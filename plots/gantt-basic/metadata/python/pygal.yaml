@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:25:30Z'
-updated: '2026-05-10T22:43:07Z'
+updated: '2026-05-10T22:49:03Z'
 generated_by: claude-haiku
 workflow_run: 25641675737
 issue: 2377
@@ -12,44 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Perfect theme adaptation: identical data colors across light/dark with fully
-    theme-aware chrome'
-  - 'Excellent typography: explicitly sized fonts (28px title, 18px labels) deliver
-    perfect legibility in both themes'
-  - 'Clean data visualization: 12 tasks clearly displayed with no overlaps or ambiguity'
-  - 'Strong color coding: Okabe-Ito palette correctly applied across all five project
-    phases'
-  - 'Thoughtful design details: rounded bar corners, dashed month dividers, and opacity
-    create visual polish'
-  - 'Realistic, neutral data: software development timeline is plausible and universally
-    relatable'
-  - 'Correct spec compliance: all features present and properly mapped'
+  - 'Perfect theme adaptation: text colors and strokes intelligently switch between
+    light and dark themes while data colors remain constant'
+  - 'Excellent visual refinement: rounded corners (rx=6, ry=6), opacity layering,
+    and dashed grid lines create polished, professional appearance'
+  - 'Critical path visualization: stroke-based highlighting clearly indicates critical
+    tasks without obscuring data'
+  - 'Comprehensive temporal context: milestone markers and month grid lines provide
+    clear timeline reference without overwhelming the plot'
+  - 'Clean SVG-based implementation: leverages pygal''s SVG output format to create
+    true Gantt functionality beyond native HorizontalBar limitations'
+  - 'All text elements fully readable in both light and dark themes: title, axis labels,
+    legend, and annotations maintain legibility across themes'
   weaknesses:
-  - 'Limited visual storytelling: chart displays data clearly but doesn''t emphasize
-    key insights (no critical path highlighting, no milestone annotations, no visual
-    focal point)'
-  - 'Library adaptation without mastery: implementation works around pygal limitations
-    with manual SVG manipulation rather than leveraging distinctive library features'
-  - 'No visual hierarchy for narrative: lacking color intensity variation, size variation,
-    or annotations to guide interpretation beyond raw timeline display'
+  - Milestone label font size (12pt) is small relative to overall canvas—consider
+    14-16pt for better visual hierarchy
+  - Month grid could be more prominent (currently dashed lines)—solid lines or higher
+    opacity might better establish temporal structure
+  - Legend placement at bottom-left is somewhat separated from chart area—consider
+    repositioning closer to the plot
+  - No current-date indicator (spec mentions as optional)—a vertical line marking
+    today's date would enhance project context
   image_description: |-
     Light render (plot-light.png):
-      Background: #FAF8F1 (warm off-white) ✓
-      Chrome: Title "Software Development Timeline · gantt-basic · pygal · anyplot.ai" (28px, dark text), task names (18px, dark text), month labels (18px, dark text) — all fully readable. Dashed month dividers subtle but visible.
-      Data: 12 horizontal bars color-coded by phase using Okabe-Ito palette (Planning #009E73, Design #D55E00, Development #0072B2, Testing #CC79A7, Deployment #E69F00). All bars clearly visible with no overlaps. Legend at bottom shows all categories.
-      Legibility verdict: PASS (excellent contrast, no light-on-light issues, all elements clearly readable)
+      Background: Warm off-white (#FAF8F1) surface provides excellent contrast for all elements
+      Chrome: Title "Software Development Timeline · gantt-basic · pygal · anyplot.ai" rendered in dark text (28pt, fully readable). Task names on left axis rendered in 18pt dark text, all clearly legible. Month markers and milestone labels at bottom/top in dark text, readily visible. Year label "Timeline (2025)" prominently displayed.
+      Data: Horizontal bars colored by category using Okabe-Ito palette — Planning (green #009E73), Design (orange #D55E00), Development (blue #0072B2), Testing (pink #CC79A7), Deployment (yellow #E69F00). Critical path tasks have dark borders (stroke). All bars have rounded corners and 0.9 opacity for refined appearance. 5 milestone markers (circles + text labels) and dashed month grid lines provide temporal context.
+      Legibility verdict: PASS — All text elements (title, labels, axes, annotations) are clearly readable against the light background. No text-on-text collisions observed. Month markers clearly show temporal progression.
 
     Dark render (plot-dark.png):
-      Background: #1A1A17 (warm near-black) ✓
-      Chrome: All text light-colored (title, labels, legend) on dark background — all fully readable. Month dividers visible. NO dark-on-dark issues detected.
-      Data: All 12 bars render in identical Okabe-Ito colors to light render (Planning #009E73, Design #D55E00, Development #0072B2, Testing #CC79A7, Deployment #E69F00). Colors are unchanged between themes (only chrome adapted).
-      Legibility verdict: PASS (excellent contrast, all text readable, no theme-adaptation failures, all colors distinguishable)
+      Background: Warm near-black (#1A1A17) surface matches light render's aesthetic — not pure black, warm tone consistent with brand
+      Chrome: Title rendered in light text (INK=#F0EFE8) on dark background, fully readable at 28pt. Task names on left axis in light text, all clearly legible at 18pt. Month markers and milestone labels in light text, plainly visible. Year label in muted light text, easily read.
+      Data: Data bars maintain IDENTICAL colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) — only chrome colors flipped, not data colors. Critical path borders now rendered in light INK color (light-colored strokes), creating good contrast against dark background. Bars, rounded corners, and opacity effects all match light render visually.
+      Legibility verdict: PASS — All text is light-colored and clearly readable on dark background. No dark-on-dark failures observed. Critical path strokes are theme-aware and light-colored on dark surface. All data markers visible and distinguishable from background. Milestone indicators and month grid clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,76 +58,84 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 18px labels); perfect
-          readability in both themes
+        comment: Title (28pt), axis labels (18pt), major labels (16pt), legend (16pt)
+          all clearly readable in both light and dark themes. All text properly themed
+          with adaptive INK colors.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text perfectly spaced with no collisions; task names, month labels,
-          legend all distinct
+        comment: Task bars have adequate spacing (row_height * 0.55 distribution).
+          No text collisions. Task labels on left do not overlap with bars. Legend
+          spacing adequate.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 bars optimally sized and visible; bar height adapted to row spacing
-          (0.55× multiplier)
+        comment: All 12 task bars clearly visible with rounded corners. Milestone
+          markers and month grid visible without obscuring data. Good visual hierarchy
+          between data and reference elements.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; excellent contrast between bars and
-          backgrounds
+        comment: Okabe-Ito palette used correctly (green, orange, blue, pink, yellow).
+          Adequate contrast in both themes. No red-green as sole signal. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 75%+ of 4800×2700px canvas; balanced margins; legend positioned
-          cleanly
+        comment: Canvas 4800×2700 (correct dimensions). Balanced proportions. Nothing
+          cut off. Adequate margins (60px) and spacing (20px).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with plot ID and library; 'Timeline (2025)' context
-          label; task names clear
+        comment: 'Title descriptive: ''Software Development Timeline · gantt-basic
+          · pygal · anyplot.ai''. X-axis shows Timeline (2025) with month markers.
+          Y-axis task names clear.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito order; backgrounds
-          #FAF8F1/#1A1A17; text fully theme-adaptive'
+        comment: 'First category (Planning) = #009E73 (brand green). Multi-series
+          follows Okabe-Ito: #009E73, #D55E00, #0072B2, #CC79A7, #E69F00. Backgrounds:
+          #FAF8F1 (light) / #1A1A17 (dark). Both renders theme-correct.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom Style object, rounded corners, opacity 0.9, dashed dividers
-          show design intent; above defaults but not publication-level
+        passed: true
+        comment: Custom Style object with explicit font sizes. Okabe-Ito palette correctly
+          applied. Rounded corners (rx=6, ry=6) on bars add polish. Critical path
+          stroke indication adds information density. Milestone and month grid add
+          visual structure. Straightforward presentation, not elaborate.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (dashed lines), generous whitespace, month dividers create
-          structure without clutter; very polished
+        comment: Rounded corners on bars. Opacity=0.9 on bars for subtle transparency.
+          Dashed month grid (stroke-dasharray='8,4') for subtlety. Milestone markers
+          opacity=0.6 to recede. Clean spacing and layout.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Gantt format communicates timeline; color-coding aids grouping; but
-          lacks emphasis on insights (no critical path highlighting, no milestone
-          annotations)
+        passed: true
+        comment: Critical path highlighting guides viewer to important tasks. Month
+          markers provide temporal context. Milestone markers show project phases.
+          Category colors help group related tasks. Natural timeline progression left-to-right.
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +145,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar Gantt chart; 12 tasks as bars spanning start→end
-          dates
+        comment: Correct Gantt chart type. Horizontal bars spanning time ranges show
+          task durations and overlaps clearly.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: task names, start/end dates, category
-          color-coding, date formatting, logical ordering'
+        comment: 'All features present: task names, start/end dates, category color
+          coding (Planning/Design/Development/Testing/Deployment), timeline context.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis = time (days from reference); Y-axis = task names; all 12
-          tasks visible; data range complete
+        comment: 'X-axis: time progression (days from reference). Y-axis: task names.
+          Bar positions correctly map start-end dates. All data visible and properly
+          scaled.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Software Development Timeline · gantt-basic · pygal · anyplot.ai''
-          ✓; legend shows all 5 categories with correct colors'
+        comment: 'Title format correct: ''Software Development Timeline · gantt-basic
+          · pygal · anyplot.ai''. Legend shows all categories with matching labels.'
     data_quality:
       score: 15
       max: 15
@@ -168,24 +178,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Gantt aspects: sequential phases, parallel tasks, overlaps,
-          varied durations (11–40 days), complete lifecycle'
+        comment: 'All Gantt features: task bars, durations, overlaps, timeline, critical
+          path visualization, milestone tracking, month grid, project phases.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world software development project; realistic task names; plausible
-          4-month Jan–Apr timeline; neutral, non-controversial
+        comment: Software development project with realistic phases. Real-world task
+          names. Realistic durations (multi-week phases). Natural task dependencies
+          and overlaps. Neutral domain, not controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Task durations factually plausible; phase sequence logical; proportions
-          reflect real-world project structure
+        comment: 12 tasks (optimal for spec 5-30 range). Date range Jan-Apr 2025 (4-month
+          project). Bar spacing adequate for task count.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,67 +204,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme setup → data → chart creation → rendering;
-          no unnecessary functions/classes'
+        comment: No classes. No unnecessary functions. Straightforward sequential
+          logic.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data (fixed dates); no randomness; identical
-          output every run
+        comment: Fixed reference_date = date(2025, 1, 1). All dates hardcoded (deterministic).
+          No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, datetime, cairosvg, pygal, pygal.style'
+        comment: 'All imports used: os (ANYPLOT_THEME), sys (path), datetime (date),
+          cairosvg (PNG), pygal (chart), Style (theming).'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manual SVG DOM manipulation is low-level but justified by pygal HorizontalBar
-          limitations; slightly verbose but appropriate
+        passed: true
+        comment: No fake UI elements. SVG manipulation is legitimate and idiomatic
+          for pygal extensions. Appropriate complexity for custom Gantt implementation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html; current
-          cairosvg API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
+          pygal API (3.1.0).
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Proper pygal.HorizontalBar(), custom Style object, correct sizing,
-          proper font sizing; workarounds justified by library limitations
+        passed: true
+        comment: Uses pygal.HorizontalBar() correctly. Custom Style object for theme
+          management (idiomatic). SVG rendering and manipulation leverages pygal's
+          output format intelligently. Extends pygal through SVG injection (sophisticated
+          but advanced).
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses custom SVG extensions; these are adaptations around pygal's
-          lack of native Gantt support, not distinctive library features
-  verdict: REJECTED
+        passed: true
+        comment: Leverages pygal's SVG output for custom bar positioning. Uses pygal
+          Style for theme system. Critical path visualization via stroke styling.
+          Milestone and month-grid elements demonstrate strong pygal mastery.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - manual-ticks
-  - custom-legend
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
   - edge-highlighting
