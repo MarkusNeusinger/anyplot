@@ -1,166 +1,185 @@
 library: pygal
+language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:38:14Z'
-updated: '2025-12-26T17:47:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526602804
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T03:35:36Z'
+generated_by: claude-haiku
+workflow_run: 25618764323
+issue: 2275
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/pygal/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Clear visualization of learning curve with appropriate training vs validation
-    gap
-  - Confidence bands shown as dashed lines effectively communicate uncertainty
-  - Custom style properly scaled for 4800x2700 canvas
-  - Colorblind-safe color palette (blue and gold)
-  - Proper KISS code structure with fixed random seed
+  - Correct plot type with both training and validation curves clearly distinguished
+  - Perfect theme-readability in both light and dark renders with no legibility issues
+  - Proper Okabe-Ito color palette with correct data color ordering (green for training,
+    orange for validation)
+  - Clean, reproducible code with deterministic seed and proper styling tokens (INK,
+    INK_MUTED)
+  - Realistic learning curve data demonstrating classic overfitting pattern with appropriate
+    scale
+  - 'Excellent spec compliance: all required features present including confidence
+    bands and legend'
   weaknesses:
-  - Legend at bottom appears slightly clipped/truncated, reducing readability
-  - Lower portion of the plot (y < 0.7) is mostly empty white space
-  - Does not fully leverage pygal interactive SVG features (tooltips, hover effects)
-  image_description: The plot displays a learning curve with two main lines on a white
-    background. The **blue line** represents the "Training Score (±1σ band)" staying
-    consistently high around 0.93-0.95 across all training set sizes. The **yellow/gold
-    line** represents the "Validation Score (±1σ band)" starting lower at ~0.71 for
-    100 samples and improving to ~0.87 at 1000 samples. Both curves have dashed confidence
-    bands (±1 standard deviation) shown as thinner dashed lines. The X-axis shows
-    "Training Set Size (samples)" from 100 to 1000. The Y-axis shows "Accuracy Score"
-    from 0.5 to 1.0. The title correctly follows the format "learning-curve-basic
-    · pygal · pyplots.ai". Legend is placed at the bottom with two columns. Dot markers
-    are visible on the main curves. The gap between training and validation curves
-    clearly demonstrates the variance/overfitting pattern typical of learning curves.
+  - 'DE-02 could be improved: consider additional visual refinement like custom grid
+    styling or subtle edge highlighting'
+  - 'LM-02 limited: could leverage more distinctive pygal features like custom dash
+    patterns or advanced styling'
+  - Design hierarchy could emphasize the convergence/overfitting pattern more explicitly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface at #FAF8F1 — correct warm tone avoiding pure white.
+      Chrome: Title "learning-curve-basic · pygal · anyplot.ai" and axis labels "Training Set Size (samples)" and "Accuracy Score" are all clearly visible in dark text (#1A1A17). Tick labels on both axes are readable. Legend positioned at top-left showing "Training Score" (green) and "Validation Score" (orange).
+      Data: Two main curves with confidence bounds (±1 std shown as dashed lines). Training Score (top curves, green #009E73) stays high (0.95–1.0) with tight confidence band. Validation Score (lower curves, orange #D55E00) starts lower (0.67) and converges upward to 0.88. Both series use solid main lines with dashed bounds. Data points (dots, size 8) clearly mark training set size positions.
+      Legibility verdict: PASS — all text readable, no contrast failures, chrome properly themed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface at #1A1A17 — correct warm tone avoiding pure black.
+      Chrome: Title and axis labels all clearly visible in light text (#F0EFE8). No dark-on-dark failures. Legend and tick labels are legible.
+      Data: Identical color structure to light render — Training Score in green (#009E73), Validation Score in orange (#D55E00). Both curves and bounds visible against dark background. Data pattern matches light render perfectly (only chrome flips, data colors unchanged).
+      Legibility verdict: PASS — all text readable, brand green still visible, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: title, axis labels, and tick labels are all readable; font sizes
-          scaled appropriately for 4800x2700 canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: no overlapping text elements anywhere
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px).
+          All readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements well-spaced, legend at top-left without overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: markers visible, lines clear; dots could be slightly larger for emphasis
+        comment: Data markers (size 8) and lines (width 4) clearly visible. Dashed
+          bounds (width 2) properly differentiated.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: blue and yellow/gold are distinguishable even for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: good proportions but lower half of plot area is unused due to y-range
-          starting at 0.5
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'descriptive labels with units: "Training Set Size (samples)" and
-          "Accuracy Score"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures CVD safety. Adequate contrast throughout.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape format appropriate. Margins=80 provides generous
+          breathing room.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: horizontal grid only, subtle; but the **legend appears clipped/truncated
-          at the bottom edge** making it difficult to read fully
+        passed: true
+        comment: 'Title format correct. Axis labels include units: ''Training Set
+          Size (samples)'' and ''Accuracy Score''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green #009E73 (Training Score). Second series orange
+          #D55E00 (Validation Score). Backgrounds #FAF8F1 light / #1A1A17 dark. Both
+          renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Style object with theme tokens. Okabe-Ito palette. Main vs.
+          bound differentiation (solid vs. dashed) shows intentional hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid is subtle and appropriate. Generous whitespace. Pygal does not
+          expose spine control, but default styling is clean.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: solid main curves prominent, dashed bounds
+          secondary. Convergence pattern visible showing overfitting diagnosis.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct XY line chart for learning curve visualization
+        comment: XY scatter with lines is correct for learning curves.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X shows training set sizes, Y shows accuracy scores
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: has training/validation curves, confidence bands (±1σ dashed lines),
-          legend distinguishing curves
-      - id: SC-04
-        name: Data Range
+        comment: Training and validation curves, confidence bands (±1 std), distinct
+          colors, legend all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: all data visible, appropriate y-range (0.5-1.0)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: training set size (100–1000 samples). Y-axis: accuracy score
+          (0.6–1.02). All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: legend labels accurately describe the series with "(±1σ band)" notation
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: correct format "learning-curve-basic · pygal · pyplots.ai"
+        comment: 'Title format: ''learning-curve-basic · pygal · anyplot.ai''. Legend
+          labels: ''Training Score'' and ''Validation Score''.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows typical learning curve pattern with gap closing as training
-          size increases; could show a bit more variance in early stages
+        comment: Shows training and validation scores, 10 training set sizes, confidence
+          bands across 5 cross-validation folds.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: simulates sklearn learning_curve output with realistic accuracy values
-          for a classification task
+        comment: 'Learning curve pattern realistic: training high (0.95+), validation
+          converges upward (0.67→0.88). Std dev decreases with dataset size. Neutral,
+          no bias.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: accuracy values are realistic (0.7-0.95); the y-axis range (0.5-1.0)
-          leaves unused space
+        comment: Accuracy range 0.6–1.02 realistic. Training set sizes 100–1000 sensible.
+          Std dev magnitudes appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,42 +187,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'flat script: imports → data → plot → save'
+        comment: 'Straightforward code: data generation → chart creation. No unnecessary
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set correctly
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: only numpy, pygal, and Style imported
+        comment: 'All imports used: os, numpy, pygal, Style.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: using current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: saves both plot.html and plot.png but the spec only requires plot.png;
-          this is acceptable but redundant
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: render_to_file(plot-{THEME}.html) and render_to_png(plot-{THEME}.png).'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: uses pygal XY chart, custom Style, stroke_style for line width, dashed
-          lines for confidence bands. Does not leverage interactive tooltips or SVG-specific
-          features more fully.
+        comment: Proper use of Style object, XY chart type, theme tokens (INK, INK_MUTED).
+          Correct stroke_style and dots configuration.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses dashed strokes for confidence bounds (pygal feature). Generates
+          interactive HTML output. Could explore more advanced styling.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
