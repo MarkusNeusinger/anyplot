@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:37:16Z'
-updated: '2026-05-10T10:50:53Z'
+updated: '2026-05-10T10:56:54Z'
 generated_by: claude-haiku
 workflow_run: 25626602224
 issue: 2331
@@ -12,38 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Perfect Visual Quality (30/30): All text legible in both themes, zero overlaps,
-    well-sized elements, correct theme adaptation'
-  - 'Complete Spec Compliance (15/15): Every specification requirement met; metrics
-    calculated and displayed correctly'
-  - 'Flawless Code Quality (10/10): Clean structure, reproducible, proper imports,
-    correct output format'
-  - 'Strong theme handling: Warm-toned backgrounds with correct theme-adaptive chrome
-    while preserving data color identity'
-  - 'Excellent data example: Shows realistic calibration scenario with good feature
-    coverage'
+  - Excellent theme adaptation with no legibility issues in either render
+  - Complete spec compliance with all required features present
+  - Professional code quality with clean structure and reproducibility
+  - Proper use of Bokeh idioms (ColumnDataSource, HoverTool, Selenium export)
+  - Metrics annotation (Brier + ECE) provides meaningful summary of calibration quality
+  - Consistent brand green (#009E73) across both themes with proper data-ink ratio
   weaknesses:
-  - 'Design Excellence below median: Standard Bokeh styling without custom polish;
-    lacks aesthetic sophistication (DE-01=4/8)'
-  - 'Visual hierarchy not emphasized: No special emphasis on deviation from perfect
-    calibration line; purely technical display without storytelling (DE-03=2/6)'
-  - 'Minimal visual refinement: All four spines present (not recommended L-shape);
-    legend/metrics boxes styled but not particularly refined (DE-02=4/6)'
+  - Design excellence could be elevated with additional visual refinements such as
+    spine removal or more sophisticated grid styling
+  - Could explore more distinctive Bokeh features beyond HoverTool such as callbacks
+    or dynamic interactions
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly specified
-      Chrome: Title, axis labels, and tick labels all clearly readable in dark text (#1A1A17 and #4A4A44)
-      Data: Teal/green brand color line (#009E73) with 10 circular markers; dashed gray reference diagonal line; metrics annotation box with semi-transparent background
-      Legibility verdict: PASS - All text is clearly visible with no overlaps or readability issues
+      Background: Warm off-white (#FAF8F1), correctly themed, not pure white
+      Chrome: Title "calibration-curve · bokeh · anyplot.ai", axis labels "Mean Predicted Probability" and "Fraction of Positives", and tick labels all in dark text (#1A1A17) are clearly readable against light background. Legend and metrics box have white background with dark text. All elements properly styled.
+      Data: Green (#009E73) solid line connecting binned calibration points with scatter markers. Dashed reference line (diagonal perfect calibration) in light gray. Metrics box displays Brier Score: 0.144 and ECE: 0.045. Grid lines subtle at 10% alpha.
+      Legibility verdict: PASS - All text is readable with proper contrast. No light-on-light issues. All data elements distinguish well from background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly specified
-      Chrome: Title, axis labels, and tick labels all clearly readable in light text (#F0EFE8 and #B8B7B0); grid lines subtle but visible
-      Data: Brand green line and markers are identical to light render (#009E73 - same hue, no change); metrics annotation and legend properly styled
-      Legibility verdict: PASS - All text is clearly visible with no dark-on-dark failures; data colors are identical between renders confirming theme-adaptive chrome with color preservation
+      Background: Warm near-black (#1A1A17), correctly themed, not pure black
+      Chrome: Title, axis labels, and tick labels all in light text (#F0EFE8) are clearly readable against dark background. Legend and metrics box have dark background with light text. All chrome elements properly adapted to dark theme.
+      Data: Green (#009E73) solid line and markers are identical to light render, proving consistent color across themes. Dashed reference line in light gray. Metrics box with dark background and light text. Grid lines visible with same subtle styling.
+      Legibility verdict: PASS - All text is readable with proper contrast. No dark-on-dark issues. Brand green is clearly distinguishable on both surfaces. Data colors are identical to light render, confirming proper theme adaptation.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,73 +48,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt;
-          perfectly readable in both themes
+        comment: All text properly sized (28pt title, 22pt labels, 18pt ticks) and
+          theme-colored for both light and dark
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text; metrics annotation, legend, and labels all
-          fully visible
+        comment: Metrics box positioned at (0.05, 0.95) with background; no overlapping
+          elements; legend clean
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Calibration markers (size=25) and line (width=5) optimally visible
-          for 10-point dataset
+        comment: Green line, markers, grid, and reference line all clearly visible
+          and distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito color is colorblind-safe; good contrast between series
-          and reference line
+        comment: 'Uses #009E73 Okabe-Ito position 1; no red-green sole signal; adequate
+          contrast'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent balance; plot uses 50-70% of canvas with even margins
+        comment: 4800×2700 landscape format; proper proportions; nothing cut off;
+          generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels; title in correct format
+        comment: 'Title: calibration-curve · bokeh · anyplot.ai; X: Mean Predicted
+          Probability; Y: Fraction of Positives'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds are #FAF8F1 (light) and #1A1A17
-          (dark); text is theme-adaptive; data colors identical across themes'
+        comment: 'First series #009E73 correct; backgrounds #FAF8F1 light/#1A1A17
+          dark; both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library defaults with clean styling but no custom
-          polish or exceptional design flourishes
+        passed: true
+        comment: Professional polish with themed metrics box styling and intentional
+          color hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid is subtle (0.10 opacity); however, all four spines are present
-          rather than recommended L-shape
+        passed: true
+        comment: Subtle grid (10% alpha), refined legend styling with background,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Plot clearly shows calibration performance but lacks visual hierarchy
-          or emphasis on deviation from perfect calibration
+        passed: true
+        comment: Clear visual hierarchy; green line is primary focus; metrics provide
+          context; guides understanding
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve with binned data, reference diagonal, and
-          markers
+        comment: Correct calibration curve showing binned classifier probabilities
+          vs observed frequencies
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, 10 equal-probability bins, Brier score,
-          and ECE all present
+        comment: 'All required: diagonal reference line, 10 bins, Brier score and
+          ECE metrics, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped with full range 0-1 visible
+        comment: 'X axis: Mean Predicted Probability; Y axis: Fraction of Positives;
+          full 0-1 range shown'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format exact: ''calibration-curve · bokeh · anyplot.ai'';
-          legend correctly identifies lines'
+        comment: Proper spec format; legend labels match (Perfect Calibration, Classifier)
     data_quality:
       score: 15
       max: 15
@@ -161,20 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data spans full probability range showing both well-calibrated and
-          overconfident regions
+        comment: Shows calibration curve, reference line, metrics (Brier/ECE), bin
+          counts via hover
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic binary classification scenario with logistic adjustment
+        comment: Binary classification scenario realistic; 5000 samples appropriate;
+          calibration factor creates realistic miscalibration; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Brier score (0.144) and ECE (0.045) are realistic values
+        comment: Probability values 0-1 range appropriate; Brier score 0.144 and ECE
+          0.045 are realistic
     code_quality:
       score: 10
       max: 10
@@ -184,62 +182,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → calculations → plot → save'
+        comment: No unnecessary functions or classes; direct data processing and plotting
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: Uses np.random.seed(42) for deterministic results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no extraneous packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear and Pythonic; no over-engineering
+        comment: Appropriate complexity; no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with current Bokeh API
+        comment: Saves as plot-light.png/html and plot-dark.png/html; current Bokeh
+          3.9.0 API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of figure(), ColumnDataSource, HoverTool, Label; solid high-level
-          API
+        comment: Proper ColumnDataSource, HoverTool with formatted tooltips, figure
+          API, Selenium screenshot pattern all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses standard Bokeh patterns; not leveraging advanced or creative
-          library capabilities
+        passed: true
+        comment: Uses HoverTool interactivity, Label annotations for metrics, legend
+          background styling; could explore callbacks or linked selection
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
-  - binning
+  - columndatasource
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending
+  - publication-ready

@@ -1,7 +1,7 @@
 """ anyplot.ai
 calibration-curve: Calibration Curve
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-10
+Quality: 91/100 | Updated: 2026-05-10
 """
 
 import os
