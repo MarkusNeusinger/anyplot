@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 precision-recall: Precision-Recall Curve
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from plotnine import (
     aes,
     annotate,
     element_line,
+    element_rect,
     element_text,
     geom_hline,
     geom_step,
@@ -21,6 +24,15 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT = "#D55E00"  # Okabe-Ito position 2 for baseline
 
 # Data - Simulated binary classification results
 np.random.seed(42)
@@ -63,8 +75,8 @@ df = pd.DataFrame({"Recall": recall, "Precision": precision})
 # Plot
 plot = (
     ggplot(df, aes(x="Recall", y="Precision"))
-    + geom_step(color="#306998", size=2, direction="vh")
-    + geom_hline(yintercept=baseline, linetype="dashed", color="#FFD43B", size=1.5)
+    + geom_step(color=BRAND, size=2, direction="vh")
+    + geom_hline(yintercept=baseline, linetype="dashed", color=ACCENT, size=1.5)
     + annotate(
         "text",
         x=0.95,
@@ -72,36 +84,36 @@ plot = (
         label=f"Random Classifier (baseline = {baseline:.2f})",
         ha="right",
         size=14,
-        color="#FFD43B",
+        color=ACCENT,
     )
-    + annotate("rect", xmin=0.55, xmax=0.95, ymin=0.75, ymax=0.95, fill="white", alpha=0.9)
     + annotate(
-        "text",
-        x=0.75,
-        y=0.85,
-        label=f"Average Precision (AP) = {ap_score:.3f}",
-        size=16,
-        color="#306998",
-        fontweight="bold",
+        "rect", xmin=0.55, xmax=0.95, ymin=0.75, ymax=0.95, fill=ELEVATED_BG, alpha=0.95, color=INK_SOFT, size=0.3
+    )
+    + annotate(
+        "text", x=0.75, y=0.85, label=f"Average Precision (AP) = {ap_score:.3f}", size=16, color=INK, fontweight="bold"
     )
     + labs(
         x="Recall (Sensitivity)",
         y="Precision (Positive Predictive Value)",
-        title="precision-recall · plotnine · pyplots.ai",
+        title="precision-recall · plotnine · anyplot.ai",
     )
     + scale_x_continuous(limits=(0, 1), breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
     + scale_y_continuous(limits=(0, 1), breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.3),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
         text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24, ha="center"),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#EEEEEE", size=0.3, alpha=0.2),
+        plot_title=element_text(size=24, color=INK, ha="center"),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
