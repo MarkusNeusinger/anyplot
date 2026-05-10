@@ -1,45 +1,56 @@
-""" pyplots.ai
+"""anyplot.ai
 lift-curve: Model Lift Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-27
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # First series, always
+ACCENT = "#D55E00"  # Second series
 
 # Data: Simulate customer response model predictions
 np.random.seed(42)
 n_samples = 1000
 
 # Create realistic model predictions with varying quality
-# Higher scores should correlate with positive responses
-base_score = np.random.beta(2, 5, n_samples)  # Skewed towards lower scores
+base_score = np.random.beta(2, 5, n_samples)
 true_signal = np.random.rand(n_samples)
 
-# Model scores with some predictive power
+# Model scores with predictive power
 y_score = 0.6 * base_score + 0.4 * true_signal
 y_score = np.clip(y_score, 0, 1)
 
-# Generate true labels based on scores (with noise for realism)
-response_prob = 0.3 * y_score + 0.1  # Base response rate ~10%, up to ~40% for high scores
+# Generate true labels based on scores
+response_prob = 0.3 * y_score + 0.1
 y_true = (np.random.rand(n_samples) < response_prob).astype(int)
 
 # Calculate lift curve
-sorted_indices = np.argsort(y_score)[::-1]  # Sort by score descending
+sorted_indices = np.argsort(y_score)[::-1]
 y_true_sorted = y_true[sorted_indices]
 
-# Cumulative response rate at each percentile
 cumsum_responses = np.cumsum(y_true_sorted)
 total_responses = y_true_sorted.sum()
 baseline_rate = total_responses / n_samples
 
-# Calculate lift at each point
 percentile = np.arange(1, n_samples + 1) / n_samples * 100
 expected_random = np.arange(1, n_samples + 1) * baseline_rate
 lift = cumsum_responses / expected_random
 
-# Sample at key percentiles for cleaner visualization
+# Sample at key percentiles for visualization
 sample_points = [0] + list(range(9, n_samples, 10)) + [n_samples - 1]
 percentile_sampled = percentile[sample_points]
 lift_sampled = lift[sample_points]
@@ -47,27 +58,27 @@ lift_sampled = lift[sample_points]
 # Create figure
 fig = go.Figure()
 
-# Lift curve
+# Lift curve (first series = brand color)
 fig.add_trace(
     go.Scatter(
         x=percentile_sampled,
         y=lift_sampled,
         mode="lines+markers",
         name="Model Lift",
-        line=dict(color="#306998", width=4),
-        marker=dict(size=10, color="#306998"),
+        line=dict(color=BRAND, width=4),
+        marker=dict(size=10, color=BRAND),
         hovertemplate="Top %{x:.0f}%<br>Lift: %{y:.2f}x<extra></extra>",
     )
 )
 
-# Random selection baseline (lift = 1)
+# Random selection baseline (second series = accent color)
 fig.add_trace(
     go.Scatter(
         x=[0, 100],
         y=[1, 1],
         mode="lines",
         name="Random Selection",
-        line=dict(color="#FFD43B", width=3, dash="dash"),
+        line=dict(color=ACCENT, width=3, dash="dash"),
         hovertemplate="Random baseline<br>Lift: 1.0x<extra></extra>",
     )
 )
@@ -82,52 +93,55 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1.5,
     arrowwidth=2,
-    arrowcolor="#306998",
+    arrowcolor=BRAND,
     ax=60,
     ay=-40,
-    font=dict(size=18, color="#306998"),
-    bgcolor="white",
-    bordercolor="#306998",
+    font=dict(size=18, color=INK),
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=1,
     borderpad=6,
 )
 
-# Layout
+# Layout with theme-adaptive colors
 fig.update_layout(
-    title=dict(text="lift-curve · plotly · pyplots.ai", font=dict(size=32, color="#333333"), x=0.5, xanchor="center"),
+    title=dict(text="lift-curve · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Percentage of Population Targeted (%)", font=dict(size=24)),
-        tickfont=dict(size=18),
+        title=dict(text="Percentage of Population Targeted (%)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
         range=[0, 100],
         showgrid=True,
-        gridcolor="rgba(0,0,0,0.1)",
+        gridcolor=GRID,
         gridwidth=1,
         dtick=10,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Cumulative Lift Ratio", font=dict(size=24)),
-        tickfont=dict(size=18),
+        title=dict(text="Cumulative Lift Ratio", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
         range=[0, max(lift_sampled) * 1.1],
         showgrid=True,
-        gridcolor="rgba(0,0,0,0.1)",
+        gridcolor=GRID,
         gridwidth=1,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     legend=dict(
-        font=dict(size=18),
+        font=dict(size=16, color=INK_SOFT),
         x=0.98,
         y=0.98,
         xanchor="right",
         yanchor="top",
-        bgcolor="rgba(255,255,255,0.9)",
-        bordercolor="rgba(0,0,0,0.1)",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
     margin=dict(l=100, r=80, t=100, b=100),
-    plot_bgcolor="white",
-    paper_bgcolor="white",
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save with theme suffix
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
