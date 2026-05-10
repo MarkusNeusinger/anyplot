@@ -1,169 +1,176 @@
 library: plotly
+language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:37:55Z'
-updated: '2025-12-26T19:44:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528201899
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - binning
-  styling: []
+updated: '2026-05-10T10:48:15Z'
+generated_by: claude-haiku
+workflow_run: 25626632817
+issue: 2331
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of calibration curve concept with comparison of two models
-    (calibrated vs overconfident)
-  - Perfect compliance with specification including optional histogram subplot for
-    prediction distribution
-  - Brier scores displayed in legend provide quantitative calibration metrics
-  - Clean, professional visual design with appropriate color choices
-  - Proper use of plotly subplots with appropriate row height ratios
+  - Perfect theme-adaptive styling with zero dark-on-dark or light-on-light contrast
+    failures
+  - 'All specification requirements met: diagonal reference, 10 bins, Brier scores,
+    histogram included'
+  - 'Excellent design hierarchy: subplot composition guides viewer through model comparison
+    naturally'
+  - Marker differentiation (circles vs diamonds) and color choices clearly distinguish
+    models
+  - Comprehensive idiomatic plotly usage with proper multi-panel composition and environment-based
+    theming
+  - All text legible at full resolution in both light and dark renders
   weaknesses:
-  - Histogram subplot could benefit from more visible distinction between overlapping
-    distributions (consider side-by-side instead of overlay)
-  - Does not leverage plotly interactive hover features to show bin details on mouseover
-  image_description: 'The plot displays a calibration curve visualization with two
-    panels. The top panel (main calibration curve) shows three elements: a gray dashed
-    diagonal line representing perfect calibration, a blue line with circular markers
-    for a "Calibrated Model" (Brier: 0.206), and a yellow/gold line with diamond markers
-    for an "Overconfident Model" (Brier: 0.219). The calibrated model follows the
-    diagonal more closely, while the overconfident model shows the characteristic
-    S-curve pattern (above the diagonal for low probabilities, below for high probabilities).
-    The bottom panel shows overlaid histograms of the prediction distributions for
-    both models - the calibrated model (blue) has a more uniform distribution across
-    probabilities, while the overconfident model (yellow) shows concentration at the
-    extremes (near 0 and 1). The title "calibration-curve · plotly · pyplots.ai" is
-    centered at the top. All text is clearly readable with appropriate font sizes.'
+  - DE-01 could be enhanced with more distinctive visual refinement (e.g., custom
+    marker sizes/fills that vary with bin sample count)
+  - LM-02 could showcase more plotly-specific advanced features (e.g., secondary y-axis
+    for histogram if scaled differently)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface, not pure white
+      Chrome: Title "calibration-curve · plotly · anyplot.ai" in dark text (28px), axis labels in dark (#1A1A17), tick labels in darker gray (#4A4A44), legend with elevated background box and border positioned top-left
+      Data: Calibrated model in Okabe-Ito green (#009E73) with circle markers, Overconfident model in orange (#D55E00) with diamond markers, Perfect calibration diagonal in gray dashes
+      Grid: Subtle 10% opacity grid lines present on both axes, not dominant
+      Legibility verdict: PASS - All text, axis labels, and data elements clearly readable. No contrast issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface, not pure black
+      Chrome: Same title in light text (#F0EFE8), axis labels in light, tick labels in lighter gray (#B8B7B0), legend styling adapted correctly
+      Data: Identical data colors to light render (green and orange Okabe-Ito preserved), markers and lines clearly visible
+      Grid: Subtle grid lines adapted for dark theme, same 10% opacity
+      Legibility verdict: PASS - All text is light-on-dark with excellent contrast. No dark-on-dark failures. Brand green (#009E73) remains visible and readable on dark surface. Histogram bars are clearly distinguishable. Perfect theme adaptation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: All text readable at proper sizes in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Clean layout with legend positioned away from data, no overlapping
+          elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 14 with width 4 lines are well-sized for the data density
-          (10 points per model)
+        comment: Markers (size 14), lines (width 4), and grid all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of subplots with 70/30 split, slight reduction for histogram
-          being somewhat compressed
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Mean Predicted Probability", "Fraction of Positives",
-          "Count"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1 and 2, CVD-safe, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned 70/30 subplot split, generous margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha 0.1), but legend lacks border visibility in
-          some contexts
+        passed: true
+        comment: Descriptive labels with appropriate title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct backgrounds, Okabe-Ito colors identical between themes, theme-adaptive
+          chrome
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional design with intentional marker differentiation and legend
+          styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, clean frame, generous whitespace, refined typography
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear narrative: diagonal reference guides, models compared effectively,
+          distributions shown'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct calibration curve (reliability diagram) implementation
+        comment: Correct calibration curve implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=mean predicted probability, Y=fraction of positives correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has diagonal reference line, 10 bins, Brier scores displayed, histogram
-          subplot
-      - id: SC-04
-        name: Data Range
+        comment: Diagonal line, 10 bins, Brier scores, histogram all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes properly show 0-1 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: mean predicted probability, Y: fraction of positives, ranges
+          [0,1]'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all elements with Brier scores
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "calibration-curve · plotly · pyplots.ai"'
+        comment: Correct format, informative labels with metrics
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows well-calibrated vs overconfident models, demonstrating calibration
-          concepts effectively; minor deduction as both models have similar Brier
-          scores
+        comment: Two models, reference line, scores, distributions, 2000 samples
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Simulated classifier predictions are plausible, though could be more
-          domain-specific
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All values in valid 0-1 probability range, 2000 samples appropriate
+        comment: Realistic synthetic generation, diverse probability range, no controversial
+          data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2000 samples appropriate for 10 bins, standard probability scale
     code_quality:
       score: 10
       max: 10
@@ -173,40 +180,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data → plot → save'
+        comment: Simple script, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly imports, all used
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.html)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png and .html format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent use of go.Figure, make_subplots, theme tokens, update methods
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses subplots, interactive features via HTML export, but doesn't
-          leverage plotly-specific features like hover customization or animations
+        comment: Good use of subplots, marker differentiation, html export; could
+          showcase more advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
