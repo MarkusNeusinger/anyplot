@@ -6,7 +6,7 @@ title: Silhouette Plot
 
 # Specification tracking
 created: 2025-12-26T19:28:09Z
-updated: null
+updated: 2026-05-10T12:46:32Z
 issue: 2334
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - silhouette
     - bar
   data_type:
     - numeric
@@ -25,4 +24,4 @@ tags:
   features:
     - basic
     - clustering
-    - evaluation
+    - diagnostic
