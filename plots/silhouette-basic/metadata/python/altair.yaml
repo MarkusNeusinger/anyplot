@@ -1,173 +1,165 @@
 library: altair
+language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:37:53Z'
-updated: '2025-12-26T19:44:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528202840
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - layer-composition
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - dataset-loading
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-10T13:16:59Z'
+generated_by: claude-haiku
+workflow_run: 25628927485
+issue: 2334
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.html
+quality_score: 62
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with proper encoding types (Q for
-    quantitative, N for nominal)
-  - Clean visual hierarchy with well-chosen color palette (Python Blue as primary)
-  - Good use of layering (bars + average line + annotation text)
-  - Interactive tooltips enhance usability
-  - Proper canvas sizing (1600x900 with scale_factor=3.0) following library guidelines
-  - Creative solution using mark_rect with y/y2 encoding to create horizontal bars
-  - Cluster averages clearly communicated both in legend and via annotation
+  - Correct silhouette plot type with proper cluster grouping and sorting
+  - Clear data representation in light theme with distinct cluster colors
+  - Good use of altair layer composition (bars + average line + annotation)
+  - Realistic example data from iris dataset with proper seeding
+  - Clean, reproducible code with deterministic random seed
   weaknesses:
-  - The Avg annotation text position (y=5) places it at the bottom of the chart rather
-    than at a more prominent position
-  - No interactive selection or highlighting when hovering over clusters (missed Altair
-    strength)
-  - Bars extending from 0 to silhouette value using x2=alt.value(0) could be clearer
-  image_description: 'The plot displays a silhouette plot for K-means clustering of
-    the Iris dataset with 3 clusters. The visualization uses horizontal bars where
-    each bar represents a sample''s silhouette coefficient. The three clusters are
-    shown in distinct colors: blue (Cluster 0, avg: 0.42), yellow (Cluster 1, avg:
-    0.80), and red (Cluster 2, avg: 0.45). The clusters are stacked vertically with
-    clear visual separation. A dashed red vertical line marks the overall average
-    silhouette score (0.553) with an annotation "Avg: 0.553". The x-axis shows "Silhouette
-    Coefficient" ranging from approximately -0.20 to 1.00. The title reads "silhouette-basic
-    · altair · pyplots.ai" at the top. The legend is positioned in the upper right
-    corner showing cluster labels with their average scores.'
+  - 'Dark mode completely broken: blue cluster (#306998) nearly invisible on dark
+    background (#1A1A17) - dark-on-dark legibility failure'
+  - 'Wrong palette: uses #306998 instead of #009E73 (brand green) for first series'
+  - 'No theme adaptation: missing os.getenv and theme token application (PAGE_BG,
+    INK, INK_SOFT)'
+  - Output files saved to plot.png instead of plot-{THEME}.png
+  - Generic design with no visual refinement or sophistication
+  - Horizontal bars have internal striped pattern instead of solid colors
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all clearly readable in dark text
+      Data: Three clusters with blue (#306998), orange (#FFD43B), green - bars have horizontal striped pattern; legend on right side with cluster info
+      Legibility verdict: PASS - all text readable in light theme, though first series color is non-compliant (should be #009E73)
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) appears correct but chrome adaptation failed
+      Chrome: Blue bars and some text nearly invisible on dark background - CRITICAL DARK-ON-DARK FAILURE
+      Data: Blue cluster bars nearly black on near-black background making them virtually unreadable; orange and green clusters barely visible; annotation text "Avg: 0.653" in red is visible but compromised
+      Legibility verdict: FAIL - blue cluster (#306998) has severe contrast failure against dark background (#1A1A17); implementation lacks theme-adaptive chrome tokens (PAGE_BG, INK_SOFT); text colors not adjusted for dark theme
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 13
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        score: 2
+        max: 8
+        passed: false
+        comment: Dark render has near-invisible blue bars - critical legibility failure
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clear
+        comment: Minimal overlap in light; dark render compromised
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Bars are clearly visible and well-sized, slight deduction for very
-          thin bars at edges
+        score: 2
+        max: 6
+        passed: false
+        comment: Dark cluster nearly invisible on dark background
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red palette is colorblind-safe with good contrast
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Dark-on-dark contrast failure; #306998 on #1A1A17'
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good use of canvas, slight imbalance with legend placement
+        comment: Good proportions and space usage
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 1
         max: 2
-        passed: true
-        comment: X-axis has descriptive label "Silhouette Coefficient" but no Y-axis
-          label (hidden by design, acceptable)
+        passed: false
+        comment: Title correct but axis lacks units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 0
         max: 2
-        passed: true
-        comment: No grid (appropriate for this chart type), legend well-placed but
-          slightly small symbols
+        passed: false
+        comment: 'Wrong first color (#306998 not #009E73), no theme tokens'
+    design_excellence:
+      score: 6
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic defaults, no custom palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Displays data but no visual hierarchy
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct silhouette plot with horizontal bars
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Silhouette values correctly mapped to x-axis, samples grouped by
-          cluster
-      - id: SC-03
+        comment: Correct silhouette plot
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has horizontal bars sorted by cluster, distinct cluster colors,
-          vertical average line with annotation. Minor: cluster section annotations
-          are in legend rather than inline'
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis properly shows full range of silhouette values (-0.2 to 1.0)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies clusters with their average scores
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "silhouette-basic · altair · pyplots.ai" format
+        comment: Correct format
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: 'Shows positive and negative silhouette values, different cluster
-          qualities (Cluster 1 excellent at 0.80, others moderate). Minor: could show
-          more extreme negative values'
+        comment: Shows all clusters with variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses actual Iris dataset, a classic clustering example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Silhouette values correctly bounded between -1 and 1, realistic distribution
+        comment: Iris dataset, realistic clustering
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Valid silhouette coefficient range
     code_quality:
       score: 9
       max: 10
@@ -177,41 +169,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save'
+        comment: Linear, simple code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42 for KMeans
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (altair, numpy, pandas, sklearn modules)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current APIs
+        comment: Clean code
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png correctly, but also saves plot.html (minor extra
-          file)
-    library_features:
-      score: 3
-      max: 5
+        comment: Should save plot-{THEME}.png not plot.png
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's declarative encoding, mark_rect for bars, tooltips,
-          layering. Could leverage more interactive features or selections
+        comment: Correct altair but could use more patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layer composition used but generic
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep: []
+  styling: []
