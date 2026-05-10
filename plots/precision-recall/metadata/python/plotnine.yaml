@@ -1,167 +1,162 @@
 library: plotnine
+language: python
 specification_id: precision-recall
 created: '2025-12-26T17:38:09Z'
-updated: '2025-12-26T17:46:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526596769
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/precision-recall/plotnine/plot.png
-preview_html: null
+updated: '2026-05-10T05:37:50Z'
+generated_by: claude-haiku
+workflow_run: 25620853787
+issue: 2274
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
 review:
   strengths:
-  - Excellent visual clarity with well-chosen colors (Python blue for curve, yellow
-    for baseline)
-  - Proper use of stepped line style (geom_step with direction=vh) accurately representing
-    threshold-based curve
-  - Clean annotation box with white background improves readability of AP score
-  - Comprehensive axis labels with clarifying terms in parentheses
-  - Proper implementation of precision-recall calculation from scratch
-  - Good use of imbalanced dataset (80/20 split) demonstrating real-world applicability
+  - Perfect visual quality with all text readable in both themes and no overlaps
+  - Flawless spec compliance with all required features correctly implemented
+  - Perfect data quality with realistic, reproducible, and appropriately scaled data
+  - Exemplary theme adaptation with proper color tokens applied throughout
+  - Clean, focused code with no unnecessary complexity
   weaknesses:
-  - Missing iso-F1 contour curves mentioned in specification (optional but would enhance
-    the visualization)
-  - Annotation text positioning could conflict with curve at different data distributions
-  - No formal legend element; relies solely on inline annotations
-  image_description: 'The plot displays a Precision-Recall curve on a white background
-    with a subtle gray grid. The main curve is rendered in Python blue (#306998) using
-    a stepped line style, starting at (0, 1.0) and descending as recall increases
-    towards 1.0. A yellow dashed horizontal baseline is shown at y=0.21 representing
-    the random classifier performance. Two text annotations are present: "Average
-    Precision (AP) = 0.901" in bold blue text on a white semi-transparent rectangle
-    in the upper-right area, and "Random Classifier (baseline = 0.21)" in yellow text
-    just above the baseline. The title "precision-recall · plotnine · pyplots.ai"
-    is centered at the top. X-axis is labeled "Recall (Sensitivity)" and Y-axis is
-    labeled "Precision (Positive Predictive Value)". Both axes range from 0.0 to 1.0
-    with tick marks at 0.2 intervals.'
+  - Design could be more refined with enhanced spine styling and whitespace distribution
+  - Library distinctiveness could be elevated with more advanced plotnine-specific
+    techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required
+      Chrome: Title, axis labels, tick labels all clearly visible in dark colors (INK #1A1A17, INK_SOFT #4A4A44); subtle grid lines visible; clean panel border
+      Data: Precision-recall curve in brand green (#009E73) using stepped line style; baseline dashed line in Okabe-Ito orange (#D55E00); annotations clearly label both elements with good positioning
+      Legibility verdict: PASS - all elements fully readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required
+      Chrome: Title and axis labels rendered in light colors (INK #F0EFE8, INK_SOFT #B8B7B0) with excellent visibility against dark background; subtle grid lines; no dark-on-dark issues; AP box has dark elevated background (#242420)
+      Data: Precision-recall curve maintains identical brand green (#009E73) as light render; baseline remains identical orange (#D55E00); all annotations properly visible with light text on dark backgrounds
+      Legibility verdict: PASS - all elements perfectly readable; data colors identical to light render (only chrome adapted)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick marks, and annotations are all clearly readable
-          at full resolution
+        comment: Font sizes explicitly set; fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; annotations are well-positioned
+        comment: All text properly spaced; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stepped line is thick enough (size=2), baseline clearly visible with
-          dashed style
+        comment: Curve and baseline clearly visible; all elements distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue curve and yellow baseline provide excellent contrast; colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with parenthetical clarification (Sensitivity,
-          Positive Predictive Value)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette with adequate contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 4800×2700px size; excellent proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle and appropriate, but no formal legend (annotations
-          serve this purpose adequately)
+        passed: true
+        comment: Descriptive labels with interpretations
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct backgrounds and Okabe-Ito colors in both themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colors and annotations show design thought; professional but
+          not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean borders, adequate whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point with visual hierarchy; guides viewer through precision-recall
+          trade-off
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct precision-recall curve with stepped line style as specified
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Recall on X-axis, Precision on Y-axis correctly mapped
-      - id: SC-03
+        comment: Correct PR curve with stepped line representation
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has AP score annotation, baseline reference line, stepped style;
-          missing iso-F1 curves (mentioned as "consider" in spec)
-      - id: SC-04
-        name: Data Range
+        comment: AP score, baseline, and stepped style all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes show full 0-1 range appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Recall and Precision correctly mapped [0,1]
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Annotations accurately describe what they represent
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Follows format but uses different separator style (· vs -)
+        comment: Title follows format; annotations clearly label elements
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows full curve from high precision/low recall to low precision/high
-          recall; demonstrates typical classifier behavior
+        comment: Complete PR curve with baseline and AP score
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Simulated binary classification with 20% positive class (imbalanced)
-          is realistic; could be more domain-specific
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: AP score of 0.901 is realistic for a good classifier; baseline at
-          0.21 matches positive class ratio
+        comment: Reproducible, imbalanced classification, realistic parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All ranges and values appropriate for domain
     code_quality:
       score: 10
       max: 10
@@ -171,41 +166,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → calculations → plot → save'
+        comment: Direct implementation; no unnecessary complexity
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic with seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: No fake interactivity; well-organized
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png output
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid ggplot idioms; proper theme customization
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses ggplot grammar correctly with geom_step, geom_hline, annotate,
-          theme customization; could leverage more plotnine-specific features like
-          scale_color_manual or faceting
+        passed: true
+        comment: Custom annotations and theme tokens; relatively standard
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
