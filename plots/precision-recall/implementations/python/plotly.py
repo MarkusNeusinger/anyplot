@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 precision-recall: Precision-Recall Curve
-Library: plotly | Python 3.13
-Quality: 92 | Updated: 2025-05-10
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-10
 """
 
 import os
