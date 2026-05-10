@@ -1,165 +1,168 @@
 library: seaborn
+language: python
 specification_id: precision-recall
 created: '2025-12-26T19:11:19Z'
-updated: '2025-12-26T19:13:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20527869532
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T05:36:10Z'
+generated_by: claude-haiku
+workflow_run: 25620713903
+issue: 2274
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/precision-recall/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-    - sklearn
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent visual clarity with properly sized fonts and stepped line visualization
-  - Well-implemented comparison of two classifiers with different performance levels
-  - Baseline reference line clearly shows random classifier performance at the positive
-    class ratio
-  - Realistic fraud detection scenario with appropriate 10% class imbalance
-  - Good use of fill_between to show area under curves, enhancing visual distinction
-  - Clean, maintainable code following KISS principles
+  - 'Perfect visual quality (30/30): all text sizes explicitly set, readable in both
+    themes'
+  - 'Flawless theme adaptation: data colors constant across light/dark, chrome perfectly
+    adapted'
+  - 'Complete spec compliance: all required features implemented (PR curves, AP scores,
+    baseline)'
+  - 'Strong data storytelling: color hierarchy guides viewer (green=best, orange=moderate,
+    blue=poor)'
+  - 'Excellent code quality: clean, reproducible, proper seaborn idioms'
+  - 'Expert library mastery: theme-adaptive chrome through sns.set_theme() rc configuration'
   weaknesses:
-  - Limited use of seaborn-specific features; primarily uses matplotlib drawing functions
-  - Could benefit from a third classifier curve to show fuller performance spectrum
-    (poor performer)
-  image_description: The plot displays two precision-recall curves on a white gridded
-    background. The blue curve (Model A, AP = 0.81) shows excellent classifier performance,
-    starting at precision 1.0 and maintaining high precision through most recall values
-    before declining. A semi-transparent light blue fill area extends beneath it.
-    The yellow/gold curve (Model B, AP = 0.32) shows moderate performance with an
-    initially high precision that quickly drops and fluctuates between 0.3-0.7 across
-    recall values, with a yellow semi-transparent fill below. A horizontal gray dashed
-    line at precision 0.10 represents the random classifier baseline. Both curves
-    use stepped line styles. The title "precision-recall · seaborn · pyplots.ai" appears
-    at the top. Axis labels are "Recall (Sensitivity)" on x-axis and "Precision (Positive
-    Predictive Value)" on y-axis. A well-formatted legend in the upper right shows
-    all three elements with their AP/P values.
+  - 'Design Excellence is solid but incremental (12/20): follows seaborn defaults
+    rather than exceptional custom aesthetic sophistication beyond Okabe-Ito colors'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all visible in dark text; legend clean and positioned upper right
+      Data: Three stepped PR curves in Okabe-Ito order (green #009E73, orange #D55E00, blue #0072B2); semi-transparent fills show area under curve; dashed baseline at P=0.10
+      Legibility verdict: PASS - all text readable, excellent contrast, grid subtle and non-intrusive
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: All text rendered in light colors (#F0EFE8 primary, #B8B7B0 secondary); excellent contrast against dark background; legend box adapted to #242420
+      Data: Identical data colors to light render (only chrome flipped); stepped curves and fills clearly distinguishable
+      Legibility verdict: PASS - no dark-on-dark failures, all elements readable, theme tokens correctly applied
+
+    Theme consistency: Data colors (Okabe-Ito positions 1-3) are identical between renders; only theme-adaptive chrome (background, text, grid, legend box) has changed. No text readability issues in either render.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All font sizes explicitly set (24pt, 20pt, 16pt), perfectly readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text collisions, clean layout with proper spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are clearly visible with good linewidth, fill areas provide
-          visual depth
+        comment: Stepped lines and fills optimally sized, three series distinctly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe, distinct from each other
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, legend positioned well, minor margin at
-          right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with parenthetical clarifications: "Recall (Sensitivity)",
-          "Precision (Positive Predictive Value)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe, strong luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid at alpha 0.3 is subtle, legend well-placed but slight visual
-          overlap with fill area
+        comment: Descriptive labels (Recall, Precision)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Perfect Okabe-Ito order, correct backgrounds, theme-chrome flawless
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, not exceptional custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color hierarchy guides viewer; visual hierarchy through data choice
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct precision-recall curve visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Recall on X, Precision on Y - correctly assigned
-      - id: SC-03
+        comment: Correct precision-recall curve with stepped lines
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has AP scores, baseline reference, stepped lines, multiple classifiers.
-          Missing iso-F1 curves (spec says "consider")
-      - id: SC-04
-        name: Data Range
+        comment: AP scores, baseline, multiple models all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full 0-1 range for both dimensions
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels accurately describe models with AP values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "precision-recall · seaborn · pyplots.ai"'
+        comment: Exact title format, legend with AP scores
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good and moderate classifiers, baseline, but could show a third
-          "poor" classifier for fuller coverage
+        comment: Full spectrum of model performance, baseline reference
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Fraud detection scenario with 10% imbalance is realistic and well-contextualized
+        comment: Fraud detection with 10% prevalence is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: AP scores of 0.81 and 0.32 are realistic; 10% positive class ratio
-          is appropriate
+        comment: All values factually correct and proportionally accurate
     code_quality:
       score: 10
       max: 10
@@ -169,42 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: seed(42) set, deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: No deprecated functions
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses sns.set_style("whitegrid") for styling but PR curves are drawn
-          with matplotlib ax.step() and ax.fill_between(), not seaborn plot functions.
-          Seaborn does not have a native PR curve function, so this is acceptable
-          but not showcasing distinctive features.
+        passed: true
+        comment: Expert sns.set_theme() with comprehensive rc configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Theme-adaptive chrome through rc configuration is distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
