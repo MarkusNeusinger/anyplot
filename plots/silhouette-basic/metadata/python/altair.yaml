@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:37:53Z'
-updated: '2026-05-10T13:00:22Z'
+updated: '2026-05-10T13:06:34Z'
 generated_by: claude-haiku
 workflow_run: 25628927485
 issue: 2334
@@ -12,112 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouett
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.html
-quality_score: 69
+quality_score: 48
 review:
   strengths:
-  - Correct silhouette plot implementation with proper data visualization
-  - Clean, readable code structure with deterministic execution
-  - All text elements are legible in both light and dark renders
-  - Proper use of altair layers and encoding
-  - Real-world iris data provides good context
-  - Cluster colors are distinct and distinguishable
-  - Average silhouette line and annotation provide useful reference
+  - Correct chart type for silhouette visualization
+  - Proper clustering and data structure with meaningful grouping
+  - Average line and annotation show key insight
+  - Clean, straightforward code structure with KISS principle
   weaknesses:
-  - 'Palette uses #306998 instead of required #009E73 (Okabe-Ito Brand Green) - CRITICAL'
-  - No theme-adaptive implementation - missing os.getenv(ANYPLOT_THEME) and color
-    tokens - CRITICAL
-  - Wrong output filename format - should be plot-light.png and plot-dark.png - CRITICAL
-  - Title contains typo - says pyplots.ai instead of anyplot.ai - CRITICAL
-  - Missing per-cluster annotation labels as specified
-  - 'Background colors not set explicitly to #FAF8F1/#1A1A17'
-  - Missing environment variable handling for theme switching
+  - No theme-adaptive styling - hardcoded colors fail in dark mode with dark-on-dark
+    text
+  - 'Wrong color palette - uses Python Blue #306998 instead of Okabe-Ito #009E73 as
+    required first series'
+  - Output filenames wrong - saves plot.png instead of plot-{THEME}.png and plot-{THEME}.html
+  - Dark render completely unreadable - legend and annotations have dark text on dark
+    background
+  - Horizontal striations in bars suggest mark_rect rendering artifact
+  - Title branding incorrect - says pyplots.ai instead of anyplot.ai
+  - Missing environment variable usage for theme adaptation (os.getenv ANYPLOT_THEME)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, appears to be #FAF8F1 - PASS
-      Chrome: Title at top (but has typo "pyplots.ai"), axis labels "Silhouette Coefficient", tick marks from -0.12 to 1.0 - all readable with dark text - PASS
-      Data: Three clusters shown in blue (#306998), yellow (#FFD43B), and green (#E34C26) - bars clearly visible, average line (red dashed) at 0.553, legend shows cluster information - PASS (but colors wrong)
-      Legibility verdict: PASS - all text readable, good contrast, proper font sizes
+      Background: Warm off-white (#FAF8F1) - CORRECT
+      Chrome: Title and axis labels are dark and readable against light background
+      Data: Three clusters with distinct colors (blue, orange, green) showing silhouette coefficients. Red dashed line marks average. Legend on right side shows cluster categories.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Very dark, appears to be near-black, should be warm #1A1A17 - QUESTIONABLE
-      Chrome: Title (same typo), axis labels and ticks appear light colored and readable - PASS, legend text appears light and readable - PASS
-      Data: Same blue, yellow, green cluster colors as light render (correct data color consistency) - PASS, dashed red average line, annotation visible - PASS
-      Legibility verdict: PASS - text is readable, though theme-adaptive implementation is missing and background color may not be exactly correct
-
-    Both renders are visually readable, but the implementation fails to follow the required theme-adaptive pattern and uses non-compliant colors.
+      Background: Near-black (#1A1A17) - appears correct but nearly indistinguishable from pure black
+      Chrome: CRITICAL FAILURE - legend box is dark on dark background making cluster labels unreadable. Cluster annotations in bars appear dark. Title barely visible. Dark-on-dark violation.
+      Data: Colors appear washed out or shifted compared to light render - lack of theme-aware color application. Data colors should be identical (only chrome should flip).
+      Legibility verdict: FAIL - Dark render is unreadable. Text is dark-on-dark throughout.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 10
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 0
         max: 8
         passed: false
-        comment: Text readable in both renders but uses defaults, missing theme-adaptive
-          color implementation
+        comment: Dark render fails completely - legend and annotations unreadable
+          (dark-on-dark)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Clean layout with no overlapping elements
+        comment: Minimal overlap but striations reduce clarity
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: All bars and annotations clearly visible
+        comment: Bars visible but horizontal striations reduce quality
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors visible but not Okabe-Ito compliant
+        passed: true
+        comment: Colors distinct but wrong palette
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Excellent layout balance and utilization
+        comment: Reasonable layout, adequate canvas use
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Descriptive labels but title has critical typo
+        comment: No axis labels; title incorrect (pyplots.ai not anyplot.ai)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL FAILURE: Uses #306998 instead of #009E73; no theme-adaptive
+        comment: 'Wrong palette - Python Blue #306998 not Okabe-Ito #009E73; no theme-adaptive
           chrome'
     design_excellence:
-      score: 7
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 2
         max: 8
         passed: false
-        comment: Generic styling with arbitrary colors
+        comment: Generic hard-coded colors, no design intent
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults
+        comment: Library defaults with minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed adequately but no exceptional storytelling
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 11
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -125,49 +122,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct silhouette plot type
+        comment: Correct silhouette plot
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Has bars, clusters, colors, average line; missing per-cluster annotations
+        passed: true
+        comment: Cluster grouping, average line, bars present; cluster annotations
+          could be better
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct, all data visible
+        comment: X/Y mapping correct
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: 'Title has typo: pyplots.ai instead of anyplot.ai'
+        comment: Title incorrect branding; legend unreadable in dark mode
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows all aspects of silhouette plot
+        comment: Shows three clusters with variation
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real iris dataset, realistic clustering
+        comment: Iris dataset, plausible clustering
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Correct silhouette value ranges
+        comment: Values are plausible
     code_quality:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: CQ-01
@@ -175,56 +173,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, clean code
+        comment: Clean import, data, plot, save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Proper seeding
+        comment: Random seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Clean but incomplete implementation
+        comment: Hard-coded legacy colors; no environment variable usage
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to plot.png instead of plot-light.png/plot-dark.png'
+        comment: Wrong filenames - saves plot.png not plot-{THEME}.png
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Correct altair usage but missing theme-adaptive pattern
+        comment: Basic altair usage, missing theme configuration
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic features, some distinctiveness
+        comment: No interactive features; basic mark_rect only
   verdict: REJECTED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - layer-composition
-  - annotations
-  - custom-legend
   patterns:
+  - data-generation
   - dataset-loading
   - iteration-over-groups
   dataprep: []
