@@ -1,14 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 gantt-basic: Basic Gantt Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-27
+Library: plotly | Python 3.13
+Quality: pending | Created: 2025-05-10
 """
 
+import os
 from datetime import datetime
 
 import pandas as pd
 import plotly.express as px
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data - Software Development Project Timeline
 tasks = [
@@ -33,13 +45,13 @@ df["end"] = pd.to_datetime(df["end"])
 # Sort by start date for logical ordering
 df = df.sort_values("start").reset_index(drop=True)
 
-# Color palette for categories (colorblind-safe)
+# Color map using Okabe-Ito palette
 color_map = {
-    "Planning": "#306998",
-    "Design": "#FFD43B",
-    "Development": "#4ECDC4",
-    "Testing": "#FF6B6B",
-    "Deployment": "#95E1A3",
+    "Planning": OKABE_ITO[0],
+    "Design": OKABE_ITO[1],
+    "Development": OKABE_ITO[2],
+    "Testing": OKABE_ITO[3],
+    "Deployment": OKABE_ITO[4],
 }
 
 # Create Gantt chart using timeline
@@ -56,7 +68,7 @@ fig.add_shape(
     x1=today,
     y0=-0.5,
     y1=len(df) - 0.5,
-    line={"color": "#E74C3C", "width": 3, "dash": "dash"},
+    line={"color": INK_SOFT, "width": 3, "dash": "dash"},
     layer="above",
 )
 fig.add_annotation(
@@ -64,7 +76,7 @@ fig.add_annotation(
     y=len(df) - 0.5,
     text="Today",
     showarrow=False,
-    font={"size": 18, "color": "#E74C3C", "family": "Arial Black"},
+    font={"size": 18, "color": INK_SOFT, "family": "Arial"},
     yanchor="top",
     yshift=-5,
 )
@@ -72,24 +84,36 @@ fig.add_annotation(
 # Update layout for 4800x2700 px
 fig.update_layout(
     title={
-        "text": "Software Development Project · gantt-basic · plotly · pyplots.ai",
-        "font": {"size": 32},
+        "text": "Software Development Project · gantt-basic · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Timeline (2025)", "font": {"size": 24}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Timeline (2025)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "tickformat": "%b %d",
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
-    yaxis={"title": {"text": "Project Tasks", "font": {"size": 24}}, "tickfont": {"size": 16}, "showgrid": False},
-    template="plotly_white",
+    yaxis={
+        "title": {"text": "Project Tasks", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "showgrid": False,
+        "linecolor": INK_SOFT,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     legend={
-        "title": {"text": "Category", "font": {"size": 20}},
-        "font": {"size": 18},
+        "title": {"text": "Category", "font": {"size": 20, "color": INK}},
+        "font": {"size": 18, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
         "orientation": "h",
         "yanchor": "bottom",
         "y": 1.02,
@@ -101,10 +125,10 @@ fig.update_layout(
 )
 
 # Update bar appearance
-fig.update_traces(marker={"line": {"color": "white", "width": 1}}, opacity=0.9)
+fig.update_traces(marker={"line": {"color": PAGE_BG, "width": 1}}, opacity=0.9)
 
 # Save as PNG
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
