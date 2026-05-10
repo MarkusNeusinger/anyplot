@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
-Library: letsplot | Python 3.13
-Quality: 92/100 | Updated: 2025-12-26
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-10
 """
 
 import os
