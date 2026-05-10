@@ -1,161 +1,177 @@
 library: altair
+language: python
 specification_id: precision-recall
 created: '2025-12-26T17:40:56Z'
-updated: '2025-12-26T17:51:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526596710
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/precision-recall/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/precision-recall/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T05:36:51Z'
+generated_by: claude-haiku
+workflow_run: 25620817512
+issue: 2274
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of stepped interpolation (step-after) which correctly represents
-    threshold-based PR curves
-  - Clean comparison of two classifiers with clearly distinguishable colors (colorblind-safe)
-  - Proper inclusion of random classifier baseline with dashed styling
-  - Average Precision (AP) scores embedded directly in legend labels for easy reference
-  - Well-configured legend with appropriate font sizes and symbol styling
-  - Proper use of Altair layering for combining PR curves with baseline
+  - Perfect visual quality and palette compliance across both light and dark themes
+  - Excellent specification compliance with appropriate stepped-line style for threshold-based
+    curves
+  - High-quality, reproducible code with clear KISS structure and explicit seed setting
+  - Strong idiomatic Altair usage with sophisticated legend customization and proper
+    layer composition
+  - Clean, realistic data with correct AP calculations and baseline representing random
+    classifier performance
+  - Precise theme-adaptive chrome implementation with no dark-on-dark or light-on-light
+    text failures
   weaknesses:
-  - Axis labels could be more descriptive (e.g., "Recall (Sensitivity)" and "Precision
-    (PPV)") to aid interpretation
-  image_description: The plot displays a precision-recall curve comparing two classifiers
-    on a 16:9 canvas. A blue stepped line represents "Logistic Regression (AP = 0.634)"
-    and a yellow/gold stepped line represents "Random Forest (AP = 0.752)". A gray
-    dashed horizontal baseline at precision = 0.30 indicates the random classifier
-    performance. The X-axis is labeled "Recall" (0.00 to 1.00) and the Y-axis is labeled
-    "Precision" (0.00 to 1.00). The title "precision-recall · altair · pyplots.ai"
-    appears at the top center. The legend is well-positioned in the bottom-right corner,
-    showing all three line types with their respective colors and AP scores.
+  - Design sophistication is competent but conventional—relies on well-configured
+    defaults rather than distinctive aesthetic choices
+  - Limited visual storytelling—plot displays data clearly but does not emphasize
+    insights or guide interpretation of model comparison
+  - Legend positioning and visual hierarchy could be refined to create stronger emphasis
+    on key findings
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1, matching specification requirement
+      Chrome: Title "precision-recall · altair · anyplot.ai" in dark text; X-axis "Recall (True Positive Rate)" and Y-axis "Precision (Positive Predictive Value)" clearly labeled; tick labels 0.00-1.00 all readable; grid lines subtle at 10% opacity
+      Data: Green curve (#009E73) for Logistic Regression (AP=0.634), orange curve (#D55E00) for Random Forest (AP=0.752) both rendered with step-after interpolation; blue dashed baseline (#0072B2) at precision=0.30; legend in bottom-right with white background
+      Legibility verdict: PASS - All text perfectly readable with high contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17, matching specification requirement
+      Chrome: Title in light text (F0EFE8); axis labels and ticks in light color; grid lines light at 10% opacity; legend with light text on dark elevated background
+      Data: Green curve (#009E73) and orange curve (#D55E00) are IDENTICAL to light render, confirming theme-independent data colors; blue dashed baseline (#0072B2) matches light render exactly; only chrome flips between themes
+      Legibility verdict: PASS - All text clearly readable with proper light-on-dark contrast; no dark-on-dark failures; data colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Zero overlapping elements; clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stepped lines are clearly visible with appropriate stroke width (4px
-          for curves, 3px for baseline)
+        comment: Lines optimally visible with proper stroke widths
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe and distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, legend positioned appropriately in bottom-right
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: '"Recall" and "Precision" lack units or context (could be "Recall
-          (True Positive Rate)" etc.)'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid with 0.3 opacity, legend well-placed with clear entries
+        comment: CVD-safe Okabe-Ito palette with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 canvas with balanced margins and generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with full context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Perfect Okabe-Ito compliance; correct theme backgrounds; data colors
+          identical across themes
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful custom legend styling and intentional design; above defaults
+          but not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, refined legend; room for additional
+          polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Displays data clearly but lacks visual emphasis or interpretation
+          of insights
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct precision-recall curve
+        comment: Correct precision-recall curve with stepped-line style
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Recall on X-axis, Precision on Y-axis as expected
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: AP scores displayed, baseline reference line present, stepped line
-          style used
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: dual curves, AP scores, baseline reference,
+          stepped interpolation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes show 0-1 range appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Recall, Y=Precision; correct axes [0,1]; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify models and their AP scores
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "precision-recall · altair · pyplots.ai"
+        comment: Title format correct; legend labels show model names with AP values
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two classifiers with different performance levels, baseline,
-          AP scores
+        comment: Shows distinct classifier performance with baseline; full range of
+          precision values
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Binary classification scenario is plausible, simulates 30% positive
-          class ratio
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Precision/recall values in valid 0-1 range with realistic AP scores
+        comment: Realistic ML classifiers; neutral binary classification scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: AP values calculated correctly; baseline at 0.30 realistic; all proportions
+          accurate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,41 +179,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save structure
+        comment: Clean linear flow; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses altair, numpy, pandas - all necessary
+        comment: Only altair, numpy, pandas, os, sys imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.trapezoid which is the newer name (was np.trapz), but this
-          is correct for Python 3.13
+        comment: Pythonic and appropriately complex; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.html)
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct plot-{THEME}.png and .html output with scale_factor=3.0
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Uses Altair declarative grammar well: layered charts, step-after
-          interpolation, custom color/stroke-dash scales, proper legend configuration'
+        comment: Expert use of Altair high-level API with proper layer composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of layer composition, custom legend, and StrokeDash encoding
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
