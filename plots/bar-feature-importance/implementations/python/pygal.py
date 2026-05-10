@@ -1,9 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-10
 """
 
+import colorsys
 import os
 import sys
 
@@ -51,18 +52,21 @@ sorted_pairs = sorted(zip(features, importances, strict=True), key=lambda x: x[1
 sorted_features = [p[0] for p in sorted_pairs]
 sorted_importances = [p[1] for p in sorted_pairs]
 
-# Color gradient: low to high importance using viridis-inspired palette
+# Color gradient: low to high importance using HSL-based interpolation (more perceptually uniform)
 min_imp = min(sorted_importances)
 max_imp = max(sorted_importances)
 
 colors_list = []
 for imp in sorted_importances:
     ratio = (imp - min_imp) / (max_imp - min_imp) if max_imp > min_imp else 0.5
-    # Interpolate from light (220, 230, 240) to dark (32, 158, 115) - brand green
-    r = int(220 - ratio * (220 - 32))
-    g = int(230 - ratio * (230 - 158))
-    b = int(240 - ratio * (240 - 115))
-    colors_list.append(f"#{r:02x}{g:02x}{b:02x}")
+    # HSL interpolation: light cyan (h=190, s=35%, l=75%) → brand green (#009E73: h=160, s=100%, l=23%)
+    h_start, s_start, light_start = 190, 0.35, 0.75
+    h_end, s_end, light_end = 160, 1.0, 0.23
+    h = (h_start + ratio * (h_end - h_start)) / 360
+    s = s_start + ratio * (s_end - s_start)
+    light = light_start + ratio * (light_end - light_start)
+    r, g, b = colorsys.hls_to_rgb(h, light, s)
+    colors_list.append(f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}")
 
 # Custom style for large canvas
 custom_style = Style(
@@ -96,7 +100,7 @@ chart = pygal.HorizontalBar(
     value_formatter=lambda x: f"{x:.3f}",
     range=(0, max_imp * 1.1),
     margin=80,
-    spacing=12,
+    spacing=6,
     truncate_label=-1,
 )
 
@@ -104,10 +108,7 @@ chart = pygal.HorizontalBar(
 chart.x_labels = sorted_features
 
 # Add data with per-bar colors
-bar_data = [
-    {"value": imp, "color": color}
-    for imp, color in zip(sorted_importances, colors_list, strict=True)
-]
+bar_data = [{"value": imp, "color": color} for imp, color in zip(sorted_importances, colors_list, strict=True)]
 chart.add("Importance", bar_data)
 
 # Save outputs for both themes
