@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:37:53Z'
-updated: '2026-05-10T12:45:55Z'
+updated: '2026-05-10T12:53:57Z'
 generated_by: claude-haiku
 workflow_run: 25628927485
 issue: 2334
@@ -12,90 +12,84 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouett
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.html
-quality_score: 76
+quality_score: 75
 review:
   strengths:
-  - Correct silhouette plot implementation with proper cluster grouping and sorting
-  - Clear horizontal bar layout effectively shows individual silhouette scores
-  - Average silhouette reference line with annotation provides useful context
-  - Strong data quality using iris dataset with realistic clustering scenario
-  - Clean, reproducible code with deterministic seed
+  - Correct silhouette plot implementation with all required features
+  - Clear data visualization with readable text in both light and dark themes
+  - Proper use of horizontal bars with cluster grouping and average annotations
+  - Realistic data source (iris dataset) demonstrating valid clustering scenario
+  - Explicit font sizing for all text elements ensures readability at high resolution
   weaknesses:
-  - 'Color palette uses Python brand colors (#306998, #FFD43B, #E34C26) instead of
-    required Okabe-Ito; first series must be #009E73'
-  - No theme-adaptive configuration - missing background, grid, text color adaptation
-    for light/dark themes
-  - Dark render has dark-on-dark contrast issues with grid lines barely visible on
-    near-black background
-  - Output files saved as plot.png instead of theme-specific plot-light.png and plot-dark.png
-  - Generic aesthetic design with no custom styling sophistication beyond library
-    defaults
+  - 'Uses custom colors instead of Okabe-Ito palette — first series must be #009E73'
+  - No theme-adaptive implementation — code doesn't read ANYPLOT_THEME or set theme
+    tokens
+  - Saves to plot.png instead of plot-{THEME}.png
+  - Minimal design sophistication with generic defaults
+  - 'Title contains typo: pyplots.ai instead of anyplot.ai'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 - correct for light theme
-      Chrome: Title "silhouette-basic · altair · anyplot.ai" is clearly visible in dark text (28px). X-axis label "Silhouette Coefficient" is readable (22px). Tick labels (18px) are clear and well-spaced.
-      Data: Three clusters shown as horizontal bars in blue, orange, and green. Bars range from -0.20 to 1.00 silhouette coefficient. Average silhouette line (dashed red) at 0.553 with annotation. Legend shows clusters 0, 1, 2 on the right side.
-      Legibility verdict: PASS - All text is readable and well-sized for the large canvas
+      Background: Warm off-white (#FAF8F1), correct theme surface color
+      Chrome: Title "silhouette-basic · altair · anyplot.ai" (28px), x-axis label "Silhouette Coefficient" (22px), tick labels (18px) — all dark text on light background
+      Data: Three clusters in blue (#306998), orange (#FFD43B), green (#E34C26) with horizontal silhouette bars; red dashed line at average score; legend with cluster labels
+      Legibility verdict: PASS — all text clearly readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 - correct for dark theme
-      Chrome: Title and axis labels are visible in light text. However, grid lines and background elements appear very dark, creating poor contrast. The dark-on-dark rendering makes cluster separations and grid lines nearly invisible.
-      Data: The three cluster colors (blue, orange, green) are identical to the light render - data colors are correctly preserved across themes. The average line and annotation remain visible with the red color adapting appropriately.
-      Legibility verdict: PARTIAL FAIL - Title and main labels readable, but grid/background contrast issues reduce overall clarity. Dark grid lines on dark background create visibility problems.
-
-    **Critical Finding:** The dark render fails the theme-readability check due to dark-on-dark contrast on grid elements and cluster separations. Additionally, the color palette does not match Okabe-Ito requirements.
+      Background: Dark near-black (#1A1A17), correct theme surface color
+      Chrome: Title, axis labels, and tick labels appear in light text colors; legend present with light text
+      Data: Same colors as light render (blue, orange, green) — data colors correctly identical across themes; red line visible
+      Legibility verdict: PASS — all text readable in both renders
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Text readable in light render, but dark render grid contrast issues
-          reduce this score. Font sizes explicitly set but theme adaptation incomplete.
+        passed: true
+        comment: 'Font sizes explicitly set: title 28px, labels 22px, ticks 18px;
+          all text readable in both light and dark themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all text fully readable
+        comment: No overlapping text or elements visible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars visible and distinct, markers perfectly adapted to data
+        comment: All silhouette bars clearly visible and distinguishable by color
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Colors distinguishable between series
+        passed: false
+        comment: Distinct colors but palette is non-compliant with Okabe-Ito standard
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good layout with balanced margins, plot fills appropriate canvas
-          area
+        comment: Good proportions, proper spacing, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Silhouette Coefficient)
+        comment: Descriptive axis label with quantity name and clear title
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses Python brand colors (#306998, #FFD43B, #E34C26) instead
-          of Okabe-Ito. First series must be #009E73. No theme-adaptive configuration.'
+        comment: 'CRITICAL: First series #306998 (Python blue) instead of #009E73;
+          uses custom colors instead of Okabe-Ito; no theme-adaptive chrome implementation'
     design_excellence:
-      score: 6
+      score: 7
       max: 20
       items:
       - id: DE-01
@@ -103,22 +97,21 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic default styling using Python brand colors instead of thoughtful
-          design choices
+        comment: Generic color choices not aligned with design system; no intentional
+          hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization, follows library defaults without special attention
-          to polish
+        comment: Library defaults with minimal customization; no visible polish
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy, emphasis, or storytelling
-          elements
+        comment: Average line provides some guidance but plot is primarily a data
+          display without strong visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +121,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct silhouette plot type with all subtypes present
+        comment: Correct silhouette plot implementation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: horizontal bars, cluster grouping, average
-          line annotation'
+        comment: 'All features present: horizontal bars, cluster grouping, cluster
+          averages, overall average line annotation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Silhouette scores correctly mapped to x-axis, samples to y-axis
+        comment: 'Correct mapping: silhouette values to x-axis, clusters to colors,
+          samples to y-positions'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels clear and properly positioned
+        comment: Title and legend present with correct format; image shows anyplot.ai
+          (code has typo)
     data_quality:
       score: 15
       max: 15
@@ -157,21 +152,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of silhouette visualization including positive
-          and negative scores
+        comment: 'Shows all silhouette plot aspects: positive/negative values, varying
+          cluster quality, mixed assignments'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Uses iris dataset - recognized, real-world dataset for clustering
-          demonstration
+        comment: Uses iris dataset, a real and classic ML dataset; demonstrates realistic
+          clustering scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Silhouette values correctly range from -0.20 to 1.00, factually correct
+        comment: Correct silhouette coefficient range (-1 to 1), sensible sample/cluster
+          counts
     code_quality:
       score: 8
       max: 10
@@ -181,59 +177,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data loading → clustering → plot
-          creation → save'
+        comment: 'Linear flow: imports → data loading → clustering → visualization
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) and KMeans random_state for deterministic
-          results
+        comment: Deterministic with random_state=42 throughout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (altair, numpy, pandas, sklearn)
+        comment: 'All imports used: altair, numpy, pandas, sklearn modules'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity for visualization
+        passed: false
+        comment: Generally clean but lacks theme-adaptive implementation as prescribed
+          in library guide
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as 'plot.png' instead of theme-specific 'plot-light.png' and
-          'plot-dark.png'
+        comment: Saves as plot.png instead of plot-{THEME}.png; should use environment
+          variable for theming
     library_mastery:
-      score: 7
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 2
         max: 5
         passed: false
-        comment: Uses altair's mark_rect, encoding, and layering correctly but doesn't
-          leverage theme-adaptive configuration available in altair
+        comment: Correct altair syntax but misses prescribed theme-adaptation pattern
+          from library guide (configure_axis, configure_view with theme tokens)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses layer composition (mark_rect + mark_rule + mark_text) but application
-          is fairly generic
+        comment: Generic usage; no distinctive altair features leveraged
+    score_caps:
+      applied: true
+      reason: DE-01 ≤ 2 AND DE-02 ≤ 2 (generic + no visual refinement)
+      cap_value: 75
+      final_score: 75
   verdict: REJECTED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   patterns:
   - dataset-loading
   - iteration-over-groups
