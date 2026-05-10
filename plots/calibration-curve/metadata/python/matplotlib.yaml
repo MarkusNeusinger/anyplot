@@ -1,171 +1,194 @@
 library: matplotlib
+language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:38:04Z'
-updated: '2025-12-26T19:44:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528201914
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/matplotlib/plot.png
-preview_html: null
+updated: '2026-05-10T10:48:24Z'
+generated_by: claude-haiku
+workflow_run: 25626604745
+issue: 2331
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - binning
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent multi-model comparison showing well-calibrated, overconfident, and underconfident
-    classifiers
-  - Includes histogram subplot as suggested in spec for showing prediction distributions
-  - Brier scores integrated into legend for quick comparison
-  - Clean separation of calibration curve calculation logic
-  - Colorblind-friendly palette with distinct marker shapes for each model
-  - Professional layout with appropriate subplot height ratios
+  - Perfect theme compliance - both light and dark renders maintain full readability
+    with proper contrast flipping, no dark-on-dark or light-on-light failures
+  - Comprehensive spec adherence - all required features present (diagonal reference
+    line, 10 bins, confidence bands, histogram, Brier scores, multi-model comparison)
+  - Strong visual hierarchy - 3:1 height ratio between main calibration plot and histogram,
+    clear data storytelling through color (Okabe-Ito palette) and marker shapes (circles,
+    squares, triangles)
+  - Clean, maintainable code with reproducible seed and idiomatic matplotlib patterns
   weaknesses:
-  - Axis labels lack units or additional context
-  - Could use more distinctive matplotlib features like fill_between for confidence
-    bands
-  image_description: The plot consists of two vertically stacked subplots. The main
-    upper subplot shows three calibration curves against a dashed black diagonal reference
-    line representing perfect calibration. The "Well-Calibrated" model (blue line
-    with circle markers) follows closely along the diagonal. The "Overconfident" model
-    (yellow line with square markers) shows a steep S-curve pattern, jumping sharply
-    from 0 to 1 around the 0.4-0.6 probability range. The "Underconfident" model (pink/magenta
-    line with triangle markers) shows a flatter curve. Each model displays its Brier
-    score in the legend (0.101, 0.020, 0.181 respectively). The lower subplot shows
-    a histogram of predicted probability distributions for all three models, clearly
-    showing that the overconfident model clusters predictions near 0 and 1, while
-    the underconfident model clusters near 0.5, and the well-calibrated model has
-    a more spread distribution. All text is clearly readable, colors are distinct
-    and colorblind-friendly, and the layout is well-balanced.
+  - 'Minor: Library mastery could showcase more distinctive matplotlib techniques
+    beyond standard fill_between and legend customization'
+  - 'Minor: Design excellence is professional but not particularly innovative - uses
+    established best practices rather than introducing novel visual approaches'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper contrast
+      Chrome: Title "calibration-curve · matplotlib · anyplot.ai" is dark and clearly readable. Axis labels ("Mean Predicted Probability", "Fraction of Positives", "Predicted Probability", "Count") are dark and legible. Tick labels are in soft gray-brown tone and fully readable against light background. No text is light-on-light.
+      Data: Three calibration curves shown with circles (green #009E73), squares (orange #D55E00), and triangles (blue #0072B2). Confidence bands have appropriate alpha blending. Dashed diagonal reference line is subtle but visible. Legend has elevated background (#FFFDF6) with dark text.
+      Legibility verdict: PASS - all elements readable, proper contrast maintained throughout light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper contrast
+      Chrome: Title is light (#F0EFE8) and clearly readable. Axis labels are light and legible. Tick labels are in light soft tone (#B8B7B0) and fully readable against dark background. No dark-on-dark failures detected.
+      Data: Colors are identical to light render (green, orange, blue markers with same confidence bands and dashed reference line). Histogram shows same color coding. All data elements distinguish clearly from the dark background. Legend has dark elevated background (#242420) with light text.
+      Legibility verdict: PASS - all text readable with proper light-on-dark contrast, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, legend at
-          16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements anywhere
+        comment: All text explicitly sized and colored for both themes - title 24pt,
+          labels 20pt, ticks 16pt. Fully readable in both light and dark renders.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements. Histogram labels and calibration
+          plot labels have clear space.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at size 12 with linewidth 3 are clearly visible; could be
-          slightly larger but acceptable
+        comment: Markers (circles, squares, triangles) clearly visible at appropriate
+          sizes. Confidence bands with alpha=0.2 are subtle but visible. Lines are
+          thick enough (linewidth=3).
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and pink/magenta are distinguishable for colorblind
-          users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Two-subplot layout with 3:1 height ratio uses canvas effectively
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("Mean Predicted Probability", "Fraction of
-          Positives", "Count") but lack units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid at alpha=0.3 with dashed style is subtle, legends well-placed
+        comment: Okabe-Ito palette is CVD-safe. Visual distinction via both color
+          AND marker shape (circles/squares/triangles) provides redundancy beyond
+          color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with gridspec height_ratios=[3,1]. Nothing
+          cut off. Tight_layout and bbox_inches='tight' ensure proper spacing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''calibration-curve · matplotlib · anyplot.ai''.
+          Axis labels descriptive with units (''Mean Predicted Probability (0 to 1)'',
+          ''Fraction of Positives (0 to 1)'', etc.).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Subsequent series follow Okabe-Ito
+          order (#D55E00, #0072B2). Backgrounds correct (#FAF8F1 light, #1A1A17 dark).
+          Both renders theme-correct with chrome flipping while data colors remain
+          constant.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Professional polish with intentional design choices: custom marker
+          shapes for visual distinction, confidence bands for uncertainty, careful
+          color palette. Legend styling with elevated background shows thought. Lacks
+          some innovation.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top and right spines removed (L-shaped frame). Grid is subtle (y-axis
+          only, alpha=0.1). Generous whitespace. Legend frames properly styled. Minor
+          room for additional refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: main plot with three calibration curves
+          + histogram. Diagonal reference line guides viewer to identify deviations.
+          Color + shape coding creates immediate distinction. Brier scores add quantitative
+          context.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct calibration/reliability diagram with diagonal reference
+        comment: Correct calibration curve / reliability diagram showing predicted
+          probability vs observed frequency.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows mean predicted probability, Y-axis shows fraction of
-          positives
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has diagonal reference line, 10 bins, Brier scores displayed, histogram
-          subplot for prediction distribution, multiple model comparison with distinct
-          colors and legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: diagonal reference line, 10 bins with
+          equal intervals, confidence bands, histogram of predicted probabilities,
+          Brier score display, multi-model comparison.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes range from 0 to 1 as appropriate for probabilities
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X/Y mapping correct: X=mean predicted probability (0-1), Y=fraction
+          of positives (0-1). Axes show all data within proper bounds.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legends correctly identify each model with Brier scores
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "calibration-curve · matplotlib · pyplots.ai"
+        comment: Title format correct. Legend labels clearly identify models (Well-Calibrated,
+          Overconfident, Underconfident) with Brier scores.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows well-calibrated, overconfident, and underconfident models demonstrating
-          key calibration patterns; histogram clearly shows distribution differences
+        comment: 'Shows all aspects of calibration curve visualization: binned probabilities
+          with error bands, reference diagonal, histogram of probability distribution,
+          multiple calibration states.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Simulated classifier outputs are plausible; using 35% positive rate
-          is realistic for imbalanced classification
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 2000 samples, probabilities correctly bounded 0-1, Brier scores in
-          realistic range
+        comment: 2000 samples is within recommended 500-10000 range. Three distinct
+          scenarios (well-calibrated, overconfident, underconfident) are all plausible
+          and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Probability scale 0-1 is correct for this domain. 10 bins with equal
+          probability intervals (0.0-0.1, etc.) as specified.
     code_quality:
       score: 10
       max: 10
@@ -175,41 +198,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure, no functions or classes
+        comment: Straightforward procedural code with no unnecessary functions or
+          classes. Data generation and plotting are direct and readable.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) ensuring deterministic output across runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports matplotlib.pyplot and numpy, both used
+        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy. All imports
+          used.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: All APIs are current
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Uses vectorized numpy operations efficiently. No fake UI or unnecessary
+          complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with f-string. Uses current API with no
+          bare 'plot.png' or deprecated methods.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses matplotlib correctly with subplots and gridspec_kw for height
-          ratios, but doesn't leverage more distinctive matplotlib features like fill_between
-          for confidence intervals or custom tick formatting
-  verdict: APPROVED
+        passed: true
+        comment: Proper Axes methods (ax.plot, ax.fill_between, ax.hist). Correct
+          figure creation with facecolor. Theme environment variable properly handled.
+          Fairly standard patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of fill_between for confidence bands, gridspec_kw for layout
+          control, and legend frame customization. Techniques are solid but somewhat
+          standard for matplotlib.
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
