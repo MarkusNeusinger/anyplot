@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lift-curve: Model Lift Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-10
@@ -55,7 +55,7 @@ custom_style = Style(
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
+    foreground_subtle=INK_SOFT,
     colors=OKABE_ITO,
     title_font_size=28,
     label_font_size=22,
