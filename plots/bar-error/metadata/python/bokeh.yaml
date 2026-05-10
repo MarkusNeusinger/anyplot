@@ -1,162 +1,163 @@
 library: bokeh
+language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:25Z'
-updated: '2025-12-27T19:29:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282050
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-error/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-error/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - edge-highlighting
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-10T14:58:47Z'
+generated_by: claude-haiku
+workflow_run: 25631490410
+issue: 2376
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent use of Bokeh Whisker model with TeeHead for professional error bar caps
-  - Clean well-structured code following KISS principles
-  - Proper font sizing scaled for 4800x2700 canvas
-  - Realistic business data scenario with appropriate variation
-  - Correct title format and descriptive axis labels with units
-  - Both PNG and HTML outputs generated
+  - Perfect spec compliance — all required features correctly implemented
+  - Excellent theme adaptation with proper color tokens (both renders fully readable)
+  - Proper error bar visualization using bokeh's Whisker and TeeHead (library-idiomatic)
+  - Clean code structure with deterministic data seeding
+  - Correct Okabe-Ito brand color (#009E73) and theme backgrounds
+  - Well-sized typography for large canvas (28pt title, 22pt labels, 18pt ticks)
   weaknesses:
-  - Error bars annotation appears partially cut off at right edge
-  - Only symmetric error bars shown; spec mentions asymmetric errors as a feature
-  - Grid alpha could be more subtle
-  image_description: 'The plot displays a vertical bar chart with 5 product categories
-    (Electronics, Clothing, Home & Garden, Sports, Books) on the x-axis and Quarterly
-    Revenue in millions on the y-axis. Bars are rendered in a medium blue color (#306998)
-    with dark outlines. Each bar has black error bars with visible horizontal caps
-    (TeeHead style) at both ends, representing ±1 standard deviation. The title "bar-error
-    · bokeh · pyplots.ai" appears in the top-left. An annotation "Error bars: ±1 SD"
-    is visible in the top-right corner. The background is light gray (#fafafa) with
-    subtle dashed horizontal grid lines. Y-axis starts at 0 and extends to ~108. All
-    text is legible and well-sized.'
+  - 'Design could be more refined: consider removing top/right spines for cleaner
+    aesthetic'
+  - No special visual hierarchy or emphasis — fairly generic styling
+  - Could enhance annotation/legend positioning for better data communication
+  - Limited use of bokeh's interactive features (no hover tooltips or custom styling)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — exactly as specified
+      Chrome: Title "bar-error · bokeh · anyplot.ai" in dark text (#1A1A17); x-axis label "Product Category" and y-axis label "Quarterly Revenue ($ millions)" both clearly readable; tick labels in soft gray (INK_SOFT #4A4A44) are visible; y-axis grid subtle and appropriate
+      Data: 5 bars representing product categories in brand green (#009E73) with fill alpha 0.85; error bars with horizontal TeeHead caps extending symmetrically from each bar in soft gray; annotation "Error bars represent ±1 Standard Deviation" clearly visible
+      Legibility verdict: PASS — All text elements fully readable against light background, no light-on-light issues, bars and error bars clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — exactly as specified
+      Chrome: Title and axis labels now in light text (INK #F0EFE8); tick labels in lighter gray (INK_SOFT #B8B7B0) — all fully readable against dark surface; y-axis grid remains subtle and visible; annotation text similarly adapted
+      Data: Bars in identical brand green (#009E73) as light render — perfect color preservation; error bars and caps in lighter shade of INK_SOFT (#B8B7B0) remain clearly visible and distinct from dark background
+      Legibility verdict: PASS — No dark-on-dark failures, all text readable, data colors identical to light render, only chrome properly flipped; brand green maintains visibility and legibility on both surfaces
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 42pt, axis labels at 32pt, tick labels at 24-26pt - all
-          clearly readable
+        comment: All text explicitly sized and colored; fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean layout with 5 categories; no crowding or text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized, error bars with line_width=5 and TeeHead size=40
-          are clearly visible
+        comment: Bars and error bars all clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but right margin slightly large due to annotation
-          positioning
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Product Category" and "Quarterly Revenue ($ millions)" - descriptive
-          with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Uses Okabe-Ito #009E73 (CVD-safe); no red-green sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; nothing cut off; proper whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend present (not strictly needed), but annotation for error
-          bar meaning is cut off at the edge
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling without distinctive refinements
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; no spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Functional but no special visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct bar chart with error bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, errors correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars have visible caps, annotation explains what they represent
-      - id: SC-04
-        name: Data Range
+        comment: All spec features implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at 0, shows all data including error bar extensions
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=categories, Y=values; error bounds correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Annotation correctly states "±1 SD"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bar-error · bokeh · pyplots.ai"
+        comment: Title format correct; annotation present
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows variation in bar heights and different error magnitudes, but
-          all errors are symmetric (spec mentions asymmetric errors as a feature)
+        comment: All bar-error plot aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Quarterly revenue by product category is a realistic business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Revenue values ($35-85M) and standard deviations ($4-9M) are realistic
+        comment: Revenue with ±1 SD is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible domain values with proportional errors
     code_quality:
       score: 10
       max: 10
@@ -166,40 +167,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: No unnecessary functions; straightforward
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs as plot-{THEME}.png/.html
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Whisker with TeeHead for error bars, Label
-          for annotation - good Bokeh idioms but could leverage more interactive features
+        comment: Proper ColumnDataSource; idiomatic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses Whisker/TeeHead but limited advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling: []
