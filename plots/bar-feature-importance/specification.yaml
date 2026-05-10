@@ -6,7 +6,7 @@ title: Feature Importance Bar Chart
 
 # Specification tracking
 created: 2025-12-26T17:28:42Z
-updated: null
+updated: 2026-05-10T00:56:15Z
 issue: 2276
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - horizontal
   data_type:
     - numeric
     - categorical
@@ -23,6 +22,7 @@ tags:
     - general
     - statistics
     - technology
+    - machine-learning
   features:
     - horizontal
     - sorted
