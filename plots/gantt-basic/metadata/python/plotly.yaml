@@ -1,172 +1,177 @@
 library: plotly
+language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:23:15Z'
-updated: '2025-12-27T19:31:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543281347
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/plotly/plot.html
+updated: '2026-05-10T22:35:06Z'
+generated_by: claude-haiku
+workflow_run: 25641501093
+issue: 2377
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - custom-legend
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
 review:
   strengths:
-  - Excellent use of plotly.express px.timeline for Gantt chart creation - the right
-    tool for the job
-  - Clear visual hierarchy with tasks sorted by start date and y-axis reversed for
-    natural top-to-bottom reading
-  - Today marker line with annotation provides practical project tracking reference
-  - Color-coded categories with custom colorblind-safe palette
-  - Clean implementation with proper font sizing for 4800x2700 output
-  - Realistic software development project scenario with believable task dependencies
-    and overlaps
-  - Both PNG and HTML exports provided, leveraging Plotly interactive capabilities
+  - Clean, idiomatic use of Plotly's timeline function for Gantt charts
+  - Excellent theme-adaptive design with perfect legibility in both light and dark
+    renders
+  - Well-structured realistic project timeline data that demonstrates Gantt chart
+    purpose
+  - Proper Okabe-Ito palette compliance with correct color ordering
+  - Custom 'Today' annotation adds valuable temporal context
+  - Professional layout with appropriate margins, font sizing, and spacing
+  - Correct output format with both PNG and HTML artifacts
   weaknesses:
-  - Grid lines are very subtle (alpha=0.1) - increasing to 0.2-0.3 would improve readability
-  - No hover customization to show task details in interactive version
-  image_description: 'The plot displays a Gantt chart titled "Software Development
-    Project · gantt-basic · plotly · pyplots.ai" with 12 horizontal bars representing
-    project tasks. The x-axis shows "Timeline (2025)" with dates from Jan 12 to Apr
-    20, formatted as "Mon DD". The y-axis is labeled "Project Tasks" with task names
-    including Requirements Analysis, System Design, Database Design, UI/UX Design,
-    Backend Development, Frontend Development, API Integration, Unit Testing, Integration
-    Testing, User Acceptance Testing, Documentation, and Deployment & Launch. Five
-    categories are color-coded: Planning (dark blue #306998), Design (yellow #FFD43B),
-    Development (teal #4ECDC4), Testing (coral/salmon #FF6B6B), and Deployment (light
-    green #95E1A3). A red dashed vertical line labeled "Today" marks Feb 20. The legend
-    is positioned horizontally at the top. Tasks are sorted by start date with overlapping
-    bars clearly showing concurrent activities.'
+  - Library Mastery score limited by conservative use of Plotly—no advanced interactive
+    features beyond defaults (custom hover templates, range sliders, cross-filter
+    callbacks could enhance visualization)
+  - Design Excellence reflects functional but standard Plotly styling—could be elevated
+    with refined typography hierarchy or distinctive visual polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - exactly as specified, not pure white.
+      Chrome: Title "Software Development Project · gantt-basic · plotly · anyplot.ai" clearly visible in dark text. Axis labels "Timeline (2025)" and "Project Tasks" readable. Tick labels (dates and task names) in dark color fully readable. Legend positioned horizontally below title with category labels. All text is legible.
+      Data: 12 horizontal bars color-coded by category using Okabe-Ito palette (Planning: #009E73 green, Design: #D55E00 orange, Development: #0072B2 blue, Testing: #CC79A7 purple, Deployment: #E69F00 yellow). Bars have white edges for definition. Vertical dashed line marked "Today" at Feb 20 with annotation. Date range Jan 12 - Apr 20, 2025. Grid lines subtle.
+      Legibility verdict: PASS - All text is clearly readable against light background with no contrast issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - exactly as specified, not pure black.
+      Chrome: Title visible in light text (#F0EFE8). Axis labels visible in light text. Tick labels in secondary light color (#B8B7B0) fully readable - NO dark-on-dark issues. Legend background (#242420) provides good contrast with legend text. All text legible.
+      Data: All bars identical colors to light render (Okabe-Ito palette unchanged). White bar edges visible. "Today" dashed line visible in light gray. Grid lines subtle and visible on dark background.
+      Legibility verdict: PASS - All text is clearly readable against dark background. No "dark-on-dark" text failures. Brand green (#009E73) is visible and readable on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 16-18pt - all
-          perfectly readable
+        comment: Title 28px, axis labels 22px, ticks 18px all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; task names have adequate spacing; legend positioned
-          above plot
+        comment: Task names and labels don't overlap; adequate left margin (220px)
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Horizontal bars well-sized with 0.3 bargap; white border lines provide
-          good separation
+        comment: All bars visible with good color distinction; appropriately sized
+          for canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Five distinct colors with good contrast; avoids pure red-green pairing
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas; left margin accommodates task names; slight extra
-          space on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Timeline (2025)" and "Project Tasks" are descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (colorblind-safe); no red-green sole signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format (4800×2700) appropriate; good margins; nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend well placed; however grid alpha=0.1 is very subtle (could
-          be slightly more visible)
+        comment: Title with spec format; axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; follows Okabe-Ito order; correct backgrounds
+          both themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional color coding and layout; 'Today' annotation intentional;
+          relies on Plotly defaults without extensive custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; legend styling with border; bar edges defined; good
+          spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear phase progression through color; 'Today' reference provides
+          context; logical ordering guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Gantt chart using px.timeline
+        comment: Correct Gantt chart; horizontal bars with duration
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Start/end dates on x-axis, tasks on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has task names, start/end dates, category color-coding, and "today"
-          marker line
-      - id: SC-04
-        name: Data Range
+        comment: Task names, dates, timeline, categories, 'Today' marker all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All tasks visible with proper axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: timeline; Y: task names; color: category; full range shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 5 categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{descriptive} · {spec-id} · {library} · pyplots.ai" format
+        comment: Title includes spec format; legend shows all categories correctly
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping tasks, multiple categories, varying durations;
-          could show more variation in task overlaps
+        comment: 'Demonstrates all Gantt aspects: durations, overlaps, variety, grouping,
+          current date'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software development project is a perfect, realistic use case for
-          Gantt charts
+        comment: Software dev project; logical phase sequence; realistic dates; neutral
+          domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Task durations (1-6 weeks) and timeline (Jan-Apr) are realistic;
-          some durations could be more varied
+        comment: 12 tasks (within 5-30); realistic durations (~2 weeks); 4.5 month
+          project reasonable
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,40 +179,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure with no functions/classes
+        comment: No unnecessary functions; direct px.timeline() usage
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded dates and task names)
+        comment: Deterministic (fixed dates, no randomization)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only datetime, pandas, and plotly.express used
+        comment: All imports used (os, datetime, pandas, plotly.express)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake features; idiomatic Plotly patterns
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotly.express API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: true
-        comment: Saves as plot.png and plot.html (both appropriate)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: px.timeline() canonical function; high-level API; proper color_discrete_map
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses px.timeline which is ideal for Gantt charts; includes interactive
-          HTML export; could leverage hover customization more
+        comment: Uses custom fig.add_shape/add_annotation; lacks advanced features
+          like custom hover, range sliders, callbacks
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
