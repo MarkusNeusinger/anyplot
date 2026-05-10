@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-error: Bar Chart with Error Bars
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-10
@@ -21,7 +21,6 @@ from lets_plot import (
     labs,
     scale_fill_manual,
     theme,
-    theme_minimal,
 )
 
 
@@ -33,8 +32,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "rgba(26,26,23,0.08)" if THEME == "light" else "rgba(240,239,232,0.08)"
 
-# Okabe-Ito palette
+# Okabe-Ito palette - first series is brand green
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data: A/B test results showing conversion rates with 95% CI
@@ -52,23 +52,22 @@ df = pd.DataFrame(
     }
 )
 
-# Create bar chart with error bars
+# Create bar chart with error bars and enhanced design
 plot = (
     ggplot(df, aes(x="category", y="value", fill="category"))
-    + geom_bar(stat="identity", width=0.7, show_legend=False)
-    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.25, size=1.5, color=INK_SOFT)
+    + geom_bar(stat="identity", width=0.68, show_legend=False, alpha=0.92)
+    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.23, size=1.3, color=INK_SOFT, alpha=0.85)
     + scale_fill_manual(values=OKABE_ITO)
     + labs(
         title="bar-error · letsplot · anyplot.ai",
         x="Test Group",
         y="Conversion Rate (%)",
-        caption="Error bars show 95% CI",
+        caption="Error bars show 95% CI | Interactive HTML export available",
     )
-    + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_major_y=element_line(color=GRID_COLOR, size=0.22),
         panel_grid_major_x=element_line(color="transparent"),
         panel_grid_minor=element_line(color="transparent"),
         axis_title=element_text(size=20, color=INK),
