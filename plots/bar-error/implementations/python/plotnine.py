@@ -1,23 +1,32 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-error: Bar Chart with Error Bars
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-10
 """
 
+import os
+
 import pandas as pd
 from plotnine import (
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_col,
     geom_errorbar,
     ggplot,
     labs,
-    scale_fill_manual,
     theme,
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data - Survey results showing average satisfaction scores with 95% CI
 categories = ["Product Quality", "Customer Service", "Delivery Speed", "Price Value", "Website UX", "Return Policy"]
@@ -39,9 +48,8 @@ df["category"] = pd.Categorical(df["category"], categories=categories, ordered=T
 # Plot
 plot = (
     ggplot(df, aes(x="category", y="value"))
-    + geom_col(aes(fill="category"), width=0.7, show_legend=False)
-    + geom_errorbar(aes(ymin="error_lower", ymax="error_upper"), width=0.25, size=1.2, color="#333333")
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#306998", "#FFD43B", "#306998", "#FFD43B"])
+    + geom_col(fill=BRAND, width=0.7)
+    + geom_errorbar(aes(ymin="error_lower", ymax="error_upper"), width=0.25, size=1.2, color=INK_SOFT)
     + labs(
         x="Survey Category",
         y="Satisfaction Score (1-5)",
@@ -51,17 +59,21 @@ plot = (
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title_x=element_text(size=20),
-        axis_title_y=element_text(size=20),
-        axis_text_x=element_text(size=14, angle=25, ha="right"),
-        axis_text_y=element_text(size=16),
-        plot_caption=element_text(size=14, style="italic"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
         panel_grid_major_x=element_line(alpha=0),
         panel_grid_minor=element_line(alpha=0),
-        panel_grid_major_y=element_line(alpha=0.3),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.1),
+        plot_title=element_text(size=24, weight="bold", color=INK),
+        axis_title_x=element_text(size=20, color=INK),
+        axis_title_y=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=14, angle=25, ha="right", color=INK_SOFT),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        plot_caption=element_text(size=14, style="italic", color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
     )
 )
 
-# Save
-plot.save("plot.png", dpi=300, verbose=False)
+# Save with theme-aware filename
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
