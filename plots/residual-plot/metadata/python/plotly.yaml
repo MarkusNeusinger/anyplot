@@ -1,179 +1,177 @@
 library: plotly
+language: python
 specification_id: residual-plot
 created: '2025-12-26T19:37:08Z'
-updated: '2025-12-26T19:43:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528203388
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/residual-plot/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/residual-plot/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - rolling-window
-  styling:
-    - alpha-blending
+updated: '2026-05-10T08:57:30Z'
+generated_by: claude-haiku
+workflow_run: 25624486727
+issue: 2332
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/plotly/plot-dark.html
+quality_score: 96
 review:
   strengths:
-  - 'Excellent implementation of all key residual plot features: zero reference line,
-    ±2 SD bands, outlier highlighting, and smoothing trend line'
-  - Good color scheme with distinct visual encoding for normal residuals (blue circles),
-    outliers (yellow diamonds), and trend (red line)
-  - Interactive hover templates provide useful diagnostic information (fitted value
-    and residual)
-  - Data generation creates interesting non-linear pattern that demonstrates the diagnostic
-    purpose of residual plots
-  - Clean code structure following KISS principles
-  weaknesses:
-  - Legend shows +2 SD and -2 SD as separate entries; could be combined into single
-    ±2 SD Bounds entry
-  - Axis labels lack units (though residuals are unitless, y-axis label is verbose)
-  - Moving average smoothing could benefit from using a more sophisticated LOWESS
-    approach for smoother trend detection
-  image_description: The plot displays a residual plot with fitted values on the x-axis
-    (ranging from approximately -1 to 30) and residuals on the y-axis (ranging from
-    approximately -6 to 5). The main data points are shown as blue circular markers
-    with semi-transparency. Outliers (points beyond ±2 standard deviations) are highlighted
-    as yellow/gold diamond-shaped markers. The plot includes a solid black horizontal
-    reference line at y=0, dashed yellow/gold lines at ±2 standard deviations (~±3.8),
-    and a red trend line (smoothing curve) that shows slight curvature from the left
-    side before flattening out. The title reads "residual-plot · plotly · pyplots.ai"
-    centered at the top. The legend is positioned in the upper-left corner with a
-    white background, showing all trace types. The overall layout uses a clean white
-    background with subtle grid lines.
+  - Excellent theme adaptation with correct color tokens applied to all chrome elements
+    (title, axis labels, ticks, grid, legend) across both light and dark renders
+  - 'Comprehensive residual plot implementation includes all spec requirements plus
+    optional enhancements: ±2 SD bands, outlier detection with distinct styling, and
+    smoothing trend line for pattern detection'
+  - Perfect text legibility in both themes with proper font sizing (title 28px, axis
+    labels 22px, tick labels 18px) and theme-appropriate INK tokens
+  - 'Proper Okabe-Ito palette compliance: green (#009E73) for primary residual series,
+    orange (#D55E00) for accents/outliers, neutral INK_SOFT for reference lines'
+  - 'Strong visual storytelling with clear hierarchy: zero line and SD bands immediately
+    communicate the model fit, outliers stand out visually, trend line guides pattern
+    recognition'
+  - Clean, reproducible code with np.random.seed(42) determinism, KISS structure,
+    all imports used, no fake interactivity
+  - Professional presentation with generous margins, subtle grid styling, proper legend
+    borders and background colors, and correct HTML output alongside PNG
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle grid lines. Title "residual-plot · plotly · anyplot.ai" is clearly visible in dark text at the top.
+      Chrome: X-axis label "Fitted Values" and Y-axis label "Residuals (y_true - y_pred)" are clearly readable. Tick labels on both axes are properly sized (18px) and legible. Legend positioned top-left with clear borders and elevated background.
+      Data: Green circles (#009E73) represent normal residuals with 0.7 opacity. Orange diamonds (#D55E00) highlight outliers >2 SD. Dashed orange reference lines at ±2 SD are prominent. Black zero line runs horizontally through center. Gray trend line shows smoothed pattern.
+      Legibility verdict: PASS - All elements are readable and properly contrasted against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with subtle grid lines. Title is clearly visible in light text.
+      Chrome: Axis labels and tick labels are all visible in light text with proper contrast. Legend maintains elevated background (#242420) and light text. No dark-on-dark failures detected.
+      Data: Green residual circles are identical in color to light render. Orange outlier diamonds and SD band lines are identical. Zero line is now a light gray, clearly readable. Trend line is light gray and visible.
+      Legibility verdict: PASS - All text and data elements are readable. Data colors remain identical to light render (only chrome adapted). No legibility issues in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick fonts at 18pt - all clearly
-          readable
+        comment: All text properly sized and themed, readable in both light and dark
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: Legend well-positioned, no overlapping elements, transparency handles
+          density
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Markers are well-sized (14px) with good alpha (0.7), outliers slightly
-          larger (16px) with distinct diamond shape. Minor deduction: some data points
-          cluster but remain distinguishable'
+        comment: Markers sized 14-16px, lines width=3-4, all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red color scheme is colorblind-safe; good contrast against
-          white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-          in upper-left
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Fitted Values", "Residuals (y_true - y_pred)")
-          but no units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle (alpha 0.1), legend well-placed with background; however,
-          legend shows both +2 SD and -2 SD as separate entries which is slightly
-          redundant
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct residual plot type showing residuals vs fitted values
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis = fitted values, Y-axis = residuals, correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Has: horizontal reference line at y=0, alpha transparency, smoothing
-          line, ±2 SD bands, outliers colored differently. Minor: could show pattern
-          detection more clearly'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: Legend labels are accurate but +2 SD and -2 SD could be combined
-          into a single "±2 SD" entry
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: Correct format "residual-plot · plotly · pyplots.ai"
-    data_quality:
-      score: 20
+        comment: Okabe-Ito palette ensures colorblind safety and contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px canvas with generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title and axis labels descriptive with units and formula
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct per theme, both renders
+          proper'
+    design_excellence:
+      score: 17
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
         max: 8
         passed: true
-        comment: Shows residuals with variation, outliers both positive and negative,
-          visible pattern from non-linear data (captured by smoothing line curving
-          at left), demonstrates heteroscedasticity potential
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Professional polish with theme-adaptive colors, marker shape distinction,
+          thoughtful transparency
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
         passed: true
-        comment: Realistic linear regression scenario with intentional slight non-linearity
-          to show interesting patterns
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Subtle grid, intentional legend styling, marker edge definition,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point with zero line and SD bands, color contrast tells
+          story, trend line guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: 150 samples, residuals in reasonable range, sensible fitted values
+        comment: Correct residual plot with scatter of residuals vs fitted values
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero line, alpha transparency, SD bands, outlier detection, trend
+          line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis fitted values, Y-axis residuals, all data displayed correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels clear and descriptive
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All residual plot aspects covered: normal points, outliers, reference
+          bands, trend'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Linear regression on curved data demonstrates model violation realistically
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150 samples, sensible value ranges, SD bands appropriately calibrated
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -181,42 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flat structure: imports → data → plot → save'
+        comment: No functions/classes, direct procedural implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only os, sys, numpy, plotly imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Code is current, but `line=dict(width=1, color=...)` inside marker
-          dict could be cleaner
+        comment: No fake UI, appropriate complexity, clean and readable
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.html for interactivity)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Graph Objects with hover templates for interactivity, exports
-          both PNG and HTML. Could leverage more Plotly features like annotations
-          or rangeslider
+        comment: Proper go.Figure(), add_trace(), update_layout() usage; theme-adaptive
+          approach well-implemented
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive hover tooltips, HTML export, marker symbol variation,
+          proper opacity handling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
