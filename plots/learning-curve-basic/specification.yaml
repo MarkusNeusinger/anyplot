@@ -6,7 +6,7 @@ title: Model Learning Curve
 
 # Specification tracking
 created: 2025-12-26T17:28:31Z
-updated: 2025-12-26T17:28:31Z
+updated: 2026-05-10T03:15:29Z
 issue: 2275
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - learning-curve
   data_type:
     - numeric
     - continuous
