@@ -1,157 +1,173 @@
 library: altair
+language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:47Z'
-updated: '2025-12-27T19:31:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282151
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-error/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-error/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T14:53:54Z'
+generated_by: claude-haiku
+workflow_run: 25631537233
+issue: 2376
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of Altair layered composition with separate marks for bars, error
-    lines, and caps
-  - Clear annotation explaining what error bars represent (±1 SD) as required by spec
-  - Realistic scientific context with treatment comparison data
-  - Proper title format and axis labeling with appropriate font sizes
-  - Clean, readable code following KISS principles
+  - Excellent visual quality with all text legible in both light and dark themes
+  - Proper theme adaptation with no dark-on-dark failures
+  - Full spec compliance with all required features correctly implemented
+  - Clean idiomatic Altair code using layering for multi-mark composition
+  - Proper use of Okabe-Ito brand color and theme-adaptive chrome tokens
+  - Helpful annotation clarifies error bar meaning
   weaknesses:
-  - No tooltips for interactivity - Altair strength is interactive visualization
-  - Only symmetric error bars shown; asymmetric example would demonstrate fuller feature
-    coverage
-  image_description: 'The plot displays a bar chart with 5 blue bars (#306998) representing
-    treatment groups: Control, Drug A, Drug B, Drug C, and Combination. The x-axis
-    is labeled "Treatment Group" and the y-axis "Response Rate (%)" with a scale from
-    0-100. Each bar features black error bars with clearly visible caps at both top
-    and bottom ends. The title "bar-error · altair · pyplots.ai" is centered at the
-    top. An annotation "Error bars: ±1 SD" is positioned in the upper right corner.
-    The background has subtle gray gridlines (alpha 0.3), and all text elements are
-    clearly readable with appropriate font sizes.'
+  - Design Excellence is solid but not exceptional - styling is functional rather
+    than distinctive
+  - Visual refinement could be enhanced with subtle bar edge colors, custom grid styling,
+    or emphasis techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title (28px), axis labels (22px), tick labels (18px) all clearly readable in dark text
+      Data: Green bars (#009E73, Okabe-Ito) with gray error bars featuring visible horizontal caps
+      Annotation: "Error bars: ±1 SD" positioned in top-right, secondary text color, fully legible
+      Grid: Subtle (10% opacity), does not compete with data
+      Legibility verdict: PASS - all elements readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, tick labels all clearly readable in light text
+      Data: Green bars identical to light render (#009E73), confirming proper theme adaptation
+      Error bars: Gray bars visible against dark background with clear caps
+      Annotation: "Error bars: ±1 SD" remains visible and readable
+      Grid: Subtle but visible
+      Legibility verdict: PASS - all elements readable, no dark-on-dark failures detected, brand green reads well on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All font sizes explicit (28px title, 22px axes, 18px ticks). Readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, category labels are well-spaced
+        comment: All text readable without collisions. Annotation well-positioned.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized (size=60), error bars clearly visible with 3px stroke
+        comment: Error bars and caps clearly visible. Appropriate spacing.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color scheme, no colorblind issues
+        comment: 'Okabe-Ito #009E73, adequate contrast, no red-green dependency.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins
+        comment: Good proportions (1600x900), nothing cut off, generous whitespace.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: '"Response Rate (%)" has units, but no units needed for categorical
-          x-axis'
+        passed: true
+        comment: Labels include units. Title format correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'First series #009E73. Backgrounds correct. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle (0.3 alpha), but no legend (annotation used instead,
-          which is acceptable)
+        comment: Professional and functional, annotation adds clarity. Not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Standard styling, clean and functional. Could add subtle bar edges
+          or custom grid.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Visual hierarchy shows Combination treatment superiority. Straightforward
+          narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bar chart type
+        comment: Correct bar chart with error bars.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars with caps present, annotation explaining error bars included
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: bars, values, symmetric errors, caps, annotation.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-100 shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: treatment groups, Y: response rate (0-100%), errors correctly
+          calculated.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Annotation "Error bars: ±1 SD" clearly explains error representation'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "bar-error · altair · pyplots.ai"'
+        comment: Correct title format and error explanation.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows variation in response rates and error magnitudes, but all symmetric
-          errors (no asymmetric example)
+        comment: 'All aspects shown: 5 categories, varied values (45.2-82.1), varied
+          errors (8.5-15.2).'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Scientific drug treatment comparison is a perfect real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response rates 45-82% with SD 8-15% are realistic for treatment studies
+        comment: Treatment comparison with measurement uncertainty is realistic and
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Response rate scale (0-100%) sensible, values span 35-95.
     code_quality:
       score: 10
       max: 10
@@ -161,40 +177,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot layers → save'
+        comment: 'Straightforward: data, layers, combination. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation)
+        comment: Deterministic data (explicit values).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: 'Only used imports: os, sys, altair, pandas.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Appropriate complexity, clear names. No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html. Current API (altair 6.1.0).
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper Chart().mark_bar().encode() pattern. Idiomatic layering with
+          alt.layer().
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
         max: 5
         passed: false
-        comment: Good use of layered chart composition (bars + error_bars + caps +
-          annotation), but could add interactivity with tooltips
+        comment: 'Good use of Altair strengths: encoding, layering, tooltips, interactive
+          export.'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
