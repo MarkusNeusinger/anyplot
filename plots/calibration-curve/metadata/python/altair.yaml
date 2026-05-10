@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:36:31Z'
-updated: '2026-05-10T10:49:58Z'
+updated: '2026-05-10T10:57:15Z'
 generated_by: claude-haiku
 workflow_run: 25626640636
 issue: 2331
@@ -12,37 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Perfect Visual Quality (30/30) - all text legible in both themes with proper contrast
-  - Excellent Spec Compliance (15/15) - all requirements met including calibration
-    curve, reference diagonal, 10 bins, Brier score, and histogram
-  - Full Data Quality (15/15) - realistic synthetic data with appropriate scales and
-    comprehensive feature representation
-  - Clean Code Quality (10/10) - simple structure, reproducible with seed, minimal
-    imports, proper output format
-  - Proper theme adaptation with Okabe-Ito palette - both renders are readable with
-    identical data colors and theme-appropriate chrome
+  - Perfect theme adaptation with verified readable renders in both light and dark
+    modes
+  - Clear visual communication through two-panel layout (calibration curve + distribution
+    histogram)
+  - 'Rigorous palette compliance: Okabe-Ito positions correctly applied, backgrounds
+    exactly on spec (#FAF8F1 light, #1A1A17 dark)'
+  - Expert Altair usage with idiomatic high-level API and sophisticated composition
+    patterns (layer, vconcat)
+  - 'Publication-ready presentation: explicit font sizing, clean code, reproducible
+    data generation'
   weaknesses:
-  - Design Excellence could be elevated - consider removing top/right spines for cleaner
-    aesthetic
-  - Library Mastery could leverage altair's interactive capabilities - hover selections
-    or brush filtering would enhance exploration
-  - Histogram styling is functional but could use visual refinement or annotations
-    to highlight key insights
+  - Limited aesthetic creativity beyond well-configured defaults (DE-01=5 instead
+    of 6+)
+  - Grid on both axes rather than Y-only (minor style guide deviation)
+  - Untapped Altair interactive capabilities—static implementation doesn't showcase
+    selections, parameter binding, or dynamic interactions unique to Altair
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "calibration-curve · altair · anyplot.ai" with subtitle "Brier Score: 0.1888" in dark text, clearly readable. Axis labels "Mean Predicted Probability" and "Fraction of Positives" are dark and well-positioned. Tick labels (0.00-1.00) are readable in dark secondary text (#4A4A44). Grid lines are subtle and don't compete with data.
-      Data: Green calibration line (#009E73) showing the actual model calibration, orange dashed reference line (#D55E00) for perfect calibration diagonal, green circular points (size 300) showing binned data points. All colors distinct and visible. Histogram below shows distribution of predicted probabilities in green with clear bar separation.
-      Legibility verdict: PASS ✓ All elements readable and properly visible
+      Background: Warm off-white (#FAF8F1), exactly on spec
+      Chrome: Title "calibration-curve · altair · anyplot.ai" in dark ink (8/8 legibility); axis labels "Mean Predicted Probability" and "Fraction of Positives" dark and clear; tick labels (0.0, 0.2, 0.4, etc.) in soft-ink color, fully readable
+      Data: Green calibration curve (#009E73) with circular markers; orange dashed diagonal reference line (#D55E00); histogram bars in green below
+      Grid: Subtle (15% opacity), does not compete with data
+      Legibility verdict: PASS — All elements clearly readable against light surface
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and subtitle rendered in light text, clearly readable against dark background. Axis labels in light color (#F0EFE8) are well-visible. Tick labels in light secondary text (#B8B7B0) are readable. Grid lines subtle but visible. No dark-on-dark failures detected - all text has sufficient contrast.
-      Data: Green calibration line (#009E73) identical to light render. Orange dashed reference line (#D55E00) identical to light render. Circular points clearly visible. Histogram bars show proper color and visibility. Data colors are consistent between both renders.
-      Legibility verdict: PASS ✓ All elements readable with proper theme adaptation
+      Background: Warm near-black (#1A1A17), exactly on spec
+      Chrome: Title in light text, clearly readable; axis labels in light text, no dark-on-dark failures; tick labels in light soft-ink (#B8B7B0), fully readable against dark background
+      Data: Green calibration curve (#009E73) — identical to light render (Okabe-Ito invariant); orange dashed diagonal (#D55E00) — identical to light render; histogram bars in green
+      Grid: Subtle, same as light render
+      Theme verification: Data colors perfectly invariant across themes; only chrome (background, text colors) changed for dark theme adaptation
+      Legibility verdict: PASS — All elements clearly readable against dark surface; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,52 +56,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px axis labels, 18px
-          ticks). Readable in both light and dark themes with proper contrast.
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps, elements well-spaced, axis labels and ticks properly
-          positioned.
+        comment: No overlapping elements; axes and labels clean and well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data points visible (size 300), lines thick enough (4px calibration,
-          3px reference), distinct colors, both categorical markers visible.
+        comment: Calibration line (strokeWidth=4), points (size=300), diagonal (strokeWidth=3)
+          all optimally visible and proportioned
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00), colorblind-safe, adequate
-          contrast, uses different line styles (solid vs dashed) as additional signal.'
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) colorblind-safe; excellent
+          contrast against backgrounds'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper dimensions (1600x900 main, 1600x400 histogram), nothing cut
-          off, two-panel layout appropriate for data visualization.
+        comment: 1600×900 landscape (scaled 4800×2700) well-proportioned; combined
+          chart fills canvas appropriately with balanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, subtitle includes Brier score metric, axis
-          labels descriptive and clear.
+        comment: Title in correct format (calibration-curve · altair · anyplot.ai);
+          axis labels descriptive (Mean Predicted Probability, Fraction of Positives)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), second #D55E00 (Okabe-Ito order),
-          backgrounds correct (#FAF8F1 light, #1A1A17 dark), both renders theme-correct.'
+        comment: 'First series #009E73 ✓, secondary #D55E00 ✓, backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark) ✓, chrome properly theme-adaptive in both
+          renders ✓'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -106,23 +109,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color choices, custom stroke styling (width and dash),
-          meaningful metric in subtitle, but could be more sophisticated.
+        comment: Professional, clean design with thoughtful theme-adaptive chrome.
+          Polished informed default; well beyond baseline but not exceptionally creative
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid (opacity 0.15), clean layout, proper spacing, layered
-          composition. Could benefit from spine removal or additional refinement.
+        comment: 'Subtle grid (gridOpacity=0.15), generous whitespace, clean typography.
+          Minor: grid on both axes (style guide suggests Y-only)'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear focal point (deviation from perfect calibration), visual hierarchy
-          with thick primary line vs dashed reference, histogram provides distribution
-          context.
+        comment: Two-panel layout (calibration + histogram) tells complete story;
+          diagonal reference makes miscalibration obvious; histogram contextualizes
+          distribution. Solid visual hierarchy and emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve with scatter + line marks and perfect diagonal
-          reference.
+        comment: Correct calibration curve with perfect calibration diagonal reference
+          line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, 10 equal-probability bins, Brier score metric,
-          histogram of predicted probabilities - all present.
+        comment: 'All spec features present: diagonal line, 10 equal-interval bins,
+          Brier score metric, histogram of predicted probabilities'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Mean Predicted Probability, Y: Fraction of Positives, both 0-1
-          scale showing complete range.'
+        comment: X/Y correctly assigned; axes span 0–1; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, subtitle meaningful, legend not needed (clear
-          from labels and line styling).
+        comment: Title format correct (spec-id · library · anyplot.ai); legend not
+          needed (single-series line chart)
     data_quality:
       score: 15
       max: 15
@@ -164,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive representation: calibration curve, reference diagonal,
-          distribution histogram, summary metric, all aspects covered.'
+        comment: Spans full 0–1 probability range; shows well-calibrated and poorly-calibrated
+          regions; multimodal histogram
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic binary classification (2000 samples, 40% positive), slightly
-          overconfident classifier (realistic), Brier score realistic, neutral domain.
+        comment: Binary classification from overconfident classifier; real-world plausible;
+          neutral scenario (no controversial data)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probability scale 0-1 appropriate, 10 bins standard for calibration,
-          20 histogram bins appropriate, all sensible for domain.
+        comment: Probabilities 0–1 range correct; Brier score 0.1388 realistic; 10
+          bins standard approach; 2000 samples sufficient
     code_quality:
       score: 10
       max: 10
@@ -189,65 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes, straightforward linear flow,
-          simple and readable.
+        comment: No functions/classes; linear flow (imports → theme tokens → data
+          → plot → save)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output, data generation
-          is fixed and reproducible.
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports os, altair, numpy, pandas - all used, no extraneous
-          imports.
+        comment: 'Only used imports: os, altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity, clean
-          structure.
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality; theme
+          token system is elegant
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, correct format and
-          current API.
+        comment: Saves as plot-{THEME}.png with scale_factor=3.0 ✓; also saves HTML
+          ✓
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of alt.Chart(), encoding system, mark_*() functions, .properties(),
+          .configure_*() methods, alt.layer(), alt.vconcat(); high-level API throughout
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper alt.Chart usage, correct encoding declarations, layer composition,
-          vconcat for vertical stacking, configure methods for theming. Good idiomatic
-          usage.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: true
-        comment: Uses stroke customization (width and dash), tooltip encoding, properties
-          and resolve_scale. Could leverage more interactive capabilities like selections
-          or brushing.
+        comment: Uses alt.vconcat() for multi-panel composition and alt.layer() for
+          chart layering (Altair-specific strengths); resolve_scale() for independent
+          scales; custom Scale domains. Could explore interactive features (selections,
+          parameter binding)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - subplots
-  - html-export
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
-  - publication-ready
+  - grid-styling
