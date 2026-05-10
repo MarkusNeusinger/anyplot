@@ -1,170 +1,195 @@
 library: bokeh
+language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:38:23Z'
-updated: '2025-12-26T17:42:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526603172
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  - html-export
-  patterns:
-  - columndatasource
-  dataprep: []
-  styling:
-  - custom-colormap
-  - grid-styling
+updated: '2026-05-10T01:24:27Z'
+generated_by: claude-haiku
+workflow_run: 25616164614
+issue: 2276
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-dark.html
+quality_score: 72
 review:
   strengths:
-  - Excellent color gradient implementation using LinearColorMapper with Blues9 palette
-  - Clean, readable feature names with value annotations at bar ends
-  - Proper sorting with highest importance at top for easy scanning
-  - Good use of ColumnDataSource pattern for data binding
-  - Dual output (PNG + HTML) leveraging Bokeh web capabilities
-  - Professional styling with subtle grid and clean background
+  - Correct horizontal bar chart type with proper sorting by importance
+  - Data colors (bar gradient) remain identical across light and dark renders
+  - Value labels at bar endpoints provide precise importance scores
+  - Realistic financial feature importance data with good variety of values
+  - Font sizes explicitly set for all text elements (32pt title, 24pt labels, 18pt
+    ticks)
+  - Clean layout with good use of canvas space
+  - Subtle grid styling that doesn't compete with data
   weaknesses:
-  - Missing HoverTool for interactive exploration in HTML output (Bokeh key strength)
-  - Y-axis label could be added (Feature or Model Feature)
-  image_description: 'The plot displays a horizontal bar chart showing feature importances
-    from a machine learning classification model. There are 12 features displayed
-    on the y-axis (from bottom to top: Account Balance, Payment History, Home Ownership,
-    Num Inquiries, Education Level, Loan Amount, Num Accounts, Debt Ratio, Employment
-    Years, Age, Credit Score, Income). The bars extend horizontally with length proportional
-    to importance scores. A blue sequential color gradient is applied - darker blue
-    for higher importance values, lighter blue for lower values. Each bar has its
-    importance value labeled at the end (ranging from 0.015 to 0.185). The title "bar-feature-importance
-    · bokeh · pyplots.ai" appears at the top in blue. The x-axis is labeled "Importance
-    Score" with tick marks at 0, 0.05, 0.1, 0.15, and 0.2. The background is light
-    gray (#fafafa) with subtle dashed vertical grid lines.'
+  - 'Title color (#306998) not theme-adapted — remains dark blue on dark background
+    in dark render, causing unreadable dark-on-dark text. Must use INK token (#1A1A17
+    light / #F0EFE8 dark) for title.text_color'
+  - Title domain incorrect — says 'pyplots.ai' instead of 'anyplot.ai' per spec format
+  - Uses deprecated bokeh.io.export_png() which bokeh.md forbids. Must switch to Selenium/headless
+    Chrome screenshot approach per library guide
+  - Output files named 'plot.png' instead of 'plot-light.png'/'plot-dark.png'. Workflow
+    expects theme-suffixed filenames
+  - Palette choice (Blues9) is generic; style guide recommends viridis/cividis for
+    continuous importance data. LinearColorMapper is correct technique but palette
+    should follow guide
+  - No environment-based theme support — should read ANYPLOT_THEME env var and set
+    PAGE_BG, INK, INK_SOFT tokens for all colors
+  - Other chrome colors (grid, axes, ticks) also hardcoded without theme tokens —
+    needs full theme-adaptive refactor
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#fafafa), close to spec requirement of #FAF8F1
+      Chrome: Title, axis labels (X: "Importance Score", Y: feature names), and tick labels all in dark #306998 color, clearly readable against light background
+      Data: Horizontal bars use gradient from light blue to dark blue (Blues9 reversed), sorted by importance (highest at top). Value labels displayed at end of each bar (0.185, 0.162, 0.124, etc.). Subtle dashed x-axis grid lines with 30% alpha provide light guidance without distraction.
+      Layout: Good use of canvas space, all 12 features visible, bars well-spaced with readable labels
+      Legibility verdict: PASS - all text readable, good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly theme-adapted
+      Chrome: **CRITICAL ISSUE** - Title text remains in dark blue (#306998) on dark background, making it unreadable (dark-on-dark failure). Y-axis feature names appear to be light-colored and readable. Value labels and axis label text appear to be light-colored and readable.
+      Data: Bars maintain identical blue gradient as light render (excellent - data colors are theme-independent). Grid and spacing unchanged.
+      Legibility verdict: FAIL - Title is unreadable due to dark-on-dark color problem; implementation failed to adapt title color to dark theme using INK tokens
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 20
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and value annotations are clearly readable. Feature
-          names on y-axis are legible. Slightly smaller than optimal for some elements.
+        score: 0
+        max: 8
+        passed: false
+        comment: Light render readable, but dark render fails — title is dark on dark
+          background (unreadable). Per mandatory readability check, any unreadable
+          text in either render drops VQ-01 to 0.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements. All feature names and value labels
-          are clearly separated.
+        comment: All text fully readable, no overlaps despite readability failures
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with good height (0.7), clearly distinguishable.
-          Color gradient effectively shows importance hierarchy.
+        comment: Bars perfectly sized and visible, markers well-adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blues9 palette is colorblind-safe. Sequential blue gradient provides
-          good contrast.
+        comment: Blue gradient is CVD-safe and provides good contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Good use of canvas space. Slight issue: feature names appear slightly
-          close to edge on y-axis.'
+        comment: Perfect layout — plot uses 50-80% of canvas with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has "Importance Score" but no units (importance scores are
-          unitless, so acceptable). Y-axis has no label (features are self-explanatory).
+        comment: 'Axis labels descriptive (X: ''Importance Score''). Title format
+          mostly correct except domain typo.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 0
         max: 2
-        passed: true
-        comment: Subtle dashed grid with alpha 0.3 is good. No legend needed for this
-          plot type.
+        passed: false
+        comment: 'Two failures: (1) Chrome colors hardcoded without theme tokens —
+          title/axes/grid not adapted to dark mode. (2) Continuous palette should
+          be viridis/cividis, not custom Blues9. (3) Title domain ''pyplots.ai'' should
+          be ''anyplot.ai'''
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default. Blue gradient is reasonable for
+          importance but feels generic — looks like a configured default, not publication-ready
+          design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid is subtle and dashed, layout is clean. Some refinement visible
+          but could be more polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Gradient progression from light to dark creates visual hierarchy
+          showing importance progression. But storytelling is minimal — just displays
+          data.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct horizontal bar chart for feature importance.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Features on y-axis, importance values on x-axis as specified.
-      - id: SC-03
+        comment: Correct horizontal bar chart type
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has sorted bars (highest at top), color gradient, value annotations.
-          Missing optional error bars (std) mentioned in spec.
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: false
+        comment: 'Has sorted bars, gradient coloring, value labels. Missing: error
+          bars for ''std'' column mentioned in spec as optional but valuable.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range (0 to ~0.21) properly shows all data with 15% padding.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed; color gradient is self-explanatory.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-feature-importance · bokeh · pyplots.ai"'
+        comment: Features on Y-axis, importance on X-axis. Axes show all data correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title format incorrect: ''bar-feature-importance · bokeh · pyplots.ai''
+          should be ''bar-feature-importance · bokeh · anyplot.ai''. No legend needed
+          (single series).'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 12 features with good variation in importance values. Could
-          show more dramatic range differences.
+        comment: Shows all 12 features with varied importance values (0.015 to 0.185),
+          demonstrating full feature importance distribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Credit scoring/loan approval model context is realistic and comprehensible.
-          Feature names are plausible for this domain.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Importance values sum close to 1.0, realistic for tree-based model
-          feature importances.
+        comment: Realistic financial/credit classification scenario — Income, Credit
+          Score, Age, Debt Ratio are plausible features for loan approval model
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Feature importance values are factually correct proportions for typical
+          ML models (sum ~1.0, normalized scores)
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -172,42 +197,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → processing → plot → save.'
+        comment: 'Straightforward: imports → data → plot setup → rendering. No unnecessary
+          functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), but no random seed comment. Minor
-          deduction.
+        comment: Data is hardcoded and deterministic. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (export_png, save, ColumnDataSource, LabelSet,
-          LinearColorMapper, Blues9, figure, CDN).
+        comment: 'All imports used: export_png, save, ColumnDataSource, LabelSet,
+          LinearColorMapper, figure, etc.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API.
+        name: Code Elegance
+        score: 0
+        max: 2
+        passed: false
+        comment: Uses deprecated bokeh.io.export_png(). bokeh.md explicitly forbids
+          this — must use Selenium/headless Chrome approach. Also lacks theme-aware
+          color handling.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves to 'plot.png' instead of 'plot-light.png' / 'plot-dark.png'.
+          Workflow expects theme-suffixed filenames for multi-render pipeline.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Correctly uses figure(), hbar(), ColumnDataSource, LabelSet, LinearColorMapper.
+          However, export_png() is deprecated method. Should use save() + Selenium.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, LinearColorMapper, LabelSet - good Bokeh patterns.
-          Could leverage HoverTool for interactivity in HTML output.
+        passed: false
+        comment: Uses LabelSet for value annotations and LinearColorMapper for gradient
+          — both are Bokeh-specific techniques. But usage is fairly standard, not
+          particularly creative.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling

@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-10
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,6 +17,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data - Feature importances from a Random Forest classifier (house price prediction)
 features = [
@@ -36,49 +45,51 @@ features = [
     "Energy Efficiency Score",
 ]
 
-# Importance scores (from ensemble averaging)
 importance = [0.215, 0.142, 0.128, 0.089, 0.078, 0.068, 0.062, 0.055, 0.048, 0.041, 0.028, 0.019, 0.014, 0.009, 0.004]
 
-# Sort by importance (already sorted, but make explicit)
+# Sort by importance (highest first)
 sorted_data = sorted(zip(features, importance, strict=True), key=lambda x: x[1], reverse=True)
 features_sorted = [x[0] for x in sorted_data]
 importance_sorted = [x[1] for x in sorted_data]
 
-# Reverse for horizontal bar chart (highest importance at top in Highcharts bar)
+# Reverse for horizontal bar chart (highest importance at top in Highcharts)
 features_sorted = features_sorted[::-1]
 importance_sorted = importance_sorted[::-1]
 
-# Create gradient colors based on importance (light to dark blue)
+# Create gradient colors using viridis-inspired sequential colormap
+# For continuous importance data, use a sequential colormap (light to dark)
 max_imp = max(importance_sorted)
 min_imp = min(importance_sorted)
 
+# Viridis-inspired colors (light to dark)
+viridis_light = "#FDE725"  # Light end
+viridis_dark = "#440154"  # Dark end
 
-def importance_to_color(imp):
-    """Map importance to color from light (#a8d5f2) to dark (#306998)."""
-    ratio = (imp - min_imp) / (max_imp - min_imp) if max_imp != min_imp else 0.5
-    r = int(168 + (48 - 168) * ratio)
-    g = int(213 + (105 - 213) * ratio)
-    b = int(242 + (152 - 242) * ratio)
-    return f"#{r:02x}{g:02x}{b:02x}"
-
-
-# Build data with colors
 bar_data = []
 for imp in importance_sorted:
-    bar_data.append({"y": imp, "color": importance_to_color(imp)})
+    # Interpolate between light and dark
+    ratio = (imp - min_imp) / (max_imp - min_imp) if max_imp != min_imp else 0.5
+    r = int(253 + (68 - 253) * ratio)
+    g = int(231 + (1 - 231) * ratio)
+    b = int(37 + (84 - 37) * ratio)
+    color = f"#{r:02x}{g:02x}{b:02x}"
+    bar_data.append({"y": imp, "color": color})
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS from jsDelivr CDN (more reliable in CI/CD)
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Build chart options as a dictionary
+# Build chart options
 chart_options = {
     "chart": {
         "type": "bar",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginLeft": 380,
         "marginRight": 180,
         "marginTop": 150,
@@ -86,27 +97,30 @@ chart_options = {
         "animation": False,
     },
     "title": {
-        "text": "bar-feature-importance \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "48px", "fontWeight": "bold"},
+        "text": "bar-feature-importance · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
     },
     "subtitle": {
         "text": "House Price Prediction - Random Forest Feature Importances",
-        "style": {"fontSize": "32px", "color": "#666666"},
+        "style": {"fontSize": "22px", "color": INK_SOFT},
     },
     "xAxis": {
         "categories": features_sorted,
         "title": {"text": None},
-        "labels": {"style": {"fontSize": "26px"}},
-        "lineWidth": 0,
-        "tickWidth": 0,
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineWidth": 0,
     },
     "yAxis": {
-        "title": {"text": "Importance Score", "style": {"fontSize": "32px"}},
-        "labels": {"style": {"fontSize": "24px"}},
+        "title": {"text": "Importance Score", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
         "min": 0,
         "max": 0.25,
         "gridLineWidth": 1,
-        "gridLineColor": "#e0e0e0",
+        "gridLineColor": GRID,
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
     },
     "legend": {"enabled": False},
     "tooltip": {"enabled": False},
@@ -115,7 +129,7 @@ chart_options = {
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.y:.3f}",
-                "style": {"fontSize": "22px", "fontWeight": "normal", "textOutline": "none"},
+                "style": {"fontSize": "18px", "color": INK_SOFT, "textOutline": "none"},
                 "align": "left",
                 "x": 10,
             },
@@ -139,7 +153,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0; background-color: #ffffff;">
+<body style="margin:0; padding:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         Highcharts.chart('container', {chart_json});
@@ -148,7 +162,7 @@ html_content = f"""<!DOCTYPE html>
 </html>"""
 
 # Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Take screenshot with Selenium
@@ -157,15 +171,13 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=5000,3000")
-chrome_options.add_argument("--force-device-scale-factor=1")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(5000, 3000)
 driver.get(f"file://{temp_path}")
 
 # Wait for Highcharts chart to render
@@ -173,11 +185,9 @@ try:
     WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".highcharts-root")))
     time.sleep(3)
 except Exception:
-    time.sleep(10)
+    time.sleep(5)
 
-# Get the container element and screenshot it
-container = driver.find_element(By.ID, "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
