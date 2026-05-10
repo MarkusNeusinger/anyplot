@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: lift-curve
 created: '2025-12-27T19:22:28Z'
-updated: '2026-05-10T16:40:23Z'
+updated: '2026-05-10T16:46:02Z'
 generated_by: claude-haiku
 workflow_run: 25633961112
 issue: 2379
@@ -12,34 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality with all text readable in both light and dark themes
-  - Correct theme-adaptive chrome implementation with proper token application
-  - Accurate lift curve calculation and data mapping
-  - Thoughtful use of decile markers and baseline reference for interpretability
-  - Clean, professional code structure with proper reproducibility
-  - All specification requirements met
+  - Perfect theme adaptation with both light and dark renders readable and color-correct
+  - Proper Okabe-Ito palette usage (green line, orange markers, gray baseline)
+  - All required spec features present and working (curve, baseline, markers, tooltips)
+  - Excellent text legibility with explicitly-sized fonts across both themes
+  - Clean, deterministic data generation demonstrating realistic model discrimination
+  - Effective use of bokeh-specific features (HoverTool, Span, ColumnDataSource)
+  - Well-balanced layout with generous whitespace and no overlapping elements
   weaknesses:
-  - Design sophistication limited to standard Okabe-Ito palette and default layout
-    — no distinctive visual refinement
-  - Visual hierarchy could be strengthened with additional emphasis techniques (e.g.,
-    varying line weights, color intensity gradients)
-  - Limited use of Bokeh-specific advanced features (callbacks, interactive selection,
-    etc.) — relies on basic hover-only interactivity
+  - Design excellence is competent but not exceptional—well-configured defaults rather
+    than distinctive aesthetic choices
+  - Could enhance data storytelling with additional visual emphasis or annotations
+    (e.g., peak lift annotation)
+  - Could explore more advanced bokeh features like selection tools or custom hover
+    formatting
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), properly theme-adapted
-      Chrome: Title, axis labels, tick labels all in dark text (INK #1A1A17); clearly readable with excellent contrast
-      Data: Green curve (#009E73) with orange decile markers (#D55E00); baseline reference line at y=1 visible as dashed line
-      Legibility verdict: PASS - All text elements fully readable, no contrast issues
+      Background: Warm off-white (#FAF8F1) - PASS
+      Chrome: Title "lift-curve · bokeh · anyplot.ai" (28pt, dark text #1A1A17), axis labels "Population Targeted (%)" and "Cumulative Lift Ratio (Model / Random)" (22pt), tick labels (18pt), all clearly readable against light background
+      Data: Primary lift curve in brand green (#009E73) with 5px line width, orange decile markers (#D55E00) size 20, gray baseline reference line (dashed, INK_SOFT color), subtle grid (10% alpha)
+      Legend: Top right with "Model Lift" and "Decile Markers" labels (18pt, #4A4A44 text on #FFFDF6 background)
+      Legibility verdict: PASS - excellent contrast, all text readable, no overlapping elements
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), properly theme-adapted
-      Chrome: Title, axis labels, tick labels all in light text (INK #F0EFE8, INK_SOFT #B8B7B0); clearly readable with no dark-on-dark failures
-      Data: Green curve (#009E73) and orange markers identical to light render; baseline reference line visible in light gray
-      Legibility verdict: PASS - All text elements fully readable, no theme-adaptation failures, data colors consistent between renders
+      Background: Warm near-black (#1A1A17) - PASS
+      Chrome: Title and labels now in light text (#F0EFE8) for optimal contrast against dark background, all clearly readable
+      Data: Identical lift curve (#009E73), identical markers (#D55E00), identical baseline reference - no color shifts between renders
+      Legend: Same labels with #B8B7B0 text on #242420 background, light and readable
+      Legibility verdict: PASS - no dark-on-dark failures, perfect readability, data colors identical to light render (only chrome changed)
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,65 +53,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for both themes
+        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, generous spacing
+        comment: Zero overlapping text elements; all well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curve, markers, baseline all clearly visible
+        comment: Line width 5px and markers size 20 optimal for resolution and data
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette provides excellent contrast; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous whitespace
+        comment: Plot uses 60-70% of canvas with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive format with units
+        comment: Descriptive with units; title follows spec format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct colors, backgrounds, theme adaptation
+        comment: Perfect Okabe-Ito compliance; theme-correct chrome in both renders
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional styling with thoughtful marker and baseline use
+        passed: false
+        comment: Well-configured defaults, professional but not publication-exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Subtle grid, proper legend styling, minimal customization
+        passed: false
+        comment: Subtle grid, generous whitespace, legend styling; above-default refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Baseline and markers provide context, reasonable hierarchy
+        passed: false
+        comment: Natural visual hierarchy through declining curve; markers and baseline
+          provide context
     spec_compliance:
       score: 15
       max: 15
@@ -118,25 +124,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift curve chart type
+        comment: Correct lift curve type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Baseline, deciles, proper calculation
+        comment: 'All features present: curve, baseline, markers, tooltips'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct, data properly sorted
+        comment: X/Y correctly mapped; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and labels
+        comment: Title format correct; legend labels accurate
     data_quality:
       score: 15
       max: 15
@@ -146,19 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All lift curve aspects demonstrated
+        comment: Shows full lift curve from 5.5x to baseline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible marketing scenario with reasonable discrimination
+        comment: Customer response data; marketing scenario realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for the domain
+        comment: All values factually sound; proportions correct
     code_quality:
       score: 10
       max: 10
@@ -168,33 +174,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, clear procedural code
+        comment: Linear flow; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used appropriately
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Straightforward, Pythonic, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and current API
+        comment: Correct output files and current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -202,13 +208,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ColumnDataSource, HoverTool, Span usage
+        comment: Uses figure(), ColumnDataSource, line(), scatter(), HoverTool, Span
+          idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Basic Bokeh features, limited advanced usage
+        comment: Uses bokeh-specific features (HoverTool, Span, ColumnDataSource)
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -218,5 +225,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - columndatasource
   dataprep: []
   styling: []
