@@ -1,13 +1,17 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-error: Bar Chart with Error Bars
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-27
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2025-12-27
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_line,
+    element_rect,
     element_text,
     geom_bar,
     geom_errorbar,
@@ -23,11 +27,21 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
 # Data: A/B test results showing conversion rates with 95% CI
 categories = ["Control", "Variant A", "Variant B", "Variant C", "Variant D"]
-values = [12.3, 14.8, 11.2, 16.5, 13.9]  # Conversion rates (%)
-errors_lower = [1.2, 1.5, 1.0, 1.8, 1.4]  # Lower CI bound
-errors_upper = [1.4, 1.6, 1.1, 2.0, 1.5]  # Upper CI bound
+values = [12.3, 14.8, 11.2, 16.5, 13.9]
+errors_lower = [1.2, 1.5, 1.0, 1.8, 1.4]
+errors_upper = [1.4, 1.6, 1.1, 2.0, 1.5]
 
 df = pd.DataFrame(
     {
@@ -42,27 +56,29 @@ df = pd.DataFrame(
 plot = (
     ggplot(df, aes(x="category", y="value", fill="category"))
     + geom_bar(stat="identity", width=0.7, show_legend=False)
-    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.25, size=1.5, color="#333333")
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#306998", "#FFD43B", "#306998"])
+    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.25, size=1.5, color=INK_SOFT)
+    + scale_fill_manual(values=OKABE_ITO)
     + labs(
-        title="bar-error · letsplot · pyplots.ai",
+        title="bar-error · letsplot · anyplot.ai",
         x="Test Group",
         y="Conversion Rate (%)",
         caption="Error bars show 95% CI",
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_caption=element_text(size=14),
-        panel_grid_major_x=None,
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_major_x=element_line(color="transparent"),
+        panel_grid_minor=element_line(color="transparent"),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        plot_caption=element_text(size=14, color=INK_SOFT),
     )
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save as HTML for interactive viewing
-ggsave(plot, "plot.html", path=".")
+# Save as PNG and HTML with theme suffix
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
