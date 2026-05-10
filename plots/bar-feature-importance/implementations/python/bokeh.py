@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 49/100 | Updated: 2026-05-10
+Quality: 72/100 | Updated: 2026-05-10
 """
 
 from bokeh.io import export_png, save

@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:38:23Z'
-updated: '2026-05-10T01:17:53Z'
+updated: '2026-05-10T01:24:27Z'
 generated_by: claude-haiku
 workflow_run: 25616164614
 issue: 2276
@@ -12,41 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-featu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-dark.html
-quality_score: 49
+quality_score: 72
 review:
   strengths:
-  - Horizontal bar chart correctly displays feature importances with proper sorting
-  - Value labels clearly show exact importance scores
-  - Gradient color mapping effectively emphasizes relative importance progression
-  - Data is realistic and well-chosen for the visualization type
+  - Correct horizontal bar chart type with proper sorting by importance
+  - Data colors (bar gradient) remain identical across light and dark renders
+  - Value labels at bar endpoints provide precise importance scores
+  - Realistic financial feature importance data with good variety of values
+  - Font sizes explicitly set for all text elements (32pt title, 24pt labels, 18pt
+    ticks)
+  - Clean layout with good use of canvas space
+  - Subtle grid styling that doesn't compete with data
   weaknesses:
-  - 'CRITICAL: Text is unreadable in dark render - title, axis labels, and value labels
-    all too dark on dark background (#306998 and #666666 text on #1A1A17 background)'
-  - Not reading ANYPLOT_THEME environment variable - uses identical hard-coded colors
-    for both light and dark themes
-  - 'Background color is #fafafa instead of spec-compliant #FAF8F1 (light) / #1A1A17
-    (dark)'
-  - Uses deprecated export_png() instead of Selenium-based screenshot as documented
-    in bokeh.md
-  - Output filenames should be plot-light.png/plot-dark.png, not bare plot.png
-  - 'Grid and axis lines use inappropriate colors for both themes (#cccccc light-gray
-    and #666666 medium-gray don''t work on either surface)'
+  - 'Title color (#306998) not theme-adapted — remains dark blue on dark background
+    in dark render, causing unreadable dark-on-dark text. Must use INK token (#1A1A17
+    light / #F0EFE8 dark) for title.text_color'
+  - Title domain incorrect — says 'pyplots.ai' instead of 'anyplot.ai' per spec format
+  - Uses deprecated bokeh.io.export_png() which bokeh.md forbids. Must switch to Selenium/headless
+    Chrome screenshot approach per library guide
+  - Output files named 'plot.png' instead of 'plot-light.png'/'plot-dark.png'. Workflow
+    expects theme-suffixed filenames
+  - Palette choice (Blues9) is generic; style guide recommends viridis/cividis for
+    continuous importance data. LinearColorMapper is correct technique but palette
+    should follow guide
+  - No environment-based theme support — should read ANYPLOT_THEME env var and set
+    PAGE_BG, INK, INK_SOFT tokens for all colors
+  - Other chrome colors (grid, axes, ticks) also hardcoded without theme tokens —
+    needs full theme-adaptive refactor
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, appears correct for #FAF8F1 light theme
-      Chrome: Title "bar-feature-importance · bokeh · anyplot.ai" is readable in dark blue (#306998). Feature names on left are readable. Axis label and tick labels are clear.
-      Data: Horizontal bars use a Blues9 gradient from light (lowest importance) to dark (highest importance), ranging from yellow (#FFD700 at top) to deep blue. Value labels are readable at 0.185, 0.162, 0.124, etc.
-      Grid: Subtle dashed x-axis grid lines at appropriate opacity
-      Legibility verdict: PASS - All text is readable against the light background
+      Background: Warm off-white (#fafafa), close to spec requirement of #FAF8F1
+      Chrome: Title, axis labels (X: "Importance Score", Y: feature names), and tick labels all in dark #306998 color, clearly readable against light background
+      Data: Horizontal bars use gradient from light blue to dark blue (Blues9 reversed), sorted by importance (highest at top). Value labels displayed at end of each bar (0.185, 0.162, 0.124, etc.). Subtle dashed x-axis grid lines with 30% alpha provide light guidance without distraction.
+      Layout: Good use of canvas space, all 12 features visible, bars well-spaced with readable labels
+      Legibility verdict: PASS - all text readable, good contrast
 
     Dark render (plot-dark.png):
-      Background: Dark near-black, appears to be dark theme surface
-      Chrome: CRITICAL FAILURE - Title is present but nearly unreadable. Feature names on left are extremely faint/dark gray against dark background. Axis labels and tick labels are also hard to read. Value labels at end of bars are barely visible.
-      Data: Bars maintain the same gradient colors as light render (good), but are now on a dark background. The color gradient itself is visible and readable.
-      Grid: Grid lines appear very faint on dark background
-      Legibility verdict: FAIL - Title, axis labels, and value labels are "dark on dark" - text colors (#306998 and #666666) are far too dark for the dark background (#1A1A17). This is a critical theme-adaptation failure.
-
-    The data colors (gradient) correctly remain identical between light and dark renders, but the chrome (text, grid, background) fails entirely in dark mode. The implementation does not read ANYPLOT_THEME and does not apply theme-adaptive tokens as documented in bokeh.md.
+      Background: Warm near-black (#1A1A17), correctly theme-adapted
+      Chrome: **CRITICAL ISSUE** - Title text remains in dark blue (#306998) on dark background, making it unreadable (dark-on-dark failure). Y-axis feature names appear to be light-colored and readable. Value labels and axis label text appear to be light-colored and readable.
+      Data: Bars maintain identical blue gradient as light render (excellent - data colors are theme-independent). Grid and spacing unchanged.
+      Legibility verdict: FAIL - Title is unreadable due to dark-on-dark color problem; implementation failed to adapt title color to dark theme using INK tokens
   criteria_checklist:
     visual_quality:
       score: 20
@@ -57,50 +62,51 @@ review:
         score: 0
         max: 8
         passed: false
-        comment: 'Dark render has unreadable text: dark blue (#306998) and gray (#666666)
-          on dark background (#1A1A17). Title, axis labels, tick labels all fail legibility
-          in dark theme.'
+        comment: Light render readable, but dark render fails — title is dark on dark
+          background (unreadable). Per mandatory readability check, any unreadable
+          text in either render drops VQ-01 to 0.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements well-spaced with no overlapping
+        comment: All text fully readable, no overlaps despite readability failures
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, labels, and grid all clearly visible
+        comment: Bars perfectly sized and visible, markers well-adapted to data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Gradient is perceptually uniform and CVD-safe
+        comment: Blue gradient is CVD-safe and provides good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, nothing cut off
+        comment: Perfect layout — plot uses 50-80% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: title with plot identifier, ''Importance Score''
-          on x-axis'
+        comment: 'Axis labels descriptive (X: ''Importance Score''). Title format
+          mostly correct except domain typo.'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'FAILED: Background color is #fafafa not #FAF8F1 (light); dark theme
-          gets same color instead of #1A1A17. Chrome (text/grid) uses inappropriate
-          colors for both themes. No theme-adaptive logic.'
+        comment: 'Two failures: (1) Chrome colors hardcoded without theme tokens —
+          title/axes/grid not adapted to dark mode. (2) Continuous palette should
+          be viridis/cividis, not custom Blues9. (3) Title domain ''pyplots.ai'' should
+          be ''anyplot.ai'''
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -108,24 +114,26 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses reversed Blues9 gradient which is a nice touch, but overall
-          styling feels like well-configured defaults without custom design thought
+        comment: Well-configured library default. Blue gradient is reasonable for
+          importance but feels generic — looks like a configured default, not publication-ready
+          design.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Minimal customization. Grid styling is basic (dashed lines). No spine
-          removal or sophisticated refinement.
+        comment: Grid is subtle and dashed, layout is clean. Some refinement visible
+          but could be more polished.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Gradient provides some visual hierarchy by showing importance progression,
-          but lacks sophisticated storytelling emphasis
+        comment: Gradient progression from light to dark creates visual hierarchy
+          showing importance progression. But storytelling is minimal — just displays
+          data.
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -133,26 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart for feature importance
+        comment: Correct horizontal bar chart type
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: sorted bars, gradient coloring, value labels,
-          proper data mapping'
+        passed: false
+        comment: 'Has sorted bars, gradient coloring, value labels. Missing: error
+          bars for ''std'' column mentioned in spec as optional but valuable.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Feature names on Y-axis, importance scores on X-axis, all data visible
+        comment: Features on Y-axis, importance on X-axis. Axes show all data correctly.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title follows format correctly. Single series, no legend needed.
+        passed: false
+        comment: 'Title format incorrect: ''bar-feature-importance · bokeh · pyplots.ai''
+          should be ''bar-feature-importance · bokeh · anyplot.ai''. No legend needed
+          (single series).'
     data_quality:
       score: 15
       max: 15
@@ -162,23 +172,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 12 features with wide range of importances (0.185 to 0.015),
-          good variety
+        comment: Shows all 12 features with varied importance values (0.015 to 0.185),
+          demonstrating full feature importance distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world classification model scenario with typical feature importance
-          pattern
+        comment: Realistic financial/credit classification scenario — Income, Credit
+          Score, Age, Debt Ratio are plausible features for loan approval model
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance values are realistic and properly proportioned
+        comment: Feature importance values are factually correct proportions for typical
+          ML models (sum ~1.0, normalized scores)
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -186,59 +197,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot creation, styling, output'
+        comment: 'Straightforward: imports → data → plot setup → rendering. No unnecessary
+          functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data with hardcoded arrays
+        comment: Data is hardcoded and deterministic. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: export_png, save, ColumnDataSource, LabelSet,
+          LinearColorMapper, figure, etc.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Code is acceptable but doesn't follow bokeh.md best practices. Uses
-          deprecated export_png() instead of Selenium-based approach.
+        comment: Uses deprecated bokeh.io.export_png(). bokeh.md explicitly forbids
+          this — must use Selenium/headless Chrome approach. Also lacks theme-aware
+          color handling.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'FAILED: Uses bare ''plot.png'' and ''plot.html'' instead of theme-specific
-          ''plot-light.png'', ''plot-dark.png'', etc. Uses deprecated export_png()
-          which bokeh.md explicitly warns against.'
+        comment: Saves to 'plot.png' instead of 'plot-light.png' / 'plot-dark.png'.
+          Workflow expects theme-suffixed filenames for multi-render pipeline.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Correctly uses figure(), hbar(), ColumnDataSource, LabelSet, LinearColorMapper.
+          However, export_png() is deprecated method. Should use save() + Selenium.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses figure, hbar, ColumnDataSource correctly but doesn't follow
-          bokeh.md guidance on theme adaptation, output methodology, or color handling
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses LinearColorMapper and LabelSet (bokeh-specific), but these are
-          basic features. Doesn't leverage bokeh's full potential.
-  verdict: REJECTED
+        comment: Uses LabelSet for value annotations and LinearColorMapper for gradient
+          — both are Bokeh-specific techniques. But usage is fairly standard, not
+          particularly creative.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap
+  - grid-styling
