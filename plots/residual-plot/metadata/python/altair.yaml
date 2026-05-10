@@ -1,174 +1,185 @@
 library: altair
+language: python
 specification_id: residual-plot
 created: '2025-12-26T19:35:59Z'
-updated: '2025-12-26T19:41:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528204950
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/residual-plot/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/residual-plot/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T09:01:38Z'
+generated_by: claude-haiku
+workflow_run: 25624569771
+issue: 2332
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of all specification requirements including zero reference
-    line, LOESS smoothing, ±2σ bands, and outlier highlighting
-  - Clear demonstration of non-linear residual pattern through LOESS line - educationally
-    valuable
-  - Strong colorblind-safe palette with Python logo colors (blue/yellow)
-  - Good use of Altair declarative layering for combining multiple visual elements
-  - Realistic housing price scenario makes the plot immediately comprehensible
-  - Proper title format and descriptive axis labels with units
+  - Perfect visual quality across both light and dark themes with no legibility issues
+  - Comprehensive residual plot with diagnostic elements (reference line, confidence
+    bands, trend curve, outlier highlighting)
+  - Excellent use of Altair's distinctive features (transform_loess, layer composition,
+    declarative theming)
+  - Clean, reproducible code with proper structure and no unnecessary complexity
+  - Realistic, neutral data scenario that demonstrates all plot capabilities
+  - Proper theme adaptation with identical data colors across renders and correct
+    chrome adaptation
   weaknesses:
-  - Legend placement is slightly isolated from the main chart area - could be positioned
-    closer
-  - Points use outlined circles which can be slightly less visible than filled circles
-    at smaller sizes
-  - The grid lines behind the ±2σ dashed lines create slight visual noise
-  image_description: The plot displays a residual plot for housing price predictions
-    with "Fitted Values ($)" on the x-axis (ranging from 0 to ~520,000) and "Residuals
-    ($)" on the y-axis (ranging from -50,000 to +40,000). Blue outlined circles represent
-    "Normal" data points, while yellow outlined circles denote "Outlier (>2σ)" points.
-    A black dashed horizontal reference line at y=0 indicates perfect predictions.
-    Two gray dashed horizontal lines mark the ±2 standard deviation boundaries (~±31,000).
-    A prominent red LOESS smoothing line reveals a characteristic "U-shaped" pattern
-    in the residuals, starting high, dipping negative in the mid-range, and rising
-    again - clearly demonstrating the non-linear relationship that the linear model
-    failed to capture. The legend is positioned on the right side with "Point Type"
-    header. The title correctly follows the format "residual-plot · altair · pyplots.ai".
+  - 'Aesthetic sophistication is functional rather than exceptional (DE-01: 4/8) —
+    could benefit from more distinctive visual treatment or custom styling beyond
+    default configuration'
+  - 'Visual storytelling emphasis could be stronger (DE-03: 4/6) — consider adding
+    subtle emphasis techniques to highlight the diagnostic insight more prominently'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 - correct for light theme
+      Chrome: Title "residual-plot · altair · anyplot.ai" in dark text (INK token), axis labels "Fitted Values ($)" and "Residuals ($)" clearly visible, tick labels in INK_SOFT (#4A4A44) providing good contrast. Legend titled "Point Type" positioned on right with readable labels.
+      Data: Green markers (#009E73) represent normal residuals, orange markers (#D55E00) highlight outliers. LOWESS smoothing curve in dark color traces trend. Zero-reference line and ±2σ bands rendered with INK_SOFT color and dashed style. All markers visible with appropriate opacity (0.7).
+      Legibility verdict: PASS - All text is clearly readable against light background with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approximately #1A1A17 - correct for dark theme
+      Chrome: Title in light text (INK token #F0EFE8), axis labels clearly visible, tick labels in INK_SOFT (#B8B7B0) with strong contrast against dark background. No dark-on-dark failures detected. Legend maintains clarity and positioning.
+      Data: Green markers (#009E73) are identical to light render (same #009E73 color), orange markers (#D55E00) are identical. LOWESS curve and reference bands render in neutral light gray tones, clearly distinguishable from dark background. All data elements are identical in color to light render, confirming proper theme adaptation.
+      Legibility verdict: PASS - All text is clearly readable against dark background with no dark-on-dark failures. Data colors are identical to light render, proving proper theme-only chrome adaptation.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels and ticks are well-spaced
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements properly positioned with no overlapping collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Points are well-sized (size=120) with good opacity (0.7), appropriate
-          for 150 data points. Minor deduction: outlined points rather than filled
-          could be slightly harder to see'
+        comment: Markers and lines optimally sized for 150-point data density with
+          alpha=0.7 transparency
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe and provide
-          excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, minor whitespace on the left side of the
-          plot area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Fitted Values ($)" and "Residuals
-          ($)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette provides CVD-safe contrast, sufficient hue distinction
+          between categories
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800×2700px landscape format with 60-70% canvas utilization
+          and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (gridOpacity=0.3), but legend placement could be improved
-          - it's somewhat isolated on the right
+        comment: 'Descriptive labels with units: ''Fitted Values ($)'' and ''Residuals
+          ($)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect compliance: first series #009E73, second series #D55E00,
+          backgrounds #FAF8F1 (light)/#1A1A17 (dark), chrome properly themed in both
+          renders, data colors identical across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured Okabe-Ito palette and clean typography, but lacks
+          exceptional custom design or distinctive visual treatment beyond default
+          requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: LOWESS line adds visual interest, ±2σ bands provide
+          diagnostic value, subtle grid (opacity 0.10), thoughtful alpha blending'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: LOWESS trend guides the eye, color-coded
+          outliers emphasize diagnosis, realistic housing scenario supports interpretation'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct residual plot showing residuals vs fitted values
+        comment: 'Correct residual plot with all required variants: scatter, reference
+          line, bands, smoothing curve, outlier highlighting'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Y-axis shows residuals, X-axis shows fitted values as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: horizontal reference line at y=0, alpha
-          transparency, LOESS smoothing line, ±2σ bands, outlier coloring'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features implemented: zero reference line, ±2σ bands, LOWESS
+          curve, color-coded outliers (>2σ), alpha transparency'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible, axes show complete range with nice scaling
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, axes show all data without clipping or distortion
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels "Normal" and "Outlier (>2σ)" categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "residual-plot · altair · pyplots.ai"
+        comment: Title format 'residual-plot · altair · anyplot.ai' correct, legend
+          title and labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows outliers, non-linear pattern via LOESS, heteroscedasticity
-          visible. Minor: could show more extreme outliers'
+        comment: 'Shows all aspects: normal residuals, outliers, non-linearity pattern,
+          heteroscedasticity indication through curved LOWESS'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Housing price prediction is an excellent, comprehensible real-world
-          scenario
+        comment: Housing price regression scenario is realistic (house size 1000-3000
+          sq ft), neutral, and comprehensible with plausible values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Values are realistic for housing prices ($200k-$500k fitted, residuals
-          in $10k-$40k range). Slight deduction: the quadratic component creates a
-          very pronounced pattern'
+        comment: Mathematically correct residual calculations, standard 2σ outlier
+          threshold, realistic residual proportions relative to fitted values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,42 +187,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot layers → combine → save'
+        comment: 'Linear flow: imports → constants → data generation → plot creation
+          → save, no unnecessary functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: Seed set with np.random.seed(42) ensuring deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas'
+        comment: 'Only used imports: os, sys, altair, numpy, pandas - no unused dependencies'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code with appropriate complexity, no over-engineering
+          or fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: 'Saves both plot.png and plot.html (correct), but minor: ideally
-          should only output what''s needed'
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png with scale_factor=3.0 and plot-{THEME}.html
+          for interactivity'
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of Altair's declarative layering system, transform_loess
-          for smoothing, tooltips for interactivity. Could better leverage Altair's
-          selection/interaction capabilities
+        comment: 'Expert-level Altair patterns: alt.layer() for composition, theme-adaptive
+          configure methods, declarative encoding'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Uses Altair-specific features: transform_loess() for trend calculation,
+          layer composition for complex multi-element plots, environment-variable
+          theming pattern'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
