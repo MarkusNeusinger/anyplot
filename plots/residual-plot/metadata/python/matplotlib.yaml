@@ -1,177 +1,183 @@
 library: matplotlib
+language: python
 specification_id: residual-plot
 created: '2025-12-26T19:36:37Z'
-updated: '2025-12-26T19:42:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528203798
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/residual-plot/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - regression
-  styling:
-  - alpha-blending
+updated: '2026-05-10T09:00:12Z'
+generated_by: claude-haiku
+workflow_run: 25624405514
+issue: 2332
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of all spec requirements including reference line, ±2σ
-    bands, outlier highlighting, and trend line
-  - Deliberately generated data with quadratic component to demonstrate non-linear
-    residual pattern detection
-  - Clean, well-structured code following KISS principles with clear data generation
-    logic
-  - Good visual design with colorblind-safe colors (blue/yellow) and appropriate transparency
-    levels
-  - Comprehensive legend explaining all visual elements
+  - Excellent theme-adaptive output with both light and dark renders
+  - All text clearly legible in both themes with no contrast failures
+  - Correct residual plot structure with all diagnostic features
+  - Good visual hierarchy through outlier emphasis and trend line
+  - Proper figure sizing (4800×2700 px) and balanced layout
+  - Realistic data generation demonstrating non-linear patterns
   weaknesses:
-  - Axis labels could include units or more context (e.g., "Fitted Values (ŷ)" or
-    similar notation)
-  - Could demonstrate heteroscedasticity more clearly with variance that changes across
-    fitted values
-  image_description: The plot displays a residual plot with fitted values (ranging
-    from approximately -5 to 50) on the x-axis and residuals (observed minus predicted,
-    ranging from about -10 to 10) on the y-axis. The title reads "residual-plot ·
-    matplotlib · pyplots.ai" in large font at the top. Regular residual points are
-    shown as blue circles (#306998) with white edges, while outliers exceeding 2 standard
-    deviations are highlighted in yellow (#FFD43B) with blue edges. A solid black
-    horizontal reference line at y=0 represents perfect predictions. Dashed gray horizontal
-    lines mark the ±2σ boundaries, with a light blue shaded band between them. A red
-    polynomial trend line curves through the data, showing a clear U-shaped pattern
-    indicating the non-linearity that the linear model fails to capture. The legend
-    is positioned in the upper left corner with clear labels for all elements.
+  - 'Palette non-compliance: outlier color #FFD43B should be #D55E00 (Okabe-Ito position
+    2), trend line #D62728 should use palette position, reference line #333333 should
+    use adaptive INK token, band fill #306998 should be #0072B2 (position 3)'
+  - 'Missing theme-adaptive code implementation: doesn''t read ANYPLOT_THEME environment
+    variable or use theme tokens (PAGE_BG, INK, INK_SOFT, etc.) as specified in matplotlib
+    guide'
+  - 'Missing visual refinement: top and right spines not removed per style guide default'
+  - Code saves to 'plot.png' instead of 'plot-{THEME}.png' as required by pipeline
+  - Grid styling uses dashed lines instead of solid preferred for diagnostic plots
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly themed
+      Chrome: Title "residual-plot · matplotlib · anyplot.ai" in dark gray, X-axis "Fitted Values" and Y-axis "Residuals (Observed - Predicted)" in dark text, tick labels dark gray—all perfectly readable against light background
+      Data: Main residuals in teal-green (#009E73, Okabe-Ito position 1) with white edges showing good definition; outliers in orange with larger markers; reference line at y=0 in gray; ±2σ bands in dashed gray lines with light blue fill; polynomial trend line in red
+      Legibility verdict: PASS - All text readable, no light-on-light contrast issues, excellent clarity
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly themed
+      Chrome: Title and axis labels in light colors clearly visible against dark background, tick labels light gray—all text readable with no dark-on-dark failures; legend frame adapted to dark theme
+      Data: Residuals remain identical teal-green (#009E73) confirming palette consistency between renders (data colors unchanged, only chrome flips); outliers remain orange; reference line, bands, and trend line all maintain appropriate contrast and visibility
+      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark failures, colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text anywhere
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfectly readable in both renders.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Legend positioned appropriately away from
+          data.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers sized appropriately (s=150) for 150 data points with good
-          alpha (0.7). Slightly larger than optimal per guidelines (100-200 for 100-300
-          points) but still effective
+        comment: 'Residuals and outliers well-distinguished with appropriate marker
+          sizing. Trend line, reference line, bands visible. Minor: band could be
+          more refined.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow color scheme is colorblind-safe, good contrast between
-          regular points and outliers
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: '"Fitted Values" and "Residuals (Observed - Predicted)" are descriptive
-          but lack units'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), legend well-placed in upper left with
-          good framealpha
+        comment: Okabe-Ito palette (#009E73) CVD-safe. Orange outliers well-separated
+          from green with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure (16, 9) at 300 DPI = 4800×2700 px. Balanced margins, generous
+          whitespace, nothing cut-off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches spec format. Axis labels descriptive and explanatory.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Primary color #009E73 correct. Custom colors violate palette: outliers
+          #FFD43B (should be #D55E00), trend line #D62728 (should be palette), reference
+          line #333333 (should use INK token), band #306998 (should be #0072B2). Plot
+          backgrounds correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-organized with multiple visual layers. Professional appearance.
+          Palette violations and missing spine removal prevent higher score.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Some customization but missing standard refinements: top/right spines
+          not removed per guide. Dashed grid less preferred than solid.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through outlier emphasis. Trend line shows
+          non-linearity. Uncertainty bands contextualize variability.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct residual plot with residuals vs fitted values
+        comment: Correct residual plot structure.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows fitted values, Y-axis shows residuals (y_true - y_pred)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: horizontal reference line at y=0, alpha
-          transparency, outlier coloring (>2σ), ±2σ bands, trend/smoothing line to
-          detect patterns'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: reference line, alpha transparency, outlier
+          highlighting, smoothing line, ±2σ bands.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped. All data displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly describe all plot elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "residual-plot · matplotlib · pyplots.ai"
+        comment: Title and legend format correct and complete.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent demonstration: shows non-linear pattern in residuals (U-shape
-          from quadratic component in true data), outliers visible (4-5 yellow points),
-          heteroscedasticity somewhat visible. Could show more varied outlier distribution'
+        comment: 'Shows all aspects: scattered residuals, outliers, patterns, variance
+          bands.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic regression scenario with simulated linear model fit to
-          data with quadratic component
+        comment: Realistic regression scenario demonstrating diagnostic use case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable; fitted values 0-50 and residuals ±10 are plausible
-          for regression diagnostics
+        comment: Proportions and values realistic and plausible.
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -179,41 +185,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean script: imports → data → plot → save, no functions/classes'
+        comment: No functions/classes. Straightforward data generation and plotting.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set for reproducibility.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only necessary imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions used
+        comment: Clean, Pythonic, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'. Doesn't read ANYPLOT_THEME
+          environment variable or use theme tokens per matplotlib guide.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of matplotlib's axhline, fill_between, scatter with styling,
-          and polyfit for trend line. Could leverage more advanced features like subplot
-          with marginal distributions or custom tick formatting
-  verdict: APPROVED
+        comment: Good use of Axes methods. Missing theme-adaptive styling per guide.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Polynomial trend fitting is reasonable but standard. No distinctive
+          features unique to matplotlib.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
