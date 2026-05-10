@@ -1,7 +1,7 @@
 """ anyplot.ai
 precision-recall: Precision-Recall Curve
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-10
+Quality: 92/100 | Updated: 2026-05-10
 """
 
 import os
