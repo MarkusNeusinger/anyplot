@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:37:53Z'
-updated: '2026-05-10T13:11:38Z'
+updated: '2026-05-10T13:16:59Z'
 generated_by: claude-haiku
 workflow_run: 25628927485
 issue: 2334
@@ -12,81 +12,82 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouett
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.html
-quality_score: 46
+quality_score: 62
 review:
   strengths:
-  - Correct silhouette plot implementation with proper data structure
-  - All required spec features present (bars, clusters, average line, annotations)
-  - Data (Iris clustering) is realistic and appropriate
-  - Code is readable and uses deterministic seeding
+  - Correct silhouette plot type with proper cluster grouping and sorting
+  - Clear data representation in light theme with distinct cluster colors
+  - Good use of altair layer composition (bars + average line + annotation)
+  - Realistic example data from iris dataset with proper seeding
+  - Clean, reproducible code with deterministic random seed
   weaknesses:
-  - No theme-adaptive rendering - does not read ANYPLOT_THEME environment variable,
-    causing dark render to be unreadable (dark-on-dark text)
-  - 'Wrong palette - uses Python language colors (#306998, #FFD43B, #E34C26) instead
-    of Okabe-Ito (#009E73, #D55E00, #0072B2)'
-  - Output file naming - saves to plot.png instead of plot-light.png and plot-dark.png
-  - Dark render has unreadable axis labels, legend, and title due to dark text on
-    dark background
-  - Title URL is wrong (pyplots.ai should be anyplot.ai)
+  - 'Dark mode completely broken: blue cluster (#306998) nearly invisible on dark
+    background (#1A1A17) - dark-on-dark legibility failure'
+  - 'Wrong palette: uses #306998 instead of #009E73 (brand green) for first series'
+  - 'No theme adaptation: missing os.getenv and theme token application (PAGE_BG,
+    INK, INK_SOFT)'
+  - Output files saved to plot.png instead of plot-{THEME}.png
+  - Generic design with no visual refinement or sophistication
+  - Horizontal bars have internal striped pattern instead of solid colors
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 - correct color
-      Chrome: Title 'silhouette-basic · altair · pyplots.ai', x-axis label 'Silhouette Coefficient', tick labels, and legend are all clearly visible with dark text
-      Data: Three horizontal bars in blue (#306998), orange (#FFD43B), green (#E34C26) representing clusters. Red dashed reference line at average silhouette score (~0.553)
-      Legibility verdict: PASS - all text and data elements are readable
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all clearly readable in dark text
+      Data: Three clusters with blue (#306998), orange (#FFD43B), green - bars have horizontal striped pattern; legend on right side with cluster info
+      Legibility verdict: PASS - all text readable in light theme, though first series color is non-compliant (should be #009E73)
 
     Dark render (plot-dark.png):
-      Background: Appears to be pure black or very dark (should be #1A1A17)
-      Chrome: CRITICAL FAILURE - title, axis labels, tick labels, and legend labels remain dark colored instead of adapting to light colors. Dark text on dark background creates dark-on-dark contrast failures. Nearly impossible to read.
-      Data: Same bars visible (colors identical to light render, which is correct). Red reference line visible. But annotations and labels are unreadable.
-      Legibility verdict: FAIL - dark-on-dark text rendering makes the plot unreadable. The implementation does not implement theme-adaptive text colors via ANYPLOT_THEME environment variable.
+      Background: Near-black (#1A1A17) appears correct but chrome adaptation failed
+      Chrome: Blue bars and some text nearly invisible on dark background - CRITICAL DARK-ON-DARK FAILURE
+      Data: Blue cluster bars nearly black on near-black background making them virtually unreadable; orange and green clusters barely visible; annotation text "Avg: 0.653" in red is visible but compromised
+      Legibility verdict: FAIL - blue cluster (#306998) has severe contrast failure against dark background (#1A1A17); implementation lacks theme-adaptive chrome tokens (PAGE_BG, INK_SOFT); text colors not adjusted for dark theme
   criteria_checklist:
     visual_quality:
-      score: 11
+      score: 13
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 1
+        score: 2
         max: 8
         passed: false
-        comment: Dark render completely unreadable - dark text on dark background
+        comment: Dark render has near-invisible blue bars - critical legibility failure
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: Minimal overlap, mostly readable
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars and reference line visible
+        comment: Minimal overlap in light; dark render compromised
+      - id: VQ-03
+        name: Element Visibility
+        score: 2
+        max: 6
+        passed: false
+        comment: Dark cluster nearly invisible on dark background
       - id: VQ-04
         name: Color Accessibility
         score: 0
         max: 2
         passed: false
-        comment: Custom palette not Okabe-Ito compliant
+        comment: 'Dark-on-dark contrast failure; #306998 on #1A1A17'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout, ~60% canvas utilization
+        comment: Good proportions and space usage
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels
+        passed: false
+        comment: Title correct but axis lacks units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Wrong palette and broken theme chrome
+        comment: 'Wrong first color (#306998 not #009E73), no theme tokens'
     design_excellence:
       score: 6
       max: 20
@@ -96,21 +97,21 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic defaults, arbitrary Python language colors
+        comment: Generic defaults, no custom palette
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization
+        comment: Library defaults with minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy
+        comment: Displays data but no visual hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,15 +131,15 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Correct axes
+        comment: Correct mapping
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: URL wrong (pyplots.ai not anyplot.ai)
+        passed: true
+        comment: Correct format
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -146,75 +147,76 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All cluster features shown
+        comment: Shows all clusters with variation
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Iris dataset is real and neutral
+        comment: Iris dataset, realistic clustering
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Realistic values
+        comment: Valid silhouette coefficient range
     code_quality:
-      score: 1
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Does not implement required theme functionality
+        passed: true
+        comment: Linear, simple code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Missing critical theme-adaptive rendering
+        passed: true
+        comment: Clean code
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png not plot-{THEME}.png
+        comment: Should save plot-{THEME}.png not plot.png
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct altair but could use more patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Does not use Altair theming configuration methods
-      - id: LM-02
-        name: Distinctive Features
-        score: 0
-        max: 5
-        passed: false
-        comment: No distinctive library features
-  verdict: REJECTED
+        comment: Layer composition used but generic
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - dataset-loading
   - iteration-over-groups
