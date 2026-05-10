@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-error: Bar Chart with Error Bars
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2025-12-21
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-10
 """
 
 import os
