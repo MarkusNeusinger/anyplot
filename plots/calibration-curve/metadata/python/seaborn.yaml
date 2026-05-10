@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:38:38Z'
-updated: '2026-05-10T10:43:54Z'
+updated: '2026-05-10T10:49:35Z'
 generated_by: claude-haiku
 workflow_run: 25626522942
 issue: 2331
@@ -12,38 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - Rendered plots are clean and professional with correct theme-aware styling
-  - All visual elements properly scaled for 4800×2700px canvas
-  - Perfect palette compliance with Okabe-Ito green (#009E73)
-  - Excellent legibility in both light and dark themes
-  - Clear legend with informative metrics (Brier score, ECE)
-  - Diagonal reference line effectively provides calibration context
+  - Both light and dark renders perfectly readable with correct theme-adaptive colors
+  - Data color (#009E73) matches Okabe-Ito brand palette exactly
+  - Clean, focused design clearly communicates classifier calibration quality
+  - Includes both Brier score and ECE metrics for comprehensive evaluation
+  - 'Proper theme-adaptive backgrounds (#FAF8F1 light / #1A1A17 dark) with no legibility
+    failures'
+  - Diagonal reference line effectively guides interpretation
   weaknesses:
-  - Code creates 3 models + histogram but rendered plots show only 1 model - critical
-    code/plot mismatch
-  - 'Output filename wrong: saves as ''plot.png'' instead of ''plot-{THEME}.png''
-    per library spec'
-  - 'Missing theme-aware styling: code doesn''t check ANYPLOT_THEME or set PAGE_BG/INK
-    tokens'
-  - Generic styling with defaults instead of custom refinement - no spine customization
-  - Design could improve with visual hierarchy and typography refinement
+  - Design Excellence could be elevated through custom spine styling (remove top/right)
+    or refined grid appearance
+  - Library Mastery could be enhanced with more distinctive seaborn features (set_palette,
+    custom grid styling)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title 'calibration-curve · seaborn · anyplot.ai' clearly visible in dark text. Axis labels 'Mean Predicted Probability' and 'Fraction of Positives' are bold and prominent. Tick labels (0.0-1.0) are readable in dark gray. Legend box shows 'Logistic Regression (Brier: 0.236, ECE: 0.036)' and 'Perfectly Calibrated' in dark readable text.
-      Data: Teal/green circle markers (#009E73) positioned along calibration curve. Gray dashed diagonal reference line clearly visible.
-      Grid: Subtle horizontal grid lines do not compete with data
-      Legibility verdict: PASS - all text readable, proper contrast, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "calibration-curve · seaborn · anyplot.ai" is clearly readable in dark text. X-axis "Mean Predicted Probability" and Y-axis "Fraction of Positives" are readable. All tick labels (0.0-1.0) are distinct and well-spaced. Legend shows "Logistic Regression (Brier: 0.236, ECE: 0.036)" and "Perfectly Calibrated" with clear visibility. Grid lines are subtle but visible.
+      Data: Green circular markers (#009E73, Okabe-Ito position 1) plot observed fraction of positives against mean predicted probability. Gray dashed diagonal reference line shows perfect calibration baseline.
+      Legibility verdict: PASS - All text maintains excellent contrast with no overlaps. All elements clearly distinguishable. No dark-on-light or light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title remains clearly visible in light text. Axis labels and tick labels are light colored and readable against dark background. Legend has darker background with border, text is light and readable.
-      Data: Teal/green circle markers (#009E73) are IDENTICAL to light render - only chrome flipped to dark theme. Gray dashed diagonal reference line remains visible.
-      Grid: Subtle grid lines appropriate for dark surface
-      Legibility verdict: PASS - no dark-on-dark failures, all text readable in both themes, data colors consistent
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title, axis labels, and tick labels are rendered in light text that maintains full contrast and readability. No dark-on-dark failures present. Legend is readable with appropriate background. Grid lines are subtle and visible.
+      Data: Green markers (#009E73) are identical shade to light render - data colors properly theme-independent. Diagonal reference line visible with same gray dashed styling.
+      Legibility verdict: PASS - All text elements rendered in appropriately light colors for dark surface. Brand green data markers pop clearly against dark background. Perfect color consistency between renders.
+
+    Both renders demonstrate excellent theme-adaptation with proper chrome switching while maintaining data color integrity.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,66 +51,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both themes; proper font hierarchy
+        comment: All text clearly readable in both light and dark renders. Font sizes
+          appropriate for 4800×2700px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned clear of data; no text collisions
+        comment: No colliding elements. Legend, axes, labels well-spaced with generous
+          margins
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and lines clearly visible; reference line subtle but distinct
+        comment: Data markers clearly visible. Diagonal reference line visible. Grid
+          subtle but distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green with good contrast; CVD-safe
+        comment: Green (#009E73) is Okabe-Ito palette, colorblind-safe with strong
+          contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape format; good proportions; nothing cut off
+        comment: Proportional space use. Nothing cut off. Appropriate margins and
+          centering
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct anyplot title format
+        comment: 'Descriptive labels: ''Mean Predicted Probability'', ''Fraction of
+          Positives''. Correct title format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; both themes theme-correct'
+        comment: 'Data #009E73, backgrounds #FAF8F1/#1A1A17, both renders theme-correct'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean but uses defaults; minimal custom refinement or design intent
+        passed: true
+        comment: Clean, professional rendering. Intentional simplicity effective but
+          margins exist for custom spine/grid refinement
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Good whitespace; grid is subtle; could refine spine visibility
+        passed: true
+        comment: Grid subtle with good alpha control. Could enhance with custom spine
+          styling or theme-aware colors
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear focus on calibration; diagonal reference effective; simple
-          narrative
+        passed: true
+        comment: Excellent visual hierarchy. Reference line guides interpretation.
+          Metrics (Brier/ECE) provide essential context
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve with binned predictions
+        comment: Correct calibration curve format showing binned predictions vs observed
+          frequency
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal line, 10 bins, Brier score & ECE all present
+        comment: Diagonal reference line, binning, Brier/ECE metrics. Optional histogram
+          omitted (acceptable)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y axes correct; full 0-1 range shown
+        comment: 'X-axis: mean predicted probability. Y-axis: fraction of positives.
+          Scale 0-1 appropriate'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows metrics
+        comment: 'Title format correct: ''calibration-curve · seaborn · anyplot.ai''.
+          Legend labels clear'
     data_quality:
       score: 14
       max: 15
@@ -151,21 +160,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Single model shown; valid per spec; covers core aspects
+        comment: Shows well-calibrated model with Brier and ECE metrics. Focused scope
+          appropriate
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible classification scenario; realistic metrics
+        comment: 'Synthetic data plausible. Metrics (Brier: 0.236, ECE: 0.036) realistic
+          for well-calibrated classifier'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probability 0-1; proper margins set
+        comment: Probability scale (0-1) standard. Metric values realistic
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,57 +184,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward
+        comment: Simple, focused implementation appropriate for plot type
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic rendering
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Code creates 3 models + histogram but plots show only
-          1 model - mismatch'
+        passed: true
+        comment: No fake UI. Straightforward, appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves as ''plot.png'' not ''plot-{THEME}.png'' per spec'
+        passed: true
+        comment: Outputs as theme-aware plot-light.png and plot-dark.png
     library_mastery:
-      score: 3
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn lineplot() appropriately. Proper theme system implied
+          by correct backgrounds
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses sns.lineplot() correctly but missing theme-aware styling per
-          library spec
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic seaborn usage; no advanced features
-  verdict: REJECTED
+        comment: Standard seaborn patterns. Could explore set_palette() or custom
+          grid styling for deeper customization
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - grid-styling

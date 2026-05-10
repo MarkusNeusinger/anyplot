@@ -1,7 +1,7 @@
 """ anyplot.ai
 calibration-curve: Calibration Curve
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-10
+Quality: 87/100 | Updated: 2026-05-10
 """
 
 import matplotlib.pyplot as plt
