@@ -1,13 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 residual-plot: Residual Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: altair | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove script directory from path to avoid importing local altair.py
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO_1 = "#009E73"  # Brand green for main data
+OKABE_ITO_2 = "#D55E00"  # Vermillion for outliers
 
 # Data: Simulate a linear regression scenario with some non-linearity
 np.random.seed(42)
@@ -43,7 +61,7 @@ scatter = (
         y=alt.Y("Residuals ($):Q", title="Residuals ($)", scale=alt.Scale(nice=True)),
         color=alt.Color(
             "Outlier:N",
-            scale=alt.Scale(domain=["Normal", "Outlier (>2σ)"], range=["#306998", "#FFD43B"]),
+            scale=alt.Scale(domain=["Normal", "Outlier (>2σ)"], range=[OKABE_ITO_1, OKABE_ITO_2]),
             legend=alt.Legend(title="Point Type", titleFontSize=18, labelFontSize=16),
         ),
         tooltip=["Fitted Values ($):Q", "Residuals ($):Q", "Outlier:N"],
@@ -52,13 +70,13 @@ scatter = (
 
 # Zero reference line
 zero_line = (
-    alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color="#333333", strokeWidth=2, strokeDash=[8, 4]).encode(y="y:Q")
+    alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color=INK_SOFT, strokeWidth=2, strokeDash=[8, 4]).encode(y="y:Q")
 )
 
 # ±2 standard deviation bands
 bands_df = pd.DataFrame({"y": [2 * std_residual, -2 * std_residual], "label": ["+2σ", "-2σ"]})
 
-band_lines = alt.Chart(bands_df).mark_rule(color="#888888", strokeWidth=1.5, strokeDash=[4, 4]).encode(y="y:Q")
+band_lines = alt.Chart(bands_df).mark_rule(color=INK_SOFT, strokeWidth=1.5, strokeDash=[4, 4]).encode(y="y:Q")
 
 # Add LOWESS-like trend using polynomial regression
 loess_df = df.copy()
@@ -67,7 +85,7 @@ loess_df = loess_df.sort_values("Fitted Values ($)")
 loess_line = (
     alt.Chart(loess_df)
     .transform_loess("Fitted Values ($)", "Residuals ($)", bandwidth=0.3)
-    .mark_line(color="#E24A33", strokeWidth=3)
+    .mark_line(color=INK_SOFT, strokeWidth=3)
     .encode(x="Fitted Values ($):Q", y="Residuals ($):Q")
 )
 
@@ -77,13 +95,26 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title(text="residual-plot · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title(text="residual-plot · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
-    .configure_legend(orient="right", padding=10)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        gridOpacity=0.10,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, orient="right", padding=10
+    )
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
