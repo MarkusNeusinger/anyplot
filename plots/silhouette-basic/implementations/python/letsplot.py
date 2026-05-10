@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -13,6 +15,16 @@ from sklearn.metrics import silhouette_samples, silhouette_score
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always #009E73 (brand green)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Clustering iris dataset into 3 groups
 np.random.seed(42)
@@ -33,8 +45,6 @@ data_rows = []
 y_position = 0
 cluster_centers = []
 cluster_avg_scores = []
-
-colors = ["#306998", "#FFD43B", "#DC2626"]  # Python Blue, Python Yellow, Red
 
 for cluster_idx in range(n_clusters):
     # Get samples in this cluster
@@ -65,6 +75,9 @@ for cluster_idx in range(n_clusters):
 df = pd.DataFrame(data_rows)
 df["x_start"] = 0  # Starting x position for horizontal bars
 
+# Map cluster indices to Okabe-Ito colors
+df["cluster_color"] = df["cluster_idx"].map({i: OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_clusters)})
+
 # Create annotation dataframe for cluster labels
 annotation_df = pd.DataFrame(
     {
@@ -74,32 +87,41 @@ annotation_df = pd.DataFrame(
     }
 )
 
+# Theme-adaptive theme
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major_x=element_line(color=INK, size=0.3),
+    panel_grid_minor_x=element_line(color=INK, size=0.2),
+    axis_title=element_text(size=20, color=INK),
+    axis_text_x=element_text(size=16, color=INK_SOFT),
+    axis_text_y=element_blank(),
+    axis_ticks_y=element_blank(),
+    panel_grid_major_y=element_blank(),
+    panel_grid_minor_y=element_blank(),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(size=24, color=INK),
+    legend_position="right",
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+)
+
 # Create the silhouette plot using horizontal bars
 plot = (
-    ggplot()
-    + geom_segment(aes(x="x_start", xend="silhouette", y="y", yend="y", color="cluster"), data=df, size=1.5)
-    + geom_vline(xintercept=avg_silhouette, color="#333333", linetype="dashed", size=1)
-    + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=14, hjust=1)
-    + scale_color_manual(values=colors)
+    ggplot(df, aes(x="silhouette", y="y", color="cluster"))
+    + geom_segment(aes(xend="silhouette", yend="y"), x=0, size=1.5)
+    + geom_vline(xintercept=avg_silhouette, color=INK_SOFT, linetype="dashed", size=1)
+    + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=14, hjust=1, color=INK_SOFT)
+    + scale_color_manual(values=OKABE_ITO[:n_clusters])
     + labs(
         x="Silhouette Coefficient",
         y="Sample Index (sorted within cluster)",
-        title="silhouette-basic · letsplot · pyplots.ai",
+        title="silhouette-basic · letsplot · anyplot.ai",
     )
     + xlim(-0.3, 1.0)
     + theme_minimal()
-    + theme(
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_position="right",
-        axis_text_y=element_blank(),
-        axis_ticks_y=element_blank(),
-        panel_grid_major_y=element_blank(),
-        panel_grid_minor_y=element_blank(),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
@@ -107,10 +129,10 @@ plot = (
 avg_label_df = pd.DataFrame(
     {"x": [avg_silhouette + 0.03], "y": [max(df["y"]) * 0.95], "label": [f"Avg: {avg_silhouette:.2f}"]}
 )
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=avg_label_df, size=14, hjust=0)
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=avg_label_df, size=14, hjust=0, color=INK_SOFT)
 
 # Save as PNG (scale 3x to get 4800 x 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
