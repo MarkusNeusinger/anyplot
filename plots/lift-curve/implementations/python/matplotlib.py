@@ -1,12 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 lift-curve: Model Lift Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-27
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-10
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT = "#E69F00"  # Okabe-Ito position 5 for reference line
 
 # Data - Simulate realistic customer response model predictions
 np.random.seed(42)
@@ -47,49 +58,44 @@ for pct in percentages:
 
 lift_values = np.array(lift_values)
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Plot lift curve
-ax.plot(percentages, lift_values, color="#306998", linewidth=3, label="Model Lift", zorder=3)
+ax.plot(percentages, lift_values, color=BRAND, linewidth=3, label="Model Lift", zorder=3)
 
 # Reference line at y=1 (random selection)
-ax.axhline(y=1, color="#FFD43B", linestyle="--", linewidth=2.5, label="Random (Lift = 1)", zorder=2)
-
-# Add markers at key deciles
-decile_pcts = [10, 20, 30, 40, 50]
-for pct in decile_pcts:
-    idx = pct - 1
-    ax.scatter(pct, lift_values[idx], color="#306998", s=150, zorder=4, edgecolors="white", linewidth=2)
-    ax.annotate(
-        f"{lift_values[idx]:.2f}x",
-        (pct, lift_values[idx]),
-        xytext=(0, 15),
-        textcoords="offset points",
-        ha="center",
-        fontsize=14,
-        fontweight="bold",
-        color="#306998",
-    )
+ax.axhline(y=1, color=ACCENT, linestyle="--", linewidth=2.5, label="Random (Lift = 1)", zorder=2)
 
 # Fill area under curve for visual emphasis
-ax.fill_between(percentages, 1, lift_values, where=(lift_values > 1), alpha=0.15, color="#306998", zorder=1)
+ax.fill_between(percentages, 1, lift_values, where=(lift_values > 1), alpha=0.15, color=BRAND, zorder=1)
 
-# Styling
-ax.set_xlabel("Population Targeted (%)", fontsize=20)
-ax.set_ylabel("Cumulative Lift", fontsize=20)
-ax.set_title("lift-curve · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("Population Targeted (%)", fontsize=20, color=INK)
+ax.set_ylabel("Cumulative Lift", fontsize=20, color=INK)
+ax.set_title("lift-curve · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
 # Set axis limits
 ax.set_xlim(0, 100)
 ax.set_ylim(0, max(lift_values) * 1.15)
 
 # Grid
-ax.grid(True, alpha=0.3, linestyle="--", zorder=0)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+
+# Spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
 # Legend
-ax.legend(fontsize=16, loc="upper right")
+leg = ax.legend(fontsize=16, loc="upper right")
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
