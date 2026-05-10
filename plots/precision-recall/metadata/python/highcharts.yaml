@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: precision-recall
 created: '2025-12-26T19:15:17Z'
-updated: '2026-05-10T05:43:17Z'
+updated: '2026-05-10T05:48:57Z'
 generated_by: claude-haiku
 workflow_run: 25620922260
 issue: 2274
@@ -12,44 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - All text is perfectly legible in both light and dark themes with proper font sizing
-    and color contrast
-  - 'Spec compliance is complete: AP score, baseline reference, stepped line, and
-    legend all present and correct'
-  - Data is realistic with binary classification and imbalanced class distribution
-    (30% positive ratio)
-  - Proper theme-adaptive chrome with all chart elements tied to theme tokens (INK,
-    INK_SOFT, GRID)
-  - Clean, straightforward code with good reproducibility (np.random.seed(42))
-  - Okabe-Ito palette correctly applied to primary series (#009E73)
+  - Perfect visual quality with all text readable in both light and dark themes
+  - Complete spec compliance with all required features (AP score, baseline, stepped
+    curve)
+  - Excellent data quality using realistic imbalanced binary classification scenario
+  - Clean, deterministic code with proper theme-adaptive styling throughout
+  - Correct Okabe-Ito palette with brand green invariant across themes
   weaknesses:
-  - Baseline color (#F0E442, yellow) has lower luminance on light backgrounds; less
-    visible on light (#FAF8F1) than on dark (#1A1A17), creating theme-readability
-    asymmetry. Use INK_SOFT (#4A4A44/#B8B7B0) instead for consistent prominence.
-  - 'Design excellence is minimal: uses standard Highcharts styling without custom
-    refinements; legend box could have more sophisticated appearance'
-  - 'Library Mastery: Does not leverage distinctive Highcharts features such as plotBands
-    for threshold regions or interactive elements'
+  - Generic Highcharts styling without custom visual refinement or design choices
+    beyond library defaults
+  - Does not showcase advanced or distinctive Highcharts capabilities (interactive
+    features, custom tooltips, events)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per style guide
-      Chrome: Title "precision-recall · highcharts · anyplot.ai" (28px, dark INK) clearly readable; subtitle "Average Precision (AP) = 0.926" (22px, INK_SOFT) readable; axis labels (22px, INK) visible; tick labels (18px, INK_SOFT) legible; legend box (ELEVATED_BG #FFFDF6) with text in INK_SOFT readable
-      Data: Stepped area curve filled with Okabe-Ito #009E73 (brand green) at 30% opacity - very clear and prominent; dashed yellow baseline (#F0E442) at y=0.3 visible but noticeably less prominent than on dark background due to low luminance on light surface
-      Legibility verdict: PASS (all elements readable, but baseline color has luminance issue)
+      Background: Warm off-white #FAF8F1 as specified
+      Chrome: Title "precision-recall · highcharts · anyplot.ai" in bold dark text; subtitle "Average Precision (AP) = 0.526" in secondary color; X-axis "Recall (Sensitivity)" and Y-axis "Precision (Positive Predictive Value)" both clearly visible with dark text; tick labels in secondary color on light background; grid lines subtle and unobtrusive
+      Data: Main classifier curve rendered as stepped area series in brand green (#009E73) with 0.3 opacity, showing the characteristic precision-recall tradeoff; dashed yellow baseline line at y=0.3 representing random classifier; stepped line correctly handles threshold-based nature
+      Legend: Positioned top-right with readable labels on elevated background box
+      Legibility verdict: PASS - All text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per style guide
-      Chrome: Title, subtitle, axis labels, tick labels all in light text (INK #F0EFE8, INK_SOFT #B8B7B0) - clearly visible against dark background with no dark-on-dark failures; legend box (ELEVATED_BG #242420) with light text readable
-      Data: Stepped area curve with identical green color (#009E73) as light render - equally prominent; dashed yellow baseline (#F0E442) more visible on dark surface than on light, revealing color choice asymmetry
-      Legibility verdict: PASS (all elements readable, data colors identical to light render)
-
-    Summary: Both renders pass legibility checks. Data colors are identical between themes (only chrome adapts). Minor issue: baseline yellow (#F0E442) violates style guide recommendation against thin lines on light surfaces - less visible on light theme creates asymmetric prominence. Baseline should use INK_SOFT for consistent readability.
+      Background: Warm near-black #1A1A17 as specified
+      Chrome: Title and axis labels in light color (#F0EFE8); secondary text in lighter gray (#B8B7B0); all readable against dark background; grid lines adapted to light shade; no dark-on-dark text failures
+      Data: Brand green area (#009E73) identical to light render - color invariance confirmed; yellow baseline dashed line identical in color; data representation unchanged, only chrome adapted
+      Legend: Light text on dark background with visible border, readable and properly positioned
+      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark failures, data colors invariant
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -57,68 +50,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, labels 22px, ticks 18px - all readable in both themes
+        comment: All text readable in both themes with proper font sizes (28px title,
+          22px axes, 18px ticks)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text non-overlapping with generous spacing
+        comment: Clean legend placement, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stepped line and area fill clearly visible; markers disabled
+        comment: Area fill at 0.3 opacity clear, stepped line distinct, baseline dashed
+          line visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe; green and yellow distinguishable
+        comment: Okabe-Ito palette colorblind-safe, adequate contrast between series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper margins; nothing cut off; good proportions
+        comment: Good proportions, generous margins (250px bottom, 200px left), nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id/library/domain; axis labels have units
+        comment: 'Descriptive labels: Recall (Sensitivity), Precision (Positive Predictive
+          Value)'
       - id: VQ-07
         name: Palette Compliance
-        score: -1
+        score: 2
         max: 2
-        passed: false
-        comment: 'PR curve correct (#009E73), backgrounds correct, but baseline #F0E442
-          (yellow) violates style guide for thin lines on light surfaces - asymmetric
-          visibility between themes'
+        passed: true
+        comment: 'First series is brand #009E73, theme tokens properly applied, both
+          renders theme-correct'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Standard Highcharts styling without custom refinements
+        comment: Functional but uses generic Highcharts defaults without custom design
+          choices
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Markers disabled, grid subtle, but could be more polished
+        comment: Minimal customization beyond library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear hierarchy and legend, but no emphasis techniques or focal point
-          enhancement
+        passed: true
+        comment: Clear focal point with main curve, baseline provides context, AP
+          score aids interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +125,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct precision-recall stepped area chart
+        comment: Correct precision-recall curve with area series and stepped line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AP score, baseline, stepped line, legend all present
+        comment: AP score in subtitle, baseline reference, stepped line style all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Recall X-axis (0-1), Precision Y-axis (0-1), all data visible
+        comment: X=Recall, Y=Precision, both 0-1 scale, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels clear
+        comment: Title format correct, legend labels descriptive and informative
     data_quality:
       score: 15
       max: 15
@@ -156,19 +154,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: PR curve, AP via trapezoidal rule, baseline'
+        comment: Complete P-R curve showing threshold effects, balanced positive/negative
+          handling
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Binary classification with 30% imbalance, realistic AP=0.926
+        comment: Imbalanced binary classification (30% positive), realistic classifier
+          output, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 samples appropriate; [0,1] range standard
+        comment: Standard 0-1 scales, 500 samples reasonable, AP=0.526 plausible
     code_quality:
       score: 10
       max: 10
@@ -178,33 +178,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; inline AP calculation necessary
+        comment: Linear flow, inline P-R computation, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Seeded random generation with np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; nothing unused
+        comment: All imports used, no bloat
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: No fake UI, no simulated interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output naming (plot-light/dark.png/html); current API
+        comment: Correct output format (plot-{THEME}.png/html), current API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -212,15 +212,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct AreaSeries/SplineSeries usage; theme tokens properly applied
+        comment: Correct Chart/HighchartsOptions pattern, comprehensive theme-adaptive
+          options
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Standard patterns without distinctive Highcharts features (plotBands,
-          custom markers)
-  verdict: REJECTED
+        comment: Uses AreaSeries fill_opacity and stepped lines, but relatively standard
+          usage
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
