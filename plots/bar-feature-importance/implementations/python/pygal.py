@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-10
+Quality: 88/100 | Updated: 2026-05-10
 """
 
 import colorsys
