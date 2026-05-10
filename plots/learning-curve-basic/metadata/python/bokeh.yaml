@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:37:56Z'
-updated: '2026-05-10T03:30:03Z'
+updated: '2026-05-10T03:36:11Z'
 generated_by: claude-haiku
 workflow_run: 25618654156
 issue: 2275
@@ -12,115 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/bokeh/plot-dark.html
-quality_score: 76
+quality_score: 67
 review:
   strengths:
-  - Clear visual distinction between training and validation curves using color and
-    positioning
-  - Confidence bands effectively communicate uncertainty across training set sizes
-  - Well-formatted title and axis labels with appropriate font sizing
-  - Proper use of Bokeh's HoverTool for interactivity on data points
-  - Both light and dark renders are visually readable with good contrast
+  - Correct learning curve visualization with realistic data showing overfitting diagnosis
+  - Clear legend and axis labels readable in light theme
+  - Proper confidence band implementation using Bokeh Band objects
+  - Good data quality with appropriate accuracy scale (0.6-1.0)
   weaknesses:
-  - Code does not read ANYPLOT_THEME environment variable — background and legend
-    colors are hard-coded to light theme values instead of using theme-adaptive tokens
-  - Output filename is plot.png instead of plot-{THEME}.png pattern required by pipeline
-  - Uses bokeh.io.export_png which is explicitly discouraged in bokeh.md style guide
-    — should use Selenium headless screenshot instead
-  - 'Confidence band colors (#306998, #FFD43B) not from Okabe-Ito palette and hard-coded
-    instead of theme-adaptive'
-  - Missing INK/INK_SOFT theme tokens for grid lines, legend, and text elements
+  - 'Dark render completely unreadable: Y-axis tick labels are dark-on-dark (fails
+    VQ-01 Text Legibility)'
+  - 'Non-Okabe-Ito palette: training uses #306998 instead of #009E73; validation uses
+    #E6A800/#FFD43B instead of palette position 2 (fails VQ-07 Palette Compliance)'
+  - 'No theme adaptation: code does not read ANYPLOT_THEME environment variable or
+    apply theme-adaptive text colors (INK, INK_SOFT tokens)'
+  - 'Wrong export method: uses export_png() instead of Selenium screenshot; saves
+    to plot.png instead of plot-light.png/plot-dark.png per bokeh.md'
+  - 'Legend styling not theme-aware: hardcoded white background (#ffffff) instead
+    of theme-aware ELEVATED_BG token'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per style guide.
-      Chrome: Title "learning-curve-basic · bokeh · anyplot.ai" in dark text, axis labels "Training Set Size (samples)" and "Accuracy Score" in dark text, tick labels in softer dark gray. All clearly readable and well-spaced. Grid lines are dashed, subtle, and visible without competing with data. Legend positioned top-left with white background and border.
-      Data: Training Score line in teal/green with light blue confidence band. Validation Score line in orange with peachy confidence band. All markers and lines clearly visible.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), correct
+      Chrome: Title, axis labels, tick labels all dark and clearly readable
+      Data: Training Score (teal line with cyan confidence band), Validation Score (orange line with beige confidence band)
+      Data colors: Training #306998 (should be #009E73), Validation #E6A800 (should be #D55E00 for Okabe-Ito position 2)
+      Legibility verdict: PASS (all text readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct per style guide.
-      Chrome: Title, axis labels, and tick labels are all clearly readable in light text against the dark background. No dark-on-dark failures detected. Grid remains subtle but visible.
-      Data: Training Score line remains teal/green (identical to light render), Validation Score line remains orange (identical to light render). Confidence bands visible with appropriate opacity. Markers clearly visible.
-      Legibility verdict: PASS
-
-    Both renders show proper theme adaptation in the visual output (correct backgrounds, readable text in both themes, data colors consistent across themes).
+      Background: Warm near-black (#1A1A17), appears correct
+      Chrome: Title, axis labels, and tick labels are DARK/UNREADABLE on dark background (dark-on-dark failure)
+      Specific failure: Y-axis tick labels (0.6, 0.7, 0.8, 0.9, 1.0) are nearly invisible against the dark background
+      Data colors: Teal and orange are identical to light render (GOOD - data colors preserved)
+      Legibility verdict: FAIL - dark render has dark-on-dark text; implementation does not use theme-adaptive INK and INK_SOFT tokens for dark theme
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 17
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: All text readable in both light and dark renders, font sizes appropriate
-          for large canvas
+        passed: false
+        comment: Dark render has dark-on-dark tick labels and axis text — unreadable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements, spacing is generous and clear
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and confidence bands clearly distinguishable
+        comment: All markers and lines clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Colors provide adequate contrast, CVD-safe for most patterns
+        passed: false
+        comment: Colors not Okabe-Ito compliant; not CVD-safe as intended
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned layout, nothing cut off, data breathes appropriately
+        comment: Good layout and proportions, proper whitespace
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Title format correct, axis labels descriptive with units
-      - id: VQ-07
-        name: Palette Compliance
-        score: -1
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Code does not implement theme-adaptive colors. Backgrounds
-          and legend colors are hard-coded (#fafafa, #ffffff) instead of using PAGE_BG,
-          ELEVATED_BG tokens. Confidence band colors (#306998, #FFD43B) are not from
-          Okabe-Ito palette. Images appear correct suggesting pipeline override, but
-          code does not follow style guide'
+        comment: Descriptive with units but unreadable in dark theme
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Wrong palette: #306998 instead of #009E73; chrome colors are wrong-theme
+          in dark'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Professional styling with confidence bands and proper legend, but
-          uses generic colors instead of refined palette choices
+        passed: true
+        comment: Generic defaults, no custom design thought
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: false
-        comment: Grid is subtle and appropriate, but legend could have better frame
-          styling. Minor refinements needed
+        passed: true
+        comment: Minimal customization beyond defaults
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: false
-        comment: Visual hierarchy clear (training at top, validation below) but could
-          emphasize the gap/relationship more
+        passed: true
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
       score: 14
       max: 15
@@ -130,27 +123,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct learning curve with two lines and confidence bands
+        comment: Correct learning curve with two curves and confidence bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shows training/validation scores, confidence bands, legend, hover
-          tooltips
+        comment: 'All features present: training/validation curves, confidence bands,
+          legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis training sizes, Y-axis accuracy scores, all data shown
+        comment: Training set size vs. accuracy score, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Title format uses pyplots.ai instead of anyplot.ai. Legend labels
-          correct but format should be 'anyplot.ai'
+        comment: Title format correct, legend labels correct, but unreadable in dark
+          theme
     data_quality:
       score: 15
       max: 15
@@ -160,22 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full learning curve characteristics shown with meaningful progression
+        comment: Shows training, validation, and confidence bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Data realistic, accuracy range (0.6-1.0) plausible, no controversial
-          patterns
+        comment: Realistic learning curve with bias/variance tradeoff
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis and training sizes appropriately scaled
+        comment: Sensible accuracy values (0.6-1.0)
     code_quality:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -183,62 +175,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct code with no unnecessary abstractions
+        comment: Straightforward data → plot → save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, no unused packages
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: -2
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses export_png which is explicitly discouraged. bokeh.md
-          specifies Selenium headless Chrome screenshot. Also no theme-adaptive color
-          logic'
+        comment: Not following bokeh.md guidelines for theme-adaptive styling
       - id: CQ-05
         name: Output & API
-        score: -1
+        score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Outputs plot.png and plot.html instead of plot-light.png/plot-dark.png
-          and plot-light.html/plot-dark.html. Code does not read ANYPLOT_THEME environment
-          variable'
+        comment: Saves as plot.png instead of plot-light.png/plot-dark.png; uses export_png()
+          instead of Selenium per bokeh.md
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses Bokeh idiomatically (ColumnDataSource, Band, HoverTool) but
-          export_png is discouraged method
+        passed: true
+        comment: Correct usage of Band, ColumnDataSource, HoverTool, but ignores bokeh.md
+          guidelines
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses Band for confidence intervals and HoverTools effectively, but
-          misses opportunity for more theme-aware styling
+        comment: Uses HoverTool and Band, but minimal distinctive feature usage
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - custom-legend
+  - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
