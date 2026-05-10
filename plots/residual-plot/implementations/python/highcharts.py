@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 residual-plot: Residual Plot
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-10
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
 
 import os
