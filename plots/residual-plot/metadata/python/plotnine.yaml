@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: residual-plot
 created: '2025-12-26T19:36:44Z'
-updated: '2026-05-10T09:04:14Z'
+updated: '2026-05-10T09:11:56Z'
 generated_by: claude-haiku
 workflow_run: 25624608924
 issue: 2332
@@ -12,46 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Proper theme adaptation across light and dark renders with all chrome correctly
-    themed
-  - 'Correct Okabe-Ito palette usage: green (#009E73) for normal, orange (#D55E00)
-    for outliers, blue (#0072B2) for LOWESS'
-  - 'All spec requirements implemented: reference lines, outlier coloring, LOWESS
-    smoothing, 2σ bands, alpha transparency'
-  - Clean, reproducible code with proper seed and realistic house price regression
-    example
-  - Excellent text legibility in both themes with appropriate font sizing (16-24pt)
-  - 'Proper use of plotnine idioms: ggplot2-style layering, element_* theming, scale_color_manual
-    for multi-series'
+  - Correct spec implementation with all diagnostic features (LOWESS, reference lines,
+    outlier highlighting)
+  - Okabe-Ito palette correctly applied; data colors identical across themes
+  - Realistic example data (house price regression) with feature coverage
+  - Explicitly-set font sizes (24/20/16pt) ensure readability at full resolution
+  - Clean, reproducible code with KISS structure and seed
+  - Proper theme-token architecture (PAGE_BG, INK, INK_SOFT) with sound approach
   weaknesses:
-  - Design could emphasize statistical insight more strongly - consider subtle background
-    fill for ±2σ bands instead of just dashed lines
-  - Reference line styling uses INK_SOFT for all three lines (y=0, +2σ, -2σ) without
-    visual hierarchy to distinguish the zero line
-  - Legend box background uses PAGE_BG instead of ELEVATED_BG (should use elevated
-    surface for callout boxes)
-  - Plot lacks visual refinement elements like removing top/right spines or using
-    subtle y-axis-only grid for cleaner appearance
+  - 'CRITICAL — Panel background colors appear inverted between light and dark renders
+    (VQ-07 failure). Light render shows dark panel (should be #FAF8F1); dark render
+    shows light panel (should be #1A1A17). Debug why panel_background element_rect(fill=PAGE_BG)
+    is not rendering to theme-dependent PAGE_BG value.'
+  - Design is functional but generic (DE-01=4) — relies on library defaults with minimal
+    custom aesthetic choices
+  - No distinctive library-specific features beyond standard ggplot2-style grammar
+    (LM-02=3)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per style guide
-      Chrome: Title "residual-plot · plotnine · anyplot.ai" in dark text (readable); axis labels "Fitted Values ($)" and "Residuals ($)" in dark text (readable); tick labels clearly visible in secondary color
-      Data: Green circles (#009E73) for normal residuals, orange circles (#D55E00) for outliers, blue LOWESS line (#0072B2); horizontal reference lines at y=0 (solid) and ±2σ (dashed)
-      Legend: "Point Type" label on right side with Normal/Outlier categories clearly distinguished
-      Legibility verdict: PASS - All text is readable with good contrast against light background; data colors are distinct and accessible
+      Background: Outer area is warm off-white (#FAF8F1) - correct. Plot panel (data area) appears dark - INCORRECT, should match outer background.
+      Chrome: Title, axis labels, tick labels all in dark text - readable against light outer background. Legend well-positioned.
+      Data: Green points (#009E73, normal), orange points (#D55E00, outliers), blue LOWESS line (#0072B2), horizontal reference lines. All correctly colored.
+      Legibility verdict: FAIL - Panel background is wrong-theme (dark on light theme instead of warm off-white).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per style guide
-      Chrome: Title and axis labels in light text (#F0EFE8), clearly readable against dark background; tick labels in secondary light color (#B8B7B0)
-      Data: Green (#009E73) and orange (#D55E00) identical to light render (only chrome changed to light theme); blue LOWESS line still visible; reference lines properly styled
-      Legend: Light text on dark background, all labels readable with good contrast
-      Legibility verdict: PASS - All text is readable on dark background; no "dark-on-dark" failures; data colors remain identical to light render, demonstrating proper theme adaptation
+      Background: Outer area is dark (#1A1A17) - correct. Plot panel (data area) appears light - INCORRECT, should match outer background.
+      Chrome: Title, axis labels, tick labels all in light text - readable against dark outer background. Legend well-positioned.
+      Data: All data colors identical to light render - #009E73 green, #D55E00 orange, #0072B2 blue. This is correct.
+      Legibility verdict: FAIL - Panel background is wrong-theme (light on dark theme instead of warm near-black). Dark-on-dark text is not visible but not the issue; the issue is background mismatch.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,48 +53,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both light and dark themes with appropriate
-          font sizing (16-24pt)
+        comment: Title 24pt, axis labels 20pt, ticks 16pt explicitly set; all readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Point overlaps handled by alpha transparency (0.7); no text-text
-          or text-element collisions
+        comment: No overlapping elements; legend well-positioned
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly distinguishable: green/orange points, blue
-          LOWESS line, reference lines visible'
+        comment: 150 points alpha=0.7 with size=4; optimal for data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; three distinct colors with
-          good contrast
+        comment: Okabe-Ito palette is CVD-safe; strong color contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format appropriate for residual plot; good proportions and whitespace
+        comment: 16:9 format (4800x2700px); plot fills 65% with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels include units ($); title has site attribution
+        comment: All labels include units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series #009E73; Okabe-Ito order respected; backgrounds #FAF8F1
-          (light) / #1A1A17 (dark)'
+        passed: false
+        comment: 'CRITICAL: Panel backgrounds appear inverted between themes. Light
+          render has dark panel (should be #FAF8F1), dark render has light panel (should
+          be #1A1A17). Chrome is wrong-theme in both renders.'
     design_excellence:
       score: 12
       max: 20
@@ -110,22 +101,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses required Okabe-Ito palette and standard plotnine styling; functional
-          but not custom-polished
+        comment: Well-configured defaults using Okabe-Ito; no custom design polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Theme customization and LOWESS line add refinement; could improve
-          with spine removal and enhanced grid styling
+        comment: Grid styling with transparency; some refinement visible but theme
+          failure impacts polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Effective residual analysis narrative; outlier coloring creates hierarchy;
-          could emphasize ±2σ bands more strongly
+        comment: LOWESS curve and outlier color create emphasis; good visual hierarchy
+          without explicit annotations
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct residual plot with fitted values on x-axis, residuals on
-          y-axis
+        comment: Correct residual plot type with all diagnostic features
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: y=0 line, ±2σ bands, LOWESS smoothing, outlier
-          coloring, alpha transparency'
+        comment: Fitted vs residuals, y=0 line, ±2σ bands, LOWESS, outlier highlighting
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis fitted values, y-axis residuals; axes show full data range
+        comment: X/Y correctly mapped; full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''residual-plot · plotnine · anyplot.ai'';
-          legend labeled ''Point Type'''
+        comment: Correct format; legend labels match
     data_quality:
       score: 15
       max: 15
@@ -166,21 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Comprehensive residual plot showcasing outliers, trends, and variability
+        comment: Shows normal and outlier points across full residual range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: House price regression example is realistic, neutral, and appropriate
-          for linear regression
+        comment: Real house price regression scenario; neutral, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150 observations with $200k-900k fitted range is sensible for house
-          price example
+        comment: House prices and residual proportions factually reasonable
     code_quality:
       score: 10
       max: 10
@@ -190,51 +175,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; direct plot creation is clean and simple
+        comment: No functions/classes; linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: Seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary plotnine, numpy, pandas imports; no unused modules
+        comment: Only numpy, pandas, plotnine used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; proper ggplot-style layering; no fake UI
-          elements
+        comment: Clean, Pythonic; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current plotnine API
+        comment: Saves as plot-{THEME}.png; current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ggplot2-style layering, element_* theming, scale_color_manual used
-          idiomatically
+        comment: Expert ggplot() + geom composition; grammar of graphics idioms
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: LOWESS smoothing and outlier coloring are present; mostly standard
-          techniques
-    score_caps: []
+        comment: Uses theme system for tokens (good); geom composition is generic,
+          no distinctive plotnine-only features
   verdict: APPROVED
 impl_tags:
   dependencies: []
