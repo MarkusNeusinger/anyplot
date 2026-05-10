@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-error: Bar Chart with Error Bars
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-10
+Quality: 92/100 | Updated: 2026-05-10
 """
 
 import os
