@@ -1,168 +1,166 @@
 library: matplotlib
+language: python
 specification_id: lift-curve
 created: '2025-12-27T19:20:38Z'
-updated: '2025-12-27T19:23:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543281060
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lift-curve/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - fill-between
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T16:33:48Z'
+generated_by: claude-haiku
+workflow_run: 25633830193
+issue: 2379
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of lift curve with proper calculation methodology (sort
-    by score, cumulative lift at each percentage)
-  - Clear visual distinction between model lift curve and random baseline with appropriate
-    colors
-  - Well-placed decile annotations that show practical lift values at key targeting
-    thresholds
-  - Shaded area between curves provides intuitive visualization of model value
-  - Realistic customer response data with appropriate base rate and sample size
-  - Clean, well-structured code following KISS principles
-  weaknesses:
-  - Y-axis label could include units or clarification (e.g., Cumulative Lift (ratio))
-  - Does not leverage distinctive matplotlib features beyond basic plotting capabilities
-  image_description: The plot displays a lift curve with a solid blue line showing
-    the model lift decreasing from approximately 6.5x at 0% population down to 1x
-    at 100% population. A horizontal yellow dashed reference line at y=1 represents
-    random selection. Key decile markers are shown at 10%, 20%, 30%, 40%, and 50%
-    with their lift values annotated (6.14x, 4.28x, 3.14x, 2.45x, 2.00x respectively).
-    The area between the lift curve and the reference line is filled with a light
-    blue shade for visual emphasis. The title reads "lift-curve · matplotlib · pyplots.ai",
-    x-axis is labeled "Population Targeted (%)", and y-axis is labeled "Cumulative
-    Lift". A legend in the upper right identifies the blue line as "Model Lift" and
-    yellow dashed line as "Random (Lift = 1)". The plot uses a subtle gray grid with
-    dashed lines.
+  - Excellent theme-adaptive implementation with both renders perfectly readable
+  - Professional design with thoughtful use of fill area to emphasize model advantage
+  - Perfect specification compliance and data quality
+  - Idiomatic matplotlib usage demonstrating library expertise
+  - Clean code and realistic, business-relevant example data
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme-light color
+      Chrome: Title, axis labels, and ticks all clearly visible in dark text (INK #1A1A17) and soft gray (INK_SOFT #4A4A44)
+      Data: Main curve in brand green (#009E73), reference line in orange (#E69F00), subtle filled area with alpha=0.15
+      Legibility verdict: PASS - All elements clearly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme-dark color
+      Chrome: All text in light colors (INK #F0EFE8, INK_SOFT #B8B7B0) with good contrast on dark background - no dark-on-dark failures
+      Data: Main curve still #009E73 (identical to light render), reference line still #E69F00 - data colors properly theme-independent
+      Legibility verdict: PASS - All elements equally readable as light render
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; annotations are well-spaced above markers
+        comment: All elements well-spaced; no collisions between text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3, marker size of 150, appropriate for line chart with
-          clear visibility
+        comment: Lift curve (3px) and reference line (2.5px) clearly visible; fill
+          area provides visual emphasis
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe and high
-          contrast
+        comment: Okabe-Ito palette; colorblind-safe; good contrast on both backgrounds
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent canvas utilization, plot fills appropriate area with balanced
-          margins
+        comment: 16:9 aspect; plot fills 60-70% of canvas; balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but y-axis could include units (e.g., "Cumulative
-          Lift (ratio)")
+        comment: Title format correct; axes labeled with units where appropriate
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: 'Grid is subtle (alpha=0.3), legend well-placed; minor: legend could
-          be slightly smaller or positioned to avoid crowding top-right'
+        comment: 'First series #009E73; backgrounds correct; text colors theme-adaptive;
+          data colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful design with fill_between creating visual emphasis; professional
+          color harmony
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; subtle y-axis grid; legend frame styled;
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with green curve focal point; filled area
+          emphasizes model advantage; natural narrative flow
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lift curve chart type
+        comment: Correct lift curve implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows percentage of population, Y-axis shows cumulative lift
-          ratio
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes reference line at y=1 as specified, decile markers at key
-          percentiles
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: x-axis %, y-axis cumulative lift, reference
+          line at y=1, fill area'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 0-100%, Y-axis shows full lift range appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; data properly sorted; all visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels both curves
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "lift-curve · matplotlib · pyplots.ai"
+        comment: Title format correct; legend labels clear
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows characteristic lift curve behavior: high lift at low percentages,
-          gradual decay to 1'
+        comment: Shows full 0-100% range with realistic lift pattern
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer response model with 15% baseline rate is realistic marketing
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 1000 samples, 15% base rate, lift values (6.5x to 1x) are realistic
-          for a good model
+        comment: Real customer response scenario; 15% base rate plausible; model realistically
+          correlated
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis (0-7.5) and X-axis (0-100%) appropriate; values factually
+          correct
     code_quality:
       score: 10
       max: 10
@@ -172,40 +170,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: imports → data → calculation → plot → save'
+        comment: No unnecessary functions/classes; straightforward flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: 'Only used: os, matplotlib.pyplot, numpy'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API (Axes methods)
+        comment: Clean, Pythonic, no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png' with dpi=300
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct plot-{THEME}.png output; current matplotlib API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic matplotlib features only; could leverage fill_between
-          more creatively or add interactive annotations
+        passed: true
+        comment: Expert Axes methods; theme-adaptive tokens; proper grid/spine styling;
+          zorder management
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses fill_between for area emphasis; theme-adaptive pattern; legend
+          frame customization
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
