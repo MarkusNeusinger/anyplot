@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 calibration-curve: Calibration Curve
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-26
+Library: plotly | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+SECONDARY = "#D55E00"
+NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 # Data - simulate predictions from two classifiers
 np.random.seed(42)
@@ -73,7 +86,7 @@ fig.add_trace(
         y=[0, 1],
         mode="lines",
         name="Perfect Calibration",
-        line=dict(color="#888888", width=3, dash="dash"),
+        line=dict(color=NEUTRAL, width=3, dash="dash"),
         showlegend=True,
     ),
     row=1,
@@ -87,7 +100,7 @@ fig.add_trace(
         y=prob_true_cal,
         mode="lines+markers",
         name=f"Calibrated Model (Brier: {brier_cal:.3f})",
-        line=dict(color="#306998", width=4),
+        line=dict(color=BRAND, width=4),
         marker=dict(size=14, symbol="circle"),
     ),
     row=1,
@@ -101,7 +114,7 @@ fig.add_trace(
         y=prob_true_over,
         mode="lines+markers",
         name=f"Overconfident Model (Brier: {brier_over:.3f})",
-        line=dict(color="#FFD43B", width=4),
+        line=dict(color=SECONDARY, width=4),
         marker=dict(size=14, symbol="diamond"),
     ),
     row=1,
@@ -113,7 +126,7 @@ fig.add_trace(
     go.Histogram(
         x=y_prob_calibrated,
         name="Calibrated",
-        marker=dict(color="#306998", line=dict(color="#1a3d5c", width=1)),
+        marker=dict(color=BRAND, line=dict(color=INK_SOFT, width=1)),
         opacity=0.7,
         nbinsx=20,
         showlegend=False,
@@ -127,7 +140,7 @@ fig.add_trace(
     go.Histogram(
         x=y_prob_overconfident,
         name="Overconfident",
-        marker=dict(color="#FFD43B", line=dict(color="#b39500", width=1)),
+        marker=dict(color=SECONDARY, line=dict(color=INK_SOFT, width=1)),
         opacity=0.7,
         nbinsx=20,
         showlegend=False,
@@ -138,16 +151,18 @@ fig.add_trace(
 
 # Update layout
 fig.update_layout(
-    title=dict(text="calibration-curve · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
-    template="plotly_white",
+    title=dict(text="calibration-curve · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
     legend=dict(
-        font=dict(size=18),
+        font=dict(size=16, color=INK_SOFT),
         x=0.02,
         y=0.98,
         xanchor="left",
         yanchor="top",
-        bgcolor="rgba(255,255,255,0.8)",
-        bordercolor="#cccccc",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
     barmode="overlay",
@@ -156,40 +171,51 @@ fig.update_layout(
 
 # Update axes for calibration curve (row 1)
 fig.update_xaxes(
-    title=dict(text="Mean Predicted Probability", font=dict(size=22)),
-    tickfont=dict(size=18),
+    title=dict(text="Mean Predicted Probability", font=dict(size=22, color=INK)),
+    tickfont=dict(size=18, color=INK_SOFT),
     range=[0, 1],
     dtick=0.1,
-    gridcolor="rgba(0,0,0,0.1)",
+    gridcolor=GRID,
     gridwidth=1,
+    linecolor=INK_SOFT,
     row=1,
     col=1,
 )
 fig.update_yaxes(
-    title=dict(text="Fraction of Positives", font=dict(size=22)),
-    tickfont=dict(size=18),
+    title=dict(text="Fraction of Positives", font=dict(size=22, color=INK)),
+    tickfont=dict(size=18, color=INK_SOFT),
     range=[0, 1],
     dtick=0.1,
-    gridcolor="rgba(0,0,0,0.1)",
+    gridcolor=GRID,
     gridwidth=1,
+    linecolor=INK_SOFT,
     row=1,
     col=1,
 )
 
 # Update axes for histogram (row 2)
 fig.update_xaxes(
-    title=dict(text="Predicted Probability", font=dict(size=20)),
-    tickfont=dict(size=16),
+    title=dict(text="Predicted Probability", font=dict(size=20, color=INK)),
+    tickfont=dict(size=16, color=INK_SOFT),
     range=[0, 1],
     dtick=0.1,
+    gridcolor=GRID,
+    gridwidth=1,
+    linecolor=INK_SOFT,
     row=2,
     col=1,
 )
-fig.update_yaxes(title=dict(text="Count", font=dict(size=20)), tickfont=dict(size=16), row=2, col=1)
+fig.update_yaxes(
+    title=dict(text="Count", font=dict(size=20, color=INK)),
+    tickfont=dict(size=16, color=INK_SOFT),
+    linecolor=INK_SOFT,
+    row=2,
+    col=1,
+)
 
 # Update subplot title font
-fig.update_annotations(font=dict(size=22))
+fig.update_annotations(font=dict(size=22, color=INK))
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG and HTML with theme-suffixed filenames
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
