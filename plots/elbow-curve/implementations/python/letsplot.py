@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: letsplot | Python 3.13
+Quality: 92/100 | Updated: 2025-12-26
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,14 @@ from lets_plot import *
 
 
 LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+ACCENT = "#D55E00"
 
 # Simulated K-means inertia values showing typical elbow curve pattern
 # Data represents clustering analysis on customer segmentation dataset
@@ -41,29 +51,32 @@ optimal_k = 4
 # Create elbow curve plot
 plot = (
     ggplot(df, aes(x="k", y="Inertia"))
-    + geom_line(size=2, color="#306998")
-    + geom_point(size=6, color="#306998", alpha=0.9)
-    + geom_point(data=df[df["k"] == optimal_k], mapping=aes(x="k", y="Inertia"), size=10, color="#FFD43B", shape=18)
-    + geom_vline(xintercept=optimal_k, linetype="dashed", color="#FFD43B", size=1.5, alpha=0.7)
+    + geom_line(size=2, color=BRAND)
+    + geom_point(size=6, color=BRAND, alpha=0.9)
+    + geom_point(data=df[df["k"] == optimal_k], mapping=aes(x="k", y="Inertia"), size=10, color=ACCENT, shape=18)
+    + geom_vline(xintercept=optimal_k, linetype="dashed", color=ACCENT, size=1.5, alpha=0.7)
     + labs(
-        title="elbow-curve · letsplot · pyplots.ai",
+        title="elbow-curve · letsplot · anyplot.ai",
         x="Number of Clusters (k)",
         y="Inertia (Within-Cluster Sum of Squares)",
     )
     + scale_x_continuous(breaks=k_values)
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=28, face="bold"),
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, linetype="solid"),
         panel_grid_minor=element_blank(),
+        plot_title=element_text(size=28, face="bold", color=INK),
+        axis_title=element_text(size=22, color=INK),
+        axis_text=element_text(size=18, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save interactive HTML
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
