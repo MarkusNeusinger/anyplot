@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-error: Bar Chart with Error Bars
 Library: highcharts unknown | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-10
+Quality: 79/100 | Updated: 2026-05-10
 """
 
 import os
