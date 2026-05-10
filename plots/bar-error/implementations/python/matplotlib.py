@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-error: Bar Chart with Error Bars
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-10
+Quality: 86/100 | Updated: 2026-05-10
 """
 
 import os
