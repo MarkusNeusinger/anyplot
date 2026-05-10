@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,25 +12,37 @@ from plotnine import (
     aes,
     annotate,
     element_line,
+    element_rect,
     element_text,
     geom_line,
     geom_point,
     geom_vline,
     ggplot,
     labs,
+    scale_x_continuous,
     theme,
     theme_minimal,
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+BRAND = OKABE_ITO[0]  # #009E73 - first series always
+ACCENT = OKABE_ITO[1]  # #D55E00 - accent for annotation line
+
 # Data - Simulate realistic K-means inertia values
-# Inertia decreases as k increases, with diminishing returns after optimal k
 np.random.seed(42)
 
 k_values = list(range(1, 11))
 
 # Simulate inertia values that show clear elbow at k=4
-# Formula: base decay curve + noise
 base_inertias = [1000, 500, 280, 150, 120, 100, 85, 75, 68, 62]
 noise = np.random.uniform(-5, 5, len(k_values))
 inertias = [max(10, base + n) for base, n in zip(base_inertias, noise, strict=True)]
@@ -42,33 +56,42 @@ optimal_k = 4
 # Plot
 plot = (
     ggplot(df, aes(x="k", y="inertia"))
-    + geom_line(color="#306998", size=2, alpha=0.9)
-    + geom_point(color="#306998", size=5, alpha=1.0)
-    + geom_vline(xintercept=optimal_k, linetype="dashed", color="#FFD43B", size=1.5, alpha=0.8)
+    + geom_line(color=BRAND, size=2, alpha=0.9)
+    + geom_point(color=BRAND, size=5, alpha=1.0)
+    + geom_vline(xintercept=optimal_k, linetype="dashed", color=ACCENT, size=1.5, alpha=0.8)
     + annotate(
         "text",
         x=optimal_k + 0.5,
         y=inertias[optimal_k - 1] + 80,
         label=f"Optimal k = {optimal_k}",
         size=14,
-        color="#FFD43B",
+        color=ACCENT,
         ha="left",
         fontweight="bold",
     )
     + labs(
-        title="elbow-curve · plotnine · pyplots.ai",
+        title="elbow-curve · plotnine · anyplot.ai",
         x="Number of Clusters (k)",
         y="Inertia (Within-Cluster Sum of Squares)",
     )
+    + scale_x_continuous(breaks=list(range(1, 11)))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5, alpha=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+        plot_title=element_text(size=24, color=INK, weight="bold"),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=16, color=INK),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
