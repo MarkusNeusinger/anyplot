@@ -1,167 +1,187 @@
 library: seaborn
+language: python
 specification_id: residual-plot
 created: '2025-12-26T19:38:17Z'
-updated: '2025-12-26T19:44:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528203156
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T08:55:17Z'
+generated_by: claude-haiku
+workflow_run: 25624446056
+issue: 2332
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/residual-plot/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - regression
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent use of housing price prediction as a realistic regression context that
-    makes the residual analysis meaningful
-  - Clear U-shaped trend in residuals demonstrates non-linearity detection, which
-    is the primary purpose of residual plots
-  - Good implementation of outlier highlighting with color differentiation (blue/yellow)
-    using hue parameter
-  - Reference line at y=0 and ±2 SD bands provide clear visual guides for interpretation
-  - Proper use of seaborn regplot for polynomial trend line with confidence interval
+  - Perfect visual quality and theme compliance - both light and dark renders are
+    pixel-perfect with identical data colors
+  - All specification requirements implemented with excellence (reference line, alpha
+    transparency, trend line, SD bands, outlier coloring)
+  - Exceptional data storytelling - polynomial trend line and SD bands guide analysis
+    and reveal patterns
+  - Clean, idiomatic seaborn code with proper theme-adaptive styling via matplotlib
+    rc parameters
+  - Strong design sophistication with thoughtful feature choices showing statistical
+    understanding
   weaknesses:
-  - Does not use seaborn built-in residplot function which is specifically designed
-    for this plot type
-  - The Trend label in regplot line_kws does not appear in the legend (seaborn regplot
-    does not add to legend automatically)
-  image_description: The plot shows a residual plot for housing price prediction.
-    Blue scatter points (labeled "Normal") represent residuals within 2 standard deviations,
-    while yellow points (labeled "Outlier (|z| > 2)") mark outliers beyond that threshold.
-    A solid black horizontal reference line at y=0 divides the plot. Gray dashed horizontal
-    lines mark the ±2 SD boundaries (~±55,000). A red curved polynomial trend line
-    (order=2) with a pink confidence band shows the U-shaped pattern in residuals,
-    revealing non-linearity in the underlying model. The x-axis shows "Fitted Values
-    (Predicted Price in $)" ranging from ~100,000 to ~600,000, and the y-axis shows
-    "Residuals (Actual - Predicted)" ranging from ~-60,000 to ~80,000. The title correctly
-    follows the format "residual-plot · seaborn · pyplots.ai". The legend in the upper
-    right shows "Normal", "Outlier (|z| > 2)", and "±2 SD". A subtle grid is visible
-    in the background.
+  - Design Excellence could be marginally higher with additional visual touches (e.g.,
+    edge colors on markers)
+  - 'Library Mastery could use one additional distinctive seaborn feature (current:
+    4/5)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, and tick labels rendered in dark ink (#1A1A17) and soft ink (#4A4A44), all clearly readable against light background
+      Data: Green markers (#009E73) for normal residuals, orange markers (#D55E00) for outliers (|z| > 2); both colors are identical to dark render
+      Reference line: Solid dark line at y=0
+      Trend line: Dashed, light-colored polynomial trend showing non-linear pattern
+      SD bands: Dashed lines at ±2 standard deviations
+      Legend: Upper right, readable with proper contrast
+      Legibility verdict: PASS - all text readable, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8) and soft ink (#B8B7B0), all clearly readable against dark background - NO dark-on-dark failures
+      Data: Green markers (#009E73) for normal residuals, orange markers (#D55E00) for outliers - IDENTICAL to light render
+      Reference line: Light-colored line at y=0
+      Trend line: Dashed, appropriate contrast against dark background
+      SD bands: Visible with correct styling
+      Legend: Shows with dark theme background (#242420), properly styled
+      Legibility verdict: PASS - all text readable, excellent theme adaptation with no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, all labels clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at s=150 with alpha=0.7 appropriate for 150 points, though
-          slightly large
+        comment: 150 markers well-sized (s=180) with appropriate alpha (0.75) for
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Fitted Values (Predicted Price in $)" and
-          "Residuals (Actual - Predicted)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, CVD-safe, good contrast between normal and outlier
+          points
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, balanced margins, optimal canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend has "Trend" missing (regplot legend not showing), ±2 SD appears
-          but trend line label absent
+        passed: true
+        comment: Descriptive labels with context (Predicted Defect Count, Actual -
+          Predicted)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first (#009E73), accent red second (#D55E00); light/dark
+          backgrounds correct; identical data colors in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with thoughtful feature choices (polynomial
+          trend, ±2 SD bands), custom outlier coloring
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, balanced whitespace, refined legend
+          positioning
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Excellent visual hierarchy with y=0 reference line prominent, color
+          distinction guides outlier identification, trend line reveals patterns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct residual plot showing residuals vs fitted values
+        comment: Correct residual plot format (residuals vs. fitted values)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Fitted values on x-axis, residuals on y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Reference line at y=0, outlier highlighting, trend line, ±2 SD bands
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: y=0 reference line, alpha transparency, polynomial
+          trend line, ±2 SD bands, outlier coloring'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Normal vs Outlier points
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "residual-plot · seaborn · pyplots.ai"'
+        comment: Title format correct (residual-plot · seaborn · anyplot.ai), legend
+          labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows non-linear pattern (U-shape curve), outliers, variance in residuals
+        comment: Shows non-linearity, residual scatter, heteroscedasticity potential,
+          outliers, full range coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Housing price prediction is a real, comprehensible regression scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: House prices $100K-600K and residuals ±60K are realistic for housing
-          data
+        comment: Manufacturing quality control (wafer defect prediction) is real and
+          neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature (700-1100°C) and defect counts are factually correct
+          for domain
     code_quality:
       score: 10
       max: 10
@@ -171,42 +191,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → plot → save'
+        comment: Linear flow with no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: All imports are used (os, plt, np, pd, sns)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API correctly
+        comment: No fake functionality, appropriate complexity, Pythonic and readable
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct output as plot-{THEME}.png
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses sns.scatterplot and sns.regplot which are seaborn functions,
-          but regplot is used only for the trend line rather than its main purpose
-          (regression visualization). The implementation could leverage seaborn's
-          residplot function which is specifically designed for residual plots.
+        passed: true
+        comment: Expert use of sns.scatterplot(), sns.regplot(), sns.set_theme(),
+          matplotlib rc parameters
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses seaborn regplot with polynomial order, hue-based categorical
+          distinction, theme-aware styling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
