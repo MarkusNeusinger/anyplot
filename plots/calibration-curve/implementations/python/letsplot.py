@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-curve: Calibration Curve
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-10
@@ -85,6 +85,12 @@ df_calibration = pd.DataFrame(
     {"mean_predicted": mean_predicted, "fraction_positive": fraction_positive, "bin_count": bin_counts}
 )
 df_calibration = df_calibration.dropna()
+df_calibration["tooltip"] = df_calibration.apply(
+    lambda row: (
+        f"Predicted: {row['mean_predicted']:.3f}\nObserved: {row['fraction_positive']:.3f}\nBin size: {int(row['bin_count'])}"
+    ),
+    axis=1,
+)
 
 # Create dataframe for diagonal (perfect calibration)
 df_diagonal = pd.DataFrame({"x": [0, 1], "y": [0, 1]})
@@ -102,7 +108,13 @@ plot = (
     + geom_line(aes(x="x", y="y"), data=df_diagonal, color=INK_SOFT, size=1.5, linetype="dashed")
     # Calibration curve
     + geom_line(aes(x="mean_predicted", y="fraction_positive"), data=df_calibration, color=BRAND, size=2)
-    + geom_point(aes(x="mean_predicted", y="fraction_positive"), data=df_calibration, color=BRAND, size=5, alpha=0.9)
+    + geom_point(
+        aes(x="mean_predicted", y="fraction_positive", tooltip="tooltip"),
+        data=df_calibration,
+        color=BRAND,
+        size=5,
+        alpha=0.9,
+    )
     # Histogram bars at bottom showing prediction distribution
     + geom_bar(
         aes(x="prob_center", y="count"), data=df_histogram, stat="identity", fill=INK_MUTED, alpha=0.4, width=0.045
@@ -115,7 +127,6 @@ plot = (
     )
     + scale_x_continuous(limits=[0, 1], breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
     + scale_y_continuous(limits=[0, 1], breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
-    + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
@@ -123,8 +134,10 @@ plot = (
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=20, color=INK),
         axis_text=element_text(size=16, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.5),
+        axis_line=element_line(color=INK_SOFT, size=0.6),
         plot_title=element_text(size=24, color=INK),
+        axis_ticks_length_x=6,
+        axis_ticks_length_y=6,
     )
     + ggsize(1600, 900)
 )
