@@ -1,167 +1,177 @@
 library: highcharts
+language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:24:21Z'
-updated: '2025-12-27T19:33:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543284236
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T22:47:29Z'
+generated_by: claude-haiku
+workflow_run: 25641716004
+issue: 2377
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - explicit-figure
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/highcharts/plot-dark.html
+quality_score: 96
 review:
   strengths:
-  - Excellent use of Highcharts xrange series type for Gantt chart implementation
-  - Clean colorblind-safe color palette with distinct category colors
-  - Well-implemented Today marker with red plotLine and label
-  - Professional project management scenario with realistic task names and durations
-  - Good typography scaling for the 4800x2700 canvas
-  - Proper category-based legend with series per category
+  - Perfect visual quality with excellent readability in both light and dark themes
+  - Idiomatic and sophisticated use of Highcharts xrange module for Gantt visualization
+  - Thoughtful design with category color coding creating clear visual hierarchy
+  - Comprehensive realistic project data showing timeline with task dependencies
+  - Complete spec compliance including Today marker for narrative context
+  - 'Professional polish with attention to detail: rounded corners, subtle borders,
+    proper margins'
+  - 'Perfect palette compliance: Okabe-Ito colors identical in both themes with correct
+    theme-adaptive chrome'
   weaknesses:
-  - Legend symbols are relatively small compared to the large canvas
-  - Could add task duration in tooltip for enhanced interactivity
-  - Left margin (420px) is slightly larger than necessary
-  image_description: 'The plot displays a well-structured Gantt chart showing a software
-    project timeline from January to April 2025. The chart has 12 tasks listed vertically
-    on the left (Requirements Analysis, System Design, Database Schema, Backend API,
-    Frontend UI, Integration, Unit Testing, System Testing, User Acceptance, Documentation,
-    Training, Go Live). Horizontal bars represent task durations with four distinct
-    colors: blue (#306998) for Planning tasks, yellow (#FFD43B) for Development, purple
-    (#9467BD) for Testing, and cyan (#17BECF) for Deployment. A prominent red vertical
-    line marks "Today (Feb 15)" with a label above it. The X-axis shows the timeline
-    with dates, and a legend at the bottom clearly identifies the four categories.
-    The layout is clean with good spacing between task bars.'
+  - 'Minor: DE-01 scored 6/8 (strong design but could approach publication-ready perfection
+    with even more sophisticated styling choices)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: #FAF8F1 warm off-white - correct for light theme
+      Chrome: Title "gantt-basic · highcharts · anyplot.ai" (28px, bold, #1A1A17), Y-axis "Tasks" label (#22px, #1A1A17), X-axis "Timeline" label (22px, #1A1A17), task names readable in #1A1A17, date labels readable in #4A4A44 (INK_SOFT)
+      Data: Four category bars with Okabe-Ito colors: Planning #009E73, Development #D55E00, Testing #0072B2, Deployment #CC79A7. All bars clearly distinguishable. "Today (Feb 15)" red vertical line with label prominently visible
+      Grid: Subtle gridlines in rgba(26,26,23,0.10), not dominant
+      Legend: Bottom legend with four categories, light background #FFFDF6, subtle border
+      Legibility verdict: PASS - All text perfectly readable, high contrast on light surface
+
+    Dark render (plot-dark.png):
+      Background: #1A1A17 warm near-black - correct for dark theme
+      Chrome: Title in #F0EFE8 (light), labels in #B8B7B0 (INK_SOFT), all readable against dark background. No dark-on-dark failures present
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7) - only chrome changed per theme, not data colors. "Today" red marker still visible
+      Grid: Subtle gridlines in rgba(240,239,232,0.10), properly themed
+      Legend: Bottom legend with light text on #242420 background, visible and readable
+      Legibility verdict: PASS - All text perfectly readable in light colors against dark background, no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and bold (48px), task names clearly readable (26px),
-          axis labels readable (28-32px)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all task names and dates are distinct
+        comment: 'All fonts explicitly sized: title 28px, labels 22px, ticks 18px,
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; all text fully readable with proper spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Task bars are well-sized with good pointWidth (55px), rounded corners,
-          and borders; slightly reduced for minor bar height uniformity
+        comment: 'Gantt bars optimally sized (pointWidth: 55) with distinct colors;
+          all 12 tasks clearly visible'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette using blue, yellow, purple, cyan - no red-green
-          conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with appropriate margins; slight deduction for
-          somewhat large left margin
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Tasks" and "Timeline" axis titles are descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; excellent contrast between all elements
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins; content fills 50-75% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend is well-placed at bottom; legend symbols could
-          be more prominent
+        comment: 'Descriptive labels: Timeline and Tasks'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; subsequent series follow Okabe-Ito order;
+          backgrounds correct for both themes; text colors theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color coding; rounded corners, subtle
+          borders, professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid styling, generous margins, attention to detail in bar
+          styling and legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color grouping creates visual hierarchy; Today marker provides narrative
+          context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Gantt chart using xrange series type
+        comment: Correct xrange Gantt chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Tasks on Y-axis, time on X-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has horizontal bars, time axis, category color coding, "today" line,
-          and logical task ordering
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: horizontal bars, dates, color coding, Today
+          marker'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full timeline visible from January to April
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis timeline correct, Y-axis tasks correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all four categories with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "gantt-basic · highcharts · pyplots.ai"
+        comment: Correct title format and legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping tasks, sequential dependencies, multiple categories;
-          slight deduction for not showing task dependencies explicitly
+        comment: 'Shows all Gantt aspects: multiple categories, overlaps, varying
+          durations'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real software development project scenario with recognizable phases
+        comment: Real-world software development project scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Timeline spans 4 months which is realistic; some tasks could have
-          slightly more varied durations
+        comment: Factually correct proportions, plausible durations and dates
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart config → export'
+        comment: 'Linear structure: imports → data → HTML → screenshot → cleanup'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (fixed dates, no random)
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, tempfile, time, urllib, datetime, pathlib,
+          selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Python code, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly but also saves plot.html (minor)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct PNG and HTML output
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses xrange module for Gantt, plotLines for today marker, proper
-          datetime handling; could leverage more Highcharts-specific features like
-          tooltips with task duration
+        comment: 'Expert use of Highcharts API: Chart constructor, xrange series,
+          color arrays, plotOptions'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Leverages Highcharts xrange module, plotLines for Today marker, theme-aware
+          Highcharts options
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - publication-ready
