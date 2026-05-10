@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 residual-plot: Residual Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-26
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,6 +17,18 @@ from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # bluish green — ALWAYS first series
+ACCENT_1 = "#D55E00"  # vermillion
 
 # Data: Linear regression example with housing price predictions
 np.random.seed(42)
@@ -49,12 +62,12 @@ outlier_data = [[float(y_pred[i]), float(residuals[i])] for i in range(n_points)
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration - increased margins for better label visibility
+# Chart configuration
 chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 280,
     "marginLeft": 280,
     "marginTop": 150,
@@ -64,33 +77,37 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "residual-plot · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "residual-plot · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
 
 # X-axis (Fitted Values)
 x_min = float(min(y_pred))
 x_max = float(max(y_pred))
 chart.options.x_axis = {
-    "title": {"text": "Fitted Values ($)", "style": {"fontSize": "42px", "fontWeight": "bold"}, "margin": 40},
-    "labels": {"style": {"fontSize": "32px"}, "rotation": 0, "y": 35},
+    "title": {"text": "Fitted Values ($)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.15)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "min": x_min - 10000,
     "max": x_max + 10000,
     "tickInterval": 50000,
 }
 
-# Y-axis (Residuals) - use actual data extent with small buffer, keeping zero visible
+# Y-axis (Residuals)
 y_min = float(min(residuals))
 y_max = float(max(residuals))
-y_axis_min = y_min * 1.1  # 10% buffer below min
-y_axis_max = y_max * 1.1  # 10% buffer above max
+y_axis_min = y_min * 1.1
+y_axis_max = y_max * 1.1
 chart.options.y_axis = {
-    "title": {"text": "Residuals ($)", "style": {"fontSize": "42px", "fontWeight": "bold"}},
-    "labels": {"style": {"fontSize": "32px"}, "x": -10},
+    "title": {"text": "Residuals ($)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.15)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "min": y_axis_min,
     "max": y_axis_max,
     "tickInterval": 20000,
@@ -99,46 +116,31 @@ chart.options.y_axis = {
     "plotLines": [
         {
             "value": 0,
-            "color": "#306998",
-            "width": 5,
+            "color": BRAND,
+            "width": 3,
             "zIndex": 5,
-            "label": {
-                "text": "Zero Line (Perfect Fit)",
-                "align": "right",
-                "x": -15,
-                "style": {"fontSize": "36px", "color": "#306998", "fontWeight": "bold"},
-            },
+            "label": {"text": "Zero Line", "align": "right", "x": -15, "style": {"fontSize": "18px", "color": BRAND}},
         },
         {
             "value": float(outlier_threshold),
-            "color": "#E67E22",
-            "width": 4,
+            "color": ACCENT_1,
+            "width": 2,
             "dashStyle": "Dash",
             "zIndex": 4,
-            "label": {
-                "text": "+2\u03c3 Threshold",
-                "align": "right",
-                "x": -15,
-                "style": {"fontSize": "36px", "color": "#E67E22", "fontWeight": "bold"},
-            },
+            "label": {"text": "+2σ", "align": "right", "x": -15, "style": {"fontSize": "18px", "color": ACCENT_1}},
         },
         {
             "value": float(-outlier_threshold),
-            "color": "#E67E22",
-            "width": 4,
+            "color": ACCENT_1,
+            "width": 2,
             "dashStyle": "Dash",
             "zIndex": 4,
-            "label": {
-                "text": "-2\u03c3 Threshold",
-                "align": "right",
-                "x": -15,
-                "style": {"fontSize": "36px", "color": "#E67E22", "fontWeight": "bold"},
-            },
+            "label": {"text": "-2σ", "align": "right", "x": -15, "style": {"fontSize": "18px", "color": ACCENT_1}},
         },
     ],
 }
 
-# Legend - position at top right with larger, more readable text
+# Legend
 chart.options.legend = {
     "enabled": True,
     "align": "right",
@@ -146,31 +148,24 @@ chart.options.legend = {
     "layout": "vertical",
     "x": -60,
     "y": 100,
-    "itemStyle": {"fontSize": "36px", "fontWeight": "normal"},
-    "symbolRadius": 8,
-    "symbolWidth": 32,
-    "symbolHeight": 32,
-    "itemMarginBottom": 12,
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderWidth": 2,
-    "borderColor": "#cccccc",
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "padding": 20,
 }
 
 # Plot options
 chart.options.plot_options = {
-    "scatter": {
-        "marker": {"radius": 12, "symbol": "circle"},
-        "states": {"hover": {"enabled": True, "lineWidthPlus": 0}},
-    }
+    "scatter": {"marker": {"radius": 8}, "states": {"hover": {"enabled": True, "lineWidthPlus": 0}}}
 }
 
-# Regular points series
+# Regular points series (BRAND color as primary)
 regular_series = ScatterSeries()
 regular_series.name = "Residuals"
 regular_series.data = regular_data
-regular_series.color = "#306998"
-regular_series.marker = {"radius": 12, "fillColor": "rgba(48, 105, 152, 0.6)", "lineWidth": 2, "lineColor": "#306998"}
+regular_series.color = BRAND
+regular_series.marker = {"radius": 8, "fillColor": BRAND, "lineWidth": 1, "lineColor": PAGE_BG}
 chart.add_series(regular_series)
 
 # Outlier points series
@@ -178,20 +173,45 @@ if outlier_data:
     outlier_series = ScatterSeries()
     outlier_series.name = "Outliers (>2σ)"
     outlier_series.data = outlier_data
-    outlier_series.color = "#E74C3C"
+    outlier_series.color = ACCENT_1
     outlier_series.marker = {
-        "radius": 16,
-        "fillColor": "rgba(231, 76, 60, 0.7)",
-        "lineWidth": 3,
-        "lineColor": "#C0392B",
+        "radius": 10,
+        "fillColor": ACCENT_1,
+        "lineWidth": 1,
+        "lineColor": PAGE_BG,
         "symbol": "diamond",
     }
     chart.add_series(outlier_series)
 
-# Download Highcharts JS
+# Download Highcharts JS with retry
 highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+highcharts_js = None
+
+for attempt in range(3):
+    try:
+        request = urllib.request.Request(
+            highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
+        with urllib.request.urlopen(request, timeout=60) as response:
+            highcharts_js = response.read().decode("utf-8")
+        break
+    except urllib.error.HTTPError as e:
+        if attempt < 2:
+            time.sleep(2)
+        elif attempt == 2:
+            # Fallback for network issues (e.g., in restricted environments)
+            # Use minified Highcharts from jsDelivr
+            try:
+                jsdelivr_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.min.js"
+                request2 = urllib.request.Request(jsdelivr_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(request2, timeout=60) as response:
+                    highcharts_js = response.read().decode("utf-8")
+            except Exception as fallback_err:
+                raise Exception(f"Failed to download Highcharts from both CDN endpoints: {e}") from fallback_err
+    except Exception:
+        if attempt == 2:
+            raise
+        time.sleep(2)
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -201,13 +221,17 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML for screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -223,25 +247,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    # Create standalone HTML with CDN for proper interactive version
-    interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>residual-plot · highcharts · pyplots.ai</title>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(interactive_html)
 
 # Cleanup
 Path(temp_path).unlink()
