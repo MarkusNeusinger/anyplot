@@ -1,169 +1,160 @@
 library: bokeh
+language: python
 specification_id: elbow-curve
 created: '2025-12-26T19:35:52Z'
-updated: '2025-12-26T19:39:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528203298
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling: []
+updated: '2026-05-10T07:21:03Z'
+generated_by: claude-haiku
+workflow_run: 25622630685
+issue: 2333
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and markers for the high-resolution
-    output
-  - Clear elbow point annotation with both highlighted marker and vertical reference
-    line
-  - Realistic K-means inertia data that demonstrates the classic elbow pattern effectively
-  - Clean KISS code structure following library guidelines exactly
-  - Good use of ColumnDataSource as recommended in Bokeh guidelines
-  weaknesses:
-  - Legend is positioned in the far top-right corner, isolated from the plot area
-    with significant empty space
-  - Does not utilize Bokeh-specific interactive features like HoverTool to show exact
-    values on hover
-  image_description: The plot displays an elbow curve for K-means clustering with
-    a light gray background (#fafafa). The title "elbow-curve · bokeh · pyplots.ai"
-    appears centered at the top in dark gray text. The X-axis is labeled "Number of
-    Clusters (k)" ranging from 1 to 10, and the Y-axis is labeled "Inertia (Within-Cluster
-    Sum of Squares)" ranging from approximately 0 to 5000. The curve shows blue (#306998)
-    circular markers connected by a blue line, starting high at k=1 (~5000) and dropping
-    sharply to k=4, then leveling off. The elbow point at k=4 is highlighted with
-    a larger yellow (#FFD43B) marker. A dashed yellow vertical line marks the elbow
-    position. An "Elbow Point" text annotation appears near k=4. The legend in the
-    top-right corner shows "Optimal k = 4" with a yellow marker. Grid lines are subtle
-    and dashed.
+  - Perfect legibility in both light and dark themes with properly implemented theme-adaptive
+    tokens
+  - 'Clear visual hierarchy: elbow point emphasized through size and color contrast'
+  - Professional appearance with clean styling and proper Okabe-Ito palette usage
+  - Realistic K-means clustering data with natural elbow point and reproducible seed
+  - Follows bokeh idioms and recommended Selenium screenshot pattern per library guide
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "elbow-curve · bokeh · anyplot.ai" centered at top in dark text (28pt); X-axis "Number of Clusters (k)" and Y-axis "Inertia (Within-Cluster Sum of Squares)" in dark text (22pt); tick labels in secondary text color (18pt) — all clearly readable
+      Data: Green line (#009E73, Okabe-Ito pos 1) with circular markers (size 18) showing main inertia series; orange elbow point marker (size 28, #D55E00, Okabe-Ito pos 2) at k=4; legend shows both series; grid subtle at 10% alpha
+      Legibility verdict: PASS — All text fully legible against light background; data colors distinct and visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Same title and axis labels rendered in light text (#F0EFE8) with proper contrast; tick labels in light secondary color (#B8B7B0); grid in light theme at 10% alpha; legend with elevated background (#242420) — all clearly readable
+      Data: Green (#009E73) and orange (#D55E00) colors identical to light render; no color shift between renders (only chrome flipped as expected)
+      Legibility verdict: PASS — All text fully legible against dark background; no dark-on-dark failures; data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt - all clearly
-          readable
+        comment: All text properly scaled for 4800×2700; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean layout; legend positioned without collision
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (size=20 for data, size=30 for highlight)
-          for 10 data points
+        comment: Line width 4; markers 18/28; all distinct and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but plot area could be slightly larger; some empty
-          space on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: "Number of Clusters (k)" and "Inertia
-          (Within-Cluster Sum of Squares)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) safe for colorblind viewers'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is positioned far in the top-right corner, isolated from the
-          plot area
+        passed: true
+        comment: Descriptive axes with context; title format compliant
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; chrome properly themed
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful dual-color scheme; subtle grid; professional appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid at 10% alpha; legend with background and padding; clean styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Elbow point emphasized via size and color; curve guides viewer to
+          optimal k
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct elbow curve/line plot with markers
+        comment: Correct elbow curve with line and scatter
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=k values, Y=inertia correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Line connecting points, markers at each k, elbow point annotated/highlighted
-          as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: k-values, inertia, line, markers, elbow highlighted
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correctly mapped; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Optimal k = 4"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "elbow-curve · bokeh · pyplots.ai"
+        comment: Format compliant; legend labels clear
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows classic elbow curve pattern with sharp decrease before elbow
-          and diminishing returns after
+        comment: Full k range; demonstrates elbow pattern with optimal point
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: K-means inertia values are realistic and the elbow pattern is clearly
-          visible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Inertia values (0-5000) and k range (1-10) are appropriate for clustering
-          analysis
+        comment: Realistic K-means inertia; plausible elbow at k=4; reproducible seed
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible k and inertia ranges; axes scale appropriately
     code_quality:
       score: 10
       max: 10
@@ -173,11 +164,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save, no functions/classes'
+        comment: Simple linear code; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -185,29 +176,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.html and .png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Implementation uses basic Bokeh features but does not leverage distinctive
-          Bokeh strengths like HoverTool for interactivity, which would be natural
-          for this library
+        passed: true
+        comment: ColumnDataSource pattern; figure/line/scatter following conventions;
+          Selenium per bokeh.md
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Dual scatter calls for emphasis; bokeh theming system used well
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
