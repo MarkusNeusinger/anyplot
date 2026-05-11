@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-density: Density Histogram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-11
@@ -54,7 +54,7 @@ chart = pygal.Bar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="Density Histogram",
+    title="histogram-density · pygal · anyplot.ai",
     x_title="Test Score",
     y_title="Density (Probability per Unit)",
     show_legend=False,
