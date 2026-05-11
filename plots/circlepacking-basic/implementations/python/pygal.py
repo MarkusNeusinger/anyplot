@@ -1,19 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 78/100 | Created: 2025-12-30
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-11
 """
 
 import math
+import os
 import xml.etree.ElementTree as ET
 
 import cairosvg
-import pygal
-from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Hierarchical data - Company structure with headcount per team
-# Format: (id, parent, value, label)
 hierarchy = [
     ("company", None, None, "TechCorp"),
     ("eng", "company", None, "Engineering"),
@@ -65,16 +73,11 @@ root = nodes["company"]
 WIDTH = 3600
 HEIGHT = 3600
 CENTER_X = WIDTH / 2
-CENTER_Y = HEIGHT / 2 + 60  # Offset down to make room for title
+CENTER_Y = HEIGHT / 2 + 60
 
-# Colors by depth level (colorblind-safe Python palette)
-DEPTH_COLORS = [
-    "#306998",  # Level 0 - root (Python Blue)
-    "#4A90D9",  # Level 1 - departments (lighter blue)
-    "#FFD43B",  # Level 2 - teams (Python Yellow)
-]
+# Color palette by depth (using Okabe-Ito for first 3 levels)
+DEPTH_COLORS = OKABE_ITO[:3]
 
-# Padding between circles
 PADDING = 15
 
 # All circles to draw
@@ -86,7 +89,7 @@ all_circles.append(
     {"x": CENTER_X, "y": CENTER_Y, "r": root_r, "label": root["label"], "value": root["value"], "depth": 0}
 )
 
-# Calculate department positions around center (arranged in a ring)
+# Calculate department positions around center
 departments = root["children"]
 n_depts = len(departments)
 total_dept_value = sum(d["value"] for d in departments)
@@ -102,7 +105,7 @@ for dept in departments:
 dept_ring_radius = root_r * 0.50
 dept_circles = []
 for i, dept in enumerate(departments):
-    angle = (2 * math.pi * i / n_depts) - math.pi / 2  # Start from top
+    angle = (2 * math.pi * i / n_depts) - math.pi / 2
     r = dept_radii[i]
     x = CENTER_X + dept_ring_radius * math.cos(angle)
     y = CENTER_Y + dept_ring_radius * math.sin(angle)
@@ -129,7 +132,6 @@ for dc in dept_circles:
         team_data = [{"node": sorted_teams[0], "r": scale_r, "x": dept_x, "y": dept_y}]
     else:
         # Multiple teams - arrange in optimized positions
-        # Calculate proportional radii with reduced max size
         max_single_r = dept_r * 0.30
         team_data = []
         for team in sorted_teams:
@@ -137,7 +139,7 @@ for dc in dept_circles:
             tr = min(max_single_r, dept_r * 0.45 * math.sqrt(proportion * n_teams / math.pi))
             team_data.append({"node": team, "r": tr, "x": 0.0, "y": 0.0})
 
-        # Ring radius for teams - leave more space
+        # Ring radius for teams
         max_team_r = max(td["r"] for td in team_data)
         ring_radius = dept_r - max_team_r - PADDING * 3
 
@@ -149,7 +151,7 @@ for dc in dept_circles:
             max_team_r = max(td["r"] for td in team_data)
             ring_radius = dept_r - max_team_r - PADDING * 3
 
-        # Place teams around the ring with spacing
+        # Place teams around the ring
         for i, td in enumerate(team_data):
             angle = (2 * math.pi * i / n_teams) - math.pi / 2
             td["x"] = dept_x + ring_radius * 0.55 * math.cos(angle)
@@ -168,42 +170,28 @@ for dc in dept_circles:
             }
         )
 
-# Use pygal Style for consistent theming
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=DEPTH_COLORS,
-    title_font_size=72,
-    legend_font_size=36,
-    font_family="sans-serif",
-)
-
-# Create base pygal config (used for style extraction and consistent rendering)
-config = pygal.Config()
-config.width = WIDTH
-config.height = HEIGHT
-config.style = custom_style
-
-# Build SVG using standard library (more stable than internal pygal.etree)
+# Build SVG
 svg_ns = "http://www.w3.org/2000/svg"
 ET.register_namespace("", svg_ns)
 
 svg_root = ET.Element("svg", xmlns=svg_ns, width=str(WIDTH), height=str(HEIGHT), viewBox=f"0 0 {WIDTH} {HEIGHT}")
-svg_root.set("style", f"background-color: {custom_style.background};")
 
-# Add title using pygal style settings
+# Add background rectangle
+bg_rect = ET.SubElement(svg_root, "rect")
+bg_rect.set("width", str(WIDTH))
+bg_rect.set("height", str(HEIGHT))
+bg_rect.set("fill", PAGE_BG)
+
+# Add title
 title_elem = ET.SubElement(svg_root, "text")
 title_elem.set("x", str(WIDTH / 2))
 title_elem.set("y", "70")
 title_elem.set("text-anchor", "middle")
-title_elem.set("fill", custom_style.foreground_strong)
-title_elem.set("font-size", str(custom_style.title_font_size))
-title_elem.set("font-family", custom_style.font_family)
+title_elem.set("fill", INK)
+title_elem.set("font-size", "28px")
+title_elem.set("font-family", "sans-serif")
 title_elem.set("font-weight", "bold")
-title_elem.text = "circlepacking-basic · pygal · pyplots.ai"
+title_elem.text = "circlepacking-basic · pygal · anyplot.ai"
 
 # Create main group for circles
 g = ET.SubElement(svg_root, "g")
@@ -214,7 +202,7 @@ sorted_circles = sorted(all_circles, key=lambda c: c["depth"])
 
 for circle in sorted_circles:
     depth = circle["depth"]
-    color = custom_style.colors[depth]
+    color = DEPTH_COLORS[depth]
     opacity = 0.20 if depth == 0 else (0.40 if depth == 1 else 0.85)
 
     # Circle element
@@ -224,14 +212,14 @@ for circle in sorted_circles:
     elem.set("r", f"{circle['r']:.1f}")
     elem.set("fill", color)
     elem.set("fill-opacity", str(opacity))
-    elem.set("stroke", "#444")
+    elem.set("stroke", INK_SOFT)
     elem.set("stroke-width", "3" if depth < 2 else "2")
 
     # Tooltip
     title = ET.SubElement(elem, "title")
     title.text = f"{circle['label']}: {circle['value']} people"
 
-# Draw labels in separate pass (on top of all circles)
+# Draw labels
 labels_g = ET.SubElement(svg_root, "g")
 labels_g.set("class", "labels")
 
@@ -245,9 +233,9 @@ for circle in sorted_circles:
         text.set("y", f"{circle['y']:.1f}")
         text.set("text-anchor", "middle")
         text.set("dominant-baseline", "middle")
-        text.set("fill", custom_style.foreground_strong)
-        text.set("font-size", "64")
-        text.set("font-family", custom_style.font_family)
+        text.set("fill", INK)
+        text.set("font-size", "64px")
+        text.set("font-family", "sans-serif")
         text.set("font-weight", "bold")
         text.set("opacity", "0.5")
         text.text = circle["label"]
@@ -257,9 +245,9 @@ for circle in sorted_circles:
         text.set("x", f"{circle['x']:.1f}")
         text.set("y", f"{circle['y'] - circle['r'] - 20:.1f}")
         text.set("text-anchor", "middle")
-        text.set("fill", "#222")
-        text.set("font-size", "52")
-        text.set("font-family", custom_style.font_family)
+        text.set("fill", INK)
+        text.set("font-size", "52px")
+        text.set("font-family", "sans-serif")
         text.set("font-weight", "bold")
         text.text = circle["label"]
     elif depth == 2 and circle["r"] > 50:
@@ -270,9 +258,9 @@ for circle in sorted_circles:
         text.set("y", f"{circle['y'] - 8:.1f}")
         text.set("text-anchor", "middle")
         text.set("dominant-baseline", "middle")
-        text.set("fill", "#222")
-        text.set("font-size", str(font_size))
-        text.set("font-family", custom_style.font_family)
+        text.set("fill", INK)
+        text.set("font-size", str(font_size) + "px")
+        text.set("font-family", "sans-serif")
         text.set("font-weight", "bold")
         text.text = circle["label"]
 
@@ -283,17 +271,17 @@ for circle in sorted_circles:
             val_text.set("y", f"{circle['y'] + font_size * 0.8:.1f}")
             val_text.set("text-anchor", "middle")
             val_text.set("dominant-baseline", "middle")
-            val_text.set("fill", custom_style.foreground_subtle)
-            val_text.set("font-size", str(int(font_size * 0.7)))
-            val_text.set("font-family", custom_style.font_family)
+            val_text.set("fill", INK_SOFT)
+            val_text.set("font-size", str(int(font_size * 0.7)) + "px")
+            val_text.set("font-family", "sans-serif")
             val_text.text = f"{circle['value']}"
 
-# Add legend at bottom with meaningful hierarchy level labels
+# Add legend at bottom
 legend_y = HEIGHT - 80
 legend_items = [
-    ("Root (Company)", custom_style.colors[0]),
-    ("Level 1 (Departments)", custom_style.colors[1]),
-    ("Level 2 (Teams)", custom_style.colors[2]),
+    ("Root (Company)", DEPTH_COLORS[0]),
+    ("Level 1 (Departments)", DEPTH_COLORS[1]),
+    ("Level 2 (Teams)", DEPTH_COLORS[2]),
 ]
 legend_x_start = WIDTH / 2 - 450
 for i, (label, color) in enumerate(legend_items):
@@ -304,21 +292,20 @@ for i, (label, color) in enumerate(legend_items):
     marker.set("cy", str(legend_y))
     marker.set("r", "20")
     marker.set("fill", color)
-    marker.set("stroke", "#444")
+    marker.set("stroke", INK_SOFT)
     marker.set("stroke-width", "2")
     # Label
     lbl = ET.SubElement(svg_root, "text")
     lbl.set("x", str(x + 35))
     lbl.set("y", str(legend_y + 8))
-    lbl.set("fill", custom_style.foreground_strong)
-    lbl.set("font-size", str(custom_style.legend_font_size))
-    lbl.set("font-family", custom_style.font_family)
+    lbl.set("fill", INK)
+    lbl.set("font-size", "16px")
+    lbl.set("font-family", "sans-serif")
     lbl.text = label
 
-# Write SVG to file (pygal convention for interactive output)
+# Render to files
 svg_output = ET.tostring(svg_root, encoding="unicode")
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(svg_output)
 
-# Render to PNG via cairosvg
-cairosvg.svg2png(bytestring=svg_output.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg_output.encode("utf-8"), write_to=f"plot-{THEME}.png")
