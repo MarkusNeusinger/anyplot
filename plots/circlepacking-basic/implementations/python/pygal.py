@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 circlepacking-basic: Circle Packing Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 79/100 | Updated: 2026-05-11
+Quality: 91/100 | Updated: 2026-05-11
 """
 
 import math
