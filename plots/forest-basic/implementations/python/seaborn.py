@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Updated: 2025-12-27
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-11
 """
 
 import os
