@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-cumulative: Cumulative Histogram
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-11
+Quality: 89/100 | Updated: 2026-05-11
 """
 
 import os
