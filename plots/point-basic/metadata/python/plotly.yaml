@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: point-basic
 created: '2025-12-30T09:31:42Z'
-updated: '2026-05-11T17:16:16Z'
+updated: '2026-05-11T17:21:42Z'
 generated_by: claude-haiku
 workflow_run: 25685094445
 issue: 2551
@@ -12,94 +12,85 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-dark.html
-quality_score: 79
+quality_score: 86
 review:
   strengths:
-  - Correct plot type with full spec compliance—all required elements present and
-    accurate
-  - Clear data visualization with good readability in both light and dark renders
-  - Appropriate realistic data with treatment effects showing meaningful variation
-  - Reference line at zero effect provides valuable context for interpretation
-  - Clean, simple code structure with proper reproducible seeding
+  - Perfect visual quality with all text explicitly sized and readable in both light
+    and dark themes
+  - Flawless spec compliance with all required features correctly implemented
+  - Clean, reproducible code with appropriate complexity and defensive programming
+  - Excellent theme adaptation with no legibility failures and proper chrome color
+    switching
+  - Professional appearance with well-balanced layout and subtle effective grid styling
   weaknesses:
-  - Code does not read ANYPLOT_THEME environment variable—mandatory pattern violation
-    per plotly library guide
-  - Chrome colors hardcoded instead of using theme-adaptive tokens (INK, INK_SOFT,
-    GRID, PAGE_BG)
-  - Wrong output file names—uses plot.png and plot.html instead of plot-light.png/html
-    and plot-dark.png/html
-  - Okabe-Ito position 7 (#FFD43B) misused for thin dashed reference line and small
-    annotation text
-  - Generic design choices—relies on plotly_white template defaults with no custom
-    refinement, visual hierarchy, or aesthetic sophistication
+  - Design excellence modest—follows well-configured defaults without distinctive
+    visual design beyond spec requirements
+  - Data storytelling not emphasized—no visual hierarchy, emphasis, or annotation
+    to highlight treatment effect magnitudes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with correct light theme surface color
-      Chrome: Title "point-basic · plotly · anyplot.ai" clearly visible in dark text; axis labels "Effect Size (units)" and "Treatment Group" readable in dark ink; tick labels (category names and numeric values) clearly visible; subtle grid lines at 10% opacity visible but not dominant
-      Data: Green markers (Okabe-Ito #009E73) with symmetric error bars; reference line at x=0 in yellow with "Null" annotation; legend positioned bottom-right showing "Estimate ± 95% CI"
-      Legibility verdict: PASS - All text readable and properly contrasted against light background
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title and axis labels in dark INK color (#1A1A17); tick labels in secondary INK_SOFT (#4A4A44); all clearly readable
+      Data: Six treatment groups with green circles (#009E73) and horizontal error bars with end caps; null reference line at x=0 (dashed, labeled)
+      Legibility verdict: PASS – all text fully readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with correct dark theme surface color
-      Chrome: Title, axis labels, tick labels all visible in light off-white/light gray tones; grid lines in light subtle gray (correctly adapted); no dark-on-dark text failures detected; all annotations readable
-      Data: Green markers identical to light render (correctly theme-independent); error bars same green; reference line and "Null" annotation in yellow (same as light render)
-      Legibility verdict: PASS - All text readable and properly contrasted against dark background; data colors correctly theme-independent
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title and axis labels in light INK (#F0EFE8); tick labels in secondary light INK_SOFT (#B8B7B0); grid lines subtle; legend box framed; all readable against dark surface
+      Data: Green circles and error bars remain identical (#009E73) to light render; null line and all data elements clearly visible
+      Legibility verdict: PASS – no dark-on-dark failures; excellent readability in dark theme; chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; minor concern with yellow Null
-          annotation legibility on dark background
+        comment: Title 32px, labels 24px, ticks 18-20px; all explicitly set and perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no text collisions or overlapping elements
+        comment: No overlapping text; clean, well-spaced layout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points and error bars clearly visible with good contrast against
-          backgrounds
+        comment: Marker size 18 optimal for 6 categories; error caps clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito position 7 (FFD43B yellow) used for thin dashed line and
-          small text; violates guideline that position 7 should not be used for thin
-          lines or small markers
+        passed: true
+        comment: Green (#009E73) excellent contrast; Okabe-Ito palette CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions with generous margins; all content visible and well-framed
+        comment: Plot uses ~60% of canvas; balanced margins (l:150, r:80, t:100, b:80)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted; axis labels descriptive with units; all
-          text properly positioned
+        comment: 'Descriptive with units: ''Effect Size (units)'' and ''Treatment
+          Group'''
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Visual output appears correct (009E73 for data, correct backgrounds)
-          but code violates mandatory theme-adaptive pattern—does not read ANYPLOT_THEME
-          or use theme tokens
+        passed: true
+        comment: 'First series #009E73 correct; backgrounds #FAF8F1/#1A1A17 correct;
+          chrome colors theme-adaptive'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -107,22 +98,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic default styling; reference line adds functional value but
-          not aesthetic sophistication; no custom palette or design thought
+        comment: Well-configured professional default; no custom palette or distinctive
+          design
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, framed legend, generous margins
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond plotly_white template; no spine removal,
-          no grid styling, no legend frame customization
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Reference line at zero creates focal point and guides interpretation;
-          limited visual hierarchy or emphasis otherwise
+        comment: Data displayed without visual hierarchy or emphasis; null line informative
+          but not visually prominent
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements horizontal point estimate plot with error bars
-          per specification
+        comment: Horizontal point estimate plot with error bars—correct
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: point estimates as markers, confidence
-          intervals as error bars, categories displayed, reference line at zero'
+        comment: Points, confidence intervals, categories, reference line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly shows effect size values; Y-axis correctly shows
-          treatment categories; all data points mapped correctly
+        comment: X-axis estimates, Y-axis categories; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correctly formatted as 'point-basic · plotly · anyplot.ai';
-          legend shows 'Estimate ± 95% CI' with correct marker
+        comment: Title format 'point-basic · plotly · anyplot.ai' correct; legend
+          accurate
     data_quality:
       score: 15
       max: 15
@@ -164,24 +151,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all aspects of point estimate plots: point estimates,
-          confidence intervals, multiple categories, reference line'
+        comment: Six groups with varying estimates (0-4.2) and CI widths (0.8-1.5)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Treatment effect data is plausible and realistic; confidence interval
-          widths vary appropriately by treatment; context is neutral and appropriate
+        comment: Treatment effects with CIs—realistic, scientifically plausible, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect sizes range from -1.6 to 6.2 (reasonable scale); CI widths
-          0.8-1.5 are appropriate; scale shows meaningful differences between treatments
+        comment: Effect sizes and proportions factually sensible for treatment study
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -189,37 +173,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward imperative code
+        comment: 'Linear: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) to ensure reproducible synthetic data generation
+        comment: np.random.seed(42) ensures deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported; all imports used
+        comment: Only os, numpy, plotly.graph_objects; all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'MANDATORY PATTERN VIOLATION: Does not read os.getenv(''ANYPLOT_THEME'')
-          or define theme-adaptive tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT, GRID);
-          uses hardcoded colors (gridcolor, line colors) instead of token-based styling;
-          plotly library guide requires explicit theme adaptation'
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity, defensive strict=False
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Outputs plot.png and plot.html instead of plot-light.png/html
-          and plot-dark.png/html; violates required output naming convention'
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -227,19 +207,19 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Good use of go.Scatter() with error_x parameter for error bars; however,
-          misses mandated theme-adaptive pattern documented in plotly library guide
+        comment: Correct go.Figure(), go.Scatter(), error_x; solid but not leveraging
+          advanced patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses error bars and annotation features; fairly standard usage without
-          library-specific customization or distinctive techniques
-  verdict: REJECTED
+        passed: true
+        comment: Uses add_vline() with annotation—Plotly-specific; otherwise straightforward
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - html-export
   - annotations
   patterns:
   - data-generation
