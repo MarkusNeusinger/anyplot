@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: contour-filled
 created: '2025-12-30T00:03:42Z'
-updated: '2026-05-11T13:26:52Z'
+updated: '2026-05-11T13:35:00Z'
 generated_by: claude-haiku
 workflow_run: 25672687650
 issue: 2500
@@ -12,90 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/bokeh/plot-dark.html
-quality_score: 69
+quality_score: 86
 review:
   strengths:
-  - Correct filled contour visualization with overlay contour lines
-  - Appropriate viridis colormap for continuous elevation data
-  - Interactive hover tooltips with elevation values
-  - Realistic and plausible terrain data with multiple Gaussian peaks
-  - Clean and reproducible code with deterministic seed
-  - Efficient contour generation using contourpy library
+  - Perfect theme adaptation with all text colors, backgrounds, and chrome correctly
+    set from tokens
+  - 'Excellent spec compliance: filled contour plot with colorbar, overlay contour
+    lines, and realistic terrain elevation data'
+  - Clean code structure with proper theme token usage, reproducible data generation
+    (seeded), and idiomatic Bokeh patterns
+  - 'Thoughtful data presentation: Gaussian peaks create clear focal points, contour
+    line dual-approach (base+outline) ensures visibility in both themes'
+  - 'Correct palette: Viridis256 for continuous data, all text legible in both light
+    and dark renders'
   weaknesses:
-  - 'CRITICAL: Background colors not rendering correctly — both light/dark renders
-    appear identical instead of #FAF8F1/#1A1A17'
-  - 'CRITICAL: Text legibility issue — axis tick labels too small and difficult to
-    read at full 4800×2700px resolution'
-  - No visual hierarchy or emphasis — all peaks treated equally
-  - Generic default styling with no custom refinement beyond Bokeh defaults
-  - Theme-adaptive styling code exists but does not visually render correctly in output
-  - ANYPLOT_THEME environment variable likely not passed during Selenium screenshot
-    process
+  - 'Design Excellence is moderate: standard Viridis palette with no custom aesthetic
+    choices; grid styling is subtle but not refined to publication-ready level'
+  - 'Visual hierarchy could be stronger: focal points exist naturally but are not
+    emphasized through additional design choices (e.g., accent colors, strategic annotations)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Expected warm off-white (#FAF8F1) but rendered as grayish/dark tone
-      Chrome: Title visible, axis labels present, tick labels very small; colors appear too dark for light theme
-      Data: Viridis colormap correctly displays elevation field with three prominent peaks, valleys, and white/light contour lines overlaid for level identification
-      Colorbar: Present with title "Terrain Elevation (m)" and tick labels; background color incorrect for light theme
-      Legibility verdict: FAIL — Background color does not match specification (#FAF8F1); text elements undersized and difficult to read
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "contour-filled · bokeh · anyplot.ai" is dark and readable; axis labels "Distance East (km)" and "Distance North (km)" are dark and clear; tick labels are readable with INK_SOFT color; colorbar title and scale labels are properly styled
+      Data: Viridis256 colormap smoothly transitions from purple (low elevation) to yellow (high elevation); three Gaussian peaks create clear terrain features; contour lines are visible with white base and dark outline for contrast; grid is very subtle at 10% opacity
+      Legibility verdict: PASS - all elements readable; dark text on light background provides strong contrast
 
     Dark render (plot-dark.png):
-      Background: Should be warm near-black (#1A1A17) but appears nearly identical to light render — grayish/dark like light render instead of true dark
-      Chrome: Title visible, axis labels present, tick labels very small; colors should be light text on dark background but appear similar to light render
-      Data: Viridis colormap and white contour lines appear identical to light render (correct for data colors, wrong for theme distinction)
-      Colorbar: Present but background color should be dark theme adapted; colors not visually distinct from light render
-      Legibility verdict: FAIL — Should appear visually distinct from light render but is nearly identical; theme adaptation not visually evident
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, and tick labels are light-colored (INK and INK_SOFT tokens) and clearly readable against dark background; colorbar properly styled with light text; NO dark-on-dark failures detected
+      Data: Viridis256 colors are identical to light render (only chrome adapted - correct theme pattern); contour lines use light outline with darker base for visibility in dark mode; grid remains subtle and visible; colorbar scale and labels readable
+      Legibility verdict: PASS - all elements readable; light text on dark background provides strong contrast
 
-    CRITICAL FINDING: Both renders appear nearly identical in overall appearance, indicating the ANYPLOT_THEME environment variable is not being properly passed to or processed by the screenshot generation pipeline. Light and dark renders should show dramatically different chrome (background, text colors, grid colors) with only the Okabe-Ito data colors (1-7) remaining constant. The fact that both appear the same suggests a rendering/environment issue rather than a code issue.
+    Both renders demonstrate correct theme-adaptive implementation with data colors remaining identical and only chrome (backgrounds, text, grid, legend) flipping between light and dark. The Viridis256 palette is perceptually uniform and appropriate for the continuous elevation data.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 8
         max: 8
-        passed: false
-        comment: Font sizes theoretically appropriate but axis/tick labels render
-          too small to read; background colors incorrect
+        passed: true
+        comment: All text (title, axis labels, tick labels, colorbar) readable in
+          both light and dark with appropriate font sizes (28pt title, 22pt axis labels,
+          18pt ticks)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Elements well-separated with minor tick label compression
+        comment: Clean layout with no overlapping elements; colorbar, axes, and title
+          properly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Contour lines and colorbar clearly visible
+        comment: Filled contour surface and contour line overlays all clearly visible;
+          data elements distinguishable from background
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform
+        comment: Viridis256 is perceptually uniform and CVD-safe; no red-green as
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good composition but canvas styling not applying correctly
+        comment: 4800×2700 format appropriate; nothing cut off; good proportions and
+          use of space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All text descriptive and on-specification
+        comment: Title includes library branding; axis labels include units (km);
+          colorbar titled 'Terrain Elevation (m)'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Both renders show identical backgrounds instead of theme-adapted
-          #FAF8F1/#1A1A17'
+        passed: true
+        comment: 'Viridis256 correct for continuous data; backgrounds #FAF8F1 (light)
+          and #1A1A17 (dark) correct; theme-adaptive chrome perfectly implemented'
     design_excellence:
       score: 8
       max: 20
@@ -105,21 +108,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Default styling with no custom refinement
+        comment: Uses standard Viridis palette (not custom); dual-line contour approach
+          is thoughtful but styling is functional rather than sophisticated
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Subtle grid present but no spine removal or custom enhancement
+        comment: Grid subtle at 10% opacity; whitespace adequate but not generous;
+          Bokeh defaults include frame elements not refined away
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: No visual hierarchy or focal point; all peaks treated equally
+        comment: Clear narrative with natural focal points (three peaks); story is
+          told but not emphasized through additional design choices
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,49 +133,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled contour plot with overlaid contour lines correctly implemented
+        comment: Correct filled contour plot with color bands representing value ranges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, contour lines, grid, and hover tooltips all present
+        comment: 'All features present: filled contours, colorbar, overlay contour
+          lines at 12 levels for precise identification'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped to Distance East/North and Terrain Elevation
+        comment: 'X: Distance East (km), Y: Distance North (km), Z: Elevation mapped
+          to Viridis color scale; all data visible'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title and colorbar title present; colorbar could be more prominent
+        comment: 'Title: ''contour-filled · bokeh · anyplot.ai''; colorbar titled
+          ''Terrain Elevation (m)'' with proper labels'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple peaks/valleys shown; gradient ranges well represented
+        comment: 'Demonstrates all aspects of filled contour visualization: color
+          bands, smooth gradients, contour overlays, colorbar scale'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Terrain elevation 0-2000m is plausible for hills/mountains
+        comment: Terrain elevation surface (0-2000m) with multiple Gaussian peaks;
+          realistic and neutral context
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 80x80 grid and 0-2000m range appropriate for smooth contours
+        comment: 80×80 grid provides smooth color transitions; 12 contour levels appropriate
+          for detail; elevation range sensible
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,55 +189,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct script without unnecessary functions/classes
+        comment: No functions or classes; simple procedural structure; straightforward
+          code flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set for determinism
+        comment: Uses np.random.seed(42) for deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, no unused modules
+        comment: 'All imports are used: contourpy.contour_generator, selenium webdriver,
+          bokeh components'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Theme-adaptive styling code exists but doesn't render correctly;
-          functional failure in output
+        passed: true
+        comment: No fake interactivity; appropriate complexity; efficient contour
+          generation
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Theme switching not visually working; output does not match specification
+        passed: true
+        comment: Correctly saves as plot-{THEME}.html and plot-{THEME}.png; uses Selenium
+          screenshot (current API pattern)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Bokeh API correctly used; theme adaptation implementation incomplete
+        comment: 'Idiomatic Bokeh patterns: figure(), LinearColorMapper, HoverTool,
+          theme tokens, Selenium screenshot approach matches library guidance'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Contourpy for efficient contours; interactive hover tooltips
-    score_caps:
-      applied: true
-      details: 'VQ-07 = 0 (palette/background failure) triggers cap: maximum score
-        reduced to 75'
-  verdict: REJECTED
+        passed: false
+        comment: 'Some distinctive features: contourpy integration, hover elevation
+          tooltip, dual-line contour technique; could showcase more Bokeh-specific
+          capabilities'
+  verdict: APPROVED
 impl_tags:
   dependencies:
+  - contourpy
   - selenium
   techniques:
   - colorbar
@@ -236,4 +251,4 @@ impl_tags:
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
+  - grid-styling
