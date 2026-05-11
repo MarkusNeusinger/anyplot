@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 venn-basic: Venn Diagram
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-11
 """
 
 import math
+import os
 
 import numpy as np
 import pandas as pd
@@ -24,6 +25,14 @@ from plotnine import (
 )
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first three colors for three-set Venn
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Three overlapping sets representing skills in a tech team
 # Set A: Python developers (100 people)
 # Set B: Data Scientists (80 people)
@@ -42,7 +51,6 @@ set_labels = ["Python\nDevelopers", "Data\nScientists", "ML\nEngineers"]
 
 region_counts = {"A_only": 60, "B_only": 35, "C_only": 25, "AB_only": 20, "AC_only": 10, "BC_only": 15, "ABC": 10}
 
-
 # Circle positions for 3-set Venn diagram
 # Circles arranged in a triangle formation with significant overlap
 radius = 5
@@ -54,13 +62,6 @@ centers = {
     "A": (-offset, offset * 0.5),  # Top-left
     "B": (offset, offset * 0.5),  # Top-right
     "C": (0, -offset * 0.9),  # Bottom
-}
-
-# Colors with transparency for overlap visibility
-colors = {
-    "A": "#306998",  # Python Blue
-    "B": "#FFD43B",  # Python Yellow
-    "C": "#4B8BBE",  # Lighter blue
 }
 
 # Create circle polygons
@@ -127,39 +128,42 @@ set_name_labels = [
 ]
 set_name_df = pd.DataFrame(set_name_labels)
 
+# Create color mapping dict for sets
+color_map = {"A": OKABE_ITO[0], "B": OKABE_ITO[1], "C": OKABE_ITO[2]}
+
 # Plot
 plot = (
     ggplot()
     # Draw circles with transparency for overlap visibility
     + geom_polygon(
-        aes(x="x", y="y", fill="set", group="circle_id"), data=circle_df, alpha=0.45, color="#333333", size=1.5
+        aes(x="x", y="y", fill="set", group="circle_id"), data=circle_df, alpha=0.45, color=INK_SOFT, size=1.5
     )
     # Region count labels (larger, bold)
-    + geom_text(aes(x="x", y="y", label="label"), data=count_labels_df, size=18, fontweight="bold", color="#000000")
+    + geom_text(aes(x="x", y="y", label="label"), data=count_labels_df, size=18, fontweight="bold", color=INK)
     # Set name labels (outside circles)
-    + geom_text(aes(x="x", y="y", label="label"), data=set_name_df, size=14, fontweight="bold", color="#333333")
-    # Colors (legend hidden via theme)
-    + scale_fill_manual(values=colors)
+    + geom_text(aes(x="x", y="y", label="label"), data=set_name_df, size=14, fontweight="bold", color=INK_SOFT)
+    # Colors using Okabe-Ito palette
+    + scale_fill_manual(values=color_map)
     # Axis scaling for proper aspect ratio
     + scale_x_continuous(limits=(-12, 12))
     + scale_y_continuous(limits=(-12, 10))
     # Title
-    + labs(title="venn-basic · plotnine · pyplots.ai")
-    # Clean theme
+    + labs(title="venn-basic · plotnine · anyplot.ai")
+    # Theme with proper sizing and colors
     + theme(
         figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", color="#333333"),
+        plot_title=element_text(size=24, ha="center", color=INK, fontweight="medium"),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#FFFFFF"),
-        plot_background=element_rect(fill="#FFFFFF"),
-        legend_position="none",  # Hide legend - labels are on the plot
+        panel_background=element_rect(fill=PAGE_BG, color=None),
+        plot_background=element_rect(fill=PAGE_BG, color=None),
+        legend_position="none",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
