@@ -1,15 +1,229 @@
 library: pygal
+language: python
 specification_id: contour-filled
 created: '2025-12-30T00:05:25Z'
-updated: '2025-12-30T00:27:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585402081
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T13:32:34Z'
+generated_by: claude-haiku
+workflow_run: 25673012621
+issue: 2500
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-filled/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-filled/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/pygal/plot-dark.html
 quality_score: 91
+review:
+  strengths:
+  - Excellent technical execution with sophisticated marching squares algorithm for
+    accurate contour rendering
+  - Perfect theme adaptation with correct colors and readable text in both light and
+    dark renders
+  - All specification requirements met with professional colorbar and overlaid contour
+    lines
+  - Clean code structure with deterministic data generation and proper reproducibility
+  - High-resolution rendering (4800×2700) with appropriately scaled fonts and elements
+  - Professional diverging colormap (blue-white-red) appropriate for continuous data
+    visualization
+  weaknesses:
+  - Design Excellence could be improved - while technically excellent, visual design
+    is relatively straightforward without additional visual refinement beyond the
+    colormap
+  - Library Mastery reduced due to heavy reliance on manual SVG injection rather than
+    leveraging pygal's high-level API features
+  - Visual hierarchy is natural from colormap but not explicitly emphasized - no specific
+    peak is highlighted as a focal point
+  - Minimal design customization beyond required elements - no additional annotations
+    or advanced visual storytelling techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface
+      Chrome: Title "contour-filled · pygal · anyplot.ai" (bold, dark), axis labels "X Position (a.u.)" and "Y Position (a.u.)" (dark, rotated), tick labels (gray), colorbar title "Intensity" (bold, dark), all text clearly readable against light background
+      Data: Filled contour plot with diverging blue-white-red colormap showing four Gaussian peaks (two positive/red, one negative/blue, one mixed). Contour lines overlay the filled regions. Colorbar on right shows value mapping from low (blue) to high (red) intensity
+      Legibility verdict: PASS - All text is clearly visible and well-positioned
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface
+      Chrome: Title, axis labels, and tick labels are light-colored (#F0EFE8 for titles, #B8B7B0 for ticks) and clearly readable against dark background. Colorbar labels are light and visible. Axis frame is rendered in light gray
+      Data: Identical filled contours and colorbar colors as light render - data visualization colors are perfectly consistent between themes. Only the chrome (text and frame colors) has adapted to dark theme
+      Legibility verdict: PASS - All text is clearly visible against dark background, no dark-on-dark failures. Contour lines remain visible
+
+    Both renders pass theme-readability checks with high quality.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All fonts explicitly sized: title 28px, labels 22px, ticks 18px.
+          Readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Well-spaced elements, no overlapping text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 80x80 grid produces smooth color transitions without jagging
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging colormap is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins (120-300px), good aspect ratio, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct BrBG-like diverging colormap, backgrounds #FAF8F1/#1A1A17,
+          theme-adapted text'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional custom colormap and marching squares algorithm, intentional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle contour lines provide refinement, good whitespace, professional
+          styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Natural visual hierarchy from cool-warm color progression guides
+          viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Filled contour plot with overlaid lines - correct
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: colorbar, contour lines, color bands'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, Z to color, full range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, colorbar labels show value mapping
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows multiple peaks with different intensities and widths
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematical Gaussian function realistic for scientific visualization
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 80x80 grid and data range are sensible and proportional
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Direct script without unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42) for deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used and necessary
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sophisticated marching squares algorithm, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format plot-{THEME}.png and .html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.XY and Style correctly, but heavy manual SVG injection
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages SVG rendering capability and cairosvg integration
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
@@ -21,194 +235,5 @@ impl_tags:
   - matrix-construction
   dataprep: []
   styling:
-  - gradient-fill
-review:
-  strengths:
-  - Excellent filled contour visualization achieved despite pygal not natively supporting
-    contour plots
-  - Creative SVG injection technique demonstrates advanced pygal customization
-  - Smooth color gradients with 25 levels and proper diverging colormap
-  - Marching squares algorithm for contour line overlay
-  - Proper colorbar with Intensity label and tick marks
-  - Good canvas utilization with balanced margins
-  - Generates both static PNG and interactive HTML output
-  weaknesses:
-  - Contour overlay lines are quite subtle (opacity 0.4) and could be more visible
-    for precise level identification
-  - Code uses helper functions (interpolate_color, lerp) which deviates from KISS
-    principle
-  - Axis labels lack units - could use generic units like Position (a.u.) or similar
-  image_description: 'The plot displays a filled contour visualization on a 4800×2700
-    canvas. The title "contour-filled · pygal · pyplots.ai" appears at the top in
-    dark gray text. The main plot area shows a 2D scalar field with multiple Gaussian
-    peaks: a dominant red/dark red peak in the upper right quadrant (around x=1, y=1)
-    representing positive values up to ~1.50, and a dark blue valley in the lower
-    left quadrant (around x=-1, y=-1) representing negative values down to ~-0.98.
-    Two additional smaller peaks are visible: one reddish peak in the lower right
-    and one blue-ish region. The colormap transitions smoothly from dark blue (negative)
-    through white (near zero) to dark red (positive). Subtle contour lines overlay
-    the filled regions at approximately 0.4 opacity. Axis labels read "X Coordinate"
-    and "Y Coordinate" with tick marks from -3.0 to 3.0. A colorbar on the right side
-    labeled "Intensity" shows the value mapping from -0.98 to 1.50.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels all clearly readable at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Filled regions and contour lines visible, contour lines could be
-          slightly more prominent
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Diverging blue-white-red colormap is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, colorbar positioned
-          appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels "X Coordinate" and "Y Coordinate" but no units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: No grid shown; colorbar present but contour lines are quite subtle
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct filled contour plot
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y grid with Z values correctly mapped to colors
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has filled regions, colorbar, and contour line overlay; contour lines
-          could be more visible
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full data range displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: Colorbar shows "Intensity" which is generic rather than describing
-          the mathematical function
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "contour-filled · pygal · pyplots.ai"'
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows multiple peaks (positive and negative), smooth gradients, demonstrates
-          both high and low regions
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Mathematical Gaussian peaks scenario is valid; slightly generic but
-          appropriate for demonstrating the technique
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Values from -0.98 to 1.50 are realistic for Gaussian surface functions
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: Has helper function `interpolate_color` and nested function `lerp`;
-          not pure KISS style
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `np.random.seed(42)` (though data is deterministic anyway)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
-        max: 5
-        passed: true
-        comment: Creative use of pygal's SVG rendering with custom SVG injection for
-          contours; generates both PNG and interactive HTML
-  verdict: APPROVED
+  - custom-colormap
+  - publication-ready
