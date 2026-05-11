@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:48:14Z'
-updated: '2026-05-11T03:32:48Z'
+updated: '2026-05-11T03:38:52Z'
 generated_by: claude-haiku
 workflow_run: 25648682436
 issue: 2442
@@ -12,49 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 77
 review:
   strengths:
-  - Bimodal distribution clearly visible and realistic (two student performance groups)
-  - KDE overlay effectively demonstrates seaborn's distinctive density estimation
-    capability
-  - Proper density normalization with stat='density' per spec
-  - Good font sizing for legibility (24pt title, 20pt labels, 16pt ticks)
-  - No text overlap or visual conflicts
-  - Realistic test score data (0-100 range) with sensible sampling
+  - Bimodal data choice effectively demonstrates histogram use case with two distinct
+    student populations
+  - Text legible at full resolution in both light and dark themes
+  - Proper axis labels with units and descriptive title format
+  - 'Theme-adaptive backgrounds render correctly (warm off-white #FAF8F1 light, warm
+    near-black #1A1A17 dark)'
+  - Clean code structure, seed set for reproducibility, idiomatic seaborn usage
   weaknesses:
-  - 'Histogram color #306998 (Python Blue) violates Okabe-Ito palette — must be #009E73
-    (brand green) as first series'
-  - 'KDE overlay color #FFD43B (Python Yellow) not from standard palette — should
-    use #D55E00 (Okabe-Ito position 2)'
-  - Missing sns.set_theme() with theme-adaptive tokens for text/grid/legend colors
-  - Output filename hardcoded as 'plot.png' instead of f'plot-{THEME}.png' with environment
-    variable
-  - No theme environment variable handling (os.getenv('ANYPLOT_THEME')) — required
-    for light/dark rendering
-  - Code shows 'pyplots.ai' in title (line 44) but images correctly show 'anyplot.ai'
-    — code-image mismatch
-  - Grid styling could be more refined (dashed lines at alpha=0.3 is more prominent
-    than recommended subtle style)
+  - 'Histogram color #306998 (Python Blue) is explicitly deprecated—must use #009E73
+    (Okabe-Ito green) for brand compliance'
+  - 'KDE color #FFD43B breaks Okabe-Ito sequence—should be #D55E00 (Okabe-Ito vermillion,
+    second series)'
+  - Output saves to plot.png instead of plot-{THEME}.png as required by seaborn.md
+    API
+  - 'Missing explicit theme-adaptive chrome setup: code should read ANYPLOT_THEME
+    environment variable and use sns.set_theme() with correct backgrounds and text
+    colors'
+  - Generic aesthetic without intentional design refinement—library defaults with
+    minimal customization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1), correct light theme
-      Chrome: Title, axis labels (20pt), tick labels (16pt) all clearly visible with dark text
-      Data: Teal/green histogram bars with white edges; orange KDE overlay line
-      Grid: Light gray dashed grid at alpha=0.3, subtle but visible
-      Legend: Clear, readable, positioned in upper right
-      Legibility verdict: PASS - all text readable against light background
+      Background: Warm off-white (approximately #FAF8F1) - correct theme color
+      Chrome: Title "histogram-density · seaborn · anyplot.ai" in dark text (readable); axis labels "Test Score (points)" and "Probability Density" in dark text with units (readable); tick labels dark and legible; grid subtle but visible
+      Data: Histogram bars #306998 blue (non-compliant, should be #009E73 green); KDE curve #FFD43B yellow (non-compliant, should be #D55E00 vermillion); bimodal distribution clearly shows two peaks; bar and curve well-defined and distinguishable from background
+      Legibility verdict: PASS - all text readable, but data colors violate Okabe-Ito brand standard
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17), correct dark theme
-      Chrome: Title and axis labels visible with light text; tick labels readable
-      Data: Histogram bars identical teal/green color as light render; orange KDE line maintained
-      Grid: Appears as light lines on dark surface, subtle
-      Legend: Readable with light text on dark background
-      Legibility verdict: PASS - all text readable. Data colors properly maintained across themes
+      Background: Warm near-black (approximately #1A1A17) - correct theme color
+      Chrome: Title in light text (readable); axis labels in light text (readable); tick labels light-colored (readable); grid adapted to dark theme (visible); NO dark-on-dark failures - text colors properly theme-adapted
+      Data: Histogram bars identical #306998 blue (same as light render - correct data consistency); KDE curve identical #FFD43B yellow (same as light render - correct data consistency); both clearly visible against dark background
+      Legibility verdict: PASS - all text readable, theme-adaptive chrome is correct, but data colors remain non-compliant across both renders
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -62,7 +56,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; perfectly readable in both themes
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt), perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -74,35 +69,36 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bars and KDE line optimally visible; good density adaptation
+        comment: Histogram bars and KDE curve clearly visible and well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between histogram and KDE; CVD-safe differentiation
+        comment: Good contrast between bars and curve; elements distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Balanced margins; plot fills ~65% of canvas; legend well-placed
+        passed: false
+        comment: Good margins and centered; plot could better utilize vertical canvas
+          space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis includes units (points); Y-axis descriptive (Probability Density);
-          title correct
+        comment: Descriptive with units (Test Score points, Probability Density)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Histogram uses #306998 (not #009E73); KDE uses #FFD43B
-          (not Okabe-Ito). Must fix to brand palette'
+        comment: 'Partial: backgrounds correct (#FAF8F1 light, #1A1A17 dark), text
+          theme-correct; but histogram #306998 (Python Blue, non-compliant) instead
+          of #009E73 (Okabe-Ito green), KDE #FFD43B instead of #D55E00'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -110,24 +106,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but generic coloring; no custom palette
-          or intentional design choices
+        comment: Well-configured defaults but no intentional design; uses deprecated
+          Python Blue instead of brand Okabe-Ito
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Dashed grid at alpha=0.3 is visible (should be more subtle); all
-          spines visible; minimal customization
+        comment: Library defaults with minimal customization; grid present but not
+          refined
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Bimodal distribution with two clear peaks; KDE overlay adds interpretation
-          value
+        passed: false
+        comment: Bimodal distribution effectively illustrates two student populations;
+          KDE overlay provides statistical context
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,26 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram with proper normalization
+        comment: Correct density histogram with normalized Y-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density normalization, histogram bars, KDE overlay all present
+        comment: Density histogram with KDE overlay present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=test scores; Y=probability density; full range visible
+        comment: Test scores on X, probability density on Y; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Code has 'pyplots.ai' (line 44) but images show 'anyplot.ai' — code-image
-          mismatch; legend labels correct
+        passed: true
+        comment: Title format correct (histogram-density · seaborn · anyplot.ai);
+          legend labels match
     data_quality:
       score: 15
       max: 15
@@ -164,23 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution shows all aspects; two groups create meaningful
-          variation
+        comment: Bimodal distribution shows rich aspects of histogram type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores from two student groups; realistic, neutral, comprehensible
-          scenario
+        comment: Test score scenario is realistic, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (0-100 range, means 65/85, sizes 300/200) are factually plausible
+        comment: Score range 0-100 factually correct for test context
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -188,57 +182,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports→data→plot→save; no functions/classes'
+        comment: 'Linear structure: imports, data, plot, save (no unnecessary functions)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic generation
+        comment: np.random.seed(42) set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports actually used (plt, np, sns)
+        comment: Only necessary imports (numpy, matplotlib, seaborn)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward, no over-engineering or fake functionality
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to ''plot.png'' (line 52) instead of f''plot-{THEME}.png''
-          — breaks pipeline'
+        comment: Saves to plot.png; must save as plot-{THEME}.png per seaborn.md
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct sns.histplot() and sns.kdeplot() usage but missing sns.set_theme()
-          with theme-adaptive tokens
+        passed: true
+        comment: High-level seaborn API used correctly (histplot, kdeplot)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: KDE overlay is distinctive seaborn feature but applied generically
-          without custom styling
+        passed: false
+        comment: Uses KDE overlay (seaborn feature); could leverage more distinctive
+          patterns
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - kde
+  - binning
   styling:
   - alpha-blending
+  - edge-highlighting
