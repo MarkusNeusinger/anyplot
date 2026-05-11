@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: gain-curve
 created: '2025-12-29T22:47:44Z'
-updated: '2026-05-11T09:36:57Z'
+updated: '2026-05-11T09:45:00Z'
 generated_by: claude-haiku
 workflow_run: 25662026890
 issue: 2440
@@ -12,35 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 92
 review:
   strengths:
-  - All text is readable in both light and dark themes with proper contrast
-  - 'Correct Okabe-Ito palette: model is brand green (#009E73), baseline is neutral
-    gray'
-  - Clean cumulative gains visualization with shaded area effectively showing model
-    vs baseline gap
-  - Proper theme-adaptive styling throughout (backgrounds, text colors, grid)
-  - Deterministic data generation with realistic fraud detection scenario
-  - Well-structured Altair layer composition with custom legend positioning
+  - 'Perfect Visual Quality (30/30): all text readable in both themes, perfect palette
+    compliance, excellent layout'
+  - 'Excellent theme adaptation: data colors identical between light/dark, chrome
+    perfectly responsive'
+  - 'Clean reproducible code: seed set, linear structure, idiomatic Altair patterns'
+  - 'Full spec compliance: all features present, correct axes, proper title/legend'
+  - 'Strong data storytelling: model curve clearly shows discrimination vs baseline,
+    realistic fraud detection scenario'
+  - 'Expert Altair usage: proper layering, encoding, configuration following recommended
+    patterns'
   weaknesses:
-  - Design is functional but generic - uses standard styling without custom touches
-  - Manual legend construction via separate chart layers is less elegant than built-in
-    legend
-  - Could enhance visual hierarchy with more sophisticated design choices (size variation,
-    emphasis techniques)
+  - 'Design Excellence not at maximum (14/20): could explore more distinctive visual
+    touches like drop shadows, custom fonts, or advanced annotations'
+  - 'LM-02 moderate (3/5): custom legend is well-done but doesn''t leverage Altair''s
+    most distinctive interactive features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with appropriate contrast
-      Chrome: Title "gain-curve · altair · anyplot.ai" is dark, clearly readable at top center. Axis labels "Population Targeted (%)" and "Positive Cases Captured (%)" are dark and prominent. Tick labels (0-100) are mid-gray, readable. Grid is subtle dotted lines at low opacity.
-      Data: Model curve is Okabe-Ito brand green (#009E73) with 4px stroke width. Shaded area under curve uses same green at 0.15 opacity. Baseline is gray dashed line (INK_SOFT #4A4A44). Legend positioned in lower-right with "Model" and "Baseline" text in dark color.
-      Legibility verdict: PASS - all text is readable, no contrast failures, data is distinct from background
+      Background: Warm off-white (#FAF8F1) - correct light theme background
+      Chrome: Title "gain-curve · altair · anyplot.ai" in dark text (28px, centered). X-axis "Population Targeted (%)" and Y-axis "Positive Cases Captured (%)" in dark labels (22px). Tick labels (18px) clearly readable. Grid lines subtle (dashed, 10% opacity). All text is dark on light background - fully readable, no light-on-light collisions.
+      Data: Model curve in bright teal-green (#009E73 - Okabe-Ito position 1), area underneath with 15% opacity same green, baseline diagonal in dashed gray (INK_SOFT #4A4A44). Legend in lower-right showing "Model" and "Baseline" with dark text.
+      Legibility verdict: PASS - All elements readable, perfect theme adaptation
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with appropriate theme contrast
-      Chrome: Title is light text, clearly readable. Axis labels are light, prominent. Tick labels are light gray, readable. Grid is subtle dotted lines at appropriate opacity for dark surface.
-      Data: Model curve is identical Okabe-Ito green (#009E73) - visible against dark background. Shaded area uses same green at 0.15 opacity. Baseline is light gray dashed line. Legend text is light color, readable.
-      Legibility verdict: PASS - all text is readable, no dark-on-dark failures, data colors are identical to light render, only chrome adapted per theme
+      Background: Warm near-black (#1A1A17) - correct dark theme background
+      Chrome: Title in light text (#F0EFE8, 28px) and clearly visible. Axis labels light-colored (22px). Tick labels light (18px). Grid lines visible but subtle. All text is light on dark background - fully readable, no dark-on-dark failures.
+      Data: Model curve remains identical bright teal-green (#009E73) - data colors match light render perfectly. Area shading same green with adjusted opacity for dark theme visibility. Baseline line lighter gray than light theme but still visible.
+      Legibility verdict: PASS - All elements readable, theme chrome correctly adapted while data colors remain constant
+
+    Theme Adaptation Status: EXCELLENT - Data colors (Okabe-Ito #009E73) identical between light and dark, chrome-only (background #FAF8F1/#1A1A17, text INK/INK_SOFT, grid opacity) properly responsive to theme
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,73 +54,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes - title 28px,
-          labels 22px, ticks 18px
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px,
+          all readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements have clear spacing, legend positioned in data-sparse
-          area, no collisions
+        comment: All text well-spaced, legend positioned clearly without collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Model curve, baseline, and shaded area all clearly visible and distinguishable
+        comment: Model curve, baseline, and area all optimally visible and distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (#009E73 + gray) - colorblind safe, adequate contrast
+        comment: Okabe-Ito palette colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 landscape (4800x2700 @ 3x) - good proportions, nothing cut
-          off, generous whitespace
+        comment: Plot fills ~70% canvas with balanced generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title ''gain-curve · altair · anyplot.ai'' follows spec. Axes: ''Population
-          Targeted (%)'' and ''Positive Cases Captured (%)'' - descriptive with units'
+        comment: Descriptive labels with units, title correct format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓, backgrounds #FAF8F1 light / #1A1A17 dark
-          ✓, both renders theme-correct ✓'
+        comment: 'First series #009E73, backgrounds correct, text theme-adaptive,
+          both renders perfect'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Competent use of palette and layout, but styling is straightforward
-          without custom palette or unique visual enhancements
+        passed: true
+        comment: Professional styling with intentional colors, custom legend positioning,
+          area shading. Well above defaults but not publication-custom
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid styling, responsive theme colors, but could have more
-          refined typography or visual polish
+        passed: true
+        comment: Subtle grid styling, custom legend, generous whitespace. Good refinement
+          visible
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Shaded area creates some visual hierarchy and emphasizes model-vs-baseline
-          gap, but storytelling could be more sophisticated
+        passed: true
+        comment: 'Visual hierarchy shows model effectiveness: bright green, shaded
+          area, baseline reference create narrative'
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +127,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative gains chart implementation
+        comment: Correct cumulative gains chart with all components
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Model curve, baseline reference line, shaded area, legend all present
+        comment: All spec requirements present and working
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: population %, Y: cumulative gain % - both 0-100 range correctly
-          mapped'
+        comment: Axes correctly assigned and full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend match specification format
+        comment: Title format correct and legend labels match
     data_quality:
       score: 15
       max: 15
@@ -156,21 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all gain-curve aspects: model performance, baseline, full
-          population range'
+        comment: Shows model discrimination with realistic fraud scenario and baseline
+          comparison
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fraud detection scenario with 1500 samples, realistic probability
-          scores and binary outcomes
+        comment: Fraud detection with probability scores, plausible, neutral, real-world
+          domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% scales sensible for population and gains
+        comment: Beta distribution, realistic probability function, correct percentages
     code_quality:
       score: 10
       max: 10
@@ -180,59 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes - straightforward linear implementation
+        comment: Linear flow with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports os, altair, numpy, pandas - all used
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or unnecessary patterns
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly
+        comment: Correct plot-{THEME} naming and scale_factor
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Uses alt.layer() and alt.Chart() idiomatically, configure methods
-          for theming - competent but not advanced
+        passed: true
+        comment: Expert use of Altair high-level API with proper patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Manual legend construction shows some technique, but overall usage
-          is straightforward without advanced Altair features
+        passed: true
+        comment: Custom legend and Altair-specific features present but not exceptional
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - custom-legend
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
