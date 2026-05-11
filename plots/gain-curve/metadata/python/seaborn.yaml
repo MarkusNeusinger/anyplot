@@ -1,166 +1,164 @@
 library: seaborn
+language: python
 specification_id: gain-curve
 created: '2025-12-29T22:49:43Z'
-updated: '2025-12-29T22:58:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584327294
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T09:30:33Z'
+generated_by: claude-haiku
+workflow_run: 25661729821
+issue: 2440
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gain-curve/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - fill-between
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent visual clarity with proper font sizing and colorblind-safe palette
-  - Complete implementation of all spec requirements including model curve, baseline,
-    and perfect model
-  - Realistic customer churn scenario that aligns perfectly with spec applications
-  - Clean KISS code structure with reproducibility via fixed seed
-  - Shaded lift area effectively highlights model improvement over baseline
+  - Flawless theme-adaptive implementation with identical data colors across light/dark
+    renders
+  - Excellent visual hierarchy through filled area emphasizing model advantage
+  - Perfect typography and text sizing across all elements
+  - Correct Okabe-Ito palette with strong aesthetic choices
+  - Complete spec compliance with clear data storytelling
+  - Clean, reproducible code with good structure
   weaknesses:
-  - Library features could be better utilized - mostly uses basic sns.lineplot which
-    offers little advantage over pure matplotlib
-  - Legend placement in lower right partially overlaps the data region; upper left
-    would be cleaner
-  image_description: 'The plot displays a cumulative gains chart with a 16:9 landscape
-    format on a white background with subtle gray gridlines. The title "gain-curve
-    · seaborn · pyplots.ai" is prominently displayed at the top in a large black font.
-    The X-axis is labeled "Customers Targeted (%)" ranging from 0 to 100, and the
-    Y-axis is labeled "Churners Captured (%)" ranging from 0 to ~105. Three lines
-    are shown: (1) a solid dark blue line labeled "Churn Prediction Model" showing
-    the cumulative gains curve with a steep initial slope that flattens as it approaches
-    100%; (2) a gray dashed diagonal line labeled "Random Selection (Baseline)" representing
-    random model performance; (3) a yellow/gold dotted line labeled "Perfect Model"
-    that rises steeply to 100% then remains horizontal. A light blue semi-transparent
-    fill highlights the area between the model curve and the baseline diagonal, illustrating
-    the model''s lift over random selection. The legend is positioned in the lower
-    right corner and is clearly readable.'
+  - LM-02 could leverage more seaborn-specific features beyond basic lineplot
+  - DE-01 could incorporate more sophisticated custom design elements
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text (24pt, 20pt, 16pt respectively); no legibility issues
+      Data: Main model curve in Okabe-Ito brand green (#009E73) with semi-transparent fill; orange dotted perfect model; black dashed baseline all clearly visible and distinct
+      Legibility verdict: PASS - All elements perfectly readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: All text light-colored and clearly readable against dark background; title, labels, ticks all legible with no dark-on-dark failures
+      Data: Green, orange, and white curves identical in color to light render, confirming data color preservation across themes
+      Legibility verdict: PASS - All elements readable with proper theme-adapted contrast
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping text; all fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths (3.5 for model, 2.5 for others) are excellent for this
-          chart type
+        comment: Lines perfectly adapted to data density; all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/gray/yellow palette is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Customers Targeted (%)" and "Churners
-          Captured (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Good contrast; colorblind-safe Okabe-Ito palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout; balanced margins; 60-70% canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle with alpha=0.3, but legend could be positioned better
-          (upper left would avoid the data area more)
+        passed: true
+        comment: Descriptive labels with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito correct (#009E73 first); theme-correct backgrounds and
+          chrome
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color choices; intentional visual hierarchy via filled
+          area; professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed; subtle grid; generous whitespace; deliberate legend
+          placement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Filled area emphasizes model lift; three curves tell coherent story
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct cumulative gains chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population percentage, Y=cumulative positives captured - correct
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has model curve, diagonal baseline reference, and perfect model curve
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: model, baseline, perfect model'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show 0-100% on X and 0-105% on Y, appropriate for the data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; axes span 0-100% appropriately
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels are accurate and descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title format correct; legend labels descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows model performance above baseline with good lift, steep initial
-          slope, includes perfect model for comparison. Minor deduction: could show
-          more variation in the curve shape'
+        comment: Demonstrates all gain curve aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Customer churn prediction is a realistic, neutral business scenario
-          matching spec applications
+        comment: Customer churn scenario is realistic and well-established
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 1000 samples with ~30% positive class is reasonable; values are sensible
+        comment: Realistic proportions and model differentiation
     code_quality:
       score: 10
       max: 10
@@ -170,41 +168,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn imported and all used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses sns.lineplot and sns.set_style, but these are basic seaborn
-          features. The shaded area uses matplotlib's fill_between rather than a seaborn-specific
-          feature
+        passed: true
+        comment: Expert seaborn lineplot and set_theme usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn theme system; could leverage more features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
