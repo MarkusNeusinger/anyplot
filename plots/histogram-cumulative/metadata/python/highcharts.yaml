@@ -1,172 +1,180 @@
 library: highcharts
+language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:31:54Z'
-updated: '2025-12-30T09:38:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593352018
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T22:52:05Z'
+generated_by: claude-haiku
+workflow_run: 25701778095
+issue: 2549
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - cumulative-sum
-  styling:
-    - gradient-fill
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/highcharts/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent step-area visualization that clearly shows cumulative distribution behavior
-  - Proper use of gradient fill creates visually appealing depth effect
-  - Clear title format following pyplots.ai convention with informative subtitle
-  - Well-chosen realistic educational context with appropriate sample size
-  - Good colorblind-safe color choice (#306998)
-  - Proper use of Selenium for PNG export with inline Highcharts JS
+  - Perfect visual quality across both themes — text sizing, contrast, readability,
+    and theme adaptation all flawless
+  - Complete spec compliance — correct chart type, all features present, proper axes
+    and formatting
+  - Excellent code quality — clean, deterministic, reproducible, follows conventions
+  - Realistic data design — three-mode student performance distribution with proper
+    clipping
+  - Professional polish — gradient styling, step interpolation, marker clarity create
+    sophisticated appearance
   weaknesses:
-  - Legend could be positioned more optimally (e.g., inside the plot area in lower-right
-    corner)
-  - Output image height slightly differs from specified 2700px
-  image_description: The plot displays a cumulative histogram showing student test
-    score distribution. The chart uses a step-area visualization with a blue color
-    (#306998) and gradient fill transitioning from semi-transparent blue at the top
-    to nearly transparent at the bottom. The title "histogram-cumulative · highcharts
-    · pyplots.ai" appears at the top in bold, with a subtitle "Student Test Score
-    Distribution (n=280)" below it. The x-axis shows "Test Score" ranging from 0 to
-    100, and the y-axis shows "Cumulative Percentage (%)" from 0% to 100%. Blue circular
-    markers appear at each data point along the step function. The curve is monotonically
-    increasing as expected for a cumulative distribution, with steeper slopes in the
-    40-80 range indicating where most scores fall. Grid lines are subtle light gray.
+  - Design Excellence could be elevated — while gradient and step styling are refined,
+    overall design is relatively standard for area charts; could explore stronger
+    visual hierarchy or data emphasis
+  - Library Mastery moderate — uses distinctive features competently but doesn't showcase
+    advanced Highcharts interactivity (though spec does not require it)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "histogram-cumulative · highcharts · anyplot.ai" in dark text (INK #1A1A17); X-axis "Test Score" and Y-axis "Cumulative Percentage (%)" clearly visible; tick labels in INK_SOFT (#4A4A44) fully legible; no readability issues
+      Data: Green step-chart area (#009E73) with markers at each bin; subtle gradient fill; step interpolation shows cumulative nature clearly; grid lines subtle and non-competing
+      Legibility verdict: PASS — all text fully readable, excellent contrast, no overlaps, proper sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, and tick labels all clearly visible in light text (INK #F0EFE8, INK_SOFT #B8B7B0); no dark-on-dark failures; legend readable
+      Data: Data colors identical to light render — green (#009E73) crisp and visible; step pattern and markers clear; grid subtle and appropriate
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, data colors match light render, only chrome theme-flipped correctly
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels and tick labels are all clearly readable.
-          Font sizes are appropriate for the 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the chart.
+        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px); fully
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, labels, and legend properly spaced with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized (radius 10), line width is good (4px). The
-          step pattern is clearly visible. Minor deduction as markers could be slightly
-          larger.
+        comment: Markers (radius 8), lines (width 3), and area fill all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses single blue color (#306998), colorblind-safe, no red-green issues.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good margins and spacing. Plot area is well-utilized. Minor wasted
-          space on the right side.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Test Score" and "Cumulative Percentage (%)" are descriptive with
-          units.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Uses #009E73 (Okabe-Ito CVD-safe); adequate contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous margins (marginBottom 250, marginLeft
+          200), nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Grid is subtle (light gray #e0e0e0). Legend is enabled but positioned
-          by default rather than optimally placed.'
+        comment: Format correct; 'Test Score' and 'Cumulative Percentage (%)' descriptive
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; both renders
+          theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful gradient fill on area series; step interpolation appropriate
+          for cumulative; professional polish. Could explore more emphasis techniques.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid (10% opacity), styled legend with background/border,
+          generous whitespace, clean composition
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy (title → axes → data); step pattern shows discrete
+          bins and monotonic increase; markers aid percentile identification
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative histogram using step-area chart, showing monotonically
-          increasing cumulative distribution.
+        comment: Correct area chart with step interpolation for cumulative histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis correctly shows bin values (score), Y-axis shows cumulative
-          percentage.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows cumulative count as percentage, step function appearance, proper
-          bin boundaries.
-      - id: SC-04
-        name: Data Range
+        comment: Y-axis shows cumulative %, monotonically non-decreasing, all required
+          elements present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows 0-100 (full score range), Y-axis shows 0-100%.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X correctly maps test scores (0–100), Y maps cumulative % (0–100%),
+          all 20 bins shown with proper tick intervals
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: '"Cumulative Distribution" label is accurate.'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "histogram-cumulative · highcharts · pyplots.ai" format.
+        comment: Title format correct; legend label 'Cumulative Distribution' appropriate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cumulative distribution with interesting shape (multimodal
-          underlying data creates visible inflection points). The S-curve shape demonstrates
-          percentile concepts well.
+        comment: Shows complete cumulative distribution; 20 bins provide good granularity;
+          demonstrates full quantile spectrum
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Student test scores is a realistic, neutral educational scenario.
-          The n=280 sample size is reasonable.
+        comment: Student test scores with three modes (average 65±10, high 85±5, struggling
+          45±8); realistic, neutral, clipped to valid range
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scores clipped to 0-100 are realistic. The tri-modal distribution
-          (struggling/average/high performers) is plausible but somewhat stylized.
+        comment: Test score range 0–100 standard; cumulative % (0–100%) appropriate;
+          bin count reasonable for 280 observations
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,43 +182,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart config → export. No functions
-          or classes.'
+        comment: No unnecessary functions/classes; direct chart implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible results.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, highcharts_core, selenium, etc.).
+        comment: All imports used (os, tempfile, time, urllib, Path, numpy, highcharts_core,
+          selenium)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no simulated interactivity; follows Highcharts
+          API conventions
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts_core API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: 'Note: Image height is 2561px instead of specified 2700px (likely
-          browser rendering difference).'
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs plot-{THEME}.png + plot-{THEME}.html; no bare plot.png; current
+          API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Chart(container=''container''), proper HighchartsOptions()
+          construction, appropriate AreaSeries() with step: ''center'', theme-adaptive
+          color tokens'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts step area chart with gradient fill, proper series
-          configuration. Could leverage more Highcharts-specific features like tooltips
-          configuration or animation settings.
+        comment: Gradient fill on area series, step + marker combination, Selenium
+          export automation. Good execution, somewhat standard for this chart type.
+    score_caps:
+      applied: false
+      notes: No caps triggered
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - cumulative-sum
+  styling:
+  - publication-ready

@@ -1,22 +1,33 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-cumulative: Cumulative Histogram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-11
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Handle module import name conflict (script is named altair.py)
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
 
 # Data: Monthly electricity usage (kWh) for households
 np.random.seed(42)
-usage = np.concatenate(
-    [
-        np.random.normal(250, 50, 300),  # Low usage households
-        np.random.normal(450, 80, 200),  # Medium usage households
-    ]
-)
+usage = np.concatenate([np.random.normal(250, 50, 300), np.random.normal(450, 80, 200)])
 
 # Compute cumulative histogram
 bin_edges = np.linspace(usage.min() - 10, usage.max() + 10, 31)
@@ -33,10 +44,10 @@ df = pd.DataFrame(
     }
 )
 
-# Create cumulative histogram as step chart
+# Create cumulative histogram as step area chart
 chart = (
     alt.Chart(df)
-    .mark_area(interpolate="step-after", color="#306998", opacity=0.7, line={"color": "#306998", "strokeWidth": 3})
+    .mark_area(interpolate="step-after", color=BRAND, opacity=0.8, line={"color": BRAND, "strokeWidth": 3})
     .encode(
         x=alt.X(
             "Electricity Usage (kWh):Q",
@@ -53,14 +64,26 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("histogram-cumulative · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title("histogram-cumulative · altair · anyplot.ai", fontSize=28),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridColor="#cccccc", gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK_SOFT,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        labelFontSize=18,
+        titleColor=INK,
+        titleFontSize=22,
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_title(color=INK, fontSize=28)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save PNG (1600 × 900 at scale 3 = 4800 × 2700)
-chart.save("plot.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
 
 # Save interactive HTML
-chart.interactive().save("plot.html")
+chart.save(f"plot-{THEME}.html")
