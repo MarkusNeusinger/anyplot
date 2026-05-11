@@ -1,14 +1,22 @@
-""" anyplot.ai
+"""anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-11
 """
+
+import os
 
 import pandas as pd
 from lets_plot import *
 
 
 LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+OKABE_ITO_1 = "#009E73"
 
 # Data: Meta-analysis of clinical trials comparing treatment vs control
 # Effect sizes are log odds ratios (log OR) - null effect at 0
@@ -45,14 +53,14 @@ df["marker_size"] = df["weight"] / df["weight"].max() * 8 + 2
 plot = (
     ggplot()
     # Vertical reference line at null effect (0 for log OR)
-    + geom_vline(xintercept=0, color="#888888", size=1, linetype="dashed")
+    + geom_vline(xintercept=0, color=INK_SOFT, size=1, linetype="dashed")
     # Confidence interval lines (whiskers)
-    + geom_segment(aes(x="ci_lower", xend="ci_upper", y="y_pos", yend="y_pos"), data=df, color="#306998", size=1.5)
+    + geom_segment(aes(x="ci_lower", xend="ci_upper", y="y_pos", yend="y_pos"), data=df, color=OKABE_ITO_1, size=1.5)
     # Point estimates (squares proportional to weight)
     + geom_point(
         aes(x="effect_size", y="y_pos", size="marker_size"),
         data=df,
-        color="#306998",
+        color=OKABE_ITO_1,
         shape=15,  # Square marker
     )
     # Study labels on y-axis
@@ -64,7 +72,7 @@ plot = (
             {"x": [pooled_ci_lower, pooled_effect, pooled_ci_upper, pooled_effect], "y": [-0.5, -1.0, -0.5, 0.0]}
         ),
         fill="#FFD43B",
-        color="#306998",
+        color=OKABE_ITO_1,
         size=1,
     )
     # Labels and title
@@ -72,10 +80,13 @@ plot = (
     # Theme and sizing
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title_x=element_text(size=20),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, face="bold", color=INK),
+        axis_title_x=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
         legend_position="none",
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
@@ -92,10 +103,10 @@ pooled_label_df = pd.DataFrame(
         "label": [f"Pooled: {pooled_effect:.2f} [{pooled_ci_lower:.2f}, {pooled_ci_upper:.2f}]"],
     }
 )
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=pooled_label_df, size=14, color="#306998")
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=pooled_label_df, size=14, color=INK_SOFT)
 
 # Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
 
 # Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
