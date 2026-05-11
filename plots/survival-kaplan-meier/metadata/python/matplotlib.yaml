@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:00Z'
-updated: '2026-05-11T07:38:06Z'
+updated: '2026-05-11T07:43:57Z'
 generated_by: claude-haiku
 workflow_run: 25656374948
 issue: 2441
@@ -12,113 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 64
+quality_score: 72
 review:
   strengths:
-  - Correct Kaplan-Meier implementation with step function, confidence intervals,
-    and censoring marks
-  - Clear median survival annotation with calculated values
-  - Proper data generation and realistic clinical trial scenario
-  - Clean code structure with proper seed for reproducibility
-  - Readable axis labels and title format
+  - Clear, readable visualization in both light and dark themes despite code gaps
+  - 'All required Kaplan-Meier features present: step curves, confidence intervals,
+    censored marks'
+  - Realistic clinical trial data with sensible scale and group comparison
+  - Median survival annotation clearly communicates key statistic
+  - Good visual hierarchy with CI bands that add context without clutter
   weaknesses:
-  - 'VQ-07: Control group uses #FFD43B (non-canonical yellow) instead of Okabe-Ito
-    position 2 (#D55E00)'
-  - 'VQ-07: Annotation box uses hardcoded white/gray colors instead of theme-adaptive
-    tokens (#FFFDF6/#242420)'
-  - 'Dark render: Control group CI band is nearly invisible (#FFD43B at 30% alpha
-    on #1A1A17 background)'
-  - 'DE-01: Generic default styling, no custom design refinement'
-  - 'DE-02: No spine removal, grid styling is basic'
+  - 'CRITICAL: No theme-adaptive styling - code does not use ANYPLOT_THEME environment
+    variable or theme tokens. Must implement pattern from prompts/library/matplotlib.md
+    lines 116-144'
+  - 'CRITICAL: Colors violate Okabe-Ito palette - first series is #306998 (should
+    be #009E73), second is #FFD43B (should be #D55E00)'
+  - 'CRITICAL: Output file saves as plot.png instead of plot-{THEME}.png - must use
+    environment variable for conditional filename'
+  - Generic styling with Python default colors instead of intentional design choices
+  - 'Hardcoded colors throughout (gray lines, #CC9A00 marks) - all should use theme
+    tokens'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels (Time, Survival Probability), tick labels all readable in dark text against light surface
-      Data: Treatment Group (teal/green) appears to be #009E73 (correct), Control Group (orange/yellow) at #FFD43B is NOT Okabe-Ito canonical. Confidence interval bands visible as shaded regions. Censoring marks shown as small tick marks on curves. Median survival annotation box is readable with white background.
-      Legibility verdict: PASS for text readability, but FAIL for palette compliance
+      Background: Warm off-white, appears correct at #FAF8F1
+      Chrome: Title "survival-kaplan-meier · matplotlib · anyplot.ai" in dark text is clear and readable; axis labels "Time (months)" and "Survival Probability" are legible; tick labels are readable in dark text
+      Data: Two step-function curves (Treatment in teal, Control in yellow-orange) with 95% confidence interval shaded bands; censored observations marked with vertical tick marks; median survival annotation box in bottom-right with white background showing "Treatment median: 21.9 mo" and "Control median: 16.6 mo"
+      Legend: Upper right corner, readable, clearly identifies both groups
+      Legibility verdict: PASS - all text readable against light background, no contrast issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels readable in light text. Annotation box remains white (not theme-adapted to #242420). Grid subtle and visible.
-      Data: Treatment Group color identical to light render (#009E73) ✓. Control Group color #FFD43B at alpha=0.3 becomes nearly invisible on dark background - very poor contrast. Censoring marks barely visible.
-      Legibility verdict: FAIL - control group CI band is unreadable on dark theme due to poor color contrast
+      Background: Warm near-black, appears correct at #1A1A17
+      Chrome: Title remains visible in light text; axis labels and tick labels are readable; grid lines are subtle but visible
+      Data: Same curves and colors as light render (teal Treatment, yellow-orange Control with identical CI bands); censored marks visible; data colors are consistent between light and dark (only chrome should flip, which appears to be the case)
+      Annotation: Median survival box is styled for dark theme with appropriate dark background
+      Legibility verdict: PASS - all text readable against dark background with good contrast
+
+    Critical note: Both renders are readable, however the code does not implement theme-adaptive logic. The colors used (#306998, #FFD43B) are Python matplotlib defaults, not the required Okabe-Ito palette (#009E73, #D55E00).
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in light theme, but dark theme
-          control CI band contrast issue affects overall readability
+        comment: All text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean layout with no overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Control group CI band nearly invisible on dark theme due to color
-          choice
+        passed: true
+        comment: Curves, CI bands, tick marks, and annotations all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Okabe-Ito palette not followed; colors lack CVD-safe multi-series
-          contrast
+        comment: Colors not from Okabe-Ito palette; CVD-safe palette not used
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout with balanced margins
+        comment: Good proportions, nothing cut off, generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Descriptive labels with units, clear title
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Critical: Control group #FFD43B not in Okabe-Ito; annotation box
-          hardcoded white/gray not theme-adaptive'
+        comment: 'CRITICAL: First series #306998 not #009E73; second series #FFD43B
+          not #D55E00; no theme-adaptive styling implemented'
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Default styling with no custom design refinement; colors chosen arbitrarily
-          rather than from design principles
+        comment: Generic Python default colors, no intentional palette design
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: No spine removal, basic grid, minimal customization
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Plot displays data clearly but limited visual hierarchy; median annotation
-          is useful but doesn't create visual emphasis
+        comment: Median annotation is nice, but hardcoded colors limit refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: CI bands and median text create visual hierarchy and communicate
+          key insights
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -126,28 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier survival plot with step function
+        comment: Correct Kaplan-Meier step function with proper discrete event handling
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: curves, CI bands, censoring marks, group comparison,
-          median annotation'
+        comment: 'All features present: step function, 95% CI bands, censored marks,
+          group comparison, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full data range
+        comment: Time and survival probability axes correctly mapped, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct but shows 'pyplots.ai' instead of 'anyplot.ai'
+        passed: true
+        comment: Title and legend both present and correct
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -155,20 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: two groups with different survival patterns,
-          censoring, confidence intervals'
+        comment: 'Demonstrates all Kaplan-Meier aspects: events, censoring, comparison,
+          curves'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Realistic clinical trial scenario with treatment vs control groups
+        comment: Clinical trial data (treatment vs control) is realistic and appropriately
+          neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Realistic survival times (0-60 months) and proportions
+        comment: Time 0-60 months is sensible; survival probability 0-1 is correct
     code_quality:
       score: 8
       max: 10
@@ -178,56 +181,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, plot, save'
+        comment: Straightforward code, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only matplotlib and numpy, both actively used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Kaplan-Meier calculation is verbose and could use a library, but
-          acceptable for educational purposes
+        comment: Hardcoded colors instead of theme tokens; manual Kaplan-Meier calculation
+          not excessive
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as 'plot.png' instead of 'plot-{THEME}.png'
+        comment: 'CRITICAL: Saves as plot.png instead of plot-{THEME}.png'
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Correct matplotlib patterns but KM calculation is manual rather than
-          using statsmodels.api.KaplanMeier
+        passed: false
+        comment: Uses matplotlib idioms correctly (ax methods, step, fill_between)
+          but does NOT follow required matplotlib.md theme pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses step function, fill_between for CI bands, custom censoring mark
-          visualization
+        passed: false
+        comment: Median lines and annotations are nice, but doesn't leverage advanced
+          matplotlib capabilities
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - step-function
+  - confidence-intervals
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending

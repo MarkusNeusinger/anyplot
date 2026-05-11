@@ -1,7 +1,7 @@
 """ anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 64/100 | Updated: 2026-05-11
+Quality: 72/100 | Updated: 2026-05-11
 """
 
 import matplotlib.pyplot as plt
