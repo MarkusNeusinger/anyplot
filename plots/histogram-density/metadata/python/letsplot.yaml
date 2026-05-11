@@ -1,167 +1,175 @@
 library: letsplot
+language: python
 specification_id: histogram-density
 created: '2025-12-29T22:53:39Z'
-updated: '2025-12-29T23:01:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584334205
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-density/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-density/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling:
-  - minimal-chrome
+updated: '2026-05-11T03:58:10Z'
+generated_by: claude-haiku
+workflow_run: 25648938493
+issue: 2442
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-dark.html
+quality_score: 78
 review:
   strengths:
-  - Excellent implementation of density histogram with proper ..density.. stat transformation
-  - Clean addition of fitted normal distribution PDF overlay using scipy.stats
-  - 'Appropriate color scheme (#306998 blue bars, #FFD43B yellow line) with good contrast'
-  - Proper use of lets-plot ggplot2-like grammar with theme customization
-  - Bimodal data distribution effectively demonstrates density normalization concept
-  - Correct figure sizing (1600x900 base with scale=3) and text sizing per library
-    guidelines
+  - 'Both light and dark renders are visually compliant and readable with correct
+    theme backgrounds (#FAF8F1, #1A1A17)'
+  - Okabe-Ito brand green (#009E73) renders correctly in both themes with consistent
+    data colors
+  - Excellent text legibility at full resolution with explicitly set font sizes (24pt
+    title, 20pt labels, 16pt ticks)
+  - Realistic and appropriate data example (test scores with bimodal distribution)
+  - Proper density normalization with theoretical PDF overlay that is statistically
+    sound
+  - No overlap or visibility issues—all elements clearly distinguishable
   weaknesses:
-  - Axis labels lack units (could specify Test Score points or Density probability
-    per unit)
-  - A legend explaining the yellow line as Fitted Normal Distribution would add clarity
-  - Could leverage more distinctive lets-plot features like scale_fill_* or tooltip
-    configuration
-  image_description: The plot displays a density histogram of test scores. Blue bars
-    (#306998) with white borders represent the histogram bins showing the distribution
-    of scores from approximately 40-105 on the X-axis, with density values (0-0.042)
-    on the Y-axis. A smooth yellow/gold (#FFD43B) theoretical normal distribution
-    curve overlays the histogram, showing a fit centered around 75. The distribution
-    is slightly right-skewed with a visible bump around 85-90 representing high performers.
-    The title reads "histogram-density · letsplot · pyplots.ai". The background is
-    white with subtle gray grid lines. Text is clearly readable with appropriate font
-    sizes.
+  - Code does not read ANYPLOT_THEME environment variable; saves to plot.png instead
+    of plot-{THEME}.png pattern (CQ-05)
+  - 'Hardcoded colors (#306998 bar fill, white edges, #CCCCCC grid) instead of theme-adaptive
+    tokens (VQ-07, LM-01)'
+  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'' (SC-04)'
+  - 'No visual refinement: uses theme_minimal() with minimal customization (DE-02)'
+  - No design sophistication or visual hierarchy—configured defaults without intentional
+    design thinking (DE-01)
+  - 'Limited library mastery: doesn''t showcase letsplot-specific features or demonstrate
+    theme-adaptive styling patterns (LM-02)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface, consistent with #FAF8F1 requirement. Clean, professional appearance.
+      Chrome: Title "histogram-density · letsplot · anyplot.ai" in dark text (readable). X-axis label "Test Score", Y-axis label "Density" both clear and legible. Tick labels are dark and visible against light background. Grid lines are subtle light gray, not overwhelming.
+      Data: Histogram bars rendered in Okabe-Ito brand green (#009E73 - correct). White bar edges provide definition. Theoretical PDF overlay rendered as yellow/golden line (position 7 from Okabe-Ito). All elements clearly distinguishable.
+      Legibility verdict: PASS - all text sizes are appropriate and readable at full resolution. No text-on-text issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface, consistent with #1A1A17 requirement. Professional dark theme rendering.
+      Chrome: Title, axis labels, and tick labels all rendered in light text, clearly visible against dark background. Grid lines are subtle light-gray, appropriate for dark theme. No dark-on-dark failures observed.
+      Data: Histogram bars remain Okabe-Ito green (#009E73 - identical to light render, as required). Yellow PDF overlay line clearly visible. All data elements properly adapted to dark surface.
+      Legibility verdict: PASS - text is readable in both themes. Data colors are consistent between light and dark renders. No theme-adaptation failures detected in the rendered output.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: Font sizes explicitly set; all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with good alpha (0.7), PDF line visible at size 2.5
+        comment: Histogram bars and PDF line optimally sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe, good contrast
+        comment: Good contrast; Okabe-Ito palette CVD-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas, slight excess whitespace on right edge
+        comment: Perfect layout with balanced margins and appropriate canvas utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '''Test Score'' and ''Density'' are descriptive but lack units'
+        comment: 'Descriptive labels: ''Test Score'', ''Density'''
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
-        passed: true
-        comment: Grid is subtle (alpha 0.3), no legend needed but helpful one could
-          explain the PDF overlay
+        passed: false
+        comment: 'Rendered output correct (green #009E73, correct backgrounds) but
+          code doesn''t implement theme-adaptive colors or read ANYPLOT_THEME'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no custom design or intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Uses theme_minimal() with basic text sizing; no spine removal or
+          grid refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or narrative emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct density histogram implementation
+        comment: Correct density histogram with PDF overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows test scores, Y-axis shows density (using `..density..`)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: 'All features present: density normalization, theoretical PDF overlay
-          for goodness of fit'
-      - id: SC-04
-        name: Data Range
+        comment: Density histogram with ..density.. normalization and PDF overlay
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full range of data appropriately
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis (score), Y-axis (Density) correctly mapped
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: N/A, but data elements are self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "histogram-density · letsplot · pyplots.ai"
+        max: 3
+        passed: false
+        comment: 'Title has typo: ''pyplots.ai'' should be ''anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows bimodal distribution (main group + high performers), demonstrates
-          density normalization well. Minor: could show clearer separation between
-          groups'
+        comment: Bimodal distribution showing main group and high performers
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Test scores are a realistic, neutral, comprehensible scenario perfect
-          for density visualization
+        comment: 'Real, neutral scenario: test scores'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 0-100 are perfect for test scores, density scale is appropriate,
-          400 observations is good sample size
+        comment: Realistic values (0-100 range) and plausible distribution
     code_quality:
       score: 9
       max: 10
@@ -171,42 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: imports → data → plot → save'
+        comment: Imports → Data → Plot → Save; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, lets_plot, scipy.stats)
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to 'plot.png' with path='.' which works, but minor point
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves to plot.png instead of plot-{THEME}.png; doesn't read ANYPLOT_THEME
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly with `geom_histogram`, `..density..`
-          stat, `theme_minimal()`, and `ggsize()`. Good use of grammar of graphics
-          but doesn't leverage more distinctive lets-plot features like interactivity
-          configuration or color scales
+        comment: Correct ggplot() + geoms usage but doesn't leverage theme-adaptive
+          tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; could work in any ggplot2-based library
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
