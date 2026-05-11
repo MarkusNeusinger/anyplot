@@ -1,155 +1,178 @@
 library: matplotlib
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:32:00Z'
-updated: '2025-12-30T09:42:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593348785
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 99
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - explicit-figure
-  dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-05-11T17:15:38Z'
+generated_by: claude-haiku
+workflow_run: 25684882767
+issue: 2551
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent horizontal layout following spec recommendation for readable category
-    labels
-  - Clear visual hierarchy with well-sized markers and error bar caps
-  - Reference line adds valuable context (overall mean) as suggested in spec
-  - Varying confidence interval widths demonstrate real-world uncertainty patterns
-  - Clean, professional appearance suitable for publication
+  - Perfect visual quality across both theme renders with zero legibility issues
+  - 'Flawless spec compliance: correct chart type, all features implemented, proper
+    data mapping'
+  - 'Excellent code quality: clean structure, reproducible, proper API usage'
+  - Realistic clinical context with plausible data proportions
+  - Professional theme adaptation with proper color tokens and readability in both
+    light and dark modes
   weaknesses:
-  - Could add alpha transparency to markers for even better visual distinction (minor)
-  image_description: The plot displays a horizontal point estimate chart showing customer
-    satisfaction scores (1-10 scale) across 7 departments. Each department has a blue
-    circular marker (#306998) with white edge representing the point estimate, and
-    horizontal error bars with caps showing 95% confidence intervals. A yellow/gold
-    dashed vertical reference line indicates the overall mean (6.8) with a text annotation.
-    The title "point-basic · matplotlib · pyplots.ai" is clearly displayed at the
-    top. The layout is clean with subtle gray grid lines on the x-axis and well-proportioned
-    margins.
+  - 'Design Excellence moderate (12/20): Plot is well-configured but lacks custom
+    aesthetic sophistication or distinctive design thinking; feels like a refined
+    default rather than intentional design'
+  - 'Limited visual storytelling (DE-03 = 3/6): Data displayed clearly but without
+    visual hierarchy, emphasis, or focal points to guide viewer interpretation'
+  - 'No distinctive matplotlib features: Uses standard errorbar() but doesn''t leverage
+    library-specific capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels (Effect Size, Treatment Group), and tick labels all in dark/gray tones, clearly visible against light background
+      Data: Brand green (#009E73) markers with horizontal asymmetric error bars, caps visible, six treatment groups displayed
+      Legibility verdict: PASS - All text readable, no overlaps, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and all labels rendered in light gray/off-white, fully legible against dark background; no dark-on-dark failures
+      Data: Brand green (#009E73) markers and error bars - identical to light render, confirming proper theme-independent data color handling
+      Legibility verdict: PASS - All text readable in both renders, proper theme adaptation, good contrast
   criteria_checklist:
     visual_quality:
-      score: 40
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: 'All fonts explicitly set: title 24pt, labels 20pt, ticks 16-18pt;
+          perfectly readable at 4800×2700px'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All category labels, ticks, and axis labels fully visible with no
+          collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers clearly visible with white edge, error bars well-sized with
-          caps
+        comment: Markers 14pt and error bars 2.5pt width perfectly sized for 6 data
+          points
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color scheme, colorblind-safe
+        comment: 'Okabe-Ito green #009E73 has excellent contrast on both light and
+          dark backgrounds'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins
+        comment: Plot fills 60-70% of canvas with balanced margins at 4800×2700px
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Satisfaction Score (1-10)" includes units, "Department" is descriptive'
+        comment: Title format correct; labels descriptive (Effect Size, Treatment
+          Group)
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha=0.3), no legend needed
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive
+          chrome correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with professional polish; lacks custom
+          design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle grid, generous whitespace; very polished
+          appearance
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data displayed clearly but with minimal visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct point estimate plot with confidence intervals
+        comment: Correct horizontal point estimate chart with error bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Horizontal orientation with estimates on x-axis, categories on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct markers, error bars with caps, reference line present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: point estimates, asymmetric confidence intervals,
+          category labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Appropriate axis limits for data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis effect size, Y-axis treatment groups; all data visible with
+          padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Reference line labeled correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "{spec-id} · {library} · pyplots.ai" format
+        comment: Title format correct; legend omitted appropriately for single series
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows variation in both estimates and CI widths (narrow for Shipping,
-          wide for Billing)
+        comment: Shows variation in effect sizes, asymmetric CIs, reference group,
+          multiple treatments
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer satisfaction by department is a realistic, neutral business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Scores 5.4-8.3 on 1-10 scale are realistic
+        comment: Real clinical trial scenario with standardized mean differences and
+          95% CIs
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Effect sizes 0.0–0.71 and CI widths are factually plausible
     code_quality:
       score: 10
       max: 10
@@ -159,40 +182,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Clean linear structure: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic code, no over-engineering or fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses current matplotlib Axes API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of errorbar with asymmetric errors, axvline, markeredgecolor/markeredgewidth
-          styling
+        comment: Proper Axes API, theme-adaptive tokens, standard matplotlib best
+          practices
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses standard errorbar() with asymmetric errors; no distinctive library-specific
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
