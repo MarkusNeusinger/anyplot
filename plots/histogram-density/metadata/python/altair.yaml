@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:49:29Z'
-updated: '2026-05-11T03:34:43Z'
+updated: '2026-05-11T03:40:48Z'
 generated_by: claude-haiku
 workflow_run: 25648723776
 issue: 2442
@@ -12,89 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 70
 review:
   strengths:
-  - 'Perfect Spec Compliance (15/15): Correctly implements density histogram with
-    proper normalization and meaningful KDE overlay'
-  - 'Excellent Visual Quality (29/30): All text explicitly sized and readable in both
-    themes; no overlap; well-balanced layout'
-  - 'Strong Data Quality (15/15): Realistic bimodal distribution showing two psychological
-    conditions; meaningful context and correct proportions'
-  - 'Data Storytelling: KDE overlay effectively visualizes theoretical probability
-    density, adding analytical depth'
+  - Correct density normalization with density=True parameter
+  - Effective KDE overlay adds theoretical reference for distribution understanding
+  - Clear bimodal distribution demonstrates plot type well
+  - Tooltips provide interactive exploration capability
+  - Reproducible with np.random.seed(42)
   weaknesses:
-  - 'Palette Non-Compliance: Uses #306998 and #FFD43B instead of Okabe-Ito brand green
-    (#009E73) for first series'
-  - 'Missing Theme-Adaptive Implementation: Hardcoded colors (#333333, #cccccc) instead
-    of reading ANYPLOT_THEME environment variable and applying INK/INK_SOFT tokens'
-  - 'Incorrect Output Filenames: Saves as plot.png instead of theme-specific plot-{THEME}.png,
-    causing filename collision in dual-theme workflow'
+  - 'Dark theme text unreadable: title and axis labels use dark colors (#333333) without
+    theme adaptation, causing dark-on-dark contrast in dark render'
+  - 'Histogram bars use custom #306998 instead of Okabe-Ito #009E73 brand green'
+  - Missing ANYPLOT_THEME environment variable handling and theme-adaptive chrome
+    styling (page background, text colors, grid colors)
+  - Saves to generic plot.png instead of theme-specific plot-{THEME}.png filenames
+  - 'Title text contains typo: ''pyplots.ai'' should be ''anyplot.ai'''
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct
-      Chrome: Title "histogram-density · altair · pyplots.ai" in dark text (fontSize=28), axis labels "Reaction Time (ms)" and "Density (probability per ms)" in dark text (titleFontSize=22), tick labels in dark text (labelFontSize=18). All readable.
-      Data: Blue histogram bars (#306998) with 1.5px strokes, yellow-gold KDE curve (#FFD43B, strokeWidth=4). Bimodal distribution clearly visible with peaks at ~0.0085 and ~0.0018 density.
-      Grid: Subtle gray lines (#cccccc, opacity 0.3), not competing with data
-      Legibility verdict: PASS - all text readable, good contrast, no overlaps
+      Background: Warm off-white surface (#FAF8F1), appropriate and clean
+      Chrome: Title, axis labels, and tick labels all readable with dark text on light background
+      Data: Histogram bars in teal/cyan color (not spec-compliant #009E73), KDE overlay in yellow (#FFD43B), both clearly visible
+      Grid: Subtle gray gridlines visible but not dominant
+      Legibility verdict: PASS - all text elements are clearly readable in light theme
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct
-      Chrome: Title and all text rendered in light color for readability against dark background. All clearly visible.
-      Data: Blue histogram bars and yellow-gold KDE curve identical to light render (only chrome changed), confirming proper color consistency. Bimodal pattern clearly visible.
-      Grid: Subtle but visible
-      Legibility verdict: PASS - no dark-on-dark failures, all text readable, proper theme adaptation
+      Background: Warm near-black surface (#1A1A17), appropriate
+      Chrome: CRITICAL ISSUE - Title, axis labels, and tick labels use dark text (#333333) without theme adaptation, resulting in dark-on-dark contrast and severely reduced readability
+      Data: Histogram bars visible (color unchanged from light), KDE overlay less visible due to low contrast
+      Grid: Dark gridlines on dark background, barely visible
+      Legibility verdict: FAIL - dark theme lacks proper text color adaptation; title and labels have poor contrast and are difficult to read. The implementation failed to implement theme-adaptive chrome styling as required by the style guide.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: All fonts explicitly set (title 28px, axes 22px, ticks 18px); perfectly
-          readable in both themes
+        passed: false
+        comment: Dark render fails - title and axis labels have dark-on-dark contrast
+          due to missing theme adaptation. Light render passes but implementation
+          does not implement required theme-adaptive styling.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text is properly spaced with no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars and KDE curve optimally sized for data density
+        comment: Histogram bars and KDE line are clearly visible in both renders
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Blue and gold provide excellent contrast, CVD-safe
+        passed: false
+        comment: 'Histogram color #306998 is not Okabe-Ito compliant - should be #009E73
+          for first categorical series'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px; plot fills 60-70% with balanced margins
+        comment: Good proportions and spacing, nothing cut off, adequate margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive with units (ms and probability per ms)
-      - id: VQ-07
-        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Uses #306998 and #FFD43B instead of Okabe-Ito (#009E73); theme chrome
-          appears correct but palette non-compliant'
+        comment: Axes properly labeled with units, but title contains typo 'pyplots.ai'
+          instead of 'anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Histogram bars use custom #306998 instead of Okabe-Ito #009E73.
+          No theme-adaptive chrome colors applied to background, text, grid, or axes.
+          Dark theme completely fails color adaptation.'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -102,22 +104,26 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Custom palette shows design intent but violates Okabe-Ito requirement
+        comment: Generic styling with default Altair appearance. Custom histogram
+          color but not compliant with spec. KDE overlay is nice but doesn't elevate
+          overall design.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid subtle, bar strokes add definition, could be more polished
+        passed: false
+        comment: Minimal customization. No spine removal, basic grid, no intentional
+          whitespace management or refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Bimodal distribution and KDE overlay effectively communicate analytical
-          insight
+        passed: false
+        comment: Bimodal distribution is visually clear with natural focal points
+          in the peaks. KDE overlay helps show density, but overall hierarchy could
+          be stronger.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,25 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram with proper normalization
+        comment: Correctly implements density histogram with proper normalization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density histogram with KDE overlay
+        comment: Density normalization, KDE overlay, tooltips - all demonstrated correctly
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: X-axis maps reaction time, Y-axis maps density. Correct normalization
+          and scale.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct
+        passed: false
+        comment: Title has typo ('pyplots.ai' vs 'anyplot.ai'). No legend needed for
+          single-series plot.
     data_quality:
       score: 15
       max: 15
@@ -153,22 +161,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of density histogram including bimodal distribution
+        comment: Shows complete density histogram with KDE overlay and all key distribution
+          features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Psychological reaction time study (baseline vs fatigued) is realistic
-          and neutral
+        comment: Reaction time data is realistic and neutral. Bimodal distribution
+          (baseline vs fatigued) is plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All proportions factually correct and plausible
+        comment: Axis ranges and bin widths are sensible for the distribution
     code_quality:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -176,34 +185,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → chart → save'
+        comment: Simple, direct implementation with no unnecessary functions or complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42))
+        comment: Uses np.random.seed(42) for reproducible output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports (numpy, pandas, altair, scipy) are used appropriately
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded colors don't follow theme-adaptive pattern; should use
-          ANYPLOT_THEME env var
+        passed: true
+        comment: No fake UI or inappropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png
+        comment: Saves to generic 'plot.png' and 'plot.html' instead of theme-specific
+          'plot-{THEME}.png' and 'plot-{THEME}.html'. Missing ANYPLOT_THEME environment
+          variable handling.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -211,25 +221,25 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct altair syntax but doesn't implement theme-adaptive pattern
-          from altair.md
+        comment: 'Uses Altair API correctly for marks and encoding, but misses idiomatic
+          patterns: no theme-adaptive configuration, no proper file naming, no environment
+          variable usage'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Layered histogram + KDE appropriate for altair; tooltips are library-specific
-  verdict: APPROVED
+        passed: false
+        comment: KDE overlay demonstrates some sophistication, but overall implementation
+          is straightforward without leveraging Altair's full potential
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - layer-composition
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - kde
   - binning

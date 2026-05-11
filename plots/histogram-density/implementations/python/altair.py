@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-density: Density Histogram
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-11
+Quality: 70/100 | Updated: 2026-05-11
 """
 
 import altair as alt
