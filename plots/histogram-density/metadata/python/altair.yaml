@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:49:29Z'
-updated: '2026-05-11T03:46:41Z'
+updated: '2026-05-11T03:53:13Z'
 generated_by: claude-haiku
 workflow_run: 25648723776
 issue: 2442
@@ -12,63 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-dark.html
-quality_score: 42
+quality_score: 88
 review:
   strengths:
-  - Bimodal distribution choice is realistic and demonstrates the density histogram
-    concept well
-  - KDE overlay is a thoughtful addition that shows theoretical density reference
-  - Data generation is clean and reproducible with proper seed
-  - Proper use of layering (alt.layer) to combine histogram and KDE
+  - Proper theme adaptation with correct background and text colors in both light
+    and dark renders
+  - 'Effective use of Okabe-Ito palette (#009E73 and #D55E00) with good visual contrast'
+  - Clear data representation of bimodal distribution with KDE overlay providing statistical
+    context
+  - All text elements (title, axis labels, tick labels) are readable in both themes
+  - Proper density normalization with well-chosen bin width and domain specifications
+  - Good use of Altair layer composition for combining histogram and KDE line
   weaknesses:
-  - No theme support — implementation ignores ANYPLOT_THEME environment variable
-  - Wrong output filenames — saves as plot.png instead of plot-{THEME}.png
-  - Dark render unreadable — title text has insufficient contrast on dark background
-  - 'Bar color #306998 is not Okabe-Ito; should be #009E73'
-  - Title text says pyplots.ai instead of anyplot.ai
-  - Missing theme token setup in configure_axis and configure_title
+  - Design could benefit from more visual refinement (e.g., removing top/right spines)
+  - Limited use of distinctive Altair features beyond basic layer composition
+  - Code structure is straightforward but could include more deliberate styling customizations
   image_description: |-
     Light render (plot-light.png):
-      Background: Off-white surface (#FAF8F1) as expected
-      Chrome: Title "histogram-density · altair · pyplots.ai" visible in dark gray; axis labels and tick labels clearly readable in dark text
-      Data: Green bars (#306998) showing bimodal distribution with 25 bins; yellow KDE curve overlay; peak density around 0.010
-      Legibility verdict: PASS - All text readable on light background
+      Background: Warm off-white (#FAF8F1) — correctly applied
+      Chrome: Title in dark text (#1A1A17) clearly readable, axis labels and ticks properly visible
+      Data: Histogram bars in Okabe-Ito bluish-green (#009E73) with opacity 0.75, KDE overlay in vermillion (#D55E00), bimodal distribution evident
+      Legibility verdict: PASS — all text and data elements clearly visible against light background
 
     Dark render (plot-dark.png):
-      Background: Dark surface (appears near-black, should be warm #1A1A17)
-      Chrome: Title remains dark gray (#333333) creating poor contrast on dark background; axis labels struggle with readability - dark-on-dark failure; grid lines barely visible
-      Data: Green bars and yellow KDE line remain same color as light render (correct - only chrome should flip); both data elements visible
-      Legibility verdict: FAIL - Title text barely readable due to dark-on-dark contrast failure; axis labels suffer from hardcoded light-theme colors not adapted to dark background
+      Background: Warm near-black (#1A1A17) — correctly applied
+      Chrome: Title and axis titles in light text (#F0EFE8) readable, tick labels in #B8B7B0, no dark-on-dark failures detected
+      Data: Histogram bars identical green (#009E73), KDE line identical vermillion (#D55E00) — theme-independent data colors confirmed
+      Legibility verdict: PASS — all text and data elements clearly visible, proper contrast maintained against dark background
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 8
         max: 8
-        passed: false
-        comment: 'Dark render has unreadable title due to hardcoded #333333 on dark
-          background'
+        passed: true
+        comment: All text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Elements well-spaced, no collisions
+        comment: Well-spaced elements, no overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and lines clearly visible
+        comment: Histogram bars and KDE line clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Bar color #306998 is not from Okabe-Ito palette; should be #009E73'
+        passed: true
+        comment: Okabe-Ito palette, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -77,41 +76,40 @@ review:
         comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title says pyplots.ai instead of anyplot.ai
+        passed: true
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: No theme-adaptive colors, wrong bar color, background not themed,
-          dark render unreadable
+        passed: true
+        comment: Correct Okabe-Ito usage, theme-correct backgrounds and chrome
     design_excellence:
-      score: 6
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic styling with default colors, no custom design choices
+        passed: true
+        comment: Uses Okabe-Ito palette well, opacity and stroke customization
       - id: DE-02
         name: Visual Refinement
-        score: 1
-        max: 6
-        passed: false
-        comment: No spine removal, minimal customization
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Bimodal distribution is clear but no visual hierarchy
+        passed: true
+        comment: Subtle grid, minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bimodal distribution clearly shown, KDE provides statistical context
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -119,25 +117,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram type
+        comment: Correct density histogram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Density normalization and KDE overlay present
+        comment: Density normalization, histogram, KDE overlay
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Density correctly mapped to Y-axis
+        comment: Axes properly configured with correct scales
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title text error: pyplots.ai instead of anyplot.ai'
+        passed: true
+        comment: Correct title format, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -147,21 +145,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution shows all density histogram aspects
+        comment: Bimodal distribution evident, appropriate binning
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction time data is realistic and neutral
+        comment: Realistic reaction time scenario with baseline/fatigued conditions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible bin width and data generation parameters
+        comment: Proper density normalization, sensible domain
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,57 +167,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, no unnecessary functions
+        comment: Direct, no unnecessary complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Has np.random.seed(42)
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Saves as plot.png instead of plot-{THEME}.png
+        passed: true
+        comment: Clean layer composition
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Output filenames are wrong
+        passed: true
+        comment: Proper PNG and HTML output
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard Altair patterns, good scale specifications
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Appropriate Altair API usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: KDE overlay is standard, no distinctive features
-  verdict: REJECTED
+        comment: Effective use of layer composition and tooltip encoding
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - layer-composition
-  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
-  - binning
   - kde
-  styling: []
+  - binning
+  styling:
+  - alpha-blending
