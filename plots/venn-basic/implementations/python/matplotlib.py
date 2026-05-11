@@ -1,17 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 venn-basic: Venn Diagram
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-29
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
 
+import os
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn3
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data: Developer survey - programming language proficiency
-# venn3 expects exclusive counts for each region:
 # venn3 expects: (Abc, aBc, ABc, abC, AbC, aBC, ABC)
-# Where uppercase = in set, lowercase = not in set
 only_a = 40  # Only Python
 only_b = 25  # Only JavaScript
 a_and_b = 20  # Python + JavaScript (not SQL)
@@ -21,7 +29,8 @@ b_and_c = 15  # JavaScript + SQL (not Python)
 a_and_b_and_c = 10  # All three
 
 # Plot
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Create Venn diagram with subset sizes
 venn = venn3(
@@ -29,7 +38,7 @@ venn = venn3(
     set_labels=("Python", "JavaScript", "SQL"),
     ax=ax,
     alpha=0.6,
-    set_colors=("#306998", "#FFD43B", "#4ECDC4"),
+    set_colors=OKABE_ITO,
 )
 
 # Style circle labels (set names)
@@ -37,14 +46,22 @@ for text in venn.set_labels:
     if text:
         text.set_fontsize(24)
         text.set_fontweight("bold")
+        text.set_color(INK)
 
 # Style subset labels (numbers in regions)
 for text in venn.subset_labels:
     if text:
         text.set_fontsize(20)
         text.set_fontweight("bold")
+        text.set_color(INK)
 
-ax.set_title("venn-basic · matplotlib · pyplots.ai", fontsize=28, fontweight="bold", pad=20)
+ax.set_title(
+    "venn-basic · matplotlib · anyplot.ai",
+    fontsize=24,
+    fontweight="medium",
+    color=INK,
+    pad=20,
+)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
