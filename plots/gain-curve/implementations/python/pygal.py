@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-12-21
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-11
 """
 
 import os
