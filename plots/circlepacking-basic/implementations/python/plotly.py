@@ -1,7 +1,7 @@
 """ anyplot.ai
 circlepacking-basic: Circle Packing Chart
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 40/100 | Updated: 2026-05-11
+Quality: 94/100 | Updated: 2026-05-11
 """
 
 import os
