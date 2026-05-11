@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: pending | Created: 2025-12-29
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-11
 """
 
 import os
