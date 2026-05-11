@@ -1,15 +1,240 @@
 library: letsplot
+language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:47:49Z'
-updated: '2025-12-29T22:56:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584331376
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/letsplot/plot.html
-quality_score: 91
+updated: '2026-05-11T07:51:37Z'
+generated_by: claude-haiku
+workflow_run: 25657089705
+issue: 2441
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - All required Kaplan-Meier features correctly implemented (step functions, 95%
+    confidence intervals, censored observation marks)
+  - Excellent visual clarity in both light and dark renders with proper theme adaptation
+  - 'Strong data storytelling: clear group comparison with Treatment showing better
+    survival than Control'
+  - Idiomatic lets-plot usage with proper ggplot2-style grammar of graphics
+  - Clean, reproducible code with well-structured helper functions for KM estimation
+  - Correct Okabe-Ito palette usage with brand green (#009E73) as first series
+  - Proper theme-adaptive styling with correct background colors and readable text
+    in both themes
+  weaknesses:
+  - 'Minor: Grid styling uses INK_MUTED color directly rather than transparent overlay
+    recommended by style guide (acceptable but not optimal)'
+  - 'Library Mastery: fairly standard lets-plot application without distinctive customizations
+    unique to the library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "survival-kaplan-meier · letsplot · pyplots.ai" and axis labels "Time (months)" / "Survival Probability" clearly readable in dark text. Tick labels legible. Legend clearly labeled "Group" with color swatches.
+      Data: Treatment group in teal (#009E73 - brand green), Control group in vermillion (#D55E00). Step functions show discrete event times. Semi-transparent confidence interval ribbons around each curve (teal and orange shades). Censored observations marked with plus signs.
+      Legibility verdict: PASS - All elements readable with excellent contrast and visibility
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title and axis labels readable in light text against dark background. Tick labels clearly visible. Legend text properly adapted for dark theme. No dark-on-dark text collisions.
+      Data: Treatment and Control colors identical to light render (teal and orange), confirming proper color consistency between themes. Step functions and ribbons clearly visible. Censored marks properly visible. Grid lines subtle and visible without competing with data.
+      Legibility verdict: PASS - All elements readable with proper contrast; no theme-adaptation failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text clearly readable in both light and dark themes; font sizes
+          (title 24pt, axis_title 20pt, axis_text 16pt) appropriately scaled
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; clean spacing throughout title, axes, legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step functions, confidence ribbons, and censored observation marks
+          all clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette (teal #009E73 and vermillion #D55E00) provides
+          excellent contrast and colorblind safety'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format (4800x2700) well-proportioned; good use of canvas
+          with adequate margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title includes spec ID, library, source; axes descriptive with units
+          (months, probability)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73; backgrounds correct (#FAF8F1
+          light, #1A1A17 dark); both renders theme-compliant'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional Okabe-Ito palette and correct visualization choice for
+          KM curves; fairly standard styling without exceptional customization
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: false
+        comment: 'Uses theme_minimal() appropriately; minor: grid uses INK_MUTED color
+          instead of transparent overlay per style guide'
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Excellent: clear visual hierarchy with Treatment vs Control divergence;
+          confidence intervals and censored marks add realism; guides viewer to compare
+          groups'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kaplan-Meier survival curves using step functions for discrete
+          event times
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All specified: step curves, 95% CI ribbons (Greenwood formula),
+          censored observation marks (plus signs), group legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: time 0-36 months; Y-axis: survival probability 0-1; color:
+          group (Treatment/Control)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format 'survival-kaplan-meier · letsplot · pyplots.ai'; legend
+          correctly identifies groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both groups, confidence intervals, censored observations; sample
+          size 160 (80 per group) within spec (50-1000)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Clinical trial data realistic; hazard rates create plausible treatment
+          effect; 20% additional censoring realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Time 0-36 months reasonable for medical trials; survival probability
+          0-1 correct; axis ranges appropriate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean structure: data generation → KM calculation → visualization;
+          appropriate helper functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports (os, shutil, numpy, pandas, lets_plot); all
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI or simulated interactivity; readable
+          pandas/numpy operations
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct: plot-{THEME}.png, plot-{THEME}.html; handles lets-plot
+          subdirectory; uses current API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent ggplot2-style grammar: aes() mappings, geom_step/ribbon/point,
+          scale_color_manual, theme with element_* functions'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Good use of lets-plot (interactive HTML export via ggsave, ggsize,
+          theme system); fairly standard application without exceptional customization
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -17,199 +242,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
-review:
-  strengths:
-  - Excellent implementation of Kaplan-Meier survival curves using lets-plot ggplot2
-    grammar of graphics
-  - Proper use of geom_step for survival curves (not smooth lines) as required for
-    KM plots
-  - 95% confidence intervals correctly implemented using Greenwood formula and displayed
-    as ribbons
-  - Censored observations clearly marked with plus symbols along the curves
-  - Good color differentiation between Treatment and Control groups
-  - Realistic clinical trial scenario with appropriate sample sizes and hazard rates
-  - Both PNG and HTML outputs generated as expected for interactive library
-  weaknesses:
-  - Code uses helper functions instead of flat KISS structure required by code standards
-  - Legend shows colored boxes instead of step-line representations
-  - Missing optional median survival time annotation mentioned in spec notes
-  image_description: 'The plot displays a Kaplan-Meier survival curve comparing two
-    groups: Treatment (blue) and Control (red). The x-axis shows "Time (months)" ranging
-    from 0 to 36, and the y-axis shows "Survival Probability" from 0 to 1. Both curves
-    are rendered as step functions, starting at survival probability 1.0 and declining
-    over time. The Treatment group (blue) shows better survival outcomes, maintaining
-    higher probability throughout. Each curve has a shaded confidence interval band
-    (blue for Treatment, red for Control) that widens over time. Censored observations
-    are marked with plus (+) symbols along the curves. The legend is positioned on
-    the right side showing "Treatment" and "Control". The title correctly follows
-    the format "survival-kaplan-meier · letsplot · pyplots.ai". Grid lines are subtle
-    and the overall layout is clean with good use of the canvas space.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements anywhere
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Step curves and confidence bands are clearly visible; censoring marks
-          are visible but could be slightly more prominent
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue and red are distinguishable but red-blue is not the most colorblind-safe
-          combination
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization with well-balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: "Time (months)", "Survival Probability"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid visible but legend shows boxes instead of lines/steps which
-          is slightly misleading for a step plot
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct step function for Kaplan-Meier survival curves
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, survival probability on Y-axis correctly
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has step function, confidence intervals, censoring marks, group comparison
-          with legend; missing median survival annotation
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full 0-36 month range and 0-1 probability scale shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies Treatment and Control groups
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but "letsplot" should be "lets-plot" per library
-          name
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows clear difference between groups, censoring events, widening
-          confidence intervals over time; could show more dramatic crossing or convergence
-          scenarios
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Clinical trial survival data is a perfect, neutral, real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: 36-month follow-up, realistic hazard rates, appropriate sample sizes
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses multiple helper functions (generate_survival_data, kaplan_meier,
-          get_survival_at_time) instead of flat structure
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) is set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 2
-        max: 2
-        passed: true
-        comment: Saves both plot.png and plot.html correctly
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent use of lets-plot ggplot2 grammar: geom_step, geom_ribbon,
-          geom_point with shape parameter, scale_color_manual, scale_fill_manual,
-          theme_minimal with custom element_text sizing'
-  verdict: APPROVED
+  - publication-ready

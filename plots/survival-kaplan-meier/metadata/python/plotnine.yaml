@@ -1,215 +1,223 @@
 library: plotnine
+language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:47:28Z'
-updated: '2025-12-29T22:50:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584329185
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/plotnine/plot.png
-preview_html: null
+updated: '2026-05-11T07:50:57Z'
+generated_by: claude-haiku
+workflow_run: 25656828436
+issue: 2441
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent implementation of Kaplan-Meier survival curves using plotnine native
-    grammar of graphics
-  - 'All spec requirements met: step functions, confidence intervals, censored marks,
-    group comparison'
-  - Custom KM estimator with proper Greenwood formula for variance estimation
-  - Strong colorblind-accessible color contrast between treatment groups (blue vs
-    yellow)
-  - Professional appearance with appropriate text sizing for 16:9 format
-  - Proper handling of censored observations displayed as tick marks on curves
-  weaknesses:
-  - Code uses helper functions instead of flat KISS structure (imports → data → plot
-    → save)
-  - Legend position overlaps with data region
-  image_description: The plot displays a Kaplan-Meier survival curve comparing two
-    treatment groups. Treatment A is shown in blue (#306998) and Treatment B in yellow/gold
-    (#FFD43B). Both curves start at 100% survival probability at time 0 and decrease
-    over time using characteristic step functions. The blue Treatment A curve extends
-    to approximately 75 months with final survival around 20%, while the yellow Treatment
-    B curve ends around 35 months reaching close to 0% survival. Shaded confidence
-    interval bands surround each curve (blue and yellow respectively, with alpha transparency).
-    Vertical tick marks indicating censored observations are visible along both curves.
-    The title reads "survival-kaplan-meier · plotnine · pyplots.ai". X-axis shows
-    "Time (months)" ranging from 0-75, Y-axis shows "Survival Probability" with percentage
-    labels (0%, 25%, 50%, 75%, 100%). A legend in the upper right identifies both
-    treatment groups.
+  - Perfect theme adaptation with no dark-on-dark or light-on-light failures in either
+    render
+  - Comprehensive spec implementation - all features present (step function, 95% CIs,
+    censored marks, group comparison, median annotations)
+  - Flawless statistical accuracy with correct Kaplan-Meier estimator using logit-based
+    confidence intervals
+  - Excellent code quality - clean, reproducible, well-structured with no over-engineering
+  - Professional visual execution with clear color contrast, appropriate sizing, and
+    balanced layout
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text (INK tokens)
+      Data: Treatment A curve in #009E73 (green), Treatment B in #D55E00 (orange), light CI ribbons (alpha=0.15), censored marks visible
+      Legibility verdict: PASS - All text is perfectly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct
+      Chrome: Title, axis labels, ticks all in light text (INK_SOFT tokens), excellent contrast on dark surface
+      Data: Colors identical to light render - Treatment A still #009E73, Treatment B still #D55E00, confirms theme-only chrome adaptation
+      Legibility verdict: PASS - All text is perfectly readable, no dark-on-dark failures
+  verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, labels=20, ticks=16), perfectly
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
         passed: true
         comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step curves and confidence bands clearly visible, censored marks
-          visible but slightly thin
+        comment: Curves, CI ribbons, and censored marks all perfectly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe (distinguishable for all common
-          types)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, legend placement in upper right works well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units "Time (months)", Y-axis descriptive "Survival Probability"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is very subtle (good), but legend overlaps slightly with data
-          region
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito correct, backgrounds correct, data colors identical across
+          themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured defaults with proper theme system, professional but
+          not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, grid subtle, good attention to theme details
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy showing treatment difference, CI ribbons provide
+          statistical context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Kaplan-Meier step function survival plot
+        comment: Correct Kaplan-Meier with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, survival probability on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step functions, confidence intervals, censored marks, group comparison
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: All features present and working
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range from 0-100% survival and 0 to max time
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Treatment A and Treatment B
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "survival-kaplan-meier · plotnine · pyplots.ai"
+        comment: Title format and legend labels correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows divergent survival curves, confidence intervals widening over
-          time, censored observations; Treatment B reaches 0% showing full survival
-          curve behavior
+        comment: Shows all aspects of survival analysis
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Clinical trial comparing two treatments is a classic, neutral, realistic
-          scenario
+        comment: Realistic clinical trial scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Time in months (0-75) is realistic; survival curves show plausible
-          progression though Treatment B hazard rate creates somewhat aggressive decline
+        comment: All values and proportions factually correct
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Code uses helper functions (generate_survival_data, kaplan_meier)
-          instead of flat script structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Clear structure with appropriate helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clean, Pythonic, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine''s grammar of graphics: ggplot() + geom_step()
-          + geom_ribbon() + geom_point() layered composition, scale_color_manual/scale_fill_manual,
-          theme customization'
-  verdict: APPROVED
+        comment: Expert ggplot2 composition with proper aes(), scales, and geoms
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses theme tokens, multi-layer composition, confidence band visualization
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
