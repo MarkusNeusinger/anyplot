@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: gain-curve
 created: '2025-12-29T22:47:43Z'
-updated: '2026-05-11T09:40:36Z'
+updated: '2026-05-11T09:46:08Z'
 generated_by: claude-haiku
 workflow_run: 25662220960
 issue: 2440
@@ -12,38 +12,29 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Flawless Visual Quality (30/30) with explicitly set font sizes and perfect readability
-    in both themes
-  - 'Perfect Spec Compliance (15/15): all required features present with correct data
-    mappings'
-  - 'Excellent Data Quality (15/15): realistic classification scenario with factually
-    correct calculations'
-  - 'Immaculate Code Quality (10/10): clean structure, reproducible, no unnecessary
-    imports'
-  - Seamless theme adaptation with correct Okabe-Ito palette and dark/light chrome
-    switching
+  - Perfect Visual Quality with explicit font sizing and proper theme adaptation
+  - Correct specification implementation with all required features present
+  - Excellent theme-adaptive implementation with correct background and text colors
+  - Realistic and feature-complete data example showing clear model discrimination
+  - Clean KISS code structure with deterministic output
   weaknesses:
-  - 'Design Excellence average (10/20): styling relies on library defaults without
-    custom visual refinement'
-  - 'No visual storytelling: data displayed clearly but lacks emphasis on model superiority
-    over baseline'
-  - 'Library Mastery low (4/10): correct but generic usage; doesn''t showcase distinctive
-    pygal capabilities'
+  - Design Excellence could be enhanced with distinctive aesthetic touches beyond
+    library defaults
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1
-      Chrome: Title "gain-curve · pygal · anyplot.ai" is bold and centered; axis labels "Population Targeted (%)" and "Cumulative Gains (%)" are descriptive with units; tick labels (0-100) are dark and clearly visible; grid lines are subtle gray
-      Data: Three lines - cyan Perfect Model (steep initial climb to 100% at ~30%), orange Model Gains (smooth S-curve), blue Random Baseline (diagonal). All colors are from Okabe-Ito palette. First series is #009E73 brand green color in baseline, orange is second, blue is third.
-      Legibility verdict: PASS - All text readable, no overlap, no light-on-light issues
+      Background: Warm off-white at #FAF8F1
+      Chrome: Title "gain-curve · pygal · anyplot.ai" in dark text; X-axis "Population Targeted (%)" and Y-axis "Cumulative Gains (%)" with readable tick labels; subtle grid lines visible
+      Data: Three lines shown - Perfect Model in brand green (#009E73) with vertical rise then horizontal, Model Gains in vermillion (#D55E00) curving above baseline, Random Baseline in blue (#0072B2) diagonal; legend at bottom clearly identifies all series
+      Legibility verdict: PASS - All elements fully readable with no text overlap or contrast issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17
-      Chrome: Title and axis labels are light-colored (#F0EFE8) on dark background; tick labels are light; grid lines are subtle and light-colored; legend is positioned at bottom
-      Data: Three lines maintain identical colors to light render - cyan Perfect Model, orange Model Gains, blue Random Baseline. No color change except theme-adaptive chrome (text, grid, background).
-      Legibility verdict: PASS - All text clearly visible against dark background, no dark-on-dark failures, brand green is visible, data colors identical to light render
+      Background: Warm near-black at #1A1A17
+      Chrome: Title, axis labels, and tick labels automatically rendered in light colors (#F0EFE8 and lighter variants); all readable; subtle grid lines visible
+      Data: Three lines maintain identical colors to light render (#009E73, #D55E00, #0072B2); only background and text chrome have flipped to dark theme
+      Legibility verdict: PASS - All text readable against dark background with excellent contrast; no dark-on-dark issues; brand green visible and legible
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,50 +45,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes
+        comment: All font sizes explicitly set; readable at full size in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend, labels, ticks all distinct and separated
+        comment: No overlapping text elements; legend well-positioned
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three lines clearly visible; stroke width appropriate; no dots competing;
-          all elements distinguishable
+        comment: All lines clearly distinguishable; proper visibility
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00, #0072B2) is CVD-safe; distinct
-          hues; good contrast'
+        comment: Okabe-Ito palette with good contrast; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect utilization at 4800×2700; plot fills 60-70%; balanced margins
+        comment: Excellent proportions; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Population Targeted (%)'' and ''Cumulative
-          Gains (%)'''
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito correct; first series #009E73; backgrounds #FAF8F1 light/#1A1A17
-          dark; theme-adaptive text and grid'
+        comment: 'Correct Okabe-Ito; first series #009E73; backgrounds #FAF8F1/#1A1A17;
+          theme chrome correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -105,22 +92,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; professional but not exceptional; relies
-          on library defaults
+        comment: Well-configured defaults; clean but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Good grid styling and legend placement; minimal customization beyond
-          Style object
+        passed: true
+        comment: Good grid and spacing; proper theme tokens
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Clear data display but no visual hierarchy or emphasis; straightforward
-          presentation without storytelling
+        passed: true
+        comment: Clear visual hierarchy; model performance vs baseline apparent
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +114,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative gains chart using XY plot format
+        comment: Correct cumulative gains chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Model gains curve, random baseline diagonal, perfect model reference,
-          0-100% axes all present
+        comment: 'All features present: model gains, perfect model, random baseline'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows population %; Y-axis shows cumulative gains %; correct
-          mapping
+        comment: X/Y correctly assigned; axes show full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''gain-curve · pygal · anyplot.ai''; legend
-          labels match data'
+        comment: Correct format; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -161,22 +142,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: good discrimination, realistic 30% positive rate,
-          smooth curves'
+        comment: 'All aspects shown: discrimination, curves, perfect model'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real classification scenario with 1000 samples; neutral domain; plausible
-          model scores
+        comment: Realistic classification scenario; neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Positive rate 300/1000=30% correct; cumsum math accurate; perfect
-          model line endpoints correct
+        comment: Proportions factually accurate; realistic distribution
     code_quality:
       score: 10
       max: 10
@@ -186,49 +164,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → calc → plot → save; no functions/classes'
+        comment: Linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Two np.random.seed(42) calls ensure deterministic output
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pygal, sklearn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering
+        comment: Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Correct output format
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct high-level API; XY chart, Style object for theming; doesn't
-          leverage advanced patterns
+        passed: true
+        comment: Proper pygal.XY and Style usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic usage; Style object is standard approach; could be replicated
-          in other libraries
+        passed: true
+        comment: Theme-adaptive Style implementation is sophisticated
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -236,6 +212,7 @@ impl_tags:
   techniques: []
   patterns:
   - data-generation
+  dataprep:
   - cumulative-sum
-  dataprep: []
-  styling: []
+  styling:
+  - dark-theme
