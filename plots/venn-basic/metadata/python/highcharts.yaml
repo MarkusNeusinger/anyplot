@@ -1,160 +1,168 @@
 library: highcharts
+language: python
 specification_id: venn-basic
 created: '2025-12-29T22:52:46Z'
-updated: '2025-12-29T23:00:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584334156
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T11:36:31Z'
+generated_by: claude-haiku
+workflow_run: 25667446316
+issue: 2444
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/venn-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/venn-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-    - custom-legend
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Highcharts VennSeries with proper data structure for sets and
-    intersections
-  - Colorblind-safe palette (Python blue, yellow, purple) with good transparency in
-    overlaps
-  - Realistic, relatable data scenario (developer skill distribution)
-  - Clean data labels showing both set names and values in each region
-  - Both PNG and interactive HTML outputs generated
-  - Good canvas utilization with the diagram filling most of the space
-  weaknesses:
-  - Legend does not explicitly map colors to set names (Highcharts Venn limitation)
-  - Very slight bottom edge clipping visible in the image
-  image_description: 'The plot displays a three-circle Venn diagram showing "Developer
-    Skill Distribution (Team of 150)". The three overlapping circles represent Backend
-    (blue, #306998), Frontend (yellow, #FFD43B), and DevOps (purple, #9467BD) developers.
-    Each region displays labels with the set name and value: Backend: 100, Frontend:
-    80, DevOps: 60. Intersection labels show Backend∩Frontend: 30, Backend∩DevOps:
-    20, DevOps∩Frontend: 15, and the triple intersection Backend∩DevOps∩Frontend:
-    10. The title "venn-basic · highcharts · pyplots.ai" appears at the top with a
-    subtitle. The diagram fills the canvas well with good proportions. Colors show
-    transparency in overlapping regions.'
+  - Perfect spec compliance with all required features clearly presented
+  - 'Proper Okabe-Ito palette with first series #009E73'
+  - Theme adaptation correctly implemented - both light and dark renders fully legible
+  - Clean, readable data labels with accurate values in all regions
+  - Proper use of Highcharts VennSeries with correct container specification
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "venn-basic · highcharts · anyplot.ai" and subtitle "Developer Skill Distribution (Team of 150)" are dark, clearly readable against light background ✓
+      Data: Three overlapping circles in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2) with data labels showing counts in each region: Backend (100), Frontend (80), DevOps (60), and intersections (30, 20, 15, 10). All labels are dark and legible ✓
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and subtitle are light-colored and readable against dark background ✓
+      Data: The three circles and all overlapping regions are clearly visible. Colors are identical to light render (data integrity preserved). Data labels appear to be properly colored for dark theme and readable ✓
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All labels readable, title and data labels clear, though intersection
-          labels could be slightly larger
+        comment: Title, subtitle, and all data labels readable in both light and dark
+          themes; font sizes appropriate (20px labels, 28px title)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap issues, all labels positioned clearly within their
-          regions
+        comment: All region labels clearly placed with no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circles are well-sized, overlapping regions clearly visible with
-          transparency
+        comment: All three circles and overlapping regions clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, purple) - no red-green
-          conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, diagram centered with balanced whitespace, minor
-          bottom clipping visible
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend enabled and appropriately styled
+        comment: Okabe-Ito palette used; colorblind-safe with excellent color separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned composition, centered, nothing cut off at edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches spec format perfectly; subtitle provides clear context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1
+          (light) and #1A1A17 (dark); both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional use of Okabe-Ito palette; intentional design with clear
+          visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Clean layout with clear data labels; professional formatting of intersection
+          values
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Developer skill distribution context clearly communicated; three-way
+          intersection is natural focal point
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Venn diagram type
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Sets and intersections correctly mapped
-      - id: SC-03
+        comment: Perfect Venn diagram with three overlapping circles
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows overlaps with counts; area appears somewhat proportional but
-          not strictly so
-      - id: SC-04
-        name: Data Range
+        comment: Set labels, sizes, and all intersection values clearly displayed
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All values displayed correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Correct representation of all overlaps and relationships with accurate
+          values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend enabled but doesn't show set colors explicitly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "venn-basic · highcharts · pyplots.ai"
+        comment: Title exactly matches format; set names labeled within circles; helpful
+          subtitle
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3 sets with all pairwise and triple intersections; good demonstration
-          of Venn features
+        comment: Shows individual sets, pairwise intersections, and three-way intersection
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Developer skill distribution is a relatable, neutral business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic (team of 150, with reasonable overlap numbers)
+        comment: Developer skill distribution is realistic, neutral, and appropriate
+          for context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible values for 150-person team with realistic skill overlap
+          percentages
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,40 +170,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart setup → save'
+        comment: Simple, straightforward implementation; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (no random), but no explicit seed needed here
+        max: 2
+        passed: true
+        comment: Deterministic data; consistent downloads; repeatable output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports used (highcharts_core, selenium, urllib, tempfile,
+          pathlib)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake interactivity; proper use of theme
+          tokens
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses VennSeries, proper Highcharts data structure, interactive HTML
-          export, data labels with formatting
+        comment: Proper VennSeries usage; follows Highcharts patterns; correct container
+          specification
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Specifically downloads venn.js module (distinctive for Venn support);
+          uses data_labels idiomatically
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

@@ -1,14 +1,32 @@
-""" pyplots.ai
+""" anyplot.ai
 venn-basic: Venn Diagram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 88/100 | Created: 2025-12-29
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-11
 """
 
 import math
+import os
+import site
+import sys
 
-import altair as alt
-import pandas as pd
 
+# Ensure site-packages comes before current directory to avoid shadowing
+site_packages = site.getsitepackages()[0]
+sys.path.insert(0, site_packages)
+
+import altair as alt  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Three overlapping research disciplines
 set_labels = ["Machine Learning", "Statistics", "Data Engineering"]
@@ -23,147 +41,135 @@ only_bc = 25 - 10  # 15
 abc = 10
 
 # Calculate proportional radii based on set sizes
-# Base radius scaled so circles fill canvas well
-base_radius = 240
-radius_a = base_radius * math.sqrt(set_sizes[0] / 100)  # 240 (100 -> 1.0)
-radius_b = base_radius * math.sqrt(set_sizes[1] / 100)  # ~215 (80 -> 0.894)
-radius_c = base_radius * math.sqrt(set_sizes[2] / 100)  # ~186 (60 -> 0.775)
+base_radius = 280
+radius_a = base_radius * math.sqrt(set_sizes[0] / 100)
+radius_b = base_radius * math.sqrt(set_sizes[1] / 100)
+radius_c = base_radius * math.sqrt(set_sizes[2] / 100)
 
-# Position circles in traditional triangular Venn arrangement (largest sets at top)
-# A (largest) at top-left, B (medium) at top-right, C (smallest) at bottom-center
-center_x, center_y = 600, 620  # Slightly below center to account for title
-circle_spacing = 150  # Distance from center to circle centers
-angle_a = math.radians(210)  # Top-left (210 degrees)
-angle_b = math.radians(330)  # Top-right (330 degrees)
-angle_c = math.radians(90)  # Bottom-center (90 degrees)
+# Position circles in triangular arrangement, centered vertically on canvas
+center_x, center_y = 800, 450
+circle_spacing = 180
+angle_a = math.radians(210)
+angle_b = math.radians(330)
+angle_c = math.radians(90)
 
-cx_a = center_x + circle_spacing * math.cos(angle_a)  # A - top-left
-cy_a = center_y - circle_spacing * math.sin(angle_a)  # Inverted Y for screen coords
-cx_b = center_x + circle_spacing * math.cos(angle_b)  # B - top-right
+cx_a = center_x + circle_spacing * math.cos(angle_a)
+cy_a = center_y - circle_spacing * math.sin(angle_a)
+cx_b = center_x + circle_spacing * math.cos(angle_b)
 cy_b = center_y - circle_spacing * math.sin(angle_b)
-cx_c = center_x + circle_spacing * math.cos(angle_c)  # C - bottom-center
+cx_c = center_x + circle_spacing * math.cos(angle_c)
 cy_c = center_y - circle_spacing * math.sin(angle_c)
 
-# Colors
-colors = ["#306998", "#FFD43B", "#4DAF4A"]  # Python Blue, Python Yellow, Green
-
-# Circle sizes for mark_point (proportional to set sizes)
+# Circle sizes for mark_point
 circle_size_a = radius_a * radius_a * 3.14
 circle_size_b = radius_b * radius_b * 3.14
 circle_size_c = radius_c * radius_c * 3.14
 
-# Circle centers data with individual sizes
+# Circle centers data with Okabe-Ito colors
 fill_centers = pd.DataFrame(
     {
         "x": [cx_a, cx_b, cx_c],
         "y": [cy_a, cy_b, cy_c],
-        "color": colors,
+        "color": OKABE_ITO[0:3],
         "set": set_labels,
         "size": [circle_size_a, circle_size_b, circle_size_c],
     }
 )
 
-# Region counts with positions computed relative to circle centers
-# Position offsets as fractions of circle radii for better scaling
-only_offset = 0.5  # Offset for exclusive regions (away from center)
+# Region counts positioned relative to circle centers
+only_offset = 0.5
 region_data = pd.DataFrame(
     {
         "x": [
-            cx_a + (cx_a - center_x) * only_offset,  # Only A (away from center)
-            cx_b + (cx_b - center_x) * only_offset,  # Only B (away from center)
-            cx_c,  # Only C (below center)
-            (cx_a + cx_b) / 2,  # A ∩ B (midpoint of A and B)
-            (cx_a + cx_c) / 2,  # A ∩ C (midpoint of A and C)
-            (cx_b + cx_c) / 2,  # B ∩ C (midpoint of B and C)
-            center_x,  # A ∩ B ∩ C (center of all three)
+            cx_a + (cx_a - center_x) * only_offset,
+            cx_b + (cx_b - center_x) * only_offset,
+            cx_c,
+            (cx_a + cx_b) / 2,
+            (cx_a + cx_c) / 2,
+            (cx_b + cx_c) / 2,
+            center_x,
         ],
         "y": [
-            cy_a + (cy_a - center_y) * only_offset,  # Only A
-            cy_b + (cy_b - center_y) * only_offset,  # Only B
-            cy_c + radius_c * 0.6,  # Only C (bottom portion)
-            (cy_a + cy_b) / 2 - 50,  # A ∩ B (above midpoint)
-            (cy_a + cy_c) / 2 + 20,  # A ∩ C
-            (cy_b + cy_c) / 2 + 20,  # B ∩ C
-            center_y,  # A ∩ B ∩ C
+            cy_a + (cy_a - center_y) * only_offset,
+            cy_b + (cy_b - center_y) * only_offset,
+            cy_c + radius_c * 0.6,
+            (cy_a + cy_b) / 2 - 50,
+            (cy_a + cy_c) / 2 + 20,
+            (cy_b + cy_c) / 2 + 20,
+            center_y,
         ],
         "count": [str(only_a), str(only_b), str(only_c), str(only_ab), str(only_ac), str(only_bc), str(abc)],
     }
 )
 
-# Set name labels positioned relative to circle centers (outside circles)
-# Labels placed at edge of circle plus offset in direction away from diagram center
-label_offset = 1.3  # Multiplier for positioning labels outside circles
+# Set name labels positioned outside circles
+label_offset = 1.3
 set_label_data = pd.DataFrame(
     {
-        "x": [
-            cx_a + (cx_a - center_x) * label_offset,  # A label - left of circle A
-            cx_b + (cx_b - center_x) * label_offset,  # B label - right of circle B
-            cx_c,  # C label - centered below circle C
-        ],
-        "y": [
-            cy_a + (cy_a - center_y) * label_offset,  # A label - above-left
-            cy_b + (cy_b - center_y) * label_offset,  # B label - above-right
-            cy_c + radius_c + 60,  # C label - below circle C
-        ],
+        "x": [cx_a + (cx_a - center_x) * label_offset, cx_b + (cx_b - center_x) * label_offset, cx_c],
+        "y": [cy_a + (cy_a - center_y) * label_offset, cy_b + (cy_b - center_y) * label_offset, cy_c + radius_c + 60],
         "label": set_labels,
     }
 )
 
-# Draw filled circles using point marks with proportional sizes
+# Draw filled circles with transparency
 background_circles = (
     alt.Chart(fill_centers)
-    .mark_point(shape="circle", filled=True, opacity=0.35)
+    .mark_point(shape="circle", filled=True, opacity=0.3)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
+        x=alt.X("x:Q", scale=alt.Scale(domain=[200, 1400]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 800]), axis=None),
         color=alt.Color("color:N", scale=None, legend=None),
         size=alt.Size("size:Q", scale=None, legend=None),
     )
 )
 
-# Circle outlines with proportional sizes
+# Circle outlines
 outline_circles = (
     alt.Chart(fill_centers)
-    .mark_point(shape="circle", filled=False, strokeWidth=4)
+    .mark_point(shape="circle", filled=False, strokeWidth=5)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
+        x=alt.X("x:Q", scale=alt.Scale(domain=[200, 1400]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 800]), axis=None),
         stroke=alt.Color("color:N", scale=None, legend=None),
         size=alt.Size("size:Q", scale=None, legend=None),
     )
 )
 
-# Region count labels - larger font for better legibility at 3600x3600
+# Region count labels
 counts_layer = (
     alt.Chart(region_data)
-    .mark_text(fontSize=42, fontWeight="bold", color="#1a1a1a")
+    .mark_text(fontSize=32, fontWeight="bold", color=INK)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
+        x=alt.X("x:Q", scale=alt.Scale(domain=[200, 1400]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 800]), axis=None),
         text="count:N",
     )
 )
 
-# Set name labels - larger font for better legibility at 3600x3600
+# Set name labels
 names_layer = (
     alt.Chart(set_label_data)
-    .mark_text(fontSize=36, fontWeight="bold", color="#333333")
+    .mark_text(fontSize=28, fontWeight="bold", color=INK_SOFT)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 1100]), axis=None),
+        x=alt.X("x:Q", scale=alt.Scale(domain=[200, 1400]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[100, 800]), axis=None),
         text="label:N",
     )
 )
 
-# Combine all layers
+# Combine all layers with theme-adaptive styling
 chart = (
     alt.layer(background_circles, outline_circles, counts_layer, names_layer)
     .properties(
-        width=1200, height=1200, title=alt.Title(text="venn-basic · altair · pyplots.ai", fontSize=40, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title(text="venn-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None, strokeWidth=0)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
