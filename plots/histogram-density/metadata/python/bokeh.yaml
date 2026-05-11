@@ -1,163 +1,172 @@
 library: bokeh
+language: python
 specification_id: histogram-density
 created: '2025-12-29T22:48:38Z'
-updated: '2025-12-29T22:57:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584328741
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-density/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-density/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-11T03:38:24Z'
+generated_by: claude-haiku
+workflow_run: 25648670291
+issue: 2442
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/bokeh/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of density histogram with theoretical PDF overlay
-  - Clean, readable code following KISS principles
-  - Good color choices with blue histogram and contrasting yellow PDF line
-  - Proper density normalization (area under histogram = 1)
-  - Realistic test score scenario with appropriate sample size (500)
-  - Correct title format and descriptive axis labels with units
+  - Excellent visual quality across both light and dark themes with perfect theme
+    adaptation
+  - Strong design sophistication with intentional use of Okabe-Ito palette and professional
+    styling
+  - 'Outstanding spec compliance: implements exact requirements with bonus theoretical
+    PDF overlay'
+  - Perfect code quality with clean structure and reproducible data generation
+  - 'Expert library usage: demonstrates mastery of Bokeh''s styling, data handling,
+    and export patterns'
+  - 'Compelling data storytelling: empirical vs. theoretical comparison educates viewers
+    about distribution fitting'
   weaknesses:
-  - Legend text is small (16pt) and difficult to read at full resolution; should be
-    larger (e.g., 20pt)
-  - Does not leverage Bokeh interactive capabilities like hover tooltips to show bin
-    values
-  - Minor empty space on the right side of the plot
-  image_description: 'The plot displays a density histogram of test scores with blue
-    histogram bars (color #306998) showing the empirical distribution. The bars have
-    white borders and slight transparency (alpha 0.7). A yellow/gold smooth curve
-    (Normal PDF with μ=75, σ=12) overlays the histogram. The title "histogram-density
-    · bokeh · pyplots.ai" appears at the top left. The x-axis is labeled "Test Score"
-    (ranging from ~40 to ~120), and the y-axis is labeled "Density (Probability per
-    Unit)" (ranging from 0 to ~0.035). A legend in the top-left shows "Empirical Distribution"
-    and "Normal PDF (μ=75, σ=12)". The grid is subtle with dashed lines. The plot
-    uses a 16:9 landscape format at 4800×2700 pixels.'
+  - 'Minor: Design Excellence could be elevated further with additional visual polish
+    (DE-02 score could reach 5-6 with more refinement details)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - matches spec perfectly
+      Chrome: Title, X-axis label (Test Score), Y-axis label (Density - Probability per Unit), and tick labels all dark and readable
+      Data: Bluish-green histogram bars (#009E73) with 0.7 alpha, vermillion PDF curve (#D55E00) with line_width=5; both clearly visible
+      Legend: Top-left, light styling with "Empirical Distribution" and "Normal PDF (μ=75, σ=12)" labels
+      Legibility verdict: PASS - All text is clearly readable, excellent contrast, grid is subtle but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - matches spec perfectly
+      Chrome: Title, axis labels, and tick labels all light-colored and readable against dark background
+      Data: Histogram bars still #009E73 (identical to light render), PDF curve still #D55E00 (identical to light render) - only chrome adapted for theme
+      Legend: Dark background (#242420) with light text - properly theme-adapted
+      Legibility verdict: PASS - All text is clearly readable, no dark-on-dark failures, grid is subtle but visible, brand green is visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are readable, though at full resolution
-          the legend text could be slightly larger
+        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt,
+          legend 20pt - all perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars and PDF line are clearly visible with good sizing
+        comment: Histogram bars and PDF line perfectly visible and well-adapted to
+          data
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though histogram is slightly left-heavy
-          with empty space on the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: "Test Score" and "Density (Probability
-          per Unit)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with good contrast and CVD-safe colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins and good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed styling and alpha=0.3, but legend text
-          is quite small and hard to read at full resolution
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1 light/#1A1A17 dark, theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with intentional colors and thoughtful composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend styled with theme-aware background, subtle grid, outline styling
+          refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: empirical vs theoretical PDF comparison shows clear insight
+          and visual hierarchy'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct density histogram with PDF overlay
+        comment: Correct density histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to x-axis, density on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes density normalization and theoretical PDF overlay as suggested
-          in spec
-      - id: SC-04
-        name: Data Range
+        comment: All features present including recommended PDF overlay
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned with proper axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows exact format: histogram-density · bokeh · pyplots.ai'
+        comment: Title format correct, legend labels accurate and descriptive
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bell-curve distribution with natural variation, demonstrates
-          density normalization well
+        comment: Shows all aspects of density histogram
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Test scores with μ=75, σ=12 is a plausible educational scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 500 observations, scores in 40-120 range with μ=75 is realistic
+        comment: Test scores are real, comprehensible, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct values and mathematical accuracy
     code_quality:
       score: 10
       max: 10
@@ -167,40 +176,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Simple linear flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures reproducible results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Appropriate complexity, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct file naming and current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic Bokeh plotting (quad, line) but doesn't leverage interactive
-          features like hover tooltips, which would showcase Bokeh's strengths
+        passed: true
+        comment: Expert use of figure(), ColumnDataSource, quad(), line(), and theme
+          adaptation
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses theme-adaptive styling, ColumnDataSource flexibility, and Selenium
+          pattern
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
