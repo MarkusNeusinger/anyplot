@@ -6,7 +6,7 @@ title: Cumulative Gains Chart
 
 # Specification tracking
 created: 2025-12-29T22:39:00Z
-updated: null
+updated: 2026-05-11T10:45:32Z
 issue: 2440
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - curve
   data_type:
     - numeric
     - binary
