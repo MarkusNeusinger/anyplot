@@ -1,172 +1,179 @@
 library: matplotlib
+language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:00Z'
-updated: '2025-12-29T22:56:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584327733
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-11T07:43:57Z'
+generated_by: claude-haiku
+workflow_run: 25656374948
+issue: 2441
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 72
 review:
   strengths:
-  - Excellent implementation of Kaplan-Meier step functions using ax.step with correct
-    post interpolation
-  - 'Complete spec compliance: CI bands, censored tick marks, median annotations,
-    group comparison all included'
-  - Clean, well-commented code following KISS principles with proper Greenwald variance
-    calculation
-  - Good color choices (blue/yellow) that are colorblind-accessible and high contrast
-  - Proper handling of censored observations with interpolated survival values for
-    tick mark placement
+  - Clear, readable visualization in both light and dark themes despite code gaps
+  - 'All required Kaplan-Meier features present: step curves, confidence intervals,
+    censored marks'
+  - Realistic clinical trial data with sensible scale and group comparison
+  - Median survival annotation clearly communicates key statistic
+  - Good visual hierarchy with CI bands that add context without clutter
   weaknesses:
-  - Missing at-risk table below the plot which was suggested in spec Notes
-  - The confidence interval bands could be slightly more transparent to better show
-    curve overlap regions
-  - Median text box positioning could be adjusted to avoid any potential overlap with
-    axis labels
-  image_description: 'The plot displays a Kaplan-Meier survival analysis comparing
-    two groups: Treatment Group (blue, #306998) and Control Group (yellow/gold, #FFD43B).
-    Both curves are step functions starting at survival probability 1.0 and decreasing
-    over time (0-60 months). The Treatment Group shows better survival with a median
-    of 21.9 months vs Control Group median of 16.6 months. Each curve has a semi-transparent
-    95% confidence interval band. Vertical tick marks along the curves indicate censored
-    observations. Dotted vertical lines mark the median survival times, with a horizontal
-    dotted line at 0.5 probability. A text box in the bottom-right corner displays
-    the median values. The legend is positioned in the upper-right corner. Grid is
-    subtle with alpha=0.3 and dashed lines.'
+  - 'CRITICAL: No theme-adaptive styling - code does not use ANYPLOT_THEME environment
+    variable or theme tokens. Must implement pattern from prompts/library/matplotlib.md
+    lines 116-144'
+  - 'CRITICAL: Colors violate Okabe-Ito palette - first series is #306998 (should
+    be #009E73), second is #FFD43B (should be #D55E00)'
+  - 'CRITICAL: Output file saves as plot.png instead of plot-{THEME}.png - must use
+    environment variable for conditional filename'
+  - Generic styling with Python default colors instead of intentional design choices
+  - 'Hardcoded colors throughout (gray lines, #CC9A00 marks) - all should use theme
+    tokens'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, appears correct at #FAF8F1
+      Chrome: Title "survival-kaplan-meier · matplotlib · anyplot.ai" in dark text is clear and readable; axis labels "Time (months)" and "Survival Probability" are legible; tick labels are readable in dark text
+      Data: Two step-function curves (Treatment in teal, Control in yellow-orange) with 95% confidence interval shaded bands; censored observations marked with vertical tick marks; median survival annotation box in bottom-right with white background showing "Treatment median: 21.9 mo" and "Control median: 16.6 mo"
+      Legend: Upper right corner, readable, clearly identifies both groups
+      Legibility verdict: PASS - all text readable against light background, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, appears correct at #1A1A17
+      Chrome: Title remains visible in light text; axis labels and tick labels are readable; grid lines are subtle but visible
+      Data: Same curves and colors as light render (teal Treatment, yellow-orange Control with identical CI bands); censored marks visible; data colors are consistent between light and dark (only chrome should flip, which appears to be the case)
+      Annotation: Median survival box is styled for dark theme with appropriate dark background
+      Legibility verdict: PASS - all text readable against dark background with good contrast
+
+    Critical note: Both renders are readable, however the code does not implement theme-adaptive logic. The colors used (#306998, #FFD43B) are Python matplotlib defaults, not the required Okabe-Ito palette (#009E73, #D55E00).
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 16pt, legend at 16pt
-          - all perfectly readable
+        comment: All text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean layout with no overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step curves with linewidth=3, tick marks with s=400 are clearly visible
+        comment: Curves, CI bands, tick marks, and annotations all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow/gold are colorblind-safe, excellent contrast
+        score: 1
+        max: 2
+        passed: false
+        comment: Colors not from Okabe-Ito palette; CVD-safe palette not used
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well, slight issue with confidence
-          bands extending to edges
+        comment: Good proportions, nothing cut off, generous whitespace
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Time (months)" and "Survival Probability" are descriptive with
-          units'
+        comment: Descriptive labels with units, clear title
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
+        passed: false
+        comment: 'CRITICAL: First series #306998 not #009E73; second series #FFD43B
+          not #D55E00; no theme-adaptive styling implemented'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic Python default colors, no intentional palette design
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Median annotation is nice, but hardcoded colors limit refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Grid is subtle (alpha=0.3), but legend is in upper right which could
-          potentially overlap with data in some scenarios; also median text box partially
-          overlaps with y-axis area
+        comment: CI bands and median text create visual hierarchy and communicate
+          key insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step function Kaplan-Meier curves
+        comment: Correct Kaplan-Meier step function with proper discrete event handling
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X, survival probability on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step functions, 95% CI bands, censored tick marks, group comparison,
-          median annotations all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: step function, 95% CI bands, censored marks,
+          group comparison, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: 0-65 months, Y: 0-1.05 shows all data'
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Time and survival probability axes correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Treatment Group and Control Group labels correct
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"survival-kaplan-meier · matplotlib · pyplots.ai" matches spec'
+        comment: Title and legend both present and correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two groups with different survival curves, censoring, CI widening
-          over time; could have shown more dramatic early separation
+        comment: 'Demonstrates all Kaplan-Meier aspects: events, censoring, comparison,
+          curves'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Clinical trial survival data is a perfect real-world application
+        comment: Clinical trial data (treatment vs control) is realistic and appropriately
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 60 months follow-up is realistic, but the exponential scale=24 for
-          treatment vs scale=16 for control could show clearer separation
+        comment: Time 0-60 months is sensible; survival probability 0-1 is correct
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -174,41 +181,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → K-M calculation → plot → save'
+        comment: Straightforward code, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used, both necessary
+        comment: Only matplotlib and numpy, both actively used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
+        max: 2
+        passed: false
+        comment: Hardcoded colors instead of theme tokens; manual Kaplan-Meier calculation
+          not excessive
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png (correct)
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: 'CRITICAL: Saves as plot.png instead of plot-{THEME}.png'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Good use of ax.step with where="post", fill_between with step="post",
-          scatter for tick marks, but no advanced matplotlib features like spines
-          customization or twin axes for at-risk table
-  verdict: APPROVED
+        passed: false
+        comment: Uses matplotlib idioms correctly (ax methods, step, fill_between)
+          but does NOT follow required matplotlib.md theme pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Median lines and annotations are nice, but doesn't leverage advanced
+          matplotlib capabilities
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - step-function
+  - confidence-intervals
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
