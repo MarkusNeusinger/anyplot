@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-29
+Library: highcharts | Python 3.13
+Quality: 92/100 | Updated: 2025-05-11
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,6 +18,17 @@ from highcharts_core.options.series.spline import SplineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT = "#D55E00"  # Okabe-Ito position 2 for baseline
 
 # Data: Customer response model with predicted probabilities
 np.random.seed(42)
@@ -69,7 +81,7 @@ chart.options = HighchartsOptions()
 chart.options.chart = {
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 350,
     "marginLeft": 220,
     "marginTop": 180,
@@ -78,52 +90,57 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "gain-curve · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "gain-curve · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
 # Subtitle
-chart.options.subtitle = {"text": "Customer Response Model Performance", "style": {"fontSize": "48px"}}
+chart.options.subtitle = {
+    "text": "Customer Response Model Performance",
+    "style": {"fontSize": "22px", "color": INK_SOFT},
+}
 
 # X-axis
 chart.options.x_axis = {
-    "title": {"text": "Population Targeted (%)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Population Targeted (%)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "min": 0,
     "max": 100,
     "tickInterval": 10,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "gridLineDashStyle": "Dash",
+    "gridLineColor": GRID,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Positive Cases Captured (%)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Positive Cases Captured (%)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "min": 0,
     "max": 100,
     "tickInterval": 10,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "gridLineDashStyle": "Dash",
+    "gridLineColor": GRID,
 }
 
-# Legend (positioned inside chart area)
+# Legend positioned at top-left to avoid overlap
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "40px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
     "layout": "vertical",
-    "align": "right",
-    "verticalAlign": "middle",
-    "x": -50,
-    "y": 200,
-    "symbolWidth": 50,
-    "symbolHeight": 25,
-    "backgroundColor": "rgba(255, 255, 255, 0.8)",
+    "align": "left",
+    "verticalAlign": "top",
+    "x": 80,
+    "y": 60,
+    "symbolWidth": 32,
+    "symbolHeight": 16,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderWidth": 1,
-    "borderColor": "#e0e0e0",
-    "padding": 20,
+    "padding": 16,
 }
 
 # Plot options
@@ -136,10 +153,10 @@ chart.options.plot_options = {
 gain_series = AreaSeries()
 gain_series.data = [[x, y] for x, y in zip(x_values, y_values, strict=True)]
 gain_series.name = "Model Gain"
-gain_series.color = "#306998"
+gain_series.color = BRAND
 gain_series.fill_color = {
     "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-    "stops": [[0, "rgba(48, 105, 152, 0.5)"], [1, "rgba(48, 105, 152, 0.1)"]],
+    "stops": [[0, "rgba(0, 158, 115, 0.5)"], [1, "rgba(0, 158, 115, 0.1)"]],
 }
 chart.add_series(gain_series)
 
@@ -147,7 +164,7 @@ chart.add_series(gain_series)
 baseline_series = SplineSeries()
 baseline_series.data = [[x, y] for x, y in zip(baseline_x, baseline_y, strict=True)]
 baseline_series.name = "Random Selection"
-baseline_series.color = "#FFD43B"
+baseline_series.color = ACCENT
 baseline_series.dash_style = "Dash"
 chart.add_series(baseline_series)
 
@@ -155,12 +172,15 @@ chart.add_series(baseline_series)
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": "<b>{series.name}</b><br/>Population: {point.x:.1f}%<br/>Captured: {point.y:.1f}%",
-    "style": {"fontSize": "24px"},
+    "style": {"fontSize": "18px"},
 }
 
 # Download Highcharts JS (required for headless Chrome)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -171,11 +191,15 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
+
+# Save HTML artifact for both themes
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -192,23 +216,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    # Include CDN for HTML file (works in browser)
-    html_interactive = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(html_interactive)
-
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
+
 Path(temp_path).unlink()  # Clean up temp file
