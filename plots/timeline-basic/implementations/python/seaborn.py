@@ -1,15 +1,32 @@
-""" pyplots.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-05-11
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 
-# Data - Software project milestones (reduced count to avoid overlap)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (canonical order)
+OKABE_ITO = [
+    "#009E73",  # brand green
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
+]
+
+# Data - Software project milestones
 events = [
     ("2024-01-15", "Project Kickoff", "Planning"),
     ("2024-02-20", "Requirements Done", "Planning"),
@@ -28,21 +45,40 @@ df["date"] = pd.to_datetime(df["date"])
 # Create y-offset for alternating labels (above/below axis)
 df["y_offset"] = [1 if i % 2 == 0 else -1 for i in range(len(df))]
 
-# Define category colors using Python Blue and Yellow as primary
+# Map categories to Okabe-Ito colors
 category_order = ["Planning", "Design", "Development", "Testing", "Deployment"]
 palette = {
-    "Planning": "#306998",
-    "Design": "#FFD43B",
-    "Development": "#2ca02c",
-    "Testing": "#d62728",
-    "Deployment": "#9467bd",
+    "Planning": OKABE_ITO[0],  # green
+    "Design": OKABE_ITO[1],  # vermillion
+    "Development": OKABE_ITO[2],  # blue
+    "Testing": OKABE_ITO[3],  # reddish purple
+    "Deployment": OKABE_ITO[4],  # orange
 }
 
+# Set seaborn theme with theme-adaptive tokens
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": PAGE_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Draw the main timeline axis
-ax.axhline(y=0, color="#888888", linewidth=3, zorder=1)
+ax.axhline(y=0, color=INK_SOFT, linewidth=3, zorder=1)
 
 # Plot events using seaborn scatterplot
 sns.scatterplot(
@@ -56,7 +92,7 @@ sns.scatterplot(
     zorder=3,
     ax=ax,
     legend=True,
-    edgecolor="white",
+    edgecolor=PAGE_BG,
     linewidth=2,
 )
 
@@ -76,12 +112,12 @@ for _idx, row in df.iterrows():
         va=va,
         fontsize=15,
         fontweight="bold",
-        color="#333333",
+        color=INK,
         xytext=(0, 10 * row["y_offset"]),
         textcoords="offset points",
     )
 
-# Style the plot - extra padding on right for "Production Launch" label
+# Style the plot
 ax.set_xlim(df["date"].min() - pd.Timedelta(days=40), df["date"].max() + pd.Timedelta(days=60))
 ax.set_ylim(-1.1, 1.1)
 
@@ -94,14 +130,14 @@ ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
 ax.spines["bottom"].set_visible(False)
 
-# Format x-axis with quarterly ticks for clarity
-ax.tick_params(axis="x", labelsize=16, length=0)
+# Format x-axis with monthly ticks
+ax.tick_params(axis="x", labelsize=16, length=0, colors=INK_SOFT)
 ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator(interval=2))
 ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %Y"))
-plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right", color=INK_SOFT)
 
 # Title and legend
-ax.set_title("timeline-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+ax.set_title("timeline-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 
 # Place legend at bottom center, horizontal layout
 ax.legend(
@@ -111,9 +147,10 @@ ax.legend(
     loc="lower center",
     ncol=5,
     framealpha=0.9,
-    edgecolor="#cccccc",
+    edgecolor=INK_SOFT,
+    facecolor=PAGE_BG,
     bbox_to_anchor=(0.5, -0.15),
 )
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
