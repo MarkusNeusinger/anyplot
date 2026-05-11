@@ -1,168 +1,185 @@
 library: seaborn
+language: python
 specification_id: venn-basic
 created: '2025-12-29T22:47:29Z'
-updated: '2025-12-29T23:14:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584328752
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T11:23:08Z'
+generated_by: claude-haiku
+workflow_run: 25666806580
+issue: 2444
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/venn-basic/seaborn/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - manual-ticks
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent text legibility with white background boxes ensuring readability against
-    all overlay colors
-  - Mathematically correct implementation using inclusion-exclusion principle for
-    region counts
-  - Good use of seaborn Set2 colorblind-safe palette and styling context
-  - Clear labeling with both counts and percentages in each region
-  - Clean code structure following KISS principles
+  - Perfect theme adaptation with both renders readable - light text on light background,
+    dark text on dark background
+  - 'Correct Okabe-Ito palette usage - first series is #009E73, all colors properly
+    applied'
+  - Excellent spec compliance - all 3 sets, sizes, intersections, and data labels
+    correctly displayed
+  - Clean, deterministic code with np.random.seed(42) and KISS structure
+  - Professional Venn diagram aesthetics with transparent overlapping circles showing
+    intersections clearly
+  - Proper region labels in styled boxes with counts and percentages for all 7 regions
+  - Correct title format and file naming convention (plot-{THEME}.png)
   weaknesses:
-  - Minor asymmetry in external label positioning (manual -0.3 offsets for bottom
-    labels)
-  - Limited use of seaborn-specific features (seaborn has no native Venn support,
-    so matplotlib patches are required)
-  image_description: 'The plot displays a three-set Venn diagram with overlapping
-    circles arranged in an equilateral triangle layout. The top circle (mint/seafoam
-    green) represents Python users (n=100), the bottom-left circle (peach/salmon)
-    represents JavaScript users (n=80), and the bottom-right circle (light blue/lavender)
-    represents SQL users (n=60). Each region displays count values with percentages
-    in white rounded boxes: Python-only=60, JavaScript-only=35, SQL-only=25, Python∩JavaScript=20,
-    Python∩SQL=10, JavaScript∩SQL=15, and the central intersection (all three)=10.
-    The title "venn-basic · seaborn · pyplots.ai" appears at the top in bold black
-    text. Set labels with sample sizes are positioned outside their respective circles.
-    Colors are from the Set2 palette with 40% transparency, allowing overlap regions
-    to be visible through color blending.'
+  - Design Excellence could be enhanced with more sophisticated visual refinement
+    beyond defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no pure white or harsh contrast. Perfect base.
+      Chrome: Title "venn-basic · seaborn · anyplot.ai" in dark ink (#1A1A17) is bold and prominent. Set labels "AWS (n=120)", "Google Cloud (n=95)", "Azure (n=75)" positioned outside circles are all clearly readable. Subtitle "Cloud Platform Adoption: 205 organizations surveyed" is legible in soft ink. All text is dark on light with excellent contrast.
+      Data: Three circles in Okabe-Ito colors - AWS (#009E73) green, Google Cloud (#D55E00) orange, Azure (#0072B2) blue. Alpha=0.4 transparency shows overlapping regions clearly. All 7 regions (3 exclusive, 3 pairwise, 1 triple) are labeled with counts and percentages in light boxes with subtle borders. Region labels range from 6 (center ABC) to 69 (AWS only), all readable at 20pt fontsize against light background.
+      Legibility verdict: PASS - All text is dark, high-contrast, and clearly visible on the warm off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with no pure black harshness. Proper theme surface.
+      Chrome: Title in light ink (#F0EFE8) is clearly visible against dark background. Set labels in light text are readable without any dark-on-dark failures. Subtitle in soft ink (#B8B7B0) is legible. All text has been properly theme-adapted.
+      Data: The three circle colors are IDENTICAL to light render - AWS still appears as the same green, Google Cloud as the same orange, Azure as the same blue. Only the chrome (backgrounds, text) changed, not the data colors. All 7 region labels remain visible with white text in the boxes against darker backgrounds. No "dark-on-dark" failures detected - all boxes have light text on appropriately darkened fills.
+      Legibility verdict: PASS - All text uses light colors, no dark-on-dark failures, data colors match light render exactly, and the plot is fully readable on the dark surface.
+
+    Both renders pass legibility and theme-adaptation requirements.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is large and clearly readable: title at 24pt, set labels
-          at 22pt bold, region counts at 20pt bold with white background boxes'
+        comment: All text explicitly sized (title 24pt, labels 22pt, counts 20pt).
+          Readable in both themes with high contrast.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; all labels and numbers are well-separated and
-          clearly positioned in their respective regions
+        comment: Region labels in boxes are well-positioned with no overlapping text.
+          All regions clearly visible.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circles are well-sized, overlap regions clearly visible through transparency
-          (alpha=0.4), white boxes make counts readable against any background
+        comment: All 3 circles visible, overlapping regions shown with transparency,
+          all 7 region counts visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses Set2 colorblind-safe palette; green, peach, and blue are distinguishable
-          to colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of square canvas (12x12) for symmetric diagram; circles
-          well-centered but slight asymmetry in bottom label positions (-0.3 adjustments)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean white background with no grid (appropriate), no traditional
-          legend needed as labels are inline
+        comment: Uses Okabe-Ito palette (colorblind-safe), adequate contrast, no red-green-only
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, centered, square format appropriate for symmetric
+          diagram, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''venn-basic · seaborn · anyplot.ai''. Set
+          labels show totals with n=size.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (AWS), second #D55E00 (Google Cloud), third
+          #0072B2 (Azure). Backgrounds correct. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Uses proper Venn diagram aesthetics with transparent overlaps, professional
+          layout, region labels in boxes, good geometric arrangement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes removed, circles have visible edges, transparency creates nice
+          visual effect, region labels in styled boxes show thoughtful design.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point at center (triple intersection), visual hierarchy
+          with set labels outside and intersection labels inside, percentages aid
+          understanding.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements a 3-set Venn diagram as specified
+        comment: Correct Venn diagram with 3 sets.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Set sizes and intersections correctly calculated and displayed; inclusion-exclusion
-          principle properly applied
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec requirements met: 3 sets, overlapping circles, counts/percentages
-          in regions, distinct colors with transparency'
-      - id: SC-04
-        name: Data Range
+        comment: Set labels (AWS, Google Cloud, Azure), sizes (120, 95, 75), all 7
+          intersections labeled, transparent overlaps, distinct colors, readable text.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data displayed; total respondents calculated correctly (175)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 7 regions correctly calculated and displayed with proper proportions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Set labels with sizes (n=X) clearly identify each circle
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "venn-basic · seaborn · pyplots.ai"'
+        comment: Title format correct. Set labels with sizes act as legend - no separate
+          legend needed.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all Venn diagram features: exclusive regions, pairwise overlaps,
-          and triple intersection'
+        comment: 'Shows all aspects: exclusive memberships, pairwise overlaps, triple
+          overlap. Cloud platform context realistic.'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Developer survey on programming languages is plausible and neutral,
-          but generic; subtitle adds context nicely
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values are realistic for a developer survey (100, 80, 60 respondents
-          with sensible overlaps)
+        comment: Cloud platform adoption among 205 organizations is plausible. Numbers
+          are realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Organizations in reasonable range (hundreds), overlaps proportional
+          to set sizes.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,43 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → seaborn styling → plot → save'
+        comment: No functions or classes, direct computation, linear flow.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) set, deterministic circle positions.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: numpy imported but only used for seed and trigonometry; could argue
-          seed isn't random data generation
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
         passed: true
-        comment: Uses strict=True in zip which is Python 3.10+ feature; acceptable
-          but non-standard
+        comment: 'Only used imports: os, matplotlib.patches, matplotlib.pyplot, numpy,
+          seaborn.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity, proper inclusion-exclusion
+          principle for region calculation.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct filename pattern. Current
+          matplotlib API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses seaborn styling (sns.set_theme), matplotlib patches (mpatches.Circle)
+          correctly, theme tokens properly integrated.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses sns.set_theme() and sns.color_palette() for styling, but Venn
-          diagrams are drawn with matplotlib patches (no native seaborn Venn support);
-          this is acceptable given seaborn lacks Venn diagram functions
+        passed: true
+        comment: Uses matplotlib patches for custom shapes, transparency for overlapping
+          effect, equilateral triangle positioning with math.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
