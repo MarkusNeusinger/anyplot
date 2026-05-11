@@ -1,73 +1,73 @@
-""" pyplots.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
 Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Quality: 91/100 | Updated: 2026-05-11
 """
+
+import os
 
 import pandas as pd
 import plotly.graph_objects as go
 
 
-# Data - Software project milestones with phases
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+]
+
+# Data - Economic and stock market milestones (2018-2024)
 data = {
-    "date": pd.to_datetime(
-        [
-            "2024-01-15",
-            "2024-02-20",
-            "2024-03-10",
-            "2024-04-05",
-            "2024-05-15",
-            "2024-06-01",
-            "2024-07-10",
-            "2024-08-20",
-            "2024-09-15",
-            "2024-10-30",
-            "2024-11-15",
-            "2024-12-10",
-        ]
-    ),
+    "date": [
+        "2018-12-26",
+        "2019-07-17",
+        "2020-03-16",
+        "2020-11-09",
+        "2021-03-11",
+        "2021-11-09",
+        "2022-03-16",
+        "2023-03-10",
+        "2024-01-10",
+    ],
     "event": [
-        "Project Kickoff",
-        "Requirements Complete",
-        "Design Review",
-        "Development Start",
-        "Alpha Release",
-        "User Testing",
-        "Beta Release",
-        "Performance Optimization",
-        "Security Audit",
-        "Release Candidate",
-        "Documentation Complete",
-        "Production Launch",
+        "Market Bottom",
+        "Bull Run Begins",
+        "COVID Crash",
+        "Post-Election Rally",
+        "Recovery Accelerates",
+        "Peak Market Euphoria",
+        "Rate Hikes Begin",
+        "Bank Crisis Resolved",
+        "AI Boom Peaks",
     ],
-    "category": [
-        "Planning",
-        "Planning",
-        "Planning",
-        "Development",
-        "Development",
-        "Testing",
-        "Testing",
-        "Development",
-        "Testing",
-        "Release",
-        "Release",
-        "Release",
-    ],
+    "category": ["Market", "Market", "Crisis", "Recovery", "Recovery", "Expansion", "Correction", "Crisis", "Growth"],
 }
 df = pd.DataFrame(data)
 
 # Color mapping for categories
 colors = {
-    "Planning": "#306998",  # Python Blue
-    "Development": "#FFD43B",  # Python Yellow
-    "Testing": "#4ECDC4",  # Teal
-    "Release": "#E74C3C",  # Red-Orange
+    "Market": OKABE_ITO[0],
+    "Recovery": OKABE_ITO[1],
+    "Crisis": OKABE_ITO[2],
+    "Expansion": OKABE_ITO[3],
+    "Growth": OKABE_ITO[0],
+    "Correction": OKABE_ITO[1],
 }
 
-# Alternate positions (above/below axis) to prevent label overlap
-positions = [1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1]
+# Alternate positions to prevent label overlap
+positions = [1, -1, 1, -1, 1, -1, 1, -1, 1]
 df["position"] = positions
+df["x_pos"] = range(len(df))
 
 # Create figure
 fig = go.Figure()
@@ -75,23 +75,23 @@ fig = go.Figure()
 # Add the timeline axis line
 fig.add_trace(
     go.Scatter(
-        x=[df["date"].min() - pd.Timedelta(days=15), df["date"].max() + pd.Timedelta(days=15)],
+        x=[-0.5, len(df) - 0.5],
         y=[0, 0],
         mode="lines",
-        line=dict(color="#333333", width=3),
+        line=dict(color=INK_SOFT, width=3),
         hoverinfo="skip",
         showlegend=False,
     )
 )
 
 # Add vertical connector lines for each event
-for _, row in df.iterrows():
+for idx, row in df.iterrows():
     fig.add_trace(
         go.Scatter(
-            x=[row["date"], row["date"]],
+            x=[row["x_pos"], row["x_pos"]],
             y=[0, row["position"] * 0.4],
             mode="lines",
-            line=dict(color="#888888", width=2, dash="dot"),
+            line=dict(color=INK_SOFT, width=2, dash="dot"),
             hoverinfo="skip",
             showlegend=False,
         )
@@ -99,69 +99,82 @@ for _, row in df.iterrows():
 
 # Add event markers and labels by category
 for category in df["category"].unique():
-    cat_df = df[df["category"] == category]
+    cat_df = df[df["category"] == category].reset_index(drop=True)
 
     fig.add_trace(
         go.Scatter(
-            x=cat_df["date"],
+            x=cat_df["x_pos"],
             y=[0] * len(cat_df),
             mode="markers",
-            marker=dict(size=20, color=colors[category], line=dict(color="white", width=2)),
+            marker=dict(size=14, color=colors[category], line=dict(color=PAGE_BG, width=2)),
             name=category,
-            hovertemplate="<b>%{text}</b><br>%{x|%B %d, %Y}<extra></extra>",
-            text=cat_df["event"],
+            hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>",
+            customdata=list(
+                zip(cat_df["event"].tolist(), [pd.to_datetime(d).strftime("%B %d, %Y") for d in cat_df["date"]])
+            ),
         )
     )
 
 # Add event labels
-for _, row in df.iterrows():
+for idx, row in df.iterrows():
     y_offset = row["position"] * 0.5
     fig.add_annotation(
-        x=row["date"],
+        x=row["x_pos"],
         y=y_offset,
         text=row["event"],
         showarrow=False,
-        font=dict(size=16, color="#333333"),
+        font=dict(size=18, color=INK),
         xanchor="center",
         yanchor="bottom" if row["position"] > 0 else "top",
     )
 
-# Add date labels below markers
-for _, row in df.iterrows():
+# Add date labels
+for idx, row in df.iterrows():
+    y_offset = row["position"] * 0.15
+    date_str = pd.to_datetime(row["date"]).strftime("%b %Y")
     fig.add_annotation(
-        x=row["date"],
-        y=row["position"] * 0.15,
-        text=row["date"].strftime("%b %d"),
+        x=row["x_pos"],
+        y=y_offset,
+        text=date_str,
         showarrow=False,
-        font=dict(size=12, color="#666666"),
+        font=dict(size=14, color=INK_SOFT),
         xanchor="center",
         yanchor="bottom" if row["position"] > 0 else "top",
     )
 
 # Layout
 fig.update_layout(
-    title=dict(
-        text="timeline-basic · plotly · pyplots.ai", font=dict(size=28, color="#333333"), x=0.5, xanchor="center"
-    ),
+    title=dict(text="timeline-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Project Timeline (2024)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        tickformat="%B",
-        dtick="M1",
+        title=dict(text="Economic Timeline (2018-2024)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=16, color=INK_SOFT),
+        tickvals=[0, 2, 4, 6, 8],
+        ticktext=["Dec 2018", "Mar 2020", "Mar 2021", "Mar 2022", "Jan 2024"],
         showgrid=True,
-        gridcolor="rgba(0,0,0,0.1)",
+        gridcolor=GRID,
         gridwidth=1,
         zeroline=False,
+        linecolor=INK_SOFT,
     ),
     yaxis=dict(visible=False, range=[-1, 1], fixedrange=True),
     template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     showlegend=True,
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=16)),
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="center",
+        x=0.5,
+        font=dict(size=16, color=INK_SOFT),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+    ),
     margin=dict(l=80, r=80, t=120, b=80),
-    plot_bgcolor="white",
-    paper_bgcolor="white",
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
