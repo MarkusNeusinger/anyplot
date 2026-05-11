@@ -1,163 +1,177 @@
 library: plotnine
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:31:03Z'
-updated: '2025-12-30T09:39:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593350752
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-11T17:27:25Z'
+generated_by: claude-haiku
+workflow_run: 25685409427
+issue: 2551
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layer composition (vline
-    → errorbar → point)
-  - Smart horizontal orientation makes category labels easy to read
-  - Thoughtful data sorting by estimate value improves visual comprehension
-  - Reference line at 7.0 provides meaningful context for interpretation
-  - Proper categorical ordering preserves the sorted display
-  - Clean, professional appearance with well-calibrated font sizes
+  - Perfect visual quality with explicit font sizing and no overlap
+  - 'Excellent theme adaptation: colors consistent between light and dark, chrome
+    flips correctly'
+  - Thoughtful analytical design with reference line providing insight
+  - Complete spec compliance with well-executed data mapping
+  - Clean, reproducible code with proper theme token system
   weaknesses:
-  - Grid styling uses non-standard alpha parameter in element_line (may cause warnings
-    in some plotnine versions)
-  image_description: The plot displays a horizontal point estimate chart showing product
-    satisfaction scores across 8 categories. Each category (Product Quality, Product
-    Variety, Customer Service, Packaging, Return Process, Website Usability, Price
-    Value, Delivery Speed) is shown on the y-axis with blue circular points representing
-    the mean estimate and horizontal error bars showing confidence intervals. A vertical
-    dashed gray reference line is positioned at score 7.0. The x-axis shows "Satisfaction
-    Score (1-10)" ranging from approximately 5.3 to 8.7. The title reads "point-basic
-    · plotnine · pyplots.ai" in bold. The plot uses a clean minimal theme with subtle
-    gray gridlines. Categories are sorted by their estimate values from lowest (Delivery
-    Speed) to highest (Product Quality).
+  - Design excellence limited by reliance on well-configured defaults rather than
+    custom aesthetic choices
+  - Library mastery uses standard geoms without leveraging distinctive plotnine features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface at #FAF8F1
+      Chrome: Title ("point-basic · plotnine · anyplot.ai") bold and clearly visible; axis labels "Satisfaction Score (1-10)" and "Category" descriptive and readable; tick labels for all 8 categories visible in dark text (#4A4A44)
+      Data: Eight product satisfaction categories sorted by estimate value; points (green at #009E73) with horizontal error bars showing 95% confidence intervals; reference line (dashed) at 7.0; grid lines subtle
+      Legibility verdict: PASS - All text is fully readable; excellent contrast between dark text and light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface at #1A1A17
+      Chrome: Title, axis labels, and tick labels all clearly visible in light text colors (#F0EFE8 for title/labels, #B8B7B0 for ticks); grid lines visible but subtle; panel border defined
+      Data: Identical to light render in all respects — same category ordering, same point colors (#009E73), same error bar styling, same reference line positioning
+      Legibility verdict: PASS - All text is fully readable; excellent contrast between light text and dark background; no dark-on-dark failures; data colors perfectly matched to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold 24pt, axis titles 20pt, tick labels 16pt - all perfectly
-          readable
+        comment: Title (24pt), axis labels (20pt), tick labels (16pt) all explicitly
+          set and perfectly readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, category labels well-spaced
+        comment: Category labels have no overlap; all text fully readable and well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are clearly visible (size=5), error bars have good thickness
-          (size=1.5) and caps (height=0.3)
+        comment: Points (size=5) and error bars (height=0.3, size=1.5) optimally sized
+          for 8 categories; all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with good contrast, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight margin imbalance on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with scale indication: "Satisfaction Score (1-10)"
-          and "Category"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (#009E73) is CVD-safe; good contrast between data
+          and backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure (16, 9) at 300 DPI fills 50-80% of canvas; balanced margins;
+          perfect proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but no legend needed for this single-series
-          plot
+        comment: X-axis descriptive with units ('Satisfaction Score (1-10)'); title
+          in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (correct); backgrounds #FAF8F1 (light) and
+          #1A1A17 (dark); chrome colors theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured defaults with thoughtful reference line; professional
+          but looks like configured defaults rather than exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid customized with subtle styling (INK_SOFT color); panel border
+          defined; good attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Data sorted by estimate creates visual narrative; reference line
+          at 7.0 emphasizes analytical insight; varying CI widths show uncertainty
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct point estimate plot with confidence intervals
+        comment: Correct horizontal point estimate plot with confidence intervals
+          as error bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, estimates on X-axis (horizontal orientation
-          as spec suggests)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has point estimates, confidence intervals, reference line at 7.0,
-          error bar caps
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: point estimates, confidence intervals, categories;
+          reference line adds extra insight'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, x-axis appropriately scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (estimate values 5.2-8.2) and Y (categories) correctly mapped;
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "point-basic · plotnine · pyplots.ai"'
+        comment: Title format correct (point-basic · plotnine · anyplot.ai); single-series
+          legend appropriately omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying confidence interval widths and different estimate positions;
-          could show more extreme outliers
+        comment: 'Shows all aspects: point estimates and varying confidence intervals
+          (widths 0.4-1.2 showing different uncertainty levels)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product satisfaction survey is a plausible, neutral business scenario
+        comment: Real product satisfaction scenario; neutral and comprehensible; concrete
+          categories
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 1-10 satisfaction scale is realistic, though all values cluster between
-          5.3-8.7
+        comment: Satisfaction scores (6.5-8.2) realistic; confidence interval widths
+          plausible for survey data
     code_quality:
       score: 10
       max: 10
@@ -167,40 +181,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Clean flow: imports → theme tokens → data generation → plot creation
+          → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set to 42; data generation deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports (os, numpy, pandas, plotnine); all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern plotnine API
+        comment: Pythonic and clean; appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png with environment variable; modern API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of ggplot2 grammar: geom_errorbarh, geom_point, geom_vline,
-          aes mapping, theme customization, categorical ordering'
+        comment: Uses ggplot2 grammar correctly (aes, geoms, theme composition); high-level
+          API; expert plotnine patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses standard geoms (geom_point, geom_errorbarh, geom_vline); no
+          distinctive library-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
