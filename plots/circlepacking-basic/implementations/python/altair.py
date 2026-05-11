@@ -1,13 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 circlepacking-basic: Circle Packing Chart
 Library: altair 6.0.0 | Python 3.13.11
-Quality: 55/100 | Created: 2025-12-30
+Quality: pending | Created: 2025-12-30
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Work around the naming conflict (local file named altair.py shadows the package)
+# Temporarily remove current directory from path
+cwd = os.getcwd()
+if cwd in sys.path:
+    sys.path.remove(cwd)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir in sys.path:
+    sys.path.remove(current_dir)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Company budget allocation by department and team (values in $K)
 np.random.seed(42)
@@ -38,12 +58,13 @@ dept_totals = {}
 for t in teams:
     dept_totals[t["parent"]] = dept_totals.get(t["parent"], 0) + t["value"]
 
-# Color palette - distinct colors for each department (colorblind-safe)
+# Okabe-Ito palette for departments (theme-independent data colors)
+okabe_ito = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
 dept_colors = {
-    "Engineering": "#4477AA",  # Blue
-    "Sales": "#228833",  # Green
-    "Marketing": "#AA3377",  # Magenta/Pink
-    "Operations": "#EE6677",  # Coral/Red
+    "Engineering": okabe_ito[0],  # bluish green
+    "Sales": okabe_ito[1],  # vermillion
+    "Marketing": okabe_ito[2],  # blue
+    "Operations": okabe_ito[3],  # reddish purple
 }
 
 # Scale value to radius (sqrt for area-proportional sizing)
@@ -149,7 +170,7 @@ circles_data.append(
         "label": "Company",
         "value": company_total,
         "depth": 0,
-        "color": "#2d4a6f",
+        "color": okabe_ito[0],  # Use brand color for root
         "department": "Company",
     }
 )
@@ -230,12 +251,12 @@ size_scale = alt.Scale(domain=size_domain, range=size_range)
 # Root circle layer (outermost - Company)
 root_layer = (
     alt.Chart(df_root)
-    .mark_circle(opacity=0.2, stroke="#2d4a6f", strokeWidth=3)
+    .mark_circle(opacity=0.15, stroke=INK_SOFT, strokeWidth=3)
     .encode(
         x=alt.X("x:Q", axis=None, scale=x_scale),
         y=alt.Y("y:Q", axis=None, scale=y_scale),
         size=alt.Size("radius:Q", scale=size_scale, legend=None),
-        color=alt.value("#2d4a6f"),
+        color=alt.value(okabe_ito[0]),
         tooltip=[alt.Tooltip("label:N", title="Name"), alt.Tooltip("display_value:N", title="Budget")],
     )
 )
@@ -243,7 +264,7 @@ root_layer = (
 # Root label
 root_label = (
     alt.Chart(df_root)
-    .mark_text(color="#2d4a6f", fontWeight="bold", fontSize=20, dy=-root_radius + 30)
+    .mark_text(color=INK, fontWeight="bold", fontSize=20, dy=-root_radius + 30)
     .encode(
         x=alt.X("x:Q", axis=None, scale=x_scale),
         y=alt.Y("y:Q", axis=None, scale=y_scale),
@@ -254,7 +275,7 @@ root_label = (
 # Department circles layer
 dept_layer = (
     alt.Chart(df_depts)
-    .mark_circle(opacity=0.4, stroke="white", strokeWidth=2)
+    .mark_circle(opacity=0.4, stroke=INK_SOFT, strokeWidth=2)
     .encode(
         x=alt.X("x:Q", axis=None, scale=x_scale),
         y=alt.Y("y:Q", axis=None, scale=y_scale),
@@ -267,7 +288,7 @@ dept_layer = (
 # Team circles layer
 team_layer = (
     alt.Chart(df_teams)
-    .mark_circle(opacity=0.9, stroke="white", strokeWidth=1.5)
+    .mark_circle(opacity=0.85, stroke=INK_SOFT, strokeWidth=1.5)
     .encode(
         x=alt.X("x:Q", axis=None, scale=x_scale),
         y=alt.Y("y:Q", axis=None, scale=y_scale),
@@ -287,14 +308,14 @@ df_depts_labels["label_y"] = df_depts_labels["y"] + df_depts_labels["radius"] * 
 
 dept_label_layer = (
     alt.Chart(df_depts_labels)
-    .mark_text(color="white", fontWeight="bold", fontSize=16)
+    .mark_text(color=INK, fontWeight="bold", fontSize=16)
     .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("label_y:Q", axis=None, scale=y_scale), text="label:N")
 )
 
 # Team labels
 team_label_layer = (
     alt.Chart(df_teams)
-    .mark_text(color="white", fontWeight="bold", fontSize=11, lineBreak="\n")
+    .mark_text(color=INK, fontWeight="bold", fontSize=11, lineBreak="\n")
     .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="display_text:N")
 )
 
@@ -313,7 +334,7 @@ legend_df = pd.DataFrame(
 # Legend circles
 legend_circles = (
     alt.Chart(legend_df)
-    .mark_circle(size=350, opacity=0.9, stroke="white", strokeWidth=1)
+    .mark_circle(size=350, opacity=0.85, stroke=INK_SOFT, strokeWidth=1)
     .encode(
         x=alt.X("x:Q", axis=None, scale=x_scale),
         y=alt.Y("y:Q", axis=None, scale=y_scale),
@@ -324,7 +345,7 @@ legend_circles = (
 # Legend text
 legend_text = (
     alt.Chart(legend_df)
-    .mark_text(align="left", dx=18, fontSize=14, fontWeight="bold", color="#333333")
+    .mark_text(align="left", dx=18, fontSize=14, fontWeight="bold", color=INK_SOFT)
     .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="department:N")
 )
 
@@ -336,11 +357,15 @@ chart = (
     .properties(
         width=1200,
         height=1200,
-        title=alt.Title("circlepacking-basic · altair · pyplots.ai", fontSize=28, fontWeight="bold", anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title(
+            "circlepacking-basic · altair · anyplot.ai", fontSize=28, fontWeight="bold", anchor="middle", color=INK
+        ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
 # Save outputs (3600x3600 px with scale_factor=3.0)
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+chart.save(os.path.join(script_dir, f"plot-{THEME}.png"), scale_factor=3.0)
+chart.save(os.path.join(script_dir, f"plot-{THEME}.html"))
