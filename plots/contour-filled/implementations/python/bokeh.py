@@ -1,16 +1,38 @@
-""" pyplots.ai
+"""anyplot.ai
 contour-filled: Filled Contour Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: bokeh 3.8.1 | Python 3.13
+Quality: 90/100 | Updated: 2025-05-11
 """
 
-import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import BasicTicker, ColorBar, HoverTool, LinearColorMapper
-from bokeh.palettes import Viridis256
-from bokeh.plotting import figure
-from contourpy import contour_generator
+import os
+import time
+from pathlib import Path
 
+import bokeh.io
+import bokeh.models
+import bokeh.palettes
+import bokeh.plotting
+import numpy as np
+from contourpy import contour_generator
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+output_file = bokeh.io.output_file
+save = bokeh.io.save
+BasicTicker = bokeh.models.BasicTicker
+ColorBar = bokeh.models.ColorBar
+HoverTool = bokeh.models.HoverTool
+LinearColorMapper = bokeh.models.LinearColorMapper
+Viridis256 = bokeh.palettes.Viridis256
+figure = bokeh.plotting.figure
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Terrain elevation surface with multiple peaks
 np.random.seed(42)
@@ -33,7 +55,7 @@ Z = (Z - Z.min()) / (Z.max() - Z.min()) * 2000
 p = figure(
     width=4800,
     height=2700,
-    title="contour-filled · bokeh · pyplots.ai",
+    title="contour-filled · bokeh · anyplot.ai",
     x_range=(x.min(), x.max()),
     y_range=(y.min(), y.max()),
     tools="pan,wheel_zoom,box_zoom,reset,save",
@@ -56,14 +78,18 @@ contour_levels = np.linspace(Z.min(), Z.max(), n_contour_lines + 2)[1:-1]
 # Create contour generator
 cont_gen = contour_generator(x=X, y=Y, z=Z)
 
-# Draw contour lines with high contrast (white with dark outline effect)
+# Theme-aware contour line colors
+contour_base = "#FFFDF6" if THEME == "light" else "#242420"
+contour_outline = INK
+
+# Draw contour lines with high contrast (base color + outline)
 for level in contour_levels:
     lines = cont_gen.lines(level)
     for line in lines:
-        # Draw white line for visibility on dark backgrounds
-        p.line(line[:, 0], line[:, 1], line_width=4, color="white", alpha=0.9)
-        # Draw thinner dark line on top for contrast on light backgrounds
-        p.line(line[:, 0], line[:, 1], line_width=1.5, color="#1a1a1a", alpha=0.8)
+        # Draw base line for visibility
+        p.line(line[:, 0], line[:, 1], line_width=4, color=contour_base, alpha=0.9)
+        # Draw thinner outline on top for contrast
+        p.line(line[:, 0], line[:, 1], line_width=1.5, color=contour_outline, alpha=0.8)
 
 # Add colorbar with terrain context
 color_bar = ColorBar(
@@ -71,7 +97,7 @@ color_bar = ColorBar(
     ticker=BasicTicker(desired_num_ticks=10),
     label_standoff=25,
     title="Terrain Elevation (m)",
-    title_text_font_size="22pt",
+    title_text_font_size="24pt",
     title_standoff=20,
     major_label_text_font_size="18pt",
     width=50,
@@ -86,15 +112,13 @@ p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
 
-# Grid styling - subtle overlay grid (reduced alpha per review feedback)
-p.xgrid.grid_line_color = "white"
-p.ygrid.grid_line_color = "white"
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_width = 2
-p.ygrid.grid_line_width = 2
-p.xgrid.grid_line_dash = [8, 4]
-p.ygrid.grid_line_dash = [8, 4]
+# Grid styling - very subtle with reduced opacity and width
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_width = 1
+p.ygrid.grid_line_width = 1
 p.xgrid.level = "overlay"
 p.ygrid.level = "overlay"
 
@@ -120,13 +144,53 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# Background
-p.background_fill_color = None
-p.border_fill_color = None
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
+p.title.text_color = INK
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Also save as HTML for interactive viewing with hover tooltips
-output_file("plot.html")
+if p.legend:
+    p.legend.background_fill_color = ELEVATED_BG
+    p.legend.border_line_color = INK_SOFT
+    p.legend.label_text_color = INK_SOFT
+
+# Colorbar text styling
+if p.right:
+    for renderer in p.right:
+        if hasattr(renderer, "label_text_color"):
+            renderer.label_text_color = INK_SOFT
+        if hasattr(renderer, "title_text_color"):
+            renderer.title_text_color = INK
+
+# Save as HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
