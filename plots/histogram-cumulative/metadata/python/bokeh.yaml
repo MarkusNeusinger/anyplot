@@ -1,165 +1,167 @@
 library: bokeh
+language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:32:31Z'
-updated: '2025-12-30T09:34:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593349825
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - columndatasource
-  patterns:
-    - data-generation
-  dataprep:
-    - cumulative-sum
-  styling:
-    - grid-styling
+updated: '2026-05-11T22:43:49Z'
+generated_by: claude-haiku
+workflow_run: 25701439795
+issue: 2549
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent step function implementation using manual coordinate construction
-  - Clean visual design with filled area under curve adding depth
-  - Yellow markers at bin edges provide clear visual anchors for data points
-  - Realistic web service response time scenario demonstrates practical application
-  - Text sizing well-calibrated for 4800x2700 canvas
-  - Proper use of ColumnDataSource for all data
-  weaknesses:
-  - Bokeh toolbar/logo visible in top-right corner should be hidden for cleaner export
-  - Could leverage HoverTool to show percentile information on hover
-  - No reference lines showing common percentiles (p50, p90, p99) which would enhance
-    the cumulative histogram utility
-  image_description: The plot displays a cumulative histogram showing web service
-    response times. The visualization features a blue step function line (#306998)
-    with a light blue filled area underneath. Yellow circular markers (#FFD43B) with
-    blue borders are placed at each bin edge to mark cumulative count values. The
-    x-axis shows "Response Time (ms)" ranging from 0 to approximately 700ms, and the
-    y-axis shows "Cumulative Count" ranging from 0 to 500. The title correctly follows
-    the format "histogram-cumulative · bokeh · pyplots.ai". The background is a light
-    gray (#fafafa) with dashed grid lines at 0.3 alpha. The curve is monotonically
-    increasing as expected for a cumulative histogram, starting at 0 and reaching
-    500 (total sample size). There's a Bokeh logo/toolbar visible in the top-right
-    corner.
+  - Perfect theme adaptation with all chrome elements using correct color tokens for
+    both light and dark renders
+  - Excellent text legibility at all scales with proper font sizing (28pt title, 22pt
+    axis labels, 18pt tick labels)
+  - Correct cumulative histogram implementation with proper step function and monotonic
+    increase
+  - Realistic, well-chosen data (web service response times with plausible 10-1000ms
+    distribution)
+  - Clean idiomatic bokeh code following library best practices and theme-adaptive
+    patterns
+  - Proper use of ColumnDataSource and layered glyphs (line, patch, scatter) for visual
+    hierarchy
+  - 'Title format exactly as specified: histogram-cumulative · bokeh · anyplot.ai'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "histogram-cumulative · bokeh · anyplot.ai" in dark INK (#1A1A17); axis labels "Response Time (ms)" and "Cumulative Count" clearly visible; tick labels and grid all readable against light surface
+      Data: Bluish-green step line (#009E73) with filled area at 15% alpha; circular markers at bin edges; monotonic increase from 0 to 500
+      Legibility verdict: PASS - All elements readable, no "light on light" contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title in light INK (#F0EFE8); axis labels clearly visible; tick labels in INK_SOFT (#B8B7B0) with good contrast on dark surface; grid visible at 10% alpha
+      Data: Identical bluish-green (#009E73) to light render - step line, fill, and markers all match; no color shift between themes
+      Legibility verdict: PASS - All text readable, no "dark-on-dark" issues, brand green maintains visibility on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text explicitly sized and readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear spacing, no collisions or unreadable text
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line and markers are visible; markers could be slightly larger
-          for this canvas size
+        comment: Markers, line, and fill all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, slight empty area on right where data tapers
-          off
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Response Time (ms)" and "Cumulative
-          Count"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito brand green with strong contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions, nothing cut off, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Dashed grid at alpha 0.3 is good, but Bokeh toolbar/logo visible
-          in corner detracts
+        comment: Descriptive with units; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds correct, both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional use of brand color and filled area with alpha; fairly
+          standard approach
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid lines, clean outline, excellent typography
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Monotonic rise guides viewer; filled area emphasizes cumulative nature;
+          markers identify thresholds
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative histogram with step function visualization
+        comment: Correct cumulative histogram with step function and monotonic increase
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows response time bins, Y-axis shows cumulative count
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows cumulative count, monotonically increasing, step function display
-      - id: SC-04
-        name: Data Range
+        comment: All features from spec present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible (0-700ms, 0-500 count)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis and Y-axis correctly mapped with appropriate ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-cumulative · bokeh · pyplots.ai"'
+        comment: Title format correct; no legend needed for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cumulative nature well; could better demonstrate percentile
-          lookups with reference lines
+        comment: Shows complete cumulative distribution from 0 to 500
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Web service response times is a real, neutral, comprehensible scenario
+        comment: Web service response times realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 10-700ms are realistic; mixing exponential and normal
-          distributions creates interesting shape
+        comment: Values sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -169,11 +171,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Direct implementation, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -181,28 +183,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or suspicious patterns
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format and API usage
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource and basic plotting, but doesn't leverage Bokeh's
-          interactive features (HoverTool for showing percentiles, annotations, etc.)
+        passed: true
+        comment: ColumnDataSource pattern, figure() and glyphs used idiomatically,
+          theme tokens follow bokeh.md
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Effective use of patch() and layer composition
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

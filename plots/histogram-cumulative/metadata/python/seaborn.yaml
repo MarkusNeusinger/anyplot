@@ -1,168 +1,190 @@
 library: seaborn
+language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:31:21Z'
-updated: '2025-12-30T09:40:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593348259
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T22:43:15Z'
+generated_by: claude-haiku
+workflow_run: 25701263134
+issue: 2549
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of seaborn histplot with cumulative=True and stat=proportion for
-    native cumulative histogram support
-  - Realistic web API response time scenario perfectly demonstrates percentile analysis
-    use case
-  - Well-designed percentile reference lines with both horizontal and vertical markers
-    make it easy to read threshold values
-  - Clean annotation styling with white background boxes and colored borders for excellent
-    readability
-  - Good color progression for percentile lines (yellow to orange to red) indicating
-    increasing severity
+  - Perfect theme-adaptive chrome with proper text color switching (INK/INK_SOFT tokens
+    used correctly)
+  - 'Excellent visual quality: all text explicitly sized (title 24pt, labels 20pt,
+    ticks 16pt) with perfect readability in both themes'
+  - 'Clean spec compliance: correct cumulative histogram with stat=''proportion''
+    and element=''step'''
+  - Realistic, meaningful data (financial transactions) showing clear distribution
+    with three modes
+  - 'Strong code quality: KISS structure with explicit theme tokens, reproducible
+    seed, clean imports'
+  - 'Proper minimalism: spines removed (top/right gone), subtle Y-axis grid (alpha=0.10),
+    generous whitespace'
   weaknesses:
-  - 'Minor: The grid lines could be further reduced (alpha 0.2) as they compete slightly
-    with the percentile reference lines'
-  - 'Minor: Right-side whitespace after data ends (~500ms) could be reduced by setting
-    xlim closer to the actual data range'
-  image_description: 'The plot shows a cumulative histogram (step function) displaying
-    web API response times on a blue filled area chart. The x-axis shows "Response
-    Time (ms)" ranging from 0 to 600, and the y-axis shows "Cumulative Proportion"
-    from 0.0 to just above 1.0. The histogram uses a muted blue color (#306998) with
-    filled area and step edges. Four percentile reference lines are displayed: P50
-    at 71ms (yellow), P90 at 359ms (orange), P95 at 403ms (red-orange), and P99 at
-    461ms (crimson). Each percentile has both horizontal and vertical dashed lines
-    intersecting at the percentile point, with labeled annotations in white boxes
-    with colored borders. The title "histogram-cumulative · seaborn · pyplots.ai"
-    appears at the top. The grid is subtle with alpha transparency.'
+  - 'Library Mastery low (LM-02=2): uses cumulative histogram via sns.histplot parameters,
+    but these are standard seaborn features not distinctive to the library—easily
+    replicated in matplotlib with minor syntax changes'
+  - 'Design Excellence moderate: while execution is polished and correct, the design
+    follows best practices without additional sophistication or custom aesthetic choices'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct theme surface
+      Chrome: Title, axis labels, tick labels all clearly visible in dark ink; Y-axis label "Cumulative Proportion" and X-axis label "Transaction Amount ($)" are descriptive with units; all text explicitly sized (title 24pt, labels 20pt, ticks 16pt)
+      Data: Brand green (#009E73) step histogram with alpha=0.7 fill and matching edges; monotonically increasing from 0 to 1.0; bins clearly visible
+      Grid: Y-axis only, subtle (alpha=0.10), doesn't interfere with data
+      Spines: L-shaped (top/right removed, left/bottom visible in soft color)
+      Legibility verdict: PASS - all text readable, no light-on-light conflicts
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct theme surface
+      Chrome: Title, axis labels, tick labels all clearly visible in light ink; no dark-on-dark failures; text colors properly adapted (INK=#F0EFE8, INK_SOFT=#B8B7B0)
+      Data: Identical brand green (#009E73) as light render - data colors DO NOT change between themes, only chrome adapts
+      Grid: Y-axis grid styling identical to light render (alpha=0.10)
+      Spines: L-shaped frame matches light render
+      Legibility verdict: PASS - all text readable against dark background, proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
+          perfect readability in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; percentile annotations are well-spaced
+        comment: No overlapping text; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step histogram with fill and linewidth 2.5 is clearly visible
+        comment: Histogram bars clearly visible with appropriate alpha=0.7; step function
+          edges distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow/orange/red gradient for percentiles is colorblind-friendly
-          with distinct luminance
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight imbalance with right-side whitespace after
-          data ends at ~500ms
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Response Time (ms)", "Cumulative
-          Proportion"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green (#009E73) has excellent contrast; CVD-safe; no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect canvas utilization: 16x9 figsize at 300 DPI = 4800x2700px;
+          plot fills ~60-70% of canvas with balanced margins'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), but no legend for the percentile lines
-          (annotations serve as inline legend, acceptable but not ideal)
+        comment: 'Descriptive with units: ''Transaction Amount ($)'' and ''Cumulative
+          Proportion''; title format correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green (#009E73) correct for single series; backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark); text colors properly theme-adaptive; data
+          colors identical between themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful execution of best practices (brand color, spine removal,
+          subtle grid) but follows defaults rather than creating distinctive design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong refinement: spines removed, grid styled with custom alpha=0.10,
+          generous whitespace, explicit font choices'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data displayed clearly with meaningful context (e-commerce scenario),
+          but limited visual hierarchy or emphasis beyond the cumulative pattern itself
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative histogram with step function display
+        comment: Correct cumulative histogram with step element; cumulative=True and
+          stat='proportion' parameters correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis is the numeric variable, Y-axis is cumulative proportion (0-1)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows cumulative count/proportion, monotonically increasing, step
-          display, practical percentile markers
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: cumulative count/proportion (stat=''proportion''),
+          step function (element=''step''), monotonically non-decreasing curve'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-600ms range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: transaction amounts (continuous); Y-axis: cumulative proportion
+          (0-1); axes show all data correctly'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Inline percentile annotations are accurate and descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-cumulative · seaborn · pyplots.ai"'
+        comment: 'Title correct format: ''histogram-cumulative · seaborn · anyplot.ai'';
+          no legend needed for single series'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows the S-curve characteristic of cumulative histograms well, demonstrates
-          percentile reading use case, but could show more distinct distribution shapes
+        comment: 'Shows all aspects: three transaction modes (small/exponential, medium/normal,
+          large/normal); clear binning pattern'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Web API response times is a perfect real-world scenario for cumulative
-          histograms (SLA monitoring, percentile tracking)
+        comment: E-commerce transaction scenario is realistic, relatable, and neutral;
+          amounts (5-500 USD) are plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 5-600ms are realistic; the tri-modal distribution
-          (fast/moderate/slow) is plausible for real API traffic
+        comment: Values and proportions factually sound; np.random.seed(42) ensures
+          reproducibility
     code_quality:
       score: 10
       max: 10
@@ -172,41 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
+        comment: 'Simple linear flow: imports → data → plot → save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib, numpy, seaborn) are used
+        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API (histplot with cumulative=True)
+        comment: Clean, Pythonic; appropriate complexity; no over-engineering or fake
+          UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current seaborn/matplotlib API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of seaborn's `histplot` with `cumulative=True`, `stat="proportion"`,
-          and `element="step"` parameters - these are seaborn-specific features that
-          simplify cumulative histogram creation
+        comment: 'Good idiomatic use: sns.histplot() high-level API, sns.set_theme()
+          with rc dict, theme tokens pattern, ax parameter for axes-level control'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses cumulative histogram parameters (cumulative=True, stat='proportion',
+          element='step'), but these are standard seaborn features not distinctive
+          to seaborn—could be replicated in matplotlib with minor changes
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
