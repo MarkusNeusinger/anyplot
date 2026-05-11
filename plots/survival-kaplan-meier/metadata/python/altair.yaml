@@ -1,15 +1,239 @@
 library: altair
+language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:50:58Z'
-updated: '2025-12-29T22:59:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584329111
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/altair/plot.html
-quality_score: 92
+updated: '2026-05-11T07:49:54Z'
+generated_by: claude-haiku
+workflow_run: 25657019309
+issue: 2441
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect text legibility with explicitly set font sizes across all themes
+  - Flawless palette compliance with correct Okabe-Ito usage and theme-adaptive chrome
+  - All specification requirements fully met with accurate Kaplan-Meier implementation
+  - Clean, KISS-structured code with reproducible random seed
+  - Excellent library mastery with idiomatic Altair usage and distinctive features
+  - High-quality data example showing realistic clinical trial context with two treatment
+    groups
+  weaknesses:
+  - Minimal design differentiation - relies on standard library styling without exceptional
+    aesthetic enhancement
+  - No visual storytelling or emphasis to guide viewer attention to key insights about
+    survival difference
+  - Could benefit from additional visual hierarchy to highlight the contrast between
+    treatment outcomes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no harsh white edges. Correctly rendered.
+      Chrome: Title, axis labels ("Time (Months)", "Survival Probability"), and tick labels all rendered in dark text (#1A1A17 and #4A4A44) with perfect legibility against the light background. Grid lines are subtle (opacity 0.10) but visible. Legend box has light background with subtle border.
+      Data: Two step-function survival curves - Treatment A (teal #009E73) starts high and remains above Treatment B (orange #D55E00) throughout. Confidence interval bands (opacity 0.25) shown around each curve. Censored observation tick marks visible at appropriate positions. All data elements clearly distinguishable.
+      Legibility verdict: PASS - All text is highly readable, data colors are distinct, no elements obscure each other.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with consistent color to light theme. Correctly rendered.
+      Chrome: Title and axis labels rendered in light text (#F0EFE8) with excellent contrast against dark background. Secondary text (#B8B7B0) properly readable. Grid lines subtle but visible (opacity 0.10 with light overlay). Legend box adapted with dark background (#242420) and light border.
+      Data: Treatment A curve (teal #009E73) and Treatment B curve (orange #D55E00) remain identical in color to light render. CI bands visible with theme-adapted appearance. Censored marks clearly visible. No dark-on-dark contrast failures.
+      Legibility verdict: PASS - No dark-on-dark issues; all text is readable with appropriate color contrast; data colors identical to light render (only chrome adapted).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All fonts explicitly set: Title 28px, Labels 22px, Ticks 18px. Perfect
+          readability in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. All elements clearly readable and well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curves, CI bands, and censored marks all clearly visible and properly
+          sized.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette ensures CVD safety. Good contrast between series
+          and backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 (×3 scale) optimally utilizes canvas with 50-80% coverage
+          and balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Time (Months)'' and ''Survival
+          Probability''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito compliance (Treatment A: #009E73, Treatment B:
+          #D55E00). Backgrounds (#FAF8F1 light, #1A1A17 dark) and text colors correctly
+          theme-adaptive. Both renders pass legibility check.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color choices and professional polish with theme tokens.
+          Well-configured defaults but not exceptional design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid configuration, proper legend styling, and generous whitespace.
+          Some refinement visible beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data correctly displayed but no visual hierarchy or emphasis to guide
+          viewer attention. No focal point highlighting survival difference.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kaplan-Meier plot with step function, CI bands, and censored
+          marks.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: step curves, 95% CI bands, censored tick
+          marks, group comparison with legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Time, Y=Survival Probability. Axes correctly cover full data range
+          [0,38] and [0,1].
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels accurately reflect treatment
+          groups.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: two treatment groups with different outcomes,
+          censored observations, confidence intervals.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Clinical trial context is realistic and neutral. Treatment A vs B
+          is generic but comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Time range (1-36 months), survival probabilities (0-1.0), and event
+          rates (0.65-0.75) are factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → theme tokens → data generation → KM
+          calculation → plot → save. No unnecessary abstraction.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, altair, numpy, pandas) are actively used. No dead
+          imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no over-engineering, no fake functionality.
+          Pythonic and readable.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html. Uses current
+          Altair API.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert-level Altair: mark_line/mark_area/mark_tick, proper encodings,
+          Scale objects, configure_* methods all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses interpolate='step-after' (Altair-specific), mark_tick for censored
+          marks, alt.Y2 for CI bands, comprehensive configure_* methods.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -21,196 +245,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent visual execution with step-function curves, CI bands, and censoring
-    marks all clearly visible and properly layered
-  - Colorblind-safe color palette (blue vs yellow) with good contrast
-  - Correct implementation of Kaplan-Meier algorithm including Greenwood formula for
-    variance estimation
-  - Proper use of Altair layered chart composition and mark types (line, area, tick)
-  - Clinically realistic data scenario with appropriate sample sizes and event rates
-  weaknesses:
-  - Code contains a kaplan_meier() function definition which violates the KISS structure
-    requirement (imports → data → plot → save, no functions)
-  - Y-axis scale extends to 1.10 creating unnecessary whitespace above the survival
-    probability ceiling of 1.0
-  - Legend placed inside plot area (upper-right) could overlap data in some scenarios;
-    consider placing outside
-  image_description: The plot displays a Kaplan-Meier survival analysis comparing
-    two treatment groups over a 36-month follow-up period. Treatment A is shown in
-    blue (#306998) and Treatment B in yellow/gold (#FFD43B). Both survival curves
-    follow a step-function pattern starting at 1.0 survival probability and declining
-    over time. Treatment A (blue) shows better survival with approximately 40% survival
-    at 36 months, while Treatment B (yellow) drops to approximately 20% survival.
-    Shaded bands represent 95% confidence intervals around each curve, with appropriate
-    transparency. Small tick marks perpendicular to the curves indicate censored observations.
-    The title "survival-kaplan-meier · altair · pyplots.ai" appears at the top. The
-    y-axis shows "Survival Probability" (0.00-1.10) and x-axis shows "Time (Months)"
-    (0-40). A legend in the upper right identifies the two treatment groups. Grid
-    lines are subtle with dashed styling.
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Step lines with strokeWidth=4 are clearly visible, CI bands at 0.25
-          opacity appropriately subtle
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow/gold are colorblind-safe (distinguishable under all
-          types)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, minor deduction for y-axis extending to
-          1.10 (unnecessary whitespace above 1.0)
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: "Time (Months)" and "Survival Probability"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid is subtle (0.3 opacity, dashed), but legend is placed in upper-right
-          corner overlapping with the plot area instead of outside
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Kaplan-Meier step-function survival plot
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time correctly on x-axis, survival probability on y-axis
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Includes step function, 95% CI bands, censoring marks, group comparison
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show full data range (0-38 months, 0-1.05+ probability)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly labels Treatment A and Treatment B
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "survival-kaplan-meier · altair · pyplots.ai"'
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows diverging survival curves, censoring events, confidence intervals
-          widening over time
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Clinical trial with treatment comparison - neutral, scientifically
-          appropriate scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: 36-month follow-up, 80 patients per group, realistic event rates
-          (65% vs 75%)
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Code contains a function `kaplan_meier()` - violates KISS principle
-          (should be inline)
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `np.random.seed(42)`
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive features
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of Altair's layered chart composition with + operator, step-after
-          interpolation, area marks for CI bands, and tick marks for censoring. However,
-          could leverage Altair's tooltip interactivity or selection features more.
-  verdict: APPROVED
