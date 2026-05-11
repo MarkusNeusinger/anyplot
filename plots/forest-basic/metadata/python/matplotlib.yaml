@@ -1,167 +1,168 @@
 library: matplotlib
+language: python
 specification_id: forest-basic
 created: '2025-12-27T19:21:39Z'
-updated: '2025-12-27T19:29:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543281172
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/forest-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-11T01:04:56Z'
+generated_by: claude-haiku
+workflow_run: 25644818496
+issue: 2378
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - 'Excellent implementation of the forest plot with all key elements: effect sizes,
-    confidence intervals, weighted markers, and pooled estimate diamond'
-  - Professional visual design with appropriate color scheme (Python blue for studies,
-    yellow for pooled)
-  - Clear Favors Treatment/Control annotations enhance interpretability
-  - Marker sizes proportional to study weights effectively communicate study importance
-  - Clean code structure following KISS principles
+  - Perfect text legibility in both light and dark themes with explicitly set font
+    sizes
+  - Excellent palette compliance with Okabe-Ito colors and correct theme-adaptive
+    chrome
+  - Clean, well-organized code with proper theme configuration separation
+  - All spec features correctly implemented (diamond, reference line, weight-based
+    sizing)
+  - Proper data visualization practices (no overlaps, subtle grid, removed spines)
+  - Realistic meta-analysis scenario demonstrating good data quality
+  - Custom diamond shape via mpatches.Polygon shows matplotlib mastery
   weaknesses:
-  - Missing legend explaining that marker size represents study weight
-  - All effect sizes favor treatment (none crossing the null line to favor control
-    would make data more illustrative)
-  image_description: 'The plot displays a forest plot for meta-analysis of 10 studies.
-    Each study (Johnson 2018 through Taylor 2023) is shown on the y-axis with horizontal
-    blue lines representing confidence intervals and blue circular markers of varying
-    sizes (proportional to study weight) indicating point estimates. A vertical dashed
-    gray reference line at x=0 marks the null effect. At the bottom, a yellow diamond
-    shows the pooled estimate. The x-axis is labeled "Standardized Mean Difference
-    (95% CI)" with annotations "← Favors Treatment" on the left and "Favors Control
-    →" on the right. The title follows the required format: "forest-basic · matplotlib
-    · pyplots.ai". Colors used are blue (#306998) for study markers/CIs and yellow
-    (#FFD43B) for the pooled estimate diamond.'
+  - Design sophistication could be enhanced with custom flourishes beyond default
+    approach
+  - Visual refinement limited to standard removals, could add additional typographic
+    or spacing polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with perfect contrast
+      Chrome: Title, study labels, and axis labels rendered in dark text (INK and INK_SOFT colors) - all clearly readable against light background
+      Data: Green confidence interval lines (#009E73) and circular markers with orange diamond pooled estimate (#D55E00). Vertical dashed reference line at null effect (x=0). Markers sized proportionally to study weights. Subtle vertical grid aids readability.
+      Legibility verdict: PASS - All text fully readable in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) appropriate for dark theme
+      Chrome: Title, study labels, and axis labels rendered in light text (INK and INK_SOFT adapted for dark) - excellent contrast, no dark-on-dark failures
+      Data: Green and orange colors identical to light render, proving only chrome has adapted. All data elements maintain full visibility and clarity.
+      Legibility verdict: PASS - All text fully readable in dark theme, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, xlabel at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: Font sizes explicitly set; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text fully readable with proper spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized (80-300 based on weight), CI lines clearly visible
-          with linewidth=3
+        comment: Marker sizes adapt to weight variation
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/gray scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight asymmetry with y-axis labels on left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has descriptive label with units "Standardized Mean Difference
-          (95% CI)"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with confidence interval context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct colors and theme-adaptive chrome
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: false
-        comment: Grid is appropriate (alpha=0.3, x-axis only), but no legend for marker
-          size meaning
+        comment: Professional forest plot but lacks custom flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good basics but limited beyond standard removals
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear structure but minimal additional hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct forest plot with effect sizes, CIs, and pooled estimate
+        comment: Correct forest plot with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Studies on y-axis, effect sizes on x-axis with proper CI whiskers
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diamond for pooled estimate, reference line at null, marker size
-          proportional to weight
-      - id: SC-04
-        name: Data Range
+        comment: Diamond, reference line, CIs, weight sizing, labels all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Y-axis labels accurate, includes "Pooled Estimate"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "forest-basic · matplotlib · pyplots.ai"
+        comment: Title format correct, legend appropriately omitted
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in effect sizes, CI widths, and weights; includes
-          studies with CIs crossing zero
+        comment: Shows all forest plot aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Meta-analysis of RCTs with SMD values in realistic range (-0.21 to
-          -0.67)
+        comment: Plausible meta-analysis scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
-        passed: false
-        comment: Values are realistic, but all studies favor treatment (none favor
-          control), which is slightly less illustrative
+        max: 4
+        passed: true
+        comment: Factually correct value ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +170,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: Linear, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Uses deterministic data (no random seed needed), but could benefit
-          from explicit comment
+        max: 2
+        passed: true
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.pyplot, matplotlib.patches, numpy)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: false
-        comment: Good use of Polygon patch for diamond, but could leverage errorbar
-          or other specialized features
+        comment: Good ax methods but could explore advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom diamond shape via mpatches.Polygon
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
