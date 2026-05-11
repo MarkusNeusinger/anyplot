@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-cumulative: Cumulative Histogram
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-11
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,6 +17,15 @@ from highcharts_core.options.series.area import AreaSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Student test scores (realistic educational context)
 np.random.seed(42)
@@ -35,7 +45,6 @@ cumulative_counts = np.cumsum(counts)
 cumulative_proportion = cumulative_counts / len(scores) * 100  # Percentage
 
 # Prepare data for Highcharts area/step chart
-# Using bin centers for x values
 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 data_points = [[float(x), float(y)] for x, y in zip(bin_centers, cumulative_proportion, strict=True)]
 
@@ -48,7 +57,7 @@ chart.options.chart = {
     "type": "area",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "marginLeft": 200,
     "marginRight": 100,
@@ -57,48 +66,53 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "histogram-cumulative · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "histogram-cumulative · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "color": INK, "fontWeight": "normal"},
 }
-
-# Subtitle
-chart.options.subtitle = {"text": "Student Test Score Distribution (n=280)", "style": {"fontSize": "32px"}}
 
 # X-axis
 chart.options.x_axis = {
-    "title": {"text": "Test Score", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Test Score", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "max": 100,
     "tickInterval": 10,
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Cumulative Percentage (%)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}, "format": "{value}%"},
+    "title": {"text": "Cumulative Percentage (%)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value}%"},
     "min": 0,
     "max": 100,
     "tickInterval": 10,
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "28px"}}
+chart.options.legend = {
+    "enabled": True,
+    "itemStyle": {"color": INK_SOFT, "fontSize": "16px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+}
 
 # Plot options for step-like appearance
 chart.options.plot_options = {
     "area": {
         "step": "center",
-        "marker": {"enabled": True, "radius": 10, "fillColor": "#306998", "lineColor": "#306998", "lineWidth": 2},
-        "lineWidth": 4,
-        "color": "#306998",
+        "marker": {"enabled": True, "radius": 8, "fillColor": BRAND, "lineColor": BRAND, "lineWidth": 2},
+        "lineWidth": 3,
+        "color": BRAND,
         "fillColor": {
             "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-            "stops": [[0, "rgba(48, 105, 152, 0.5)"], [1, "rgba(48, 105, 152, 0.1)"]],
+            "stops": [[0, "rgba(0, 158, 115, 0.3)"], [1, "rgba(0, 158, 115, 0.05)"]],
         },
     }
 }
@@ -113,8 +127,11 @@ series.name = "Cumulative Distribution"
 chart.add_series(series)
 
 # Export to PNG via Selenium
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 html_str = chart.to_js_literal()
@@ -124,12 +141,17 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -144,11 +166,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
