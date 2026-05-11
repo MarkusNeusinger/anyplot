@@ -1,168 +1,158 @@
 library: matplotlib
+language: python
 specification_id: gain-curve
 created: '2025-12-29T22:47:36Z'
-updated: '2025-12-29T22:51:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584327624
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gain-curve/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - fill-between
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-11T09:29:08Z'
+generated_by: claude-haiku
+workflow_run: 25661632453
+issue: 2440
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of the gains curve with all spec-required elements (model,
-    baseline, perfect model)
-  - Clear visual hierarchy with distinct line styles (solid, dashed, dotted) and colors
-  - Informative annotation highlighting the key insight at 20% targeting threshold
-  - Shaded area effectively communicates the model lift over random selection
-  - Clean, well-structured code following KISS principles
-  - Proper use of matplotlib Axes methods throughout
-  weaknesses:
-  - Legend positioned in lower right overlaps with the data region where curves pass
-    through
-  - Square aspect ratio (1:1) while appropriate for the 0-100% axes creates some unused
-    corner space compared to 16:9
-  image_description: The plot displays a cumulative gains chart on a square canvas
-    with 1:1 aspect ratio. The main model curve is shown in blue (solid line, linewidth=3),
-    starting from origin (0,0) and curving upward to (100,100). A gray dashed diagonal
-    line represents the random baseline. A yellow/gold dotted line shows the perfect
-    model - rising steeply to 100% at approximately 50% of population, then horizontal.
-    A light blue shaded area fills the space between the model curve and the baseline,
-    visually highlighting the model's "lift" over random selection. An annotation
-    box in the lower portion reads "Top 20% captures 35% of positive cases" with an
-    arrow pointing to the corresponding point on the curve. The legend is positioned
-    in the lower right corner. All text is clearly legible with appropriate font sizes.
+  - Excellent theme adaptation with perfect legibility in both light and dark renders
+  - Professional annotation that adds narrative context and highlights the 20% insight
+  - Perfect color palette compliance with brand green and proper secondary color choices
+  - Clean, well-structured code with proper reproducibility
+  - Strong visual hierarchy through line styles, opacity, and strategic data emphasis
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title "gain-curve · matplotlib · anyplot.ai" in dark text (INK), axis labels and tick labels clearly visible
+      Data: Model curve in brand green (#009E73), random baseline in muted gray (INK_SOFT), perfect model in darker gray (INK_MUTED), light green shaded area with alpha blending
+      Legibility verdict: PASS - All text perfectly readable with excellent contrast against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title and axis labels in light text (INK), clearly visible with no dark-on-dark failures, annotation box properly styled
+      Data: Model curve remains brand green (#009E73) identical to light render, confirming proper theme-independent color handling
+      Legibility verdict: PASS - All text readable on dark background, proper theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt, legend 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (24/20/16pt), perfectly readable in
+          both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, annotation well-positioned
+        comment: No overlapping elements, all text clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are appropriately sized (linewidth=3 for model, 2 for others),
-          clearly distinguishable
+        comment: Curves and markers optimally sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, gray, and yellow are colorblind-safe and have good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with equal aspect, though square format creates
-          some empty space in corners
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Population Targeted (%)" and "Positive Cases Captured (%)" are
-          descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Excellent contrast, CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid at alpha=0.3 is good, but legend could be positioned better
-          (lower right overlaps with data region)
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green correct, theme chrome perfect in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful design with meaningful color choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Excellent refinement with proper spine removal and whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong storytelling through visual hierarchy and annotation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative gains chart
+        comment: Correct gain curve implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population percentage, Y=cumulative positives captured - correct
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has diagonal baseline, model curve, perfect model reference, annotation
-          showing key insight
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show 0-100% for both dimensions
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct axes and data representation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify Model, Random (Baseline), Perfect
-          Model
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "gain-curve · matplotlib · pyplots.ai"
+        comment: Correct title format and clear labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows model lift over baseline and comparison to perfect model; the
-          model demonstrates clear discrimination with steeper initial slope
+        comment: Shows realistic customer response scenario
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Customer response model is a real, neutral business scenario (marketing
-          campaign optimization)
+        comment: Professional, neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are sensible; 35% capture at 20% targeting is realistic for
-          a decent model, though the lift could be more dramatic to better showcase
-          the plot type
+        comment: Well-calibrated data and sensible sample size
     code_quality:
       score: 10
       max: 10
@@ -172,40 +162,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic with seed=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API (Axes methods)
+        comment: Pythonic, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses fill_between for shaded area, annotation with arrowprops, proper
-          Axes methods - good but not exceptional matplotlib features
+        comment: Expert use of matplotlib axes API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of fill_between and annotation styling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
