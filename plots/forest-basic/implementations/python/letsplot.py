@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-27
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-11
 """
 
 import pandas as pd
