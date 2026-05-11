@@ -1,7 +1,7 @@
 """ anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-11
+Quality: 94/100 | Updated: 2026-05-11
 """
 
 import os
