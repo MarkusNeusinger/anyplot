@@ -1,14 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
-Library: plotnine 0.15.2 | Python 3.13.11
+Library: plotnine | Python 3.13
 Quality: 91/100 | Created: 2025-12-29
 """
 
-import pandas as pd
-from plotnine import (
+import os
+import sys
+from pathlib import Path
+
+
+# Remove current directory from path to avoid importing local plotnine.py
+current_dir = str(Path(__file__).parent)
+sys.path = [p for p in sys.path if p != current_dir and p != ""]
+
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_point,
     geom_segment,
@@ -22,22 +32,32 @@ from plotnine import (
 )
 
 
-# Data - Software development project milestones
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Software development project milestones with varied timing
 data = {
     "date": pd.to_datetime(
         [
-            "2024-01-15",
-            "2024-02-20",
-            "2024-03-10",
-            "2024-04-05",
-            "2024-05-15",
-            "2024-06-20",
-            "2024-07-10",
-            "2024-08-25",
-            "2024-09-15",
-            "2024-10-30",
-            "2024-11-20",
-            "2024-12-15",
+            "2024-01-08",
+            "2024-02-15",
+            "2024-03-08",
+            "2024-04-12",
+            "2024-05-20",
+            "2024-06-10",
+            "2024-07-18",
+            "2024-08-05",
+            "2024-09-22",
+            "2024-10-15",
+            "2024-11-08",
+            "2024-12-20",
         ]
     ),
     "event": [
@@ -81,52 +101,56 @@ df["y_label"] = df["y_offset"] * 0.65
 df_above = df[df["y_offset"] == 1].copy()
 df_below = df[df["y_offset"] == -1].copy()
 
-# Category colors - using colorblind-safe palette
+# Category colors - using Okabe-Ito palette
 category_colors = {
-    "Planning": "#306998",  # Python Blue
-    "Development": "#FFD43B",  # Python Yellow
-    "Testing": "#E69F00",  # Orange
-    "Release": "#009E73",  # Green
+    "Planning": OKABE_ITO[0],
+    "Development": OKABE_ITO[1],
+    "Testing": OKABE_ITO[2],
+    "Release": OKABE_ITO[3],
 }
 
 # Create timeline plot
 plot = (
     ggplot(df, aes(x="date", y=0))
     # Vertical connector lines from axis to points
-    + geom_segment(aes(x="date", xend="date", y=0, yend="y_point"), color="#888888", size=0.8)
+    + geom_segment(aes(x="date", xend="date", y=0, yend="y_point"), color=INK_SOFT, size=0.8, alpha=0.5)
     # Timeline axis line
     + geom_segment(
-        aes(x=df["date"].min() - pd.Timedelta(days=15), xend=df["date"].max() + pd.Timedelta(days=15), y=0, yend=0),
-        color="#333333",
+        aes(x=df["date"].min() - pd.Timedelta(days=20), xend=df["date"].max() + pd.Timedelta(days=20), y=0, yend=0),
+        color=INK_SOFT,
         size=1.5,
     )
     # Event points on the timeline
-    + geom_point(aes(x="date", y="y_point", color="category"), size=8)
+    + geom_point(aes(x="date", y="y_point", color="category"), size=5)
     # Event labels above the axis
-    + geom_text(data=df_above, mapping=aes(x="date", y="y_label", label="event"), size=11, color="#333333", va="bottom")
+    + geom_text(data=df_above, mapping=aes(x="date", y="y_label", label="event"), size=11, color=INK, va="bottom")
     # Event labels below the axis
-    + geom_text(data=df_below, mapping=aes(x="date", y="y_label", label="event"), size=11, color="#333333", va="top")
+    + geom_text(data=df_below, mapping=aes(x="date", y="y_label", label="event"), size=11, color=INK, va="top")
     # Styling
     + scale_color_manual(values=category_colors)
     + scale_y_continuous(limits=(-1.2, 1.2))
-    + labs(title="timeline-basic · plotnine · pyplots.ai", x="Date", y="", color="Phase")
+    + labs(title="timeline-basic · plotnine · anyplot.ai", x="Project Timeline 2024", y="", color="Phase")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center"),
-        axis_title_x=element_text(size=20),
-        axis_text_x=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, ha="center", color=INK),
+        axis_title_x=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
+        axis_line_y=element_blank(),
         panel_grid_major_y=element_blank(),
         panel_grid_minor_y=element_blank(),
-        panel_grid_major_x=element_line(color="#cccccc", alpha=0.3),
+        panel_grid_major_x=element_line(color=INK_SOFT, alpha=0.1, size=0.3),
         panel_grid_minor_x=element_blank(),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
         legend_position="bottom",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
