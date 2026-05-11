@@ -14,20 +14,19 @@ A point estimate plot displays central tendency values (means, medians, or other
 
 ## Data
 
-The visualization requires:
-- **Categorical variable**: Groups or categories
-- **Point estimate**: Central value (mean, median, coefficient)
-- **Lower bound**: Lower confidence limit
-- **Upper bound**: Upper confidence limit
+- `category` (categorical) - The group or category identifier
+- `estimate` (numeric) - The point estimate value (mean, median, coefficient, etc.)
+- `lower_bound` (numeric) - Lower confidence limit
+- `upper_bound` (numeric) - Upper confidence limit
+- Size: 3–100 categories recommended for clarity
 
-Example structure:
+Example:
 ```
-Group    | Estimate | Lower | Upper
+Category | Estimate | Lower | Upper
 ---------|----------|-------|------
 Group A  | 5.2      | 4.1   | 6.3
 Group B  | 3.8      | 2.9   | 4.7
 Group C  | 6.1      | 5.5   | 6.7
-...
 ```
 
 ## Notes
