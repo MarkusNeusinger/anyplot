@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-density: Density Histogram
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 72/100 | Updated: 2026-05-11
+Quality: 78/100 | Updated: 2026-05-11
 """
 
 import numpy as np
