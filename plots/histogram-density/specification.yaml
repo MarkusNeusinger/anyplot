@@ -6,7 +6,7 @@ title: Density Histogram
 
 # Specification tracking
 created: 2025-12-29T22:38:56Z
-updated: null
+updated: 2026-05-11T17:25:30Z
 issue: 2442
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - histogram
-    - distribution
   data_type:
     - numeric
     - continuous
