@@ -1,169 +1,169 @@
 library: plotly
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:31:42Z'
-updated: '2025-12-30T09:42:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593348770
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-11T17:21:42Z'
+generated_by: claude-haiku
+workflow_run: 25685094445
+issue: 2551
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent horizontal orientation matching spec recommendation for readability
-  - Clear reference line at null hypothesis with annotation
-  - Well-sized markers (18) and error bars with visible caps (width=10)
-  - Proper use of asymmetric error bars calculated from CI bounds
-  - Clean clinical trial context that is realistic and neutral
-  - Good font sizing hierarchy (title 32, labels 24, ticks 18-20)
+  - Perfect visual quality with all text explicitly sized and readable in both light
+    and dark themes
+  - Flawless spec compliance with all required features correctly implemented
+  - Clean, reproducible code with appropriate complexity and defensive programming
+  - Excellent theme adaptation with no legibility failures and proper chrome color
+    switching
+  - Professional appearance with well-balanced layout and subtle effective grid styling
   weaknesses:
-  - Legend positioned in bottom-right could overlap with data; top-right or outside
-    placement preferred
-  - All treatment effects are positive; including one negative effect would better
-    demonstrate full capability
-  - Grid opacity at 0.1 is very subtle; 0.2-0.3 would improve readability
-  image_description: The plot displays a horizontal point estimate plot with 6 treatment
-    groups (Control, Treatment A through Treatment E) arranged vertically on the y-axis.
-    The x-axis shows "Effect Size (units)" ranging from approximately -1 to 5.5. Each
-    group has a blue circular marker (#306998) representing the point estimate, with
-    horizontal error bars extending to show the 95% confidence intervals. The error
-    bars have visible caps at the endpoints. A dashed yellow/gold vertical reference
-    line at x=0 is labeled "Null" at the top, representing the null hypothesis. The
-    Control group is centered at 0, while all treatment groups show positive effects
-    of varying magnitudes (Treatment D highest at ~4.2, Treatment C lowest at ~1.5).
-    The legend "Estimate ± 95% CI" is positioned in the bottom right corner with a
-    semi-transparent white background. The plot uses the plotly_white template with
-    subtle gray gridlines.
+  - Design excellence modest—follows well-configured defaults without distinctive
+    visual design beyond spec requirements
+  - Data storytelling not emphasized—no visual hierarchy, emphasis, or annotation
+    to highlight treatment effect magnitudes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title and axis labels in dark INK color (#1A1A17); tick labels in secondary INK_SOFT (#4A4A44); all clearly readable
+      Data: Six treatment groups with green circles (#009E73) and horizontal error bars with end caps; null reference line at x=0 (dashed, labeled)
+      Legibility verdict: PASS – all text fully readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title and axis labels in light INK (#F0EFE8); tick labels in secondary light INK_SOFT (#B8B7B0); grid lines subtle; legend box framed; all readable against dark surface
+      Data: Green circles and error bars remain identical (#009E73) to light render; null line and all data elements clearly visible
+      Legibility verdict: PASS – no dark-on-dark failures; excellent readability in dark theme; chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18-20pt, all perfectly
-          readable
+        comment: Title 32px, labels 24px, ticks 18-20px; all explicitly set and perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels fully visible
+        comment: No overlapping text; clean, well-spaced layout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized at 18 with good visibility, error bars thickness=3
-          with width=10 caps
+        comment: Marker size 18 optimal for 6 categories; error caps clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with yellow reference line, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, margins well configured, slight excess
-          space on left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Effect Size (units)" and "Treatment Group" are descriptive with
-          units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Green (#009E73) excellent contrast; Okabe-Ito palette CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot uses ~60% of canvas; balanced margins (l:150, r:80, t:100, b:80)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.1), but legend placement in bottom-right
-          corner is suboptimal for this horizontal layout - would be better positioned
-          outside the plot area or top-right
+        comment: 'Descriptive with units: ''Effect Size (units)'' and ''Treatment
+          Group'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; backgrounds #FAF8F1/#1A1A17 correct;
+          chrome colors theme-adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured professional default; no custom palette or distinctive
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, framed legend, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without visual hierarchy or emphasis; null line informative
+          but not visually prominent
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct point estimate plot with confidence intervals
+        comment: Horizontal point estimate plot with error bars—correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, estimates on X-axis (horizontal orientation
-          per spec)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has point estimates, confidence intervals, reference line at zero,
-          error bar caps
-      - id: SC-04
-        name: Data Range
+        comment: Points, confidence intervals, categories, reference line all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points and confidence intervals
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis estimates, Y-axis categories; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend label "Estimate ± 95% CI" accurately describes the data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "point-basic · plotly · pyplots.ai"
+        comment: Title format 'point-basic · plotly · anyplot.ai' correct; legend
+          accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying CI widths, positive and zero effects, but all treatments
-          positive (no negative treatment effect shown)
+        comment: Six groups with varying estimates (0-4.2) and CI widths (0.8-1.5)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Clinical trial treatment effects scenario is realistic and neutral
+        comment: Treatment effects with CIs—realistic, scientifically plausible, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Effect sizes 0-4.2 with CIs 0.8-1.5 are plausible, though units are
-          generic
+        comment: Effect sizes and proportions factually sensible for treatment study
     code_quality:
       score: 10
       max: 10
@@ -173,41 +173,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Linear: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only os, numpy, plotly.graph_objects; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity, defensive strict=False
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: false
-        comment: Uses go.Scatter with error_x and add_vline which are standard Plotly
-          features, but doesn't leverage Plotly's interactive capabilities in the
-          static output (hover templates, annotations with arrows, etc.)
+        passed: true
+        comment: Correct go.Figure(), go.Scatter(), error_x; solid but not leveraging
+          advanced patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses add_vline() with annotation—Plotly-specific; otherwise straightforward
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
