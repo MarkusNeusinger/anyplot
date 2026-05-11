@@ -1,15 +1,246 @@
 library: seaborn
+language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:27Z'
-updated: '2025-12-29T22:57:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584327715
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T07:49:31Z'
+generated_by: claude-haiku
+workflow_run: 25656464813
+issue: 2441
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 72
+review:
+  strengths:
+  - Correct Kaplan-Meier implementation with proper step functions and confidence
+    intervals (95% CI via Greenwood formula)
+  - 'All required spec features present: two-group comparison, censored observation
+    marks, median survival annotation, clear legend'
+  - Excellent visual clarity in both light and dark renders—all text readable, no
+    overlapping elements
+  - Realistic clinical trial data with plausible survival curves showing meaningful
+    group difference
+  - Canvas utilization and layout well-balanced; annotation box positioned effectively
+  weaknesses:
+  - 'CRITICAL: Source code contains hardcoded colors (#306998 Python Blue, #FFD43B
+    Python Yellow) that do not match Okabe-Ito palette or the output images; code
+    does not read ANYPLOT_THEME environment variable'
+  - Code does not implement theme-adaptive chrome as specified in seaborn library
+    rules (missing sns.set_theme with theme-dependent rc parameters, missing color
+    tokens like PAGE_BG/INK_SOFT)
+  - Code saves to 'plot.png' instead of 'plot-{THEME}.png' as required by seaborn
+    spec
+  - Annotation box uses hardcoded facecolor='white' instead of theme-adaptive ELEVATED_BG
+    token
+  - 'Code/output mismatch: generated images show correct colors and theme adaptation
+    but source code does not implement this—images must be from a different version'
+  - Grid styling uses sns.set_style('whitegrid') without theme-aware customization
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle gray gridlines
+      Chrome: Title, X-axis label ("Time (months)"), Y-axis label ("Survival Probability"), and tick labels all clearly visible in dark text; annotation box with light background and border readable
+      Data: Two step-function survival curves—treatment (bluish-green, appears to be #009E73) shows better survival; control (orange, appears to be #E69F00 or #D55E00) shows worse outcomes. Confidence interval bands rendered as semi-transparent fills. Censored observations marked with tick marks. Median survival line at 0.5 with annotation. Legend in lower left clearly labels both groups.
+      Legibility verdict: PASS — all elements readable and well-positioned
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with subtle light gridlines
+      Chrome: Title, axis labels, and tick labels clearly visible in light text; annotation box styling remains readable with proper contrast
+      Data: Survival curves maintain identical bluish-green and orange colors from light render (only chrome adapted, not data colors as required). Confidence bands, censored marks, and median line all visible with same structure as light render. Legend and annotations clearly readable.
+      Legibility verdict: PASS — all elements readable; colors correctly theme-invariant; no dark-on-dark text failures
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend positioned outside plot area
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Survival curves, CI bands, censored marks all clearly visible and
+          well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green and orange series have high contrast; Okabe-Ito palette is
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good balance but slight wasted space on right side of both renders
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Images show correct Okabe-Ito colors (#009E73 treatment, orange control);
+          theme-adaptive chrome evident; however, source code does not implement this
+          correctly—code/output mismatch
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults; no custom design choices beyond
+          standard seaborn styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; grid visible but could be more subtle; uses
+          sns.set_style defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Visual hierarchy present through color contrast (green vs orange)
+          and group separation; median survival annotation adds insight
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kaplan-Meier survival plot with step functions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: step function, 95% CI, censored marks,
+          group comparison, legend, median annotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned; axes span full data range (0-38 months, 0-1.05
+          probability)
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title format 'survival-kaplan-meier · seaborn · anyplot.ai' correct;
+          legend labels match but styling could be polished
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: two groups, censoring, confidence intervals,
+          event times, varying survival probabilities'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Clinical trial scenario (treatment vs control groups) is realistic
+          and neutral; transparent about synthetic data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: false
+        comment: Proportions plausible (treatment median ~22 months, control ~17 months)
+          but synthetic data; values are within expected ranges
+    code_quality:
+      score: 4
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Includes kaplan_meier() function (adds complexity) but justified
+          for domain logic
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for reproducibility
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports (matplotlib, numpy, pandas, seaborn)
+      - id: CQ-04
+        name: Code Elegance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL ISSUE: Code contains hardcoded colors that don''t match
+          output; missing required theme-adaptive styling; annotation box facecolor
+          hardcoded to ''white'''
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png' as specified; code/output
+          mismatch suggests stale file
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses ax.step(), ax.fill_between(), ax.scatter() correctly but does
+          not follow seaborn theme-adaptation pattern from library spec
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom Kaplan-Meier estimator function is domain-specific but not
+          a seaborn distinctive feature; seaborn-specific features (set_theme, theme-adaptive
+          rc) not utilized
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -18,195 +249,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent Kaplan-Meier step function implementation with proper survival probability
-    calculation
-  - Clear visual separation between Treatment (blue) and Control (yellow) groups with
-    colorblind-friendly palette
-  - Correctly implemented 95% confidence intervals as shaded bands using Greenwood
-    formula
-  - Censored observations properly marked with vertical tick marks on the curves
-  - 'Helpful median survival annotation box showing Treatment: 22.4 months vs Control:
-    16.9 months'
-  - Clean clinical trial scenario with realistic survival data (150 patients, 36-month
-    follow-up)
-  - Proper title format following pyplots.ai conventions
-  weaknesses:
-  - Code uses functions (kaplan_meier) which violates KISS principle - should be inline
-    calculations
-  - Does not use any seaborn-specific plotting functions (only sns.set_style) - relies
-    entirely on matplotlib for actual plotting
-  image_description: 'The plot displays two Kaplan-Meier survival curves comparing
-    Treatment (dark blue) and Control (yellow/gold) groups over a 36-month follow-up
-    period. Both curves start at 1.0 survival probability and step down over time,
-    with the Treatment group showing better survival (ending around 0.4) compared
-    to Control (ending around 0.25). Each curve has shaded confidence interval bands
-    (blue for treatment, yellow for control). Vertical tick marks along the curves
-    indicate censored observations. A horizontal dashed gray line at y=0.5 marks the
-    median survival reference. An annotation box in the upper right shows median survival
-    times: Treatment 22.4 months, Control 16.9 months. The legend is positioned in
-    the lower left. Title follows the pyplots.ai format. Grid is subtle with dashed
-    lines.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Step curves with linewidth=3 clearly visible, tick marks sized appropriately
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe, excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis missing units (should be "Survival Probability (proportion)"
-          or similar)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Subtle dashed grid at alpha 0.3, legend well-placed in lower left
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Kaplan-Meier step function
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X, survival probability on Y
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Step function, confidence intervals, censoring marks, group comparison,
-          median annotation
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full 0-36 month range shown, Y-axis 0-1.05
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Treatment/Control labels correct
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"survival-kaplan-meier · seaborn · pyplots.ai" correct'
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows declining survival, group differences, censoring, confidence
-          widening over time
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Clinical trial with 150 patients, exponential survival model, appropriate
-          censoring
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: 36-month follow-up, realistic survival proportions
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses function definition (kaplan_meier) instead of inline code
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current API used
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: false
-        comment: Only uses sns.set_style(), actual plotting done with matplotlib ax.step(),
-          ax.fill_between(), ax.scatter()
-  verdict: APPROVED
