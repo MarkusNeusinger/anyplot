@@ -1,13 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-27
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-11
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO_1 = "#009E73"  # Primary data color (brand green)
+OKABE_ITO_2 = "#D55E00"  # Secondary
 
 # Data: Meta-analysis of RCTs comparing treatment efficacy (standardized mean difference)
 studies = [
@@ -37,7 +52,8 @@ pooled_ci_lower = -0.53
 pooled_ci_upper = -0.31
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 n_studies = len(studies)
 y_positions = np.arange(n_studies, 0, -1)
@@ -47,14 +63,16 @@ weight_normalized = (weights - weights.min()) / (weights.max() - weights.min())
 marker_sizes = 80 + weight_normalized * 220
 
 # Plot vertical reference line at null effect (0)
-ax.axvline(x=0, color="#888888", linestyle="--", linewidth=2, alpha=0.7, zorder=1)
+ax.axvline(x=0, color=INK_SOFT, linestyle="--", linewidth=2, alpha=0.7, zorder=1)
 
 # Plot confidence intervals as horizontal lines
 for y, lower, upper in zip(y_positions, ci_lower, ci_upper, strict=True):
-    ax.hlines(y=y, xmin=lower, xmax=upper, color="#306998", linewidth=3, zorder=2)
+    ax.hlines(y=y, xmin=lower, xmax=upper, color=OKABE_ITO_1, linewidth=3, zorder=2)
 
 # Plot effect size points
-ax.scatter(effect_sizes, y_positions, s=marker_sizes, color="#306998", edgecolors="white", linewidths=1.5, zorder=3)
+ax.scatter(
+    effect_sizes, y_positions, s=marker_sizes, color=OKABE_ITO_1, edgecolors=ELEVATED_BG, linewidths=1.5, zorder=3
+)
 
 # Plot pooled estimate as diamond
 diamond_y = 0
@@ -70,18 +88,18 @@ diamond_vertices = np.array(
     ]
 )
 diamond_patch = mpatches.Polygon(
-    diamond_vertices, closed=True, facecolor="#FFD43B", edgecolor="#306998", linewidth=2.5, zorder=4
+    diamond_vertices, closed=True, facecolor=OKABE_ITO_2, edgecolor=OKABE_ITO_1, linewidth=2.5, zorder=4
 )
 ax.add_patch(diamond_patch)
 
 # Add study labels on y-axis
 ax.set_yticks(list(y_positions) + [0])
-ax.set_yticklabels(studies + ["Pooled Estimate"])
+ax.set_yticklabels(studies + ["Pooled Estimate"], color=INK_SOFT, fontsize=16)
 
 # Styling
-ax.set_xlabel("Standardized Mean Difference (95% CI)", fontsize=20)
-ax.set_title("forest-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Standardized Mean Difference (95% CI)", fontsize=20, color=INK)
+ax.set_title("forest-basic · matplotlib · pyplots.ai", fontsize=24, color=INK, fontweight="medium")
+ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT, length=0)
 ax.tick_params(axis="y", length=0)
 
 # Set x-axis limits with padding
@@ -93,17 +111,18 @@ ax.set_xlim(x_min, x_max)
 ax.set_ylim(-0.8, n_studies + 0.8)
 
 # Add subtle grid for x-axis only
-ax.grid(True, axis="x", alpha=0.3, linestyle="--", zorder=0)
+ax.grid(True, axis="x", alpha=0.15, linestyle="-", linewidth=0.8, color=INK, zorder=0)
 ax.set_axisbelow(True)
 
 # Add annotation for "Favors Treatment" and "Favors Control"
-ax.text(x_min + 0.05, -0.6, "\u2190 Favors Treatment", fontsize=14, ha="left", va="top", color="#555555")
-ax.text(x_max - 0.05, -0.6, "Favors Control \u2192", fontsize=14, ha="right", va="top", color="#555555")
+ax.text(x_min + 0.05, -0.6, "← Favors Treatment", fontsize=14, ha="left", va="top", color=INK_MUTED)
+ax.text(x_max - 0.05, -0.6, "Favors Control →", fontsize=14, ha="right", va="top", color=INK_MUTED)
 
-# Remove top and right spines
+# Style spines
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_visible(False)
+ax.spines["bottom"].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
