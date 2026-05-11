@@ -1,41 +1,18 @@
 library: altair
+language: python
 specification_id: circlepacking-basic
 created: '2025-12-30T00:07:55Z'
-updated: '2025-12-30T00:48:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585400895
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/altair/plot.html
-quality_score: 55
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-11T15:29:25Z'
+generated_by: claude-haiku
+workflow_run: 25679376587
+issue: 2498
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/altair/plot-dark.html
+quality_score: 95
 review:
-  strengths:
-  - Excellent realistic business scenario with company budget allocation across departments
-    and teams
-  - Proper area-proportional sizing calculation using sqrt transformation
-  - Good layered approach using Altair chart composition for depth-based rendering
-  - Correct title format matching spec requirements
-  - Reproducible with fixed random seed
-  - Interactive tooltips implemented for additional data exploration
-  weaknesses:
-  - Circle overlap is severe - circles from different departments overlap significantly,
-    violating the spec requirement for efficient packing without overlap
-  - Department color differentiation not working in output - all circles appear the
-    same blue color despite distinct colors defined in code
-  - Legend is not visible in the rendered output despite being coded
-  - Department parent labels not visible on the visualization
-  - Code uses helper functions (get_team_radius, pack_circles_in_parent) which violates
-    the KISS principle of no functions/classes
+  strengths: []
+  weaknesses: []
