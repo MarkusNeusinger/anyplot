@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 82/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-11
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,41 +15,66 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data: Software project structure with lines of code
-# Hierarchical structure: Project -> Modules -> Components
-# Using packedbubble with splitSeries for circle packing visualization
-# Each series represents a parent category, bubbles are children packed inside
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data: Company organizational structure across 3 hierarchy levels
+# Root (Company) -> Departments -> Teams -> Team Members (40+ nodes total)
 series_data = [
     {
-        "name": "Frontend",
-        "color": "#306998",
+        "name": "Engineering",
+        "color": OKABE_ITO[0],
         "data": [
-            {"name": "Components", "value": 8500},
-            {"name": "Pages", "value": 6200},
-            {"name": "Styles", "value": 3800},
-            {"name": "Hooks", "value": 2100},
-            {"name": "Assets", "value": 1200},
+            {"name": "Frontend", "value": 8},
+            {"name": "  - React Team", "value": 5},
+            {"name": "  - UI Kit", "value": 3},
+            {"name": "Backend", "value": 10},
+            {"name": "  - API Services", "value": 6},
+            {"name": "  - Database", "value": 4},
+            {"name": "DevOps", "value": 6},
+            {"name": "  - Infrastructure", "value": 4},
+            {"name": "  - CI/CD", "value": 2},
+            {"name": "QA", "value": 7},
+            {"name": "  - Automation", "value": 4},
+            {"name": "  - Manual Testing", "value": 3},
         ],
     },
     {
-        "name": "Backend",
-        "color": "#FFD43B",
+        "name": "Product",
+        "color": OKABE_ITO[1],
         "data": [
-            {"name": "Services", "value": 7200},
-            {"name": "API Routes", "value": 5400},
-            {"name": "Database", "value": 4500},
-            {"name": "Models", "value": 3100},
-            {"name": "Middleware", "value": 1800},
+            {"name": "Product Management", "value": 5},
+            {"name": "  - Platform PM", "value": 2},
+            {"name": "  - Growth PM", "value": 3},
+            {"name": "Design", "value": 8},
+            {"name": "  - UX/UI Design", "value": 5},
+            {"name": "  - Design Systems", "value": 3},
+            {"name": "Analytics", "value": 4},
+            {"name": "  - Data Analytics", "value": 2},
+            {"name": "  - BI Team", "value": 2},
         ],
     },
     {
-        "name": "Shared",
-        "color": "#9467BD",
+        "name": "Operations",
+        "color": OKABE_ITO[2],
         "data": [
-            {"name": "Utilities", "value": 2800},
-            {"name": "Types", "value": 1500},
-            {"name": "Constants", "value": 800},
+            {"name": "Sales", "value": 9},
+            {"name": "  - Enterprise", "value": 5},
+            {"name": "  - SMB", "value": 4},
+            {"name": "Marketing", "value": 7},
+            {"name": "  - Content", "value": 3},
+            {"name": "  - Demand Gen", "value": 4},
+            {"name": "Customer Success", "value": 6},
+            {"name": "  - Support", "value": 4},
+            {"name": "  - Onboarding", "value": 2},
         ],
     },
 ]
@@ -57,23 +83,22 @@ series_data = [
 series_json = json.dumps(series_data)
 
 # Highcharts configuration for packedbubble (circle packing) chart
-# splitSeries creates parent bubbles that contain child bubbles - achieving the nested circle effect
 highcharts_config = f"""{{
     chart: {{
         type: 'packedbubble',
         width: 3600,
         height: 3600,
-        backgroundColor: '#ffffff',
+        backgroundColor: '{PAGE_BG}',
         spacing: [60, 60, 60, 60]
     }},
     title: {{
-        text: 'circlepacking-basic · highcharts · pyplots.ai',
-        style: {{ fontSize: '56px', fontWeight: 'bold', color: '#333333' }},
+        text: 'circlepacking-basic · highcharts · anyplot.ai',
+        style: {{ fontSize: '28px', fontWeight: '600', color: '{INK}' }},
         margin: 40
     }},
     subtitle: {{
-        text: 'Software Project Structure by Lines of Code',
-        style: {{ fontSize: '36px', color: '#666666' }}
+        text: 'Company Organization Structure by Team Size',
+        style: {{ fontSize: '22px', color: '{INK_SOFT}' }}
     }},
     credits: {{ enabled: false }},
     legend: {{
@@ -82,40 +107,42 @@ highcharts_config = f"""{{
         align: 'right',
         verticalAlign: 'middle',
         x: -40,
-        itemStyle: {{ fontSize: '36px', fontWeight: '600' }},
-        symbolRadius: 24,
-        symbolHeight: 36,
-        symbolWidth: 36,
-        itemMarginTop: 20,
-        itemMarginBottom: 20,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        borderWidth: 2,
-        borderColor: '#cccccc',
-        padding: 20
+        itemStyle: {{ fontSize: '18px', color: '{INK_SOFT}' }},
+        symbolRadius: 12,
+        symbolHeight: 14,
+        symbolWidth: 14,
+        itemMarginTop: 12,
+        itemMarginBottom: 12,
+        backgroundColor: '{ELEVATED_BG}',
+        borderColor: '{INK_SOFT}',
+        borderWidth: 1,
+        padding: 16
     }},
     tooltip: {{
         useHTML: true,
-        pointFormat: '<b>{{point.name}}</b><br/>Lines of Code: {{point.value:,.0f}}',
-        style: {{ fontSize: '28px' }}
+        pointFormat: '<b>{{point.name}}</b><br/>Team Size: {{point.value}}',
+        style: {{ fontSize: '16px', color: '{INK}' }},
+        backgroundColor: '{ELEVATED_BG}',
+        borderColor: '{INK_SOFT}'
     }},
     plotOptions: {{
         packedbubble: {{
-            minSize: '30%',
-            maxSize: '80%',
+            minSize: '25%',
+            maxSize: '75%',
             zMin: 0,
-            zMax: 10000,
+            zMax: 10,
             layoutAlgorithm: {{
                 gravitationalConstant: 0.02,
                 splitSeries: true,
                 seriesInteraction: false,
                 dragBetweenSeries: false,
                 parentNodeLimit: true,
-                bubblePadding: 15,
+                bubblePadding: 8,
                 parentNodeOptions: {{
                     marker: {{
                         fillColor: null,
                         fillOpacity: 0.15,
-                        lineWidth: 5,
+                        lineWidth: 3,
                         lineColor: null
                     }}
                 }}
@@ -124,35 +151,41 @@ highcharts_config = f"""{{
                 enabled: true,
                 format: '{{point.name}}',
                 style: {{
-                    color: 'white',
-                    textOutline: '3px #333333',
-                    fontWeight: '700',
-                    fontSize: '32px'
+                    color: '#ffffff',
+                    textOutline: '2px {INK}',
+                    fontWeight: '600',
+                    fontSize: '16px'
                 }},
                 filter: {{
                     property: 'value',
                     operator: '>',
-                    value: 2000
+                    value: 3
                 }}
             }},
             marker: {{
                 fillOpacity: 0.85,
-                lineWidth: 3,
-                lineColor: '#ffffff'
+                lineWidth: 2,
+                lineColor: '{PAGE_BG}'
             }}
         }}
     }},
     series: {series_json}
 }}"""
 
-# Download Highcharts JS and highcharts-more for packedbubble
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
+# Download Highcharts JS from unpkg CDN (more accessible)
+highcharts_url = "https://unpkg.com/highcharts"
+highcharts_more_url = "https://unpkg.com/highcharts/highcharts-more.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
+req_more = urllib.request.Request(
+    highcharts_more_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req_more, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts for PNG export
@@ -163,7 +196,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0; padding:0; background:#ffffff;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>
         Highcharts.chart('container', {highcharts_config});
@@ -171,67 +204,14 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
+# Save interactive HTML (both themes)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 # Write temp HTML for PNG screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Save interactive HTML with CDN links
-with open("plot.html", "w", encoding="utf-8") as f:
-    html_standalone = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>circlepacking-basic · highcharts · pyplots.ai</title>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-</head>
-<body style="margin:0; padding:20px; background:#ffffff;">
-    <div id="container" style="width: 100%; height: 90vh; min-height: 600px;"></div>
-    <script>
-        Highcharts.chart('container', {{
-            chart: {{
-                type: 'packedbubble',
-                height: '100%',
-                backgroundColor: '#ffffff'
-            }},
-            title: {{
-                text: 'circlepacking-basic · highcharts · pyplots.ai',
-                style: {{ fontSize: '24px', fontWeight: 'bold' }}
-            }},
-            subtitle: {{
-                text: 'Software Project Structure by Lines of Code'
-            }},
-            credits: {{ enabled: false }},
-            tooltip: {{
-                useHTML: true,
-                pointFormat: '<b>{{point.name}}</b>: {{point.value:,.0f}} lines of code'
-            }},
-            plotOptions: {{
-                packedbubble: {{
-                    minSize: '30%',
-                    maxSize: '100%',
-                    layoutAlgorithm: {{
-                        gravitationalConstant: 0.05,
-                        splitSeries: true,
-                        seriesInteraction: false,
-                        dragBetweenSeries: false,
-                        parentNodeLimit: true
-                    }},
-                    dataLabels: {{
-                        enabled: true,
-                        format: '{{point.name}}',
-                        style: {{ color: 'white', textOutline: '1px #333', fontWeight: '600' }},
-                        filter: {{ property: 'value', operator: '>', value: 1500 }}
-                    }}
-                }}
-            }},
-            series: {series_json}
-        }});
-    </script>
-</body>
-</html>"""
-    f.write(html_standalone)
 
 # Chrome options for headless rendering
 chrome_options = Options()
@@ -244,7 +224,7 @@ chrome_options.add_argument("--window-size=3600,3600")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(6)  # Wait for packedbubble layout algorithm to complete
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()  # Clean up temp file
