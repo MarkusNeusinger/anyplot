@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
-Library: pygal | Python 3.13
+Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-11
 """
 
