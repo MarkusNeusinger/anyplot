@@ -5,8 +5,11 @@ spec/library combos. Mimics the production renderer
 (``agentic/workflows/modules/regen/render.py``) so visual results are
 trustworthy.
 
-Outputs land under ``/tmp/anyplot-style-experiments/<timestamp>/`` by default
-- never inside the repo, never on GCS.
+Outputs land under ``/tmp/anyplot-style-experiments/<timestamp>/`` by default.
+The script sets ``cwd`` to the run directory so anything an implementation
+writes via relative paths goes there, and the pre/post ``git status`` check
+on ``plots/`` flags any artifacts that leaked in beside the source (some
+impls resolve paths from ``__file__``). It can detect, but not prevent, that.
 
 Usage::
 
@@ -32,7 +35,6 @@ import atexit
 import json
 import os
 import re
-import shutil
 import signal
 import subprocess
 import sys
@@ -41,8 +43,10 @@ import webbrowser
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from html import escape as h
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote as urlquote
 
 import yaml
 
@@ -146,7 +150,14 @@ def _signal_handler(signum: int, frame: Any) -> None:
 
 
 atexit.register(_restore_all)
-for _sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+_signals_to_trap = [
+    s for s in (
+        getattr(signal, "SIGINT", None),
+        getattr(signal, "SIGTERM", None),
+        getattr(signal, "SIGHUP", None),
+    ) if s is not None
+]
+for _sig in _signals_to_trap:
     try:
         signal.signal(_sig, _signal_handler)
     except (ValueError, OSError):
@@ -316,8 +327,8 @@ def write_compare_html(
   [data-theme="dark"] body { background: #121210; color: #f0efe8; }
 </style></head><body>""")
 
-    html.append(f"<h1>anyplot style experiment</h1>")
-    html.append(f"<div class='meta'>{datetime.now().strftime('%Y-%m-%d %H:%M')} &middot; "
+    html.append("<h1>anyplot style experiment</h1>")
+    html.append(f"<div class='meta'>{h(datetime.now().strftime('%Y-%m-%d %H:%M'))} &middot; "
                 f"{len(specs)} spec(s) &times; {len(libraries)} library(ies) &times; "
                 f"{len(variants)} variant(s) &times; {len(themes)} theme(s) "
                 f"= {len(records)} render(s)</div>")
@@ -334,26 +345,27 @@ def write_compare_html(
 
     for spec in specs:
         for lib in libraries:
-            html.append(f"<div class='group'><h2>{spec} &mdash; {lib}</h2>")
+            html.append(f"<div class='group'><h2>{h(spec)} &mdash; {h(lib)}</h2>")
             html.append("<table><thead><tr><th></th>")
             for vn in variant_names:
-                html.append(f"<th>{vn}<small>{variant_desc[vn]}</small></th>")
+                html.append(f"<th>{h(vn)}<small>{h(variant_desc[vn])}</small></th>")
             html.append("</tr></thead><tbody>")
             for theme in themes:
-                html.append(f"<tr><th>{theme}</th>")
+                html.append(f"<tr><th>{h(theme)}</th>")
                 for vn in variant_names:
                     rec = by_key.get((spec, lib, vn, theme))
-                    html.append(f"<td class='cell {theme}'>")
+                    html.append(f"<td class='cell {h(theme)}'>")
                     if rec is None:
                         html.append("<div class='err'>(no record)</div>")
                     elif rec.success and rec.png_path:
-                        html.append(f"<a href='{rec.png_path}' target='_blank'>"
-                                    f"<img src='{rec.png_path}' loading='lazy'></a>")
+                        href = urlquote(rec.png_path, safe="/")
+                        html.append(f"<a href='{href}' target='_blank'>"
+                                    f"<img src='{href}' loading='lazy'></a>")
                         html.append(f"<div class='label'>{rec.duration_sec}s"
                                     + (f", {rec.patches_applied} patch(es)" if rec.patches_applied else "")
                                     + "</div>")
                     else:
-                        err = (rec.error or "unknown error")[:600]
+                        err = h((rec.error or "unknown error")[:600])
                         html.append(f"<div class='err'>{err}</div>")
                     html.append("</td>")
                 html.append("</tr>")
@@ -406,13 +418,13 @@ def main() -> int:
     (output_root / "runs").mkdir(exist_ok=True)
 
     pre_dirty = subprocess.run(
-        ["git", "diff", "--name-only", "--", "plots/"],
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", "plots/"],
         capture_output=True, text=True, cwd=REPO_ROOT,
     ).stdout.strip()
     if pre_dirty:
-        print("[style-experiment] WARNING: plots/ has uncommitted changes before run:")
+        print("[style-experiment] WARNING: plots/ has uncommitted or untracked files before run:")
         print(pre_dirty)
-        print("Patches will still be reverted via try/finally, but verify with `git diff` after.\n")
+        print("Patches will still be reverted via try/finally, but verify with `git status` after.\n")
 
     total = len(specs) * len(libraries) * len(variants) * len(themes)
     print(f"[style-experiment] {total} render(s) -> {output_root}")
@@ -442,13 +454,13 @@ def main() -> int:
     print(f"[style-experiment] manifest: {output_root / 'manifest.json'}")
 
     post_dirty = subprocess.run(
-        ["git", "diff", "--name-only", "--", "plots/"],
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", "plots/"],
         capture_output=True, text=True, cwd=REPO_ROOT,
     ).stdout.strip()
     if post_dirty and post_dirty != pre_dirty:
-        print("\n[style-experiment] WARNING: plots/ is dirty after run (patches not restored?):")
+        print("\n[style-experiment] WARNING: plots/ is dirty after run (unrestored patches or stray artifacts):")
         print(post_dirty)
-        print("Run `git checkout -- plots/` to restore.")
+        print("Restore tracked files with `git checkout -- plots/` and inspect untracked entries before deleting.")
         return 2
 
     if args.open_browser:
