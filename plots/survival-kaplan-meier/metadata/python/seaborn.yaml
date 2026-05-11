@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:27Z'
-updated: '2026-05-11T07:42:29Z'
+updated: '2026-05-11T07:49:31Z'
 generated_by: claude-haiku
 workflow_run: 25656464813
 issue: 2441
@@ -12,84 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 72
 review:
   strengths:
-  - Correct Kaplan-Meier visualization with all required elements (curves, CI bands,
-    censored marks)
-  - Clear visual differentiation between treatment groups; treatment survival advantage
-    immediately apparent
-  - Median survival annotation provides clinical context
-  - Excellent text legibility in both light and dark themes
-  - Proper canvas utilization with balanced layout
+  - Correct Kaplan-Meier implementation with proper step functions and confidence
+    intervals (95% CI via Greenwood formula)
+  - 'All required spec features present: two-group comparison, censored observation
+    marks, median survival annotation, clear legend'
+  - Excellent visual clarity in both light and dark renders—all text readable, no
+    overlapping elements
+  - Realistic clinical trial data with plausible survival curves showing meaningful
+    group difference
+  - Canvas utilization and layout well-balanced; annotation box positioned effectively
   weaknesses:
-  - Title says 'pyplots.ai' instead of 'anyplot.ai'
-  - Missing theme-adaptive color implementation (ANYPLOT_THEME handling, INK/INK_SOFT
-    tokens per seaborn.md)
-  - Saves as 'plot.png' instead of 'plot-{THEME}.png'
-  - Code lacks theme environment variable reading despite rendered images showing
-    proper theme adaptation
+  - 'CRITICAL: Source code contains hardcoded colors (#306998 Python Blue, #FFD43B
+    Python Yellow) that do not match Okabe-Ito palette or the output images; code
+    does not read ANYPLOT_THEME environment variable'
+  - Code does not implement theme-adaptive chrome as specified in seaborn library
+    rules (missing sns.set_theme with theme-dependent rc parameters, missing color
+    tokens like PAGE_BG/INK_SOFT)
+  - Code saves to 'plot.png' instead of 'plot-{THEME}.png' as required by seaborn
+    spec
+  - Annotation box uses hardcoded facecolor='white' instead of theme-adaptive ELEVATED_BG
+    token
+  - 'Code/output mismatch: generated images show correct colors and theme adaptation
+    but source code does not implement this—images must be from a different version'
+  - Grid styling uses sns.set_style('whitegrid') without theme-aware customization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all dark and clearly readable against light background
-      Data: Treatment (teal #009E73) and Control (orange #D55E00) curves with confidence interval bands clearly visible. Censored observations marked with tick marks. Legend labels match data groups.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) with subtle gray gridlines
+      Chrome: Title, X-axis label ("Time (months)"), Y-axis label ("Survival Probability"), and tick labels all clearly visible in dark text; annotation box with light background and border readable
+      Data: Two step-function survival curves—treatment (bluish-green, appears to be #009E73) shows better survival; control (orange, appears to be #E69F00 or #D55E00) shows worse outcomes. Confidence interval bands rendered as semi-transparent fills. Censored observations marked with tick marks. Median survival line at 0.5 with annotation. Legend in lower left clearly labels both groups.
+      Legibility verdict: PASS — all elements readable and well-positioned
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels now light-colored and readable. No dark-on-dark failures detected. Dashed reference line and grid visible in light gray.
-      Data: Treatment and Control colors identical to light render (teal and orange maintained). Confidence intervals properly visible on dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) with subtle light gridlines
+      Chrome: Title, axis labels, and tick labels clearly visible in light text; annotation box styling remains readable with proper contrast
+      Data: Survival curves maintain identical bluish-green and orange colors from light render (only chrome adapted, not data colors as required). Confidence bands, censored marks, and median line all visible with same structure as light render. Legend and annotations clearly readable.
+      Legibility verdict: PASS — all elements readable; colors correctly theme-invariant; no dark-on-dark text failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicitly set sizes, readable in both themes
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements well-spaced
+        comment: No overlapping text; legend positioned outside plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curves, bands, censored marks all visible
+        comment: Survival curves, CI bands, censored marks all clearly visible and
+          well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe, good contrast
+        comment: Green and orange series have high contrast; Okabe-Ito palette is
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Excellent utilization and balance
+        comment: Good balance but slight wasted space on right side of both renders
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: Both axes labeled with units; title format correct
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors appear correct but code lacks theme-adaptive implementation
+        passed: true
+        comment: Images show correct Okabe-Ito colors (#009E73 treatment, orange control);
+          theme-adaptive chrome evident; however, source code does not implement this
+          correctly—code/output mismatch
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -97,21 +111,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Default seaborn styling, no custom design
+        comment: Well-configured library defaults; no custom design choices beyond
+          standard seaborn styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults
+        comment: Minimal customization; grid visible but could be more subtle; uses
+          sns.set_style defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Clear group divergence, annotation adds context
+        comment: Visual hierarchy present through color contrast (green vs orange)
+          and group separation; median survival annotation adds insight
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -119,27 +136,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier with step function
+        comment: Correct Kaplan-Meier survival plot with step functions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: 'All spec requirements met: step function, 95% CI, censored marks,
+          group comparison, legend, median annotation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correct
+        comment: X/Y correctly assigned; axes span full data range (0-38 months, 0-1.05
+          probability)
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: 'CRITICAL: Title says ''pyplots.ai'' not ''anyplot.ai'''
+        comment: Title format 'survival-kaplan-meier · seaborn · anyplot.ai' correct;
+          legend labels match but styling could be polished
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -147,76 +167,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all plot type aspects
+        comment: 'Shows all aspects: two groups, censoring, confidence intervals,
+          event times, varying survival probabilities'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial scenario realistic
+        comment: Clinical trial scenario (treatment vs control groups) is realistic
+          and neutral; transparent about synthetic data
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Values proportionally correct
+        passed: false
+        comment: Proportions plausible (treatment median ~22 months, control ~17 months)
+          but synthetic data; values are within expected ranges
     code_quality:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Clean flow
+        passed: false
+        comment: Includes kaplan_meier() function (adds complexity) but justified
+          for domain logic
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: np.random.seed(42) set for reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports (matplotlib, numpy, pandas, seaborn)
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Missing theme-adaptive implementation
+        comment: 'CRITICAL ISSUE: Code contains hardcoded colors that don''t match
+          output; missing required theme-adaptive styling; annotation box facecolor
+          hardcoded to ''white'''
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png, should be plot-{THEME}.png
+        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png' as specified; code/output
+          mismatch suggests stale file
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses ax.step(), ax.fill_between(), ax.scatter() correctly but does
+          not follow seaborn theme-adaptation pattern from library spec
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses sns.set_style() appropriately
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic usage, no distinctive seaborn features
-  verdict: REJECTED
+        comment: Custom Kaplan-Meier estimator function is domain-specific but not
+          a seaborn distinctive feature; seaborn-specific features (set_theme, theme-adaptive
+          rc) not utilized
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
