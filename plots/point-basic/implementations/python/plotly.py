@@ -1,12 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 point-basic: Point Estimate Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-11
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Treatment effects for different interventions
 np.random.seed(42)
@@ -28,13 +38,13 @@ fig.add_trace(
         x=estimates,
         y=categories,
         mode="markers",
-        marker={"size": 18, "color": "#306998", "symbol": "circle"},
+        marker={"size": 18, "color": BRAND, "symbol": "circle"},
         error_x={
             "type": "data",
             "symmetric": False,
             "array": [u - e for e, u in zip(estimates, upper, strict=False)],
             "arrayminus": [e - low for e, low in zip(estimates, lower, strict=False)],
-            "color": "#306998",
+            "color": BRAND,
             "thickness": 3,
             "width": 10,
         },
@@ -46,40 +56,54 @@ fig.add_trace(
 # Add reference line at zero (null hypothesis)
 fig.add_vline(
     x=0,
-    line={"color": "#FFD43B", "width": 3, "dash": "dash"},
+    line={"color": INK_SOFT, "width": 3, "dash": "dash"},
     annotation_text="Null",
     annotation_position="top",
-    annotation_font={"size": 18, "color": "#FFD43B"},
+    annotation_font={"size": 18, "color": INK_SOFT},
 )
 
 # Layout
 fig.update_layout(
-    title={"text": "point-basic · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "point-basic · plotly · anyplot.ai",
+        "font": {"size": 32, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Effect Size (units)", "font": {"size": 24}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Effect Size (units)", "font": {"size": 24, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "zeroline": False,
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Treatment Group", "font": {"size": 24}},
-        "tickfont": {"size": 20},
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Treatment Group", "font": {"size": 24, "color": INK}},
+        "tickfont": {"size": 20, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     template="plotly_white",
     legend={
-        "font": {"size": 18},
+        "font": {"size": 18, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
         "x": 0.98,
         "y": 0.02,
         "xanchor": "right",
         "yanchor": "bottom",
-        "bgcolor": "rgba(255,255,255,0.8)",
     },
     margin={"l": 150, "r": 80, "t": 100, "b": 80},
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
