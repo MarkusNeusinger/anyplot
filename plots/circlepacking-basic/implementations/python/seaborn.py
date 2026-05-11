@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-05-11
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 93/100 | Created: 2026-05-11
 """
 
 import os
