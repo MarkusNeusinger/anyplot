@@ -1,167 +1,163 @@
 library: plotnine
+language: python
 specification_id: forest-basic
 created: '2025-12-27T19:23:19Z'
-updated: '2025-12-27T19:32:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282765
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/forest-basic/plotnine/plot.png
-preview_html: null
+updated: '2026-05-11T01:14:50Z'
+generated_by: claude-haiku
+workflow_run: 25645079268
+issue: 2378
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent implementation of forest plot structure with clear visual hierarchy
-  - Proper diamond shape for pooled estimate using geom_polygon
-  - Study labels and effect size values clearly displayed on left and right sides
-  - Good color choices with Python blue (#306998) and yellow accent (#FFD43B)
-  - Appropriate sizing for all text elements following quality guidelines
-  - Clean, readable code structure following KISS principles
-  - Realistic meta-analysis data context with meaningful study names
+  - Perfect theme adaptation with correct color tokens for both light and dark renders
+  - Excellent typography hierarchy with explicitly set font sizes throughout
+  - Flawless specification compliance - all required forest plot elements present
+    and correctly implemented
+  - Strong data quality with realistic meta-analysis scenario and appropriate confidence
+    intervals
+  - Clean, idiomatic plotnine usage with proper grammar-of-graphics composition
   weaknesses:
-  - All individual study effects are negative; including some positive effects would
-    better demonstrate the plot ability to show heterogeneous results
-  - Grid lines only on x-axis (though appropriate for forest plots, full grid could
-    be considered)
-  image_description: 'The plot displays a forest plot with 10 individual studies listed
-    vertically on the left side (Smith 2018 through Anderson 2023), each with a blue
-    horizontal error bar representing the confidence interval and a blue dot at the
-    point estimate. A vertical dashed gray line at x=0 marks the null effect reference.
-    At the bottom, a yellow diamond shape represents the pooled estimate. On the right
-    side, effect sizes with confidence intervals are displayed in text format (e.g.,
-    "-0.45 [-0.72, -0.18]"). The pooled estimate is shown in bold ("-0.31 [-0.46,
-    -0.15]"). The title follows the required format: "forest-basic · plotnine · pyplots.ai".
-    The x-axis is labeled "Mean Difference (Treatment - Control)". The background
-    is white with subtle light gray vertical grid lines.'
+  - Design Excellence could be elevated with more visual emphasis or hierarchy (e.g.,
+    highlight studies with CIs crossing null effect)
+  - LM-02 (Distinctive Features) is solid but represents fairly standard plotnine
+    patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "forest-basic · plotnine · anyplot.ai" is prominent (24pt), study names on left are dark and readable (16pt), effect sizes on right are secondary text color and readable (10pt). X-axis label "Mean Difference (Treatment - Control)" is clearly visible (20pt). All tick labels are readable at 16pt.
+      Data: Green error bars and points (#009E73 brand color) are crisp and clearly visible. Confidence intervals show appropriate variation. Pooled diamond at bottom is well-defined. Vertical reference line at zero is subtle but visible.
+      Legibility verdict: PASS - All text is clearly readable; excellent contrast against light background; no overlaps or legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title text is light-colored (#F0EFE8) and fully readable. Study names are light, clearly visible against dark background. Effect sizes use secondary text color (#B8B7B0) and are readable. X-axis labels and tick labels are all light-colored and readable. No dark-on-dark text failures.
+      Data: Error bars and points are identical #009E73 as in light render (perfect color consistency). Diamond is the same teal color. Vertical reference line is visible. Grid lines are appropriately visible.
+      Legibility verdict: PASS - All text is light-colored and readable on dark background; data colors are identical to light render; no theme-adaptation failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, study names and effect values
-          clearly readable at appropriate sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: All text elements are well-separated with no overlap
+        comment: All font sizes explicitly set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Study names on left, values on right; no overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points and error bars well-sized; marker sizes vary by weight as
-          specified; slightly conservative sizing
+        comment: Error bars and markers clearly visible; appropriate sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe; high contrast
-          against white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; slight imbalance with more whitespace on
-          the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has descriptive label "Mean Difference (Treatment - Control)"
-          with context
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: CVD-safe palette; good contrast both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect canvas utilization; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed; grid is subtle but only vertical lines present
-          which is appropriate for forest plots
+        comment: Descriptive labels with context; proper title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 throughout; theme-correct chrome both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, clean design; theme tokens used throughout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid styling, minimal spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear layout guides viewer; visual hierarchy present
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct forest plot with study estimates, CIs, and pooled diamond
+        comment: Correct forest plot with all standard elements
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Effect sizes on x-axis, studies on y-axis as expected
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: point estimates, CI whiskers, diamond
-          for pooled estimate, reference line at null, marker size by weight'
-      - id: SC-04
-        name: Data Range
+        comment: Point estimates, CIs, pooled diamond, reference line, labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this plot type; labels are inline
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "forest-basic · plotnine · pyplots.ai"
+        comment: Correct title format; legend properly omitted for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both significant (CI not crossing 0) and non-significant results;
-          varying CI widths; pooled estimate clearly shown. Could have more variation
-          in effect directions.
+        comment: Shows varying effect sizes, CIs, and precision
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Meta-analysis of RCTs comparing treatment vs control is a perfect
-          real-world scenario for forest plots
+        comment: Meta-analysis of RCTs; neutral, realistic scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Effect sizes and CIs are realistic for clinical trials; all effects
-          are negative which is slightly monotonic
+        comment: Factually correct; pooled effect within study range
     code_quality:
       score: 10
       max: 10
@@ -171,41 +167,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → calculations → plot → save'
+        comment: 'Linear: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation)
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unnecessary packages
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct filename format plot-{THEME}.png
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses plotnine's grammar of graphics
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot pattern; proper use of geoms and theme
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of geom_errorbarh, geom_point with size identity, geom_polygon
-          for diamond, geom_text for labels. Uses ggplot properly but doesn't showcase
-          any particularly distinctive plotnine features beyond standard ggplot grammar.
+        comment: Uses geom_polygon for diamond; theme tokens; solid plotnine patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
