@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-density: Density Histogram
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 77/100 | Updated: 2026-05-11
+Quality: 81/100 | Updated: 2026-05-11
 """
 
 import matplotlib.pyplot as plt
