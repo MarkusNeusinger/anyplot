@@ -1,167 +1,170 @@
 library: plotnine
+language: python
 specification_id: circlepacking-basic
 created: '2025-12-30T00:08:30Z'
-updated: '2025-12-30T00:55:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585401342
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - layer-composition
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+updated: '2026-05-11T15:29:48Z'
+generated_by: claude-haiku
+workflow_run: 25679494609
+issue: 2498
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent visual hierarchy with clear color differentiation between levels (gray
-    root, blue departments, yellow teams)
-  - Creative implementation using geom_polygon to draw circles since plotnine lacks
-    native circle packing
-  - Proper area encoding (r ∝ sqrt(value)) for accurate visual perception of sizes
-  - Clean, readable code with well-documented manual layout calculations
-  - Realistic company organizational data that effectively demonstrates the visualization
-    concept
-  - All labels readable with appropriate sizing and bold text for emphasis
+  - Excellent visual quality and legibility in both light and dark themes
+  - Perfect specification compliance with all required features correctly implemented
+  - Thoughtful color encoding using Okabe-Ito palette that makes hierarchy immediately
+    clear
+  - Area-proportional circle sizing correctly implemented via square-root scaling
+  - Clean, professional aesthetic with minimal visual clutter
+  - Strong data storytelling through nested visual structure
+  - Proper theme-adaptive chrome with no dark-on-dark or light-on-light legibility
+    failures
   weaknesses:
-  - Manual circle positioning rather than algorithmic packing means circles do not
-    pack as tightly as possible
-  - Slight empty space at bottom of the root circle could be better utilized
-  image_description: 'The plot displays a circle packing chart representing a company
-    organizational structure. A large light gray root circle (labeled "Root" in legend)
-    encompasses the entire visualization. Inside it are three medium-sized blue circles
-    representing departments: Engineering (top center, largest), Operations (bottom
-    left), and Product (bottom right). Each department contains smaller yellow circles
-    representing teams: Engineering has Backend, Frontend, and DevOps; Operations
-    has Finance, Legal, and HR; Product has Design, PM, and Research. The title "circlepacking-basic
-    · plotnine · pyplots.ai" appears at the top in bold black text. A horizontal legend
-    at the bottom shows the hierarchy levels with colored squares: Root (gray), Departments
-    (blue), and Teams (yellow). Circle sizes correctly reflect the hierarchical values
-    with Engineering being the largest department.'
+  - Design Excellence could be elevated beyond default Okabe-Ito application through
+    additional visual refinement techniques
+  - Library Mastery limited—could leverage more distinctive plotnine features or advanced
+    theming techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title in bold dark text, legend at bottom with clear hierarchy labels, all text dark (INK #1A1A17) and readable
+      Data: Root circle green (#009E73), asset class circles orange (#D55E00), holding circles blue (#0072B2). Circles properly nested and sized proportionally. All labels clearly visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in white/light text, legend at bottom with light text on dark background. No dark-on-dark failures detected. All text clearly readable.
+      Data: Circle colors identical to light render (green, orange, blue). No color adaptation needed for data elements (only chrome flips). All hierarchy labels visible with light text.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and bold at 28pt, labels are readable at 10-12pt,
-          all text clear
+        comment: All text readable in both themes, bold weight, appropriate sizing
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels well-positioned within or near circles
+        comment: No text collisions, labels positioned thoughtfully on circle surfaces
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circle sizes properly differentiated, good alpha at 0.92
+        comment: All circles and nested structure clearly visible at high resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Gray/blue/yellow palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of square canvas, circles well-centered, slight empty space
-          at bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for circle packing (no axes), giving full credit
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom, clean theme_void removes grid appropriately
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned square format, centered composition, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format, legend properly identifies hierarchy levels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Root=#009E73, Asset Classes=#D55E00, Holdings=#0072B2, backgrounds
+          correct, data colors identical in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful Okabe-Ito palette use for hierarchy encoding, intentional
+          color choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean minimal aesthetic, circle strokes add subtle definition
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy guides viewer through portfolio structure
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct circle packing chart with nested circles
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Parent-child hierarchy correctly mapped, sizes proportional to values
-      - id: SC-03
+        comment: Correct circle packing with nested structure
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows hierarchy levels with color encoding; manual layout instead
-          of force simulation
-      - id: SC-04
-        name: Data Range
+        comment: Hierarchy levels, area-proportional sizing, color encoding, labels
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within root circle
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: ID, parent, value, label properly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes hierarchy levels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: circlepacking-basic · plotnine · pyplots.ai'
+        comment: Title format correct, legend identifies all hierarchy levels
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3-level hierarchy, different sized nodes; could show more variation
-          in team sizes
+        comment: Portfolio hierarchy demonstrated across 3 levels
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Company organizational structure is realistic and neutral business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Team sizes (8-20 people) and department totals are realistic
+        comment: Realistic portfolio composition, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values scale correctly, square-root area encoding is mathematically
+          sound
     code_quality:
       score: 10
       max: 10
@@ -171,40 +174,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → calculations → plot → save'
+        comment: Straightforward data setup and plot definition, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seeded random state ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used, no redundancy
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: No fake interactivity, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file format and current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of plotnine grammar, theme tokens properly threaded
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_polygon and geom_text, theme_void,
-          scale_fill_manual; creative use of plotnine for non-standard chart type
+        comment: Polygon-based circle approach shows coordinate system understanding
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

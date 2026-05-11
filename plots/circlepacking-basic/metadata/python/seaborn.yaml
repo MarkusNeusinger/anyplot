@@ -1,0 +1,247 @@
+library: seaborn
+language: python
+specification_id: circlepacking-basic
+created: '2026-05-11T15:18:33Z'
+updated: '2026-05-11T15:22:08Z'
+generated_by: claude-haiku
+workflow_run: 25679028976
+issue: 2498
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Perfect visual quality and legibility in both light and dark themes
+  - Full specification compliance with correct hierarchy visualization
+  - Strong data representation using depth-based color coding (Okabe-Ito palette)
+  - Clean, readable code with proper seed for reproducibility
+  - Excellent theme-adaptive implementation with matching colors across renders
+  - Well-balanced composition with clear visual hierarchy from root to leaf nodes
+  weaknesses:
+  - Design Excellence could be elevated with more sophisticated visual refinement
+    or additional styling details
+  - 'Library Mastery: Circle packing algorithm is custom but could demonstrate additional
+    matplotlib advanced features'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, exactly per spec
+      Chrome: Title "circlepacking-basic · seaborn · anyplot.ai" in dark text (INK #1A1A17), clearly readable at 24pt fontweight=medium
+      Data: Hierarchical circles properly arranged — root circle (center) in brand green #009E73, 4 level-1 folder circles in vermillion #D55E00 (Media, Archive, Documents, Projects), 10+ level-2 item circles in blue #0072B2. All labels (white on root, dark on folders/items) clearly visible.
+      Margins: Spacious, no cut-off elements
+      Legibility verdict: PASS ✓ All elements readable, excellent contrast, clean layout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, exactly per spec
+      Chrome: Title in light text on dark background, clearly readable. All labels visible and properly contrasted.
+      Data: Root green #009E73 (IDENTICAL to light render), folder vermillion #D55E00 (IDENTICAL), item blue #0072B2 (IDENTICAL). Circle edges in INK_SOFT with subtle gray outline, visible and well-defined.
+      Margins: Same spacious layout, no overcrowding
+      Legibility verdict: PASS ✓ All text readable on dark surface, proper light-on-dark contrast, green circle text clearly visible, no dark-on-dark failures
+
+    Both renders: Data colors are 100% identical between light and dark themes. Only chrome (background, text, borders) adapts properly. Theme-adaptive implementation is correct.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable at appropriate sizes in both themes; title at 24pt,
+          labels at 12-14pt, perfect contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles arranged without overlap, labels centered and clearly visible,
+          spacious layout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All circles visible, size hierarchy clear, no hidden elements, proper
+          radius scaling
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette ensures CVD safety, good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio with good proportions, nothing cut off, generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''circlepacking-basic · seaborn · anyplot.ai'';
+          no axes needed for plot type'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background #FAF8F1 (light)/#1A1A17 (dark), root #009E73 (Okabe-Ito
+          pos 1), folders #D55E00 (pos 2), items #0072B2 (pos 3), both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional depth-based coloring, thoughtful circle positioning,
+          Okabe-Ito palette usage shows design intent beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean minimal presentation, edge colors for definition (INK_SOFT),
+          generous whitespace, alpha-blended circles
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy guides understanding, size encoding shows
+          values, color by depth level, strong focal point (central root)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Circle packing visualization correctly implemented, hierarchical
+          structure properly shown
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Circles packed without overlap, proportional sizing by value, color
+          by depth level, labels for larger circles
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Root encompasses children, value mapped to radius, hierarchy levels
+          properly represented (3 levels)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend N/A (color indicates hierarchy not categories)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full hierarchical structure demonstrated, 3 levels with multiple
+          parent-child relationships
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: File system hierarchy (root, folders, items) realistic and plausible,
+          neutral data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: File size values realistic, 2-4 hierarchy levels match spec, ~20
+          total nodes ideal for visualization
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple structure, pack_circles() helper is essential, straightforward
+          data generation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, deterministic across runs
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports (os, matplotlib, numpy, pandas), all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity, clean and readable logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png correctly, current matplotlib API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses matplotlib.patches.Circle idiomatically, proper theme-adaptive
+          coloring, standard figure/axes setup, good use of tight_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom circle packing algorithm, depth-based coloring strategy, theme-adaptive
+          implementation with proper token usage
+    score_caps:
+      applied: false
+      notes: 'No caps triggered: VQ-02>0, VQ-03>0, SC-01>0, DQ-02>0, CQ-04>0'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
