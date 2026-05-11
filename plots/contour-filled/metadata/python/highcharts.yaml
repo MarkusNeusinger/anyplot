@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: contour-filled
 created: '2025-12-30T00:07:49Z'
-updated: '2026-05-11T13:36:10Z'
+updated: '2026-05-11T13:43:27Z'
 generated_by: claude-haiku
 workflow_run: 25673123045
 issue: 2500
@@ -12,109 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - Correctly implements filled contour visualization using heatmap with contour line
-    overlay
-  - Viridis colormap is appropriate for continuous data and demonstrates CVD-safety
-  - 'Perfect theme adaptation: background, text, and chrome elements properly use
-    light/dark tokens while preserving data colors'
-  - Contour lines with white stroke and black shadow provide excellent visual definition
-    of level curves
-  - Annotations with level values (10%, 30%, 50%, 70%, 90%) aid interpretation without
-    cluttering the plot
-  - Marching squares algorithm is well-implemented for accurate contour extraction
-  - Good data representation showing multiple Gaussian peaks with smooth color transitions
+  - Excellent dual visualization (heatmap + contour lines) with marching squares algorithm
+  - Correct viridis colormap for continuous data, colorblind-safe
+  - Good data generation with multiple Gaussian peaks showing all aspects of plot
+    type
+  - Clean code structure with proper Selenium integration and JS fallbacks
+  - Proper layout and proportions with generous margins
+  - Perfect spec compliance for plot type and all required features
+  - Marching squares implementation shows good algorithmic knowledge
   weaknesses:
-  - Title font appears small relative to 4800x2700 canvas despite being set to 28px
-    - consider larger font size or increased vertical spacing for better prominence
+  - Dark render title barely visible against dark background - theme color not properly
+    rendered
+  - Dark render axis labels too faint to read - INK_SOFT color not appearing in output
+  - Dark render tick labels nearly invisible - theme adaptation failing
+  - Possible issue with HighchartsOptions color value embedding in generated JavaScript
+  - Generic design sophistication - follows standard Highcharts defaults
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme surface
-      Chrome: Title "contour-filled · highcharts · anyplot.ai" is small but readable at top. X/Y axis titles ("X Position (units)", "Y Position (units)") are clear with dark ink (#1A1A17). Axis tick labels sparse but legible showing range -4 to 4. Colorbar on right with "Intensity (%)" title is readable with proper contrast.
-      Data: Beautiful viridis gradient heatmap from dark blue (low values) through greens and yellows (high values). Shows three distinct Gaussian peaks. White contour lines with black shadow outline the level curves at 15 levels (10%, 30%, 50%, 70%, 90% annotated with level labels in readable boxes).
-      Legibility verdict: PASS - All chrome elements readable. Title is small relative to canvas but still discernible. Contour lines and heatmap colors are well-distinguished from background.
+      Background: Warm off-white (#FAF8F1) as expected
+      Chrome: Title "contour-filled · highcharts · anyplot.ai" clearly visible in dark text, axis labels "X Position (units)" and "Y Position (units)" readable, tick labels visible
+      Data: Viridis gradient heatmap showing Gaussian peaks, white contour lines with black shadows for clarity, level labels (50%, 70%, 90%) positioned on contours, colorbar legend showing full gradient
+      Legibility verdict: PASS - All text and elements clearly readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme surface
-      Chrome: Title same as light render. Axis titles use light ink (#F0EFE8) and are readable. Axis tick labels use INK_SOFT (#B8B7B0) and are visible. Colorbar text is light-colored and readable. No dark-on-dark failures observed.
-      Data: Data colors IDENTICAL to light render - viridis gradient preserved perfectly. White contour lines visible against dark background. Annotations readable.
-      Legibility verdict: PASS - All chrome elements readable. Theme adaptation is correct; only background and text colors changed, data colors preserved.
+      Background: Warm near-black (#1A1A17) appears correct
+      Chrome: Title barely visible (extremely faint), axis labels too dim to read, tick labels nearly invisible - theme color tokens not properly applied in dark theme
+      Data: Viridis gradient identical to light render (correct data color independence), white contour lines visible, colorbar present but text unreadable
+      Legibility verdict: FAIL - Dark theme has critical text readability failure with unreadable chrome elements. Dark text colors (INK=#F0EFE8, INK_SOFT=#B8B7B0) do not appear to be rendering in the Highcharts output.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 2
         max: 8
-        passed: true
-        comment: Title readable but small; axis labels and tick labels clear in both
-          themes
+        passed: false
+        comment: Title and axis labels unreadable in dark theme due to color not being
+          applied/rendered
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; annotations and legend properly spaced
+        comment: Level labels well-positioned, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap, contour lines, labels, and colorbar all clearly visible
+        comment: Contours and heatmap visible; dark labels barely visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe; white/black contour lines provide good contrast
+        comment: Viridis colormap is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; some unused space at top due to small title
+        comment: Perfect proportions, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled with units; title follows spec format
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Background colors correct; viridis appropriate for continuous data;
-          theme tokens used correctly
+        passed: false
+        comment: Chrome not theme-adapted in dark render - unreadable text
     design_excellence:
       score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Contour overlay shows design intent; viridis gradient is appropriate;
-          some custom thought evident
+        comment: Well-configured default, heatmap+contour combo is standard
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean heatmap with no borders; generous whitespace; standard Highcharts
-          spines
+        comment: Good margins, clean legend, but chrome issues detract
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear focal points on peaks; contour lines guide viewer through data
-          structure
+        comment: Clear visualization of 2D field, peaks easily identified
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +121,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled contour plot implementation
+        comment: Correct filled contour plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colored regions, level curves, colorbar scale all present
+        comment: 'All features present: heatmap, colorbar, contours, labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes mapped correctly; Z values map to viridis colors
+        comment: X/Y correctly mapped from meshgrid
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar labeled with units
+        comment: Correct format with proper legend
     data_quality:
       score: 15
       max: 15
@@ -152,20 +149,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 80x80 grid shows multiple Gaussian peaks and valleys; good surface
-          representation
+        comment: Shows all plot type aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical function is realistic for demo; neutral domain
+        comment: Gaussian peaks are realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% intensity range is sensible; grid range -4 to 4 appropriate
+        comment: 80x80 grid with 0-100% normalization
     code_quality:
       score: 10
       max: 10
@@ -175,31 +171,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward code; no unnecessary abstractions
+        comment: Straightforward procedural code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Marching squares algorithm is appropriate; no fake UI
+        comment: No fake UI, proper error handling
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Correct file naming
     library_mastery:
       score: 7
       max: 10
@@ -209,16 +205,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Highcharts API; proper theme adaptation; downloads JS
-          modules correctly
+        comment: Correct Chart/HighchartsOptions usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Contour overlay with annotations shows library mastery; custom color
-          axis with viridis stops
-  verdict: APPROVED
+        comment: Heatmap+line combo, marching squares, annotations
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
@@ -230,8 +224,6 @@ impl_tags:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - custom-colormap
-  - publication-ready
