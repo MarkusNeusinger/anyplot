@@ -1,169 +1,170 @@
 library: matplotlib
+language: python
 specification_id: venn-basic
 created: '2025-12-29T22:49:22Z'
-updated: '2025-12-29T22:58:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584328597
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/venn-basic/matplotlib/plot.png
-preview_html: null
+updated: '2026-05-11T11:20:02Z'
+generated_by: claude-haiku
+workflow_run: 25666717339
+issue: 2444
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent choice of square figure format (12x12) which is ideal for circular Venn
-    diagrams
-  - Clear and intuitive color scheme with Python blue (#306998), JavaScript yellow
-    (#FFD43B), and SQL cyan (#4ECDC4)
-  - Well-organized code with clear variable names explaining each region
-  - Appropriate alpha transparency (0.6) that shows overlaps clearly
-  - Good use of matplotlib_venn library venn3 function with proper 7-tuple subset
-    format
-  - Realistic and relatable data context (developer survey about programming languages)
+  - Both renders are perfectly theme-adapted with no text legibility issues
+  - Correct use of matplotlib_venn library for proper Venn diagram construction
+  - Okabe-Ito palette correctly applied (positions 1-3 in order)
+  - All required spec elements present and clearly labeled
+  - Clean, professional code with proper theme tokens
+  - Excellent data storytelling through overlapping regions
   weaknesses:
-  - Figure size uses 12x12 instead of the standard 3600x3600 or 4800x2700 canvas dimensions
-  - Could add a brief subtitle or annotation explaining the data context
-  - The yellow JavaScript circle could benefit from a slightly darker shade for better
-    contrast against white background
-  image_description: 'The plot shows a classic three-circle Venn diagram with overlapping
-    circles representing Python (blue, #306998), JavaScript (yellow, #FFD43B), and
-    SQL (cyan, #4ECDC4). The title "venn-basic · matplotlib · pyplots.ai" is displayed
-    at the top in bold black text. Each set is labeled with bold text (Python top-left,
-    JavaScript top-right, SQL bottom-center). Each region displays its count in bold:
-    Python-only (40), JavaScript-only (25), SQL-only (15), Python+JavaScript overlap
-    (20), Python+SQL overlap (10), JavaScript+SQL overlap (15), and the central triple
-    overlap (10). The circles have 0.6 alpha transparency, creating distinct blended
-    colors in overlapping regions. The plot uses a square 12x12 figure with a white
-    background.'
+  - 'Design Excellence below median: limited visual customization beyond matplotlib_venn
+    defaults'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with excellent contrast against all elements.
+      Chrome: Title "venn-basic · matplotlib · anyplot.ai" in dark bold 24pt text at top—highly readable. Set labels (Python, JavaScript, SQL) in dark bold 24pt—all clearly visible outside circles.
+      Data: Circle colors show Okabe-Ito brand green (#009E73), orange (#D55E00), blue (#0072B2) in proper order. Numbers in regions (40, 20, 10, 25, 15, 10, 15) in dark bold 20pt text—all readable. Overlapping regions display blended colors with alpha=0.6, creating clear visual separation.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with excellent contrast against all text elements.
+      Chrome: Title in light text against dark background—highly readable. Set labels in light bold text—all clearly visible, no dark-on-dark failures. Proper theme-adaptive chrome throughout.
+      Data: Circle colors are identical to light render (brand green, orange, blue preserved). Numbers in regions in light bold text—all readable against overlapping regions. Okabe-Ito data colors remain constant; only chrome flipped between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at fontsize 28, set labels at 24pt, subset numbers at 20pt
-          - all clearly readable
+        comment: All fonts explicitly set; title, labels, and numbers readable at
+          full size in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlaps; all numbers and labels are well-positioned within
-          their regions
+        comment: Numbers positioned clearly in regions; set labels outside circles;
+          no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circles are well-sized and fill the canvas appropriately; alpha=0.6
-          provides good visibility of overlaps
+        comment: Circles clearly visible; overlapping regions show color blending
+          with appropriate alpha=0.6
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and cyan are distinguishable; however yellow on white
-          could have slightly better contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square format (12x12) is appropriate for Venn diagram; good use of
-          canvas space
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for Venn diagrams (no axes), but set labels are present and clear
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: N/A for Venn diagrams; clean white background is appropriate
+        comment: Okabe-Ito palette used; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: figsize=(16,9) creates good proportions; tight_layout() applied;
+          no cut-off elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title and set labels descriptive and properly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First color #009E73; Okabe-Ito order followed; backgrounds correct;
+          both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Uses matplotlib_venn professionally; limited custom refinement beyond
+          library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean composition, proper whitespace; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point; visual hierarchy through color and position; overlaps
+          show relationships
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Venn diagram with 3 overlapping circles
+        comment: Correct 3-set Venn diagram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: All 7 regions correctly mapped with exclusive counts
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows set labels, counts in each region, overlapping areas with transparency
-      - id: SC-04
-        name: Data Range
+        comment: Set labels, region sizes, overlapping regions all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible; numbers range appropriately from 10-40
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 7 regions correctly mapped and labeled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Set labels (Python, JavaScript, SQL) clearly identify each circle
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "venn-basic · matplotlib · pyplots.ai"
+        comment: Correct title format; no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all 7 regions of a 3-set Venn; good variety in overlap sizes;
-          could show more variation between set sizes
+        comment: Shows all aspects of 3-set Venn diagram; all regions labeled
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Developer survey about programming language proficiency is a realistic,
-          neutral, and relatable scenario
+        comment: Developer survey on programming language proficiency is realistic
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible for a survey; total ~135 respondents is reasonable
-          though exact proportions are somewhat arbitrary
+        comment: Values sensible; good distribution; no outliers
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +172,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: No functions/classes; direct data + plotting
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded values), but no random seed statement
-          since none needed
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and matplotlib_venn are imported, both used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib_venn API
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot.png with dpi=300 and bbox_inches="tight"
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses matplotlib_venn extension library effectively with venn3 function;
-          styling through set_labels and subset_labels customization
+        comment: Uses matplotlib_venn correctly; proper venn3 API; theme tokens applied
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Leverages matplotlib_venn; standard execution for library
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
