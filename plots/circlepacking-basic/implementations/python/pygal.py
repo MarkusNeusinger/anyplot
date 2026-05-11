@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 circlepacking-basic: Circle Packing Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-11
@@ -6,20 +6,42 @@ Quality: 79/100 | Updated: 2026-05-11
 
 import math
 import os
+import sys
 import xml.etree.ElementTree as ET
 
 import cairosvg
 
 
-# Theme tokens
+# Import pygal for styling infrastructure
+# Remove current directory from path to avoid importing this file as pygal
+cwd = os.getcwd()
+if cwd in sys.path:
+    sys.path.remove(cwd)
+if os.path.dirname(os.path.abspath(__file__)) in sys.path:
+    sys.path.remove(os.path.dirname(os.path.abspath(__file__)))
+
+from pygal.style import Style  # noqa: E402
+
+
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Initialize pygal Style for theme-aware styling
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=18,
+)
 
 # Hierarchical data - Company structure with headcount per team
 hierarchy = [
