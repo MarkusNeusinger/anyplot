@@ -1,12 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: altair 5.3.0 | Python 3.13
+Quality: 91/100 | Updated: 2026-05-11
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for categories
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: Software project milestones
 data = pd.DataFrame(
@@ -61,16 +73,19 @@ data = pd.DataFrame(
 # Alternate label positions to prevent overlap (above/below axis)
 data["y_offset"] = [1.5 if i % 2 == 0 else -1.5 for i in range(len(data))]
 data["y_zero"] = 0
-data["y_label"] = [2.3 if i % 2 == 0 else -2.3 for i in range(len(data))]
+data["y_label"] = [2.4 if i % 2 == 0 else -2.4 for i in range(len(data))]
 
-# Color palette for categories (Python Blue and complementary colors with good contrast)
-category_colors = {"Planning": "#306998", "Development": "#E5A000", "Testing": "#4ECDC4", "Release": "#E8575A"}
+# Color scale using Okabe-Ito palette
+category_colors = {
+    "Planning": OKABE_ITO[0],
+    "Development": OKABE_ITO[1],
+    "Testing": OKABE_ITO[2],
+    "Release": OKABE_ITO[3],
+}
+color_scale = alt.Scale(domain=list(category_colors.keys()), range=list(category_colors.values()))
 
 # Shared y scale
 y_scale = alt.Scale(domain=[-3.5, 3.5])
-
-# Color scale for consistency
-color_scale = alt.Scale(domain=list(category_colors.keys()), range=list(category_colors.values()))
 
 # Vertical connector lines from axis to points
 connectors = (
@@ -87,11 +102,20 @@ connectors = (
 # Event markers on the timeline
 points = (
     alt.Chart(data)
-    .mark_circle(size=600, stroke="white", strokeWidth=3)
+    .mark_circle(size=600, stroke=PAGE_BG, strokeWidth=3)
     .encode(
         x=alt.X(
             "date:T",
-            axis=alt.Axis(title="Date", format="%b %Y", labelFontSize=18, titleFontSize=22, labelAngle=-45, grid=False),
+            axis=alt.Axis(
+                title="Date",
+                format="%b %Y",
+                labelFontSize=18,
+                titleFontSize=22,
+                labelAngle=-45,
+                grid=False,
+                labelColor=INK_SOFT,
+                titleColor=INK,
+            ),
         ),
         y=alt.Y("y_offset:Q", scale=y_scale),
         color=alt.Color("category:N", scale=color_scale, legend=None),
@@ -104,13 +128,13 @@ points = (
 )
 
 # Central timeline axis line using rule from min to max date
-timeline_line = alt.Chart(data).mark_rule(color="#666666", strokeWidth=4).encode(y=alt.Y("y_zero:Q", scale=y_scale))
+timeline_line = alt.Chart(data).mark_rule(color=INK_SOFT, strokeWidth=4).encode(y=alt.Y("y_zero:Q", scale=y_scale))
 
 # Event labels positioned above/below points
 labels = (
     alt.Chart(data)
-    .mark_text(align="center", fontSize=16, fontWeight="bold")
-    .encode(x="date:T", y=alt.Y("y_label:Q", scale=y_scale), text="event:N", color=alt.value("#333333"))
+    .mark_text(align="center", fontSize=18, fontWeight="bold")
+    .encode(x="date:T", y=alt.Y("y_label:Q", scale=y_scale), text="event:N", color=alt.value(INK))
 )
 
 # Create inline legend using text and point marks
@@ -118,18 +142,18 @@ legend_data = pd.DataFrame(
     {
         "category": list(category_colors.keys()),
         "x_pos": [
-            pd.Timestamp("2024-02-01"),
-            pd.Timestamp("2024-05-01"),
-            pd.Timestamp("2024-08-01"),
-            pd.Timestamp("2024-11-01"),
+            pd.Timestamp("2024-01-15"),
+            pd.Timestamp("2024-04-05"),
+            pd.Timestamp("2024-07-20"),
+            pd.Timestamp("2024-10-25"),
         ],
-        "y_pos": [3.2, 3.2, 3.2, 3.2],
+        "y_pos": [3.0, 3.0, 3.0, 3.0],
     }
 )
 
 legend_points = (
     alt.Chart(legend_data)
-    .mark_circle(size=300, stroke="white", strokeWidth=2)
+    .mark_circle(size=300, stroke=PAGE_BG, strokeWidth=2)
     .encode(
         x=alt.X("x_pos:T"),
         y=alt.Y("y_pos:Q", scale=y_scale),
@@ -140,19 +164,23 @@ legend_points = (
 legend_labels = (
     alt.Chart(legend_data)
     .mark_text(align="left", fontSize=16, fontWeight="bold", dx=15)
-    .encode(x=alt.X("x_pos:T"), y=alt.Y("y_pos:Q", scale=y_scale), text="category:N", color=alt.value("#333333"))
+    .encode(x=alt.X("x_pos:T"), y=alt.Y("y_pos:Q", scale=y_scale), text="category:N", color=alt.value(INK_SOFT))
 )
 
 # Combine all layers
 chart = (
     alt.layer(timeline_line, connectors, points, labels, legend_points, legend_labels)
     .properties(
-        width=1600, height=900, title=alt.Title("timeline-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("timeline-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axisY(disable=True)
+    .interactive()
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
