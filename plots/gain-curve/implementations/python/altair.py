@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: altair | Python 3.13
-Quality: pending | Updated: 2026-05-11
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-11
 """
 
 import os
