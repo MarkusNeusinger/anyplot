@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: plotly | Python 3.13
-Quality: pending | Created: 2025-12-29
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-11
 """
 
 import os
