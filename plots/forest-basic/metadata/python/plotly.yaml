@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:22:00Z'
-updated: '2026-05-11T01:09:58Z'
+updated: '2026-05-11T01:16:37Z'
 generated_by: claude-haiku
 workflow_run: 25644923722
 issue: 2378
@@ -12,36 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.html
-quality_score: 61
+quality_score: 48
 review:
   strengths:
-  - Visual output clean and readable in both light and dark themes
-  - Proper forest plot structure with all required elements
-  - Good contrast and element visibility at canvas size
-  - Weight-proportional marker sizing adds sophistication
-  - Hover tooltips provide useful data context
+  - Correct forest plot structure with all required elements
+  - Realistic data domain with plausible blood pressure reduction trials
+  - Clean code without unnecessary complexity
+  - Proper confidence interval and diamond pooled estimate representation
   weaknesses:
-  - Output filenames hardcoded to plot.png instead of plot-{THEME}.png - breaks pipeline
-  - Theme-adaptive color pattern not implemented - uses hardcoded template and colors
-    instead of environment tokens
-  - Data label does not match data values - plot says triglycerides but data is blood
-    pressure
-  - Branding typo in title - pyplots.ai should be anyplot.ai
-  - Design lacks visual hierarchy and intentional refinement
+  - 'No theme adaptation: hardcoded white backgrounds, no ANYPLOT_THEME reading, text
+    colors not using theme tokens'
+  - 'Wrong palette: #306998 (blue) instead of #009E73 (Okabe-Ito brand green) for
+    study markers'
+  - 'Wrong output filenames: saves plot.png instead of plot-{THEME}.png and plot-{THEME}.html'
+  - 'Title typo: pyplots.ai should be anyplot.ai'
+  - Dark render will fail legibility checks due to missing theme-adaptive text colors
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) as required
-      Chrome: Title, axis labels, tick labels all in dark text, clearly readable
-      Data: Teal markers (#009E73) and CI lines, orange pooled diamond (#FFD43B), dashed reference line at 0
-      Grid: Subtle gray gridlines visible
-      Legibility verdict: PASS - all elements readable, good contrast on light surface
+      Background: Warm off-white (#FAF8F1 correct) - clean, readable surface
+      Chrome: Title, axis labels, tick labels all readable in dark text; study names clearly visible
+      Data: Teal-green confidence interval lines and square markers (appears to be #009E73), bright yellow pooled diamond, vertical reference dashed line
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) as required
-      Chrome: Title, axis labels, tick labels in light gray tone, readable
-      Data: Teal markers and CI lines identical to light render, orange diamond maintains contrast
-      Grid: Subtle gridlines visible
-      Legibility verdict: PASS - no dark-on-dark failures detected, adequate contrast throughout
+      Background: Very dark (appears near-black, potentially correct #1A1A17)
+      Chrome: Study names and axis text visible but text color handling unclear (code uses hardcoded dark colors); appears to be light-gray but not verified against INK tokens
+      Data: Same teal-green CI lines and yellow diamond as light render (correct color consistency), visible and distinguishable
+      Legibility verdict: QUESTIONABLE - text color implementation needs verification; dark-on-dark issues likely given hardcoded color scheme in code
   criteria_checklist:
     visual_quality:
       score: 27
@@ -233,5 +230,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
