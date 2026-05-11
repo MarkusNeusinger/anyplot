@@ -1,71 +1,79 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-cumulative: Cumulative Histogram
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-11
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
-# Data - Response times for a web API service (realistic scenario)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
+# Data - Financial transaction amounts (realistic e-commerce scenario)
 np.random.seed(42)
-response_times = np.concatenate(
+transactions = np.concatenate(
     [
-        np.random.exponential(scale=50, size=300),  # Fast responses (majority)
-        np.random.normal(loc=200, scale=30, size=100),  # Moderate responses
-        np.random.normal(loc=400, scale=50, size=50),  # Slow responses
+        np.random.exponential(scale=25, size=400),  # Small purchases (majority)
+        np.random.normal(loc=120, scale=25, size=150),  # Medium purchases
+        np.random.normal(loc=300, scale=60, size=50),  # Large purchases
     ]
 )
-response_times = np.clip(response_times, 5, 600)  # Clip to realistic range (5-600ms)
+transactions = np.clip(transactions, 5, 500)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
+)
 
-# Plot cumulative histogram using seaborn's histplot with cumulative=True
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+
 sns.histplot(
-    response_times,
-    bins=40,
+    transactions,
+    bins=35,
     cumulative=True,
     stat="proportion",
     element="step",
     fill=True,
-    color="#306998",
+    color=BRAND,
     alpha=0.7,
     linewidth=2.5,
-    edgecolor="#306998",
+    edgecolor=BRAND,
     ax=ax,
 )
 
-# Add reference lines for common percentiles
-percentiles = [50, 90, 95, 99]
-percentile_values = np.percentile(response_times, percentiles)
-colors = ["#FFD43B", "#FF8C00", "#FF4500", "#DC143C"]
-
-for p, val, color in zip(percentiles, percentile_values, colors, strict=True):
-    ax.axhline(y=p / 100, color=color, linestyle="--", linewidth=2, alpha=0.8)
-    ax.axvline(x=val, color=color, linestyle="--", linewidth=2, alpha=0.8)
-    ax.annotate(
-        f"P{p}: {val:.0f}ms",
-        xy=(val, p / 100),
-        xytext=(val + 30, p / 100 + 0.03),
-        fontsize=14,
-        color=color,
-        fontweight="bold",
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": color, "alpha": 0.9},
-    )
-
-# Labels and styling
-ax.set_xlabel("Response Time (ms)", fontsize=20)
-ax.set_ylabel("Cumulative Proportion", fontsize=20)
-ax.set_title("histogram-cumulative · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
-
-# Set axis limits
-ax.set_xlim(0, 600)
+# Style
+ax.set_xlabel("Transaction Amount ($)", fontsize=20, color=INK)
+ax.set_ylabel("Cumulative Proportion", fontsize=20, color=INK)
+ax.set_title("histogram-cumulative · seaborn · anyplot.ai", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_xlim(0, 500)
 ax.set_ylim(0, 1.05)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
