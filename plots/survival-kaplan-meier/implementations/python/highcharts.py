@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-11
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,6 +18,18 @@ from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (position 1 for first series, position 2 for second)
+COLOR_PRIMARY = "#009E73"  # First series - brand green
+COLOR_SECONDARY = "#D55E00"  # Second series - vermillion
 
 # Generate synthetic clinical trial survival data
 np.random.seed(42)
@@ -33,7 +46,7 @@ times_b = np.random.weibull(1.8, n_patients // 2) * 30
 events_b = np.random.binomial(1, 0.55, n_patients // 2)  # 55% event rate
 times_b = np.minimum(times_b, max_time)
 
-# Kaplan-Meier calculation for Group A (inline, no function)
+# Kaplan-Meier calculation for Group A
 sorted_idx_a = np.argsort(times_a)
 times_a_sorted = times_a[sorted_idx_a]
 events_a_sorted = events_a[sorted_idx_a]
@@ -68,7 +81,7 @@ for t in unique_times_a:
         censored_survival_a.append(float(survival_a))
     n_at_risk_a -= d + c
 
-# Kaplan-Meier calculation for Group B (inline, no function)
+# Kaplan-Meier calculation for Group B
 sorted_idx_b = np.argsort(times_b)
 times_b_sorted = times_b[sorted_idx_b]
 events_b_sorted = events_b[sorted_idx_b]
@@ -107,159 +120,164 @@ for t in unique_times_b:
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
+# Chart configuration with theme-adaptive colors
 chart.options.chart = {
+    "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "marginLeft": 220,
     "marginRight": 150,
 }
 
-# Title
+# Title with theme-adaptive color
 chart.options.title = {
-    "text": "survival-kaplan-meier · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "survival-kaplan-meier · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
 # Subtitle
 chart.options.subtitle = {
     "text": "Clinical Trial: Survival Probability Over Time",
-    "style": {"fontSize": "42px", "color": "#666666"},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
-# X-axis configuration
+# X-axis configuration with theme-adaptive colors
 chart.options.x_axis = {
-    "title": {"text": "Time (Months)", "style": {"fontSize": "48px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "36px"}, "y": 40},
+    "title": {"text": "Time (Months)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "max": 40,
     "tickInterval": 6,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "gridLineDashStyle": "Dash",
-    "lineWidth": 2,
-    "lineColor": "#333333",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
-# Y-axis configuration
+# Y-axis configuration with theme-adaptive colors
 chart.options.y_axis = {
-    "title": {"text": "Survival Probability", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Survival Probability", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "max": 1.0,
     "tickInterval": 0.2,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "gridLineDashStyle": "Dash",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
-# Legend configuration - positioned closer to the data (left side, middle)
+# Legend configuration - positioned in top-right to avoid data overlap
 chart.options.legend = {
     "enabled": True,
-    "align": "left",
-    "verticalAlign": "middle",
+    "align": "right",
+    "verticalAlign": "top",
     "layout": "vertical",
-    "x": 250,
-    "y": -200,
-    "itemStyle": {"fontSize": "36px"},
-    "itemMarginBottom": 20,
-    "backgroundColor": "rgba(255, 255, 255, 0.85)",
+    "x": -100,
+    "y": 50,
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "itemMarginBottom": 15,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "borderRadius": 5,
-    "padding": 15,
+    "padding": 12,
 }
-
-# Colors
-color_a = "#306998"  # Python Blue
-color_b = "#FFD43B"  # Python Yellow
 
 # Plot options for step function
 chart.options.plot_options = {
     "series": {"animation": False},
     "line": {"step": "left", "lineWidth": 5, "marker": {"enabled": False}},
     "arearange": {"step": "left", "fillOpacity": 0.2, "lineWidth": 0, "marker": {"enabled": False}},
-    "scatter": {"marker": {"symbol": "diamond", "radius": 8, "enabled": True}, "enableMouseTracking": True},
+    "scatter": {"marker": {"symbol": "circle", "radius": 10, "enabled": True}, "enableMouseTracking": True},
 }
 
-# --- Group A: Confidence Interval ---
+# Group A: Confidence Interval
 ci_data_a = [[km_times_a[i], km_lower_a[i], km_upper_a[i]] for i in range(len(km_times_a))]
 ci_series_a = AreaRangeSeries()
 ci_series_a.data = ci_data_a
 ci_series_a.name = "95% CI (Standard)"
-ci_series_a.color = color_a
+ci_series_a.color = COLOR_PRIMARY
 ci_series_a.show_in_legend = False
 chart.add_series(ci_series_a)
 
-# --- Group A: Survival Curve ---
+# Group A: Survival Curve
 curve_data_a = [[km_times_a[i], km_survival_a[i]] for i in range(len(km_times_a))]
 curve_series_a = LineSeries()
 curve_series_a.data = curve_data_a
 curve_series_a.name = "Standard Treatment"
-curve_series_a.color = color_a
+curve_series_a.color = COLOR_PRIMARY
 chart.add_series(curve_series_a)
 
-# --- Group A: Censored Marks (tick marks on curve) ---
+# Group A: Censored Marks
 if censored_times_a:
     censor_data_a = [{"x": censored_times_a[i], "y": censored_survival_a[i]} for i in range(len(censored_times_a))]
     censor_series_a = ScatterSeries()
     censor_series_a.data = censor_data_a
     censor_series_a.name = "Censored (Standard)"
-    censor_series_a.color = color_a
+    censor_series_a.color = COLOR_PRIMARY
     censor_series_a.marker = {
-        "symbol": "diamond",
-        "lineWidth": 3,
-        "lineColor": color_a,
-        "fillColor": "#ffffff",
-        "radius": 8,
+        "symbol": "circle",
+        "lineWidth": 2,
+        "lineColor": COLOR_PRIMARY,
+        "fillColor": PAGE_BG,
+        "radius": 10,
     }
     censor_series_a.show_in_legend = False
     chart.add_series(censor_series_a)
 
-# --- Group B: Confidence Interval ---
+# Group B: Confidence Interval
 ci_data_b = [[km_times_b[i], km_lower_b[i], km_upper_b[i]] for i in range(len(km_times_b))]
 ci_series_b = AreaRangeSeries()
 ci_series_b.data = ci_data_b
 ci_series_b.name = "95% CI (New)"
-ci_series_b.color = color_b
+ci_series_b.color = COLOR_SECONDARY
 ci_series_b.show_in_legend = False
 chart.add_series(ci_series_b)
 
-# --- Group B: Survival Curve ---
+# Group B: Survival Curve
 curve_data_b = [[km_times_b[i], km_survival_b[i]] for i in range(len(km_times_b))]
 curve_series_b = LineSeries()
 curve_series_b.data = curve_data_b
 curve_series_b.name = "New Treatment"
-curve_series_b.color = color_b
+curve_series_b.color = COLOR_SECONDARY
 chart.add_series(curve_series_b)
 
-# --- Group B: Censored Marks (tick marks on curve) ---
+# Group B: Censored Marks
 if censored_times_b:
     censor_data_b = [{"x": censored_times_b[i], "y": censored_survival_b[i]} for i in range(len(censored_times_b))]
     censor_series_b = ScatterSeries()
     censor_series_b.data = censor_data_b
     censor_series_b.name = "Censored (New)"
-    censor_series_b.color = color_b
+    censor_series_b.color = COLOR_SECONDARY
     censor_series_b.marker = {
-        "symbol": "diamond",
-        "lineWidth": 3,
-        "lineColor": color_b,
-        "fillColor": "#ffffff",
-        "radius": 8,
+        "symbol": "circle",
+        "lineWidth": 2,
+        "lineColor": COLOR_SECONDARY,
+        "fillColor": PAGE_BG,
+        "radius": 10,
     }
     censor_series_b.show_in_legend = False
     chart.add_series(censor_series_b)
 
 # Download Highcharts JS modules
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
+highcharts_more_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts-more.js"
+req = urllib.request.Request(
+    highcharts_more_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+# Generate HTML with inline scripts and theme-adaptive background
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -268,14 +286,14 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
 # Save HTML file for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Write temp HTML and take screenshot
@@ -289,12 +307,12 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
