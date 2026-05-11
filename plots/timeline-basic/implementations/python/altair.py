@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeline-basic: Event Timeline
-Library: altair 5.3.0 | Python 3.13
-Quality: 91/100 | Updated: 2026-05-11
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-11
 """
 
 import os
