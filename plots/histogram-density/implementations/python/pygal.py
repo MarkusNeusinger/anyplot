@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-density: Density Histogram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-11
+Quality: 82/100 | Updated: 2026-05-11
 """
 
 import os
