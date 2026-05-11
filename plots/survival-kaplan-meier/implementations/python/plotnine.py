@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2025-12-29
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-11
 """
 
 import os
