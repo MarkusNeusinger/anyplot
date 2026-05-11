@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-filled: Filled Contour Plot
-Library: bokeh 3.8.1 | Python 3.13
-Quality: 90/100 | Updated: 2025-05-11
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 69/100 | Updated: 2026-05-11
 """
 
 import os
