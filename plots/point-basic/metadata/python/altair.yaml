@@ -1,163 +1,163 @@
 library: altair
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:31:29Z'
-updated: '2025-12-30T09:38:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593350746
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-basic/altair/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-11T17:23:58Z'
+generated_by: claude-haiku
+workflow_run: 25685305456
+issue: 2551
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/altair/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of layered Altair chart combining points, rules, and
-    tick marks for caps
-  - Clean reference line implementation using separate DataFrame
-  - Proper use of Altair declarative encoding system with explicit type annotations
-    (:Q, :N)
-  - Good use of tooltips for interactivity
-  - Appropriate horizontal orientation for categorical labels as spec recommends
-  - High-quality visual output with proper sizing (1600x900 with scale_factor=3.0)
+  - Perfect visual quality across both light and dark themes with no legibility issues
+  - Exemplary palette compliance with brand green correctly used and theme-adaptive
+    chrome properly applied
+  - Clean, professional code structure with explicit theme tokens and idiomatic Altair
+    patterns
+  - Strong data quality with realistic treatment effect scenario and meaningful variation
+  - All spec requirements met exactly; generous whitespace and refined grid styling
+    create polished appearance
   weaknesses:
-  - Axis label Effect Size lacks units (could be Effect Size Cohens d or similar)
-  - Library features underutilized - could add selection/highlighting for interactivity
-  - The seed(42) call is unnecessary since no random data generation actually occurs
-  image_description: The plot displays a horizontal point estimate chart with 6 groups
-    (Treatment A, B, C, D, Control, Placebo) on the y-axis and "Effect Size" on the
-    x-axis (ranging from -3.0 to 5.0). Each group shows a blue filled circle marker
-    at its estimate value, with horizontal error bars extending to confidence interval
-    bounds. The error bars have vertical caps at both endpoints. A dashed gray vertical
-    reference line is positioned at x=0 (null hypothesis). The color scheme uses a
-    consistent blue (#306998) for all data elements. The title "point-basic · altair
-    · pyplots.ai" appears centered at the top. Text is clearly readable, and the layout
-    effectively uses the canvas space.
+  - Design Excellence score could be improved by adding more visual emphasis or exceptional
+    design sophistication beyond the solid professional level
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "point-basic · altair · anyplot.ai" and axis labels ("Effect Size") in dark text, clearly readable; tick labels visible; subtle grid at 10% opacity
+      Data: Large green points (#009E73 - brand green); teal error bars with end caps; dashed reference line at x=0; all elements well-spaced
+      Legibility verdict: PASS - all text clearly readable at full resolution, no overlaps
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and all labels now in light text, perfectly readable against dark surface; no dark-on-dark failures; grid remains subtle
+      Data: Green points identical to light render (#009E73); teal error bars identical; reference line identical
+      Legibility verdict: PASS - all text clearly readable, excellent theme adaptation, data colors consistent across renders
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All font sizes explicitly set and perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: No overlapping text elements; all categories well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Point markers (size=400) and error bars (strokeWidth=3) are appropriately
-          sized for 6 data points
+        comment: Points, error bars, and end caps optimally sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color scheme, high contrast against white background
+        comment: Strong contrast and CVD-safe via Okabe-Ito palette
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization, slight asymmetry with data clustered on
-          right side but this reflects the data
+        comment: Perfect layout with plot at 70% of canvas and balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has "Effect Size" (descriptive) but no units specified
+        comment: Descriptive x-axis label and correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No grid (clean look), no legend needed for single series
+        comment: 'Brand green #009E73, correct backgrounds, theme-correct chrome,
+          identical data colors across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional design with intentional choices; well above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid and theme-aware styling throughout with generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with reference line creating focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct point estimate plot with confidence intervals
+        comment: Correct horizontal point estimate plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, estimates on X-axis, properly horizontal orientation
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Points, confidence intervals, error bar caps, reference line at zero
-          - all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: points, error bars, end caps, reference line'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis scale (-3 to 5) shows all data points and intervals
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, tooltips included for interactivity
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "point-basic · altair · pyplots.ai"'
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive effects, negative effect (Treatment D), control groups,
-          varying CI widths - good variety but could show more extreme differences
+        comment: Full range of effects and varying confidence intervals
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Clinical trial treatment effects is a perfect, neutral real-world
-          scenario
+        comment: Real-world clinical trial scenario, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Effect sizes in reasonable range, though the specific values are
-          somewhat arbitrary
+        comment: Factually reasonable effect sizes and CI widths
     code_quality:
       score: 10
       max: 10
@@ -167,42 +167,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → layered chart → save'
+        comment: Simple linear flow with clear organization
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) (though not actually used for random generation
-          in this case)
+        comment: np.random.seed(42) set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic code with appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative layering system with mark_point, mark_rule,
-          mark_tick, but doesn't use interactive features like selections or dynamic
-          tooltips beyond basic
+        comment: Expert use of Altair's patterns and API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses layer composition and x2 range encoding distinctively
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

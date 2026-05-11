@@ -1,14 +1,17 @@
-""" pyplots.ai
+""" anyplot.ai
 point-basic: Point Estimate Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-11
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_errorbarh,
     geom_point,
@@ -19,6 +22,13 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data: Product satisfaction scores with 95% confidence intervals
 np.random.seed(42)
@@ -48,24 +58,31 @@ df = df.sort_values("estimate").reset_index(drop=True)
 df["category"] = pd.Categorical(df["category"], categories=df["category"], ordered=True)
 
 # Plot
+anyplot_theme = theme(
+    figure_size=(16, 9),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK_SOFT, size=0.3, linewidth=0.3),
+    panel_grid_minor=element_line(linewidth=0),
+    panel_border=element_rect(color=INK_SOFT, fill=None),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24, weight="bold"),
+    legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=16),
+)
+
 plot = (
     ggplot(df, aes(x="estimate", y="category"))
-    + geom_vline(xintercept=7.0, linetype="dashed", color="#888888", size=1)
-    + geom_errorbarh(aes(xmin="lower", xmax="upper"), height=0.3, size=1.5, color="#306998")
-    + geom_point(size=5, color="#306998")
-    + labs(x="Satisfaction Score (1-10)", y="Category", title="point-basic · plotnine · pyplots.ai")
+    + geom_vline(xintercept=7.0, linetype="dashed", color=INK_SOFT, size=0.8)
+    + geom_errorbarh(aes(xmin="lower", xmax="upper"), height=0.3, size=1.5, color=BRAND)
+    + geom_point(size=5, color=BRAND)
+    + labs(x="Satisfaction Score (1-10)", y="Category", title="point-basic · plotnine · anyplot.ai")
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title_x=element_text(size=20),
-        axis_title_y=element_text(size=20),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=16),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(alpha=0),
-    )
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
