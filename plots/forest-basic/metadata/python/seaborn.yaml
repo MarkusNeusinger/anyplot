@@ -1,170 +1,186 @@
 library: seaborn
+language: python
 specification_id: forest-basic
 created: '2025-12-27T19:21:16Z'
-updated: '2025-12-27T19:28:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543281061
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T01:07:01Z'
+generated_by: claude-haiku
+workflow_run: 25644872709
+issue: 2378
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/forest-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - manual-ticks
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - 'Excellent implementation of all forest plot requirements: diamond pooled estimate,
-    weighted markers, reference line, CI whiskers'
-  - Clear, professional layout with study labels and effect sizes displayed in readable
-    format
-  - Good use of seaborn scatterplot for weighted point estimates with size mapping
-  - Proper directional annotations help interpret the plot
-  - Realistic meta-analysis data with chronological study names and varied effect
-    sizes
+  - 'Excellent theme adaptation: both light and dark renders fully readable with perfect
+    data color consistency'
+  - Professional forest plot design with thoughtful visual hierarchy and interpretive
+    aids (directional annotations, null reference line)
+  - 'Clear data storytelling: weight-based sizing, ordered studies, highlighted pooled
+    estimate guides viewer'
+  - All text elements appropriately sized (24pt title, 20pt labels, 16pt ticks) and
+    positioned for 4800×2700px canvas
+  - Strong specification compliance and data quality across all metrics
+  - Clean code with proper theme tokens and reproducible data generation
   weaknesses:
-  - sns.set_style called after plt.subplots (should be called before for idiomatic
-    seaborn usage)
-  - Layout could be slightly tighter on the right side to reduce whitespace
-  image_description: The forest plot displays a meta-analysis of 10 clinical studies
-    showing treatment effect (mean difference) with horizontal confidence intervals.
-    The plot uses a blue color scheme (#306998) for study markers and CI lines. Each
-    study is represented with a circular marker whose size varies proportionally to
-    study weight. Study names are listed on the left (e.g., "Johnson et al. 2019",
-    "Brown et al. 2020"), while effect sizes with 95% CIs are shown on the right in
-    monospace font (e.g., "-0.52 [-0.77, -0.27]"). A dashed vertical reference line
-    at x=0 indicates the null effect. At the bottom, a yellow diamond shows the pooled
-    estimate (-0.31 [-0.37, -0.24]). The title "forest-basic · seaborn · pyplots.ai"
-    is prominently displayed at the top. Directional annotations "← Favors Treatment"
-    and "Favors Control →" appear at the top of the plot area.
+  - 'Library mastery: CI lines and pooled diamond use manual matplotlib.patches and
+    ax.hlines rather than seaborn''s statistical plotting features, which could showcase
+    more distinctive seaborn capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct color, not pure white
+      Chrome: Title, axis labels, study names all in dark INK text - fully readable. Soft-ink gray tick labels and effect size values clearly visible. Null reference line visible at x=0.
+      Data: Brand green (#009E73) circles for point estimates, horizontal green lines for confidence intervals. Yellow diamond (#F0E442) for pooled estimate with green border. Color-coded annotations "← Favors Treatment" (green) and "Favors Control →" (soft-ink gray).
+      Legibility verdict: PASS - All text readable, no light-on-light contrast issues, excellent visibility across all elements
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct color, not pure black
+      Chrome: Title, axis labels, study names now in light INK (#F0EFE8) text - fully readable against dark background. Soft-ink gray tick labels properly contrast. No dark-on-dark failures.
+      Data: Brand green colors identical to light render - confirms proper data color preservation. Yellow diamond and all markers maintain visibility. Grid lines subtle but visible.
+      Legibility verdict: PASS - All text readable, no dark-on-dark contrast issues, data colors correctly preserved from light render, excellent theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text perfectly readable: title at 24pt, axis labels at 20pt,
-          study names at 14pt, tick labels at 16pt'
+        comment: All text sizes explicitly set (title 24pt, axis labels 20pt, tick
+          labels 16pt); both renders fully readable in light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; study labels, CIs, and effect sizes are
-          well-spaced
+        comment: Study names, effect sizes, and annotations positioned without collision;
+          clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker sizes appropriately scaled by weight, CI lines clearly visible
-          with good linewidth
+        comment: Markers sized by weight (100-500), CI lines 2.5pt with white edges;
+          all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with good contrast
+        comment: Okabe-Ito brand green primary; adequate contrast on both surfaces;
+          CVD-safe palette
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas but some unused space on the right side could
-          be reduced
+        comment: 16×9 landscape (4800×2700px); well-proportioned with study labels
+          left, plot center, effect sizes right
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive x-axis label "Mean Difference (Treatment - Control)"
-          with parenthetical context
+        comment: Title and x-axis label descriptive; y-axis empty (correct, study
+          names shown as text)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle and appropriate; no legend needed for this plot type
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct forest plot with point estimates and confidence intervals
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Effect sizes on x-axis, studies on y-axis with proper ordering
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All required: diamond for pooled estimate, vertical reference line,
-          weighted markers, CI whiskers'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: No legend needed; directional annotations serve informational purpose
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "forest-basic · seaborn · pyplots.ai"'
-    data_quality:
+        comment: 'Brand green #009E73 for all data; backgrounds #FAF8F1 (light) /
+          #1A1A17 (dark); both renders theme-correct'
+    design_excellence:
       score: 18
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 7
         max: 8
         passed: true
-        comment: Shows studies favoring treatment AND control, various CI widths,
-          weighted markers, pooled estimate
+        comment: Custom diamond shape for pooled estimate; vertical reference line
+          for null effect; color-coded directional annotations; thoughtful spacing
+          throughout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed (top/right); grid subtle (alpha=0.1, x-axis only);
+          generous whitespace; custom positioning refines layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy (studies ordered by effect, pooled estimate
+          highlighted); focal point on diamond; annotations guide interpretation;
+          marker size conveys study weight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct forest plot format with point estimates, CI whiskers, diamond
+          pooled estimate, null reference line
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: point estimates, confidence intervals, study
+          weight sizing, null effect line, pooled diamond, study labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis effect size correct; CI whiskers ci_lower/ci_upper correct;
+          y-axis study positioning correct; size mapped to weight
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend omitted (single series); study labels
+          and effect values clearly displayed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Comprehensive forest plot: 10 studies, point estimates, CIs, weights,
+          pooled estimate, heterogeneity visible'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic meta-analysis scenario with plausible study names and chronological
-          years
+        comment: Plausible meta-analysis (studies 2018-2023, effect sizes -0.52 to
+          0.12, varied weights, realistic pooled estimate); data neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Effect sizes (-0.52 to +0.12) and CI widths are realistic for mean
-          differences
+        comment: Effect scale -1.0 to 1.5 appropriate for mean differences; 10 studies
+          within 5-30 range; varied weights and CI widths realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: No functions or classes; straightforward imperative code; clear linear
+          flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.patches, plt, np, pd, sns)
+        comment: 'All imports used: os, matplotlib.patches (polygon), matplotlib.pyplot,
+          numpy, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: sns.set_style called after figure creation (order doesn't affect
-          output but not idiomatic)
+        comment: Clear structure, appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output format: plot-{THEME}.png at dpi=300 with tight_layout'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot with size mapping and sns.despine, but CI lines
-          use matplotlib directly
+        comment: Proper sns.set_theme() with theme tokens; sns.scatterplot() for points;
+          sns.despine() for aesthetics; axes-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Good use of seaborn theming; however, CI lines and pooled diamond
+          use matplotlib.patches and ax.hlines (manual) rather than seaborn's statistical
+          capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
