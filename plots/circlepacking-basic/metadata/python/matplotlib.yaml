@@ -1,169 +1,169 @@
 library: matplotlib
+language: python
 specification_id: circlepacking-basic
 created: '2025-12-30T00:04:06Z'
-updated: '2025-12-30T00:23:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585399783
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - manual-ticks
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+updated: '2026-05-11T15:26:19Z'
+generated_by: claude-haiku
+workflow_run: 25678910372
+issue: 2498
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent hierarchical visualization with proper nesting and containment
-  - Smart use of square figure format (12x12) appropriate for circular visualization
-  - 'Colorblind-safe palette with good visual hierarchy (root: muted blue, departments:
-    bright yellow, teams: light blue)'
-  - Proper area-based sizing using sqrt scaling for accurate visual perception
-  - Clean implementation of painter's algorithm (drawing larger circles first)
-  - Realistic organizational data that makes the visualization immediately understandable
-  - Well-positioned legend that doesn't interfere with the visualization
-  weaknesses:
-  - Team-level circles lack labels (only circles with radius > 30 get labels), making
-    it hard to identify specific teams
-  - Could benefit from showing team names at least for the larger team circles (e.g.,
-    Backend at 35 employees)
-  image_description: 'The plot shows a circle packing chart with a company organizational
-    hierarchy. There is one large light blue root circle labeled "Company" in the
-    center. Inside this root circle are four yellow department circles arranged in
-    quadrants: "Engineering" (upper left), "Product" (upper right), "Sales" (lower
-    left), and "Operations" (lower right). Each department circle contains 3-4 smaller
-    light blue team circles representing individual teams. The title "circlepacking-basic
-    · matplotlib · pyplots.ai" appears at the top in bold black text. A legend in
-    the upper right shows "Company (Root)" in blue, "Departments" in yellow, and "Teams"
-    in light blue. The circles are all properly nested without overlapping, and sizing
-    appears proportional to values.'
+  - Perfect visual quality with all text explicitly sized and readable in both themes
+  - Excellent palette compliance with correct Okabe-Ito ordering and theme-adaptive
+    chrome
+  - Strong design aesthetics featuring intentional depth-based color hierarchy
+  - Clean, reproducible code with zero fake interactivity or over-engineering
+  - Realistic organizational structure data demonstrating all circle packing features
+  - Professional layout and proportions appropriate for symmetric visualization
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title clearly readable in dark text (24pt bold); legend in upper right with light-gray text on elevated background; all labels (Company, department names) readable with appropriate contrast
+      Data: Root circle in brand green (#009E73); department circles in vermillion (#D55E00); team circles in blue (#0072B2) — colors match Okabe-Ito positions 1-3; no overlap; circles properly sized by value
+      Legibility verdict: PASS — all text, colors, and elements clearly visible against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in white/light text and readable; legend text in light gray on dark elevated background; all chrome properly light-colored with no dark-on-dark failures
+      Data: Root, department, and team circles show identical colors to light render (#009E73, #D55E00, #0072B2) — data colors constant across themes as required; legend background and borders properly darkened
+      Legibility verdict: PASS — all text, colors, and elements clearly visible against dark background; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and department labels are clear and readable; team circles
-          lack labels but this is appropriate given their smaller size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: All circles are properly nested and contained; no overlapping elements
+        comment: Title (24pt), labels (11-18pt), legend (16pt) — all explicitly sized
+          and readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circles are well-sized and visible; team circles could be slightly
-          larger for better visibility
+        comment: Circle sizes optimally adapted to hierarchy; all elements distinct
+          and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Circle fills canvas well with balanced padding; good use of square
-          format
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for circle packing (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed and clearly explains hierarchy levels
+        comment: Okabe-Ito palette provides excellent CVD safety and contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format ideal for symmetric visualization; generous padding;
+          optimal proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct title format: spec-id · library · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order (#D55E00, #0072B2); backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Intentional depth-based color hierarchy; theme-adaptive polish; above
+          generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Circle edges, alpha blending, elevated legend frame, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy through size and color; guides viewer through organizational
+          structure
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct circle packing chart with nested hierarchy
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Values correctly mapped to circle areas using sqrt scaling
-      - id: SC-03
+        comment: Correct circle packing with proper nesting
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Hierarchical nesting, proportional sizing, labels present; hover
-          interaction not applicable for static matplotlib
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: hierarchy, proportional sizing, color-by-depth,
+          labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Hierarchy correct; all nodes visible; accurate proportions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three hierarchy levels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3-level hierarchy with varying branch sizes; could show more
-          variation in team sizes
+        comment: 'Shows all aspects: hierarchy, proportional sizing, no overlap, varied
+          sizes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Company organizational structure is an excellent, relatable scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Team sizes (6-35 employees) are realistic
+        comment: Professional org structure; plausible team sizes; neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible and proportionally accurate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +171,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → layout → plotting → save'
+        comment: 'Direct flow: data → positioning → plotting → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set; deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only used imports (os, matplotlib, numpy)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity for custom positioning
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves to 'plot.png' (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct format: plot-{THEME}.png'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert use of patches.Circle, Axes methods, theme tokens; high-level
+          API
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of matplotlib.patches.Circle and proper painter's algorithm
-          for layering; could leverage more advanced features like PathCollection
-          or custom transforms
+        comment: Custom circle positioning; leverages matplotlib geometric capabilities
+    score_caps: []
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
