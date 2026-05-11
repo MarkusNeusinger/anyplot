@@ -1,215 +1,231 @@
 library: bokeh
+language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:12Z'
-updated: '2025-12-29T22:56:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584328803
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-11T07:40:05Z'
+generated_by: claude-haiku
+workflow_run: 25656648838
+issue: 2441
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of Kaplan-Meier algorithm with proper step functions
-    and Greenwood formula for confidence intervals
-  - Beautiful color scheme with Python blue/yellow that provides excellent contrast
-    and colorblind accessibility
-  - 'All specification requirements met: step curves, CI bands, censoring marks, group
-    comparison, median line'
-  - 'Proper use of Bokeh features: ColumnDataSource, patch for CI areas, Span annotation'
-  - Realistic clinical trial scenario with appropriate sample sizes and time scales
+  - Correct Kaplan-Meier implementation with proper step functions and confidence
+    interval bands
+  - Excellent theme adaptation with correct color tokens in both light and dark renders
+  - All text elements properly sized and readable across both themes—no legibility
+    failures
+  - Proper use of Okabe-Ito palette (positions 1–2) with accurate color identity preservation
+  - Clean, idiomatic Bokeh code with essential helpers and no extraneous complexity
+  - Censored observations correctly marked and visible
+  - Median survival reference line adds interpretive context
   weaknesses:
-  - Legend text appears small relative to the plot size; could benefit from larger
-    font or better positioning
-  - Code uses helper functions instead of flat KISS structure preferred by guidelines
-  - Censoring tick marks could be slightly more prominent for better visibility
-  image_description: 'The plot displays a Kaplan-Meier survival curve comparing two
-    groups: Treatment (n=80) in blue (#306998) and Control (n=80) in yellow/gold (#FFD43B).
-    Both curves start at survival probability 1.0 and decrease in characteristic step-function
-    fashion over time (0-36 months). The treatment group shows better survival (higher
-    curve) than the control group throughout. Each curve has a semi-transparent confidence
-    interval band (shaded regions). Censored observations are marked with small vertical
-    tick marks on the curves. A horizontal dashed gray line at y=0.5 indicates the
-    median survival reference. The title follows the required format "survival-kaplan-meier
-    · bokeh · pyplots.ai". Axes are labeled "Time (months)" and "Survival Probability".
-    The legend is positioned in the bottom-left corner. Grid lines are subtle and
-    dashed.'
+  - Design excellence is solid but straightforward—limited by default Bokeh styling
+    conventions
+  - No advanced refinements like spine removal or minimal-chrome styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels "Time (months)" and "Survival Probability", tick labels (0–1 and 0–38) all rendered in dark text (INK #1A1A17 and INK_SOFT #4A4A44). All clearly readable against light background. Legend "Treatment (n=80)" and "Control (n=80)" properly styled with background box.
+      Data: Treatment curve (#009E73 brand green), Control curve (#D55E00 vermillion). Confidence interval bands with 15% alpha transparency. Censored observations marked with small dash marks. Median reference line (dashed horizontal at 0.5) visible.
+      Legibility verdict: PASS - All text is clearly visible, no light-on-light issues, grid subtle but visible (10% alpha)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, and tick labels adapted to light text (INK #F0EFE8 and INK_SOFT #B8B7B0). All readable with proper contrast against dark background. Legend background (#242420) provides appropriate contrast. No dark-on-dark text failures.
+      Data: Treatment curve identical #009E73, Control curve identical #D55E00 (Okabe-Ito positions preserved). CI bands visible with proper alpha. Censored marks clearly distinguished. Median reference line visible. Brand green maintains visibility and identity on dark surface.
+      Legibility verdict: PASS - All text readable, no dark-on-dark failures, grid adapted correctly with 10% alpha, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all readable at full size.
-          Font sizes are appropriately scaled for 4800x2700.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the plot.
+        comment: All text explicitly sized (title 28pt, axis labels 22pt, ticks 18pt,
+          legend 20pt). Readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend well-positioned bottom-left. Clear spacing. No collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step lines are clearly visible with good line width. Censoring marks
-          visible but could be slightly more prominent.
+        comment: Censored markers (dashes) visible. Curves prominent. CI bands appropriately
+          transparent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow/gold provide excellent contrast and are colorblind-safe
-          (not red-green).
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins. Good use of space.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Time (months)" includes units, "Survival Probability" is descriptive.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1–2. CVD-safe. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 format. Nothing cut off. Balanced proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines and alpha. However, the legend is
-          very small and positioned in the bottom-left corner where it's somewhat
-          hard to read.
+        comment: Descriptive labels with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Backgrounds correct. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional execution. Median reference line and CI band treatment
+          add context. Competent but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid. Styled legend. Default L-shaped frame. No exceptional
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy. Step function accurate. Median line provides
+          focal point.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Kaplan-Meier step function survival curves.
+        comment: Correct Kaplan-Meier with step functions.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, survival probability on Y-axis, correctly mapped.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: step function curves, 95% CI bands, censored
-          observation marks, group comparison with legend, median survival line.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: step functions, CI bands, censored marks,
+          group comparison, legend with n.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range (0-38 months, 0-1.05 probability).
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=time, Y=survival probability (0–1). All data displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Treatment and Control with sample sizes.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "survival-kaplan-meier · bokeh · pyplots.ai"'
+        comment: Format correct. Legend labels match.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows declining survival, group differences, censoring, confidence
-          intervals. Could show more dramatic separation or crossing curves for fuller
-          demonstration.
+        comment: 'Demonstrates all KM aspects: comparison, censoring, step behavior,
+          divergence.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Clinical trial with treatment vs control is a classic, neutral, realistic
-          scenario.
+        comment: Clinical trial data (treatment vs. control) realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Time scale (months) and sample sizes (n=80) are realistic. Survival
-          curves show plausible decline patterns.
+        comment: Survival probability 0–1 correct. Time 0–38 months appropriate.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: Code uses helper functions (kaplan_meier, make_step_data) rather
-          than flat script structure.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set.
+        comment: Only essential compute_km() helper. Clean, direct plotting.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API.
+        comment: Appropriate complexity. No fake interactivity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png.
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct file naming (plot-{THEME}.html/png).
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, patch for CI bands, Span for median line,
-          scatter with custom markers for censoring. Good Bokeh usage but could leverage
-          HoverTool for interactivity.
+        comment: Idiomatic Bokeh patterns. Proper theme tokens. Selenium screenshot
+          pattern correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Bokeh-specific features well (ColumnDataSource, patch, Span).
+          Competent but not exceptional.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
