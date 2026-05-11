@@ -1,0 +1,81 @@
+# Style variants for scripts/style-experiment.py
+#
+# Each variant is a named bundle of text patches applied to the plot
+# implementation source file before rendering. Two kinds of patches:
+#   - {find: STR, replace: STR}    - literal substring (all occurrences)
+#   - {regex: PATTERN, replace: R} - Python regex
+#
+# Patches are keyed by library name. "*" applies to all libraries.
+# Non-matching patches are silently skipped, so a single variant can target
+# whatever libraries actually contain the pattern.
+#
+# Library names match the implementation file names:
+#   matplotlib seaborn plotnine plotly bokeh altair pygal highcharts letsplot
+
+variants:
+
+  baseline:
+    description: "Current production style (no changes)"
+    patches: {}
+
+  smaller_canvas:
+    description: "Halved canvas (~2400x1350). Fonts unchanged - effective text doubles on thumbnails."
+    patches:
+      matplotlib:
+        - {find: "figsize=(16, 9)", replace: "figsize=(8, 4.5)"}
+      seaborn:
+        - {find: "figsize=(16, 9)", replace: "figsize=(8, 4.5)"}
+      plotnine:
+        - {find: "figure_size=(16, 9)", replace: "figure_size=(8, 4.5)"}
+      plotly:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+      altair:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+      bokeh:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+
+  bigger_fonts:
+    description: "Title 24->40pt, axis 20->32pt, tick 16->26pt, line 3->5. Canvas unchanged."
+    patches:
+      "*":
+        - {regex: 'fontsize=24\b',  replace: "fontsize=40"}
+        - {regex: 'fontsize=20\b',  replace: "fontsize=32"}
+        - {regex: 'fontsize=16\b',  replace: "fontsize=26"}
+        - {regex: 'linewidth=3\b',  replace: "linewidth=5"}
+        - {regex: '"size":\s*28\b', replace: '"size": 44'}
+        - {regex: '"size":\s*22\b', replace: '"size": 34'}
+        - {regex: '"size":\s*18\b', replace: '"size": 28'}
+
+  combo_smaller_canvas_modest_fonts:
+    description: "Halved canvas + modestly larger fonts (title 28, axis 22, tick 18). Recommended starting point."
+    patches:
+      "*":
+        - {regex: 'figsize=\(16, 9\)',     replace: "figsize=(8, 4.5)"}
+        - {regex: 'figure_size=\(16, 9\)', replace: "figure_size=(8, 4.5)"}
+        - {regex: 'fontsize=24\b',          replace: "fontsize=28"}
+        - {regex: 'fontsize=20\b',          replace: "fontsize=22"}
+        - {regex: 'fontsize=16\b',          replace: "fontsize=18"}
+      plotly:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+      altair:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+      bokeh:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+
+  palette_tableau:
+    description: "Tableau-10 categorical palette in place of Okabe-Ito (visual sanity check, not a real proposal)."
+    patches:
+      "*":
+        - {find: "#009E73", replace: "#4E79A7"}
+        - {find: "#D55E00", replace: "#F28E2B"}
+        - {find: "#0072B2", replace: "#59A14F"}
+        - {find: "#CC79A7", replace: "#E15759"}
+        - {find: "#E69F00", replace: "#B07AA1"}
+        - {find: "#56B4E9", replace: "#76B7B2"}
+        - {find: "#F0E442", replace: "#EDC948"}
