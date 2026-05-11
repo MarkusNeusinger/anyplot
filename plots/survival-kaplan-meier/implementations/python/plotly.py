@@ -1,12 +1,51 @@
-""" pyplots.ai
+""" anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-29
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-11
 """
+
+import os
+import sys
+
+
+# Fix import issue: remove script directory from path before importing plotly
+try:
+    _script_dir = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    _script_dir = os.getcwd()
+
+if _script_dir in sys.path:
+    sys.path.remove(_script_dir)
+if "" in sys.path:
+    sys.path.remove("")
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Ensure we save to the script's directory
+SCRIPT_DIR = _script_dir if "_script_dir" in locals() else os.path.dirname(os.path.abspath(__file__))
+
+
+def hex_to_rgba(hex_color, alpha):
+    hex_color = hex_color.lstrip("#")
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+COLOR_A = "#009E73"  # First series (bluish green)
+COLOR_B = "#D55E00"  # Second series (vermillion)
 
 # Data - Clinical trial with two treatment groups
 np.random.seed(42)
@@ -47,7 +86,6 @@ for t in unique_times_a:
         S_a = S_a * (1 - events / at_risk)
         if at_risk > events:
             var_sum_a += events / (at_risk * (at_risk - events))
-        # 95% CI using Greenwood's formula
         if S_a > 0 and S_a < 1 and var_sum_a > 0:
             se_log = np.sqrt(var_sum_a) / abs(np.log(S_a))
             lower = S_a ** np.exp(1.96 * se_log)
@@ -138,20 +176,16 @@ y_step_b = np.array(y_step_b)
 y_lower_b = np.array(y_lower_b)
 y_upper_b = np.array(y_upper_b)
 
-# Colors
-color_a = "#306998"  # Python Blue
-color_b = "#FFD43B"  # Python Yellow
-
 # Create figure
 fig = go.Figure()
 
-# Treatment A - Confidence interval
+# Treatment A - Confidence interval band
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([x_step_a, x_step_a[::-1]]),
         y=np.concatenate([y_upper_a, y_lower_a[::-1]]),
         fill="toself",
-        fillcolor="rgba(48, 105, 152, 0.2)",
+        fillcolor=hex_to_rgba(COLOR_A, 0.15),
         line=dict(color="rgba(0,0,0,0)"),
         showlegend=False,
         hoverinfo="skip",
@@ -159,13 +193,13 @@ fig.add_trace(
     )
 )
 
-# Treatment B - Confidence interval
+# Treatment B - Confidence interval band
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([x_step_b, x_step_b[::-1]]),
         y=np.concatenate([y_upper_b, y_lower_b[::-1]]),
         fill="toself",
-        fillcolor="rgba(255, 212, 59, 0.25)",
+        fillcolor=hex_to_rgba(COLOR_B, 0.15),
         line=dict(color="rgba(0,0,0,0)"),
         showlegend=False,
         hoverinfo="skip",
@@ -179,7 +213,7 @@ fig.add_trace(
         x=x_step_a,
         y=y_step_a,
         mode="lines",
-        line=dict(color=color_a, width=4),
+        line=dict(color=COLOR_A, width=4),
         name="Treatment A (Experimental)",
         hovertemplate="Time: %{x:.1f} months<br>Survival: %{y:.1%}<extra></extra>",
     )
@@ -191,7 +225,7 @@ fig.add_trace(
         x=x_step_b,
         y=y_step_b,
         mode="lines",
-        line=dict(color=color_b, width=4),
+        line=dict(color=COLOR_B, width=4),
         name="Treatment B (Standard Care)",
         hovertemplate="Time: %{x:.1f} months<br>Survival: %{y:.1%}<extra></extra>",
     )
@@ -212,8 +246,9 @@ fig.add_trace(
         x=censored_times_a,
         y=censored_surv_a,
         mode="markers",
-        marker=dict(symbol="line-ns", size=14, line=dict(width=3, color=color_a)),
-        name="Censored (A)",
+        marker=dict(symbol="line-ns", size=14, line=dict(width=3, color=COLOR_A)),
+        name="Censored",
+        legendgroup="censored",
         hovertemplate="Censored at: %{x:.1f} months<extra></extra>",
     )
 )
@@ -233,8 +268,10 @@ fig.add_trace(
         x=censored_times_b,
         y=censored_surv_b,
         mode="markers",
-        marker=dict(symbol="line-ns", size=14, line=dict(width=3, color=color_b)),
-        name="Censored (B)",
+        marker=dict(symbol="line-ns", size=14, line=dict(width=3, color=COLOR_B)),
+        name="Censored",
+        legendgroup="censored",
+        showlegend=False,
         hovertemplate="Censored at: %{x:.1f} months<extra></extra>",
     )
 )
@@ -254,28 +291,28 @@ for i, s in enumerate(km_survival_b):
 
 # Layout
 fig.update_layout(
-    title=dict(text="survival-kaplan-meier · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
+    title=dict(
+        text="survival-kaplan-meier · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"
+    ),
     xaxis=dict(
-        title=dict(text="Time (months)", font=dict(size=24)),
-        tickfont=dict(size=18),
+        title=dict(text="Time (months)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
         range=[0, 50],
-        gridcolor="rgba(128, 128, 128, 0.2)",
-        gridwidth=1,
+        gridcolor=GRID,
         showline=True,
         linewidth=2,
-        linecolor="black",
+        linecolor=INK_SOFT,
         zeroline=False,
     ),
     yaxis=dict(
-        title=dict(text="Survival Probability", font=dict(size=24)),
-        tickfont=dict(size=18),
+        title=dict(text="Survival Probability", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
         tickformat=".0%",
         range=[0, 1.05],
-        gridcolor="rgba(128, 128, 128, 0.2)",
-        gridwidth=1,
+        gridcolor=GRID,
         showline=True,
         linewidth=2,
-        linecolor="black",
+        linecolor=INK_SOFT,
         zeroline=False,
     ),
     legend=dict(
@@ -283,15 +320,14 @@ fig.update_layout(
         y=0.98,
         xanchor="right",
         yanchor="top",
-        font=dict(size=18),
-        bgcolor="rgba(255, 255, 255, 0.9)",
-        bordercolor="rgba(0, 0, 0, 0.3)",
+        font=dict(size=18, color=INK_SOFT),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     margin=dict(l=100, r=80, t=100, b=100),
-    plot_bgcolor="white",
-    paper_bgcolor="white",
 )
 
 # Add median survival annotation
@@ -306,14 +342,14 @@ fig.add_annotation(
     yref="paper",
     text=median_text,
     showarrow=False,
-    font=dict(size=16),
+    font=dict(size=16, color=INK),
     align="left",
-    bgcolor="rgba(255, 255, 255, 0.9)",
-    bordercolor="rgba(0, 0, 0, 0.3)",
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=1,
     borderpad=8,
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(os.path.join(SCRIPT_DIR, f"plot-{THEME}.png"), width=1600, height=900, scale=3)
+fig.write_html(os.path.join(SCRIPT_DIR, f"plot-{THEME}.html"), include_plotlyjs="cdn")
