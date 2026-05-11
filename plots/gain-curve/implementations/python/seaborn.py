@@ -1,27 +1,57 @@
-""" pyplots.ai
+"""anyplot.ai
 gain-curve: Cumulative Gains Chart
 Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-29
+Quality: pending | Created: 2025-12-29
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OI_BRAND = "#009E73"
+OI_2 = "#D55E00"
+OI_3 = "#0072B2"
+OI_NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
+
+# Configure seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
 # Set seed for reproducibility
 np.random.seed(42)
 
 # Generate synthetic classification data (customer churn scenario)
-# y_true: actual churn (1) or not (0)
-# y_score: model's predicted probability of churn
 n_samples = 1000
 
 # Create synthetic true labels with ~30% positive class (churners)
 y_true = np.random.choice([0, 1], size=n_samples, p=[0.7, 0.3])
 
 # Create correlated prediction scores (simulating a reasonably good model)
-# Higher scores for true positives, lower for true negatives, with noise
 noise = np.random.normal(0, 0.15, n_samples)
 y_score = np.clip(0.3 + 0.4 * y_true + noise, 0, 1)
 
@@ -45,46 +75,44 @@ positive_rate = total_positives / len(y_true) * 100
 perfect_gains = np.minimum(population_pct / positive_rate * 100, 100)
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot model gain curve using seaborn
-sns.lineplot(x=population_pct, y=gains, ax=ax, color="#306998", linewidth=3.5, label="Churn Prediction Model")
+# Plot model gain curve using Okabe-Ito brand color
+sns.lineplot(x=population_pct, y=gains, ax=ax, color=OI_BRAND, linewidth=3.5, label="Churn Prediction Model")
 
-# Plot random baseline (diagonal)
+# Plot random baseline (diagonal) using neutral color
 sns.lineplot(
-    x=[0, 100], y=[0, 100], ax=ax, color="#888888", linewidth=2.5, linestyle="--", label="Random Selection (Baseline)"
+    x=[0, 100], y=[0, 100], ax=ax, color=OI_NEUTRAL, linewidth=2.5, linestyle="--", label="Random Selection (Baseline)"
 )
 
-# Plot perfect model curve
-sns.lineplot(
-    x=population_pct, y=perfect_gains, ax=ax, color="#FFD43B", linewidth=2.5, linestyle=":", label="Perfect Model"
-)
+# Plot perfect model curve using secondary Okabe-Ito color
+sns.lineplot(x=population_pct, y=perfect_gains, ax=ax, color=OI_2, linewidth=2.5, linestyle=":", label="Perfect Model")
 
 # Fill area between model and baseline to show model lift
-ax.fill_between(
-    population_pct,
-    gains,
-    population_pct,  # baseline is y = x
-    alpha=0.2,
-    color="#306998",
-)
+ax.fill_between(population_pct, gains, population_pct, alpha=0.2, color=OI_BRAND)
 
 # Styling
-ax.set_xlabel("Customers Targeted (%)", fontsize=20)
-ax.set_ylabel("Churners Captured (%)", fontsize=20)
-ax.set_title("gain-curve · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Customers Targeted (%)", fontsize=20, color=INK)
+ax.set_ylabel("Churners Captured (%)", fontsize=20, color=INK)
+ax.set_title("gain-curve · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
 # Set axis limits
 ax.set_xlim(0, 100)
 ax.set_ylim(0, 105)
 
-# Legend
-ax.legend(fontsize=16, loc="lower right")
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Grid styling
-ax.grid(True, alpha=0.3, linestyle="--")
+# Subtle grid
+ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+
+# Legend in upper left to avoid data overlap
+ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
