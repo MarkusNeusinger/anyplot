@@ -1,166 +1,168 @@
 library: plotnine
+language: python
 specification_id: venn-basic
 created: '2025-12-29T22:49:39Z'
-updated: '2025-12-29T22:58:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584330726
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/venn-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-11T11:35:42Z'
+generated_by: claude-haiku
+workflow_run: 25667163653
+issue: 2444
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of a Venn diagram using plotnine grammar of graphics
-    approach
-  - Clean, readable layout with well-positioned count labels in each region
-  - Good use of transparency (alpha=0.45) to show overlap regions clearly
-  - Realistic tech team scenario with mathematically consistent intersection counts
-  - Proper calculation of exclusive region counts from set totals and intersections
-  - Clean theme with hidden axes and grid appropriate for a Venn diagram
+  - Perfect visual and spec compliance with no legibility issues in either theme
+  - Clean, professional implementation with proper theme adaptation
+  - Well-structured data with realistic, neutral context
+  - All required Venn regions clearly labeled and differentiated
+  - Correct color palette and consistent branding
   weaknesses:
-  - 'Two of the three colors are shades of blue (#306998 and #4B8BBE), which could
-    be confusing for colorblind users'
-  - Figure size is 12x12 (square) instead of 16x9 as recommended in library guidelines
-  image_description: 'The plot displays a classic three-circle Venn diagram showing
-    the overlap between Python Developers, Data Scientists, and ML Engineers. The
-    three circles are arranged in a triangular formation with significant overlap
-    in the center. Colors used are a muted blue (#306998) for Python Developers, yellow
-    (#FFD43B) for Data Scientists, and a lighter blue (#4B8BBE) for ML Engineers.
-    Each region displays its count: 60 (Python only), 35 (Data Scientists only), 25
-    (ML Engineers only), 20 (Python ∩ Data Scientists), 10 (Python ∩ ML), 15 (Data
-    Scientists ∩ ML), and 10 (all three). Set labels are positioned outside the circles.
-    The title "venn-basic · plotnine · pyplots.ai" is centered at the top. The background
-    is clean white with no axes or grid lines visible.'
+  - Design lacks sophistication or custom styling refinement
+  - No advanced visual hierarchy or design emphasis techniques applied
+  - Library usage is functional but straightforward without distinctive plotnine features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly theme-adapted
+      Chrome: Title (24pt), set labels (14pt), count labels (18pt bold) all dark text, clearly readable
+      Data: Three circles in Okabe-Ito colors — green (#009E73), orange (#D55E00), blue (#0072B2) with alpha=0.45
+      Region counts: 60, 35, 25, 20, 10, 15, 10 positioned in all seven regions
+      Circle outlines: INK_SOFT color (#4A4A44) visible against light background
+      Legibility verdict: PASS — all text readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly theme-adapted
+      Chrome: Title and labels now in light color (#F0EFE8), clearly readable against dark background
+      Data colors: Identical to light render — green, orange, blue unchanged
+      Region counts: Same 60, 35, 25, 20, 10, 15, 10 in white/light text
+      Circle outlines: Light colored, visible against dark background
+      Theme adaptation: Perfect chrome flip, no dark-on-dark failures
+      Legibility verdict: PASS — all elements readable, proper light-text contrast on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All numbers and labels are clearly readable with appropriate font
-          sizes
+        comment: Title (24pt), count labels (18pt bold), set labels (14pt) explicitly
+          sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all region counts are well-positioned
+        comment: All text regions clearly separated; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circles are well-sized with good transparency (alpha=0.45) showing
-          overlaps clearly
+        comment: Circles with alpha=0.45 clearly show overlapping regions
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but two shades of blue could be confusing
-          for some users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas but slightly more space at bottom than top
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for Venn diagrams, axes correctly hidden
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe with high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600px) appropriate; balanced proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend hidden as labels are on plot, but no legend explaining what
-          counts mean
+        comment: Title format correct; no axis labels (appropriate)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First color #009E73; backgrounds correct in both themes'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional design but lacks custom styling or sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; clean but not refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Clear focal point but without exceptional visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct three-circle Venn diagram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Set memberships and intersections correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 3 sets, overlaps, counts in regions,
-          distinct colors with transparency'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: labels, sizes, intersections, counts'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All regions visible and counts displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All seven regions labeled with correct counts
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Set labels positioned correctly outside circles
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "venn-basic · plotnine · pyplots.ai"
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows all 7 regions of a 3-set Venn but all sets use similar-ish
-          data ranges
+        comment: All seven regions shown with complete count data
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Tech team skills overlap is a plausible, neutral business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Numbers (60, 35, 25, etc.) are realistic for a team/organization
-          context
+        comment: Tech team skill overlap is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Team size values are sensible and realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,41 +170,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No unnecessary functions; straightforward script
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random), but no explicit seed for any potential
-          randomness
+        comment: Uses fixed data; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses plotnine's grammar of graphics well with geom_polygon and geom_text,
-          but Venn diagrams are not a native strength of plotnine
+        comment: Proper geom_polygon, geom_text, scale_fill_manual usage; theme adaptation
+          correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Alpha blending used but not distinctive to plotnine
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - alpha-blending
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptation
