@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:57:27Z'
-updated: '2026-05-11T07:48:32Z'
+updated: '2026-05-11T07:55:04Z'
 generated_by: claude-haiku
 workflow_run: 25657001047
 issue: 2441
@@ -12,41 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Perfect Kaplan-Meier specification implementation with step functions, 95% CI
-    bands, and censored observation markers
-  - 'Flawless palette compliance: Okabe-Ito colors (#009E73, #D55E00) with identical
-    data rendering across light/dark themes'
-  - 'Excellent text legibility: all font sizes explicitly set (title 28px, labels
-    22px, ticks 18px) with perfect readability in both themes'
-  - Clean, idiomatic Highcharts usage with proper series composition (LineSeries,
-    AreaRangeSeries, ScatterSeries) and theme-adaptive chrome
-  - Realistic clinical trial data with appropriate sample sizes, event rates, and
-    time ranges demonstrating plot feature coverage
+  - Perfect visual quality and readability in both light and dark themes with flawless
+    theme adaptation
+  - All specification requirements correctly implemented with proper Kaplan-Meier
+    calculations
+  - Clean, reproducible code with explicit seed and all necessary imports
+  - Correct Okabe-Ito palette colors and title/legend formatting
+  - Realistic clinical trial data showcasing all features (step curves, confidence
+    intervals, censored marks, group comparison)
   weaknesses:
-  - Design Excellence is competent but standard—lacks distinctive aesthetic touches
-    or custom visual refinement beyond library defaults
-  - Visual storytelling is functional but minimal—data is displayed clearly but doesn't
-    emphasize the treatment efficacy difference through visual hierarchy or focal
-    point emphasis
+  - Chart spines still visible—consider removing for publication-ready minimalist
+    appearance
+  - Limited distinctive library usage—AreaRangeSeries used well for confidence intervals
+    but other highcharts-specific features could be leveraged more creatively
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) with appropriate spacing for legibility.
-      Chrome: Title "survival-kaplan-meier · highcharts · anyplot.ai" in dark ink (28px), subtitle in softer ink (22px), axis labels in primary ink with tick labels in secondary ink—all clearly readable. Legend positioned top-right with light background and border.
-      Data: Two Kaplan-Meier survival curves with step functions—green (#009E73) for Standard Treatment and orange (#D55E00) for New Treatment, each with 95% confidence interval bands (light, semi-transparent) and censored observation markers (hollow circles). Data shows clear divergence between treatment groups.
-      Grid: Subtle gridlines visible on both axes.
-      Legibility verdict: PASS - all text and elements fully readable on light background.
+      Background: Warm off-white (#FAF8F1), perfect for light theme
+      Chrome: Title in 28px bold dark text, subtitle 22px light gray, axis labels/titles 22px dark, tick labels 18px light gray—all clearly readable
+      Data: Green (#009E73) and orange (#D55E00) step curves with shaded 95% CI bands; small circle markers for censored observations
+      Layout: Legend top-right with group labels "Standard Treatment" and "New Treatment"; generous margins prevent overlap
+      Legibility verdict: PASS ✓
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) with consistent spacing and margins.
-      Chrome: Title, subtitle, axis labels, and tick labels all rendered in light text colors (cream/light gray), clearly visible against dark background. Legend maintains light text and elevated (darker) background box.
-      Data: Green (#009E73) and orange (#D55E00) data colors are identical to light render—only chrome has flipped to dark theme. Survival curves, confidence interval bands, and censored markers all visible and properly contrasted.
-      Grid: Subtle gridlines visible in lighter tone appropriate for dark theme.
-      Legibility verdict: PASS - all text and data elements fully readable on dark background with no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17), proper for dark theme
+      Chrome: Title light gray, axis labels/titles light gray, tick labels light gray—all clearly readable against dark background; no dark-on-dark failures
+      Data: Data colors identical to light render (green #009E73, orange #D55E00)—only chrome has flipped to light colors
+      Layout: Legend properly visible with light text and border; axis lines and grid subtle in light gray at 10% opacity
+      Legibility verdict: PASS ✓
 
-    Both renders demonstrate perfect theme adaptation: data colors constant, chrome properly flipped, and legibility maintained across themes.
+    Both renders pass theme-readability check. Data colors remain constant; only chrome adapts to theme.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,73 +54,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable at full resolution in both
-          themes
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements properly spaced; no overlaps detected
+        comment: Legend top-right, generous margins (220L, 150R, 250B) prevent all
+          overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data elements (curves, CI bands, censored markers) optimally visible
-          and sized
+        comment: Step curves 5px, censored marks 10px radius, CI bands 0.2 opacity
+          all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; distinct lines with
-          good contrast
+        comment: Okabe-Ito colors CVD-safe with distinct hues and brightness
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot utilizes 60-70% of canvas with balanced margins; legend properly
-          positioned
+        comment: 4800×2700 with balanced margins; plot area well-utilized
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Survival Probability', X-axis 'Time (Months)' with units;
-          title in correct format
+        comment: Descriptive labels with units; correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito); backgrounds #FAF8F1
-          light / #1A1A17 dark; data colors identical across themes'
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          theme chrome perfect'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured default—professional and clean, but lacks exceptional
-          creative touches
+        comment: Theme-adaptive colors with intentional typography hierarchy; professional
+          styling but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; adequate but not polished
+        comment: Subtle grid and margins good; chart spines still visible (not minimalist)
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed clearly but no special visual hierarchy to emphasize
-          treatment advantage
+        passed: true
+        comment: Treatment curves crossing create focal point; legend and subtitle
+          guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier survival plot with step functions
+        comment: Correct Kaplan-Meier step function with all variants
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function, CI bands, censored markers, group comparison with
-          legend—all present
+        comment: Step curves, 95% CI bands, censored marks, group comparison, legend
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time (0-40 months) on X, Survival Probability (0-1) on Y; axes show
-          all data
+        comment: X/Y correctly assigned; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'survival-kaplan-meier · highcharts · anyplot.ai'; legend labels
-          'Standard Treatment' / 'New Treatment'
+        comment: Title format correct; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -164,21 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Kaplan-Meier features: two groups with different survival
-          patterns, censoring, CIs'
+        comment: 'All aspects shown: curves, CIs, censored marks, group comparison'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial scenario is real, comprehensible, and neutral
+        comment: Clinical trial scenario real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample size (120), event rates (70%, 55%), time range (36 months)—all
-          realistic and correct
+        comment: Survival 0-1.0, time 0-36 months realistic; CI variation appropriate
     code_quality:
       score: 10
       max: 10
@@ -188,52 +179,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → KM calculation → plot → save; no unnecessary
-          functions'
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, tempfile, time, urllib, pathlib, numpy, highcharts_core,
+        comment: 'All imports used: os, tempfile, time, urllib, numpy, highcharts,
           selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Python code, appropriate complexity, no over-engineering or
-          fake functionality
+        comment: Appropriate complexity; no over-engineering or fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert usage of Chart(), HighchartsOptions, series composition, theme-adaptive
-          colors
+        comment: Proper Chart, HighchartsOptions, add_series pattern; good API understanding
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses AreaRangeSeries, ScatterSeries, step functions, and Selenium
-          export—effective but not particularly rare
+        comment: AreaRangeSeries used well; other highcharts features could be leveraged
+          more
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -244,4 +232,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready

@@ -1,7 +1,7 @@
 """ anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-11
+Quality: 89/100 | Updated: 2026-05-11
 """
 
 import os
