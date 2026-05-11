@@ -1,15 +1,40 @@
-""" pyplots.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-11
 """
 
-import pandas as pd
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Label
-from bokeh.palettes import Category10
-from bokeh.plotting import figure
+import os
+import time
+from pathlib import Path
 
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, Label
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Save files in the directory where this script is located
+SCRIPT_DIR = Path(__file__).parent
+os.chdir(SCRIPT_DIR)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = [
+    "#009E73",  # brand green
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
+]
 
 # Data - Software project milestones
 events = [
@@ -31,16 +56,16 @@ df["date"] = pd.to_datetime(df["date"])
 # Assign alternating y positions for label readability (above/below axis)
 df["y_pos"] = [0.6 if i % 2 == 0 else -0.6 for i in range(len(df))]
 
-# Category colors
+# Map categories to Okabe-Ito colors
 categories = df["category"].unique().tolist()
-color_map = {cat: Category10[10][i] for i, cat in enumerate(categories)}
+color_map = {cat: OKABE_ITO[i % len(OKABE_ITO)] for i, cat in enumerate(categories)}
 df["color"] = df["category"].map(color_map)
 
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="timeline-basic · bokeh · pyplots.ai",
+    title="timeline-basic · bokeh · anyplot.ai",
     x_axis_type="datetime",
     y_range=(-1.5, 1.5),
     tools="",
@@ -52,14 +77,13 @@ p.line(
     x=[df["date"].min() - pd.Timedelta(days=10), df["date"].max() + pd.Timedelta(days=10)],
     y=[0, 0],
     line_width=6,
-    line_color="#306998",
-    line_alpha=0.8,
+    line_color=INK_SOFT,
+    line_alpha=0.6,
 )
 
-# Draw vertical connector lines and markers for each event
+# Draw vertical connector lines for each event
 for _, row in df.iterrows():
-    # Vertical connector line from axis to marker
-    p.line(x=[row["date"], row["date"]], y=[0, row["y_pos"]], line_width=3, line_color=row["color"], line_alpha=0.7)
+    p.line(x=[row["date"], row["date"]], y=[0, row["y_pos"]], line_width=3, line_color=row["color"], line_alpha=0.8)
 
 # Plot event markers with category colors
 for cat in categories:
@@ -74,11 +98,11 @@ for cat in categories:
         alpha=0.9,
         marker="circle",
         legend_label=cat,
-        line_color="white",
+        line_color=PAGE_BG,
         line_width=3,
     )
 
-# Add event labels manually with proper positioning
+# Add event labels with proper positioning
 for _, row in df.iterrows():
     y_offset = 80 if row["y_pos"] > 0 else -80
     baseline = "bottom" if row["y_pos"] > 0 else "top"
@@ -86,8 +110,8 @@ for _, row in df.iterrows():
         x=row["date"],
         y=row["y_pos"],
         text=row["event"],
-        text_font_size="18pt",
-        text_color="#333333",
+        text_font_size="20pt",
+        text_color=INK,
         text_align="center",
         text_baseline=baseline,
         y_offset=y_offset,
@@ -95,42 +119,65 @@ for _, row in df.iterrows():
     p.add_layout(label)
 
 # Style the plot
-p.title.text_font_size = "32pt"
-p.title.text_color = "#306998"
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
 p.title.align = "center"
 
 p.xaxis.axis_label = "Date"
-p.xaxis.axis_label_text_font_size = "24pt"
+p.xaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_orientation = 0.4
+p.xaxis.axis_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
+p.xaxis.major_tick_line_color = INK_SOFT
 p.xaxis.major_tick_line_width = 2
 p.xaxis.minor_tick_line_width = 1
 
 p.yaxis.visible = False
 p.ygrid.visible = False
-p.xgrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.xgrid.grid_line_width = 2
+p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
 
-p.outline_line_color = None
-p.background_fill_color = "#fafafa"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
 # Configure legend
-p.legend.location = "top_right"
+p.legend.location = "top_left"
 p.legend.title = "Phase"
 p.legend.title_text_font_size = "22pt"
-p.legend.label_text_font_size = "20pt"
+p.legend.title_text_color = INK
+p.legend.label_text_font_size = "18pt"
+p.legend.label_text_color = INK_SOFT
 p.legend.glyph_height = 30
 p.legend.glyph_width = 30
-p.legend.border_line_color = "#cccccc"
-p.legend.background_fill_alpha = 0.9
+p.legend.border_line_color = INK_SOFT
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 0.95
 p.legend.padding = 15
 p.legend.spacing = 10
 
-# Save outputs
-export_png(p, filename="plot.png")
-
-# Also save HTML for interactive version
-output_file("plot.html", title="Event Timeline")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome via Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
