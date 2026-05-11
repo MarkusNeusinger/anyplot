@@ -1,11 +1,17 @@
-""" pyplots.ai
+"""anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
 Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-27
+Quality: 92/100 | Updated: 2026-05-11
 """
 
-import pandas as pd
-from plotnine import (
+import os
+import sys
+
+
+sys.path = [p for p in sys.path if p != "" and "/forest-basic" not in p]
+
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
     aes,
     element_blank,
     element_line,
@@ -24,6 +30,14 @@ from plotnine import (
     theme,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"
 
 # Data: Meta-analysis of RCTs comparing treatment vs control
 studies = pd.DataFrame(
@@ -49,7 +63,7 @@ studies = pd.DataFrame(
 
 # Calculate pooled estimate (weighted mean)
 pooled_effect = (studies["effect_size"] * studies["weight"]).sum() / studies["weight"].sum()
-pooled_se = 0.08  # Simplified standard error for pooled estimate
+pooled_se = 0.08
 pooled_lower = pooled_effect - 1.96 * pooled_se
 pooled_upper = pooled_effect + 1.96 * pooled_se
 
@@ -79,8 +93,8 @@ studies["label"] = (
 )
 
 # Fixed positions for text columns
-x_left = -1.4  # Left column for study names
-x_right = 0.55  # Right column for effect sizes
+x_left = -1.4
+x_right = 0.55
 
 # Add fixed positions to dataframe
 studies["x_left"] = x_left
@@ -95,53 +109,39 @@ pooled_label_right = pd.DataFrame(
 # Plot
 plot = (
     ggplot()
-    # Reference line at null effect (0 for mean difference)
-    + geom_vline(xintercept=0, linetype="dashed", color="#888888", size=1)
-    # Error bars (confidence intervals)
-    + geom_errorbarh(
-        aes(y="y_pos", xmin="ci_lower", xmax="ci_upper"), data=studies, height=0.25, size=1.2, color="#306998"
-    )
-    # Point estimates (sized by weight)
-    + geom_point(aes(x="effect_size", y="y_pos", size="marker_size"), data=studies, color="#306998", fill="#306998")
+    + geom_vline(xintercept=0, linetype="dashed", color=INK_SOFT, size=1, alpha=0.6)
+    + geom_errorbarh(aes(y="y_pos", xmin="ci_lower", xmax="ci_upper"), data=studies, height=0.25, size=1.2, color=BRAND)
+    + geom_point(aes(x="effect_size", y="y_pos", size="marker_size"), data=studies, color=BRAND, fill=BRAND)
     + scale_size_identity()
-    # Pooled estimate diamond
-    + geom_polygon(aes(x="x", y="y"), data=diamond, fill="#FFD43B", color="#306998", size=1.2)
-    # Study labels at fixed left position
-    + geom_text(aes(x="x_left", y="y_pos", label="study"), data=studies, ha="left", size=12, color="#333333")
-    # Effect size labels at fixed right position
-    + geom_text(aes(x="x_right", y="y_pos", label="label"), data=studies, ha="left", size=10, color="#333333")
-    # Pooled label
+    + geom_polygon(aes(x="x", y="y"), data=diamond, fill=BRAND, color=BRAND, size=1.2, alpha=0.7)
+    + geom_text(aes(x="x_left", y="y_pos", label="study"), data=studies, ha="left", size=12, color=INK)
+    + geom_text(aes(x="x_right", y="y_pos", label="label"), data=studies, ha="left", size=10, color=INK_SOFT)
     + geom_text(
-        aes(x="x", y="y", label="label"), data=pooled_label_left, ha="left", size=12, fontweight="bold", color="#333333"
+        aes(x="x", y="y", label="label"), data=pooled_label_left, ha="left", size=12, fontweight="bold", color=INK
     )
     + geom_text(
-        aes(x="x", y="y", label="label"),
-        data=pooled_label_right,
-        ha="left",
-        size=10,
-        fontweight="bold",
-        color="#333333",
+        aes(x="x", y="y", label="label"), data=pooled_label_right, ha="left", size=10, fontweight="bold", color=INK_SOFT
     )
-    # Labels and theme
-    + labs(x="Mean Difference (Treatment - Control)", y="", title="forest-basic · plotnine · pyplots.ai")
+    + labs(x="Mean Difference (Treatment - Control)", y="", title="forest-basic · plotnine · anyplot.ai")
     + scale_x_continuous(breaks=[-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4], limits=(-1.5, 1.3))
     + scale_y_continuous(breaks=[], limits=(-1, 11.5))
     + theme(
         figure_size=(16, 9),
-        panel_background=element_rect(fill="white"),
-        plot_background=element_rect(fill="white"),
-        panel_grid_major_x=element_line(color="#EEEEEE", size=0.5),
+        panel_background=element_rect(fill=PAGE_BG, color=None),
+        plot_background=element_rect(fill=PAGE_BG, color=None),
+        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        axis_text_x=element_text(size=16, color="#333333"),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
         axis_text_y=element_blank(),
-        axis_title_x=element_text(size=20, color="#333333"),
+        axis_title_x=element_text(size=20, color=INK),
         axis_title_y=element_blank(),
-        plot_title=element_text(size=24, ha="center", color="#333333"),
+        plot_title=element_text(size=24, ha="center", color=INK),
         axis_ticks_major_y=element_blank(),
         legend_position="none",
+        panel_border=element_rect(color=INK_SOFT, fill=None),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
