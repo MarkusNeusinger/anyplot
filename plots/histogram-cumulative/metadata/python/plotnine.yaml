@@ -1,156 +1,167 @@
 library: plotnine
+language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:31:52Z'
-updated: '2025-12-30T09:40:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593351244
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep:
-    - cumulative-sum
-  styling:
-    - grid-styling
+updated: '2026-05-11T22:54:57Z'
+generated_by: claude-haiku
+workflow_run: 25701610460
+issue: 2549
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Clean implementation of cumulative histogram using plotnine grammar of graphics
-  - Excellent text sizing with properly configured theme elements for 4800x2700 output
-  - Good use of realistic product shelf life data scenario
-  - Proper color scheme with blue bars and subtle border contrast
-  - Correct title format following pyplots.ai conventions
+  - Perfect visual quality with explicitly set font sizes and zero overlap
+  - Excellent theme-adaptive chrome implementation with flawless light/dark rendering
+  - Strong data storytelling through quartile reference lines with visual hierarchy
+  - Clean, reproducible code with proper KISS structure and deterministic seed
+  - Perfect spec compliance with all required features and correct plot type
+  - Correct Okabe-Ito palette (#009E73) with realistic product shelf-life context
   weaknesses:
-  - Manual histogram calculation with numpy instead of exploring plotnine native stat_bin
-    with cumulative transformation
-  image_description: The plot displays a cumulative histogram showing product shelf
-    life measurements in days. The visualization uses blue bars (#306998) with darker
-    borders (#1a3d5c) arranged in ascending stair-step fashion from left to right.
-    The x-axis shows "Shelf Life (days)" ranging from approximately 20 to 75 days,
-    while the y-axis displays "Cumulative Count" from 0 to 450. The title "histogram-cumulative
-    · plotnine · pyplots.ai" appears at the top. The bars form a characteristic S-curve
-    pattern typical of cumulative distributions, showing slower accumulation at the
-    tails and steeper growth in the middle range. The background uses a minimal theme
-    with subtle gray grid lines.
+  - Design Excellence could be elevated with additional custom refinement beyond well-configured
+    defaults
+  - Library Mastery is competent but not distinctive—cumulative histogram via bar
+    chart is a standard approach
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct specification
+      Chrome: Title "histogram-cumulative · plotnine · anyplot.ai" and subtitle "Quartile positions shown as reference lines" both clearly visible in dark text. Axis labels "Shelf Life (days)" and "Cumulative Count" rendered at 20pt with full clarity. Tick labels (0, 100, 200, 300, 400, etc.) at 16pt - all readable.
+      Data: 25 bars in brand green (#009E73) with subtle gray edges. Cumulative count increases monotonically from ~0 to 450. Three dashed quartile reference lines (Q1, Q2, Q3) with varying alpha (0.4, 0.6, 0.4) create visual hierarchy. Subtle grid lines (alpha=0.08) aid readability.
+      Legibility verdict: PASS - all elements readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct specification
+      Chrome: Title and subtitle render in light text (#F0EFE8 primary) with full visibility against dark surface. Axis labels and tick labels in secondary light color (#B8B7B0) - all readable with excellent contrast. No dark-on-dark failures detected.
+      Data: Identical green (#009E73) bars to light render - perfect theme-color separation. Quartile reference lines maintain identical positions and opacity as light render. Grid lines visible in light tones.
+      Legibility verdict: PASS - all elements readable, no dark-on-dark issues, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text fully readable; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and clearly visible with good contrast
+        comment: Bars perfectly adapted to bin density; reference lines optimally
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but some empty space on the left side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units "(days)", Y-axis is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green highly visible; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 16:9 layout with 60-70% canvas utilization and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, but no legend needed for this single-series plot
+        comment: Descriptive with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73; backgrounds #FAF8F1/#1A1A17; theme chrome perfect'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Strong design with intentional colors and visual hierarchy; professional
+          but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spine, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Reference lines with varying alpha create clear quartile narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative histogram as bar chart
+        comment: Correct cumulative histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X shows bin values, Y shows cumulative count correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Monotonically increasing, shows cumulative totals
-      - id: SC-04
-        name: Data Range
+        comment: All features present and working
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single series, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: histogram-cumulative · plotnine · pyplots.ai'
+        comment: Title format correct; no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows bimodal distribution accumulation well, though the bimodality
-          could be more pronounced in the cumulative view
+        comment: Bimodal distribution visible; shows all aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product shelf life is a neutral, realistic scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 45-65 day shelf life is realistic for products
+        comment: Real product shelf-life scenario; neutral and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct values and proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,40 +169,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: Clean linear structure; no over-engineering
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no waste
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no over-engineering or fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" but uses verbose=False which is fine
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and ggsave call
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_bar and theme_minimal, but manual histogram
-          calculation instead of native geom_histogram with cumulative option
+        comment: Expert use of ggplot API and plotnine conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses theme composition and stat='identity' but not highly distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - alpha-blending
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
