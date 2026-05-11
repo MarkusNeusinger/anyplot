@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 timeline-basic: Event Timeline
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-11
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_hline,
     geom_point,
@@ -27,6 +31,16 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data - Software project milestones (10 events for better readability)
 events = pd.DataFrame(
@@ -77,7 +91,7 @@ events["date_num"] = (events["date"] - events["date"].min()).dt.days
 events["y_offset"] = [1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0]
 events["label_y"] = [1.5, -1.5, 1.5, -1.5, 1.5, -1.5, 1.5, -1.5, 1.5, -1.5]
 
-# Create month breaks for x-axis (simplified labeling)
+# Create month breaks for x-axis
 month_breaks = [0, 31, 59, 90, 121, 152, 182, 213, 244, 274, 305, 335]
 month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -85,7 +99,7 @@ month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 plot = (
     ggplot(events)
     # Timeline axis (horizontal line at y=0)
-    + geom_hline(yintercept=0, color="#555555", size=1.5)
+    + geom_hline(yintercept=0, color=INK_SOFT, size=1.5)
     # Vertical connectors from axis to event points
     + geom_segment(
         mapping=aes(x="date_num", xend="date_num", yend="y_offset", color="category"), y=0, size=1.2, alpha=0.7
@@ -93,24 +107,29 @@ plot = (
     # Event points
     + geom_point(mapping=aes(x="date_num", y="y_offset", color="category"), size=6, alpha=0.9)
     # Event labels (positioned at label_y)
-    + geom_text(mapping=aes(x="date_num", y="label_y", label="event"), size=9)
-    # Color scale
-    + scale_color_manual(values=["#306998", "#FFD43B", "#22C55E", "#DC2626", "#8B5CF6"], name="Phase")
+    + geom_text(mapping=aes(x="date_num", y="label_y", label="event"), size=10, color=INK)
+    # Color scale using Okabe-Ito palette
+    + scale_color_manual(values=OKABE_ITO, name="Phase")
     # Axis configuration - use simple month labels with padding
-    + scale_x_continuous(name="2024", breaks=month_breaks, labels=month_labels, limits=[-15, 365])
+    + scale_x_continuous(name="Month (2024)", breaks=month_breaks, labels=month_labels, limits=[-15, 365])
     + scale_y_continuous(limits=[-2.2, 2.2])
     # Labels
-    + labs(title="timeline-basic · letsplot · pyplots.ai", y="")
+    + labs(title="timeline-basic · letsplot · anyplot.ai", y="")
     # Theme
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title_x=element_text(size=20),
-        axis_text_x=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, color=INK),
+        axis_title_x=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
         axis_text_y=element_blank(),
         axis_ticks_y=element_blank(),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        axis_line_x=element_line(color=INK_SOFT, size=0.5),
+        axis_line_y=element_blank(),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
@@ -118,8 +137,6 @@ plot = (
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800x2700 px)
-ggsave(plot, filename="plot.png", path=".", scale=3)
-
-# Save interactive HTML version
-ggsave(plot, filename="plot.html", path=".")
+# Save as PNG (scale 3x for 4800x2700 px) and HTML
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, filename=f"plot-{THEME}.html", path=".")
