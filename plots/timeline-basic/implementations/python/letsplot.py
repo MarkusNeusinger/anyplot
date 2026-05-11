@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeline-basic: Event Timeline
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-12-21
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-11
 """
 
 import os
