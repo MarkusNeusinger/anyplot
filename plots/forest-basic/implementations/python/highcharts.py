@@ -1,12 +1,12 @@
-""" pyplots.ai
+""" anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-27
+Library: highcharts unknown | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-11
 """
 
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 from highcharts_core.chart import Chart
@@ -15,6 +15,21 @@ from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+SECONDARY = "#D55E00"
 
 # Data: Meta-analysis of treatment effect studies (mean difference)
 studies = [
@@ -34,59 +49,59 @@ studies = [
 effect_sizes = [-0.35, 0.12, -0.52, -0.28, 0.05, -0.41, -0.18, -0.55, -0.22, -0.38]
 ci_lower = [-0.68, -0.21, -0.88, -0.55, -0.32, -0.72, -0.48, -0.91, -0.52, -0.65]
 ci_upper = [-0.02, 0.45, -0.16, -0.01, 0.42, -0.10, 0.12, -0.19, 0.08, -0.11]
-weights = [8.5, 6.2, 9.1, 10.3, 5.8, 8.9, 7.4, 6.8, 9.5, 11.2]  # Study weights (%)
+weights = [8.5, 6.2, 9.1, 10.3, 5.8, 8.9, 7.4, 6.8, 9.5, 11.2]
 
 # Pooled estimate (diamond)
 pooled_effect = -0.28
 pooled_ci_lower = -0.42
 pooled_ci_upper = -0.14
 
-# Create chart with container
+# Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration - adjust margins to fix x-axis title visibility and reduce bottom whitespace
+# Chart configuration
 chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginLeft": 350,
     "marginRight": 150,
-    "marginBottom": 250,  # Increased for x-axis title visibility
+    "marginBottom": 250,
     "marginTop": 150,
 }
 
 # Title
-chart.options.title = {
-    "text": "forest-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+chart.options.title = {"text": "forest-basic · highcharts · anyplot.ai", "style": {"fontSize": "28px", "color": INK}}
+
+chart.options.subtitle = {
+    "text": "Meta-Analysis of Treatment Effect on Primary Outcome",
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
-chart.options.subtitle = {"text": "Meta-Analysis of Treatment Effect on Primary Outcome", "style": {"fontSize": "32px"}}
-
-# Y-axis labels: studies at top, pooled at bottom (reversed order for categories)
+# Y-axis labels: studies at top, pooled at bottom
 all_labels = ["Pooled Estimate", ""] + list(reversed(studies))
 n_studies = len(studies)
 
-# X-axis (effect size) - increase title visibility and ensure proper rendering
+# X-axis (effect size)
 chart.options.x_axis = {
-    "title": {"text": "Mean Difference (95% CI)", "style": {"fontSize": "36px", "fontWeight": "bold"}, "margin": 25},
-    "labels": {"style": {"fontSize": "26px"}, "y": 35},
+    "title": {"text": "Mean Difference (95% CI)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "plotLines": [
         {
             "value": 0,
-            "color": "#555555",
+            "color": INK_SOFT,
             "width": 3,
             "dashStyle": "Dash",
             "zIndex": 3,
             "label": {
                 "text": "No Effect",
-                "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#333333"},
+                "style": {"fontSize": "18px", "color": INK_SOFT},
                 "rotation": 0,
                 "align": "center",
                 "verticalAlign": "top",
-                "y": 25,  # Small offset from top
+                "y": 25,
                 "x": 0,
             },
         }
@@ -94,34 +109,37 @@ chart.options.x_axis = {
     "min": -1.2,
     "max": 0.8,
     "gridLineWidth": 1,
-    "gridLineColor": "#f0f0f0",  # Lighter grid lines for cleaner appearance
-    "gridLineDashStyle": "Dot",  # Dotted style is less prominent
+    "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
     "tickInterval": 0.2,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
-# Y-axis (studies) - tight layout to minimize whitespace below pooled estimate
+# Y-axis (studies)
 chart.options.y_axis = {
     "title": {"text": None},
     "categories": all_labels,
     "reversed": False,
-    "labels": {"style": {"fontSize": "26px"}, "x": -10},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "x": -10},
     "gridLineWidth": 0,
-    "min": -0.15,  # Tighter min to reduce bottom gap below pooled estimate
-    "max": len(all_labels) - 0.5,  # Slightly tighter top
+    "min": -0.15,
+    "max": len(all_labels) - 0.5,
     "tickPositions": list(range(len(all_labels))),
     "startOnTick": False,
     "endOnTick": False,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
-# Disable legend (we use labels)
+# Disable legend
 chart.options.legend = {"enabled": False}
 
-# Create series for study points (map indices: study 0 -> y = n_studies+1, study 1 -> y = n_studies, etc.)
+# Create series for study points
 study_points_data = []
 for i, (es, w, lower, upper) in enumerate(zip(effect_sizes, weights, ci_lower, ci_upper, strict=True)):
-    # Marker radius proportional to weight (scaled for visibility)
     radius = 8 + (w / max(weights)) * 16
-    y_pos = n_studies + 1 - i  # First study at top (y = n_studies+1), last at y = 2
+    y_pos = n_studies + 1 - i
     study_points_data.append(
         {
             "x": es,
@@ -135,8 +153,8 @@ for i, (es, w, lower, upper) in enumerate(zip(effect_sizes, weights, ci_lower, c
 study_series = ScatterSeries()
 study_series.data = study_points_data
 study_series.name = "Study Effect"
-study_series.color = "#306998"
-study_series.marker = {"symbol": "square", "lineWidth": 2, "lineColor": "#306998"}
+study_series.color = BRAND
+study_series.marker = {"symbol": "square", "lineWidth": 2, "lineColor": BRAND}
 
 chart.add_series(study_series)
 
@@ -146,7 +164,7 @@ for i, (lower, upper) in enumerate(zip(ci_lower, ci_upper, strict=True)):
     ci_series = ScatterSeries()
     ci_series.data = [{"x": lower, "y": y_pos}, {"x": upper, "y": y_pos}]
     ci_series.name = f"CI {i}"
-    ci_series.color = "#306998"
+    ci_series.color = BRAND
     ci_series.marker = {"enabled": False}
     ci_series.enable_mouse_tracking = False
     ci_series.show_in_legend = False
@@ -154,10 +172,9 @@ for i, (lower, upper) in enumerate(zip(ci_lower, ci_upper, strict=True)):
     ci_series.type = "line"
     chart.add_series(ci_series)
 
-# Pooled estimate (diamond) - at y = 0
+# Pooled estimate (diamond)
 pooled_y = 0
 
-# Create diamond shape for pooled estimate with enhanced tooltip data
 diamond_series = ScatterSeries()
 diamond_series.data = [
     {
@@ -168,14 +185,8 @@ diamond_series.data = [
     }
 ]
 diamond_series.name = "Pooled Estimate"
-diamond_series.color = "#FFD43B"
-diamond_series.marker = {
-    "symbol": "diamond",
-    "radius": 20,
-    "lineWidth": 3,
-    "lineColor": "#306998",
-    "fillColor": "#FFD43B",
-}
+diamond_series.color = SECONDARY
+diamond_series.marker = {"symbol": "diamond", "radius": 20, "lineWidth": 3, "lineColor": BRAND, "fillColor": SECONDARY}
 
 chart.add_series(diamond_series)
 
@@ -183,7 +194,7 @@ chart.add_series(diamond_series)
 pooled_ci_series = ScatterSeries()
 pooled_ci_series.data = [{"x": pooled_ci_lower, "y": pooled_y}, {"x": pooled_ci_upper, "y": pooled_y}]
 pooled_ci_series.name = "Pooled CI"
-pooled_ci_series.color = "#306998"
+pooled_ci_series.color = BRAND
 pooled_ci_series.marker = {"enabled": False}
 pooled_ci_series.line_width = 4
 pooled_ci_series.type = "line"
@@ -192,7 +203,7 @@ pooled_ci_series.show_in_legend = False
 
 chart.add_series(pooled_ci_series)
 
-# Enhanced tooltip showing exact values, CI, and weight
+# Enhanced tooltip
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": (
@@ -201,19 +212,64 @@ chart.options.tooltip = {
         "95% CI: [{point.custom.ciLower:.2f}, {point.custom.ciUpper:.2f}]<br/>"
         "Weight: {point.custom.weight:.1f}%"
     ),
-    "style": {"fontSize": "24px"},
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
+    "style": {"fontSize": "18px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
     "borderWidth": 2,
-    "borderColor": "#306998",
+    "borderColor": INK_SOFT,
 }
 
 # Credits
 chart.options.credits = {"enabled": False}
 
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Try multiple CDN sources for reliability
+cdn_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/highcharts.min.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.min.js",
+    "https://code.highcharts.com/highcharts.js",
+]
+
+highcharts_js = None
+
+for cdn_url in cdn_urls:
+    if requests:
+        try:
+            session = requests.Session()
+            session.headers.update(
+                {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "text/javascript,*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                }
+            )
+            response = session.get(cdn_url, timeout=30)
+            response.raise_for_status()
+            highcharts_js = response.text
+            break
+        except Exception:
+            continue
+
+if not highcharts_js:
+    import urllib.request
+
+    for cdn_url in cdn_urls:
+        for attempt in range(2):
+            try:
+                req = urllib.request.Request(
+                    cdn_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+                )
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    highcharts_js = response.read().decode("utf-8")
+                break
+            except Exception:
+                if attempt == 1:
+                    break
+                time.sleep(1)
+        if highcharts_js:
+            break
+
+if not highcharts_js:
+    raise RuntimeError("Failed to download Highcharts JS from any CDN")
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -223,14 +279,14 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
 # Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Write temp HTML and take screenshot
@@ -243,15 +299,13 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4900,2800")  # Slightly larger to ensure full chart capture
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
+time.sleep(5)
 
-# Get the container element and take screenshot of just that element for exact dimensions
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
