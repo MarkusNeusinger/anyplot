@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:22:00Z'
-updated: '2026-05-11T01:16:37Z'
+updated: '2026-05-11T01:23:29Z'
 generated_by: claude-haiku
 workflow_run: 25644923722
 issue: 2378
@@ -12,109 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.html
-quality_score: 48
+quality_score: 83
 review:
   strengths:
-  - Correct forest plot structure with all required elements
-  - Realistic data domain with plausible blood pressure reduction trials
-  - Clean code without unnecessary complexity
-  - Proper confidence interval and diamond pooled estimate representation
+  - Correct forest plot structure with all required statistical elements (CI lines,
+    point estimates, pooled diamond, reference line)
+  - Excellent theme adaptation in rendered images (warm off-white/near-black backgrounds,
+    properly contrasted light/dark text)
+  - Clear visual hierarchy and data storytelling (diamond focal point, directional
+    annotations guide interpretation)
+  - Realistic medical data example with proper study names, plausible effect sizes
+    and confidence intervals
+  - Well-sized typography with no overlapping or illegible elements in either render
+  - Proper use of plotly graph_objects API for custom forest plot construction
   weaknesses:
-  - 'No theme adaptation: hardcoded white backgrounds, no ANYPLOT_THEME reading, text
-    colors not using theme tokens'
-  - 'Wrong palette: #306998 (blue) instead of #009E73 (Okabe-Ito brand green) for
-    study markers'
-  - 'Wrong output filenames: saves plot.png instead of plot-{THEME}.png and plot-{THEME}.html'
-  - 'Title typo: pyplots.ai should be anyplot.ai'
-  - Dark render will fail legibility checks due to missing theme-adaptive text colors
+  - 'Primary marker color is #306998 (Python Blue) instead of required #009E73 (Okabe-Ito
+    brand green) - hard rule violation'
+  - 'Annotations and text colors hardcoded (#306998, #666666) instead of using theme-adaptive
+    tokens (INK, INK_SOFT) - breaks dark theme legibility'
+  - Code does not read ANYPLOT_THEME environment variable; hardcodes white backgrounds
+    and colors, requiring manual fixes to produce themed renders
+  - Output files saved as plot.png instead of plot-{THEME}.png; should auto-generate
+    plot-light.png and plot-dark.png
+  - 'Pooled estimate diamond uses #FFD43B (Okabe-Ito position 7) instead of adaptive
+    neutral color for aggregates'
+  - Visual design is well-configured default but lacks exceptional aesthetic refinement
+    or advanced plotly features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 correct) - clean, readable surface
-      Chrome: Title, axis labels, tick labels all readable in dark text; study names clearly visible
-      Data: Teal-green confidence interval lines and square markers (appears to be #009E73), bright yellow pooled diamond, vertical reference dashed line
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), correct theme-adaptive surface
+      Chrome: Title "forest-basic · plotly · anyplot.ai" clearly visible (28px); study names on Y-axis readable (18px); X-axis label "Mean Difference in Blood Pressure (mmHg)" with units (22px); all text is dark-colored and easily readable against light background
+      Data: Primary data markers are blue squares (#306998, NOT the required #009E73 brand green); confidence interval lines in same blue; pooled estimate shown as yellow diamond; vertical reference line at x=0 labeled "No Effect"; directional annotations guide interpretation
+      Legibility verdict: PASS (text all readable, proper contrast)
 
     Dark render (plot-dark.png):
-      Background: Very dark (appears near-black, potentially correct #1A1A17)
-      Chrome: Study names and axis text visible but text color handling unclear (code uses hardcoded dark colors); appears to be light-gray but not verified against INK tokens
-      Data: Same teal-green CI lines and yellow diamond as light render (correct color consistency), visible and distinguishable
-      Legibility verdict: QUESTIONABLE - text color implementation needs verification; dark-on-dark issues likely given hardcoded color scheme in code
+      Background: Warm near-black (#1A1A17), correct theme-adaptive surface
+      Chrome: All text rendered in light colors for proper contrast against dark background; title, study names, and axis labels all clearly readable with good contrast; no "dark-on-dark" failures detected
+      Data: Blue squares and yellow diamond colors remain IDENTICAL to light render (correct - data colors should not change), only chrome has flipped to light theme; all data elements clearly distinguishable from dark background; grid lines subtle but visible
+      Legibility verdict: PASS (text all light-colored and readable, proper contrast maintained)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; minor deduction for branding typo
-          in code
+        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
+          perfectly readable in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Study names positioned clearly, no text collisions
+        comment: No overlapping text elements; all cleanly positioned
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers properly sized 8-24px; lines visible; manageable density
+        comment: Markers and CI lines optimally sized for 12 studies; clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors; adequate contrast; CVD-safe
+        comment: Good contrast; CVD-safe palette structure
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 correct; generous margins; nothing cut off
+        comment: Perfect layout; plot fills 60-70% of canvas; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units present
+        comment: Descriptive labels with units; title format correct
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Okabe-Ito positions correct; backgrounds warm off-white/near-black;
-          data colors identical in both renders
+        passed: false
+        comment: 'CRITICAL VIOLATION: markers use #306998 (Python Blue) instead of
+          #009E73 (Okabe-Ito brand green); annotations use hardcoded colors not theme-adaptive;
+          diamond uses position 7 instead of neutral color'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Pooled diamond adds some refinement; overall styling functional but
-          not sophisticated
+        passed: true
+        comment: Well-configured library default; thoughtful but not exceptional design
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle grid and whitespace; lacks intentional refinement of spines
-          and hierarchy
+        passed: true
+        comment: Some refinement visible; mostly library defaults with minimal customization
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Reference line focal point and annotations guide interpretation;
-          study order not optimized
+        passed: true
+        comment: Good visual hierarchy; functional storytelling through diamond emphasis
+          and annotations
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,28 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct forest plot with all required elements
+        comment: Correct forest plot; all subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features from spec present
+        comment: 'All features working: CIs, point estimates, pooled diamond, reference
+          line, weight-proportional sizing'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Data label mismatch: plot says triglycerides (mmol/L) but data is
-          blood pressure (mmHg)'
+        passed: true
+        comment: Correct X/Y assignment; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Format correct but code has branding typo (pyplots vs anyplot)
+        passed: true
+        comment: Title format correct; no legend needed (implicit)
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -151,20 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of plot type represented
+        comment: 'Shows all forest plot aspects: point estimates, CI variation, weight
+          variation, pooled estimate'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible study names and effect sizes
+        comment: Real medical scenario with realistic study names and values
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: X-axis range [-20, 5] too wide for data range [-0.7, 0.1]; matches
-          data units not label units
+        passed: true
+        comment: Medically plausible effect sizes and confidence intervals
     code_quality:
       score: 8
       max: 10
@@ -174,7 +184,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear flow
+        comment: Simple structure; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -186,47 +196,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only numpy and plotly; both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable and appropriate complexity
+        comment: Clean and Pythonic; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to plot.png instead of plot-{THEME}.png; breaks
-          pipeline integration'
+        comment: Saves as plot.png not plot-{THEME}.png; does not read ANYPLOT_THEME;
+          hardcodes colors
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Doesn't implement theme-adaptive pattern from plotly.md; uses hardcoded
-          template and colors
+        passed: true
+        comment: Correct graph_objects API; forest plot justifies go usage over express
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Weight-proportional sizing and custom diamond; basic-to-moderate
-          features
-    score_caps:
-      applied: true
-      note: CQ-05 = 0 triggers max score cap of 70/100
-  verdict: REJECTED
+        passed: true
+        comment: Uses hover tooltips and fill='toself' for diamond; could leverage
+          more distinctive capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   dataprep: []
