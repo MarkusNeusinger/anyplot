@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-11
@@ -10,12 +10,14 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    element_blank,
     element_line,
     element_rect,
     element_text,
     geom_point,
     geom_ribbon,
     geom_step,
+    geom_vline,
     ggplot,
     labs,
     scale_color_manual,
@@ -132,16 +134,31 @@ for _, row in censored.iterrows():
 
 censored_df = pd.DataFrame(censored_marks)
 
+
+# Compute median survival times for annotations
+def get_median_survival(km_group):
+    surv_below_half = km_group[km_group["survival"] <= 0.5]
+    if len(surv_below_half) > 0:
+        return surv_below_half.iloc[0]["time"]
+    return None
+
+
+median_a = get_median_survival(km_a)
+median_b = get_median_survival(km_b)
+
 # Plot
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
-    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.4),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.08),
+    panel_grid_minor=element_blank(),
+    axis_ticks_y=element_line(color=INK_SOFT, size=0.3),
+    axis_ticks_x=element_blank(),
+    panel_border=element_blank(),
+    axis_line_y=element_line(color=INK_SOFT, size=0.4),
+    axis_line_x=element_blank(),
     axis_title=element_text(color=INK, size=20),
     axis_text=element_text(color=INK_SOFT, size=16),
-    axis_line=element_line(color=INK_SOFT, size=0.4),
     plot_title=element_text(color=INK, size=24, face="medium"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
     legend_text=element_text(color=INK_SOFT, size=16),
@@ -156,6 +173,16 @@ plot = (
     + geom_ribbon(km_data, aes(x="time", ymin="ci_lower", ymax="ci_upper", fill="group"), alpha=0.15)
     + geom_step(km_data, aes(x="time", y="survival", color="group"), size=1.5)
     + geom_point(censored_df, aes(x="time", y="survival", color="group"), shape="|", size=4)
+)
+
+if median_a is not None:
+    plot = plot + geom_vline(xintercept=median_a, linetype="dashed", color=OKABE_ITO[0], alpha=0.4, size=0.8)
+
+if median_b is not None:
+    plot = plot + geom_vline(xintercept=median_b, linetype="dashed", color=OKABE_ITO[1], alpha=0.4, size=0.8)
+
+plot = (
+    plot
     + scale_color_manual(values=OKABE_ITO)
     + scale_fill_manual(values=OKABE_ITO)
     + scale_y_continuous(limits=(0, 1.05), breaks=[0, 0.25, 0.5, 0.75, 1.0], labels=["0%", "25%", "50%", "75%", "100%"])
