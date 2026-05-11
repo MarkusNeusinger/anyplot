@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-cumulative: Cumulative Histogram
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-11
+Library: highcharts unknown | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-11
 """
 
 import os
