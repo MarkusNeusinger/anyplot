@@ -6,7 +6,7 @@ title: Basic Gantt Chart
 
 # Specification tracking
 created: 2025-12-27T19:13:01Z
-updated: null
+updated: 2026-05-10T22:21:49Z
 issue: 2377
 suggested: MarkusNeusinger
 
@@ -16,7 +16,6 @@ tags:
   plot_type:
     - gantt
     - bar
-    - timeline
   data_type:
     - datetime
     - categorical

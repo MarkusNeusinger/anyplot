@@ -1,166 +1,170 @@
 library: bokeh
+language: python
 specification_id: lift-curve
 created: '2025-12-27T19:22:28Z'
-updated: '2025-12-27T19:27:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282378
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lift-curve/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lift-curve/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T16:46:02Z'
+generated_by: claude-haiku
+workflow_run: 25633961112
+issue: 2379
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent text sizing with 42pt title, 32pt axis labels, 24pt tick labels - perfectly
-    readable at 4800x2700
-  - Clean implementation of lift curve with proper baseline reference line at y=1
-  - Decile markers with contrasting yellow fill and blue outline provide clear data
-    point emphasis
-  - Realistic marketing campaign scenario with 15% baseline response rate
-  - Proper use of ColumnDataSource for data management
-  - Both PNG and HTML outputs generated
+  - Perfect theme adaptation with both light and dark renders readable and color-correct
+  - Proper Okabe-Ito palette usage (green line, orange markers, gray baseline)
+  - All required spec features present and working (curve, baseline, markers, tooltips)
+  - Excellent text legibility with explicitly-sized fonts across both themes
+  - Clean, deterministic data generation demonstrating realistic model discrimination
+  - Effective use of bokeh-specific features (HoverTool, Span, ColumnDataSource)
+  - Well-balanced layout with generous whitespace and no overlapping elements
   weaknesses:
-  - Missing HoverTool for interactivity - would allow users to see exact lift values
-    at each percentage
-  - Y-axis label could be more descriptive (e.g., Cumulative Lift Model/Random)
-  - Legend text slightly small relative to other text elements on the large canvas
-  image_description: The plot displays a lift curve visualization on a light gray
-    background (#fafafa). A blue line (#306998) represents the model lift, starting
-    at approximately 5.2 at 1% population, peaking around 5.7 at 3-5%, then smoothly
-    declining toward 1.0 as population approaches 100%. A horizontal dashed gray line
-    at y=1 represents the random selection baseline. Yellow circular markers with
-    blue outlines are placed at each decile (10%, 20%, ..., 100%) along the curve.
-    The title "lift-curve · bokeh · pyplots.ai" appears in bold at the top-left. The
-    x-axis is labeled "Population Targeted (%)" ranging from 0-105, and the y-axis
-    shows "Cumulative Lift Ratio" from 0 to ~6.5. A legend in the top-right corner
-    identifies "Model Lift" (line) and "Decile Markers" (circles). Grid lines are
-    subtle with dashed styling and low alpha.
+  - Design excellence is competent but not exceptional—well-configured defaults rather
+    than distinctive aesthetic choices
+  - Could enhance data storytelling with additional visual emphasis or annotations
+    (e.g., peak lift annotation)
+  - Could explore more advanced bokeh features like selection tools or custom hover
+    formatting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - PASS
+      Chrome: Title "lift-curve · bokeh · anyplot.ai" (28pt, dark text #1A1A17), axis labels "Population Targeted (%)" and "Cumulative Lift Ratio (Model / Random)" (22pt), tick labels (18pt), all clearly readable against light background
+      Data: Primary lift curve in brand green (#009E73) with 5px line width, orange decile markers (#D55E00) size 20, gray baseline reference line (dashed, INK_SOFT color), subtle grid (10% alpha)
+      Legend: Top right with "Model Lift" and "Decile Markers" labels (18pt, #4A4A44 text on #FFFDF6 background)
+      Legibility verdict: PASS - excellent contrast, all text readable, no overlapping elements
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - PASS
+      Chrome: Title and labels now in light text (#F0EFE8) for optimal contrast against dark background, all clearly readable
+      Data: Identical lift curve (#009E73), identical markers (#D55E00), identical baseline reference - no color shifts between renders
+      Legend: Same labels with #B8B7B0 text on #242420 background, light and readable
+      Legibility verdict: PASS - no dark-on-dark failures, perfect readability, data colors identical to light render (only chrome changed)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 42pt, axis labels at 32pt, tick labels at 24pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Zero overlapping text elements; all well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 5 is excellent, decile markers size 20 with contrasting
-          colors are clearly visible
+        comment: Line width 5px and markers size 20 optimal for resolution and data
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/gray palette is colorblind-safe
+        comment: Okabe-Ito palette provides excellent contrast; CVD-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas, minor extra whitespace on right side
+        comment: Plot uses 60-70% of canvas with balanced margins; nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (% in x-axis label is good, y-axis
-          could specify "ratio" more clearly)
+        comment: Descriptive with units; title follows spec format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), legend well-placed but could be slightly
-          larger
+        comment: Perfect Okabe-Ito compliance; theme-correct chrome in both renders
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, professional but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, generous whitespace, legend styling; above-default refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Natural visual hierarchy through declining curve; markers and baseline
+          provide context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lift curve visualization
+        comment: Correct lift curve type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population percentage, Y=cumulative lift ratio correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes baseline reference line at y=1, decile markers as specified
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: curve, baseline, markers, tooltips'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows 0-100% population, appropriate y-range with padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Model Lift and Decile Markers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: lift-curve · bokeh · pyplots.ai'
+        comment: Title format correct; legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows typical lift curve behavior: high lift at low percentages,
-          gradual decline to baseline. Could show more dramatic initial peak'
+        comment: Shows full lift curve from 5.5x to baseline
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Marketing campaign customer response data is a perfect real-world
-          scenario
+        comment: Customer response data; marketing scenario realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 15% baseline response rate and lift values 1-5.7 are realistic, though
-          lift could vary more at early percentiles
+        comment: All values factually sound; proportions correct
     code_quality:
       score: 10
       max: 10
@@ -170,41 +174,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern, no functions/classes
+        comment: Linear flow; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Straightforward, Pythonic, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output files and current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource and Span which are Bokeh features, but doesn't
-          leverage interactive capabilities like HoverTool which would be valuable
-          for showing exact lift values at each point
+        passed: true
+        comment: Uses figure(), ColumnDataSource, line(), scatter(), HoverTool, Span
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses bokeh-specific features (HoverTool, Span, ColumnDataSource)
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling: []

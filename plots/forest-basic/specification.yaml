@@ -6,7 +6,7 @@ title: Meta-Analysis Forest Plot
 
 # Specification tracking
 created: 2025-12-27T19:13:20Z
-updated: 2025-12-27T19:13:20Z
+updated: 2026-05-11T00:56:43Z
 issue: 2378
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - forest
-    - errorbar
   data_type:
     - numeric
     - categorical

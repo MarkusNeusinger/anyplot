@@ -1,171 +1,168 @@
 library: bokeh
+language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:24:09Z'
-updated: '2025-12-27T19:33:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282696
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/bokeh/plot.html
+updated: '2026-05-10T22:36:25Z'
+generated_by: claude-haiku
+workflow_run: 25641543860
+issue: 2377
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - html-export
-  - custom-legend
-  patterns:
-  - explicit-figure
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
 review:
   strengths:
-  - Excellent visual clarity with well-sized task labels and bars
-  - Perfect color coding by category with Python-themed blue/yellow for first two
-    categories
-  - Professional layout with proper canvas utilization at 4800x2700
-  - Realistic software development project data showing overlapping and sequential
+  - Perfect theme adaptation in both light and dark renders with correct color preservation
+  - 'Excellent visual hierarchy: color-coding by category and timeline clearly communicate
+    project progression'
+  - 'Professional typography: all font sizes explicitly set and readable at 4800×2700px'
+  - Clean, idiomatic Bokeh code using ColumnDataSource, custom legends, and theme
+    tokens
+  - Realistic software project data demonstrates actual Gantt use case with overlapping
     tasks
-  - Clean datetime handling with proper x-axis formatting
-  - Good use of Bokeh ColumnDataSource pattern
   weaknesses:
-  - Missing HoverTool for task details on hover (Bokeh key interactive feature)
-  - Generates both PNG and HTML but only PNG is required
-  - Axis label Timeline could be more descriptive
-  image_description: 'The plot displays a Gantt chart for a software development project
-    with 12 tasks arranged vertically. Task names appear on the left side (Requirements
-    Analysis, System Design, Database Schema, Backend API, Frontend UI, Unit Testing,
-    Integration, Documentation, System Testing, User Acceptance, Deployment, Training).
-    Horizontal bars span from each task''s start to end date. The x-axis shows "Timeline"
-    with dates from Jan 2025 to Apr 2025. Tasks are color-coded by category: blue
-    (Planning - 2 tasks), yellow/gold (Development - 4 tasks), green (Testing - 3
-    tasks), and red (Deployment - 3 tasks). A legend on the right side shows the four
-    categories. The title reads "gantt-basic · bokeh · pyplots.ai". The background
-    is light gray (#fafafa), bars have dark outlines, and vertical dashed grid lines
-    mark time intervals.'
+  - Design Excellence could be elevated beyond well-configured defaults to publication-ready
+    polish with more custom refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, not pure white. Perfect warm tone.
+      Chrome: Title "gantt-basic · bokeh · anyplot.ai" (28pt), axis label "Timeline" (22pt), tick labels (18pt), task names (28pt)—all dark text (INK color) with excellent contrast against light background. All clearly readable.
+      Data: Twelve tasks with color-coded bars: Planning=#009E73 (brand green), Development=#D55E00 (orange), Testing=#0072B2 (blue), Deployment=#CC79A7 (purple). Bars show varying durations (2–4 weeks), overlapping tasks visible. Legend top-right with category labels and color swatches. Subtle vertical grid lines at 10% alpha.
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, not pure black. Correct warm tone.
+      Chrome: Title, axis label, tick labels, and task names now in light text (INK=#F0EFE8, INK_SOFT=#B8B7B0). All perfectly readable against dark background. Zero dark-on-dark failures.
+      Data: Identical to light render—Planning=#009E73, Development=#D55E00, Testing=#0072B2, Deployment=#CC79A7. Data colors preserved exactly. Legend background now #242420 with light-colored labels. Grid lines remain subtle and visible.
+      Legibility verdict: PASS ✓
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48pt, axis labels at 36pt, task labels at 32pt, tick labels
-          at 28pt - all clearly readable
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          all perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, task labels well-spaced on left
+        comment: Zero text collisions; task names, dates, legend properly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with 0.65 height, good alpha (0.9), dark outlines
-          enhance visibility
+        comment: Bar height 0.65 and spacing optimal for 12 tasks; all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, green, red are distinct and colorblind-friendly (no
-          red-green as only differentiator)
+        comment: Okabe-Ito palette; colorblind-safe; excellent contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas, slight excess whitespace on left for task labels
-          but reasonable
+        comment: Plot fills 60–70% of canvas; balanced margins; excellent utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Timeline" is descriptive but lacks date format specification'
+        comment: Title format correct; "Timeline" is descriptive and appropriate
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines and alpha 0.5, legend well-placed
-          but slightly far from plot
+        comment: 'Perfect Okabe-Ito order; backgrounds #FAF8F1/#1A1A17; theme-adaptive
+          chrome correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional palette and theme adaptation; follows Bokeh defaults
+          without extraordinary custom touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, y-axis hidden, styled legend, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; color-coding and timeline show project progression
+          effectively
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar/Gantt chart type
+        comment: Correct Gantt chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Tasks on Y-axis, time on X-axis, correctly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has task names, start/end dates, category color coding, chronological
-          ordering
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: bars, dates, labels, categories, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, x-range properly extended for labels
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 4 categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "gantt-basic · bokeh · pyplots.ai"
+        comment: Title and legend format correct
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping tasks, sequential tasks, parallel work, varying
-          durations
+        comment: 'Shows all Gantt aspects: varying durations, overlapping tasks, categories'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software development project is a perfect real-world Gantt chart
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Realistic 4-month project timeline with sensible task durations
+        comment: Realistic software project with specific task names and phases
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic dates and durations; logical progression
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,40 +170,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses deterministic data (no random), but no explicit seed statement
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also plot.html (extra file, minor issue)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, hbar, datetime axis, custom legend with LegendItem,
-          but could use HoverTool for interactivity
+        comment: 'Expert use of Bokeh patterns: figure(), ColumnDataSource, hbar(),
+          datetime axis'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, custom Legend/LegendItem, theme tokens, Selenium
+          export workflow
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - custom-legend
+  - annotations
+  patterns:
+  - columndatasource
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling

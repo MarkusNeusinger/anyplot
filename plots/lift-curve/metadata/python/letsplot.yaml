@@ -1,155 +1,173 @@
 library: letsplot
+language: python
 specification_id: lift-curve
 created: '2025-12-27T19:21:39Z'
-updated: '2025-12-27T19:29:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543283655
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lift-curve/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lift-curve/letsplot/plot.html
-quality_score: 98
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T16:58:49Z'
+generated_by: claude-haiku
+workflow_run: 25634179037
+issue: 2379
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent lift curve implementation with proper mathematical calculation of cumulative
-    lift ratio
-  - Clear reference line at y=1 with helpful annotation explaining random selection
-    baseline
-  - 'Well-chosen data: beta distributions create realistic score separation between
-    positive/negative classes'
-  - Decile markers (points at 10% intervals) aid interpretation per spec recommendation
-  - 'Proper lets-plot idioms: ggsize for dimensions, scale=3 for 4800x2700 output,
-    theme customization'
+  - Perfect theme adaptation with identical data colors and theme-only chrome switching
+  - 'Strong visual storytelling: shaded region and annotations clearly communicate
+    targeting value'
+  - Comprehensive text styling with explicit font sizes ensuring readability at 4800×2700px
+  - Realistic fraud detection scenario demonstrating practical utility of lift curves
+  - Clean, maintainable code with proper random seed for reproducibility
+  - 'Excellent palette compliance: Okabe-Ito brand green used correctly; all text
+    colors theme-appropriate'
   weaknesses:
-  - None significant - implementation is publication quality
-  image_description: The plot displays a lift curve with a blue line (#306998) starting
-    at approximately lift value 5 at 0% population, gradually decreasing to lift value
-    1 at 100% population. The x-axis shows "Population Targeted (%)" from 0-100 in
-    increments of 10. The y-axis shows "Cumulative Lift" with values 1-5. A horizontal
-    dashed gray reference line at y=1 represents random selection, annotated with
-    "Random (Lift = 1)" near the right side. Blue dots mark decile points along the
-    curve. The title "lift-curve · letsplot · pyplots.ai" appears at top left. Minimal
-    theme with subtle gray grid lines.
+  - Library Mastery (LM-02) uses standard LetsPlot techniques without leveraging distinctive
+    interactive features (though appropriate for static PNG output)
+  - Design Excellence (DE-01) could reach 7-8 with refined typography choices or enhanced
+    color harmony
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - matches spec requirement exactly
+      Chrome: Title "lift-curve · letsplot · anyplot.ai" (dark, 24pt), axis labels "Population Targeted (%)" and "Cumulative Lift" (dark, 20pt), tick labels 0-100 for X and 1-7 for Y (dark gray, 16pt) - all readable with excellent contrast against light surface
+      Data: Thick green line (#009E73, size=2.5) starting at ~8x lift, curving down to y=1; point markers every 5th value (size=4, alpha=0.8); shaded green region under curve; gray dashed reference line at y=1; annotations "High-lift zone" and "Baseline (Lift = 1)" both clearly visible
+      Legibility verdict: PASS - All text elements perfectly readable, no overlaps, optimal contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - matches spec requirement exactly
+      Chrome: Title, axis labels, tick labels all rendered in light colors (INK and INK_SOFT tokens) with excellent contrast against dark surface; no dark-on-dark failures; grid lines subtly visible in light gray
+      Data: Identical green line and shaded region as light render (data colors unchanged - only chrome adapted); reference line visible with same styling; all annotations clearly readable with light text color
+      Legibility verdict: PASS - All text readable in dark theme, proper theme-adaptive colors applied to all elements, data colors identical to light render confirming correct implementation
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: all text perfectly readable at proper sizes
+        comment: All font sizes explicitly set; title=24pt, labels=20pt, ticks=16pt;
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text elements
+        comment: No overlapping text elements; all content fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: line and points well-sized for data
+        comment: Curve (size=2.5) prominent; markers (size=4) well-spaced; reference
+          line clear; all density-appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: blue/gray colorblind-safe palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: excellent canvas utilization
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: descriptive but lift is dimensionless
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: subtle grid, no legend needed
+        comment: Okabe-Ito palette; excellent contrast; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout; plot fills 50-70% of canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: ''Population Targeted (%)'' and ''Cumulative
+          Lift'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; light bg #FAF8F1; dark bg #1A1A17; theme tokens
+          on all chrome; data colors identical in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful design with shaded region and annotations; brand color
+          used effectively; above defaults but not publication-extreme
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, good whitespace, thoughtful annotations; some customization
+          visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; shaded area emphasizes value; annotations
+          guide interpretation; viewer sees the insight immediately
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct lift curve
+        comment: Correct lift curve with cumulative lift vs population percentage
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population %, Y=lift ratio
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: reference line, decile markers, proper curve shape
-      - id: SC-04
-        name: Data Range
+        comment: Reference line at y=1, proper axes, realistic fraud detection scenario
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: full range shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X correctly mapped to population_pct; Y to lift; axes show full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: annotation correct
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'exact format: lift-curve · letsplot · pyplots.ai'
+        comment: Title format correct; annotations serve as contextual labels
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows full lift curve behavior
+        comment: Shows full curve; demonstrates steep decline; exponential distributions
+          realistic
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: customer response model with 20% rate
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: ~5x lift at top decile is realistic
+        comment: Real fraud detection scenario; neutral; 10% fraud rate realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1200 samples within spec range; lift values (8x→1x) factually correct
     code_quality:
       score: 10
       max: 10
@@ -159,33 +177,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data → plot → save
+        comment: Simple linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: only necessary imports
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: current API usage
+        comment: Clean, Pythonic, effective use of theme tokens
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
-      items: []
+        comment: 'Correct output: plot-{THEME}.png and .html; scale=3'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot() + geom_*() + theme() pattern; proper mappings
+          and styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses multiple geoms effectively; theme-adaptive design; solid but
+          not library-distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling

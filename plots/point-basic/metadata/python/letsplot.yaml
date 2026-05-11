@@ -1,160 +1,176 @@
 library: letsplot
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:34:53Z'
-updated: '2025-12-30T09:44:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593353470
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-11T17:33:19Z'
+generated_by: claude-haiku
+workflow_run: 25685727391
+issue: 2551
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of geom_pointrange for clean point-and-interval visualization
-  - Proper horizontal orientation with coord_flip for readable category labels
-  - Reference line at zero helps interpretation of effect sizes
-  - Clean minimal theme with appropriate font sizes for the 4800x2700 output
-  - Realistic clinical trial scenario with varying confidence interval widths
+  - Perfect theme implementation with consistent token usage across both renders
+  - Correct geom_pointrange choice is idiomatic for point-estimate plots
+  - Clean, professional appearance with thoughtful horizontal layout improving readability
+  - Reference line at x=0 anchors null hypothesis and provides narrative context
+  - High-quality reproducible code with seed, clean imports, and readable variable
+    names
+  - Full compliance with specification and AnyPlot style guide
   weaknesses:
-  - All effect sizes are positive; including at least one negative or zero-crossing
-    effect would better demonstrate the plot utility
-  - Does not include error bar caps at endpoints (spec suggests caps)
-  image_description: The plot displays a horizontal point estimate plot with confidence
-    intervals. It shows 5 treatment groups (Treatment A, Treatment B, Treatment C,
-    Control, Placebo) on the y-axis and Effect Size (95% CI) on the x-axis. Each group
-    has a blue point (#306998) representing the estimate with horizontal lines extending
-    to show confidence intervals. A vertical dashed gray reference line is drawn at
-    x=0. The title "point-basic · lets-plot · pyplots.ai" appears at the top. The
-    plot uses a minimal theme with a clean white background, subtle horizontal grid
-    lines, and well-sized text throughout.
+  - 'Limited design sophistication: no custom palette variations or visual emphasis
+    techniques'
+  - 'Minimal visual refinement: grid customization present but otherwise mostly default
+    styling'
+  - 'No distinctive letsplot features: competent but doesn''t leverage advanced capabilities
+    like layer composition, custom legends, or hover interactivity'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "point-basic · letsplot · anyplot.ai" (24pt, dark INK), subtitle explaining plot (dark INK), y-axis label "Treatment Group" (20pt, dark INK), x-axis label "Effect Size (95% CI)" (20pt, dark INK), tick labels in dark INK_SOFT (#4A4A44) — all clearly visible against light background
+      Data: Five treatment groups (Treatment A/B/C, Control, Placebo) with point estimates and 95% confidence intervals rendered in brand green (#009E73); dashed reference line at x=0 in INK_SOFT; subtle vertical grid lines in RULE token (rgba opacity)
+      Legibility verdict: PASS — all text readable, no light-on-light issues, strong contrast on light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and axis labels in light INK (#F0EFE8), clearly visible against dark background; tick labels in light INK_SOFT (#B8B7B0), soft gray readable against dark surface — no dark-on-dark failures detected
+      Data: Identical point estimates and confidence intervals in same brand green (#009E73) as light render (confirming data colors are theme-independent); dashed reference line in INK_SOFT; subtle vertical grid lines in RULE token; subtitle visible
+      Legibility verdict: PASS — all text readable, proper theme adaptation, data colors identical to light render, no legibility issues
+
+    Both renders pass theme-readability check. Chrome (backgrounds, text, grid, reference line) properly adapted to light/dark themes while Okabe-Ito data colors (#009E73) remain constant.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt bold, axis titles at 20pt, axis text at 16pt - all
-          perfectly readable
+        comment: Title (24pt), axis labels (20pt), tick labels (16pt) all readable
+          in both themes with proper INK/INK_SOFT tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, horizontal orientation prevents label overlap
+        comment: All category labels distinct; point values and confidence intervals
+          clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points and confidence interval lines are clearly visible with good
-          sizing (size=1.5)
+        comment: Points, error bars, reference line, and grid all visible and appropriately
+          sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998), no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, balanced whitespace
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: '"Effect Size (95% CI)" has units, but "Treatment Group" is descriptive
-          only'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Minimal theme with subtle grid, no legend needed (single series)
+        comment: 'Okabe-Ito #009E73 CVD-safe; adequate contrast on both light and
+          dark backgrounds'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape (4800×2700px); generous whitespace; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Effect Size (95% CI)" with units; "Treatment Group" descriptive;
+          title correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; theme-adaptive
+          chrome correct ✓'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Intentional theme-aware design but straightforward without custom
+          palette or dramatic emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid customization present but minimal overall styling refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Reference line provides context but no dramatic visual hierarchy
+          or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct point estimate plot with confidence intervals using geom_pointrange
+        comment: Point estimate plot with geom_pointrange is correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis (after coord_flip), estimates and CI bounds
-          correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Points, confidence intervals, reference line at zero, horizontal
-          orientation - all present
-      - id: SC-04
-        name: Data Range
+        comment: Points, CIs, categories, reference line all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points and intervals fully visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: x→group, y→estimate, ymin/ymax→bounds; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A (full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "point-basic · lets-plot · pyplots.ai"'
+        comment: Title format correct; legend unnecessary (single series); axis labels
+          descriptive
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows varying CI widths and different effect sizes, but no negative
-          effects shown
+        comment: Five categories with varying effect sizes (1.8–5.8) and CI widths
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Research study with treatment groups is a neutral, realistic scientific
-          scenario
+        comment: Treatment efficacy study is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Effect sizes 1.8-5.8 are reasonable, but all positive which limits
-          demonstration
+        comment: Effect sizes sensible; CI widths appropriate; x-axis scales well
     code_quality:
       score: 10
       max: 10
@@ -164,40 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions or classes; straightforward linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used
+        comment: 'Only necessary imports: os, numpy, pandas, lets_plot'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current lets-plot API used
+        comment: Readable variable names; appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot + aes, geom_pointrange, coord_flip, element_* theme API all
+          idiomatic
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses ggplot grammar correctly with geom_pointrange, coord_flip, theme_minimal,
-          but doesn't leverage lets-plot unique features like tooltips or interactivity
+        comment: Theme system demonstrates library command; lacks advanced features
+          like layer composition or custom legend
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

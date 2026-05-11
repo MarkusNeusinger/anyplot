@@ -1,19 +1,36 @@
-""" pyplots.ai
+""" anyplot.ai
 venn-basic: Venn Diagram
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-29
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-11
 """
 
-import numpy as np
-from bokeh.io import export_png
-from bokeh.models import HoverTool, Label
-from bokeh.plotting import figure, output_file, save
+import os
+import time
+from pathlib import Path
 
+import numpy as np
+from bokeh.io import output_file, save
+from bokeh.models import Label
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for three sets
+OI_COLORS = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Three sets representing product feature categories
 set_labels = ["Product A", "Product B", "Product C"]
-set_sizes = [100, 80, 60]  # Total sizes
-# Overlaps: AB=30, AC=20, BC=25, ABC=10
+set_sizes = [100, 80, 60]
+
+# Calculate region sizes
 only_a = 100 - 30 - 20 + 10  # 60
 only_b = 80 - 30 - 25 + 10  # 35
 only_c = 60 - 20 - 25 + 10  # 25
@@ -30,50 +47,32 @@ centers = [
     (0.0, -0.2),  # C - bottom center
 ]
 
-# Create figure with proper sizing and hover tool
+# Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="venn-basic · bokeh · pyplots.ai",
+    title="venn-basic · bokeh · anyplot.ai",
     x_range=(-1, 1),
     y_range=(-0.8, 0.8),
-    tools="hover",
     toolbar_location=None,
 )
 
-# Colors with transparency
-colors = ["#306998", "#FFD43B", "#4DAF4A"]  # Python Blue, Python Yellow, Green
-alpha = 0.4
-
-# Generate circle points inline (KISS - no helper function)
+# Draw three circles
 n_points = 100
 theta = np.linspace(0, 2 * np.pi, n_points)
 
-# Draw the three circles as patches with hover tooltips
 for i, (cx, cy) in enumerate(centers):
     x_pts = (cx + radius * np.cos(theta)).tolist()
     y_pts = (cy + radius * np.sin(theta)).tolist()
     p.patch(
-        x_pts,
-        y_pts,
-        fill_color=colors[i],
-        fill_alpha=alpha,
-        line_color=colors[i],
-        line_width=4,
-        line_alpha=0.8,
-        name=f"set_{i}",
+        x_pts, y_pts, fill_color=OI_COLORS[i], fill_alpha=0.35, line_color=OI_COLORS[i], line_width=3, line_alpha=0.8
     )
 
-# Configure hover tool for interactivity
-hover = p.select({"type": HoverTool})
-hover.tooltips = [("Set", "@name"), ("Region", "Hover over numbers for details")]
-hover.mode = "mouse"
-
-# Add set labels with total sizes outside circles
+# Add set labels and sizes
 label_positions = [
-    (-0.55, 0.50, set_labels[0], f"n={set_sizes[0]}"),  # A - top left
-    (0.55, 0.50, set_labels[1], f"n={set_sizes[1]}"),  # B - top right
-    (0.0, -0.62, set_labels[2], f"n={set_sizes[2]}"),  # C - bottom
+    (-0.55, 0.50, set_labels[0], f"n={set_sizes[0]}"),
+    (0.55, 0.50, set_labels[1], f"n={set_sizes[1]}"),
+    (0.0, -0.62, set_labels[2], f"n={set_sizes[2]}"),
 ]
 
 for lx, ly, text, size_text in label_positions:
@@ -85,10 +84,10 @@ for lx, ly, text, size_text in label_positions:
         text_font_style="bold",
         text_align="center",
         text_baseline="middle",
-        text_color="#333333",
+        text_color=INK,
     )
     p.add_layout(label)
-    # Add set size below the label
+
     size_label = Label(
         x=lx,
         y=ly - 0.08,
@@ -96,24 +95,22 @@ for lx, ly, text, size_text in label_positions:
         text_font_size="24pt",
         text_align="center",
         text_baseline="middle",
-        text_color="#666666",
+        text_color=INK_SOFT,
     )
     p.add_layout(size_label)
 
 # Add region counts
-# Positions for each region (calculated manually for clarity)
 region_labels = [
-    # (x, y, count, description)
-    (-0.35, 0.25, str(only_a), "Only A"),  # Only A
-    (0.35, 0.25, str(only_b), "Only B"),  # Only B
-    (0.0, -0.38, str(only_c), "Only C"),  # Only C
-    (0.0, 0.28, str(only_ab), "A∩B"),  # A ∩ B only
-    (-0.18, -0.08, str(only_ac), "A∩C"),  # A ∩ C only
-    (0.18, -0.08, str(only_bc), "B∩C"),  # B ∩ C only
-    (0.0, 0.05, str(abc), "A∩B∩C"),  # A ∩ B ∩ C
+    (-0.35, 0.25, str(only_a)),  # Only A
+    (0.35, 0.25, str(only_b)),  # Only B
+    (0.0, -0.38, str(only_c)),  # Only C
+    (0.0, 0.28, str(only_ab)),  # A ∩ B only
+    (-0.18, -0.08, str(only_ac)),  # A ∩ C only
+    (0.18, -0.08, str(only_bc)),  # B ∩ C only
+    (0.0, 0.05, str(abc)),  # A ∩ B ∩ C
 ]
 
-for rx, ry, count, _desc in region_labels:
+for rx, ry, count in region_labels:
     count_label = Label(
         x=rx,
         y=ry,
@@ -122,26 +119,44 @@ for rx, ry, count, _desc in region_labels:
         text_font_style="bold",
         text_align="center",
         text_baseline="middle",
-        text_color="#222222",
+        text_color=INK,
     )
     p.add_layout(count_label)
 
-# Style the figure - larger title for 4800x2700 canvas
+# Style
 p.title.text_font_size = "48pt"
 p.title.align = "center"
+p.title.text_color = INK
 
-# Remove axes for cleaner look (Venn diagrams don't need axes)
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
 
-# Set background
-p.background_fill_color = "white"
-p.border_fill_color = "white"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-output_file("plot.html", title="venn-basic · bokeh · pyplots.ai")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

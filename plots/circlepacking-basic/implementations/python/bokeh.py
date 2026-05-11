@@ -1,33 +1,58 @@
-""" pyplots.ai
+""" anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-11
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 np.random.seed(42)
 
-# Build hierarchical data: Technology company budget allocation (in millions)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for hierarchy levels
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Build hierarchical data: Portfolio composition by asset class (in millions)
 hierarchy = [
-    {"id": "TechCorp", "parent": None, "value": 0, "label": "TechCorp"},
-    {"id": "Engineering", "parent": "TechCorp", "value": 0, "label": "Engineering"},
-    {"id": "Sales", "parent": "TechCorp", "value": 0, "label": "Sales"},
-    {"id": "Operations", "parent": "TechCorp", "value": 0, "label": "Operations"},
-    {"id": "Frontend", "parent": "Engineering", "value": 45, "label": "Frontend"},
-    {"id": "Backend", "parent": "Engineering", "value": 60, "label": "Backend"},
-    {"id": "DevOps", "parent": "Engineering", "value": 35, "label": "DevOps"},
-    {"id": "Mobile", "parent": "Engineering", "value": 40, "label": "Mobile"},
-    {"id": "Enterprise", "parent": "Sales", "value": 75, "label": "Enterprise"},
-    {"id": "SMB", "parent": "Sales", "value": 45, "label": "SMB"},
-    {"id": "Partners", "parent": "Sales", "value": 30, "label": "Partners"},
-    {"id": "HR", "parent": "Operations", "value": 25, "label": "HR"},
-    {"id": "Finance", "parent": "Operations", "value": 30, "label": "Finance"},
-    {"id": "Legal", "parent": "Operations", "value": 20, "label": "Legal"},
+    {"id": "Portfolio", "parent": None, "value": 0, "label": "Portfolio"},
+    # Equities
+    {"id": "Equities", "parent": "Portfolio", "value": 0, "label": "Equities"},
+    {"id": "US-Large-Cap", "parent": "Equities", "value": 450, "label": "US Large Cap"},
+    {"id": "US-Mid-Cap", "parent": "Equities", "value": 280, "label": "US Mid Cap"},
+    {"id": "US-Small-Cap", "parent": "Equities", "value": 170, "label": "US Small Cap"},
+    {"id": "Intl-Dev", "parent": "Equities", "value": 320, "label": "Intl Dev"},
+    {"id": "Emerging", "parent": "Equities", "value": 180, "label": "Emerging"},
+    # Fixed Income
+    {"id": "Fixed-Income", "parent": "Portfolio", "value": 0, "label": "Fixed Income"},
+    {"id": "US-Govt", "parent": "Fixed-Income", "value": 250, "label": "US Govt"},
+    {"id": "Corp-Bonds", "parent": "Fixed-Income", "value": 180, "label": "Corp Bonds"},
+    {"id": "Int-Bonds", "parent": "Fixed-Income", "value": 120, "label": "Intl Bonds"},
+    {"id": "High-Yield", "parent": "Fixed-Income", "value": 100, "label": "High Yield"},
+    # Real Assets
+    {"id": "Real-Assets", "parent": "Portfolio", "value": 0, "label": "Real Assets"},
+    {"id": "Real-Estate", "parent": "Real-Assets", "value": 200, "label": "Real Estate"},
+    {"id": "Commodities", "parent": "Real-Assets", "value": 90, "label": "Commodities"},
+    {"id": "Infrastructure", "parent": "Real-Assets", "value": 110, "label": "Infrastructure"},
+    # Alternatives
+    {"id": "Alternatives", "parent": "Portfolio", "value": 0, "label": "Alternatives"},
+    {"id": "Hedge-Funds", "parent": "Alternatives", "value": 150, "label": "Hedge Funds"},
+    {"id": "Private-Equity", "parent": "Alternatives", "value": 130, "label": "Private Equity"},
+    {"id": "Crypto", "parent": "Alternatives", "value": 40, "label": "Crypto"},
 ]
 
 # Build tree structure
@@ -41,26 +66,20 @@ for _node_id, node in nodes.items():
         parent["children"].append(node)
         node["depth"] = parent["depth"] + 1
 
-scale_factor = 15
+scale_factor = 12
 
-# Compute layout bottom-up using stack-based iteration (no recursion/functions)
-# First pass: compute radii for leaves
+# Compute layout bottom-up
 for node in nodes.values():
     if not node["children"]:
         node["r"] = np.sqrt(node["value"]) * scale_factor
 
-# Process nodes level by level, bottom-up
-# Get max depth
 max_depth = max(n["depth"] for n in nodes.values())
 
-# Process from bottom to top
 for current_depth in range(max_depth, -1, -1):
     nodes_at_depth = [n for n in nodes.values() if n["depth"] == current_depth and n["children"]]
 
     for node in nodes_at_depth:
         children = node["children"]
-
-        # Pack siblings using simple algorithm
         children.sort(key=lambda c: -c["r"])
         n_children = len(children)
 
@@ -84,13 +103,11 @@ for current_depth in range(max_depth, -1, -1):
                 c2["x"] = x2
                 c2["y"] = np.sqrt(max(0, y2_sq))
 
-                # Place remaining circles
                 for i in range(3, n_children):
                     ci = children[i]
                     best_score = float("inf")
                     best_pos = (0.0, 0.0)
 
-                    # Try placing tangent to each pair
                     for j in range(i):
                         for k in range(j + 1, i):
                             cj, ck = children[j], children[k]
@@ -135,7 +152,6 @@ for current_depth in range(max_depth, -1, -1):
 
                     ci["x"], ci["y"] = best_pos
 
-        # Find enclosing circle
         if children:
             min_x = min(c["x"] - c["r"] for c in children)
             max_x = max(c["x"] + c["r"] for c in children)
@@ -145,7 +161,6 @@ for current_depth in range(max_depth, -1, -1):
             cy = (min_y + max_y) / 2
             enc_r = max(np.sqrt((c["x"] - cx) ** 2 + (c["y"] - cy) ** 2) + c["r"] for c in children)
 
-            # Center children
             for child in children:
                 child["x"] -= cx
                 child["y"] -= cy
@@ -177,23 +192,22 @@ depths = [n["depth"] for n in all_circles]
 labels = [n["label"] for n in all_circles]
 values = [n["value"] for n in all_circles]
 
-# Color palette by depth
-depth_colors = ["#306998", "#FFD43B", "#4ECDC4"]
-colors = [depth_colors[min(d, 2)] for d in depths]
-depth_names = ["Root (Company)", "Division", "Team"]
+# Color by depth using Okabe-Ito palette
+colors = [OKABE_ITO[min(d, 2)] for d in depths]
+depth_names = ["Portfolio", "Asset Class", "Investment"]
 depth_labels = [depth_names[min(d, 2)] for d in depths]
 
-# Create figure (square aspect, no toolbar)
+# Create figure (square aspect)
 p = figure(
     width=3600,
     height=3600,
-    title="circlepacking-basic · bokeh · pyplots.ai",
+    title="circlepacking-basic · bokeh · anyplot.ai",
     match_aspect=True,
     toolbar_location=None,
     tools="",
 )
 
-# Sort by depth and radius for proper layering (draw outer first)
+# Sort by depth and radius for proper layering
 sorted_indices = sorted(range(len(all_circles)), key=lambda i: (depths[i], -radii[i]))
 
 # Draw circles with ColumnDataSource for hover
@@ -216,14 +230,14 @@ circles_glyph = p.circle(
     radius="radius",
     fill_color="color",
     fill_alpha="alpha",
-    line_color="#333333",
+    line_color=INK_SOFT,
     line_width="line_width",
     source=circle_source,
 )
 
 # Add HoverTool for interactivity
 hover = HoverTool(
-    tooltips=[("Name", "@label"), ("Level", "@depth_label"), ("Budget", "@value{0} M$")],
+    tooltips=[("Name", "@label"), ("Level", "@depth_label"), ("Value", "@value{0} M$")],
     renderers=[circles_glyph],
     mode="mouse",
 )
@@ -231,22 +245,23 @@ p.add_tools(hover)
 
 # Create legend for depth colors
 legend_items = []
-for color, name in zip(depth_colors, depth_names, strict=True):
-    # Create a dummy circle for the legend
+for color, name in zip(OKABE_ITO[:3], depth_names, strict=True):
     dummy_source = ColumnDataSource(data={"x": [-99999], "y": [-99999], "r": [10]})
     dummy_circle = p.circle(
-        x="x", y="y", radius="r", fill_color=color, fill_alpha=0.7, line_color="#333333", source=dummy_source
+        x="x", y="y", radius="r", fill_color=color, fill_alpha=0.7, line_color=INK_SOFT, source=dummy_source
     )
     legend_items.append(LegendItem(label=name, renderers=[dummy_circle]))
 
 legend = Legend(items=legend_items, location="top_right", label_text_font_size="24pt", glyph_height=40, glyph_width=40)
-legend.background_fill_alpha = 0.8
-legend.border_line_color = "#333333"
+legend.background_fill_color = ELEVATED_BG
+legend.background_fill_alpha = 0.95
+legend.border_line_color = INK_SOFT
+legend.label_text_color = INK_SOFT
 legend.padding = 15
 legend.spacing = 10
 p.add_layout(legend)
 
-# Prepare labels - for leaf nodes and divisions
+# Prepare labels for larger circles
 label_data = {"x": [], "y": [], "label": []}
 for node in all_circles:
     if not node["children"] and node["r"] >= 50:
@@ -266,21 +281,23 @@ label_set = LabelSet(
     source=label_source,
     text_align="center",
     text_baseline="middle",
-    text_font_size="28pt",
-    text_color="#222222",
+    text_font_size="26pt",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(label_set)
 
-# Style
+# Style with theme-adaptive chrome
 p.title.text_font_size = "36pt"
+p.title.text_color = INK
 p.title.align = "center"
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
-p.background_fill_color = "#FAFAFA"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
 # Set axis ranges
 extent = root["r"] * 1.08
@@ -289,7 +306,25 @@ p.x_range.end = extent
 p.y_range.start = -extent
 p.y_range.end = extent
 
-# Save outputs
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with Selenium
+W, H = 3600, 3600
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

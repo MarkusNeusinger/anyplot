@@ -1,167 +1,177 @@
 library: bokeh
+language: python
 specification_id: gain-curve
 created: '2025-12-29T23:21:24Z'
-updated: '2025-12-29T23:23:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584840801
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gain-curve/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gain-curve/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-11T09:34:35Z'
+generated_by: claude-haiku
+workflow_run: 25661927588
+issue: 2440
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/bokeh/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of all three required curves (model, baseline, perfect
-    model)
-  - Clean, well-structured code following KISS principles
-  - Good color choices that are colorblind-accessible
-  - Proper use of ColumnDataSource for data management
-  - Realistic customer response scenario with appropriate beta distributions
+  - Perfect visual quality with excellent text legibility in both light and dark themes
+  - All spec requirements correctly implemented (three curves, proper axes, accurate
+    labels)
+  - Professional theme-token styling applied consistently throughout
+  - Clean, reproducible code with proper random seed and idiomatic Bokeh patterns
+  - Realistic synthetic data that clearly demonstrates model discrimination
+  - Correct Okabe-Ito palette usage with brand green as primary series
+  - Proper use of HoverTools for legitimate interactivity without fake UI
   weaknesses:
-  - Could benefit from HoverTool to show exact values on hover (bokeh interactive
-    strength)
-  - Legend border line is slightly heavy at 2px width
-  - Text sizes could be increased slightly for better readability at full resolution
-  image_description: 'The plot displays a cumulative gains chart on a light gray background
-    (#fafafa). The title "gain-curve · bokeh · pyplots.ai" appears in the top-left
-    corner. The X-axis is labeled "Percentage of Population Targeted (%)" and spans
-    0-100, while the Y-axis is labeled "Percentage of Positive Cases Captured (%)"
-    spanning 0-105. Three curves are shown: (1) a solid blue line (#306998) representing
-    the model gain curve with a steep initial slope that rises quickly from 0 to ~90%
-    captured within the first 15% of population, then gradually approaches 100%; (2)
-    a gray dashed diagonal baseline from (0,0) to (100,100) representing random selection;
-    (3) a yellow/gold dotted line showing the perfect model that rises vertically
-    to 100% at ~15% population, then stays horizontal. The legend is positioned on
-    the right side with clear labels. Subtle dashed grid lines are visible.'
+  - Could remove top and right spines for cleaner, more minimal aesthetic (minor refinement)
+  - Legend positioning could explore alternatives (upper-left is common for gains
+    charts)
+  - Design excellence is solid but lacks distinctive or highly innovative styling
+    choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified.
+      Chrome: Title "gain-curve · bokeh · anyplot.ai" is dark (INK, #1A1A17), clearly readable at 28pt. Axis labels "Percentage of Population Targeted (%)" and "Percentage of Positive Cases Captured (%)" are dark at 22pt, fully legible. Tick labels are rendered in INK_SOFT (#4A4A44) at 18pt, all numbers visible. Grid is very subtle (alpha=0.10). Legend positioned in center area with styled background (#FFFDF6), border, and text colors — all readable.
+      Data: Three lines present — Model Gain Curve in brand green (#009E73, solid, line_width=4), Random Baseline in INK_SOFT gray (dashed, line_width=3), Perfect Model in orange/vermillion (#D55E00, dotted, line_width=3). All three curves are distinct and clearly visible. First series is correct brand green per Okabe-Ito.
+      Legibility verdict: PASS — all text is readable against the light background, no dark-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified.
+      Chrome: Title is now light (INK #F0EFE8), clearly readable. Axis labels are light, fully legible. Tick labels in INK_SOFT (#B8B7B0) are visible without any dark-on-dark collision. Legend background is #242420 (ELEVATED_BG), text is INK_SOFT — no legibility issues.
+      Data: Model Gain Curve remains brand green (#009E73) — identical to light render. Random Baseline is light gray INK_SOFT, visible. Perfect Model remains orange (#D55E00) — identical to light render. Only chrome flipped; data colors are consistent.
+      Legibility verdict: PASS — all text is readable against the dark background, no dark-on-dark text issues. Data colors maintained correctly from light render.
+
+    Both renders successfully demonstrate proper theme adaptation with identical data representation and legible chrome in each theme.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are clearly readable at 28pt/22pt/18pt
-          respectively; slightly small for the canvas but acceptable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Title, axis labels, tick labels all readable in both themes at proper
+          sizes (28pt, 22pt, 18pt)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-spaced, no overlapping elements, legend positioned
+          clearly
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are clearly visible with good width (line_width=4 for model,
-          3 for others); the curves are well distinguished
+        comment: Three lines clearly distinguishable via color, width, and dash pattern
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, gray, and yellow are colorblind-safe and easily distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; legend placement on right is appropriate
-          but creates some empty space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (%)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito compliant, CVD-safe palette, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, nothing cut off, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3) but legend border is a bit heavy
+        comment: Title format correct, axes include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, both renders
+          theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with intentional line styles, typography hierarchy,
+          and color choices. Good but relatively straightforward.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10), refined legend styling. Could be enhanced
+          by removing top/right spines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three curves show model effectiveness clearly, good visual hierarchy
+          with model as focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative gains chart
+        comment: Cumulative gains chart correctly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X shows population %, Y shows captured positives %
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes model curve, random baseline (diagonal), and perfect model
-          reference
-      - id: SC-04
-        name: Data Range
+        comment: 'All three required curves present and labeled: model, baseline,
+          perfect'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-100% range displayed on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y axes correctly map population and positive percentages
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three curves
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "{spec-id} · {library} · pyplots.ai"'
+        comment: Title format correct, legend labels clear and accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows steep initial slope indicating good model discrimination; perfect
-          model shows expected shape; baseline is correct diagonal
+        comment: Demonstrates all aspects of gains charts with realistic discrimination
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Customer response model with 15% positive rate is a realistic marketing
-          scenario
+        comment: Binary classification scenario with realistic score distribution
+          (15% positive ratio)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 1000 samples produces smooth curve; beta distributions create realistic
-          score separation
+        comment: 1000 samples, 0-100% ranges all appropriate for domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,40 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: No unnecessary functions/classes, direct flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures consistent results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code with legitimate HoverTools interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both PNG and HTML which is correct for Bokeh
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png and .html output with Selenium per guidelines
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource properly and Legend placement; could have added
-          HoverTool for interactivity
+        comment: Excellent use of ColumnDataSource, proper figure setup, theme tokens
+          applied correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of HoverTools, interactive HTML output, proper Bokeh styling.
+          Could explore more distinctive features.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling

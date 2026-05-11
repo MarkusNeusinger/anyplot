@@ -6,7 +6,7 @@ title: Circle Packing Chart
 
 # Specification tracking
 created: 2025-12-29T23:55:27Z
-updated: null
+updated: 2026-05-11T17:42:30Z
 issue: 2498
 suggested: MarkusNeusinger
 
@@ -14,8 +14,7 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - circle-packing
-    - hierarchy
+    - circlepacking
   data_type:
     - hierarchical
     - numeric

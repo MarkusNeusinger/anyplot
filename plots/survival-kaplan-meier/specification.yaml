@@ -6,7 +6,7 @@ title: Kaplan-Meier Survival Plot
 
 # Specification tracking
 created: 2025-12-29T22:39:04Z
-updated: null
+updated: 2026-05-11T07:25:06Z
 issue: 2441
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - survival
     - step
     - line
   data_type:

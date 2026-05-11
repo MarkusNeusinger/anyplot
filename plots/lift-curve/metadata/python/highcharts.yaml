@@ -1,214 +1,242 @@
 library: highcharts
+language: python
 specification_id: lift-curve
 created: '2025-12-27T19:24:09Z'
-updated: '2025-12-27T19:33:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543283913
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T16:54:41Z'
+generated_by: claude-haiku
+workflow_run: 25634256512
+issue: 2379
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lift-curve/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lift-curve/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/highcharts/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent use of Highcharts plotLines feature for the reference line with label
-  - Effective combination of LineSeries for the curve and ScatterSeries for key percentile
-    annotations
-  - Clean colorblind-safe palette (Python blue/yellow)
-  - Proper title format and informative subtitle with baseline rate
-  - Good data labels on key percentiles showing lift multipliers
+  - Perfect visual quality with excellent text legibility across both themes
+  - 'Full specification compliance: correct chart type, data mapping, and required
+    features'
+  - Comprehensive theme-adaptive styling with proper color tokens throughout
+  - Clean, reproducible code with deterministic data generation
+  - Proper reference line implementation with meaningful label
+  - Excellent canvas sizing and typography hierarchy for 4800x2700px
+  - Correct Okabe-Ito palette usage (#009E73 brand color)
+  - Strong data quality with realistic churn prediction scenario
   weaknesses:
-  - The Random Selection (Lift = 1) label appears to be cut off at the right edge
-    of the plot
-  - Lift values at 10%, 20%, and 30% are identical (1.52x), which looks artificial;
-    the data generation could show more variation
-  - Code complexity with regex extraction of JS literal could be simplified
-  image_description: 'The plot displays a lift curve for a customer response model.
-    It shows a blue line ("Model Lift") starting at approximately 1.52x lift at the
-    top left, gradually decreasing as the population targeted percentage increases
-    from 0% to 100%. The curve smoothly approaches the horizontal dashed reference
-    line at y=1 (labeled "Random Selection (Lift = 1)") near 100% population. Four
-    yellow diamond markers highlight key percentiles at 10%, 20%, 30%, and 50% with
-    lift values displayed (1.52x, 1.52x, 1.52x, and 1.46x respectively). The title
-    "lift-curve · highcharts · pyplots.ai" appears at the top with a subtitle showing
-    "Customer Response Model | Baseline Rate: 65.7%". The Y-axis is labeled "Cumulative
-    Lift" (ranging 0.9-1.6) and X-axis shows "Population Targeted (%)" (0-100). A
-    legend in the top-right identifies the two series. Colors are Python blue (#306998)
-    for the line and Python yellow (#FFD43B) for the diamond markers.'
+  - 'DE-01: Design is clean but fairly minimalist without additional visual sophistication
+    beyond theme adaptation'
+  - 'DE-02: Grid styling is appropriate but could be slightly more refined'
+  - 'LM-02: Library mastery is solid but doesn''t showcase exceptionally distinctive
+    Highcharts features beyond what''s necessary'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper surface styling
+      Chrome: Title "lift-curve · highcharts · anyplot.ai" is bold and readable; axis labels "Population Targeted (%)" and "Cumulative Lift" are clear and descriptive; tick labels (0, 10, 20... 100 on x-axis, 0.9-1.8 on y-axis) are legible in dark text (#1A1A17); legend "Model Lift" is visible in top-right with semi-transparent background
+      Data: Green brand line (#009E73) curves from ~1.8 lift at 0% population down to ~1.0 at 100%; reference line at y=1 (dashed) labeled "Random Selection" provides context; no markers on line, appropriate for dense data
+      Grid: Subtle horizontal grid lines that don't compete with data
+      Legibility verdict: PASS - all text is clearly readable against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper dark surface styling
+      Chrome: Title is clearly visible in light text; axis labels and tick labels are all readable in light colors (INK_SOFT #B8B7B0); no dark-on-dark text issues
+      Data: Same green line (#009E73) is clearly visible and maintains identical color to light render; reference line at y=1 remains visible with proper contrast; legend text is readable
+      Grid: Same subtle grid lines visible and appropriate
+      Theme consistency: Data colors are identical between renders (only chrome flips) ✓
+      Legibility verdict: PASS - all text is clearly readable against dark surface, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable
-          at large font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; labels are well-spaced
+        comment: All text clearly readable in both themes; bold title, descriptive
+          axis labels, legible tick labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; clean spacing throughout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line and markers are clearly visible; markers could be slightly larger
-          but are adequate
+        comment: 5px line width ensures visibility; reference line clearly visible;
+          legend text readable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow combination is colorblind-safe, good contrast
+        comment: 'Brand color #009E73 (Okabe-Ito 1) with good contrast; CVD-safe'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good layout but slight asymmetry; "Random Selection" label partially
-          cut off at right edge
+        comment: Generous margins (200px bottom/left/right, 200px top); well-proportioned
+          layout
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but Y-axis lacks units ("Cumulative Lift"
-          is unitless which is technically correct, but X-axis shows % appropriately)
+        comment: Title format correct; axis labels descriptive with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle; legend placement is good but could be positioned
-          better to avoid isolation in corner
+        comment: 'Brand color correct; backgrounds match spec (#FAF8F1 light, #1A1A17
+          dark); theme-adaptive chrome throughout'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional appearance with intentional color choices; minimalist
+          but polished
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid lines; clean L-shaped frame; refined typography; generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point in declining lift curve; reference line provides
+          context; meaningful hierarchy
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct lift curve visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis shows population %, Y-axis shows cumulative lift ratio correctly
-      - id: SC-03
+        comment: Correct line chart for lift curve visualization
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has reference line at y=1, shows lift curve, has decile markers;
-          could show more percentile annotations
-      - id: SC-04
-        name: Data Range
+        comment: X-axis (population %), Y-axis (cumulative lift), reference line at
+          y=1, proper title
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-100% range displayed with appropriate Y-axis scale
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X correctly 0-100%; Y correctly shows lift values; sorted by scores
+          in descending order
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Model Lift" and "Key Percentiles"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "lift-curve · highcharts · pyplots.ai"'
+        comment: Title includes spec-id, library, and domain; legend label 'Model
+          Lift' is clear
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows lift curve characteristics well: high lift at low percentages,
-          gradual decline to 1; the flat section at top (10-30%) shows same lift values
-          which is slightly artificial'
+        comment: Shows complete lift curve behavior; 1000 samples within recommended
+          range; smooth representation
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Customer response model is realistic; baseline rate of 65.7% is quite
-          high for typical marketing scenarios but plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Lift values (1.0-1.52x) are realistic for a moderately good model
+        comment: Customer churn prediction is realistic application; two-distribution
+          mixture realistic; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lift values (0.9-1.8) realistic for moderately good model; population
+          percentage standard
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally follows imports→data→plot→save pattern but has some complexity
-          with regex extraction of JS
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: No functions/classes; straightforward direct code flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42); fully deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused modules or bloat
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; library conventions followed
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Highcharts features: plotLines for reference, dataLabels
-          for annotations, scatter series overlay, proper LineSeries/ScatterSeries
-          combination'
+        comment: Container parameter correct; proper HighchartsOptions; LineSeries
+          correctly configured; plotLines for reference line; Selenium export standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of plotLines with label; theme-adaptive approach; legend
+          positioning; margin handling for canvas
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []

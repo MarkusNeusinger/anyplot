@@ -1,207 +1,236 @@
 library: altair
+language: python
 specification_id: contour-filled
 created: '2025-12-30T00:04:22Z'
-updated: '2025-12-30T00:30:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585401768
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-filled/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-filled/altair/plot.html
-quality_score: 86
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-05-11T13:29:21Z'
+generated_by: claude-haiku
+workflow_run: 25672796384
+issue: 2500
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of viridis colormap for colorblind accessibility
-  - Good filled contour visualization using mark_rect with discrete color bands
-  - Proper title format following spec-id · library · pyplots.ai convention
-  - Well-structured data with two Gaussian peaks and a valley showing variation
-  - Clean KISS code structure with reproducible seed
+  - Excellent theme-adaptive styling with correct color tokens throughout both renders
+  - Sophisticated contour visualization using marching squares algorithm for precise
+    level curves
+  - Perfect adherence to specification requirements and style guide (backgrounds,
+    text sizes, formats)
+  - Both light and dark renders fully readable with zero theme-adaptation failures
+  - Proper use of viridis colormap for continuous data visualization
+  - Clean integration of filled contours with contour line overlay creating visual
+    hierarchy
   weaknesses:
-  - Contour line overlay using white points is unconventional and does not provide
-    clear level identification as specified
-  - The white point markers for contour lines create visual noise rather than clean
-    isolines
-  image_description: 'The plot displays a filled contour visualization of a 2D scalar
-    field using the viridis colormap. The image shows two prominent Gaussian peaks:
-    one bright yellow peak at approximately (1, 1) and another slightly dimmer yellow-green
-    peak at (-1, -0.5). There is also a subtle valley/depression near (0, 1.5) visible
-    as a darker purple region. The X and Y axes are labeled "X Coordinate" and "Y
-    Coordinate" respectively, ranging from -3 to 3. The title "contour-filled · altair
-    · pyplots.ai" appears at the top. A colorbar on the right labeled "Intensity"
-    shows the color mapping from approximately -0.2 (dark purple) to 1.2+ (bright
-    yellow). The plot has good visual balance with the chart filling most of the canvas.
-    White points are scattered throughout indicating contour level boundaries, though
-    they appear as noise rather than clean isolines.'
+  - Design Excellence could be slightly elevated with additional visual refinement
+    (e.g., custom color tweaking beyond defaults)
+  - Data quality could show slightly more extreme values to maximize feature coverage
+    demonstration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as per style guide specification
+      Chrome: Title "contour-filled · altair · anyplot.ai" in 28px dark INK color, clearly visible. Axis labels "X Coordinate" and "Y Coordinate" in 22px dark INK, full contrast. Tick labels in 18px INK_SOFT (#4A4A44), fully readable against light surface.
+      Data: Viridis colormap showing smooth gradient transitions from dark blue (low values) through cyan, green, yellow to bright yellow (peaks). Contour lines overlay at 0.4 opacity in dark color (#2A2A25), visible but subtle. Colorbar legend on right with "Intensity" label in proper theme colors.
+      Legibility verdict: PASS - All text elements have proper contrast, sizing, and color tokens for light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as per style guide specification
+      Chrome: Title in 28px light INK color (#F0EFE8), excellent contrast. Axis labels in 22px light INK, clear visibility. Tick labels in 18px INK_SOFT (#B8B7B0), all readable against dark surface. No dark-on-dark failures detected.
+      Data: Viridis colormap colors are IDENTICAL to light render (blue, cyan, green, yellow unchanged). Contour lines now light colored (#D5D4CC) for visibility on dark background. Legend styling adapted with light text and proper frame colors.
+      Legibility verdict: PASS - Theme adaptation is complete and correct; data colors unchanged between renders
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title 28pt, axis labels 22pt, tick labels 18pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title (28px), axis labels (22px), tick labels (18px) all properly
+          sized and readable in both themes with correct color tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements properly spaced with no collisions or overlapping text
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Color bands clearly visible, though white contour points create some
-          visual noise
+        comment: 80×80 grid provides smooth transitions; contour lines at 0.4 opacity
+          visible but subtle
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe
+        comment: Viridis is colorblind-safe; adequate contrast throughout
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, though aspect ratio is slightly non-square for
-          the data domain
+        comment: 1600×900 px base (4800×2700 rendered) with proper proportions; nothing
+          cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (generic X/Y coordinates)
+        comment: Title format correct; axis labels descriptive; legend properly labeled
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Colorbar well-placed and sized, but subtle grid lines visible in
-          background
+        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); contour colors theme-adaptive; data colors identical between renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Viridis is well-justified; marching squares algorithm shows thoughtful
+          design; intentional choices evident
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Borderless rectangles; subtle contour opacity; clean styling; adaptive
+          legend frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Two Gaussian peaks create focal points; color gradient guides eye;
+          contour lines add structure
     spec_compliance:
-      score: 22
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct filled contour representation using colored regions
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y coordinates correctly mapped, Z values to color
-      - id: SC-03
+        comment: Correct filled contour implementation
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has filled regions and colorbar; contour line overlay attempted but
-          not as clean isolines
-      - id: SC-04
-        name: Data Range
+        comment: Filled contours, colorbar, contour overlay all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/Z correctly mapped; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled as "Intensity"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: contour-filled · altair · pyplots.ai'
+        comment: Format and labels appropriate
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple peaks, valley, and subtle ripples demonstrating surface
-          variation
+        comment: Multiple peaks/valleys demonstrate capability; good value variety
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Mathematical function visualization, plausible scientific scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Reasonable range for mathematical function (-3 to 3)
+        comment: Gaussian peaks with mathematical oscillation realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Value range sensible for field data; grid interval appropriate
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions or classes, follows imports → data → plot → save
+        comment: Linear flow; find_contours() helper is justified but slightly violates
+          KISS principle
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas)
+        comment: Only necessary imports; none unused
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Code uses current API
+        comment: Appropriate complexity; no fake UI; well-structured
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and current API usage
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses mark_rect for heatmap-style filled contours, proper encoding
-          with scales, but doesn't leverage Altair's declarative strengths fully for
-          this plot type
+        comment: mark_rect for contours is idiomatic Altair; proper encoding and layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Manual marching squares shows deep understanding; creative use of
+          detail encoding
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending

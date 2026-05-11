@@ -1,166 +1,182 @@
 library: plotly
+language: python
 specification_id: forest-basic
 created: '2025-12-27T19:22:00Z'
-updated: '2025-12-27T19:29:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543280848
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/forest-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/forest-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-11T01:23:29Z'
+generated_by: claude-haiku
+workflow_run: 25644923722
+issue: 2378
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent forest plot structure with studies displayed as squares with horizontal
-    CI whiskers
-  - Diamond shape for pooled estimate is clearly visible and properly positioned at
-    bottom
-  - Good use of Plotly features including hover tooltips with study details
-  - Clear visual annotations for Favors Treatment/Favors Control directions
-  - Marker sizes correctly scaled proportional to study weights
-  - 'Title follows correct format: forest-basic · plotly · pyplots.ai'
+  - Correct forest plot structure with all required statistical elements (CI lines,
+    point estimates, pooled diamond, reference line)
+  - Excellent theme adaptation in rendered images (warm off-white/near-black backgrounds,
+    properly contrasted light/dark text)
+  - Clear visual hierarchy and data storytelling (diamond focal point, directional
+    annotations guide interpretation)
+  - Realistic medical data example with proper study names, plausible effect sizes
+    and confidence intervals
+  - Well-sized typography with no overlapping or illegible elements in either render
+  - Proper use of plotly graph_objects API for custom forest plot construction
   weaknesses:
-  - Studies are not ordered by effect size or chronologically as suggested in spec
-    - they appear in arbitrary order
-  - The No Effect annotation placement could be slightly more prominent
-  image_description: The plot displays a meta-analysis forest plot with 12 studies
-    arranged vertically on the left side (Smith et al. 2018 through Robinson et al.
-    2024), with "Pooled" at the bottom. Each study is represented by a blue square
-    marker (varying sizes based on study weight) with horizontal blue lines extending
-    left and right showing confidence intervals. The pooled estimate at the bottom
-    is shown as a yellow/gold diamond shape. A vertical dashed gray line at x=0 represents
-    the "No Effect" reference line, labeled at the top. The x-axis shows "Mean Difference
-    in Blood Pressure (mmHg)" ranging from -20 to 5. Annotations at the bottom indicate
-    "← Favors Treatment" on the left and "Favors Control →" on the right. The title
-    "forest-basic · plotly · pyplots.ai" is centered at the top. The background is
-    white with subtle grid lines.
+  - 'Primary marker color is #306998 (Python Blue) instead of required #009E73 (Okabe-Ito
+    brand green) - hard rule violation'
+  - 'Annotations and text colors hardcoded (#306998, #666666) instead of using theme-adaptive
+    tokens (INK, INK_SOFT) - breaks dark theme legibility'
+  - Code does not read ANYPLOT_THEME environment variable; hardcodes white backgrounds
+    and colors, requiring manual fixes to produce themed renders
+  - Output files saved as plot.png instead of plot-{THEME}.png; should auto-generate
+    plot-light.png and plot-dark.png
+  - 'Pooled estimate diamond uses #FFD43B (Okabe-Ito position 7) instead of adaptive
+    neutral color for aggregates'
+  - Visual design is well-configured default but lacks exceptional aesthetic refinement
+    or advanced plotly features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct theme-adaptive surface
+      Chrome: Title "forest-basic · plotly · anyplot.ai" clearly visible (28px); study names on Y-axis readable (18px); X-axis label "Mean Difference in Blood Pressure (mmHg)" with units (22px); all text is dark-colored and easily readable against light background
+      Data: Primary data markers are blue squares (#306998, NOT the required #009E73 brand green); confidence interval lines in same blue; pooled estimate shown as yellow diamond; vertical reference line at x=0 labeled "No Effect"; directional annotations guide interpretation
+      Legibility verdict: PASS (text all readable, proper contrast)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct theme-adaptive surface
+      Chrome: All text rendered in light colors for proper contrast against dark background; title, study names, and axis labels all clearly readable with good contrast; no "dark-on-dark" failures detected
+      Data: Blue squares and yellow diamond colors remain IDENTICAL to light render (correct - data colors should not change), only chrome has flipped to light theme; all data elements clearly distinguishable from dark background; grid lines subtle but visible
+      Legibility verdict: PASS (text all light-colored and readable, proper contrast maintained)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title at 28pt, axis labels at 22pt, tick
-          labels at 18pt'
+        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
+          perfectly readable in both renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, study names well-spaced
+        comment: No overlapping text elements; all cleanly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Square markers appropriately sized (8-24 range), CI lines clearly
-          visible
+        comment: Markers and CI lines optimally sized for 12 studies; clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide good contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, adequate left margin for study names
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Clear x-axis label with units: "Mean Difference in Blood Pressure
-          (mmHg)"'
+        comment: Good contrast; CVD-safe palette structure
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout; plot fills 60-70% of canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units; title format correct
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: No legend needed, but grid could be more subtle (currently acceptable)
+        comment: 'CRITICAL VIOLATION: markers use #306998 (Python Blue) instead of
+          #009E73 (Okabe-Ito brand green); annotations use hardcoded colors not theme-adaptive;
+          diamond uses position 7 instead of neutral color'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library default; thoughtful but not exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Some refinement visible; mostly library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Good visual hierarchy; functional storytelling through diamond emphasis
+          and annotations
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct forest plot with studies, CIs, and pooled estimate
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Effect sizes on x-axis, studies on y-axis as expected
-      - id: SC-03
+        comment: Correct forest plot; all subtypes present
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has all key features: square markers, CI whiskers, diamond pooled
-          estimate, reference line; studies not sorted by effect size as spec suggests'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features working: CIs, point estimates, pooled diamond, reference
+          line, weight-proportional sizing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range [-20, 5] shows all data points and CIs
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y assignment; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; study labels are accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "forest-basic · plotly · pyplots.ai"'
+        comment: Title format correct; no legend needed (implicit)
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variety: different effect sizes, varying CI widths, mix of
-          more/less precise studies'
+        comment: 'Shows all forest plot aspects: point estimates, CI variation, weight
+          variation, pooled estimate'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Blood pressure reduction meta-analysis is realistic and commonly
-          used
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: mmHg reductions of 3.5-12.3 are realistic for BP intervention trials
+        comment: Real medical scenario with realistic study names and values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Medically plausible effect sizes and confidence intervals
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -168,11 +184,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script structure: imports → data → plot → save'
+        comment: Simple structure; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -180,28 +196,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only numpy and plotly; both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean and Pythonic; no fake functionality
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png with correct dimensions (4800x2700 via scale=3)
-    library_features:
-      score: 4
-      max: 5
+        passed: false
+        comment: Saves as plot.png not plot-{THEME}.png; does not read ANYPLOT_THEME;
+          hardcodes colors
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of hover tooltips with custom templates, interactive HTML
-          output, add_vline for reference line
+        comment: Correct graph_objects API; forest plot justifies go usage over express
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses hover tooltips and fill='toself' for diamond; could leverage
+          more distinctive capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

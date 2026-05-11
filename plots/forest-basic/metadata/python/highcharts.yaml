@@ -1,215 +1,235 @@
 library: highcharts
+language: python
 specification_id: forest-basic
 created: '2025-12-27T19:23:53Z'
-updated: '2025-12-27T19:47:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543284449
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T01:27:44Z'
+generated_by: claude-haiku
+workflow_run: 25645182694
+issue: 2378
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/forest-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/forest-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/highcharts/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of forest plot with proper diamond marker for pooled
-    estimate
-  - Weight-proportional marker sizing implemented correctly
-  - Clean visual design with subtle grid and clear reference line at null effect
-  - Proper title format and informative subtitle
-  - Good colorblind-safe color choices (blue/yellow)
-  - X-axis label includes units and CI notation
-  - Tooltip shows detailed information (effect size, CI, weight)
+  - Excellent text legibility in both light and dark themes with properly-sized, explicit
+    font settings
+  - 'Perfect palette compliance: brand green for primary data, Okabe-Ito secondary
+    color for pooled estimate, correct theme-adaptive chrome'
+  - Robust error handling for CDN downloads with multiple fallback sources
+  - Professional forest plot implementation with thoughtful use of proportional marker
+    sizing to represent study weights
+  - Clean theme-token architecture making maintenance straightforward
+  - Well-structured data with comprehensive coverage of meta-analysis features
   weaknesses:
-  - Slight gap between last study and pooled estimate could be tighter
-  - Grid/legend score affected by disabled legend (though appropriate for this plot
-    type)
-  - Code structure has multiple series loops which adds complexity
-  image_description: The plot displays a forest plot for meta-analysis with 10 studies
-    plus a pooled estimate. Each study is labeled on the left (Smith et al. 2018 through
-    Anderson et al. 2023) with blue square markers representing effect sizes and horizontal
-    lines showing 95% confidence intervals. The pooled estimate at the bottom is shown
-    as a yellow diamond with a blue border. A vertical dashed line at x=0 marks "No
-    Effect" with a label at the top. The x-axis shows "Mean Difference (95% CI)" ranging
-    from -1.2 to 0.8. The title reads "forest-basic · highcharts · pyplots.ai" with
-    a subtitle "Meta-Analysis of Treatment Effect on Primary Outcome". The background
-    is white with very subtle dotted grid lines.
+  - 'Minor: Design Excellence could reach 18/20 with more distinctive visual refinement
+    (e.g., custom spine styling or grid pattern)'
+  - 'Minor: Library Mastery could reach 10/10 with more distinctive highcharts-specific
+    features'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "forest-basic · highcharts · anyplot.ai" at 28px in dark ink, subtitle at 22px, study names on left at 18px, axis labels at 22px, all perfectly readable against light background
+      Data: Study effect markers in brand green (#009E73) with proportionally-sized squares reflecting study weights; horizontal CI whiskers in same green; reference line at x=0 labeled "No Effect"; pooled estimate diamond in orange (#D55E00) with CI line at bottom
+      Legibility verdict: PASS - all elements clearly readable, no text-on-text or legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title and labels adapted to light colors (cream/off-white) for readability against dark background; all text elements properly flipped but maintain same content; axis labels, study names, tick marks all clearly visible
+      Data: Study markers, CI whiskers, and pooled estimate diamond are IDENTICAL in color to light render (#009E73 green and #D55E00 orange) - only chrome has flipped as required
+      Legibility verdict: PASS - no dark-on-dark failures, perfect theme adaptation with maintained data color identity
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is readable; title, labels, and axis text are appropriately
-          sized for 4800x2700 canvas
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; study labels are well-spaced
+        comment: All study names spaced cleanly, no text-element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Square markers are appropriately sized with weight-proportional scaling;
-          CI lines are clearly visible
+        comment: Markers optimally sized with proportional scaling for weights; CI
+          lines clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe; no red-green
-          issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; slight excess whitespace between last study
-          and pooled estimate but acceptable
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis has descriptive label with units: "Mean Difference (95% CI)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with good contrast; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 4800×2700 perfectly proportioned; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (dotted, light gray), but legend is disabled which
-          is appropriate for this plot type
+        comment: Descriptive with units; spec-id format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, secondary #D55E00, backgrounds correct, theme-adaptive
+          chrome perfect'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with intentional color hierarchy; above defaults
+          but slight room for publication-perfection
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle dotted grid, generous whitespace, clean refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent visual hierarchy: studies vs pooled estimate distinction
+          clear, proportional sizing guides attention'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct forest plot implementation with effect sizes and confidence
-          intervals
+        comment: Correct forest plot with point estimates and CIs
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Studies on Y-axis, effect sizes on X-axis, CI whiskers correctly
-          placed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: diamond for pooled estimate, vertical
-          reference line at null effect (0), marker size proportional to weight, clear
-          labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: names, effect sizes, CIs, weights, pooled,
+          reference line'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range (-1.2 to 0.8) shows all data points and CIs completely
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: effect sizes, Y: categorical studies; all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; study labels serve this purpose effectively
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "forest-basic · highcharts · pyplots.ai"'
+        comment: Title format correct; legend disabled appropriately
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows studies with varying effect sizes (positive and negative),
-          different CI widths, and weight variation; could show more extreme heterogeneity
+        comment: 'All forest plot aspects shown: 10 studies, varying effects, wide
+          CIs, variable weights, pooled estimate'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plausible meta-analysis scenario of treatment effect studies with
-          realistic author names and years
+        comment: Realistic clinical meta-analysis scenario, neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Mean differences are realistic for clinical trials; pooled estimate
-          CI appropriately narrower than individual studies
+        comment: Plausible clinical effect sizes, realistic CI ranges, appropriate
+          axis scaling
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Linear structure but slightly complex with multiple series creation
-          loops
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data (no random seed needed as data is hardcoded)
+        comment: No unnecessary functions/classes; straightforward flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed data; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Clean theme tokens; robust CDN handling; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts scatter/line series, tooltips with custom data, plotLines
-          for reference; could leverage more interactive features
+        comment: Correct highcharts-core patterns; proper series composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of scatter series for forest plot; proportional sizing;
+          custom tooltips; theme-aware config
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling

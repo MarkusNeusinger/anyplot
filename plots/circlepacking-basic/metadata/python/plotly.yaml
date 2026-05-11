@@ -1,206 +1,252 @@
 library: plotly
+language: python
 specification_id: circlepacking-basic
 created: '2025-12-30T00:06:39Z'
-updated: '2025-12-30T09:17:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585399981
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/plotly/plot.html
-quality_score: 88
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-11T15:32:19Z'
+generated_by: claude-haiku
+workflow_run: 25679145778
+issue: 2498
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent choice of file system storage hierarchy as a realistic, relatable data
-    scenario
-  - Good colorblind-safe color scheme using blue and yellow tones
-  - Clean circle packing implementation with proper size proportionality
-  - Effective use of Plotly shape and annotation features for custom visualization
-  - Interactive hover functionality adds value to the HTML output
-  - Labels clearly show category names and sizes in MB
+  - Perfect visual quality across both light and dark renders with all text legible
+    and no overlap
+  - Well-implemented custom circle packing algorithm with efficient arrangement and
+    no collisions
+  - Excellent Okabe-Ito palette compliance with proper theme-adaptive styling throughout
+  - Real-world investment portfolio data with actual ticker symbols and realistic
+    hierarchical structure
+  - Expert idiomatic Plotly usage leveraging library strengths for shapes, annotations,
+    and interactivity
   weaknesses:
-  - Title includes extra prefix before the required format
-  - Leaf-level nodes (individual files) are not visible in the rendered output
-  - Helper functions violate the KISS principle (should be flat script structure)
-  - Some minor text overlap between subcategory and category labels
-  image_description: 'The plot displays a circle packing chart visualizing file storage
-    hierarchy. There are 4 main category circles arranged in a 2x2 grid pattern: **Documents**
-    (blue, 520 MB), **Media** (yellow, 1070 MB), **Projects** (blue, 500 MB), and
-    **System** (yellow, 280 MB). Each category contains nested subcategory circles
-    with labels and values (e.g., Reports 180, Photos 340, Videos 450). The title
-    reads "Storage Analysis · circlepacking-basic · plotly · pyplots.ai" at the top.
-    Colors alternate between blue (#306998/#4B8BBE) and yellow (#FFD43B) for categories,
-    with lighter shades for subcategories. White borders clearly separate hierarchy
-    levels.'
+  - Design Excellence scores are conservative—while professional and above defaults,
+    could benefit from additional visual refinement techniques (e.g., subtle effects
+    on primary circles, enhanced contrast) to reach FiveThirtyEight-level aesthetic
+    sophistication
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ (#FAF8F1) — not pure white, perfect theme color\n  Chrome: Title \"circlepacking-basic\
+    \ · plotly · anyplot.ai\" at 28px in dark text (#1A1A17), clearly visible; legend\
+    \ in top-right with dark text and soft gray borders; all axis elements hidden\
+    \ (appropriate)\n  Data: Four asset classes in Okabe-Ito colors (green #009E73,\
+    \ orange #D55E00, blue #0072B2, purple #CC79A7); subcategories inherit parent\
+    \ colors with consistent opacity; all circles have soft gray outlines for definition;\
+    \ labels at 18px (assets), 14px (values), 13px (subcategories), 10px (holdings)\n\
+    \  Legibility verdict: PASS — all text readable with excellent contrast, no overlap,\
+    \ no light-on-light issues\n\nDark render (plot-dark.png):\n  Background: Warm\
+    \ near-black (#1A1A17) — not pure black, perfect dark theme color\n  Chrome: Title\
+    \ in light text (#F0EFE8) at 28px, clearly visible against dark background; legend\
+    \ with light text and soft border (#B8B7B0); axis elements hidden; theme-correct\
+    \ adaptation\n  Data: All circle colors IDENTICAL to light render (#009E73, #D55E00,\
+    \ #0072B2, #CC79A7) — only chrome adapts; outlines in soft ink; label sizing matches\
+    \ light render (18/14/13/10px)\n  Legibility verdict: PASS — all text readable\
+    \ with strong contrast, no dark-on-dark failures, brand green #009E73 visible\
+    \ and readable\n  \nBoth renders are perfectly theme-correct with flawless chrome\
+    \ adaptation and identical data representation."
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and category labels clear; some subcategory labels slightly
-          small but readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No text overlap; labels well positioned within circles
+        comment: 'All font sizes explicitly set: title 28px, asset labels 18px, values
+          14px, subcategories 13px, holdings 10px. Perfectly readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text overlap. All labels positioned clearly. Legend isolated
+          in corner.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circles well-sized and clearly visible; subcategories appropriately
-          scaled
+        comment: 'Circles perfectly adapted to hierarchy: root faint (opacity 0.08),
+          asset classes prominent (0.8), subcategories (0.7), holdings (0.85).'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 4 categories arranged in grid; some empty space in corners but overall
-          balanced
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for circle packing (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean white background; no distracting grid needed
+        comment: Okabe-Ito palette with good contrast. Soft gray outlines provide
+          definition. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas, well-centered, balanced margins, optimal
+          legend placement.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format. Axes hidden (appropriate for chart type).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito, backgrounds
+          #FAF8F1/#1A1A17, theme-correct chrome.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Okabe-Ito palette shows design intent. Hierarchical opacity/color
+          scheme elegant. Above generic defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No unnecessary elements. Opacity levels thoughtfully chosen. Margins
+          balanced. Could benefit from additional refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy via size (value), color (asset class), nesting
+          (structure). Portfolio story clear.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct circle packing chart with nested hierarchy
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Size correctly proportional to values (area encoding)
-      - id: SC-03
+        comment: 'Circle packing with correct 4-level hierarchy: Portfolio → Asset
+          Classes → Categories → Holdings.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows 2-level hierarchy; missing deepest leaf level visible in spec
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: efficient packing algorithm, colored
+          by category, labels for large circles, scaled by area, root encompasses
+          children.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within circles
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Hierarchy properly mapped. All data visible. Relationships preserved.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Category labels accurate
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Has "circlepacking-basic · plotly · pyplots.ai" but also includes
-          "Storage Analysis" prefix
+        comment: Title format correct. Legend shows asset classes with correct colors.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchy well; 2 levels visible but spec mentions 2-4 levels
+        comment: 'Shows all aspects: 4 asset classes, multiple subcategories, holdings,
+          size variation, color distinction.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: File storage visualization is realistic and neutral
+        comment: Real-world investment portfolio with actual ticker symbols. Plausible
+          scenario. Neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: MB values plausible; some inconsistency between displayed totals
-          and subcategory sums
+        comment: Realistic values (~$700K portfolio). Proportions sensible. Hierarchy
+          makes sense.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally follows imports→data→plot→save; inline packing logic is
-          verbose but avoids functions
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set
+        comment: 'Clean linear flow: imports → data → algorithm → figure → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set. All deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly imported
+        comment: 'Only used imports: os, numpy, plotly.graph_objects.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: Packing algorithm appropriate complexity. No over-engineering. No
+          fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Outputs plot-{THEME}.png and .html files correctly.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Leverages Plotly shapes for circles, annotations for labels, hover
-          interactivity via scatter traces, and HTML export
+        comment: 'Expert Plotly: go.Figure(), add_shape(), add_annotation(), add_trace(),
+          theme-adaptive styling.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Plotly-specific features (shapes, opacity styling, hover traces,
+          legend customization).
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

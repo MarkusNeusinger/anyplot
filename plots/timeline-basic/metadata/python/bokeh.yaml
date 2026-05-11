@@ -1,169 +1,180 @@
 library: bokeh
+language: python
 specification_id: timeline-basic
 created: '2025-12-29T22:48:09Z'
-updated: '2025-12-29T22:56:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584329995
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-11T05:51:42Z'
+generated_by: claude-haiku
+workflow_run: 25652316180
+issue: 2443
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent alternating label positioning above/below axis prevents text overlap
-  - Clean category color-coding with proper legend showing all 5 project phases
-  - Good use of Bokeh ColumnDataSource for categorical grouping in scatter plot
-  - Proper 4800x2700 sizing with appropriate font sizes for the canvas
-  - Realistic software project milestone scenario with logical progression
-  - Both PNG and HTML outputs generated for static and interactive viewing
+  - Perfect theme adaptation with identical data colors across light/dark renders
+  - 'Excellent label positioning: alternating above/below axis eliminates overlap'
+  - 'Clean Okabe-Ito palette compliance: first series correctly #009E73, multi-series
+    follows canonical order'
+  - 'Professional typography: all text sizes explicitly set (28pt title, 22pt labels,
+    18pt ticks)'
+  - Well-designed legend with clear phase grouping and consistent styling
+  - Intuitive chronological timeline with proper visual rhythm and balance
   weaknesses:
-  - Event label font size (18pt) could be slightly larger for better readability at
-    full resolution
-  - Legend positioned far from data area in top-right corner
-  - Could benefit from Bokeh-specific features like HoverTool for interactivity
-  image_description: 'The plot displays a horizontal timeline visualization showing
-    10 software project milestones from January 2024 to October 2024. A central blue
-    horizontal line serves as the timeline axis. Events are represented by colored
-    circular markers (size ~35) positioned alternately above and below the axis with
-    vertical connector lines. The 5 project phases are color-coded using Category10
-    palette: Planning (blue), Design (orange), Development (green), Testing (red),
-    and Release (purple). Event labels appear above/below their respective markers.
-    The title "timeline-basic · bokeh · pyplots.ai" is displayed in blue (#306998)
-    at the top center. A legend titled "Phase" in the top-right shows all categories.
-    The x-axis displays dates with slight rotation, labeled "Date". Background is
-    light gray (#fafafa) with dashed vertical grid lines.'
+  - 'LM-02: Could leverage more bokeh-distinctive features (e.g., HoverTool for interactive
+    tooltips, JS callbacks)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — matches spec perfectly, not pure white
+      Chrome: Title "timeline-basic · bokeh · anyplot.ai" in large 28pt dark text (#1A1A17), clearly visible. X-axis label "Date" and tick labels in 18-22pt dark text, fully readable. Legend titled "Phase" with category labels in 18pt dark text, excellent contrast.
+      Data: 10 events with color-coded markers (green #009E73 for Planning, orange #D55E00 for Design, blue #0072B2 for Development, pink #CC79A7 for Testing, yellow #E69F00 for Release). All markers 35px circles with white edges. Vertical connector lines colored to match event categories. Event labels alternate above/below axis for no overlap, all in dark text.
+      Timeline axis: Subtle gray horizontal line (INK_SOFT, alpha 0.6) clearly visible. Grid: x-grid only, very subtle (alpha 0.10).
+      Legibility verdict: PASS — all elements readable, professional layout, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — matches spec perfectly, not pure black
+      Chrome: Title in light text (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in light text, fully readable. Legend text light-colored with INK_SOFT secondary text, excellent contrast.
+      Data: All 10 events with IDENTICAL colors to light render (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 pink, #E69F00 yellow). Markers and connectors render cleanly. Event labels all light-colored, no dark-on-dark issues.
+      Timeline axis: Light horizontal line visible. Grid: x-grid with light-alpha transparency, subtle and balanced.
+      Legibility verdict: PASS — all elements readable, no dark-on-dark failures, chrome properly theme-adapted, data colors preserve brand identity across themes
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 32pt, axis labels 24pt, tick labels 18pt, event labels 18pt
-          - all clearly readable, slightly below optimal for event labels
+        comment: 'All fonts explicitly set: 28pt title, 22pt labels, 18pt ticks. All
+          perfectly readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Alternating above/below positioning prevents text overlap excellently
+        comment: Alternating label positions eliminate overlap. All text fully readable.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 35 with alpha 0.9, connector lines visible, well-adapted
-          for 10 events
+        comment: Markers (35px) and connector lines optimally sized. 10 events well-spaced,
+          all clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Category10 palette is generally colorblind-friendly, but red/green
-          could be challenging for some
+        comment: Okabe-Ito palette colorblind-safe. Good contrast. No red-green dependence.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas, timeline centered, balanced margins, legend well-positioned
+        comment: Plot fills 60-70% of canvas. Balanced margins. Legend positioned
+          with good spacing.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Date" label present but no units (though dates are self-explanatory
-          for timeline)'
+        comment: Title includes spec-id, library, site. X-axis labeled 'Date' (descriptive).
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is dashed with alpha 0.3 (good), legend well-styled but slightly
-          far from data
+        comment: 'First series #009E73 ✓. Multi-series follows Okabe-Ito order ✓.
+          Backgrounds #FAF8F1/#1A1A17 ✓. Theme chrome correct in both renders ✓.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-configured design with intentional category colors and clear
+          hierarchy. Thoughtful choices (alternating labels, colored connectors) above
+          defaults, but not quite publication-ready level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle x-grid only (alpha 0.10), L-shaped frame, generous whitespace.
+          Some refinement evident, good polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Timeline guides viewer chronologically. Color categories aid grouping.
+          Alternating positions create visual rhythm. Good temporal storytelling.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct timeline visualization with events along temporal axis
+        comment: Correct timeline visualization with proper event markers and horizontal
+          orientation.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, events as labeled markers, category for color-coding
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Horizontal orientation, alternating labels, color-coding by category,
-          clear date formatting
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: events, dates, labels, categories, color-coding.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full date range visible with padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis = dates (temporal), Y = label position, colors = phases. All
+          correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately shows all 5 phases with correct colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "timeline-basic · bokeh · pyplots.ai"'
+        comment: 'Title format correct: ''timeline-basic · bokeh · anyplot.ai''. Legend
+          titled ''Phase'' with matching labels.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple phases, varying time gaps, 10 events - demonstrates
-          timeline well but could show more varied spacing
+        comment: 'Shows all timeline aspects: 5 project phases, varied event spacing,
+          realistic progression.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software project milestones is an excellent, neutral, realistic scenario
+        comment: Real software project milestone scenario (Jan-Oct 2024). Neutral,
+          professional, comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Dates span 9 months which is realistic for a software project, events
-          well-distributed
+        comment: 9-month date range reasonable. 10 events appropriate. Proportions
+          factually consistent.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,43 +182,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → figure → plot → style → save'
+        comment: 'Linear flow: imports → theme setup → data → plotting → save. No
+          unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded dates), but no explicit seed for
-          any random elements
+        max: 2
+        passed: true
+        comment: Data hardcoded deterministically. Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (pandas, bokeh.io, bokeh.models, bokeh.palettes,
-          bokeh.plotting)
+        comment: 'All imports used: pandas, bokeh.*, selenium, os, time, Path.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh APIs
+        comment: Clean, idiomatic Python. Appropriate complexity. No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html. Current Bokeh API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'High-level API: figure(), scatter(), line(). ColumnDataSource for
+          category iteration. Theme tokens properly applied.'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Label model, figure with datetime axis, legend
-          configuration - good Bokeh usage but could leverage more interactive features
-          or tooltips
+        comment: Uses ColumnDataSource, Label annotations, bokeh's native rendering.
+          Could leverage HoverTool or JS callbacks for more interactivity.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready

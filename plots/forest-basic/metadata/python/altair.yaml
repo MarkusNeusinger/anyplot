@@ -1,15 +1,223 @@
 library: altair
+language: python
 specification_id: forest-basic
 created: '2025-12-27T19:59:34Z'
-updated: '2025-12-27T20:01:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543640932
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/forest-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/forest-basic/altair/plot.html
-quality_score: 91
+updated: '2026-05-11T01:13:58Z'
+generated_by: claude-haiku
+workflow_run: 25645028747
+issue: 2378
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Perfect visual legibility in both light and dark themes with no adaptation failures
+  - 'Proper use of Okabe-Ito palette (brand green #009E73 for data, orange #E69F00
+    for pooled); data colors identical across renders'
+  - Clean, professional aesthetic with subtle grid and minimal-chrome design
+  - Weight-proportional marker sizing adds visual depth without clutter
+  - Effective use of altair's layer composition and tooltips; interactive HTML export
+  - All spec requirements met precisely; data quality and realism excellent
+  weaknesses:
+  - Design Excellence could be elevated with stronger visual hierarchy or emphasis
+    techniques (e.g., annotation, size/opacity variation) to guide the viewer toward
+    key findings
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with clear dark text throughout
+      Chrome: Title "forest-basic · altair · anyplot.ai" prominent and readable; study names (Johnson 2018 through Taylor 2023) dark and clearly visible on left; x-axis label "Standardized Mean Difference (95% CI)" and tick labels in dark gray
+      Data: Ten studies displayed with green (#009E73) confidence interval lines and proportional-sized circle markers; vertical dashed reference line at 0; pooled estimate as orange/yellow diamond (#E69F00) with green border at bottom
+      Legibility verdict: PASS - All elements are sharp and highly legible against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with all text shifted to light colors
+      Chrome: Title, study labels, axis labels all light-colored and clearly readable against dark background; no dark-on-dark issues
+      Data: Confidence intervals, circles, and pooled diamond are IDENTICAL in color to light render (#009E73 green and #E69F00 orange); only chrome has adapted to theme
+      Legibility verdict: PASS - No dark-on-dark failures; all text readable and data colors perfectly preserved across themes
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all clearly readable and sized appropriately
+          (28px, 22px, 18px) in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Study labels well-spaced, no text collisions, all elements distinct
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All markers visible and appropriately sized; CI lines (strokeWidth=4)
+          and diamond (size=1500) prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses Okabe-Ito #009E73 and #E69F00—colorblind-safe, high contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas (1600×900) well-proportioned; margins adequate; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label descriptive; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; pooled #E69F00; backgrounds correct; data
+          colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with weight-proportional markers, elegant reference
+          line, effective color hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, minimalist Y-axis, dashed reference line; room for additional
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point on pooled diamond; color contrast guides viewer;
+          could strengthen with emphasis techniques
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct forest plot with all structural elements
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Confidence intervals, point estimates, diamond, reference line all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: effect size with CI bounds; Y: study names; size: weight—all
+          correct'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; study labels match data; no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all forest-plot aspects with 10 studies and pooled aggregate
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic study names, plausible effect sizes, neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Effect size range and CI widths realistic; y-axis accommodates all
+          rows
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple, direct code; no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, altair, pandas; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; natural use of altair tooltips
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper altair patterns: Chart, marks, encoding, layer composition'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Layer composition, interactive tooltips, HTML export, weight-proportional
+          sizing
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,197 +227,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent visual clarity with well-sized text and markers
-  - Diamond shape for pooled estimate is distinctive and correctly implemented
-  - Good use of Altair layered chart composition with 7 layers cleanly combined
-  - Weight-proportional marker sizing implemented correctly
-  - Appropriate color scheme with blue/yellow contrast
-  - Clean code structure following KISS principles
-  - Helpful tooltips for interactivity
-  weaknesses:
-  - The Favors Treatment and Favors Control annotations appear slightly cut off at
-    the edges
-  - All studies show negative effects favoring treatment - having at least one study
-    crossing the null line would better demonstrate forest plot interpretation
-  - Could leverage more Altair-specific features like selection for highlighting
-  image_description: The plot displays a forest plot for a meta-analysis with 10 studies
-    (Taylor 2023 through Johnson 2018) and a pooled estimate at the bottom. Each study
-    is shown with a blue horizontal line representing the 95% confidence interval
-    and a blue circular point for the effect size. The marker sizes vary based on
-    study weight - larger circles for higher-weighted studies (e.g., Williams 2020,
-    Wilson 2022) and smaller circles for lower-weighted studies (e.g., Brown 2021).
-    A vertical dashed gray reference line at x=0 indicates the null effect. The pooled
-    estimate is displayed as a distinctive yellow diamond with a blue border. The
-    x-axis shows "Standardized Mean Difference (95% CI)" ranging from approximately
-    -1.20 to 0.20. Study names appear on the y-axis. Text annotations "← Favors Treatment"
-    and "Favors Control →" appear near the bottom. The title "forest-basic · altair
-    · pyplots.ai" is centered at the top.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and study names are all clearly readable with
-          appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; all study names and labels are well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Confidence interval lines are clearly visible with good stroke width;
-          point markers appropriately sized and weight-scaled
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) diamond provide excellent contrast;
-          no red-green issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall layout but the plot area could use more of the canvas;
-          some empty space on the right side
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'X-axis has descriptive label with units: "Standardized Mean Difference
-          (95% CI)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid is subtle which is good, but "Favors Treatment" and "Favors
-          Control" annotations are partially cut off at the edges
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct forest plot with point estimates, confidence intervals, and
-          pooled diamond
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Effect sizes on X-axis, studies on Y-axis, correct CI representation
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: diamond for pooled estimate, vertical
-          reference line at null, marker sizes proportional to weight'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points and confidence intervals completely
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed for this plot type; annotations explain direction
-          correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "forest-basic · altair · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows variety in effect sizes, CI widths, and weights; all negative
-          effects though (no crossing null)
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic meta-analysis of RCTs with plausible study names and years
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Standardized mean differences in reasonable range (-0.21 to -0.67);
-          weights sensible but one study crossing null would be more educational
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean sequential structure: imports → data → chart layers → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic data (no random generation)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only altair and pandas imported, both used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Using current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html which is correct for altair
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of layered marks, tooltips, and declarative encoding; could
-          leverage more Altair-specific features like interactive selection or concatenation
-  verdict: APPROVED
+  styling:
+  - edge-highlighting

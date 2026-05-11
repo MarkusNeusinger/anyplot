@@ -1,161 +1,179 @@
 library: plotnine
+language: python
 specification_id: lift-curve
 created: '2025-12-27T19:20:56Z'
-updated: '2025-12-27T19:26:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282476
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lift-curve/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T16:48:52Z'
+generated_by: claude-haiku
+workflow_run: 25634050982
+issue: 2379
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of lift curve with correct mathematical calculation
-  - Clean use of plotnine grammar of graphics (ggplot, geom_line, geom_point, geom_hline)
-  - Good visual distinction with yellow-filled decile markers on blue line
-  - Proper reference line at y=1 for random selection baseline
-  - Well-documented code with realistic customer response scenario
-  - Appropriate sizing for high-resolution output (16x9, 300 DPI)
+  - Theme-adaptive colors work flawlessly in both light and dark renders
+  - 'Perfect palette compliance with Okabe-Ito #009E73 and theme-correct chrome'
+  - Clear visual storytelling with reference line showing no-lift baseline and decile
+    markers for emphasis
+  - 'Excellent readability: all text sizes explicitly set and legible at full resolution'
+  - Clean, reproducible code with proper KISS structure and no dependencies
   weaknesses:
-  - Y-axis label could include (ratio) for clarity since lift is a unitless ratio
-  - Could add text annotations at key decile points showing actual lift values
-  image_description: The plot displays a lift curve with a solid blue line (#306998)
-    showing cumulative lift values on the Y-axis ranging from 0 to approximately 2.5,
-    plotted against population targeted percentage (0-100%) on the X-axis. Yellow-filled
-    circular markers with blue outlines appear at each decile point (10%, 20%, 30%,
-    etc.). A gray dashed horizontal reference line at y=1.0 represents random selection
-    (no lift). The curve starts high at approximately 2.5 when targeting the top 1-2%
-    of the population, then gradually descends and approaches 1.0 as the percentage
-    increases to 100%. The title "lift-curve · plotnine · pyplots.ai" is displayed
-    at the top. The layout uses a minimal theme with clean white background and subtle
-    grid lines.
+  - Panel border on all four sides rather than L-shaped (left/bottom only) per style
+    guide
+  - Design is straightforward with minimal aesthetic sophistication beyond competent
+    defaults
+  - Could enhance visual hierarchy further with additional annotations or emphasis
+    techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "lift-curve · plotnine · anyplot.ai" in dark text (#1A1A17), axis labels and tick labels all readable in darker gray (#4A4A44), panel border visible in soft gray
+      Data: Bold green line (#009E73) with 10 decile points marked, dashed reference line at y=1 in soft gray, subtle grid lines visible
+      Legibility verdict: PASS - all elements clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light color (#F0EFE8), axis labels and tick labels readable in lighter gray (#B8B7B0), panel border visible
+      Data: Green line (#009E73) is identical to light render and stands out clearly, decile points visible, reference line visible, grid subtle
+      Legibility verdict: PASS - all elements readable, no dark-on-dark failures, data colors match light render perfectly
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: No overlapping text elements, excellent spacing throughout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line thickness of 2.5 and point size of 5 are appropriate, decile
-          markers clearly visible
+        comment: Line width 2.5 and point size 5 optimal for the data density, all
+          elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe
+        comment: 'Brand green #009E73 is CVD-safe and provides excellent contrast
+          on both backgrounds'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: 16:9 landscape format at 4800×2700px, perfect proportions and generous
+          whitespace
       - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels but Y-axis lacks units (ratio is unitless but
-          could note it)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed for this single-series plot, grid is subtle
+        comment: Title format correct (spec-id · library · anyplot.ai), axis labels
+          include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds #FAF8F1/#1A1A17 correct, theme-adaptive
+          text colors, both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library default with professional appearance, but
+          no exceptional custom design or FiveThirtyEight-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid with alpha values and generous whitespace,
+          though panel border on all sides rather than L-shaped'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy with reference line, decile markers, and color
+          contrast guiding the reader to understand model lift behavior
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lift curve visualization
+        comment: Correct lift curve showing cumulative lift vs population percentage
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population percentage, Y=cumulative lift - correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Reference line at y=1, decile markers, curve showing lift behavior
-          - all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: axes 0-100%, reference line at y=1, decile
+          markers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 0-100%, Y-axis shows full range with room
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y correctly mapped, axes show all data with appropriate scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single series (full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: lift-curve · plotnine · pyplots.ai'
+        comment: Title format correct, no legend needed for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows lift curve behavior well with high initial lift descending
-          to 1.0; slight variation in early curve shows realistic model behavior
+        comment: 'Shows complete lift curve behavior: high lift early, smooth decay
+          to 1.0, deciles show key points'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Customer response model scenario is realistic and well-documented
-          in code comments
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Lift values of 1.5-2.5x are realistic for a good predictive model
+        comment: Real marketing scenario with customer response data, 15% baseline
+          response rate, realistic model scores
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'X: 0-100% population (correct), Y: 0-3.5 with 0.5 breaks (appropriate),
+          proportions realistic'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,40 +181,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern, no functions/classes
+        comment: 'Clean straightforward structure: imports → data generation → plot
+          → save, no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports, specific plotnine imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly, but verbose=False is good practice
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot() + geom layers, proper aes() mapping, appropriate
+          theme() customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Good use of ggplot grammar (geom_line, geom_point, geom_hline, theme_minimal,
-          scale functions), but could use more advanced features like annotations
+        comment: Basic plotnine features without leveraging distinctive grammar of
+          graphics capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - reference-line
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive

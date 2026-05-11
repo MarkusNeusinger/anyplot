@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 venn-basic: Venn Diagram
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-11
 """
 
 import os
@@ -15,25 +15,33 @@ np.random.seed(42)
 
 LetsPlot.setup_html()
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 # Data: Three research fields with overlapping expertise
 set_a_label = "Machine Learning"
 set_b_label = "Statistics"
 set_c_label = "Data Engineering"
 
 # Set sizes and intersections
-only_a = 45  # Only ML
-only_b = 35  # Only Statistics
-only_c = 30  # Only Data Engineering
-ab_only = 25  # ML & Statistics (not DE)
-ac_only = 15  # ML & DE (not Stats)
-bc_only = 20  # Stats & DE (not ML)
-abc = 10  # All three
+only_a = 45
+only_b = 35
+only_c = 30
+ab_only = 25
+ac_only = 15
+bc_only = 20
+abc = 10
 
-# Circle parameters (for 3-set Venn diagram) - larger for better canvas utilization
-r = 1.8  # radius (increased from 1.5)
-cx_a, cy_a = -0.85, 0.6  # Center of set A (top left)
-cx_b, cy_b = 0.85, 0.6  # Center of set B (top right)
-cx_c, cy_c = 0.0, -0.75  # Center of set C (bottom)
+# Circle parameters (for 3-set Venn diagram)
+r = 1.8
+cx_a, cy_a = -0.85, 0.6
+cx_b, cy_b = 0.85, 0.6
+cx_c, cy_c = 0.0, -0.75
 
 # Generate circle points
 theta = np.linspace(0, 2 * np.pi, 100)
@@ -52,32 +60,16 @@ df_b = pd.DataFrame({"x": circle_b_x, "y": circle_b_y, "set": set_b_label})
 df_c = pd.DataFrame({"x": circle_c_x, "y": circle_c_y, "set": set_c_label})
 df_circles = pd.concat([df_a, df_b, df_c], ignore_index=True)
 
-# Label positions and values (adjusted for larger circles and better spacing)
+# Label positions and values
 labels_data = pd.DataFrame(
     {
-        "x": [
-            cx_a - 0.6,  # Only A (left side of A)
-            cx_b + 0.6,  # Only B (right side of B)
-            cx_c,  # Only C (bottom of C) - moved further down
-            (cx_a + cx_b) / 2,  # A & B intersection
-            (cx_a + cx_c) / 2 - 0.35,  # A & C intersection
-            (cx_b + cx_c) / 2 + 0.35,  # B & C intersection
-            0.0,  # Center (A & B & C)
-        ],
-        "y": [
-            cy_a + 0.4,  # Only A
-            cy_b + 0.4,  # Only B
-            cy_c - 0.75,  # Only C - moved much further down to avoid center overlap
-            cy_a + 0.75,  # A & B intersection
-            (cy_a + cy_c) / 2 - 0.4,  # A & C intersection
-            (cy_b + cy_c) / 2 - 0.4,  # B & C intersection
-            0.0,  # Center (A & B & C)
-        ],
+        "x": [cx_a - 0.6, cx_b + 0.6, cx_c, (cx_a + cx_b) / 2, (cx_a + cx_c) / 2 - 0.35, (cx_b + cx_c) / 2 + 0.35, 0.0],
+        "y": [cy_a + 0.4, cy_b + 0.4, cy_c - 0.75, cy_a + 0.75, (cy_a + cy_c) / 2 - 0.4, (cy_b + cy_c) / 2 - 0.4, 0.0],
         "label": [str(only_a), str(only_b), str(only_c), str(ab_only), str(ac_only), str(bc_only), str(abc)],
     }
 )
 
-# Set name labels (outside circles) - adjusted for larger circles
+# Set name labels (outside circles)
 set_labels_data = pd.DataFrame(
     {
         "x": [cx_a - 0.9, cx_b + 0.9, cx_c],
@@ -86,33 +78,43 @@ set_labels_data = pd.DataFrame(
     }
 )
 
-# Colors
-colors = {"Machine Learning": "#306998", "Statistics": "#FFD43B", "Data Engineering": "#DC2626"}
+# Map sets to Okabe-Ito palette
+set_colors = {set_a_label: OKABE_ITO[0], set_b_label: OKABE_ITO[1], set_c_label: OKABE_ITO[2]}
+
+# Create custom theme for chrome styling
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    axis_title=element_text(color=INK),
+    axis_text=element_text(color=INK_SOFT),
+    axis_line=element_blank(),
+    plot_title=element_text(size=28, face="bold", hjust=0.5, color=INK),
+    legend_position="none",
+    plot_margin=[50, 30, 30, 30],
+)
 
 # Create plot
 plot = (
     ggplot()
-    + geom_polygon(aes(x="x", y="y", fill="set"), data=df_circles, alpha=0.35, color="white", size=2.5)
-    + geom_text(aes(x="x", y="y", label="label"), data=labels_data, size=20, fontface="bold", color="#1a1a1a")
-    + geom_text(aes(x="x", y="y", label="label"), data=set_labels_data, size=18, fontface="bold", color="#222222")
-    + scale_fill_manual(values=colors)
+    + geom_polygon(aes(x="x", y="y", fill="set"), data=df_circles, alpha=0.35, color=INK_SOFT, size=2.5)
+    + geom_text(aes(x="x", y="y", label="label"), data=labels_data, size=20, fontface="bold", color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=set_labels_data, size=18, fontface="bold", color=INK)
+    + scale_fill_manual(values=set_colors)
     + coord_fixed(ratio=1)
-    + labs(title="venn-basic · lets-plot · pyplots.ai")
+    + labs(title="venn-basic · letsplot · anyplot.ai")
     + theme_void()
-    + theme(
-        plot_title=element_text(size=28, face="bold", hjust=0.5), legend_position="none", plot_margin=[50, 30, 30, 30]
-    )
+    + anyplot_theme
     + ggsize(1200, 1200)
 )
 
-# Save as PNG and HTML
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+# Save as PNG and HTML with theme suffix
+ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.html")
 
-# Move files from lets-plot-images subdirectory to current directory
-if os.path.exists("lets-plot-images/plot.png"):
-    os.rename("lets-plot-images/plot.png", "plot.png")
-if os.path.exists("lets-plot-images/plot.html"):
-    os.rename("lets-plot-images/plot.html", "plot.html")
+# Move files from lets-plot-images subdirectory if needed
+if os.path.exists(f"lets-plot-images/plot-{THEME}.png"):
+    os.rename(f"lets-plot-images/plot-{THEME}.png", f"plot-{THEME}.png")
+if os.path.exists(f"lets-plot-images/plot-{THEME}.html"):
+    os.rename(f"lets-plot-images/plot-{THEME}.html", f"plot-{THEME}.html")
 if os.path.exists("lets-plot-images") and not os.listdir("lets-plot-images"):
     os.rmdir("lets-plot-images")

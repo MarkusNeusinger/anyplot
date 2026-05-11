@@ -1,176 +1,177 @@
 library: letsplot
+language: python
 specification_id: gain-curve
 created: '2025-12-29T22:48:22Z'
-updated: '2025-12-29T22:57:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584330606
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gain-curve/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gain-curve/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-11T09:47:46Z'
+generated_by: claude-haiku
+workflow_run: 25662408893
+issue: 2440
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of the gain curve with all three required reference lines
-    (model, random, perfect)
-  - Proper use of lets-plot grammar of graphics with theme_minimal and clean styling
-  - Good color choices that are colorblind-accessible (blue, gray, yellow)
-  - Realistic customer response scenario matching the spec marketing application
-  - Clean KISS code structure with proper reproducibility seed
-  - Correct title format and descriptive axis labels with units
+  - Perfect visual quality and accessibility in both themes with correct color tokens
+  - Excellent spec compliance implementing all required features (model, random, perfect
+    curves)
+  - Strong data quality with realistic customer response scenario and appropriate
+    scale
+  - Clean, reproducible code with proper theme adaptation and output formats
+  - Effective use of spline smoothing and reference lines to contextualize model performance
   weaknesses:
-  - Grid lines are not visible due to theme_minimal; adding subtle grid would improve
-    readability
-  - X-axis scale extends slightly beyond 100% which looks unintended
-  - Model curve appears stepped/jagged due to discrete data points rather than smoothly
-    interpolated
-  image_description: 'The plot displays a cumulative gains chart with three lines
-    on a white background with subtle gray grid lines:
+  - Design could emphasize the model curve more prominently to strengthen visual hierarchy
+  - Missing opportunity to showcase letsplot-specific interactive features or advanced
+    capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color, not pure white
+      Chrome: Title "gain-curve · letsplot · anyplot.ai" in dark text, axis labels "Population Targeted (%)" and "Positive Cases Captured (%)" clearly visible, tick labels and legend text dark and readable
+      Data: Three curves - Model (green #009E73), Perfect (blue #0072B2), Random (gray #888888) - all clearly distinguishable with spline smoothing applied to model curve
+      Legibility verdict: PASS - all text readable with proper contrast, no dark-on-light legibility issues
 
-    - **Model curve (blue, #306998)**: A jagged/stepped blue line showing the model''s
-    cumulative gain, starting from origin and rising steeply initially before gradually
-    flattening as it approaches 100%
-
-    - **Random baseline (gray, #888888)**: A straight diagonal line from (0,0) to
-    (100,100) representing random selection
-
-    - **Perfect model (yellow, #FFD43B)**: Shows the theoretical perfect classifier
-    - rises steeply vertically until reaching 100% gain at ~20% population, then remains
-    horizontal at 100%
-
-
-    The X-axis shows "Population Targeted (%)" ranging from -5 to 100+, Y-axis shows
-    "Positive Cases Captured (%)" from 0 to 100. Title reads "gain-curve · letsplot
-    · pyplots.ai". Legend is positioned in the lower right area, clearly labeled "Curve"
-    with entries for Model, Random, and Perfect.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color, not pure black
+      Chrome: Title and all axis labels in light text clearly visible against dark background, no dark-on-dark failures, legend text readable
+      Data: Identical colors to light render (Model green, Perfect blue, Random gray) - all curves clearly visible against dark surface with proper contrast
+      Legibility verdict: PASS - all text readable with no dark-on-dark issues, data colors unchanged from light render, proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          output resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title 24pt, axis 20pt, text 16pt);
+          readable in both light and dark themes with proper contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; legend well-positioned with ample space; axis labels
+          and data elements non-colliding
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are clearly visible with good thickness (size=1.5), though
-          the model line appears stepped/jagged rather than smooth
+        comment: All three curves clearly visible in both themes; line thickness 1.5
+          is adequate; distinct colors and styles
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, gray, and yellow provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, but X-axis extends to 100+ (showing "10" label beyond
-          100) which is slightly awkward
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Population Targeted (%)" and "Positive
-          Cases Captured (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Uses Okabe-Ito colors (#009E73, #0072B2) which are CVD-safe; adequate
+          contrast; no red-green sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions (1600x900 base, 3x scale = 4800x2700); nothing cut
+          off; appropriate margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No visible grid lines (theme_minimal removes them), legend placement
-          is good but grid is absent
+        comment: Axes have units and descriptive labels; title follows spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); multi-series follows Okabe-Ito
+          order; backgrounds correct for both themes; both renders theme-appropriate'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Uses Okabe-Ito palette; clean professional presentation; thoughtful
+          spline smoothing; reasonable hierarchy but not exceptionally sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed via theme_minimal; subtle grid (0.15 opacity); generous
+          whitespace; clean presentation
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three reference curves provide context; comparison between model/random/perfect
+          is clear; good hierarchy with model as focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative gains chart
+        comment: Correct cumulative gains chart; shows percentage positives captured
+          vs population targeted
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population percentage, Y=cumulative gains - correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required: model curve, random baseline diagonal, perfect model
-          reference'
-      - id: SC-04
-        name: Data Range
+        comment: All required curves present (Model, Random baseline, Perfect reference);
+          smooth curve fitting applied
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows full 0-100% range on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: population percentage 0-100%; Y-axis: cumulative positives
+          0-100%; limits set appropriately'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels "Model", "Random", "Perfect" are accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "gain-curve · letsplot · pyplots.ai"
+        comment: Title follows spec format; legend clearly identifies all three series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows model performing better than random with clear lift, includes
-          perfect model comparison; model curve could show more pronounced initial
-          steepness
+        comment: 'Shows all essential aspects: model performance, random baseline,
+          perfect model; demonstrates steepness differences'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Customer response model is a realistic marketing scenario per spec
+        comment: Customer response data scenario; realistic probability scores; plausible
+          generation method; neutral data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scale is appropriate, though positive rate of ~20% is reasonable
-          for response data
+        comment: 1000 samples (within 100-10000 range); percentage scales appropriate
+          for domain
     code_quality:
       score: 10
       max: 10
@@ -180,41 +181,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save, no functions/classes'
+        comment: No functions/classes; straightforward script; direct approach
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and lets_plot used
+        comment: All imports used; no unnecessary dependencies beyond scipy
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; spline interpolation justified; no fake UI
+          elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly with proper theme customization and
-          ggsize; pd.melt for data reshaping is good practice, but could use more
-          distinctive lets-plot features
+        comment: Proper ggplot2 API pattern; correct aesthetic mappings; idiomatic
+          theme customization; appropriate geom usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses HTML export feature; solid implementation but doesn't fully
+          leverage letsplot-specific interactive capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  - cumulative-sum
+  styling:
+  - grid-styling

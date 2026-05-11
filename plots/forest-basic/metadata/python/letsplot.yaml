@@ -1,174 +1,177 @@
 library: letsplot
+language: python
 specification_id: forest-basic
 created: '2025-12-27T19:22:44Z'
-updated: '2025-12-27T20:06:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543284156
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/forest-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/forest-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-11T01:28:49Z'
+generated_by: claude-haiku
+workflow_run: 25645235139
+issue: 2378
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of the forest plot structure with all required elements
-    (point estimates, CIs, pooled diamond, null reference line)
-  - Clean, readable code following KISS principles with logical data organization
-  - Good use of lets-plot ggplot2-style grammar including geom_polygon for the diamond
-    shape
-  - Appropriate text sizing for 4800x2700 output (title 24pt, axis text 16pt, axis
-    title 20pt)
-  - Realistic meta-analysis data with meaningful variation in effect sizes and weights
-  - Proper marker sizing proportional to study weight using scale_size_identity()
+  - Perfect theme-adaptive rendering with identical data colors across light/dark
+  - Complete forest plot implementation with all required features (whiskers, diamonds,
+    reference line, weights)
+  - Excellent text legibility in both themes with proper color token application (INK/INK_SOFT)
+  - Clean code structure with realistic data and deterministic computations
+  - 'Proper Okabe-Ito palette usage for primary data (green #009E73)'
+  - Custom marker sizing proportional to study weights shows attention to detail
   weaknesses:
-  - Marker size variation based on weight is subtle and could be more visually distinct
-    (range of 2-10 is narrow)
-  - Grid styling could be improved - currently using panel_grid_major_y=element_blank()
-    but might benefit from subtle horizontal grid lines for readability
-  - The plot could benefit from lets-plot interactive features like tooltips showing
-    exact values on hover
-  image_description: 'The forest plot displays 10 clinical trials (Johnson 2019 through
-    Taylor 2022) arranged vertically and ordered by effect size from lowest to highest.
-    Each study is represented by a blue square marker (point estimate) with horizontal
-    blue lines extending to show 95% confidence intervals. A dashed gray vertical
-    line at x=0 marks the null effect. At the bottom, a yellow diamond indicates the
-    pooled estimate with the label "Pooled: 0.31 [0.15, 0.46]" shown beneath it. The
-    title "forest-basic · letsplot · pyplots.ai" appears at the top. The x-axis is
-    labeled "Log Odds Ratio (95% CI)" and ranges from -0.5 to 1.0. Study names appear
-    on the left y-axis. The overall color scheme uses blue (#306998) for study data
-    and yellow (#FFD43B) for the pooled estimate diamond.'
+  - Title contains "pyplots.ai" instead of "anyplot.ai" - should be "forest-basic
+    · letsplot · anyplot.ai"
+  - Design Excellence could be raised with more visual refinement (e.g., selective
+    grid on x-axis only, spine styling)
+  - Limited use of library-specific distinctive features beyond standard ggplot2 syntax
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "forest-basic · letsplot · pyplots.ai" in bold 24pt dark text; x-axis label "Log Odds Ratio (95% CI)" in 20pt dark text; all tick labels (study names, axis values) in 16pt muted gray - all clearly readable against light background
+      Data: Forest plot with 10 studies sorted by effect size; study confidence intervals rendered as horizontal green whiskers (#009E73); point estimates as proportionally-sized green squares; reference line at null effect (0) as dashed gray line; pooled estimate at bottom as yellow diamond with label "Pooled: 0.31 [0.15, 0.46]" - all elements clearly distinguishable
+      Grid: Subtle x-axis gridlines visible; y-axis grid removed (appropriate for categorical study names)
+      Legibility verdict: PASS - all text elements are dark on light background with sufficient contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title in light text (white/off-white) at 24pt bold; x-axis label in light text; all tick labels and axis text in light muted gray - all clearly readable against dark background
+      Data: Identical forest plot structure to light render; green (#009E73) confidence intervals and point estimates exactly match light render (confirming Okabe-Ito consistency); yellow diamond (#FFD43B) for pooled estimate stands out clearly; reference line visible - all elements identifiable and data colors prove theme-independence of data visualization
+      Grid: X-axis gridlines slightly more visible due to contrast against dark background but remain appropriately subtle
+      Legibility verdict: PASS - no dark-on-dark failures; all text is light-colored with good contrast against dark background; data colors identical to light render confirming proper theme handling
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and prominent, study labels are clearly readable, axis
-          labels and tick marks are appropriately sized
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; study labels are well-spaced vertically
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Markers and whiskers are clearly visible; marker sizes vary by weight
-          as specified, though the size difference could be more pronounced
+        comment: All text readable in both themes, but title has domain name error
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements well-spaced with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All data elements (whiskers, points, diamond) clearly visible with
+          weight-based sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow color scheme is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good overall layout, though there's some unused space on the right
-          side of the plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis has descriptive label with units: "Log Odds Ratio (95% CI)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito #009E73 for all data elements; good contrast and CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape proportions good; no cut-off elements; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed, but the grid could be more subtle (currently minimal
-          vertical grid lines which is appropriate for forest plots)
+        comment: X-axis descriptive with units; y-axis shows study identifiers; title
+          format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Primary data uses Okabe-Ito position 1 (#009E73); backgrounds correct;
+          theme-adaptive chrome applied
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional clean styling with theme-adaptive colors; minimal decorative
+          elements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Minimal chrome appropriate for plot type; could refine grid presence
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Studies ordered by effect size; pooled estimate highlights focal
+          point; reference line aids interpretation
     spec_compliance:
-      score: 24
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct forest plot implementation with point estimates, confidence
-          intervals, and pooled diamond
+        comment: Correct forest plot with confidence intervals and effect sizes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Effect sizes on x-axis, studies on y-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: vertical null reference line at 0, diamond
-          for pooled estimate, whiskers for CIs, marker size proportional to weight'
-      - id: SC-04
-        name: Data Range
+        comment: Reference line, weighted markers, pooled diamond - all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis appropriately shows full range of data including all confidence
-          intervals
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: No legend present (appropriate for this plot type, but marker sizing
-          by weight isn't labeled)
-      - id: SC-06
-        name: Title Format
+        comment: X/Y axes correctly mapped; all data visible and properly scaled
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "forest-basic · letsplot · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: 'Format correct but title domain wrong: says ''pyplots.ai'' instead
+          of ''anyplot.ai'''
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in effect sizes (both positive and negative), varying
-          CI widths, and different weights; one study crosses null, demonstrating
-          heterogeneity
+        comment: 'Comprehensive forest plot: studies, effects, CIs, pooled estimate,
+          weights'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic meta-analysis scenario with plausible study names, years,
-          and log odds ratios
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Log odds ratios in realistic range (-0.45 to 1.02), weights sum to
-          ~100%
+        comment: Clinical meta-analysis context; realistic log odds ratios with 95%
+          CIs; appropriate weight distribution
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log OR scale [-0.5, 1.0] appropriate; pooled estimate 0.31 reasonable
+          given individual effects
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,42 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Linear script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements), but no seed comment for
-          clarity
+        comment: Embedded data; no randomness; deterministic weighted average calculation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and lets_plot used, both necessary
+        comment: Only os, pandas, lets_plot imported; all used appropriately
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current lets-plot API
+        comment: No fake UI or unnecessary complexity; clean readable implementation
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of ggplot grammar (geom_segment, geom_point, geom_polygon,
-          geom_text), theme customization, and scale_size_identity; however, doesn't
-          leverage lets-plot specific interactive features or tooltips
+        comment: Good ggplot2 grammar of graphics syntax; proper aes() and theme()
+          usage; high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses geom_polygon for diamond and scale_size_identity for weighting;
+          mostly standard ggplot2 patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

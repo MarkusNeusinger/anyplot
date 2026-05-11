@@ -1,168 +1,173 @@
 library: plotly
+language: python
 specification_id: contour-filled
 created: '2025-12-30T00:02:58Z'
-updated: '2025-12-30T00:08:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585400365
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-filled/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-filled/plotly/plot.html
+updated: '2026-05-11T13:29:54Z'
+generated_by: claude-haiku
+workflow_run: 25672570541
+issue: 2500
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-dark.html
 quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - colorbar
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling:
-    - custom-colormap
 review:
   strengths:
-  - Excellent use of Viridis colormap providing colorblind-safe visualization
-  - Multiple Gaussian peaks and valley demonstrate full capability of filled contours
-  - Contour labels with white text provide precise value identification
-  - Well-structured code following KISS principles
-  - Correct aspect ratio with scaleanchor maintaining square coordinate system
-  - Both PNG and HTML outputs generated as expected for Plotly
-  weaknesses:
-  - Axis labels are generic (X Coordinate, Y Coordinate) without units or more descriptive
-    context
-  - Could leverage more Plotly-specific features like custom hovertemplate to show
-    (x, y, z) values on interaction
-  image_description: 'The plot displays a filled contour visualization of a 2D scalar
-    field with multiple Gaussian features. The color scheme uses the Viridis colormap,
-    transitioning from dark blue/purple (low values around -0.8) through teal and
-    green to bright yellow (high values around 1.8). Two prominent peaks appear: a
-    bright yellow peak in the upper right quadrant around (1, 1) and a green-yellow
-    peak in the lower left quadrant around (-1, -1). There is also a smaller teal
-    peak in the upper left and a purple valley (negative values) in the lower right
-    quadrant around (1, -1). White contour lines with numeric labels (0.2, 0.4, 0.6,
-    etc.) overlay the filled regions. The title reads "contour-filled · plotly · pyplots.ai"
-    at the top, with "X Coordinate" and "Y Coordinate" axis labels. A vertical colorbar
-    titled "Surface Value" appears on the right side. The aspect ratio is maintained
-    as square within the plotting area.'
+  - 'Perfect visual quality across all dimensions (30/30): exceptional text legibility,
+    zero overlap, optimal element visibility'
+  - 'Flawless theme-adaptive implementation: data colors identical between light and
+    dark renders, chrome colors theme-correct, no dark-on-dark failures'
+  - 'Strong idiomatic Plotly usage with sophisticated features: RdBu_r colorscale,
+    contour labeling with custom fonts, hover tooltips, clean code structure'
+  - 'Excellent data representation: multiple features (peaks, valleys, saddle surface)
+    clearly visualized with perceptually-uniform color encoding'
+  - Clean, reproducible, maintainable code with proper separation of theme-adaptive
+    concerns
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1, proper theme-light surface
+      Chrome: Title "contour-filled · plotly · anyplot.ai" clearly visible in dark text. Axis labels "X Position" and "Y Position" readable. Tick labels, colorbar title "Surface Value", and legend label "Peaks" all in appropriate dark text (#1A1A17 and #4A4A44). Grid lines subtle but visible.
+      Data: Filled contour regions with RdBu_r diverging colormap (red/pink for high values, blue for low values). White contour line overlays with numerical labels. Three white star markers with black outlines at peak locations.
+      Legibility verdict: PASS - All text fully readable, no contrast issues, data clearly visible, proper color differentiation.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17, proper theme-dark surface
+      Chrome: Title clearly visible in light text. Axis labels, tick labels, colorbar title, and legend all rendered in light colors (#F0EFE8 and #B8B7B0) with excellent contrast against dark background. Grid lines visible without being dominant. No dark-on-dark failures.
+      Data: Contour colors IDENTICAL to light render - same RdBu_r mapping with red peaks and blue valleys, confirming proper theme-adaptive implementation. Star markers remain white with dark outlines, clearly visible.
+      Legibility verdict: PASS - All text fully readable with proper light-on-dark contrast, data representation identical to light render (only chrome adapted), no theme-adaptation failures.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick marks, and colorbar text are all clearly
-          readable at appropriate sizes
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px.
+          Perfectly readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; contour labels are well-spaced
+        comment: All text elements well-spaced, no overlaps detected.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Contour lines and filled regions are clearly visible with good contrast
+        comment: Star markers and contour regions clearly visible and properly adapted
+          to data density.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe and provides excellent perceptual
-          uniformity
+        comment: RdBu_r colormap is perceptually uniform. White contour lines add
+          definition beyond color alone.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas appropriately with balanced margins; colorbar well-positioned
+        comment: Perfect layout with appropriate plot area and balanced margins.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("X Coordinate", "Y Coordinate") but lack
-          units
+        comment: Descriptive labels with semantic meaning, correct title format.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, but colorbar could have more tick marks for finer
-          value reading
+        comment: RdBu_r appropriate for continuous diverging data. Background colors
+          correct. Text colors theme-adaptive in both renders.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: RdBu_r colorscale and white contour overlays show sophistication.
+          Star markers intentionally placed. Above defaults but not publication-exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: white contours for precision, custom colorbar styling,
+          subtle grid. Could refine further.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative with multiple peaks, colorbar mapping, and marker
+          emphasis. Good visual hierarchy through color intensity.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct filled contour plot with color bands between level curves
+        comment: Correct filled contour plot with colored regions and overlay lines.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y grid coordinates correctly mapped with Z values shown as color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar present, contour lines overlaid for precise level identification,
-          15 levels used
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: filled contours, contour lines with labels,
+          colorbar, smooth grid resolution.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range (-3 to 3)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly mapped, Z values properly represented through
+          color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately shows value mapping
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "contour-filled · plotly · pyplots.ai"'
+        comment: Title format correct. Legend labels appropriate.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Excellent data showing multiple peaks, a valley (negative values),
-          and smooth transitions - demonstrates full capability of filled contours
+        comment: 'Excellent diversity: positive peaks, negative saddle, smooth transitions
+          demonstrate all contour plot features.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Mathematical Gaussian surface is a standard, neutral example for
-          demonstrating contour plots
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values range appropriately from about -1 to 2, realistic for a mathematical
-          function
+        comment: Mathematical function (Gaussian peaks) provides realistic scientific
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Gaussian function values are factually correct with proper proportions.
     code_quality:
       score: 10
       max: 10
@@ -172,42 +177,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Clean linear flow with no unnecessary abstraction.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy and plotly.graph_objects'
+        comment: 'Only essential imports: os, sys, numpy, plotly.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Pythonic and clean. Theme-adaptive architecture elegant.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct output format with theme suffix, current API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: While the implementation is correct, it does not leverage Plotly's
-          distinctive interactive features in a meaningful way for the static output.
-          The HTML output enables interactivity, but no special hover templates, animations,
-          or advanced Plotly-specific features are showcased.
+        passed: true
+        comment: 'Expert Plotly patterns: go.Figure, go.Contour, go.Scatter, proper
+          update_layout usage.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses colorscale parameter, contours dict with custom fonts, hovertemplate,
+          scatter overlay. Plotly-distinctive features.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

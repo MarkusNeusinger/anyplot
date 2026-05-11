@@ -1,169 +1,181 @@
 library: letsplot
+language: python
 specification_id: timeline-basic
 created: '2025-12-29T22:56:01Z'
-updated: '2025-12-29T22:58:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584332533
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-11T05:58:31Z'
+generated_by: claude-haiku
+workflow_run: 25652640363
+issue: 2443
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent alternating label placement above/below axis prevents overlap
-  - Clean implementation of timeline using ggplot grammar (geom_segment + geom_point
-    + geom_text)
-  - Good color palette with 5 distinct phases clearly differentiated
-  - Realistic software project milestone data that is easy to understand
-  - Proper title format and legend placement
-  - Generates both PNG and HTML outputs
+  - Perfect theme adaptation with readable text in both light and dark renders
+  - Zero text overlap with well-executed alternating label positioning
+  - Complete spec compliance with all required features present
+  - Clean, reproducible code with proper structure and theme token usage
+  - Realistic data quality - software project milestones are authentic and neutral
+  - 'Okabe-Ito palette correctly applied with first series as #009E73'
   weaknesses:
-  - Red and green colors for Testing and Development could be improved for colorblind
-    accessibility
-  - Event label text size (size=9) could be slightly larger for better readability
-    at full resolution
-  - X-axis label 2024 is unconventional - consider moving year to title or using a
-    more descriptive label
-  image_description: 'The plot displays a horizontal timeline visualization for a
-    software project spanning January to December 2024. A dark gray horizontal line
-    serves as the main axis at y=0. Ten events are shown as colored circular markers
-    connected to the axis by vertical segments. Events alternate above and below the
-    axis to prevent label overlap. The title "timeline-basic · letsplot · pyplots.ai"
-    appears at the top left in bold. Event labels (e.g., "Project Kickoff", "Requirements
-    Done", "Design Review", etc.) are positioned above or below their respective markers.
-    A legend on the right shows five color-coded phases: Planning (blue), Design (yellow),
-    Development (green), Testing (red), and Release (purple). The x-axis shows month
-    abbreviations (Jan-Dec) with "2024" as the axis label. The overall layout is clean
-    with a light/white background and subtle minimal theming.'
+  - Limited visual storytelling - events are displayed but lack interpretive hierarchy
+    or focal points
+  - Generic library usage - does not leverage letsplot's distinctive interactive features
+  - Design could be more sophisticated - appears as well-configured defaults rather
+    than custom aesthetic choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), appropriate for light theme.
+      Chrome: Title "timeline-basic · letsplot · anyplot.ai" in dark text (24pt), month labels in soft gray (16pt), all fully readable against light background.
+      Data: 10 colored event markers with vertical connectors (teal #009E73 for Planning, orange #D55E00 for Design, blue #0072B2 for Development, pink #CC79A7 for Testing, yellow #E69F00 for Release). Event labels alternate above/below timeline with no overlap. Horizontal timeline axis in soft gray.
+      Legibility verdict: PASS - All text clearly readable, excellent contrast, well-spaced.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), appropriate for dark theme.
+      Chrome: Title and month labels in light text on dark background, all readable. No dark-on-dark failures.
+      Data: Same event marker colors and layout as light render - data colors are identical (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00), confirming proper theme adaptation where only chrome flips, not data.
+      Legibility verdict: PASS - All text clearly readable, proper contrast, brand green stands out clearly.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is bold at 24pt, axis text at 16pt, labels readable but could
-          be slightly larger
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Alternating label positions work well, no text overlap
+        comment: Perfect alternating label positioning (above/below), zero overlapping
+          elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (size=6), connectors visible with good alpha
+        comment: Event markers (size=6), connectors (size=1.2), and axis (size=1.5)
+          all well-adapted to 10-event density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Good color palette, but red/green for Testing/Development could be
-          problematic for some colorblind users
+        comment: Okabe-Ito palette is colorblind-safe, good contrast, alpha values
+          appropriate
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend well-positioned
+        comment: 1600x900 base (4800x2700 final) with balanced margins and legend
+          positioning, minor opportunity for more generous spacing
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis labeled "2024" which is descriptive but not a typical axis
-          label format
+        comment: Title format correct, X-axis label 'Month (2024)' is descriptive
+          with context
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend well placed, but no grid lines (appropriate for timeline)
+        comment: 'Okabe-Ito palette with #009E73 as first series, proper theme backgrounds
+          (#FAF8F1 light, #1A1A17 dark), text colors theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-above defaults with intentional timeline design and color hierarchy,
+          but not quite publication-ready or custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good: spines removed, minimal grid, generous whitespace, clean legend
+          - solid but not exceptional refinement'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data displayed clearly by category, but lacks focal point or narrative
+          emphasis - all phases treated equally
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct timeline visualization with events along temporal axis
+        comment: Correct horizontal event timeline with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on x-axis, events as labeled points
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has date, event labels, categories with color-coding, alternating
-          positions
-      - id: SC-04
-        name: Data Range
+        comment: Timeline axis, event markers, connectors, labels, category colors,
+          date formatting all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year shown with padding, all events visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis shows dates, Y-axis shows event positioning, all 10 events
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 5 phases
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "timeline-basic · letsplot · pyplots.ai"
+        comment: Title 'timeline-basic · letsplot · anyplot.ai' correct, legend labels
+          match phase categories
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 10 events across 5 categories, good variety, but events are
-          evenly spaced which is somewhat artificial
+        comment: 'Shows all phases: Planning (2), Design (1), Development (2), Testing
+          (2), Release (3) - full spectrum'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software project milestones is a realistic and neutral scenario
+        comment: Real software project milestones, neutral content, realistic event
+          names and timeline
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Dates are realistic for a year-long project, though some phases could
-          have more events
+        comment: 2024 project year with realistic date gaps, event names appropriate
+          for phase context
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +183,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean imports → data → plot → save, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (fixed dates, no randomness)
+        comment: Fully deterministic - hardcoded dates and events, no randomization
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, pandas, letsplot components, ggsave'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity, no over-engineering or fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" and "plot.html" but path="." may cause issues
-          in workflow context
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html, scale=3 for 4800x2700, current
+          letsplot API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses ggplot grammar properly with geom_segment, geom_point, geom_text,
-          scale_color_manual, theme_minimal. Good use of layering but does not leverage
-          lets-plot interactive features in the static output.
+        passed: false
+        comment: Correct ggplot2-style pattern with proper theme customization, could
+          leverage more letsplot-specific features
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage - could leverage letsplot's interactive capabilities
+          or distinctive visualization patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

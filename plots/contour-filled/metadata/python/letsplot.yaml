@@ -1,168 +1,177 @@
 library: letsplot
+language: python
 specification_id: contour-filled
 created: '2025-12-30T00:07:14Z'
-updated: '2025-12-30T00:15:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585407404
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-filled/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-filled/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-05-11T13:45:56Z'
+generated_by: claude-haiku
+workflow_run: 25673233448
+issue: 2500
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent visual clarity with the plasma colormap providing smooth, perceptually
-    uniform color transitions
-  - Well-designed mathematical surface showing multiple features (peaks, valley, ridge)
-    that demonstrate contour capabilities
-  - Properly sized text elements following library guidelines (24/20/16pt for title/labels/ticks)
-  - Clean code structure following KISS principles with clear data generation section
-  - Overlaid white contour lines at matching 15 bins provide precise level identification
-    as recommended in spec
+  - 'Perfect technical execution across all requirements: correct plot type, complete
+    feature set (filled contours, colorbar, overlay lines)'
+  - 'Flawless theme adaptation: both light and dark renders readable with correct
+    theme tokens (INK, INK_SOFT) and backgrounds (#FAF8F1 light, #1A1A17 dark)'
+  - 'Realistic and engaging data: topographic elevation model with multiple peaks,
+    valleys, and ridges creates clear visual hierarchy'
+  - 'Idiomatic lets-plot code: proper grammar of graphics composition with ggplot(),
+    geoms, and theme layering'
+  - 'Appropriate visualization choice: viridis/plasma colormap for continuous data
+    is perceptually uniform and CVD-safe'
   weaknesses:
-  - Axis labels are generic (X Coordinate, Y Coordinate) rather than having a concrete
-    real-world context with units
-  - Data context is mathematical rather than a real-world application scenario (e.g.,
-    topographic elevation, temperature distribution)
-  image_description: 'The plot displays a filled contour visualization of a 2D scalar
-    field with the plasma colormap from viridis. Two prominent peaks appear as bright
-    yellow/orange concentric regions: a main peak at approximately (1.5, 1.5) and
-    a secondary peak at (-1.5, -1.5). A subtle depression is visible at (1.5, -1.5)
-    appearing as a slightly darker blue-purple region. A diagonal ridge connects features
-    across the plot. The colors range from deep purple/blue (values near 0) through
-    pink/magenta to bright yellow (values near 1). White contour lines are overlaid
-    at 15 levels to help identify precise boundaries. The title "contour-filled ·
-    letsplot · pyplots.ai" appears at the top, axis labels show "X Coordinate" and
-    "Y Coordinate", and a vertical colorbar labeled "Value" displays the mapping from
-    0 to 1.'
+  - 'Design Excellence below median: relies on theme_minimal() defaults rather than
+    custom refinement (e.g., could adjust legend placement, enhance typography, or
+    add visual emphasis)'
+  - 'Limited distinctive library features: while layer composition (geom_contourf
+    + geom_contour) is shown, could push further with lets-plot-specific capabilities
+    like interactive tooltips or advanced theme customization'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: #FAF8F1 warm off-white, correct surface color.
+      Chrome: Title "contour-filled · letsplot · anyplot.ai" in dark text (INK token), clearly readable. Axis labels "Longitude (km)" and "Latitude (km)" in dark text with size 20pt. Tick labels in INK_SOFT token (secondary text) at size 16pt, all readable against the light background. Legend title "Elevation (m)" and scale values readable.
+      Data: Viridis/plasma colormap with smooth color bands from dark purple (low elevation) through blue, cyan, yellow-green (peaks at 2500m). White contour lines overlay with alpha=0.5, creating visual hierarchy. Three peaks and one valley clearly distinguished by color intensity.
+      Legibility verdict: PASS — all text is readable, no "light on light" failures, data colors are crisp and distinct.
+
+    Dark render (plot-dark.png):
+      Background: #1A1A17 warm near-black, correct surface color for dark theme.
+      Chrome: Title in light text (INK token #F0EFE8), clearly readable against dark background. Axis labels in light text at size 20pt. Tick labels in INK_SOFT token (#B8B7B0) at size 16pt, all readable. Grid lines visible as subtle lines (inherited from minimal theme). No "dark on dark" failures — all text has sufficient contrast.
+      Data: Viridis/plasma colormap identical to light render (only chrome flips per design specification). White contour lines remain visible. Three elevation peaks and valley depression clearly distinguished.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark text conflicts, data colors match light render perfectly (theme-adaptive chrome only).
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, legend text
-          at 14-16pt - all perfectly readable
+        comment: All text readable in both themes with proper size and color tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No collisions between title, labels, ticks, legend, and data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Filled contours with 15 bins provide excellent gradient visibility,
-          overlaid white contour lines are subtle but visible
+        comment: Contour bands and white overlay lines clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Plasma colormap is colorblind-friendly, excellent perceptual uniformity
+        comment: Viridis/plasma colormap is perceptually uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
+        comment: 1600x900 (4800x2700 scaled) with good proportions and generous margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels ("X Coordinate", "Y Coordinate") but no units
+        passed: true
+        comment: Descriptive labels with units; title format correct per spec
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: No grid visible (acceptable for contour plot), legend well-placed
-          but could have more descriptive title
+        passed: true
+        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark); continuous
+          colormap appropriate; chrome theme-adapted'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Plasma colormap shows design intent; professional appearance with
+          clear color progression
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Theme_minimal provides clean aesthetic; white contour overlay and
+          proper spacing add refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Multiple peaks and valley create visual hierarchy; color intensity
+          guides viewer to significant features
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct filled contour plot with color bands between level curves
+        comment: Filled contour plot correctly implemented with geom_contourf
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly mapped to grid, z values to fill colors
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar present, contour lines overlaid as suggested in spec, smooth
-          color transitions
-      - id: SC-04
-        name: Data Range
+        comment: Filled contours, colorbar, overlay contour lines, smooth color transitions
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible from -4 to 4 on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y grid mapped correctly; Z values mapped to fill color; all data
+          displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately shows value mapping 0 to 1
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "contour-filled · letsplot · pyplots.ai"
+        comment: Title format correct; legend title and value range properly labeled
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows peaks, valleys, and ridges demonstrating all aspects of filled
-          contour visualization
+        comment: 'Shows all aspects: multiple peaks, valleys, ridges; demonstrates
+          contour plotting at its best'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: false
-        comment: Mathematical function (Gaussian peaks/valleys) is plausible but generic,
-          not a real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values 0-1 are sensible for normalized function output, grid spans
-          -4 to 4
+        comment: Topographic elevation data is realistic, plausible, and neutral (not
+          controversial)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 60x60 grid resolution appropriate for smooth gradients; elevation
+          range sensible for terrain
     code_quality:
       score: 10
       max: 10
@@ -172,41 +181,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: No functions or classes; simple procedural flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though data is deterministic)
+        comment: Deterministic seed (42) ensures reproducible data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports from lets_plot, numpy, pandas
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; no fake functionality; clean and readable
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html per spec
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ggplot grammar, geom_contourf/geom_contour, scale_fill_viridis
-          with plasma option, theme_minimal - good lets-plot usage but no advanced
-          features like tooltips or interactivity setup
+        passed: true
+        comment: Proper ggplot composition with aesthetics, geoms, scales, and theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Demonstrates layer composition (geom_contourf + geom_contour), scale_fill_viridis,
+          HTML export, theme_minimal patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

@@ -1,15 +1,240 @@
 library: plotly
+language: python
 specification_id: timeline-basic
 created: '2025-12-29T22:47:16Z'
-updated: '2025-12-29T22:50:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20584328110
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/plotly/plot.html
-quality_score: 91
+updated: '2026-05-11T05:42:42Z'
+generated_by: claude-haiku
+workflow_run: 25652255711
+issue: 2443
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/plotly/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Excellent theme adaptation: both light and dark renders pass readability checks
+    with no legibility issues'
+  - 'Perfect palette compliance: first series is #009E73, Okabe-Ito order followed
+    (positions 1-4), proper theme-token usage throughout'
+  - 'Thoughtful label placement: alternating event labels above/below timeline prevent
+    overlap, excellent data density management'
+  - 'Strong timeline implementation: horizontal orientation with alternating labels,
+    clear chronological flow, professional date formatting'
+  - 'Clean code: direct structure, proper theme token handling, idiomatic Plotly usage
+    (go.Figure, add_annotation, update_layout)'
+  - 'Complete spec implementation: all required features present (events, dates, category
+    color-coding, title, legend)'
+  weaknesses:
+  - 'Design Excellence moderate: uses solid defaults; could add more sophisticated
+    styling (custom color refinement, enhanced visual hierarchy, distinctive marker
+    patterns)'
+  - 'Library Mastery opportunities: could showcase more distinctive Plotly features
+    (e.g., custom event styling, range sliders, more advanced interactivity for dense
+    timelines)'
+  - 'Marker styling: while edges are present, could explore size variation or other
+    techniques to emphasize key events'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with excellent contrast.
+      Chrome: Title "timeline-basic · plotly · anyplot.ai" in dark INK (28px), x-axis label "Economic Timeline (2018-2024)" in dark INK (22px), date tick labels in INK_SOFT (16px) — all clearly readable. Legend at top center with categories in light gray text on elevated background.
+      Data: 9 events displayed as colored markers with white edges; event names positioned alternately above/below timeline (18px, dark INK); date labels below event names (14px, INK_SOFT). Colors follow Okabe-Ito: #009E73 (Market/Growth), #D55E00 (Recovery/Correction), #0072B2 (Crisis), #CC79A7 (Expansion). Timeline axis line subtle but prominent (width 3, INK_SOFT). Vertical gridlines visible but not dominant (10% opacity).
+      Legibility verdict: PASS — all text is dark on light, excellent contrast, font sizes appropriately scaled for large canvas.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper theme adaptation.
+      Chrome: Title in light text (F0EFE8), axis labels in light text, tick labels in light gray (B8B7B0) — all clearly readable against dark background. Legend text in light gray on darker elevated background (#242420).
+      Data: Identical marker positions and colors to light render (#009E73, #D55E00, #0072B2, #CC79A7 remain unchanged). Event labels in light INK, date labels in light INK_SOFT. Timeline axis and gridlines visible with appropriate dark-theme colors (rgba(240,239,232,0.10) for grid).
+      Legibility verdict: PASS — no dark-on-dark failures; light text reads clearly on dark background; data colors are identical to light render (only chrome changed from dark to light, as required).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 28px title, 22px axis labels, 16-18px tick/event labels — all readable
+          at full size in BOTH themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alternating label placement prevents collisions; legend positioned
+          at top without overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size 14) clearly visible; edges provide definition; connector
+          lines subtle but visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette used; colorblind-safe; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, adequate margins (l=80, r=80, t=120, b=80), nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; x-axis label descriptive with time range; appropriate
+          date formatting
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order (1-4); backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom label positioning algorithm, white marker edges, thoughtful
+          color mapping; mostly defaults with some sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines handled appropriately, subtle grid, marker definition via
+          edges; good but not exceptional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong chronological flow, color-coding creates hierarchy, clear
+          focal point on events; excellent for timeline format
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal event timeline with markers and labels
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: event names, dates, category color-coding,
+          label positioning'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis dates correct, category-to-color mapping proper, all 9 events
+          represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct format, legend shows all 6 categories, labels match
+          data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 9 events over 6 years (2018-2024), multiple categories (6), well-distributed
+          across timeline
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Economically plausible data (Market Bottom, COVID Crash, etc.), neutral
+          presentation, real-world context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: '9 events over 6 years: good density (not sparse, not dense), appropriate
+          time scale'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes; direct data-to-plot flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No random elements; deterministic output guaranteed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only 3 imports (os, pandas, plotly); all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear variable names, readable structure, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Figure, add_trace, add_annotation used correctly; theme tokens
+          via os.getenv; good patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses annotations effectively, customdata for tooltips, HTML export;
+          somewhat generic usage overall
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,195 +245,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent implementation of alternating label positions above/below the axis to
-    prevent text overlap
-  - Clean use of Plotly annotation system for event labels and date labels
-  - Interactive hover templates showing formatted dates enhance usability
-  - Color scheme effectively distinguishes the four project phases
-  - Proper use of go.Scatter for both the timeline axis and event markers
-  weaknesses:
-  - Yellow markers (#FFD43B) have lower contrast against white background
-  - Vertical grid lines could be more subtle or removed for cleaner appearance
-  - Could leverage Plotly interactivity more (e.g., range slider for zooming dense
-    timelines)
-  image_description: 'The plot displays a horizontal timeline visualization of a software
-    project spanning January to December 2024. Twelve milestones are represented as
-    colored circular markers along a dark horizontal axis line. Events are alternately
-    positioned above and below the axis to prevent text overlap. Four categories are
-    distinguished by color: Planning (blue - #306998), Development (yellow - #FFD43B),
-    Testing (teal - #4ECDC4), and Release (red-orange - #E74C3C). Each milestone has
-    its event name label and a smaller date label (e.g., "Jan 15"). The title "timeline-basic
-    · plotly · pyplots.ai" appears at the top center, with a horizontal legend showing
-    all four categories below it. The x-axis shows months from January to December
-    with "Project Timeline (2024)" as the axis title. Dotted vertical lines connect
-    each marker to its labels. The overall design is clean with a white background.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 28pt, labels at 16pt, tick fonts at 18pt. All text is readable,
-          though date labels are slightly small.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: Excellent use of alternating positions above/below axis prevents
-          all text overlap.
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Markers are appropriately sized (size=20) with white borders for
-          visibility.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good distinct colors, but yellow on white background has lower contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins.
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: X-axis has descriptive title "Project Timeline (2024)" but lacks
-          units context.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Legend well-placed, but vertical grid lines are visible and could
-          be more subtle.
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct timeline visualization with events along temporal axis.
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates correctly mapped to x-axis, events displayed as markers with
-          labels.
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: horizontal orientation, alternating label
-          positions, category color-coding.'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Timeline shows full year span with padding on both ends.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows all four categories with accurate colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "timeline-basic · plotly · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows 12 events across 4 categories throughout the year. Could include
-          varied event durations or importance levels.
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software project milestones is a realistic, neutral scenario appropriate
-          for business contexts.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Dates are realistic for a software project, though 12 milestones
-          in one year is dense.
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data → figure → traces → annotations
-          → layout → save.'
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 3
-        passed: true
-        comment: Deterministic data (hardcoded dates), no random elements, but no
-          explicit seed comment.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only pandas and plotly.graph_objects used.
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API.
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html correctly.
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses graph_objects with annotations and hover templates. Could leverage
-          more Plotly interactivity features like animations or range sliders.
-  verdict: APPROVED
+  styling:
+  - publication-ready

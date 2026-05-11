@@ -1,14 +1,19 @@
-""" pyplots.ai
+""" anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-29
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-11
 """
+
+import os
+import shutil
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_line,
+    element_rect,
     element_text,
     geom_point,
     geom_ribbon,
@@ -25,6 +30,17 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (brand color #009E73 is first series)
+OKABE_ITO = ["#009E73", "#D55E00"]
 
 # Data - Simulated clinical trial survival data for two treatment groups
 np.random.seed(42)
@@ -106,9 +122,6 @@ censored_control["survival"] = censored_control["time"].apply(lambda t: get_surv
 censored_control["group"] = "Control"
 censored_data = pd.concat([censored_treatment, censored_control], ignore_index=True)
 
-# Colors
-colors = ["#306998", "#DC2626"]  # Python Blue for Treatment, Red for Control
-
 # Plot
 plot = (
     ggplot()
@@ -124,8 +137,8 @@ plot = (
         size=4,
         stroke=2,
     )
-    + scale_color_manual(values=colors)
-    + scale_fill_manual(values=colors)
+    + scale_color_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=OKABE_ITO)
     + labs(
         x="Time (months)",
         y="Survival Probability",
@@ -135,15 +148,26 @@ plot = (
     )
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK_MUTED, size=0.3),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
     )
     + ggsize(1600, 900)
 )
 
 # Save
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.html")
+
+# lets-plot creates a subdirectory; move files to current directory
+if os.path.exists("lets-plot-images"):
+    for file in os.listdir("lets-plot-images"):
+        shutil.move(f"lets-plot-images/{file}", file)
+    os.rmdir("lets-plot-images")
