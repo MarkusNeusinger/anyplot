@@ -1,160 +1,173 @@
 library: seaborn
+language: python
 specification_id: line-styled
 created: '2025-12-30T10:37:42Z'
-updated: '2025-12-30T10:44:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594555070
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T07:24:12Z'
+generated_by: claude-haiku
+workflow_run: 25719399821
+issue: 2598
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-styled/seaborn/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent use of all four standard line styles (solid, dashed, dotted, dash-dot)
-    clearly differentiating the series
-  - Realistic temperature data context with appropriate seasonal patterns across different
-    climate regions
-  - Clean, readable code following KISS principles with proper seed for reproducibility
-  - Good font sizing throughout meeting the 4800×2700 target resolution requirements
-  - Proper title format and axis labels with units
+  - Both light and dark renders perfectly theme-adapted with correct backgrounds and
+    full legibility
+  - Typography uses theme-appropriate color tokens throughout; no text-legibility
+    failures
+  - Line styles are all clearly visible and serve dual purpose (style distinction
+    + monochrome printing)
+  - First series correctly uses brand green (#009E73); full Okabe-Ito order maintained
+  - Data is realistic, neutral, and well-chosen (seasonal temperature patterns across
+    climate zones)
+  - Clean code with deterministic seeding and proper theme-token pattern
+  - Professional use of seaborn styling system
   weaknesses:
-  - Could leverage seaborn native palette system instead of manually specifying colors
-  - Data context is generic (Coastal, Continental) rather than specific real-world
-    regions
-  image_description: 'The plot displays four line series representing temperature
-    trends across 12 months (Jan-Dec) for different climate regions. The lines use
-    distinct styles: Coastal (solid blue), Continental (dashed yellow/gold), Mountain
-    (dotted green), and Mediterranean (dash-dot red/crimson). The title reads "line-styled
-    · seaborn · pyplots.ai" at the top. X-axis shows month abbreviations, Y-axis shows
-    "Temperature (°C)" ranging from approximately -5 to 33. All four series show the
-    expected seasonal pattern with peaks in July-August. The legend is positioned
-    in the upper right with a semi-transparent background. A subtle dashed grid helps
-    with value reading.'
+  - Design excellence is solid but conventional; could benefit from more distinctive
+    visual refinement beyond standard seaborn best practices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title "line-styled · seaborn · anyplot.ai" in dark text (#1A1A17), fully readable. Axis labels "Month" and "Temperature (°C)" in dark text, clearly visible. Tick labels in soft gray (#4A4A44), all readable. Subtle y-axis grid (alpha=0.10) visible but not dominant.
+      Data: Four lines with distinct styles - Coastal (solid green #009E73), Continental (dashed orange #D55E00), Mountain (dotted blue #0072B2), Mediterranean (dash-dot purple #CC79A7). All colors and line styles clearly distinguishable. Legend in upper right with series names and styles.
+      Legibility verdict: PASS - All text is readable against the light background with proper contrast. No "light-on-light" issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title in light text (#F0EFE8), clearly visible. Axis labels in light text, readable. Tick labels in light gray (#B8B7B0), all readable. Y-axis grid visible and appropriate. NO dark-on-dark failures observed.
+      Data: Four lines with IDENTICAL colors to light render - all data colors maintained (#009E73, #D55E00, #0072B2, #CC79A7). Only chrome (background, text, grid, legend frame) has flipped to dark theme. Line styles remain perfectly distinguishable.
+      Legibility verdict: PASS - All text is readable against the dark background. Brand green #009E73 is clearly visible. Zero theme-adaptation failures. Chrome elements properly use light colors on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 16pt, all perfectly
-          readable
+        comment: All text sizes explicitly set with proper color tokens; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements; legend well-positioned; sufficient spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines at 3.5pt width are clearly visible and distinguishable
+        comment: All four line styles clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, green, red) with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" includes units, "Month" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with redundant color+style encoding for accessibility
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio appropriate; good proportions; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid at alpha=0.3 is good, but legend duplicates line styles within
-          the legend entries when sns.lineplot creates them
+        passed: true
+        comment: Correct title format; descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order maintained; backgrounds correct;
+          theme-adapted properly'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional Okabe-Ito palette with intentional visual hierarchy;
+          somewhat conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed (top/right); subtle grid; generous whitespace; refined
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; focal point around July peak; seasonal patterns
+          visible
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot type
+        comment: Multi-series line plot with distinct line styles
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months, Y=temperature correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: All four line styles (solid, dashed, dotted, dash-dot) present with
-          legend
-      - id: SC-04
-        name: Data Range
+        comment: All four standard line styles present; legend maps styles to series;
+          consistent linewidth
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range from -5 to 33°C
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: months 1-12; Y: temperature values; all data visible; appropriate
+          range'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps styles to region names
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: line-styled · seaborn · pyplots.ai'
+        comment: Correct title format; legend labels match; well-positioned
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all four standard line styles clearly differentiated
+        comment: All four standard line styles demonstrated; optimal series count
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Temperature trends by climate region is plausible but could be more
-          specific (e.g., actual regions)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic (-3°C mountain winter to 33°C Mediterranean
-          summer)
+        comment: Plausible seasonal temperature patterns; neutral; realistic regional
+          variation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 months standard; -5 to 30°C sensible; good tick spacing
     code_quality:
       score: 10
       max: 10
@@ -164,40 +177,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary functions/classes; direct plotting code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib.pyplot, numpy, seaborn)
+        comment: Only used imports; no cruft
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API correctly
+        comment: No fake interactivity; zip(..., strict=True) for safety
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png format; proper savefig parameters
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Professional sns.set_theme() usage; proper rc-param configuration;
+          theme tokens pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.lineplot with sns.set_style, but could leverage more seaborn-specific
-          features like themes or palettes
+        comment: Effective use of seaborn theme system; somewhat standard approach
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
