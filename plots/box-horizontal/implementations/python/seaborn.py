@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 box-horizontal: Horizontal Box Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: seaborn 0.13.2 | Python 3.13
+Quality: pending | Created: 2026-05-12
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,77 +12,110 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - response times by service type (with intentional outliers and different distributions)
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
+
+# Data - salary ranges by job title (with realistic distributions)
 np.random.seed(42)
 
-categories = ["Database Query", "API Gateway", "File Upload", "Authentication", "Cache Lookup"]
+categories = ["Software Engineer", "Product Manager", "Data Scientist", "UX Designer", "DevOps Engineer"]
 
 data = []
-# Database Query - moderate spread with some outliers
+# Software Engineer - moderate spread
 data.extend(
     [
-        {"Service Type": "Database Query", "Response Time (ms)": v}
+        {"Job Title": "Software Engineer", "Salary (USD)": v}
         for v in np.concatenate(
             [
-                np.random.normal(150, 40, 80),
-                np.random.normal(350, 20, 5),  # outliers
+                np.random.normal(135000, 25000, 80),
+                np.random.normal(200000, 15000, 5),  # outliers (senior/staff)
             ]
         )
     ]
 )
 
-# API Gateway - tight distribution
-data.extend([{"Service Type": "API Gateway", "Response Time (ms)": v} for v in np.random.normal(80, 15, 85)])
+# Product Manager - higher median with tight distribution
+data.extend([{"Job Title": "Product Manager", "Salary (USD)": v} for v in np.random.normal(155000, 22000, 85)])
 
-# File Upload - wide spread with high values
+# Data Scientist - wide spread with high values
 data.extend(
     [
-        {"Service Type": "File Upload", "Response Time (ms)": v}
+        {"Job Title": "Data Scientist", "Salary (USD)": v}
         for v in np.concatenate(
             [
-                np.random.normal(500, 150, 75),
-                np.random.normal(900, 50, 10),  # outliers
+                np.random.normal(145000, 30000, 75),
+                np.random.normal(220000, 20000, 10),  # outliers
             ]
         )
     ]
 )
 
-# Authentication - moderate values
-data.extend([{"Service Type": "Authentication", "Response Time (ms)": v} for v in np.random.normal(120, 30, 85)])
+# UX Designer - moderate values
+data.extend([{"Job Title": "UX Designer", "Salary (USD)": v} for v in np.random.normal(120000, 20000, 85)])
 
-# Cache Lookup - very fast, tight distribution
-data.extend([{"Service Type": "Cache Lookup", "Response Time (ms)": v} for v in np.random.normal(25, 8, 90)])
+# DevOps Engineer - highest median, tight distribution
+data.extend([{"Job Title": "DevOps Engineer", "Salary (USD)": v} for v in np.random.normal(160000, 18000, 90)])
 
 df = pd.DataFrame(data)
 
 # Sort categories by median for easier comparison
-category_order = df.groupby("Service Type")["Response Time (ms)"].median().sort_values().index.tolist()
+category_order = df.groupby("Job Title")["Salary (USD)"].median().sort_values().index.tolist()
+
+# Set theme-adaptive styling
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Horizontal box plot
+# Horizontal box plot with single color
 sns.boxplot(
     data=df,
-    x="Response Time (ms)",
-    y="Service Type",
-    hue="Service Type",
+    x="Salary (USD)",
+    y="Job Title",
     order=category_order,
-    palette=["#306998", "#FFD43B", "#306998", "#FFD43B", "#306998"],
+    color=BRAND,
     linewidth=2,
     width=0.6,
     flierprops={"marker": "o", "markersize": 8, "alpha": 0.6},
-    legend=False,
     ax=ax,
 )
 
 # Labels and styling
-ax.set_xlabel("Response Time (ms)", fontsize=20)
-ax.set_ylabel("Service Type", fontsize=20)
-ax.set_title("box-horizontal · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, axis="x", alpha=0.3, linestyle="--")
+ax.set_xlabel("Salary (USD)", fontsize=20, color=INK)
+ax.set_ylabel("Job Title", fontsize=20, color=INK)
+ax.set_title("box-horizontal · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+# Spine styling
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+
+# Grid styling - subtle on x-axis only
+ax.xaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(False)
 
 # Adjust layout
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
