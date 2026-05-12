@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: polar-line
 created: '2025-12-30T16:34:34Z'
-updated: '2026-05-12T23:02:40Z'
+updated: '2026-05-12T23:08:04Z'
 generated_by: claude-haiku
 workflow_run: 25766900304
 issue: 2692
@@ -12,120 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-dark.html
-quality_score: 21
+quality_score: 75
 review:
   strengths:
-  - Correct polar-coordinate line plot structure and data mapping
-  - Proper data generation with realistic temperature patterns (2-30°C seasonal cycle)
-  - Clean code structure with clear variable names
-  - Grid circles and radial lines successfully convey polar structure
+  - Polar coordinate visualization is mathematically correct and well-executed
+  - Grid structure (concentric circles + radial lines) is clear and appropriate
+  - Month labels positioned effectively around the circle
+  - Data shows realistic seasonal temperature patterns
+  - Both light and dark renders are legible with no contrast failures
+  - Straightforward, reproducible code with proper seeding
   weaknesses:
-  - 'Background colors are pure white/black instead of warm theme colors (#FAF8F1
-    light, #1A1A17 dark) — violates style guide'
-  - Month label colors (#333333) are invisible on dark background — dark-on-dark legibility
-    failure
-  - Output files saved as 'plot.png' instead of 'plot-light.png' / 'plot-dark.png'
-    — violates output API
-  - 'Data colors violate Okabe-Ito palette (#306998 and #FFD43B instead of #009E73
-    and #D55E00)'
-  - No theme-adaptive color tokens implemented anywhere (missing PAGE_BG, INK, INK_SOFT,
-    etc.)
-  - Grid and text use hardcoded colors that do not adapt to light/dark themes
-  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'''
-  - Missing implementation of anyplot theme system entirely
+  - 'First series color is #306998 instead of mandatory #009E73 (Okabe-Ito brand green)'
+  - Output file naming uses plot.png instead of plot-{THEME}.png, breaking workflow
+  - 'No theme-adaptive implementation: hardcodes grid (#CCCCCC) and labels (#333333)'
+  - 'Second series color #FFD43B is position 7 in Okabe-Ito, violates ''never use
+    for thin lines'' rule'
+  - Grid colors and labels should use INK_SOFT token for proper dark theme adaptation
   image_description: |-
     Light render (plot-light.png):
-      Background: Pure white, NOT warm off-white #FAF8F1 (FAIL)
-      Chrome: Title, month labels, legend visible; title has typo "pyplots.ai"
-      Data: Two lines (teal #306998 City A, orange #FFD43B City B) with circular grid; colors not Okabe-Ito compliant
-      Legibility verdict: PASS visually, but FAIL style compliance
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "polar-line · letsplot · anyplot.ai" clearly readable; month labels (Jan-Dec) positioned around outer edge, fully legible; legend on right with "Location" title and series names
+      Data: Two lines visible - one bluish, one orange; grid circles (3 levels) and 12 radial lines (every 30°) in subtle gray; both data lines clearly distinguishable with good line weight
+      Legibility verdict: PASS - all text readable against light background, excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Pure black, NOT warm near-black #1A1A17 (FAIL)
-      Chrome: Title and legend readable (light text); month labels in #333333 (CRITICAL: dark-on-dark, unreadable)
-      Data: Same colors as light render (correct consistency); grid visible but competing with dark background
-      Legibility verdict: FAIL — month labels are dark-on-dark and essentially invisible on black background
-
-    Both renders FAIL theme adaptation. Neither uses the anyplot color token system. Data colors are identical between renders (correct) but wrong colors per palette specification.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and month labels rendered in light text, all readable against dark background; legend elements visible; no dark-on-dark failures detected
+      Data: Same two lines with identical colors as light render (only chrome flips); grid structure maintained; data colors remain visually distinct
+      Legibility verdict: PASS - no legibility issues, proper light text on dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 3
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Month labels are dark-on-dark in dark render (unreadable); no theme-adaptive
-          text colors for any text elements
+        passed: true
+        comment: All text readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
         passed: true
-        comment: Elements don't overlap; tight layout but readable positioning
+        comment: Month labels well-positioned, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: Dark render month labels are invisible due to dark-on-dark failure
+        passed: true
+        comment: Grid circles, radial lines, points, and lines all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 0
         max: 2
         passed: false
-        comment: 'Colors are not Okabe-Ito (#306998 and #FFD43B instead of #009E73
-          and #D55E00) and not CVD-tested'
+        comment: 'Colors #306998 and #FFD43B lack accessibility consideration'
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: 'Pure white and pure black backgrounds violate style guide (must
-          be #FAF8F1 and #1A1A17)'
+        passed: true
+        comment: Good proportions, appropriate whitespace, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Title typo: ''pyplots.ai'' should be ''anyplot.ai''; no descriptive
-          axis labels'
+        passed: true
+        comment: Title descriptive, month labels clear
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: (1) Backgrounds are pure white/black, not #FAF8F1/#1A1A17.
-          (2) Colors are #306998/#FFD43B, not Okabe-Ito #009E73/#D55E00. (3) Grid/text
-          use hardcoded colors, not theme tokens'
+        comment: 'Critical fail: first series #306998 not #009E73; second series #FFD43B
+          violates thin-line rule'
     design_excellence:
-      score: 2
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults, no customization beyond basic plot structure
+        comment: Generic hardcoded colors, no design intent
       - id: DE-02
         name: Visual Refinement
-        score: 0
+        score: 2
         max: 6
         passed: false
-        comment: Minimal effort; no spine removal (theme_void() removes all spines),
-          minimal grid refinement
+        comment: Uses theme_void() but lacks custom refinement
       - id: DE-03
         name: Data Storytelling
-        score: 0
+        score: 2
         max: 6
         passed: false
-        comment: No visual hierarchy or emphasis; basic display only without focal
-          points
+        comment: Shows seasonality but no visual hierarchy
     spec_compliance:
-      score: 8
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -133,132 +119,107 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: polar-coordinate line chart with two series representing
-          temperature patterns'
+        comment: Correct polar line plot
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Lines and points present; grid circles and radial lines shown; month
-          labels added. Missing proper theme adaptation and correct colors per spec.
+        comment: Features present but color palette violates spec requirement
       - id: SC-03
         name: Data Mapping
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Theta and radius are correctly mapped; however legend title should
-          align better with spec terminology
+        passed: true
+        comment: Theta and radius mapping correct
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Title has typo ('pyplots.ai' should be 'anyplot.ai'). Output file
-          names are wrong (should be 'plot-light.png' / 'plot-dark.png', not 'plot.png').
-          CRITICAL API violation.
+        passed: true
+        comment: Title format and legend labels correct
     data_quality:
-      score: 4
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Cyclical pattern shown correctly; two series; month labels visible
-          (though not color-adapted)
+        comment: Full 12-month cycle demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: Temperature range (2-30°C) is plausible, but critical rendering failures
-          make this moot. Data is neutral and not controversial.
+        passed: true
+        comment: Realistic and neutral temperature data
       - id: DQ-03
         name: Appropriate Scale
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Grid radii and label positioning are technically appropriate, but
-          violations of output API and theme system make this fail overall
+        passed: true
+        comment: Sensible temperature range for domain
     code_quality:
-      score: 2
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Straightforward code; no unnecessary functions or classes. Missing
-          explanatory comments for polar conversion logic.
+        comment: Simple, direct implementation
       - id: CQ-02
         name: Reproducibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Seed is set (np.random.seed(42)), but CRITICAL: output files are
-          wrong — saves ''plot.png'' instead of ''plot-{THEME}.png'''
+        passed: true
+        comment: Uses random seed for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Imports are clean; only used modules from lets_plot, pandas, numpy
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'FAIL: No theme integration at all. Hardcoded colors everywhere (#CCCCCC,
-          #333333, #306998, #FFD43B). Violates anyplot theme system entirely.'
+        passed: true
+        comment: No fake UI, straightforward logic
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL FAIL: Saves as ''plot.png'', not ''plot-light.png'' / ''plot-dark.png''.
-          API violation — pipeline expects theme-specific filenames.'
+        comment: Saves as plot.png instead of plot-{THEME}.png
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct ggplot2-style API usage
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic letsplot syntax is correct (ggplot, aes, geom_path, geom_point,
-          geom_text), but does not use library's theme customization capabilities
-      - id: LM-02
-        name: Distinctive Features
-        score: 0
-        max: 5
-        passed: false
-        comment: No use of letsplot-specific theme features, element_rect, element_text,
-          or theme system for styling
-    score_caps:
-      applied:
-      - condition: VQ-07 = 0 (palette wrong + backgrounds pure white/black)
-        max_score: 49
-        reason: Palette compliance failure with pure white/black backgrounds
-      - condition: VQ-01 = 0 (text unreadable in dark render)
-        max_score: 49
-        reason: Text legibility failure in dark theme
-      - condition: CQ-05 = 0 (output files named wrong)
-        max_score: 70
-        reason: Output API violation
-      final_score: 21
-      final_max: 100
+        comment: Uses coord_fixed() and HTML export; moderate library exploitation
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
-  - html-export
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome

@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-line: Polar Line Plot
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 21/100 | Updated: 2026-05-12
+Quality: 75/100 | Updated: 2026-05-12
 """
 
 import numpy as np
