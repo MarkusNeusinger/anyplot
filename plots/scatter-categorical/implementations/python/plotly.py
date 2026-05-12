@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-categorical: Categorical Scatter Plot
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-12
+Quality: 85/100 | Updated: 2026-05-12
 """
 
 import os
