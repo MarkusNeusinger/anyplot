@@ -1,14 +1,41 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-stacked: Stacked Histogram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 68/100 | Updated: 2026-05-12
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
+
+# Get theme from environment
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Set theme-aware colors
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data - Response times (ms) from three different server regions
 np.random.seed(42)
@@ -29,6 +56,9 @@ df = pd.DataFrame(
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 
+# Okabe-Ito palette for stacked histogram
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Stacked histogram using histplot with multiple='stack'
 sns.histplot(
     data=df,
@@ -37,7 +67,7 @@ sns.histplot(
     hue_order=["US East", "Europe", "Asia Pacific"],
     multiple="stack",
     bins=20,
-    palette=["#306998", "#FFD43B", "#4DAF4A"],
+    palette=OKABE_ITO,
     edgecolor="white",
     linewidth=0.8,
     alpha=0.9,
@@ -47,9 +77,9 @@ sns.histplot(
 # Styling
 ax.set_xlabel("Response Time (ms)", fontsize=20)
 ax.set_ylabel("Frequency", fontsize=20)
-ax.set_title("histogram-stacked · seaborn · pyplots.ai", fontsize=24)
+ax.set_title("histogram-stacked · seaborn · anyplot.ai", fontsize=24)
 ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
+ax.grid(True, alpha=0.1, linestyle="-", axis="y")
 
 # Adjust legend styling
 legend = ax.get_legend()
@@ -59,4 +89,4 @@ for text in legend.get_texts():
     text.set_fontsize(14)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
