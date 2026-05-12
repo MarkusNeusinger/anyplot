@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-filled: Filled Line Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-12
+Quality: 82/100 | Updated: 2026-05-12
 """
 
 import os
