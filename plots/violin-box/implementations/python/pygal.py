@@ -1,13 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 88/100 | Created: 2025-12-30
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-12
 """
 
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
+import numpy as np
+
+
+sys.path = [p for p in sys.path if not p.endswith("/python")]
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette - use first 4 colors for violin categories
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
 
 # Data - Generate distributions for different categories with scores constrained to 0-100
 np.random.seed(42)
@@ -20,34 +36,20 @@ raw_data = {
 # Clip all values to 0-100 range
 data = {k: np.clip(v, 0, 100) for k, v in raw_data.items()}
 
-# Color palette: 4 violin colors + white for boxes + dark gray for whiskers/median/outliers
-# Pattern per category: violin, box, whisker*4, median, outliers = 8 series
-# 4 categories = 32 series, colors cycle through
-violin_colors = ["#306998", "#FFD43B", "#4CAF50", "#FF5722"]
-box_color = "#FFFFFF"  # White fill for box - improves internal contrast
-line_color = "#333333"  # Dark gray for whiskers, median, outliers
-
-# Build color sequence: for each violin, we need violin color, then white for box,
-# then dark gray for lines (whisker, cap, median, outliers)
-colors_list = []
-for vc in violin_colors:
-    colors_list.extend([vc, box_color, line_color, line_color, line_color, line_color, line_color, line_color])
-
 # Custom style for 4800x2700 px canvas
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=tuple(colors_list),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
-    opacity=0.7,
-    opacity_hover=0.9,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
 # Create XY chart for violin plot with embedded box
@@ -55,39 +57,33 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="violin-box · pygal · pyplots.ai",
+    title="violin-box · pygal · anyplot.ai",
     x_title="Department",
-    y_title="Performance Score (0-100 scale)",
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    y_title="Performance Score (0-100)",
+    show_legend=False,
     stroke=True,
     fill=True,
     dots_size=0,
     show_x_guides=False,
     show_y_guides=True,
-    range=(0, 110),
+    range=(0, 105),
     xrange=(0, 6),
-    margin=50,
+    margin=80,
 )
 
 # Parameters for violin shapes
 violin_width = 0.35
 n_points = 100
 
-# Box plot styling for stronger contrast
+# Box plot styling
 box_stroke_style = {"width": 4, "dasharray": ""}
 median_stroke_style = {"width": 6, "dasharray": ""}
 whisker_stroke_style = {"width": 3, "dasharray": ""}
 
-# Track if legend entries have been added (only add once for first occurrence)
-added_box_legend = False
-added_median_legend = False
-added_outlier_legend = False
-
 # Add violins with embedded box plots for each category
 for i, (category, values) in enumerate(data.items()):
     center_x = i + 1.5
+    violin_color = OKABE_ITO[i]
 
     # Compute KDE using Silverman's rule
     n = len(values)
@@ -130,7 +126,8 @@ for i, (category, values) in enumerate(data.items()):
 
     box_width = 0.10
 
-    # Quartile box (IQR) - white filled for contrast
+    # Quartile box - use elevated background color for visibility
+    elevated_bg = "#FFFDF6" if THEME == "light" else "#242420"
     quartile_box = [
         (center_x - box_width, q1),
         (center_x - box_width, q3),
@@ -138,18 +135,15 @@ for i, (category, values) in enumerate(data.items()):
         (center_x + box_width, q1),
         (center_x - box_width, q1),
     ]
-    # Only add legend entry for box once
-    box_label = "Box (Q1-Q3)" if not added_box_legend else None
-    chart.add(box_label, quartile_box, stroke=True, fill=True, show_dots=False, stroke_style=box_stroke_style)
-    added_box_legend = True
+    chart.add(None, quartile_box, stroke=True, fill=True, show_dots=False, stroke_style=box_stroke_style)
 
-    # Whisker lines (vertical lines from box to whisker ends) - no legend
+    # Whisker lines (vertical lines from box to whisker ends)
     lower_whisker_line = [(center_x, q1), (center_x, lower_whisker)]
     upper_whisker_line = [(center_x, q3), (center_x, upper_whisker)]
     chart.add(None, lower_whisker_line, stroke=True, fill=False, show_dots=False, stroke_style=whisker_stroke_style)
     chart.add(None, upper_whisker_line, stroke=True, fill=False, show_dots=False, stroke_style=whisker_stroke_style)
 
-    # Whisker caps (horizontal lines at ends) - no legend
+    # Whisker caps (horizontal lines at ends)
     cap_width = box_width * 0.8
     lower_cap = [(center_x - cap_width, lower_whisker), (center_x + cap_width, lower_whisker)]
     upper_cap = [(center_x - cap_width, upper_whisker), (center_x + cap_width, upper_whisker)]
@@ -158,21 +152,17 @@ for i, (category, values) in enumerate(data.items()):
 
     # Median line (thicker, contrasting)
     median_line = [(center_x - box_width * 1.2, median), (center_x + box_width * 1.2, median)]
-    median_label = "Median" if not added_median_legend else None
-    chart.add(median_label, median_line, stroke=True, fill=False, show_dots=False, stroke_style=median_stroke_style)
-    added_median_legend = True
+    chart.add(None, median_line, stroke=True, fill=False, show_dots=False, stroke_style=median_stroke_style)
 
-    # Outliers as points - larger dots for better visibility
+    # Outliers as points
     if len(outliers) > 0:
         outlier_points = [(center_x, float(o)) for o in outliers]
-        outlier_label = "Outliers" if not added_outlier_legend else None
-        chart.add(outlier_label, outlier_points, stroke=False, fill=False, show_dots=True, dots_size=18)
-        added_outlier_legend = True
+        chart.add(None, outlier_points, stroke=False, fill=False, show_dots=True, dots_size=18)
 
 # X-axis labels at violin positions
 chart.x_labels = ["", "Engineering", "Marketing", "Sales", "Operations", ""]
 chart.x_labels_major_count = 4
 
 # Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
