@@ -1,168 +1,178 @@
 library: altair
+language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:38:08Z'
-updated: '2025-12-30T10:45:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594559490
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-12T05:36:38Z'
+generated_by: claude-haiku
+workflow_run: 25715433443
+issue: 2601
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/altair/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent declarative encoding with proper use of Altair grammar (alt.X with bin,
-    alt.Y with stack="zero", alt.Color with custom scale)
-  - Clean, readable code following KISS principles with good data generation
-  - Proper font sizing throughout (title 28pt, axis titles 22pt, labels 18pt, legend
-    16-18pt)
-  - Good color palette choice (blue, yellow, orange) that avoids colorblind issues
-  - White stroke between bar segments (strokeWidth=0.5) enhances visual separation
-  - Appropriate use of scale_factor=3.0 for high-resolution output
-  - Both PNG and HTML outputs generated for static and interactive viewing
+  - Perfect visual quality with all text legible and colors accessible
+  - Flawless spec compliance implementing all required features
+  - Pristine theme-adaptive styling with both renders readable and chrome correctly
+    adapted
+  - Clean, reproducible code following KISS principles with proper theme tokens
+  - Idiomatic Altair usage with fluent chaining and proper encoding syntax
+  - Realistic, neutral data context for study methods comparison
   weaknesses:
-  - Legend styling could be more polished (title and label fonts could be slightly
-    larger for better visual hierarchy)
-  - Could add tooltips for interactive exploration showing exact counts per bin
-  - The order parameter could be more intentionally designed to show a specific visual
-    story (e.g., ordering by mean score)
-  image_description: 'The plot displays a stacked histogram showing test score distributions
-    for three study methods. The X-axis shows "Test Score (points)" ranging from 40
-    to 100, and the Y-axis shows "Number of Students" ranging from 0 to 80. Three
-    groups are stacked: Traditional Study (blue, #306998), Active Recall (yellow,
-    #FFD43B), and Passive Reading (orange, #E67E22). The stacking clearly shows individual
-    group contributions with total bar heights representing combined frequencies.
-    The title "histogram-stacked · altair · pyplots.ai" appears at the top. A legend
-    on the right identifies each study method. The grid uses subtle dashed lines with
-    low opacity.'
+  - Design excellence is conservative - could explore visual hierarchy (highlighting
+    one group), key insight annotations, or refined color treatment
+  - Library distinctive features underutilized - interactive selection/highlighting
+    would enhance storytelling (though not spec-required)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title, axis labels, and tick labels all dark text - fully readable against light background
+      Data: Three Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2) with white bar strokes (0.5px) for definition - all segments clearly visible
+      Grid: Subtle horizontal lines at 10% opacity
+      Legend: "Study Method" box with light background, dark text, positioned right
+      Legibility verdict: PASS - all elements readable with strong contrast; no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct surface color
+      Chrome: Title, axis labels, and tick labels all light text on dark background - fully readable; secondary text in softer light (#B8B7B0)
+      Data: Data colors IDENTICAL to light render (same three Okabe-Ito positions) - only chrome has flipped as intended
+      Grid: Subtle grid lines at appropriate opacity
+      Legend: Dark elevated background (#242420) with light text, properly styled
+      Legibility verdict: PASS - all text readable with no dark-on-dark failures; grid visible; brand green #009E73 clearly visible
+
+    Both renders achieve perfect theme adaptation: data colors constant, chrome theme-correct, legibility maintained on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          all readable in both themes with proper theme-adaptive colors
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No text collisions; legend positioned outside; tick labels clear
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with good opacity (0.85), white stroke separates
-          segments nicely
+        comment: White strokes on bars add definition; all color segments visible;
+          no hidden data
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, orange palette is colorblind-friendly (no red-green
-          issues), though could be slightly more distinct
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, plot fills ~60% of canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Test Score (points)", "Number of Students"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (positions 1-3) is deuteranopia/protanopia safe;
+          no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px with good proportions; nothing cut off; margins generous
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed), but legend title font could better
-          match overall styling
+        comment: Title follows format; axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; order green→orange→blue (Okabe-Ito 1-3); backgrounds
+          correct; both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Theme tokens properly applied; intentional color choice; palette
+          is straightforward without custom refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: false
+        comment: Grid subtle; bar strokes add refinement; legend box styled appropriately
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Functional storytelling showing group composition; could benefit
+          from explicit emphasis or annotation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked histogram implementation
+        comment: Correct stacked histogram with proper bin structure
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous variable (Score) binned on X, count on Y, category for
-          color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: stacking, distinct colors, legend with
-          group labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features implemented: groups stacked, same bin boundaries, distinct
+          colors, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate bin boundaries (40-100)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y mapping correct; all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data groups correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-stacked · altair · pyplots.ai"'
+        comment: Title matches format; legend labels correspond exactly to data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct distributions with different means and spreads,
-          demonstrates stacking well
+        comment: 'Shows complete aspects: composition and total frequency; all groups
+          distinguished'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Educational test scores with study methods is a neutral, relatable
-          scenario
+        comment: 'Realistic: test scores from study methods plausible; neutral topic;
+          no controversial framing'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Test scores 0-100 are realistic; distributions centered around 68-78
-          are plausible
+        comment: 40-100 score range realistic; 370 students across 3 methods sensible
     code_quality:
       score: 10
       max: 10
@@ -172,41 +182,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions/classes; direct generation and plotting
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42); clipping ensures deterministic values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: All imports used; no dead code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: No fake UI; theme tokens properly threaded; elegant structure
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; uses current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of declarative encoding with alt.X, alt.Y, alt.Color, binning,
-          and stack configuration, but could leverage more Altair-specific features
-          like tooltips or selection
+        comment: Fluent API chaining; proper encoding syntax; alt.Bin, alt.Color with
+          alt.Scale, alt.Order all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses binning, color encoding, order configuration; could leverage
+          interactive features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

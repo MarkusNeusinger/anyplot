@@ -1,165 +1,169 @@
 library: bokeh
+language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:40:06Z'
-updated: '2025-12-30T10:50:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594559186
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - edge-highlighting
-  - custom-legend
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-12T05:41:55Z'
+generated_by: claude-haiku
+workflow_run: 25715359488
+issue: 2601
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent text sizing scaled appropriately for 4800x2700 canvas
-  - Clean stacking implementation with proper bottom/top calculations
-  - White line separators between segments improve readability
-  - Realistic educational scenario with meaningful group differences
-  - Proper use of consistent bin edges across all groups
+  - 'Perfect visual quality: all text explicitly sized and readable in both themes'
+  - Complete spec compliance with realistic, well-structured test score data
+  - Clean, reproducible code following Bokeh library patterns correctly
+  - Theme-adaptive chrome properly applied; no dark-on-dark or light-on-light failures
+  - Professional execution with no visual defects
   weaknesses:
-  - 'Two blue colors (dark #306998 and light #4B8BBE) may cause confusion for colorblind
-    users; consider using more distinct hues'
-  - Does not use ColumnDataSource which is idiomatic Bokeh practice
-  - Some test scores exceed 100 points which is atypical for standard tests
-  image_description: 'The plot displays a stacked histogram showing test score distributions
-    for three study groups. The x-axis shows "Test Score (points)" ranging from approximately
-    40 to 120, and the y-axis shows "Frequency (count)" from 0 to about 83. Three
-    colored segments are stacked: dark blue (Self-study Group) at bottom, yellow (Regular
-    Study Group) in middle, and light blue (Intensive Study Group) on top. The distributions
-    show realistic patterns with Self-study peaking around 65, Regular around 75,
-    and Intensive around 82. A legend is positioned in the top-right corner. White
-    line separators between bar segments provide clear visual distinction. The title
-    "histogram-stacked · bokeh · pyplots.ai" appears at top-left.'
+  - Design Excellence limited to library defaults; no aesthetic sophistication or
+    visual refinement beyond standard configuration
+  - 'Stacking order (C, A, B from bottom-to-top) appears arbitrary; could be optimized
+    for visual narrative (e.g., alphabetical: A, B, C)'
+  - Library mastery uses required Bokeh patterns but no distinctive enhancements;
+    generic usage that could translate to other libraries
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1, matches specification
+      Chrome: Title (28pt), axis labels (22pt), and tick labels (18pt) all explicitly sized and readable in dark text (#1A1A17); legend positioned on right with clear labels
+      Data: Three stacked groups - blue (#0072B2) Group C at bottom, green (#009E73) Group A in middle, orange (#D55E00) Group B on top; white borders aid segment separation
+      Grid: Subtle at 10% alpha, supports readability
+      Legibility verdict: PASS - all text readable, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17, matches specification
+      Chrome: Title and axis labels rendered in light text (#F0EFE8 primary, #B8B7B0 secondary); all elements remain clearly readable against dark background
+      Data: Identical colors to light render - blue, green, orange in same stacking order; confirms color consistency across themes
+      Grid: Subtle, properly visible
+      Legibility verdict: PASS - no dark-on-dark failures, all text is light-colored and readable, proper theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all perfectly
-          readable
+        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt;
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text; bars well-separated; legend clearly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with 0.85 width factor, alpha 0.9 provides good visibility
+        comment: Bars clearly visible with white borders aiding distinction between
+          segments
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good contrast between groups, but two blues (dark and light) could
-          be confused by some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, though legend is slightly far from data
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Test Score (points)", "Frequency
-          (count)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend properly positioned, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend colors don't match plot colors (Self-study shows as darker
-          blue in legend but appears lighter in some contexts)
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors correct; backgrounds correct; theme-adaptive chrome
+          applied correctly
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults; professional but no exceptional
+          design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color and stacking
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct stacked histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous values binned correctly, categories stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Same bin boundaries, distinct colors, legend present, total height
-          = combined frequency
-      - id: SC-04
-        name: Data Range
+        comment: Multiple groups, distinct colors, legend, stacking
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match group names
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: histogram-stacked · bokeh · pyplots.ai'
+        comment: Correct title format; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct distributions with different means and spreads,
-          though more variation in spreads would better demonstrate the plot type
+        comment: Shows all aspects of stacked histogram type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Test scores from different study methods is a plausible, neutral
-          educational scenario
+        comment: Test score scenario is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scores in 40-120 range are reasonable for tests, though some values
-          exceed 100 which is unusual for typical tests
+        comment: Test scores 0-100 range; frequencies match sample sizes
     code_quality:
       score: 10
       max: 10
@@ -169,40 +173,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script structure: imports → data → plot → save'
+        comment: 'Linear: imports → data → plotting → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports utilized
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct ColumnDataSource pattern and figure API
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Basic vbar usage, could leverage ColumnDataSource and HoverTool for
-          better Bokeh idioms
+        comment: Uses required Bokeh patterns but no distinctive enhancement
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
