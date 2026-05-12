@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:34:54Z'
-updated: '2026-05-12T01:13:10Z'
+updated: '2026-05-12T01:19:48Z'
 generated_by: claude-haiku
 workflow_run: 25706859723
 issue: 2548
@@ -12,95 +12,87 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 83
 review:
   strengths:
-  - Correct plot type with proper box-plot visualization (boxes, whiskers, outliers)
-  - Theme adaptation is well-implemented with appropriate light and dark color tokens
-  - All required axis labels and title in correct format
-  - Legend clearly identifies all 5 categories
-  - Good use of pygal's dynamic class creation to implement horizontal box plot
-  - Data shows realistic salary ranges with variation between job titles
-  - No text overlap or readability issues in either theme
+  - Correct horizontal box plot with all statistical elements (median, quartiles,
+    whiskers, outliers)
+  - 'Proper theme-adaptive styling with correct background colors (#FAF8F1 light,
+    #1A1A17 dark)'
+  - Theme-adaptive text colors for title, axis labels, and ticks—readable in both
+    renders
+  - 'Excellent code quality: clean, reproducible, deterministic with seed'
+  - Proper spec compliance for plot type, features, and data mapping
+  - Realistic, plausible salary data with sensible distributions
   weaknesses:
-  - 'Potential color palette issue: DevOps Engineer legend appears to show cyan/teal
-    rather than the expected #E69F00 (orange) from Okabe-Ito position 4 - verify pygal''s
-    color cycling behavior'
-  - Design lacks visual refinement - no removal of unnecessary spines, grid styling
-    is basic
-  - Limited visual hierarchy or data storytelling - boxes are arranged alphabetically
-    rather than by median salary for easier comparison
-  - Legend could be positioned more elegantly or omitted since each series is explicitly
-    labeled on y-axis
+  - 'Palette Compliance (VQ-07): First series must be brand green (#009E73), but visually
+    appears as pale peachy/gold tone—critical violation of core palette requirement'
+  - Categories not sorted by median value, missing the optimization suggested in the
+    spec
+  - Design is purely functional without visual sophistication or refinement
+  - Limited use of pygal-specific features beyond basic box plot rendering
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "box-horizontal · pygal · anyplot.ai" is clearly visible in dark text. X-axis label "Salary (USD)" is descriptive with units. Y-axis category labels (Software Engineer, Data Scientist, Product Manager, Designer, DevOps Engineer) are all clearly readable in the left margin. X-axis tick labels (20000, 40000, ..., 220000) are clearly visible. Legend in top-left shows all 5 categories with colored squares.
-      Data: Horizontal box plots show distributions with boxes (IQR), horizontal lines (median), whiskers (1.5*IQR), and individual outlier points displayed as dots. Multiple colors used for each category - appears to use a categorical palette. Data fills approximately 60% of canvas with balanced margins.
-      Legibility verdict: PASS - All text is readable against the light background, no overlap issues detected.
+      Background: Warm off-white (#FAF8F1) as required
+      Chrome: Title, axis labels, tick labels all in dark text—clearly readable
+      Data: Five horizontal box plots (Software Engineer, Data Scientist, Product Manager, Designer, DevOps Engineer) with salary distributions on x-axis (0-220K USD)
+      Legibility verdict: PASS—all text and elements clearly visible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title, axis labels, and tick labels are rendered in light text and clearly readable against the dark background. Legend colors match the light render. All chrome elements have good contrast.
-      Data: Box plots are rendered with identical colors to the light render (only chrome changed). The distribution visualizations are clear and all data elements are distinguishable. No dark-on-dark text issues.
-      Legibility verdict: PASS - All text is readable against the dark background, good contrast throughout, data colors remain identical to light render as required.
+      Background: Warm near-black (#1A1A17) as required
+      Chrome: All text in light color—clearly readable against dark surface; no dark-on-dark failures
+      Data: Same box plots with identical data colors to light render (only chrome flipped appropriately)
+      Legibility verdict: PASS—all text and elements clearly visible
+
+    Color consistency verified: Data colors remain identical between renders (only chrome theme-adapts). However, first series color does not visually match the required brand green (#009E73)—appears pale peachy/gold instead.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All text is explicitly sized and readable. Font sizes are well-chosen
-          (title 28px, labels 22px, ticks 18px) but rely on library configuration
-          rather than fine-tuning.
+        comment: All text properly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Category names, tick labels, and legend
-          are all well-spaced.
+        comment: Clean layout with no element collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box plots are clearly visible with appropriate sizing. Whiskers,
-          boxes, medians, and outlier points are all distinguishable.
+        comment: All box plot elements clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Colors are visually distinct with good contrast. CVD-safe palette
-          (Okabe-Ito).
+        comment: Okabe-Ito palette used, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Plot uses 60-70% of canvas. Margins are adequate but could be optimized
-          - some wasted space in left margin and around edges.
+        comment: Excellent proportions with generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Salary (USD)'' on x-axis, job titles
-          on y-axis.'
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'First series (Software Engineer) appears green (#009E73) - correct.
-          However, the 5th series (DevOps Engineer) legend shows cyan/teal rather
-          than expected #E69F00 (orange). Possible pygal Box plot color cycling issue.
-          Backgrounds and theme chrome are correct in both renders.'
+        comment: First series should be brand green (#009E73), but appears pale peachy/gold—critical
+          violation
     design_excellence:
       score: 8
       max: 20
@@ -110,24 +102,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with explicit theme tokens. Not custom
-          design - uses predefined sizes from style guide and library defaults. No
-          intentional hierarchy or custom palette.
+        comment: Functional but generic; minimal custom design
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond theme tokens. No spine removal, basic
-          grid styling, no attention to whitespace refinement or polish.
+        comment: Standard styling, no exceptional visual polish
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data is displayed clearly but not interpreted. Categories are arranged
-          alphabetically rather than sorted by median (which would create insight).
-          No visual emphasis or focal point.
+        comment: Categories not sorted by median; no visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -137,31 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal box plot implementation with proper quartiles,
-          medians, whiskers, and outliers.
+        comment: Correct horizontal box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required box plot statistical elements present: boxes (IQR),
-          whiskers (1.5*IQR), median line, outliers.'
+        comment: 'All elements present: median, quartiles, whiskers, outliers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories correctly on y-axis, salary values on x-axis. All data
-          visible within appropriate axis ranges.
+        comment: X/Y axes correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''box-horizontal · pygal · anyplot.ai''. Legend
-          shows all 5 categories with clear labels.'
+        comment: Correct format; legend matches data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -169,23 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of box plot type: different distributions across
-          categories, outliers visible, varying IQR widths demonstrate distribution
-          differences.'
+        comment: All aspects shown; realistic distributions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, comprehensible, neutral scenario: salary ranges by job title.
-          Values are realistic for tech industry context.'
+        comment: Salary ranges are plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Salary ranges plausible ($105k-$140k median), but some whiskers are
-          quite long. Still factually acceptable.
+        comment: Sensible salary values
     code_quality:
       score: 10
       max: 10
@@ -195,54 +174,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → constants → data generation → chart
-          creation → render. No unnecessary functions or classes.'
+        comment: Direct, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start ensures reproducible random data
-          generation.
+        comment: Deterministic with seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only required imports: os, numpy, pygal, Style. All are used.'
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Creative use of dynamic class creation for
-          HorizontalBox. No over-engineering or fake functionality.
+        comment: HorizontalBox workaround is justified; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html. Uses current
-          pygal API.
+        comment: Correct file naming
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of pygal's high-level API. Proper Style object usage for
-          theme tokens. Well-structured chart definition with meaningful parameters.
+        comment: Good use of Style; HorizontalBox workaround is non-standard
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Creative use of dynamic class inheritance (HorizontalBox mixing HorizontalGraph
-          + Box) leverages pygal's MRO capabilities in a distinctive way.
-    score_caps_applied: []
+        passed: false
+        comment: Theme tokens used; limited other distinctive features
   verdict: REJECTED
 impl_tags:
   dependencies: []
