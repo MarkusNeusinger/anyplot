@@ -1,21 +1,42 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-30
+Library: plotly 6.5.0 | Python 3.13
+Quality: 93/100 | Updated: 2026-05-12
 """
 
-import numpy as np
-import plotly.graph_objects as go
+import os
+import sys
 
+import numpy as np
+
+
+try:
+    import plotly.graph_objects as go
+except ModuleNotFoundError:
+    # Remove current directory from sys.path to avoid importing this script as 'plotly'
+    sys.path = [p for p in sys.path if p != "" and os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
+    import plotly.graph_objects as go
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is ALWAYS #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Product weights from three production lines
 np.random.seed(42)
 n_per_group = 150
 
 # Three production lines with different weight distributions
-line_a = np.random.normal(loc=250, scale=30, size=n_per_group)  # Line A - centered at 250g
-line_b = np.random.normal(loc=280, scale=25, size=n_per_group)  # Line B - centered at 280g
-line_c = np.random.normal(loc=260, scale=35, size=n_per_group)  # Line C - centered at 260g
+line_a = np.random.normal(loc=250, scale=30, size=n_per_group)
+line_b = np.random.normal(loc=280, scale=25, size=n_per_group)
+line_c = np.random.normal(loc=260, scale=35, size=n_per_group)
 
 # Define consistent bin edges for all groups
 all_values = np.concatenate([line_a, line_b, line_c])
@@ -33,45 +54,73 @@ bin_width = bin_edges[1] - bin_edges[0]
 # Create figure with stacked bars
 fig = go.Figure()
 
-# Colors: Python Blue, Python Yellow, and a complementary teal
-colors = ["#306998", "#FFD43B", "#4ECDC4"]
+fig.add_trace(
+    go.Bar(
+        x=bin_centers,
+        y=hist_a,
+        name="Line A",
+        marker_color=OKABE_ITO[0],
+        width=bin_width * 0.9,
+        hovertemplate="<b>Line A</b><br>Weight: %{x:.1f}g<br>Count: %{y}<extra></extra>",
+    )
+)
 
-fig.add_trace(go.Bar(x=bin_centers, y=hist_a, name="Line A", marker_color=colors[0], width=bin_width * 0.9))
+fig.add_trace(
+    go.Bar(
+        x=bin_centers,
+        y=hist_b,
+        name="Line B",
+        marker_color=OKABE_ITO[1],
+        width=bin_width * 0.9,
+        hovertemplate="<b>Line B</b><br>Weight: %{x:.1f}g<br>Count: %{y}<extra></extra>",
+    )
+)
 
-fig.add_trace(go.Bar(x=bin_centers, y=hist_b, name="Line B", marker_color=colors[1], width=bin_width * 0.9))
+fig.add_trace(
+    go.Bar(
+        x=bin_centers,
+        y=hist_c,
+        name="Line C",
+        marker_color=OKABE_ITO[2],
+        width=bin_width * 0.9,
+        hovertemplate="<b>Line C</b><br>Weight: %{x:.1f}g<br>Count: %{y}<extra></extra>",
+    )
+)
 
-fig.add_trace(go.Bar(x=bin_centers, y=hist_c, name="Line C", marker_color=colors[2], width=bin_width * 0.9))
-
-# Layout
+# Layout with theme-adaptive styling
+# noqa: C408 - dict() is idiomatic for Plotly configuration
 fig.update_layout(
-    title=dict(text="histogram-stacked · plotly · pyplots.ai", font=dict(size=28), x=0.5, xanchor="center"),
+    title=dict(text="histogram-stacked · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Product Weight (g)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(128, 128, 128, 0.2)",
-        gridwidth=1,
+        title=dict(text="Product Weight (g)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Frequency", font=dict(size=22)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(128, 128, 128, 0.2)",
-        gridwidth=1,
+        title=dict(text="Frequency", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     barmode="stack",
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     legend=dict(
-        font=dict(size=18),
+        font=dict(size=16, color=INK_SOFT),
         x=0.98,
         y=0.98,
         xanchor="right",
         yanchor="top",
-        bgcolor="rgba(255, 255, 255, 0.8)",
-        bordercolor="rgba(128, 128, 128, 0.3)",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
     margin=dict(l=80, r=40, t=80, b=80),
-)
+)  # noqa: C408
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
