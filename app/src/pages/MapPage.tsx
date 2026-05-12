@@ -825,13 +825,17 @@ export function MapPage() {
               boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
             }}>
               {searchMatches.length === 0 ? (
-                <Box sx={{
-                  px: 1.25, py: 0.75,
-                  fontSize: fontSize.xs,
-                  color: 'var(--ink-soft)',
-                  fontStyle: 'italic',
-                }}>
-                  no matches
+                <Box
+                  aria-label="No matches"
+                  sx={{
+                    px: 1.25, py: 0.75,
+                    fontSize: fontSize.xs,
+                    color: 'var(--ink-soft)',
+                    fontFamily: typography.mono,
+                    '& .subj': { opacity: 0.7 },
+                  }}
+                >
+                  <span className="subj">results</span>.empty()
                 </Box>
               ) : (
                 searchMatches.map((s, i) => (

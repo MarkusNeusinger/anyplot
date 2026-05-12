@@ -91,18 +91,20 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
         component={RouterLink}
         to="/about"
         onClick={trackInternal('about')}
+        aria-label="About anyplot"
         sx={linkSx}
       >
-        about
+        .about()
       </Link>
       <span>·</span>
       <Link
         component={RouterLink}
         to="/legal"
         onClick={trackInternal('legal')}
+        aria-label="Legal notice and privacy"
         sx={linkSx}
       >
-        legal
+        .legal()
       </Link>
     </Box>
   );
