@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:22:59Z'
-updated: '2026-05-12T11:07:11Z'
+updated: '2026-05-12T11:14:51Z'
 generated_by: claude-haiku
 workflow_run: 25730098740
 issue: 2647
@@ -12,33 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes explicitly set and readable in both themes'
-  - 'Perfect spec compliance: correct 100% stacked area chart with proper data normalization'
-  - 'Excellent theme adaptation: both light and dark renders are equally readable
-    with correct chrome colors'
-  - Clean, deterministic code with proper seed and no unused imports
-  - Realistic, neutral data showing renewable energy market share evolution
-  - Proper Okabe-Ito palette usage with brand green (#009E73) for first series
+  - Perfect theme adaptation—both light and dark renders are flawless with correct
+    palette compliance
+  - Excellent text legibility across all sizes and both themes with no overlaps
+  - Proper 100% normalization and data mapping with clear visual hierarchy through
+    stacking order
+  - Real-world relevant dataset (renewable energy market share) showing clear trends
+    over time
+  - Clean code structure with reproducible synthetic data and correct seaborn theme
+    configuration
   weaknesses:
-  - 'Design Excellence: generic styling with default seaborn aesthetic - could benefit
-    from custom visual hierarchy or emphasis'
-  - 'Library Mastery: uses fill_between() manual stacking approach rather than leveraging
-    seaborn-specific features - could explore distinctive seaborn techniques'
+  - Design Excellence could be elevated with more sophisticated styling choices or
+    distinctive visual enhancements beyond library defaults
+  - Library Mastery limited to correct idiomatic usage—seaborn lacks native stacked-percent
+    support, so manual stacking is necessary
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), professional and clean appearance
-      Chrome: Title "area-stacked-percent · seaborn · anyplot.ai" is dark and clearly visible at fontsize=24. X-axis label "Year" and Y-axis label "Share (%)" are well-sized (20pt) and readable. Tick labels (2015-2024 on x-axis, 0-100 on y-axis) are at 16pt and fully legible. Legend labels (Solar, Wind, Hydro, Other) are visible and properly positioned in upper left.
-      Data: Stacked areas show: Solar (brand green #009E73) at top, Wind (vermillion #D55E00), Hydro (blue #0072B2), Other (reddish purple #CC79A7) at bottom. All colors are vibrant and distinct. The composition trend is clear: Solar increasing from ~10% to 45%, Wind steady ~20-35%, Hydro declining from 50% to 18%, Other decreasing from 20% to 2%. Y-axis grid (alpha=0.15) is subtle but visible.
-      Legibility verdict: PASS - All text is highly readable against the warm off-white background
+      Background: Warm off-white (#FAF8F1) — perfect theme color, not pure white
+      Chrome: Title "area-stacked-percent · seaborn · anyplot.ai" clearly visible in dark text (INK color);
+              X-axis label "Year" and Y-axis label "Share (%)" at fontsize 20, fully readable;
+              Tick labels at fontsize 16, all readable with INK_SOFT color;
+              Legend in upper left with clear labels (Solar, Wind, Hydro, Other)
+      Data: Four stacked areas perfectly normalized to 100%;
+            Solar (#009E73) at top, Wind (#D55E00), Hydro (#0072B2), Other (#CC79A7) at bottom;
+            Color progression is smooth and distinct;
+            All areas are clearly visible and distinguishable
+      Grid: Subtle Y-axis grid with low alpha (0.15) provides reference without competing with data
+      Legibility verdict: PASS — all text is readable, no overlaps, excellent contrast against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with light theme inverse
-      Chrome: Title is light-colored (INK token) and clearly visible against dark background. Axis labels and tick labels are all light-colored, fully readable. Legend frame is visible with proper contrast. No dark-on-dark failures detected.
-      Data: Stacked area colors are IDENTICAL to light render (Solar #009E73, Wind #D55E00, Hydro #0072B2, Other #CC79A7), confirming proper theme implementation where only chrome adapts, not data colors. All areas are clearly distinguishable and the composition trends are equally visible.
-      Legibility verdict: PASS - All text and data elements are highly readable against the dark background; theme-adaptive chrome works perfectly
+      Background: Warm near-black (#1A1A17) — perfect theme color, not pure black
+      Chrome: Title remains visible in light text (INK color #F0EFE8);
+              Axis labels and tick labels all visible in appropriate light INK/INK_SOFT colors;
+              No "dark-on-dark" failures — all chrome text is light-colored on dark background;
+              Legend frame properly styled with theme-adaptive colors
+      Data: All four data colors are IDENTICAL to light render:
+            Solar (#009E73), Wind (#D55E00), Hydro (#0072B2), Other (#CC79A7);
+            Areas remain clearly visible and distinct;
+            Brand green (#009E73) reads well on dark background
+      Grid: Subtle grid maintains visibility without harshness
+      Legibility verdict: PASS — all text is readable against dark background, no dark-on-dark failures,
+                         complete color consistency with light render
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,48 +66,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+        comment: Title (24pt), labels (20pt), ticks (16pt) all explicitly set and
           perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all fully readable
+        comment: All text fully readable with no overlaps or collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four stacked areas clearly visible with opacity 0.85, distinct colors
+        comment: Four areas properly sized and distinct with appropriate alpha=0.85
+          blending
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with good contrast
+        comment: Okabe-Ito palette is colorblind-safe; good contrast throughout
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 canvas (4800×2700px), plot fills appropriate space with
-          balanced margins
+        comment: Plot fills 60-70% of canvas with balanced margins; legend well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, axis labels descriptive with units (Share %)
+        comment: Y-axis label includes units (%); X-axis descriptive; title format
+          correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, multi-series follows Okabe-Ito order, backgrounds
-          are correct (#FAF8F1 light, #1A1A17 dark), both renders theme-correct'
+        comment: 'Perfect Okabe-Ito compliance; backgrounds are #FAF8F1 (light) and
+          #1A1A17 (dark); data colors identical in both renders; chrome properly theme-adapted'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -98,22 +116,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults, professional but not exceptional;
-          lacks custom palette or intentional hierarchy
+        comment: Well-configured library default; professional but not exceptional;
+          could benefit from more distinctive visual enhancements
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Top/right spines removed, y-axis grid present, some refinement visible
-          but minimal customization
+        passed: true
+        comment: Top/right spines removed; subtle grid; clean whitespace; good refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed clearly but no explicit visual emphasis or focal point
-          to guide viewer through the story
+        passed: true
+        comment: Excellent data choice (renewable energy) with clear narrative; visual
+          hierarchy created through stacking order and color contrast
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area chart with normalized percentages
+        comment: Correct 100% stacked area chart with proper normalization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: time axis, categories, values normalized
-          to 100%'
+        comment: 'All spec features present: time variable, categories, value normalization,
+          proportional changes'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (Year) and Y-axis (Share %) correctly assigned, all data visible
+        comment: 'X: Year (continuous); Y: Share (%) (normalized); all data visible;
+          axes show complete range'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data categories
+        comment: Title format correct; legend labels match data categories; all properly
+          formatted
     data_quality:
       score: 15
       max: 15
@@ -152,21 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 distinct trends (Solar increasing, Wind stable,
-          Hydro declining, Other declining)'
+        comment: 'Shows all aspects: multiple categories, growth trends (Solar), decline
+          (Hydro/Other), relative proportion changes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real renewable energy scenario, plausible proportions matching global
-          trends, neutral topic
+        comment: Real-world renewable energy scenario; neutral topic; comprehensible
+          labels; plausible values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages 0-100% with correct normalization, factually sound proportions
+        comment: Factually plausible proportions; solar growth trajectory realistic;
+          values sum to 100%; no impossible data
     code_quality:
       score: 10
       max: 10
@@ -176,31 +196,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no unnecessary functions'
+        comment: 'Linear flow: imports → tokens → palette → data → plot → save; no
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, deterministic data
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, matplotlib, numpy, pandas, seaborn)
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with appropriate complexity, no fake functionality
+        comment: Clean, straightforward code; appropriate complexity; no fake UI or
+          over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, correct API usage
+        comment: Saves as plot-{THEME}.png with current API; no deprecated functions
     library_mastery:
       score: 4
       max: 10
@@ -209,23 +231,24 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Correct sns.set_theme() usage, but manual fill_between stacking doesn't
-          leverage seaborn-specific features
+        passed: true
+        comment: Correct use of seaborn theming (sns.set_theme, rc parameters); matplotlib's
+          fill_between is appropriate since seaborn lacks native stacked-percent
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage - could apply to matplotlib directly without seaborn-specific
-          techniques
+        comment: Generic usage—manual stacking could be replicated in other libraries;
+          no distinctive seaborn features leveraged (seaborn limitation for this chart
+          type)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
