@@ -1,171 +1,167 @@
 library: letsplot
+language: python
 specification_id: polar-line
 created: '2025-12-30T16:34:34Z'
-updated: '2025-12-30T16:44:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601061174
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-line/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-line/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-05-12T23:08:04Z'
+generated_by: claude-haiku
+workflow_run: 25766900304
+issue: 2692
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-dark.html
+quality_score: 75
 review:
   strengths:
-  - Excellent polar coordinate implementation using manual Cartesian transformation
-    when native coord_polar is unavailable
-  - Clean visual design with appropriate colors, grid lines, and month labels
-  - Good use of multiple series to demonstrate comparison capability
-  - Realistic temperature data with clear seasonal patterns
-  - Proper closed-loop polar lines connecting first and last points
-  - Well-balanced layout with legend positioned cleanly
+  - Polar coordinate visualization is mathematically correct and well-executed
+  - Grid structure (concentric circles + radial lines) is clear and appropriate
+  - Month labels positioned effectively around the circle
+  - Data shows realistic seasonal temperature patterns
+  - Both light and dark renders are legible with no contrast failures
+  - Straightforward, reproducible code with proper seeding
   weaknesses:
-  - Missing temperature scale labels (no indication of what the concentric circles
-    represent in °C)
-  - 'Minor: LetsPlot.setup_html() call is unnecessary for PNG-only output'
-  image_description: The plot displays a polar line chart showing monthly average
-    temperature patterns for two cities (City A and City B) throughout the year. The
-    visualization uses a circular layout with month labels (Jan-Dec) arranged clockwise
-    around the perimeter starting from January on the right. Three concentric gray
-    grid circles indicate temperature magnitude from the center outward, with 12 radial
-    lines marking each month. City A is shown in dark blue (#306998) and City B in
-    golden yellow (#FFD43B). Both series form closed polygons connecting temperature
-    values month-by-month, clearly showing the seasonal pattern with peaks in summer
-    months (Jun-Aug) and troughs in winter (Dec-Feb). City B consistently shows higher
-    temperatures than City A. The title "polar-line · letsplot · pyplots.ai" appears
-    at the top. A legend labeled "Location" on the right identifies the two city series.
-    The plot uses a void theme with a clean white background.
+  - 'First series color is #306998 instead of mandatory #009E73 (Okabe-Ito brand green)'
+  - Output file naming uses plot.png instead of plot-{THEME}.png, breaking workflow
+  - 'No theme-adaptive implementation: hardcodes grid (#CCCCCC) and labels (#333333)'
+  - 'Second series color #FFD43B is position 7 in Okabe-Ito, violates ''never use
+    for thin lines'' rule'
+  - Grid colors and labels should use INK_SOFT token for proper dark theme adaptation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "polar-line · letsplot · anyplot.ai" clearly readable; month labels (Jan-Dec) positioned around outer edge, fully legible; legend on right with "Location" title and series names
+      Data: Two lines visible - one bluish, one orange; grid circles (3 levels) and 12 radial lines (every 30°) in subtle gray; both data lines clearly distinguishable with good line weight
+      Legibility verdict: PASS - all text readable against light background, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and month labels rendered in light text, all readable against dark background; legend elements visible; no dark-on-dark failures detected
+      Data: Same two lines with identical colors as light render (only chrome flips); grid structure maintained; data colors remain visually distinct
+      Legibility verdict: PASS - no legibility issues, proper light text on dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and month labels are clearly readable; legend text is appropriately
-          sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; month labels well-positioned around
-          perimeter
+        comment: All text readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Month labels well-positioned, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines and points are clearly visible; line width and point sizes
-          appropriate for data density
+        comment: Grid circles, radial lines, points, and lines all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space; plot centered with balanced margins; legend
-          positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 0
         max: 2
         passed: false
-        comment: No axis labels for temperature values (no indication of units like
-          °C)
-      - id: VQ-07
-        name: Grid & Legend
+        comment: 'Colors #306998 and #FFD43B lack accessibility consideration'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, appropriate whitespace, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Grid circles and radial lines are subtle (alpha 0.6); legend well-placed
+        comment: Title descriptive, month labels clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Critical fail: first series #306998 not #009E73; second series #FFD43B
+          violates thin-line rule'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic hardcoded colors, no design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Uses theme_void() but lacks custom refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Shows seasonality but no visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar line plot with lines connecting points around circular
-          axis
+        comment: Correct polar line plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta (angle) represents months, radius represents temperature magnitude
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Multiple series with different colors, closed loop, concentric grid
-          circles, radial lines
-      - id: SC-04
-        name: Data Range
+        score: 2
+        max: 4
+        passed: false
+        comment: Features present but color palette violates spec requirement
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within the grid
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Theta and radius mapping correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies City A and City B
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "polar-line · letsplot · pyplots.ai"'
+        comment: Title format and legend labels correct
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series comparison, cyclical seasonal pattern, clear
-          variation across months
+        comment: Full 12-month cycle demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Temperature comparison between two cities is a neutral, real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (2-30°C) are realistic for temperate climate cities
+        comment: Realistic and neutral temperature data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible temperature range for domain
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -173,43 +169,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Simple, direct implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42), though data is mostly deterministic
+        comment: Uses random seed for determinism
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Several unused imports: coord_fixed is used, but LetsPlot.setup_html()
-          is for HTML output only (not needed for PNG)'
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
         passed: true
-        comment: Uses current lets-plot API
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, straightforward logic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png but ggsave path parameter usage is unconventional
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png instead of plot-{THEME}.png
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Properly uses ggplot grammar, geom_path, geom_point, geom_text, scale_color_manual,
-          theme_void. However, the manual polar coordinate transformation is a workaround
-          since lets-plot lacks native coord_polar(). This is acceptable but not showcasing
-          lets-plot's strengths.
-  verdict: APPROVED
+        comment: Correct ggplot2-style API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses coord_fixed() and HTML export; moderate library exploitation
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
