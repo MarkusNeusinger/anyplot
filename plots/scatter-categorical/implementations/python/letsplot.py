@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-05-12
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 86/100 | Created: 2026-05-12
 """
 
 import os
