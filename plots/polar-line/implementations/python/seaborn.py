@@ -1,65 +1,103 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-line: Polar Line Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-05-12
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
-# Set seaborn style and context for consistent styling
-sns.set_theme(style="whitegrid", context="talk", font_scale=1.2)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Hourly temperature patterns for two seasons (cyclical data)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Configure seaborn theme with theme-adaptive colors
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data - Wind speeds by compass direction (8 directions, two wind patterns)
 np.random.seed(42)
-hours = np.linspace(0, 2 * np.pi, 24, endpoint=False)  # 24 hours in radians
+angles = np.linspace(0, 2 * np.pi, 8, endpoint=False)
 
-# Summer pattern: warmer during day, cooler at night
-summer_temps = 25 + 8 * np.sin(hours - np.pi / 2) + np.random.randn(24) * 0.5
-# Winter pattern: cooler overall, less variation
-winter_temps = 8 + 5 * np.sin(hours - np.pi / 2) + np.random.randn(24) * 0.5
+# Pattern 1: Prevailing winds (stronger from one direction)
+prevailing = 12 + 6 * np.sin(angles) + np.random.randn(8) * 0.3
 
-# Close the loop for continuous line
-hours_closed = np.append(hours, hours[0])
-summer_closed = np.append(summer_temps, summer_temps[0])
-winter_closed = np.append(winter_temps, winter_temps[0])
+# Pattern 2: Secondary wind pattern (different characteristic)
+secondary = 8 + 4 * np.sin(angles + np.pi / 2) + np.random.randn(8) * 0.3
 
-# Get seaborn color palette
-palette = sns.color_palette("colorblind")
-color_summer = palette[1]  # Orange
-color_winter = palette[0]  # Blue
+# Close the loop for continuous lines
+angles_closed = np.append(angles, angles[0])
+prevailing_closed = np.append(prevailing, prevailing[0])
+secondary_closed = np.append(secondary, secondary[0])
 
 # Create polar plot (square format for circular plot)
-fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"projection": "polar"})
+fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"projection": "polar"}, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot lines with seaborn-style aesthetics
+# Plot lines
 ax.plot(
-    hours_closed, summer_closed, linewidth=3.5, color=color_summer, label="Summer", marker="o", markersize=10, alpha=0.9
+    angles_closed,
+    prevailing_closed,
+    linewidth=3.5,
+    color=OKABE_ITO[0],
+    label="Prevailing Winds",
+    marker="o",
+    markersize=12,
+    alpha=0.9,
 )
 ax.plot(
-    hours_closed, winter_closed, linewidth=3.5, color=color_winter, label="Winter", marker="o", markersize=10, alpha=0.9
+    angles_closed,
+    secondary_closed,
+    linewidth=3.5,
+    color=OKABE_ITO[1],
+    label="Secondary Pattern",
+    marker="s",
+    markersize=10,
+    alpha=0.9,
 )
 
-# Configure theta axis (hours of day)
-hour_labels = [f"{h}:00" for h in range(0, 24, 3)]
-ax.set_xticks(np.linspace(0, 2 * np.pi, 8, endpoint=False))
-ax.set_xticklabels(hour_labels, fontsize=18)
+# Configure theta axis (compass directions)
+directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+ax.set_xticks(angles)
+ax.set_xticklabels(directions, fontsize=18, color=INK_SOFT)
 
-# Configure radial axis (temperature)
-ax.set_ylim(0, 40)
-ax.set_yticks([10, 20, 30, 40])
-ax.set_yticklabels(["10°C", "20°C", "30°C", "40°C"], fontsize=16)
+# Configure radial axis (wind speed in m/s)
+ax.set_ylim(0, 20)
+ax.set_yticks([5, 10, 15, 20])
+ax.set_yticklabels(["5", "10", "15", "20"], fontsize=16, color=INK_SOFT)
 
 # Title and legend
-ax.set_title("Hourly Temperature Pattern · polar-line · seaborn · pyplots.ai", fontsize=24, pad=30, fontweight="bold")
+ax.set_title(
+    "Wind Speed by Direction · polar-line · seaborn · anyplot.ai", fontsize=24, pad=30, fontweight="medium", color=INK
+)
 
-# Legend positioned outside the plot
-ax.legend(loc="upper right", bbox_to_anchor=(1.15, 1.05), fontsize=18, frameon=True, fancybox=True, shadow=True)
+ax.legend(loc="upper right", bbox_to_anchor=(1.15, 1.05), fontsize=18, frameon=True)
 
-# Grid styling (seaborn whitegrid provides good defaults)
-ax.grid(True, alpha=0.4, linestyle="-")
+# Grid styling
+ax.grid(True, alpha=0.15, linestyle="-", linewidth=0.8)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
