@@ -1,161 +1,168 @@
 library: plotnine
+language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:31:06Z'
-updated: '2025-12-30T09:39:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593349974
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/plotnine/plot.png
-preview_html: null
+updated: '2026-05-12T01:16:18Z'
+generated_by: claude-haiku
+workflow_run: 25706789224
+issue: 2548
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
 review:
   strengths:
-  - Excellent data design with realistic service response time scenario showing varied
-    distributions and outliers
-  - Services sorted by median response time as recommended in the spec for easier
+  - Perfect theme-adaptive rendering with consistent data colors across light/dark
+    and flawless text legibility in both renders
+  - Data sorted by median response time creates effective visual narrative for service
     comparison
-  - Clean KISS code structure following plotnine grammar of graphics idiom
-  - Good visual hierarchy with appropriately sized text elements
-  - Python-themed color palette adds personality while remaining readable
+  - 'All quality criteria met: correct chart type, all statistical elements present,
+    proper Okabe-Ito palette, theme-correct chrome'
+  - Clean, Pythonic code with proper random seed and deterministic output
+  - Professional execution with thoughtful design choices (margin sizing, grid opacity,
+    box/outlier styling)
   weaknesses:
-  - 'Minor code issue: panel_grid_major_y uses element_text() instead of element_line()
-    which is incorrect'
-  - Y-axis label is empty string instead of descriptive label like Service Type
-  - Could use more distinctive plotnine features like faceting or statistical transformations
-  image_description: 'The plot displays a horizontal box plot showing response times
-    (ms) for 5 service types. Services are arranged vertically on the y-axis (sorted
-    by median): Database Query Handler (bottom, blue), Authentication Service (yellow),
-    Email Notification (light blue), Payment Gateway (gray), and File Storage API
-    (top, light yellow). The x-axis shows Response Time (ms) ranging from 0 to 400.
-    Each box shows the IQR with median line, whiskers extend to 1.5*IQR, and outliers
-    are visible as dots for Database Query Handler (around 220-280ms) and Payment
-    Gateway (around 350-380ms). The title "box-horizontal · plotnine · pyplots.ai"
-    is displayed in bold at the top. The background uses a minimal theme with subtle
-    grid lines.'
+  - Design could be elevated beyond well-configured defaults; could explore more distinctive
+    plotnine patterns
+  - Visual refinement at 4/6; could push grid styling or whitespace further for publication-ready
+    polish
+  - Data storytelling relies primarily on sorting; could add subtle visual emphasis
+    or visual hierarchy for deeper insight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches theme specification perfectly
+      Chrome: Title "box-horizontal · plotnine · anyplot.ai" in dark gray; axis labels "Service Type" (Y) and "Response Time (ms)" (X) in dark gray; tick labels clearly visible in darker secondary color
+      Data: 5 horizontal box plots with colors following Okabe-Ito order - Database Query Handler (#009E73 green), Authentication Service (#D55E00 orange), Email Notification (#0072B2 blue), Payment Gateway (#CC79A7 reddish-purple), File Storage API (#E69F00 yellow-orange). All boxes show quartiles and median lines; whiskers visible; outliers plotted as small dots
+      Legibility verdict: PASS - All text elements are dark and clearly readable on light background; grid lines are subtle at 10% opacity; data elements are distinctly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches theme specification perfectly
+      Chrome: Title in light gray (#F0EFE8); axis labels in light gray; tick labels in secondary light color (#B8B7B0); all clearly readable on dark background
+      Data: Identical colors to light render - all five box plots maintain their Okabe-Ito colors (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00). Boxes, whiskers, and outliers all rendered identically
+      Legibility verdict: PASS - All text elements are light-colored and clearly readable on dark background; no dark-on-dark failures; grid lines remain visible at 10% opacity; data colors maintain perfect fidelity from light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and bold (~24pt), axis labels are clearly readable
-          (~20pt), tick labels are appropriately sized (~16pt)
+        comment: All fonts explicitly sized; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; service names are well-spaced on the y-axis
+        comment: All labels well-spaced; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots are appropriately sized, outliers are visible with good
-          alpha
+        comment: Boxes and outliers optimally sized and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Python-themed palette is distinguishable but could have better contrast
-          between some colors
+        comment: Okabe-Ito palette, excellent contrast, CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas, plot fills appropriate area with balanced margins
+        comment: Plot fills ~60% of canvas with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has units "Response Time (ms)" but Y-axis is empty (no label)
+        comment: Descriptive with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (good), but there's an issue with panel_grid_major_y
-          using element_text instead of element_line
+        comment: 'First series #009E73; multi-series Okabe-Ito; backgrounds theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Proper Okabe-Ito palette; services sorted by median; professional
+          execution
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean layout, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorting by median creates narrative; outliers highlight variability
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal box plot using coord_flip()
+        comment: Correct horizontal box plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, numeric values on X-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All box plot elements present: median, quartiles, whiskers, outliers'
-      - id: SC-04
-        name: Data Range
+        comment: All statistical elements present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly hidden since colors map to y-axis categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "box-horizontal · plotnine · pyplots.ai"'
+        comment: Correct title format; legend appropriately omitted
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions, varying spreads, and outliers for
-          multiple services
+        comment: Shows varied distributions with different spreads and outlier patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Service response times is a realistic, neutral tech scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times 50-400ms are realistic for API services
+        comment: Real, neutral scenario; professional context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Response time values logically sound and realistic
     code_quality:
       score: 10
       max: 10
@@ -165,40 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: Clean Imports → Data → Plot → Save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, Pythonic; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic ggplot grammar but no distinctive plotnine features beyond
-          standard geom_boxplot + coord_flip
+        passed: true
+        comment: Expert ggplot + geoms grammar; proper theme layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine theme system effectively; could leverage more capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
