@@ -1,12 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 line-markers: Line Plot with Markers
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-30
+Library: plotly | Python 3.13
+Quality: 94 | Updated: 2026-05-12
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"
+COLOR_2 = "#D55E00"
+COLOR_3 = "#0072B2"
 
 # Data - experimental temperature readings over time
 np.random.seed(42)
@@ -27,8 +42,9 @@ fig.add_trace(
         y=sensor_a,
         mode="lines+markers",
         name="Sensor A",
-        line=dict(color="#306998", width=4),
-        marker=dict(size=16, symbol="circle", color="#306998", line=dict(width=2, color="white")),
+        line=dict(color=BRAND, width=4),
+        marker=dict(size=16, symbol="circle", color=BRAND, line=dict(width=2, color=PAGE_BG)),
+        hovertemplate="<b>Sensor A</b><br>Time: %{x}h<br>Temperature: %{y:.1f}°C<extra></extra>",
     )
 )
 
@@ -38,8 +54,9 @@ fig.add_trace(
         y=sensor_b,
         mode="lines+markers",
         name="Sensor B",
-        line=dict(color="#FFD43B", width=4),
-        marker=dict(size=16, symbol="square", color="#FFD43B", line=dict(width=2, color="#333333")),
+        line=dict(color=COLOR_2, width=4),
+        marker=dict(size=16, symbol="square", color=COLOR_2, line=dict(width=2, color=PAGE_BG)),
+        hovertemplate="<b>Sensor B</b><br>Time: %{x}h<br>Temperature: %{y:.1f}°C<extra></extra>",
     )
 )
 
@@ -49,44 +66,50 @@ fig.add_trace(
         y=sensor_c,
         mode="lines+markers",
         name="Sensor C",
-        line=dict(color="#E55934", width=4),
-        marker=dict(size=16, symbol="diamond", color="#E55934", line=dict(width=2, color="white")),
+        line=dict(color=COLOR_3, width=4),
+        marker=dict(size=16, symbol="diamond", color=COLOR_3, line=dict(width=2, color=PAGE_BG)),
+        hovertemplate="<b>Sensor C</b><br>Time: %{x}h<br>Temperature: %{y:.1f}°C<extra></extra>",
     )
 )
 
-# Layout
+# Layout with theme-adaptive styling
 fig.update_layout(
-    title=dict(text="line-markers · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
+    title=dict(text="line-markers · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Time (hours)", font=dict(size=24)),
-        tickfont=dict(size=20),
+        title=dict(text="Time (hours)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
         showgrid=True,
         gridwidth=1,
-        gridcolor="rgba(0,0,0,0.1)",
+        gridcolor=GRID,
         dtick=2,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Temperature (°C)", font=dict(size=24)),
-        tickfont=dict(size=20),
+        title=dict(text="Temperature (°C)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
         showgrid=True,
         gridwidth=1,
-        gridcolor="rgba(0,0,0,0.1)",
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     legend=dict(
-        font=dict(size=20),
-        x=0.02,
+        font=dict(size=16, color=INK_SOFT),
+        x=1.02,
         y=0.98,
         xanchor="left",
         yanchor="top",
-        bgcolor="rgba(255,255,255,0.8)",
-        bordercolor="rgba(0,0,0,0.2)",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
-    template="plotly_white",
-    margin=dict(l=100, r=60, t=100, b=80),
-    plot_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    margin=dict(l=100, r=160, t=100, b=80),
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
