@@ -1,169 +1,178 @@
 library: bokeh
+language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:22:54Z'
-updated: '2025-12-30T11:34:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595335643
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - grid-styling
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-12T09:24:29Z'
+generated_by: claude-haiku
+workflow_run: 25725147569
+issue: 2645
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/bokeh/plot-dark.html
+quality_score: 96
 review:
   strengths:
-  - Excellent implementation of step histogram using manual coordinate calculation
-    for the step function appearance
-  - Clean comparison of two distributions without visual overlap issues (outline-only
-    approach)
-  - Proper use of colorblind-safe color palette (blue and yellow)
-  - Correct title format and descriptive axis labels with units
-  - Good font sizing for 4800x2700 canvas
+  - Perfect spec compliance — all required features (step lines, overlay-capable,
+    outline-only format) correctly implemented
+  - 'Excellent visual quality in both themes — text readable in both light and dark,
+    colors identical, backgrounds correct (#FAF8F1 and #1A1A17)'
+  - Idiomatic Bokeh usage with native interactive features (HoverTool with temperature/frequency
+    tooltips) that add genuine value
+  - Clean, reproducible code with proper theme tokens and Okabe-Ito palette positioning
+  - Effective data storytelling — overlaid step histograms clearly show distribution
+    comparison with realistic temperature sensor context
   weaknesses:
-  - Legend appears small relative to other text elements despite having label_text_font_size
-    set
-  - Could demonstrate more variety in the distributions (different spreads or shapes)
-  image_description: The plot shows two step histograms (outline only, no fill) comparing
-    temperature distributions from two sensors. The blue line represents "Sensor A"
-    with a distribution centered around 50°C, and the yellow/gold line represents
-    "Sensor B" centered around 65°C. The x-axis shows "Temperature (°C)" ranging from
-    approximately 15 to 100, and the y-axis shows "Frequency" from 0 to about 56.
-    The title reads "histogram-stepwise · bokeh · pyplots.ai" in the top-left. A legend
-    in the top-right corner identifies the two sensors. The background is white with
-    subtle dashed grid lines. Both distributions show the characteristic step function
-    appearance with horizontal segments at count levels connected by vertical segments.
+  - Design is utilitarian/standard — no extra visual refinement beyond spec requirements
+    (but not needed for this plot type)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly matches light theme specification.
+      Chrome: Title "histogram-stepwise · bokeh · anyplot.ai" is dark (#1A1A17) and clearly readable. Axis labels ("Temperature (°C)", "Frequency") are dark and prominent. Tick labels are in INK_SOFT (#4A4A44) and perfectly legible. Grid lines are subtle (10% opacity) and don't compete with data.
+      Data: Two step histograms overlaid cleanly. Sensor A (first series) is #009E73 (Okabe-Ito position 1 — brand green), showing a normal distribution centered around 50°C with wider spread. Sensor B (position 2) is #D55E00 (vermillion), centered around 65°C with tighter spread. Lines are 4pt width with 0.85 alpha, making them clearly distinguishable. No fill, only outline step format as specified.
+      Legend: Top-right corner, background is #FFFDF6 (elevated surface), text is INK_SOFT, clearly readable.
+      Legibility verdict: PASS — all text elements are readable, high contrast, zero "light-on-light" issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly matches dark theme specification.
+      Chrome: Title is light (#F0EFE8) and clearly readable against the dark background. Axis labels are light and prominent. Tick labels are in INK_SOFT (#B8B7B0) and perfectly visible. Grid lines are subtle and appropriate.
+      Data: Identical colors to light render — Sensor A is #009E73 (green) and Sensor B is #D55E00 (orange). Both distributions are clearly visible with excellent contrast. The step histogram format is identical to light render, confirming only chrome has flipped per spec.
+      Legend: Top-right corner, background is #242420 (dark elevated surface), text is INK_SOFT (#B8B7B0), clearly readable.
+      Legibility verdict: PASS — all text elements are readable, no "dark-on-dark" failures, excellent contrast across both data and chrome elements.
+
+    Both renders PASS all legibility requirements. Data colors are identical between themes. Only chrome (background, text, grid) adapts appropriately.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All text explicitly sized and readable in both themes — title 28pt,
+          labels 22pt, ticks 18pt
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Two overlaid histograms with legend in top-right — no text collisions
+          or readability issues
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step lines are visible with good line width (5px), though the two
-          distributions do overlap in the middle region which is acceptable for comparison
+        comment: Lines 4pt width with 0.85 alpha — clearly visible over all densities
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though there is some unused space on the
-          right side of the plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Temperature (°C)" and "Frequency"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito positions 1–2 (#009E73, #D55E00) — CVD-safe, no red-green
+          sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape format appropriate — good proportions, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is positioned in top-right corner but appears quite small
-          relative to the canvas; the legend text is noticeably smaller than other
-          text elements in the plot
+        passed: true
+        comment: Title format correct, axis labels descriptive with units (°C)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓, backgrounds #FAF8F1/#1A1A17 ✓, both renders
+          theme-correct ✓'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Professional polish, correct palette, intentional hierarchy — fairly
+          standard for histogram type
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid subtle (10% alpha), generous whitespace, standard frame approach
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy, overlaid distributions guide eye effectively,
+          good focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step histogram with outline only, no fill
+        comment: Correct step histogram implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows continuous values, Y-axis shows frequency counts
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step lines with horizontal segments at count levels and vertical
-          connectors between bins
-      - id: SC-04
-        name: Data Range
+        comment: Step lines ✓, outline-only ✓, overlay-capable ✓, horizontal/vertical
+          segments ✓
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Temperature on X, frequency on Y — axes show all data, appropriate
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both distributions
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-stepwise · bokeh · pyplots.ai"'
+        comment: Title format correct, legend labels match (Sensor A/B)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two overlapping distributions for comparison as suggested in
-          spec, demonstrates the advantage of step histograms for comparing distributions;
-          minor deduction as distributions could show more variety (e.g., different
-          spreads)
+        comment: Two distributions with different spreads demonstrate plot type fully
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature sensor readings is a plausible real-world scenario
+        comment: Temperature sensor readings are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature values are reasonable for sensor readings, though 65°C
-          average for a sensor might be high for typical ambient conditions
+        comment: Temperature 15–100°C, frequency 0–70+ sensible for domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +180,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Straightforward script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy, bokeh, selenium, os/sys/pathlib/time for
+          script management'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code with native HoverTool interactivity (not fake
+          UI)
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also saves plot.html which is fine for bokeh
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current Bokeh API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic Bokeh line plotting and export features; could leverage
-          more Bokeh-specific features like hover tools or better interactivity in
-          the HTML output
+        passed: true
+        comment: Excellent Bokeh idioms — figure(), line(), HoverTool, theme-adaptive
+          tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Native HoverTool, interactive HTML, Bokeh toolbar — good use of library
+          strengths
+    score_caps_applied: []
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling: []
