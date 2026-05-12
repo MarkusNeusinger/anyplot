@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-categorical: Categorical Scatter Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-12
+Quality: 89/100 | Updated: 2026-05-12
 """
 
 import os
