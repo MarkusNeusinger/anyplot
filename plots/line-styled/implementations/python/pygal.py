@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-styled: Styled Line Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-12
+Quality: 83/100 | Updated: 2026-05-12
 """
 
 import os
