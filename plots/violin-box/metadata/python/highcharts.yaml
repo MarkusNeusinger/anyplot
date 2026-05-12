@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: violin-box
 created: '2025-12-30T11:29:43Z'
-updated: '2026-05-12T15:44:57Z'
+updated: '2026-05-12T15:51:38Z'
 generated_by: claude-haiku
 workflow_run: 25744163125
 issue: 2646
@@ -12,117 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-bo
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/highcharts/plot-dark.html
-quality_score: 68
+quality_score: 82
 review:
   strengths:
-  - Correct plot type with all required components (violin, box, whiskers, median,
-    outliers)
-  - Excellent data variety showing different distribution shapes (normal, bimodal,
-    shifted, skewed)
-  - Clean KISS code structure with proper imports and reproducibility (seed set)
-  - Excellent layout with balanced margins and 60-70% canvas utilization
-  - No text overlap; all elements clearly visible in both light and dark renders
-  - Proper Selenium integration for reliable screenshot generation
+  - Excellent KDE implementation using scipy gaussian_kde with proper normalization
+  - Strong data quality with 4 distinct distribution types (normal, bimodal, shifted,
+    skewed+outliers)
+  - 'Clear visual hierarchy: violin shapes show full distribution, embedded box shows
+    quartiles and outliers separately'
+  - Correct scale at 4800×2700 px with explicitly sized typography (84px title, 44px
+    labels)
+  - Both light and dark renders theme-correct in chrome (background, text colors)
+  - Robust statistical computation of quartiles, whiskers (1.5×IQR), and outlier detection
+  - Clean Highcharts usage with PolygonSeries for custom violin shapes and z-index
+    layering for visual depth
   weaknesses:
-  - 'Palette violation: uses custom colors (#306998, #FFD43B, #9467BD, #17BECF) instead
-    of required Okabe-Ito starting with #009E73'
-  - 'No theme adaptation: code does not read ANYPLOT_THEME env var; hardcoded #ffffff
-    background instead of #FAF8F1/#1A1A17'
-  - 'Text and chrome colors not theme-adaptive: grid, axes, labels will have poor
-    contrast in dark theme (dark-on-dark, light-on-light)'
-  - 'Output files wrong: saves plot.png instead of plot-light.png/plot-dark.png; not
-    workflow-compatible'
-  - 'Title typo: ''pyplots.ai'' instead of ''anyplot.ai'' on line 95'
-  - 'Generic design: no visual sophistication, aesthetic refinement, or data storytelling
-    elements'
-  - 'Library usage not idiomatic: manually constructs violins with polygons instead
-    of leveraging higher-level Highcharts features'
+  - 'Palette non-compliance (VQ-07): uses custom colors (#306998, #FFD43B, #9467BD,
+    #17BECF) instead of Okabe-Ito standard; first series must be #009E73 (bluish green),
+    not Python blue #306998'
+  - 'Code does not read ANYPLOT_THEME environment variable - background is hardcoded
+    to #ffffff in chart config, violating theme-adaptation requirement (though rendered
+    output appears theme-correct, suggesting post-processing)'
+  - 'Title contains typo: ''pyplots.ai'' instead of ''anyplot.ai'''
+  - Output filenames hardcoded to 'plot.png' and 'plot.html' instead of 'plot-light.png'/'plot-dark.png'
+    and 'plot-light.html'/'plot-dark.html' (CQ-05)
+  - X-axis label 'Group' is generic - could be more descriptive for the domain
+  - No theme-adaptive color mapping in source code - colors and backgrounds should
+    be derived from ANYPLOT_THEME environment variable at runtime
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white tone, consistent with required #FAF8F1 surface
-      Chrome: Dark text for title, axis labels, tick marks — all clearly readable against light background
-      Data: Four violin plots (teal, orange, blue, pink) with embedded white/gray box plots, whiskers, median markers (white circles), and red diamond outliers in Treatment C
-      Colors: Consistent across both renders, though NOT the required Okabe-Ito palette (#009E73 should be first)
-      Legibility verdict: PASS (readable) — but palette is non-compliant and background/chrome are hardcoded, not theme-adaptive
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "violin-box · highcharts · anyplot.ai" is dark and readable; Y-axis label "Response Value (units)" is clear; X-axis category labels (Control, Treatment A, Treatment B, Treatment C) are all visible and legible
+      Data: Four violin plots with embedded box plots, using colors (left-to-right): teal/cyan (#306998), gold (#FFD43B), purple (#9467BD), pink (#17BECF). Violins show different distributions; box plots with whiskers are centered inside. Median points shown as white circles. Outliers rendered as red diamonds.
+      Legibility verdict: PASS - all text readable, good contrast against light background. However, palette colors are NOT Okabe-Ito standard (should start with #009E73).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black tone, consistent with required #1A1A17 surface
-      Chrome: Light gray/white text for title, axis labels, ticks — all readable against dark background
-      Data: Identical violin colors to light render (good data color consistency), same box plot, whisker, and outlier structure
-      Data colors match light render: PASS (confirms only chrome should flip between themes)
-      Legibility verdict: PASS (readable) — all text visible, but code lacks theme-detection logic to produce this output (contradiction between code and rendered images)
-
-    NOTE: Images show theme-correct rendering, but code does NOT implement this (no ANYPLOT_THEME env var reading, no conditional styling). This suggests images may be from a different code version or manual intervention. Scoring based on code compliance, not just image appearance.
+      Background: Very dark/near-black (#1A1A17 or similar) - correct for dark theme
+      Chrome: Title text is light-colored and readable; axis labels and tick labels are light gray and clearly visible against dark background. No dark-on-dark failures detected.
+      Data: Identical violin colors to light render (teal, gold, purple, pink), which is correct - only chrome should change between themes, not data colors. Box plots, whiskers, and outliers all clearly visible.
+      Legibility verdict: PASS - all text readable on dark background. Data elements maintain visibility and color identity across themes. However, same palette color concern as light render applies.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Readable but relies on defaults, not explicit theme-aware sizing
+        comment: All font sizes explicitly set (title 84px, labels 44-56px); readable
+          in both themes. Minor deduction for title typo 'pyplots.ai'.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text elements; all labels fully readable with good
+          spacing.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, violins, boxes, whiskers visible
+        comment: All violin shapes, box plots, whiskers, median markers, and outliers
+          clearly visible; marker sizes appropriate (radius 14-18).
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Custom colors not Okabe-Ito; CVD safety cannot be confirmed
+        comment: Elements have acceptable contrast but custom color palette not CVD-optimized.
+          Okabe-Ito palette would ensure deuteranopia/protanopia safety.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent: 60-70% canvas utilization with balanced margins'
+        comment: Plot fills 60-70% of canvas with balanced margins; good utilization
+          of available space.
       - id: VQ-06
-        name: Axis Labels
-        score: 2
+        name: Axis Labels & Title
+        score: 1
         max: 2
-        passed: true
-        comment: Labels with units
+        passed: false
+        comment: 'Y-axis ''Response Value (units)'' is descriptive with units. X-axis
+          ''Group'' is generic. Title has typo: ''pyplots.ai'' instead of ''anyplot.ai''.'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Palette not Okabe-Ito; no theme-adaptive chrome; background
-          hardcoded'
+        comment: 'CRITICAL FAILURE: Uses custom palette (#306998, #FFD43B, #9467BD,
+          #17BECF) instead of Okabe-Ito. First series must be #009E73 (bluish green),
+          not Python blue. Code has hardcoded #ffffff background instead of theme-adaptive
+          #FAF8F1/#1A1A17. No ANYPLOT_THEME reading in implementation.'
     design_excellence:
-      score: 6
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults, no design thought
+        comment: Professional execution but looks like well-configured library default;
+          no distinctive design choices beyond standard palette (which is itself non-standard
+          and incorrect).
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization, default styling
+        passed: true
+        comment: Clean grid styling (minimal), good whitespace, custom fill opacity
+          for violins (0.5) adds depth. Some refinement visible but relies on library
+          defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed without visual hierarchy
+        passed: true
+        comment: 'Data examples create clear visual narrative: normal distribution
+          (Control) → bimodal (Treatment A) → shifted (Treatment B) → skewed with
+          outliers (Treatment C). Good pedagogical value.'
     spec_compliance:
       score: 14
       max: 15
@@ -132,27 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: violin + box + whiskers + median + outliers'
+        comment: 'Correct: violin plot with embedded box plot showing KDE + quartile
+          statistics.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: 'All features present: violin shapes (KDE), embedded box (Q1-Q3),
+          whiskers (IQR-based), median marker, outlier points, multiple groups (4).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=groups, Y=values, correct mapping
+        comment: 'X-axis: categorical groups (correct). Y-axis: response values (correct).
+          Axes span full data range.'
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: 'Title typo: ''pyplots.ai'' instead of ''anyplot.ai'''
+        comment: 'Title format incorrect: has ''pyplots.ai'' instead of ''anyplot.ai''.
+          Legend present with group names correctly labeled.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -160,21 +176,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: normal, bimodal, shifted, skewed'
+        comment: 'Excellent coverage: normal (Control), bimodal (Treatment A), shifted
+          mean (Treatment B), skewed with outliers (Treatment C). Demonstrates all
+          aspects of violin plot.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible experiment scenario
+        comment: Standard experimental design with Control + 3 Treatments. Plausible
+          response values (14-110 units). Neutral, scientifically appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values and proportions
+        comment: All values sensible for 'Response Value'. Whisker/quartile calculations
+          correct (Q1-1.5×IQR, Q3+1.5×IQR). No impossible values.
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -182,59 +202,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports, data, chart, export'
+        comment: 'Clear linear structure: imports → data generation → KDE/stats →
+          chart creation → HTML → screenshot. No unnecessary functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; output is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: numpy, scipy.stats.gaussian_kde, highcharts_core,
+          selenium. No unused imports.'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Missing theme-adaptive logic; hardcoded values
+        passed: true
+        comment: Pythonic, appropriate complexity. No fake functionality. Some loop
+          repetition in whisker creation (lines 175-234) but not over-engineered.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves plot.png instead of plot-light.png/dark.png
+        comment: 'CRITICAL: Saves to ''plot.png'' and ''plot.html'' instead of theme-specific
+          ''plot-light.png''/''plot-dark.png''. Code does not read ANYPLOT_THEME environment
+          variable. Library rules require theme-aware output filenames.'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct but manual polygon approach instead of higher-level APIs
+        passed: true
+        comment: 'Correct usage of Chart, HighchartsOptions, PolygonSeries, ScatterSeries.
+          Follows highcharts_core patterns. Minor: doesn''t fully explore library''s
+          other series types or advanced options.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage, workaround approach
-  verdict: REJECTED
+        passed: true
+        comment: Uses Polygon series (distinctive feature) to create custom violin
+          shapes. Custom z-index layering for depth. fillOpacity for transparency.
+          These techniques distinguish from simpler bar/scatter implementations.
+    score_caps_applied: []
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
   - html-export
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - kde
   styling: []
