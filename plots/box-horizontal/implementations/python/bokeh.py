@@ -1,7 +1,7 @@
 """ anyplot.ai
 box-horizontal: Horizontal Box Plot
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-12
+Quality: 91/100 | Updated: 2026-05-12
 """
 
 import sys
