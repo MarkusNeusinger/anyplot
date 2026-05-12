@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: line-markers
 created: '2025-12-30T10:38:15Z'
-updated: '2026-05-12T03:28:35Z'
+updated: '2026-05-12T03:34:01Z'
 generated_by: claude-haiku
 workflow_run: 25711320007
 issue: 2599
@@ -12,32 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mark
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Perfect theme-adaptive chrome implementation with full readability in both renders
-  - Thoughtful marker shape differentiation (circles, squares, diamonds) for series
-    clarity
-  - Correct Okabe-Ito palette with proper color order throughout
-  - Well-scaled typography for large canvas (28/22/18px hierarchy)
-  - Custom hover templates with temperature units
-  - Clean, idiomatic plotly code structure
+  - Excellent theme-adaptive implementation with proper color tokens in both light
+    and dark renders
+  - Clear visual differentiation through marker shapes (circle, square, diamond) and
+    Okabe-Ito colors
+  - Professional typography and layout with readable text at all scales
+  - Correct spec compliance with all required features implemented
+  - Clean, reproducible code with sensible random seed
   weaknesses:
-  - Minimal visual hierarchy—all series treated equally without emphasis or focal
-    point
-  - Design Excellence below median despite functional aesthetics
+  - Design Excellence could be enhanced with additional visual refinement or emphasis
+    techniques
+  - Limited use of distinctive plotly features beyond basic line+marker visualization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text. No readability issues.
-      Data: Three series with distinct colors—Sensor A green (#009E73), Sensor B orange (#D55E00), Sensor C blue (#0072B2). Markers (circles, squares, diamonds) are large (16px) with visible white borders. Lines are thick (4px). All 15 data points clearly distinguishable.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct for light theme
+      Chrome: Title "line-markers · plotly · anyplot.ai" clearly visible in dark text (INK color). Axis labels "Time (hours)" and "Temperature (°C)" are readable. Tick labels (0-14 on x-axis, 15-24 on y-axis) are visible in secondary text color (INK_SOFT). Legend positioned right with light background frame and dark text.
+      Data: Three series with Okabe-Ito colors: Sensor A (green #009E73, circles), Sensor B (orange #D55E00, squares), Sensor C (blue #0072B2, diamonds). Lines are thick and clear. Markers have white edges for definition against the light background.
+      Legibility verdict: PASS — All text is clearly readable against the light background with proper contrast.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in light text. No dark-on-dark failures.
-      Data: Colors identical to light render (green, orange, blue unchanged). Markers and lines equally visible against dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct for dark theme
+      Chrome: Title is now displayed in light text (INK color for dark theme #F0EFE8), clearly readable against dark background. Axis labels are in the same light INK color. Tick labels are in INK_SOFT (#B8B7B0 for dark theme). Legend background is darker (#242420). All text is light-colored with no dark-on-dark failures.
+      Data: Data colors are identical to the light render — Sensor A green, B orange, C blue. Marker edges adapt to background color, maintaining subtle definition. Lines and markers are equally visible as in the light render.
+      Legibility verdict: PASS — All text is clearly readable with light colors on dark background. No dark-on-dark failures. Brand green #009E73 remains visible and matches light render exactly.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,46 +48,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; proper font sizing for canvas
+        comment: All text clearly readable in both light and dark themes; font sizes
+          explicitly set and appropriate
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Excellent spacing; no overlapping elements; generous margins
+        comment: No overlapping elements; clean layout with generous margins
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 16px markers with visible borders; 4px lines; all points distinct
+        comment: Markers and lines clearly distinguishable; marker shapes provide
+          clear visual differentiation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; CVD-safe; good contrast
+        comment: Okabe-Ito palette is colorblind-safe; good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper proportions; 4800×2700px achieved; nothing cut off
+        comment: Well-proportioned layout; nothing cut off; generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title with spec-id/library/site; axis labels with units
+        comment: Descriptive labels with units; proper title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; backgrounds correct; both
-          renders theme-adapted'
+        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds correct;
+          both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -95,20 +97,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Marker shape differentiation shows design thought; professional but
-          not elaborate
+        comment: Professional polish with three-color palette; marker shapes provide
+          intentional visual hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid; legend styling with elevated background
+        comment: Subtle grid styling; generous margins; legend with frame; marker
+          edges add definition
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: true
-        comment: Clear data display but no visual hierarchy or emphasis
+        comment: Visual hierarchy through color and shape; three distinct sensor patterns
+          guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line-markers plot type
+        comment: Correct line plot with markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Lines, markers, distinct shapes, proportional sizes, filled with
-          borders
+        comment: Multiple series; different marker shapes; markers visible and proportional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time(0-14h), Y=temperature; all data shown correctly
+        comment: X-axis (time) and Y-axis (temperature) correctly mapped; all data
+          displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Correct title format; legend shows all series with accurate labels
     data_quality:
       score: 15
       max: 15
@@ -147,19 +151,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All plot-type aspects shown
+        comment: 'Demonstrates all line-marker aspects: multiple series, sparse points,
+          different styles'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature sensor readings plausible and neutral
+        comment: Temperature sensor readings are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Time (0-14h) and temperature (15-24°C) realistic
+        comment: Temperature (14-24°C) and time (0-14h) ranges are sensible
     code_quality:
       score: 10
       max: 10
@@ -169,54 +174,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward
+        comment: Straightforward code without unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly; all used
+        comment: Only necessary imports; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; idiomatic plotly
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly
+        comment: Correctly saves as plot-{THEME}.png and .html
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: go.Scatter with lines+markers; theme-adaptive chrome; high-level
-          API
+        comment: Uses plotly.graph_objects API idiomatically; proper Scatter mode
+          configuration
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom hover templates; adaptive marker borders; legend styling
+        comment: Uses hover templates and HTML export; could leverage more advanced
+          features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
