@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:23:41Z'
-updated: '2026-05-12T11:13:47Z'
+updated: '2026-05-12T11:20:59Z'
 generated_by: claude-haiku
 workflow_run: 25730484771
 issue: 2647
@@ -12,47 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - 'Perfect visual quality: All text explicitly sized (24pt title, 20pt labels, 16pt
-    ticks), readable in both light and dark themes, zero overlap, zero legibility
-    issues.'
-  - 'Flawless spec compliance: Correct 100% stacked area chart with accurate data
-    mapping, proper title format, and legend labels matching spec.'
-  - 'Excellent real-world data scenario: Device market share with plausible, dramatic
-    trends (Smartphones 50%→20%, Wearables 4%→48%) showing all plot type features.'
-  - 'Clean, reproducible code: KISS structure, deterministic data generation, no unnecessary
-    complexity.'
-  - 'Theme-adaptive perfection: Both renders pass all readability checks; data colors
-    identical across themes, chrome (backgrounds/text) adapts correctly without dark-on-dark
-    failures.'
+  - Excellent theme adaptation with perfect chrome color switching between light and
+    dark
+  - Perfect text legibility across both renders with explicit font sizing
+  - Correct 100% stacking implementation with percentage normalization
+  - Realistic, meaningful data showing real market trends (smartphone decline, wearables
+    rise)
+  - Clean, reproducible code with minimal complexity
+  - All spec features correctly implemented and visible
   weaknesses:
-  - 'Design Excellence (12/20) below optimal: Well-configured library defaults but
-    lacks distinctive aesthetic sophistication (DE-01=4/8). Visual refinement (DE-02=4/6)
-    is solid but could be more intentional. Data storytelling (DE-03=4/6) is clear
-    but lacks emphasis on the key insight (Wearables'' dramatic rise).'
+  - 'VQ-07: First categorical series (Smartphones) assigned #0072B2 instead of canonical
+    #009E73 — color sequence does not match expected Okabe-Ito position 1'
+  - 'DE-01/DE-02: Generic design aesthetic with minimal visual refinement beyond library
+    defaults'
+  - 'DE-03: Data storytelling limited — viewer sees trends but lacks visual hierarchy
+    or emphasis'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "area-stacked-percent · plotnine · anyplot.ai" in 24pt bold dark text; Y-axis "Market Share (%)" and X-axis "Year" in 20pt dark text; tick labels (16pt, INK_SOFT color) clearly visible without overlap.
-      Data: Four stacked areas—Smartphones (#009E73, greenish, declining 50%→20%), Tablets (#D55E00, orange, declining 28%→5%), Wearables (#0072B2, blue, rising 4%→48%), Laptops (#CC79A7, pink, stable ~18–27%). All colors distinct and readable.
-      Grid: Subtle grid lines (alpha=0.10/0.05) don't compete with data.
-      Legend: "Product Category" with four clearly labeled categories at bottom.
-      Legibility verdict: PASS ✓
+      Background: Warm off-white (#FAF8F1) - correct per spec
+      Chrome: Title "area-stacked-percent · plotnine · anyplot.ai" in dark text (INK #1A1A17), axis labels "Market Share (%)" and "Year" in dark text, tick labels (years and percentages) all dark and fully readable against light background
+      Data: Four stacked areas representing market share: Smartphones, Tablets, Wearables, Laptops in Okabe-Ito palette colors showing realistic market evolution (smartphone 50%→20%, wearables 4%→48%)
+      Legibility verdict: PASS - All text clearly readable with excellent contrast and no overlap
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and labels rendered in light colors (INK=#F0EFE8, INK_SOFT=#B8B7B0) and clearly readable against dark background—zero dark-on-dark failures. All text is light-colored and legible.
-      Data: Colors identical to light render (Smartphones #009E73, Tablets #D55E00, Wearables #0072B2, Laptops #CC79A7), confirming theme-correct chrome with only background/text adapting, not data colors.
-      Grid: Subtle and visible.
-      Legend: Same as light render with light text.
-      Legibility verdict: PASS ✓
-
-    Both renders pass theme-readability checks. No text legibility issues in either theme.
+      Background: Warm near-black (#1A1A17) - correct per spec
+      Chrome: Title and axis labels rendered in light text (INK #F0EFE8 and INK_SOFT #B8B7B0), all clearly visible against dark background, no dark-on-dark failures
+      Data: Identical color sequence to light render (only chrome flips, data colors remain constant), stacked areas show same proportional relationships and trends, legend clearly visible
+      Legibility verdict: PASS - All text readable with proper light-on-dark contrast, no chrome failures in dark theme
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,51 +52,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks),
-          perfectly readable in both themes
+        comment: Title 24pt, labels 20pt, ticks 16pt - all explicitly set and perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text; x-axis labels, y-axis labels, legend labels
-          all cleanly spaced
+        comment: All labels and legend elements fully separated, no overlapping text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four stacked areas clearly visible with strong color contrast and
-          optimal alpha=0.85 for density
+        comment: Stacked areas perfectly adapted to data density with clear distinction
+          between categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; excellent contrast between all four
-          colors
+        comment: Okabe-Ito palette is inherently CVD-safe with adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16×9 figure fills ~65% of canvas with balanced margins; no cut-off;
-          legend properly positioned
+        comment: Landscape 16:9 (4800x2700px) fills 60-70% of canvas with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (%); all labels descriptive; title format correct
+        comment: 'Descriptive labels with units: Y-axis has %, title matches spec
+          format'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Okabe-Ito palette perfect: first series #009E73, order correct,
-          backgrounds #FAF8F1/#1A1A17, chrome theme-correct in both renders'
+        passed: false
+        comment: 'Okabe-Ito used but first series (Smartphones) assigned #0072B2 (position
+          3) instead of #009E73 (position 1). Theme chrome perfect in both renders.'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -112,22 +103,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks distinctive aesthetic choices
-          or exceptional design
+        comment: Well-configured library defaults but not particularly sophisticated
+          or distinctive
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid styling, whitespace, and border customization are solid; could
-          be more intentional with explicit spine removal
+        passed: false
+        comment: Minimal customization beyond defaults - grid alpha adjusted but panel
+          border remains
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visualization of trends (Smartphones declining, Wearables rising),
-          but lacks visual emphasis on key insights
+        passed: false
+        comment: Data choice tells story (smartphone/wearable trends) but visualization
+          lacks visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -137,26 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area chart with geom_area(position='stack')
+        comment: Correct 100% stacked area chart with proper position='stack' and
+          0-100% Y-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Time (Year), Category (Product Category), values normalized to percentages
+        comment: 'All features present: temporal X-axis, percentage Y-axis, categorical
+          fill, stacked normalization'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible and axes show full range
+        comment: X=Year (continuous), Y=Percent (0-100%), Fill=Category. All data
+          visible and correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'area-stacked-percent · plotnine · anyplot.ai' correct;
-          legend labels match spec
+        comment: 'Title format correct: ''area-stacked-percent · plotnine · anyplot.ai''.
+          Legend shows 4 categories correctly.'
     data_quality:
       score: 15
       max: 15
@@ -166,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 categories with diverse trends (decline, rise,
-          stability)'
+        comment: 'Excellent: shows all 4 categories with varying trends (smartphones
+          50%→20%, wearables 4%→48%)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real device market scenario; neutral, comprehensible, non-controversial
+        comment: 'Real-world scenario: electronics market share evolution. Comprehensible
+          and factually plausible.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible proportions; 2015–2024 timeframe; percentages sum to 100%
-          at each year
+        comment: 10-year span (2015-2024) realistic. Market shares sum to 100%. Trends
+          align with real market evolution.
     code_quality:
       score: 10
       max: 10
@@ -190,57 +185,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → plot → save; no functions/classes
+        comment: 'Simple: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; hardcoded data, completely reproducible
+        comment: Data generated deterministically from hardcoded lists. Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: 'Only necessary imports used: os, sys, pandas, plotnine. All utilized.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity; no fake functionality
+        comment: Clean, Pythonic code. Appropriate complexity. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct API
+        comment: Saves as plot-{THEME}.png using current plotnine API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Correct plotnine idioms (ggplot + geom_area + scales + theme), but
-          standard patterns
+        passed: false
+        comment: Good ggplot() + grammar of graphics usage. Theme customization via
+          element_* is idiomatic. Could leverage more advanced features.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses theme customization and manual breaks/labels, but these are
-          common patterns not distinctive to plotnine
+        comment: Uses pd.Categorical for ordered categories and theme_minimal() base.
+          Fairly generic usage overall.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - manual-ticks
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
