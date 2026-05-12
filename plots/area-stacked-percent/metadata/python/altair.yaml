@@ -1,173 +1,167 @@
 library: altair
+language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:23:32Z'
-updated: '2025-12-30T11:36:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595338920
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/altair/plot.html
+updated: '2026-05-12T11:13:33Z'
+generated_by: claude-haiku
+workflow_run: 25730507182
+issue: 2647
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - hover-tooltips
-  - layer-composition
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep:
-  - normalization
-  styling: []
 review:
   strengths:
-  - Excellent use of Altair's declarative grammar with stack="normalize" for proper
-    100% stacking
-  - Clear, compelling real-world narrative (energy transition) that perfectly demonstrates
-    the spec
-  - Clean code structure following KISS principles with well-organized long-format
-    data
-  - Good typography sizing making all text highly readable
-  - Appropriate use of tooltips and interactive HTML export
-  - Proper stacking order using explicit order encoding
+  - Perfect theme adaptation with identical data colors in both light and dark renders
+  - All text legible in both themes with proper contrast and no theme-adaptation failures
+  - 'Okabe-Ito palette correctly applied with #009E73 as first series'
+  - Clean code with proper environment-based theming and theme tokens
+  - Clear data storytelling showing energy transition (coal declining, renewables
+    rising)
+  - Correct use of stack=normalize for 100% stacked composition
   weaknesses:
-  - Legend positioned outside creates slight whitespace imbalance; consider moving
-    inside plot area
-  - Nuclear data staying perfectly flat at 12% for all 10 years feels artificially
-    constant
-  image_description: 'The plot displays a 100% stacked area chart showing energy source
-    mix evolution from 2015 to 2024. Four colored areas are stacked from bottom to
-    top: Coal (steel blue), Natural Gas (golden yellow), Nuclear (medium slate blue/purple),
-    and Renewables (sea green). The Y-axis shows "Share of Energy Mix (%)" ranging
-    from 0% to 100% with percentage formatting. The X-axis displays years from 2015
-    to 2024. The title "area-stacked-percent · altair · pyplots.ai" is centered at
-    the top. A legend on the right identifies the four energy sources with colored
-    circular markers. The chart clearly illustrates the energy transition narrative
-    with Coal declining from ~45% to ~16%, Renewables growing from ~18% to ~44%, while
-    Natural Gas and Nuclear remain relatively stable. Subtle dashed grid lines provide
-    reference. The areas have slight transparency (0.85 opacity) with visible boundary
-    lines.'
+  - Design is competent but standard - no extra visual refinement beyond spec requirements
+  - Could leverage more Altair distinctive features like interactive selections or
+    faceting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) correctly applied
+      Chrome: Title, axis labels ("Year", "Share of Energy Mix (%)"), tick labels all clearly visible in dark text with excellent contrast
+      Data: Four stacked areas - Coal (green #009E73), Natural Gas (orange #D55E00), Nuclear (blue #0072B2), Renewables (reddish purple #CC79A7). Boundaries between areas are clear and distinct. Legend at bottom shows all four sources.
+      Legibility verdict: PASS - all elements readable with strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) correctly applied
+      Chrome: Title, axis labels, tick labels all rendered in light text and clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Colors identical to light render (Coal green, Natural Gas orange, Nuclear blue, Renewables pink). All boundaries visible and consistent.
+      Legibility verdict: PASS - theme adaptation successful, no contrast issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt, all perfectly
-          readable
+        comment: Font sizes explicitly set (labelFontSize=18, titleFontSize=22). All
+          text readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: Elements well-spaced, no overlapping text or labels.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area fills are clearly visible with good opacity (0.85), boundary
-          lines enhance distinction
+        comment: Area boundaries clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colors are distinguishable but blue/purple could be closer for some
-          colorblind users
+        comment: Okabe-Ito palette is CVD-safe; all colors distinct.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization, plot fills appropriate space with balanced
-          margins
+        comment: Good proportions, well-balanced, nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with unit indication (%), X-axis just
-          "Year" without additional context
+        comment: Descriptive labels with units ('Share of Energy Mix (%)').
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed style and 0.3 opacity, BUT legend is positioned
-          outside the plot area creating extra whitespace
+        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds correct,
+          both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional use of Okabe-Ito palette and opacity layering. Clean
+          and intentional, but fairly standard.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped frame, subtle grid (opacity 0.10), generous margins, no
+          unnecessary decoration.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative of energy transition (coal declining, renewables
+          rising).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked area chart
+        comment: Correct 100% stacked area chart using stack='normalize'.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is time (Year), Y is percentage contribution correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows percentage stacking, multiple categories, temporal progression
-      - id: SC-04
-        name: Data Range
+        comment: All required features present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full 0-100% range, all years visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Year (time), Percentage (normalized), Source (categorical). All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data categories correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact required format: `area-stacked-percent · altair · pyplots.ai`'
+        comment: Title formatted correctly; legend complete with all categories.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows proportion changes over time well, demonstrates both increasing
-          and decreasing trends, but all changes are gradual (no dramatic shifts shown)
+        comment: All four energy sources represented; realistic range.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy source mix evolution is a perfect real-world scenario, neutral
-          topic
+        comment: Real-world plausible energy mix data; neutral framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Percentages are realistic for energy mix, though nuclear staying
-          exactly flat at 12% for 10 years is slightly artificial
+        comment: Percentage scale (0–100%) appropriate for composition data.
     code_quality:
       score: 10
       max: 10
@@ -177,42 +171,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean, straightforward, no unnecessary abstractions.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)` (though data is manually specified, seed
-          is set)
+        comment: Uses np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: altair, numpy, pandas'
+        comment: Only necessary imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Altair API usage
+        comment: Theme-adaptive tokens properly threaded; no fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of mark_area, encode API, stack='normalize', alt.Scale,
+          alt.Legend.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's declarative encoding with proper stacking (`stack="normalize"`),
-          tooltips, and `interactive()` for HTML export. However, could leverage more
-          Altair-specific features like selections or more sophisticated interactivity.
+        comment: Uses order encoding for stack control, but doesn't leverage other
+          Altair capabilities like interactions.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

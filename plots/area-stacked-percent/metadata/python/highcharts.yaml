@@ -1,170 +1,172 @@
 library: highcharts
+language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:29:03Z'
-updated: '2025-12-30T11:36:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595341909
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T11:16:25Z'
+generated_by: claude-haiku
+workflow_run: 25730678105
+issue: 2647
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - normalization
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/highcharts/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - 'Excellent implementation of 100% stacked area chart using Highcharts native stacking:
-    percent feature'
-  - Colorblind-safe palette with good contrast between all three areas
-  - Well-configured tooltip showing percentage values for interactive use
-  - Realistic market share scenario that perfectly demonstrates the chart purpose
-  - Good canvas utilization with appropriate margins and text sizing
-  - Clean, readable code following KISS principles
-  weaknesses:
-  - No visible grid lines on the chart area, which could help readers trace values
-    more precisely
-  - 'Legend symbols use symbolRadius: 0 (squares) which is fine but circular markers
-    might match the data point markers better'
-  image_description: 'The plot displays a 100% stacked area chart showing "Product
-    Market Share Evolution (2018-2025)". Three distinct colored areas fill the chart
-    from bottom to top: purple (Product C) at the bottom maintaining ~21-25%, yellow
-    (Product B) in the middle declining from ~40% to ~24%, and steel blue (Product
-    A) at the top growing from ~35% to ~55%. The Y-axis shows "Market Share (%)" with
-    values from 0% to 100% in 2% increments. The X-axis shows years from 2018 to 2025.
-    The title "area-stacked-percent · highcharts · pyplots.ai" appears at the top
-    with a subtitle below. A horizontal legend at the bottom shows all three products
-    with colored squares. Data points are marked with small squares on each area boundary.
-    The chart fills the canvas well with balanced margins.'
+  - Perfect visual quality in both light and dark renders; all text legible with proper
+    theme adaptation
+  - Correct Okabe-Ito palette implementation with brand green (#009E73) as first series
+  - Clean, professional design with subtle refinements (grid styling, legend background,
+    proper margins)
+  - Realistic, plausible data that effectively demonstrates the 100% stacked area
+    chart type
+  - Strong command of Highcharts library; proper stacking, formatting, and custom
+    styling
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1 — verified correct, not pure white
+      Chrome: Title "area-stacked-percent · highcharts · anyplot.ai" and subtitle "Product Market Share Evolution (2018-2025)" in dark text (#1A1A17), clearly readable. Y-axis label "Market Share (%)" and X-axis label "Year" in dark text, fully readable. Tick labels (0%-100% range, years 2018-2025) in soft dark text (#4A4A44), clearly visible. Legend at bottom center with three items clearly labeled.
+      Data: Product A (green #009E73) at top showing growth trend; Product B (orange #D55E00) in middle showing decline; Product C (blue #0072B2) at bottom stable. All areas clearly distinguishable with smooth fills. Markers visible at data points.
+      Legibility verdict: PASS — All text readable, excellent contrast, no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17 — verified correct, not pure black
+      Chrome: Title and subtitle in light text (#F0EFE8), fully readable against dark background. Y-axis and X-axis labels in light text, clearly visible. Tick labels in soft light text (#B8B7B0), readable. Legend with light text on dark background, no dark-on-dark failures detected.
+      Data: Product A (green #009E73), Product B (orange #D55E00), Product C (blue #0072B2) — identical colors to light render, confirming proper theme adaptation (only chrome flips, not data colors). All areas clearly visible with proper contrast.
+      Legibility verdict: PASS — All text readable, proper contrast, brand green maintains strong visibility on both surfaces
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable.
-          Font sizes are appropriate for the 4800x2700 canvas.
+        comment: Title, axis labels, ticks, legend all readable at full size in both
+          light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are well-spaced.
+        comment: No collisions; legend, axes, data areas cleanly separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas are clearly visible with good fill opacity (0.7), markers are
-          appropriately sized (radius 8).
+        comment: All three product areas fully visible; 100% stacking ensures no masking
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Uses colorblind-safe palette (blue #306998, yellow #FFD43B, purple
-          #9467BD). No red-green conflicts.'
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; plot fills most of the space. Slight extra
-          whitespace at bottom due to legend placement.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Market Share (%)" with units, X-axis has "Year".
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; colors distinct and accessible
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed and readable. No visible grid lines (Highcharts
-          default), which is acceptable but a subtle grid could enhance readability.
+        comment: Descriptive title with library/site attribution; axis labels clear
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73 (brand green); Okabe-Ito order; correct backgrounds;
+          both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, clean design; thoughtful use of color palette; proper
+          visual hierarchy; subtle fills show design refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid lines; clean layout with appropriate spines; good whitespace;
+          legend has subtle background box and border
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual narrative: Product A growth, Product B/C decline; stacked
+          percentage format emphasizes relative contribution'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct 100% stacked area chart with `stacking: "percent"`.'
+        comment: Correct 100% stacked area chart with proper normalization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows time (years), Y-axis shows percentage contributions.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows proportional changes over time, total always 100%, multiple
-          categories stacked.
-      - id: SC-04
-        name: Data Range
+        comment: Percent stacking, category labeling, temporal x-axis, legend all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly shows 0-100%, all years visible.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct; axes display full range; percentages calculated correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Product A, B, and C.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "area-stacked-percent · highcharts · pyplots.ai".
+        comment: Title follows format; legend labels match series names
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows three trends: growing (Product A), declining (Product B),
-          and stable (Product C). Good variety but could show more dramatic crossover
-          points.'
+        comment: 'Demonstrates all aspects of 100% stacked area type: proper normalization,
+          temporal trends, percentage formatting'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Market share evolution is a perfect, realistic business scenario
-          for this chart type.
+        comment: Market share evolution is realistic and neutral; plausible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible market share percentages. The data is deterministic
-          but the values chosen are sensible.
+        comment: 8-year span appropriate; percentages sum to 100% at each time point;
+          reasonable values
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,43 +174,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart setup → series → export.
-          No functions or classes.'
+        comment: No unnecessary functions or classes; straightforward, readable implementation
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Data is deterministic (no random), but no explicit seed comment.
-          Minor deduction.
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed data arrays; deterministic output; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts API.
+        comment: Appropriate complexity; no fake UI; clean code structure
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`.
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: AreaSeries with percent stacking used correctly; theme-adaptive colors
+          properly integrated
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of Highcharts-specific features: `stacking: "percent"`,
-          interactive tooltips with `{point.percentage:.1f}%`, proper series configuration.
-          Could leverage more advanced features like data labels or animation settings.'
+        comment: Custom tooltip formatting with percentage display; legend styling;
+          proper plot_options configuration
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
