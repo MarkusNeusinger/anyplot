@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:22:59Z'
-updated: '2026-05-12T11:09:18Z'
+updated: '2026-05-12T11:15:50Z'
 generated_by: claude-haiku
 workflow_run: 25730291323
 issue: 2647
@@ -12,33 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Perfect theme adaptation with correct color tokens in both light and dark modes
-  - All text elements clearly readable and properly sized for 4800×2700 canvas
-  - Excellent Okabe-Ito palette compliance with first series as brand green (#009E73)
-  - Clean idiomatic Bokeh implementation with HoverTool for interactive hover tooltips
-  - Proper data normalization showing true 100% stacked percentages
-  - Correct Selenium headless Chrome screenshot method per library guidelines
+  - 'Correct Okabe-Ito palette with first series as #009E73'
+  - 'Perfect text legibility: all font sizes explicitly set and readable in both themes'
+  - No overlap or collision of text elements
+  - 'Theme-adaptive chrome correctly implemented: identical data colors, proper INK
+    tokens for both light and dark'
+  - 'Accurate spec compliance: correctly normalized to 100% stacked areas'
+  - Proper use of ColumnDataSource and HoverTool for bokeh interactivity
+  - Clean data generation with reproducible seed (np.random.seed(42))
+  - Subtle grid styling (alpha=0.10) with proper legend styling
   weaknesses:
-  - Generic styling — uses default look without distinctive customization or visual
-    refinement
-  - Limited visual hierarchy to emphasize composition shifts or guide reader attention
-  - Could enhance design with refined spine treatment, accent colors, or strategic
-    emphasis techniques
+  - 'Limited design sophistication: follows standard library patterns without custom
+    aesthetic choices'
+  - 'Repetitive code structure: four identical patch blocks could be refactored into
+    a loop for maintainability'
+  - 'Data storytelling could be stronger: visual hierarchy is present through stacking
+    but lacks emphasis or focal point'
+  - HoverTool included but its interactive benefits not visible in static PNG render
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no artifacts
-      Chrome: Title "area-stacked-percent · bokeh · anyplot.ai" is dark and prominent; axis labels "Year" and "Market Share (%)" are clearly readable; tick labels (2015-2024, 0-100) are visible in appropriate sizes
-      Data: Four stacked areas in Okabe-Ito order — green (#009E73 Product A, bottom), orange (#D55E00 Product B), blue (#0072B2 Product C), pink (#CC79A7 Product D, top); smooth curves show market share evolution; legend positioned top-right with clear product labels
-      Legibility verdict: PASS — all elements readable with strong contrast against light surface
+      Background: Warm off-white (#FAF8F1), matching style guide specification
+      Chrome: Title "area-stacked-percent · bokeh · anyplot.ai" in dark text (#1A1A17, 28pt); X-axis label "Year" and Y-axis label "Market Share (%)" in dark text (22pt); tick labels (18pt) showing years 2015-2024 and percentages 0-100, all clearly readable; subtle grid lines with 10% alpha; legend in top-right with elevated background and proper border styling
+      Data: Four stacked areas in Okabe-Ito colors in canonical order: Product A (green #009E73), Product B (orange #D55E00), Product C (blue #0072B2), Product D (purple #CC79A7); all areas clearly visible with 85% alpha and appropriate boundaries; market share evolution over 10 years clearly shown with compositional shifts
+      Legibility verdict: PASS - All text perfectly readable against light background; no dark-on-dark issues; clear visual hierarchy through stacking
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) matching the dark theme surface
-      Chrome: Title, axis labels, and tick labels are all in light text (adapting from INK dark-theme token); no dark-on-dark legibility issues; grid lines are subtle and visible
-      Data: Data area colors are identical to light render (green, orange, blue, pink remain the same); only non-data chrome has flipped from dark to light text
-      Legibility verdict: PASS — all text readable on dark surface; theme adaptation is correct throughout
+      Background: Warm near-black (#1A1A17), matching style guide specification
+      Chrome: All text rendered in light color (#F0EFE8), clearly visible against dark background; title, axis labels, tick labels all readable; grid lines visible at 10% alpha; legend properly styled with dark elevated background (#242420)
+      Data: Data colors are identical to light render - Product A (green #009E73), Product B (orange #D55E00), Product C (blue #0072B2), Product D (purple #CC79A7) - confirming theme-independent data visualization; all areas clearly distinguishable
+      Legibility verdict: PASS - No dark-on-dark failures; all text and data clearly readable; proper theme adaptation with chrome colors changing while data colors remain constant
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,50 +54,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 28pt, axis labels 22pt, tick labels
-          18pt) and readable in both themes
+        comment: All font sizes explicitly set and perfectly readable in both light
+          and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned top-right with adequate spacing; no overlapping
-          text
+        comment: No overlapping text elements; all labels clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four stacked areas distinctly visible with clear color separation
-          and smooth transitions
+        comment: All four area patches clearly visible with appropriate alpha and
+          boundaries
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; adequate contrast between all colors
+        comment: Okabe-Ito palette is colorblind-safe; good contrast between adjacent
+          areas
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 landscape format appropriate; good margins and proportions;
-          nothing cut off
+        comment: Plot fills 60-70% of canvas with balanced margins; no content cut-off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with library and domain info; axis labels clearly
-          identify dimensions
+        comment: Title format correct; axis labels descriptive with units (Year, Market
+          Share %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73; follows Okabe-Ito positions
-          1-4; backgrounds are #FAF8F1 (light) and #1A1A17 (dark); text colors use
-          theme-adaptive tokens'
+        comment: 'First series #009E73 correct; multi-series follows Okabe-Ito order;
+          backgrounds are #FAF8F1 (light) and #1A1A17 (dark); both renders theme-correct'
     design_excellence:
       score: 10
       max: 20
@@ -102,22 +105,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic styling using defaults; no custom design work or distinctive
-          visual treatment
+        comment: Well-configured library defaults with correct palette, but no custom
+          design choices or exceptional polish
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid styling (alpha=0.10), proper legend styling with background
+          and border; some refinement but mostly standard patterns
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Grid styled appropriately but minimal customization; clean but not
-          refined beyond baseline
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Composition changes over time are clear; smooth curves guide viewer
-          through market share shifts
+        comment: Data displayed clearly through stacking, but lacks visual emphasis
+          or focal point to guide viewer insight
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area chart with percentages summing to 100%
+        comment: Correct 100% stacked area chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: normalized percentages, categorical
-          stacking, temporal axis'
+        comment: 'All spec features present: time axis, categories, normalization
+          to 100%'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows years 2015-2024; Y-axis shows 0-100%; categories properly
-          stacked from 0 to 100%
+        comment: X=Years, Y=Percentages; axes show all data correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows all 4 products with distinct colors
+        comment: Title format correct; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -157,24 +159,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of 100% stacked area — multiple categories, temporal
-          progression, normalized percentages
+        comment: Shows all four products across all 10 time periods with clear compositional
+          shifts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Market share scenario is realistic and plausible; 4 products over
-          10 years with natural compositional shifts
+        comment: Market share evolution is realistic, neutral scenario; plausible
+          product names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range 0-100% with realistic market share distributions and
-          variation patterns
+        comment: Percentages sum to 100%; values are proportionally reasonable for
+          market share
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -182,63 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data generation and figure creation; no unnecessary functions
-          or classes
+        comment: 'Clean linear flow: imports → data → plot → save; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh, selenium, os, pathlib'
+        comment: All imports (os, numpy, bokeh, selenium) are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; clean idiomatic Bokeh code; no fake UI or
-          unnecessary features
+        passed: false
+        comment: Code is Pythonic and clean, but four identical patch blocks repeat
+          logic without loop refactoring
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current Bokeh
-          API
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Uses Bokeh best practices: ColumnDataSource, HoverTool, figure configuration,
-          theme-adaptive tokens'
+        passed: false
+        comment: Correct usage of figure(), ColumnDataSource, theme-adaptive styling;
+          follows bokeh best practices but not exceptionally leveraged
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: HoverTool and HTML export are good but fairly standard Bokeh patterns;
-          no unique library-specific innovation
+        comment: Uses HoverTool for interactivity and Selenium for export; these are
+          distinctive to bokeh but interactive features not visible in static PNG
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - normalization
   styling:
   - grid-styling
-  - alpha-blending

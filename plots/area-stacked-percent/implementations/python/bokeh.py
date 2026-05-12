@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-12
+Quality: 85/100 | Updated: 2026-05-12
 """
 
 import os
