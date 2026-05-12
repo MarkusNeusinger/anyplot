@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-stepwise: Step Histogram
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 85/100 | Created: 2026-05-12
+Quality: 80/100 | Created: 2026-05-12
 """
 
 import os
