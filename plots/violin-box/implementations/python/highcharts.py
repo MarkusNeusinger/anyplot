@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 43/100 | Updated: 2026-05-12
+Quality: 48/100 | Updated: 2026-05-12
 """
 
 import tempfile

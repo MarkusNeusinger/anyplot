@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: violin-box
 created: '2025-12-30T11:29:43Z'
-updated: '2026-05-12T15:31:26Z'
+updated: '2026-05-12T15:39:10Z'
 generated_by: claude-haiku
 workflow_run: 25744163125
 issue: 2646
@@ -12,207 +12,202 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-bo
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/highcharts/plot-dark.html
-quality_score: 43
+quality_score: 48
 review:
   strengths:
-  - Realistic and well-structured data generation with different distribution shapes
-  - Correct KDE calculation using scipy.stats.gaussian_kde
-  - Appropriate outlier detection via IQR method
-  - Clean, deterministic code with seed management
+  - Correct violin-box plot structure with proper KDE shape and embedded box plot
+  - Accurate statistical calculations (quartiles, whiskers, median, outliers)
+  - All four treatment groups with diverse distributions demonstrated
+  - Readable text in both light and dark renders
+  - No overlapping elements or legibility issues
+  - Deterministic output with proper random seed
+  - Correct use of PolygonSeries and ScatterSeries for visualization
   weaknesses:
-  - Plot rendering completely broken - violin shapes and box plot not visible in either
-    theme
-  - No theme-adaptive implementation - code does not read ANYPLOT_THEME environment
-    variable
-  - 'Non-compliant color palette - uses custom colors instead of Okabe-Ito with #009E73
-    as first series'
-  - 'Wrong background colors - uses pure white and pure black instead of #FAF8F1 and
-    #1A1A17'
-  - Wrong file output format - saves as plot.png and plot.html instead of plot-light.png,
-    plot-dark.png, plot-light.html, plot-dark.html
-  - Dark render nearly completely blank - dark-on-dark rendering issue with poor contrast
-  - 'Branding error in title: ''pyplots.ai'' should be ''anyplot.ai'''
-  - Complex polygon-based box plot implementation instead of using standard BoxPlotSeries
+  - Pure white/black backgrounds instead of warm off-white (#FAF8F1) and warm near-black
+    (#1A1A17) required by style guide
+  - 'Color palette not Okabe-Ito: used [#306998, #FFD43B, #9467BD, #17BECF] instead
+    of starting with #009E73 brand green'
+  - 'No theme-adaptive styling: code does not read ANYPLOT_THEME environment variable,
+    all colors hardcoded'
+  - Output files saved to plot.html/plot.png instead of plot-{THEME}.html/plot-{THEME}.png
+    API
+  - 'Missing theme tokens: title, axis labels, tick labels, grid colors do not adapt
+    between light/dark renders'
+  - Generic styling with no visual refinement, hierarchy, or design polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at #FAF8F1, correct theme background
-      Chrome: Title text visible at top ("violin-box · highcharts · pyplots.ai" in large font), axis frame visible at bottom with category labels (Control, Treatment A, Treatment B, Treatment C) and numeric scale on Y-axis
-      Data: Plot content completely missing - no violin shapes, no box plots, no data markers visible. Only axis frame rendered.
-      Legibility verdict: PARTIAL FAIL - Chrome elements (title, axis labels) are readable but plot data is entirely absent
+      Background: Pure white (#FFFFFF) — VIOLATION, should be warm off-white #FAF8F1
+      Chrome: Title "violin-box · highcharts · anyplot.ai", axis labels "Group" and "Response Value (units)", tick labels 14-110 on Y-axis — all dark text, readable on light background ✓
+      Data: 4 violin plots (teal, orange, blue, pink) with embedded box plots inside. Box fills white with dark borders, median markers white circles with dark borders, outlier diamonds red/maroon. Whiskers dark. All colors visible.
+      Legibility verdict: PASS (readable but background color is wrong per style guide)
 
     Dark render (plot-dark.png):
-      Background: Dark surface at approximately #1A1A17, correct dark theme background
-      Chrome: Title barely visible (very large font), axis lines faintly visible. Most chrome elements are nearly invisible against dark background.
-      Data: Plot content completely missing - no violin shapes, no box plots, no data markers visible. Plot is nearly entirely blank.
-      Legibility verdict: CRITICAL FAIL - Dark-on-dark rendering failure. Axis text and elements have insufficient contrast against dark background. Plot data missing entirely.
+      Background: Pure black or near-black (#000000 or very close) — VIOLATION, should be warm near-black #1A1A17
+      Chrome: Title, axis labels, tick labels all light text — readable ✓ No dark-on-dark failures in terms of text contrast.
+      Data: Same violin colors (teal, orange, blue, pink) as light render ✓ Box plots, median markers, outlier points all visible. Data colors are theme-independent as required.
+      Legibility verdict: PASS (text readable but background tone is incorrect per style guide)
 
-    Summary: Both renders fail to display the core violin-box visualization. The plot data visualization is absent in both themes. The dark render has severe legibility issues with dark text on dark background, making it nearly unreadable. This is a critical rendering failure.
+    Summary: Both renders are legible and the data visualization is correct. However, background colors violate the mandatory style guide requirement for warm tones (pure white/black forbidden). Data colors are not Okabe-Ito compliant (should start with #009E73). No theme-adaptive styling logic detected — code appears to use hardcoded values for both renders.
   criteria_checklist:
     visual_quality:
-      score: 15
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 7
         max: 8
-        passed: false
-        comment: Title and axis labels present but plot elements missing. Core visualization
-          not visible.
+        passed: true
+        comment: Text readable in both themes; sizing hierarchy could be better
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: No overlap issues but plot content absent.
+        passed: true
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: 'CRITICAL: Violin shapes and embedded box plots not rendered or invisible
-          in either theme.'
+        passed: true
+        comment: All markers, lines, shapes clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Plot colors not visible; cannot assess accessibility.
+        passed: true
+        comment: Adequate contrast; colors distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimensions appropriate (4800x2700).
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 4
+        score: 2
         max: 2
         passed: true
-        comment: Present but branding error (pyplots.ai should be anyplot.ai).
+        comment: Descriptive labels with units; correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Multiple violations: non-Okabe-Ito palette, pure white background
-          not #FAF8F1, no dark theme variant, hard-coded text colors without theme-adaptation,
-          pure white box fill.'
+        comment: 'CRITICAL: Pure white/black backgrounds violate style guide. Data
+          colors not Okabe-Ito (should start with #009E73)'
     design_excellence:
-      score: 4
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults; no custom design intent evident.
+        comment: Generic defaults; colors not from specified palette; no intentional
+          refinement
       - id: DE-02
         name: Visual Refinement
-        score: 0
-        max: 6
-        passed: false
-        comment: Plot not visible; no refinement observable.
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Intended violin+box structure present in code but not rendered; visual
-          hierarchy unclear.
+        comment: Minimal customization; grid subtle but no additional polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 1
+        max: 6
+        passed: false
+        comment: No visual hierarchy, emphasis, or focal point; all violins equally
+          weighted
     spec_compliance:
-      score: 8
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: Intended to implement violin plot with embedded box plot but rendering
-          completely failed.
+        passed: true
+        comment: Correct violin-box plot with embedded box plots
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Box plot structure attempted in code; violin KDE calculated and polygons
-          created but not visible in output.
+        passed: true
+        comment: 'All features present: violin shape, box, whiskers, median, outliers'
       - id: SC-03
         name: Data Mapping
-        score: 2
-        max: 3
-        passed: false
-        comment: Data correctly mapped to categories and axes, but visualization missing.
-      - id: SC-04
-        name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend structure present; branding incorrect (pyplots.ai
-          should be anyplot.ai).
+        comment: X-axis groups, Y-axis response values; ranges correct
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Title format correct; category labels on x-axis but no formal legend
     data_quality:
-      score: 8
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Four distributions with different characteristics generated; no visualization.
+        passed: true
+        comment: KDE shape, box, quartiles, whiskers, median, outliers all shown
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Realistic control/treatment design; neutral context.
+        comment: Plausible data (values 14-110); diverse distributions (bimodal, normal,
+          skewed); neutral context
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Data ranges sensible (30–100) for response value axis.
+        passed: false
+        comment: Sensible value range but excessive whitespace/margins
     code_quality:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear code structure; no unnecessary functions.
+        comment: No functions/classes; straightforward data and plotting
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic.
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; no dead code.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 0
         max: 2
         passed: false
-        comment: Hard-coded colors throughout. No theme-adaptive implementation. Uses
-          unconventional Polygon series for drawing box components instead of standard
-          Highcharts BoxPlot series.
+        comment: 'CRITICAL: No ANYPLOT_THEME environment variable reading; all styling
+          hardcoded; no theme-adaptive logic'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png instead of plot-{THEME}.png. No ANYPLOT_THEME handling.
-          Missing theme-variant generation.
+        comment: 'CRITICAL: Output to plot.html/plot.png instead of plot-{THEME}.html/plot-{THEME}.png'
     library_mastery:
-      score: 3
+      score: 2
       max: 10
       items:
       - id: LM-01
@@ -220,14 +215,18 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses Polygon series for box components instead of standard BoxPlotSeries.
-          Scatter series for median/outliers is appropriate; KDE calculation is correct.
+        comment: PolygonSeries and ScatterSeries used appropriately but fails to implement
+          theme-adaptive styling per library guide
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 0
         max: 5
         passed: false
-        comment: No distinctive features; very generic usage pattern.
+        comment: No distinctive library features; standard polygon/scatter APIs only
+    score_caps:
+      applied: true
+      reason: VQ-07=0 (palette/background) + CQ-04=0 (no theme logic) + CQ-05=0 (wrong
+        API) → fundamental compliance failures cap score at 48/100
   verdict: REJECTED
 impl_tags:
   dependencies:
