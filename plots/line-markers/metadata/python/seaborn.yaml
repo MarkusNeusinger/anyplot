@@ -1,160 +1,176 @@
 library: seaborn
+language: python
 specification_id: line-markers
 created: '2025-12-30T10:37:25Z'
-updated: '2025-12-30T10:43:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594556455
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T03:25:56Z'
+generated_by: claude-haiku
+workflow_run: 25711255835
+issue: 2599
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-markers/seaborn/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent use of seaborn's lineplot with style parameter for automatic marker
-    shape differentiation per series
-  - Clean, professional visualization with proper font sizing for high-resolution
-    output
-  - Colorblind-safe custom palette with good contrast between series
-  - Realistic data scenario (temperature sensors) that matches the spec's quality
-    control application
+  - Excellent theme-adaptive implementation with proper token usage in both light
+    and dark renders
+  - Perfect text legibility with explicitly set font sizes (24pt title, 20pt labels,
+    16pt ticks)
+  - Idiomatic seaborn usage with sns.lineplot(), hue/style parameters, and sns.set_theme()
+    for global styling
+  - Well-chosen data example with three distinct stock patterns (growth, volatile,
+    stable) that showcases different use cases
+  - 'Professional visual refinement: removed top/right spines, subtle y-axis grid,
+    refined legend with framealpha=0.5'
+  - 'Correct Okabe-Ito palette compliance with #009E73 as first series, no palette
+    deviations'
   weaknesses:
-  - Legend frame opacity (framealpha=0.9) is quite opaque; a lower value would be
-    more visually appealing
-  - Data series patterns are somewhat similar; more variety in trends (e.g., one volatile,
-    one cyclical) would better showcase the plot type's utility
-  image_description: The plot shows three line series with markers tracking temperature
-    readings over 12 hours from three sensors. Sensor A (dark blue circles) stays
-    in the 22-24°C range with a slight upward trend. Sensor B (golden yellow X markers)
-    starts around 20°C and declines to approximately 16°C. Sensor C (teal squares)
-    remains stable around 23-24°C. The title "line-markers · seaborn · pyplots.ai"
-    is bold at the top. Axes show "Hour" (0-11) on x-axis and "Temperature (°C)" (15-24
-    range) on y-axis. A legend in the upper left identifies each sensor. A subtle
-    dashed grid aids readability. The 16:9 layout uses space well with balanced margins.
+  - 'Minor: DE-02 could be elevated with custom grid styling (e.g., different line
+    patterns for major/minor gridlines)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) correctly applied
+      Chrome: Title "line-markers · seaborn · anyplot.ai" in dark text (INK=#1A1A17), axis labels "Day" and "Price ($)" clearly visible in dark text, tick labels in secondary gray (INK_SOFT=#4A4A44) — all readable against the light surface
+      Data: Three distinct series with Okabe-Ito colors — Stock A (teal #009E73, upward trend), Stock B (orange #D55E00, high volatility), Stock C (blue #0072B2, stable). Circular markers at each point, linewidth 2.5pt, markersize 10 — all clearly distinguishable
+      Legend: Upper left positioned, framealpha=0.5 on elevated background (#FFFDF6), legend text readable
+      Grid: Subtle y-axis grid with alpha=0.10, barely visible but present
+      Legibility verdict: PASS — all text is readable, no "light-on-light" failures, data elements clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) correctly applied
+      Chrome: Title in light text (INK=#F0EFE8), axis labels in light text, tick labels in secondary light gray (INK_SOFT=#B8B7B0) — all readable against the dark surface, no "dark-on-dark" failures
+      Data: Stock A, B, C colors are IDENTICAL to light render (teal, orange, blue at exact same hex values). Markers and lines rendered consistently across theme
+      Legend: Visible on elevated background (#242420), text readable
+      Grid: Subtle, consistent with light render
+      Legibility verdict: PASS — all text is readable, data colors perfectly preserved, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt bold, axis labels 20pt, tick labels 16pt - all perfectly
-          readable
+        comment: Font sizes explicitly set (24pt, 20pt, 16pt); all perfectly readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap anywhere, all elements clearly separated
+        comment: No overlapping text; legend well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 14 with linewidth 3, excellent visibility for 12 points
-          per series
+        comment: Markers perfectly sized for canvas; linewidth 2.5pt appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, gold, teal palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" includes units, "Hour" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, generous margins, tight_layout used
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha 0.3 is appropriate, but legend framealpha=0.9 could be
-          slightly lower
+        comment: Descriptive labels with units (Price ($))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          theme-correct chrome'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette, intentional styling, professional polish;
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, refined legend
+          framealpha
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three distinct stock patterns (growth, volatile, stable) with clear
+          visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with markers at each data point
+        comment: Correct line plot with markers
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (Hour) and Y (Temperature) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series with different marker shapes as per spec notes
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: multiple series, visible markers, line/marker
+          combination'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify each sensor
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "line-markers · seaborn · pyplots.ai"
+        comment: Perfect title format; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows multiple series with different trends, but could show more
-          variation in patterns (e.g., one series with volatility, one stable)
+        comment: 'Shows all aspects: growth trend, high volatility, stability'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Temperature sensor readings is a real, neutral scenario relevant
-          to quality control/monitoring
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values 15-24°C are realistic for indoor/environmental
-          monitoring
+        comment: Stock price data is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Value proportions and domain constraints align perfectly
     code_quality:
       score: 10
       max: 10
@@ -164,41 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Simple, clean structure: data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning
+        comment: np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib, numpy, pandas, seaborn) are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API correctly
+        comment: No over-engineering, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn's lineplot with hue/style for automatic marker differentiation,
-          but could leverage more seaborn-specific features like set_theme() or statistical
-          capabilities
+        comment: Expertly uses sns.lineplot(), hue/style, sns.set_theme() for global
+          styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses seaborn's marker handling and style parameter effectively; dashes=False
+          is distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
