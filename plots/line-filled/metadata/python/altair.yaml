@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-filled
 created: '2025-12-30T11:22:20Z'
-updated: '2026-05-12T17:09:44Z'
+updated: '2026-05-12T17:15:43Z'
 generated_by: claude-haiku
 workflow_run: 25749687148
 issue: 2643
@@ -12,38 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/altair/plot-dark.html
-quality_score: 78
+quality_score: 72
 review:
   strengths:
-  - 'Correct plot type and structure: filled area chart with clear line-on-fill layering'
-  - Realistic, well-chosen example data with weekly patterns and growth trend
-  - Explicit font sizing (18px labels, 22px title) ensures readability at large canvas
-  - Proper transparency gradient and data visibility
-  - Correct title format and descriptive axis labels
+  - Correct filled area chart structure with visible line-on-fill layering
+  - 'Both renders display correct theme backgrounds (#FAF8F1 light, #1A1A17 dark)'
+  - Text is legible in both light and dark themes
+  - Realistic, well-chosen example data with clear weekly patterns
+  - Proper transparency and data visibility through gradient fill
   weaknesses:
-  - 'Output files must use {THEME} suffix: plot.png → plot-light.png/plot-dark.png;
-    code saves wrong filenames'
-  - 'Color palette violation: uses #306998 (Python Blue) instead of #009E73 (brand
-    green) for first series'
-  - Missing ANYPLOT_THEME environment variable handling and theme-adaptive styling
-    (no PAGE_BG, INK, INK_SOFT tokens)
-  - Grid uses dashed styling instead of solid subtle lines per style guide
-  - Generic design with hardcoded colors and no intentional aesthetic choices
+  - 'CRITICAL: Color palette violation - uses #306998 (Python blue) instead of #009E73
+    (brand green)'
+  - 'CRITICAL: File naming - code saves to plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
+  - 'Missing theme-adaptive styling in code: no ANYPLOT_THEME environment variable
+    handling, no PAGE_BG/INK_SOFT color tokens'
+  - Grid uses dashed lines instead of solid subtle lines per style guide
+  - No intentional design choices; generic defaults throughout
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), appropriate for light theme
-      Chrome: Title "line-filled · altair · pyplots.ai" clearly visible; axis labels "Day of Month (day)" and "Daily Visitors (count)" readable with 18px tick font and 22px title font; all text is dark-colored and legible
-      Data: Filled area with gradient (darker to lighter opacity) and visible line stroke on top; colors are a blue shade (#306998), not the required brand green (#009E73); data range 1000–8700 shown fully
-      Legibility verdict: PASS - all text readable, but color palette is wrong
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "line-filled · altair · anyplot.ai" clearly visible; axis labels "Day of Month" and "Daily Visitors" readable with 18px tick font and 22px title font; all text is dark-colored and legible
+      Data: Filled area with teal/cyan gradient (#306998) with semi-transparent fill and visible line stroke on top; data range 1000–8700 shown fully; color is WRONG (should be #009E73 brand green)
+      Legibility verdict: PASS (but color palette violated)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), appropriate for dark theme
-      Chrome: Title, axis labels, and tick labels visible with light text colors; grid lines visible; all elements readable, no dark-on-dark failures
-      Data: Colors identical to light render (as expected); grid and background properly darkened; line and fill clearly distinguishable
-      Legibility verdict: PASS - readable in both theme surfaces, but code does not contain theme-adaptive logic; images show proper theming that is not implemented in source code
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title, axis labels, and tick labels visible with light text colors; all elements readable, no dark-on-dark failures
+      Data: Colors identical to light render as expected (only chrome flips); grid and background properly darkened; line and fill clearly distinguishable
+      Legibility verdict: PASS (theme backgrounds render correctly, but code does not implement theme-adaptive logic)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -51,39 +50,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicitly set font sizes (18px, 22px); readable but could optimize
-          contrast
+        comment: Explicit font sizing (18px, 22px) ensures readability; title format
+          slightly off in code but renders correctly
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced
+        comment: All text properly spaced, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line and fill well-sized and visible
+        comment: Line and fill well-sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast and visibility
+        comment: Good contrast between data and backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (1600x900 → 4800x2700px); balanced margins
+        comment: Well-proportioned layout (1600x900), balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Descriptive labels but could be more concise
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses #306998 (Python Blue) instead of #009E73 (brand green);
-          missing all theme-adaptive styling'
+        comment: 'CRITICAL: Uses #306998 instead of #009E73 (brand green); no theme-adaptive
+          styling tokens'
     design_excellence:
       score: 7
       max: 20
@@ -93,19 +98,19 @@ review:
         score: 3
         max: 8
         passed: false
-        comment: Generic defaults; hardcoded colors with no design intent
+        comment: Generic styling with hardcoded colors
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Dashed grid lines (should be solid); minimal customization
+        comment: Dashed grid instead of solid subtle lines
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Basic data display with no visual hierarchy
+        comment: Basic display with no visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -115,19 +120,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled area chart'
+        comment: Correct filled line/area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Has fill, line, transparency, proper layering
+        comment: Fill, line, transparency, layering all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; all data visible
+        comment: X/Y correctly mapped; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -143,7 +148,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: magnitude, variation, trends'
+        comment: Shows magnitude, variation, and trend
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -155,9 +160,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values are realistic and proportionally sound
+        comment: Values (1000–8700) are realistic
     code_quality:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -171,7 +176,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Random seed set
+        comment: Random seed properly set
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -180,33 +185,32 @@ review:
         comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity
+        passed: false
+        comment: Gradient usage is effective but missing ENV handling
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: -2
         max: 1
         passed: false
         comment: 'CRITICAL: Saves as plot.png instead of plot-{THEME}.png'
     library_mastery:
-      score: 5
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: false
-        comment: Correct mark_area() usage but missing theme-handling patterns from
-          altair.md
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses alt.Gradient but generic overall
+        comment: mark_area() correct but missing theme-handling patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: alt.Gradient used but in generic way
   verdict: REJECTED
 impl_tags:
   dependencies: []
