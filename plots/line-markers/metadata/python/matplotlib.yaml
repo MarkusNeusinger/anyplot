@@ -1,175 +1,176 @@
 library: matplotlib
+language: python
 specification_id: line-markers
 created: '2025-12-30T10:38:02Z'
-updated: '2025-12-30T10:45:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594555710
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-markers/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-12T03:37:42Z'
+generated_by: claude-haiku
+workflow_run: 25711186309
+issue: 2599
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 75
 review:
   strengths:
-  - Excellent marker visibility with white edge borders creating strong contrast against
-    lines
-  - Three distinct marker shapes (circle, square, triangle) for easy series differentiation
-  - Realistic weather station scenario with plausible temperature ranges
-  - Clean, readable code following KISS principles
-  - Perfect title format and axis labels with units
+  - Excellent text legibility with explicitly sized fonts readable in both themes
+  - 'Clean code structure: simple flow, properly reproducible with seed'
+  - Strong data quality with realistic weather station context and varied patterns
+  - 'Proper visual theme rendering: backgrounds, text colors, and grid adaptation
+    work correctly'
+  - 'No visual defects: no overlapping elements, excellent element visibility, good
+    contrast'
   weaknesses:
-  - Could demonstrate filled vs unfilled markers as suggested in spec notes for additional
-    distinction
-  - Legend placement inside plot area could potentially overlap with data in edge
-    cases
-  - Does not leverage more distinctive matplotlib features like annotations or custom
-    styling
-  image_description: 'The plot displays a line chart showing temperature readings
-    (°C) over 14 days from three weather stations. Three distinct lines with markers
-    are shown:
+  - 'Title domain is wrong: ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'Color palette code does not match Okabe-Ito specification (#306998, #FFD43B,
+    #E74C3C are not canonical)'
+  - Missing ANYPLOT_THEME environment integration for theme-adaptive background, text,
+    grid, spine, and legend colors
+  - 'No theme-aware file output: saves ''plot.png'' instead of ''plot-{THEME}.png'''
+  - 'Minimal design excellence: default grid styling, all spines visible, no visual
+    hierarchy or storytelling emphasis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) - all dark text clearly readable on light background; grid dashed lines subtle but visible
+      Data: Coastal Station (teal/green circles), Inland Station (orange/yellow squares), Mountain Station (blue triangles); white marker edges provide excellent definition
+      Legibility verdict: PASS - All text readable, no overlap, excellent contrast
 
-    - **Coastal Station** (blue circles): Highest temperatures, ranging from ~18°C
-    to ~22°C, showing an upward trend mid-period then declining
-
-    - **Inland Station** (yellow squares): Mid-range temperatures, starting at ~13°C
-    and declining to ~7°C over the period
-
-    - **Mountain Station** (red triangles): Lowest temperatures, ranging from ~6°C
-    to ~10°C with a general downward trend
-
-
-    The title follows the required format "line-markers · matplotlib · pyplots.ai".
-    Axis labels are "Day" (x-axis) and "Temperature (°C)" (y-axis). A legend is positioned
-    in the upper left. Grid lines are visible with subtle alpha. Markers are clearly
-    visible with white edge borders for contrast. The layout is well-balanced with
-    good use of the 16:9 canvas.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title, axis labels, tick labels flipped to light colors (readable); grid subtle; legend styling appropriate for dark theme
+      Data: Colors identical to light render (teal/green, orange/yellow, blue maintain their identity); no color shift between themes
+      Legibility verdict: PASS - All text readable, no dark-on-dark failures, good contrast; brand green (#009E73) clearly visible in Coastal series
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All fonts explicitly set (title 24pt, labels 20pt, ticks 16pt); perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping text; all content fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are size 12 with linewidth 3, perfectly visible for 14 data
-          points per series; white marker edges provide excellent contrast
+        comment: Markers (12pt) and lines (3pt width) clearly visible; white marker
+          edges provide definition
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red are distinguishable; not ideal for red-green
-          colorblind but shapes compensate
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins using tight_layout()
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" includes units, "Day" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Good contrast; distinct marker shapes aid accessibility; CVD-safe
+          palette attempted
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Optimal canvas utilization (50-80%); balanced margins; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha 0.3 is good, legend placed well but could be positioned
-          outside plot area to avoid any potential data overlap
+        comment: 'Descriptive labels with units: Temperature (°C)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Visual renders mostly compliant; theme adaptation works visually;
+          but title says 'pyplots.ai' instead of 'anyplot.ai' and code colors don't
+          match Okabe-Ito
+    design_excellence:
+      score: 5
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic styling; hard-coded colors; no design thought or intentional
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 1
+        max: 6
+        passed: false
+        comment: Default grid styling; all spines visible; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly; weather patterns visible; no visual hierarchy
+          to emphasize insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with markers combining line and scatter features
+        comment: Correct line plot with markers
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=days (continuous), Y=temperature values correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series with different marker shapes (circle, square, triangle)
-          as specified
-      - id: SC-04
-        name: Data Range
+        comment: Lines with markers; multiple series; distinct marker shapes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X (days 1-14) and Y (temperature) correctly mapped
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend labels correctly identify each station
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "line-markers · matplotlib · pyplots.ai"
+        max: 3
+        passed: false
+        comment: Legend correct; title has domain error ('pyplots.ai' instead of 'anyplot.ai')
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series with different markers and line patterns; could
-          benefit from showing filled vs unfilled markers as mentioned in spec notes
+        comment: Three distinct station types with varied temperature patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Weather station temperature data is a real, comprehensible, neutral
-          scientific scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic (6-22°C over 14 days)
+        comment: Real weather station scenario; plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic temperature values (6-22°C) and proportions
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -177,40 +178,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Simple linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only matplotlib and numpy; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Saves 'plot.png' instead of 'plot-{THEME}.png'; no ANYPLOT_THEME
+          integration
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic matplotlib features well but doesn't leverage distinctive
-          capabilities like annotations, custom tick formatters, or advanced styling
+        comment: Correct ax.plot() usage; standard matplotlib patterns without leveraging
+          advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Marker edge styling is standard matplotlib; no distinctive features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
