@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-categorical: Categorical Scatter Plot
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 79/100 | Updated: 2026-05-12
+Quality: 78/100 | Updated: 2026-05-12
 """
 
 import numpy as np

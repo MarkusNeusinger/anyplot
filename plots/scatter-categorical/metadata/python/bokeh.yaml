@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-categorical
 created: '2025-12-30T11:40:30Z'
-updated: '2026-05-12T13:05:44Z'
+updated: '2026-05-12T13:17:26Z'
 generated_by: claude-haiku
 workflow_run: 25736050634
 issue: 2597
@@ -12,114 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/bokeh/plot-dark.html
-quality_score: 79
+quality_score: 78
 review:
   strengths:
-  - Clear visual separation of three categorical groups with distinct clusters
-  - Excellent data scenario choice (products, marketing, engagement) with realistic
-    values
-  - Explicitly set font sizes (48pt title, 36pt labels, 28pt ticks) ensure legibility
-    across both themes
-  - Proper use of ColumnDataSource and scatter() API with hover tooltips
-  - Clean, simple code structure with deterministic seed for reproducibility
+  - Excellent explicit text sizing ensuring readability at high resolution
+  - Perfect marker sizing and transparency for data density
+  - Clear categorical visual distinction with distinct colors
+  - Realistic, business-relevant example data with meaningful axis labels
+  - Proper legend implementation with readable labels
   weaknesses:
-  - 'Custom color palette (#306998, #FFD43B, #E74C3C) instead of Okabe-Ito standard
-    - first series must be #009E73'
-  - No theme-adaptive styling - code hardcodes background without reading ANYPLOT_THEME
-    environment variable
-  - Missing INK, INK_SOFT color tokens for theme-aware chrome elements
-  - Output filename is plot.png instead of plot-light.png / plot-dark.png
-  - Title says pyplots.ai instead of anyplot.ai
-  - Uses export_png() which bokeh library guide forbids - should use Selenium with
-    headless Chrome
+  - 'Custom color palette violates Okabe-Ito requirement; first series must be #009E73
+    not #306998'
+  - 'No theme-adaptive implementation: missing ANYPLOT_THEME environment variable
+    usage and theme tokens (INK, INK_SOFT, PAGE_BG)'
+  - 'Output format violations: saves as plot.png instead of plot-light.png/plot-dark.png'
+  - Uses deprecated bokeh.io.export_png instead of Selenium headless Chrome as per
+    library guide
+  - 'Design lacks sophistication: generic library defaults with no custom palette
+    or intentional visual hierarchy'
+  - 'Minimal visual refinement: all spines preserved, standard grid, no customization
+    beyond basics'
   image_description: |-
     Light render (plot-light.png):
-      Background: #fafafa (warm off-white, close to spec #FAF8F1)
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text. Legend in top-right well-placed.
-      Data: Three clusters - Product A (greenish, lower-left), Product B (orange, middle-upper), Product C (blue, right). Data markers clearly distinct.
-      Colors: Custom palette (#306998, #FFD43B, #E74C3C) instead of Okabe-Ito. First series should be #009E73, not #306998.
-      Legibility verdict: PASS on readability, but FAIL on color specification compliance
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title, axis labels, tick labels all dark-colored and clearly visible against light background
+      Data: Three color clusters (green/teal Product A lower left, orange Product B upper middle, blue Product C right); legend in top right with readable labels; grid lines subtle
+      Legibility verdict: PASS - all text readable with no overlaps
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (appears to be dark theme, should be #1A1A17)
-      Chrome: Title and axis labels appear light-colored and readable despite code not using theme tokens. This works accidentally, not by design.
-      Data: Same data colors as light render (green, orange, blue) - correct for theme independence
-      Colors: Identical custom colors to light render - maintains data color consistency, but still violates Okabe-Ito requirement
-      Legibility verdict: PASS on readability (text visible), but FAIL on theme-adaptive implementation (no environment variable usage)
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title, axis labels, tick labels all light-colored and clearly visible; no dark-on-dark text failures
+      Data: Colors identical to light render (green, orange, blue) confirming consistent category identity; same spatial distribution
+      Legibility verdict: PASS - all text readable in both renders, proper theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicitly set sizes (48pt, 36pt, 28pt) but lacks theme-adaptive
-          colors
+        comment: Font sizes explicitly set (48pt title, 36pt labels, 28pt ticks);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no collisions
+        comment: No overlapping text elements; all content fully legible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized for density (150 points, size=25, alpha=0.7)
+        comment: 150 markers with size=25 and alpha=0.7 properly adapted to density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Custom palette compromises CVD-safe design
+        passed: true
+        comment: Adequate contrast between categories
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent balance, plot fills 60-70% of canvas
+        comment: Good canvas utilization, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Marketing Spend ($K), Engagement Score'
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Custom colors not Okabe-Ito; first series #306998 not #009E73; no
-          theme-adaptive chrome'
+        comment: 'Code uses custom colors (#306998, #FFD43B, #E74C3C) instead of Okabe-Ito;
+          first series must be #009E73'
     design_excellence:
       score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Custom palette chosen but wrong specification - design intent present
-          but misguided
+        comment: Generic styling with library defaults; no custom palette or intentional
+          design hierarchy
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; all spines visible, standard grid; lacks polish
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid and whitespace, but minimal customization beyond defaults
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Three distinct clusters create visual hierarchy and clear focal points
+        comment: Clear group patterns with color differentiation but limited visual
+          hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,19 +132,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Legend, three categories, scatter representation all present
+        comment: Categorical coloring, legend, clear distinction
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all 150 points visible
+        comment: X/Y correctly mapped; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format wrong - says pyplots.ai instead of anyplot.ai
+        passed: true
+        comment: Proper format and labels
     data_quality:
       score: 15
       max: 15
@@ -155,21 +154,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects - three distinct groups with different patterns
+        comment: Shows all categorical aspects with three distinct patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario (products, marketing spend, engagement)
+        comment: Business-relevant product performance metrics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible ranges (25-75 for X, 20-85 for Y) with realistic proportions
+        comment: Plausible marketing spend and engagement values
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -177,54 +176,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Simple, direct structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, bokeh.io, bokeh.models) used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI, appropriate complexity
+        passed: false
+        comment: Uses deprecated export_png; missing theme implementation
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png instead of plot-light.png / plot-dark.png
+        comment: Saves as plot.png instead of plot-{THEME}.png; uses forbidden export_png
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper use of figure(), scatter(), ColumnDataSource - good but not
-          exceptional
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses hover tooltips and Legend model - some Bokeh-specific features
+        passed: false
+        comment: Standard bokeh patterns but ignores library guide theme and export
+          requirements
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: ColumnDataSource and custom legend used but minimal library-specific
+          features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - custom-legend
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
