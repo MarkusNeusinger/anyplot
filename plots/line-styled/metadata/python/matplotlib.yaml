@@ -1,163 +1,171 @@
 library: matplotlib
+language: python
 specification_id: line-styled
 created: '2025-12-30T10:37:53Z'
-updated: '2025-12-30T10:45:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594555861
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-styled/matplotlib/plot.png
-preview_html: null
+updated: '2026-05-12T07:22:09Z'
+generated_by: claude-haiku
+workflow_run: 25719311773
+issue: 2598
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - All four standard line styles (solid, dashed, dotted, dash-dot) are clearly visible
-    and easily distinguishable
-  - Added markers provide additional visual differentiation beyond line styles alone
-  - Consistent line width across all series maintains visual harmony
-  - Legend clearly maps styles to series names as required by the specification
-  - The plot is well-suited for black-and-white printing - the different line styles
-    would remain distinguishable without color
+  - 'Excellent theme adaptation: both light and dark renders are perfectly readable
+    with correct color schemes'
+  - 'Proper Okabe-Ito palette usage: all 4 colors in correct order with brand green
+    (#009E73) first'
+  - Line styles are clearly distinguishable and effectively demonstrate the plot type
+  - Clean, professional visual design with proper spine removal and subtle grid
+  - Idiomatic matplotlib usage with correct theme-token implementation
+  - 'All specification requirements met: solid, dashed, dotted, and dash-dot line
+    styles'
+  - 'Code quality is excellent: reproducible, clean imports, proper structure'
   weaknesses:
-  - Axis labels could include units (e.g., Performance Score (pts) or Relative Performance)
-  - 'Blue color palette has two similar shades (#306998 and #4B8BBE) - while line
-    styles make them distinguishable, more contrasting colors would improve color
-    accessibility further'
-  image_description: 'The plot displays a styled line chart showing CPU performance
-    benchmark scores over 12 months (January to December). Four processor series are
-    shown, each with a distinct line style: Processor A uses a solid dark blue line
-    with circle markers, Processor B uses a dashed yellow/gold line with square markers,
-    Processor C uses a dotted light blue line with triangle markers, and Processor
-    D uses a dash-dot gray line with diamond markers. The title "line-styled · matplotlib
-    · pyplots.ai" appears at the top. A legend in the upper left corner clearly maps
-    each line style to its series name. The Y-axis shows "Performance Score" ranging
-    from approximately 80 to 135, and the X-axis shows "Month" with abbreviated month
-    names. A subtle dashed grid aids readability.'
+  - 'Design excellence is solid but not sophisticated: relies primarily on line styles
+    without additional visual refinement'
+  - Could showcase more distinctive matplotlib features beyond basic line styling
+  - Data storytelling is adequate but lacks a strong visual focal point or emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color. Plot is clearly defined against the light background.
+      Chrome: Title "line-styled · matplotlib · anyplot.ai" is bold and prominent in dark ink (#1A1A17). X-axis label "Month" and Y-axis label "Performance Score" are clearly visible. Month labels (Jan-Dec) and performance score ticks (85-135) are all readable in INK_SOFT (#4A4A44). Legend in upper left has proper dark text on light background frame. No text legibility issues.
+      Data: Four series with distinct line styles and Okabe-Ito colors: solid green (#009E73), dashed orange (#D55E00), dotted blue (#0072B2), and dash-dot reddish purple (#CC79A7). All lines are clearly distinguishable and visible. Data trends are obvious and line styles are distinct enough to identify each series. Grid lines subtle at alpha=0.15.
+      Legibility verdict: PASS — All text is readable, colors meet accessibility standards, line styles are distinct at this resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface. Plot is properly contrast-adjusted.
+      Chrome: Title is in light ink (#F0EFE8) and highly visible on dark background. Axis labels and tick labels are in INK_SOFT (#B8B7B0), all clearly readable against the dark surface. No dark-on-dark contrast failures. Legend frame has appropriate light background color (#242420) with dark text. All text is legible.
+      Data: Line colors are identical to light render — solid green, dashed orange, dotted blue, dash-dot reddish purple. Data representation is identical, confirming proper theme adaptation. Lines are equally distinct and visible.
+      Legibility verdict: PASS — All elements are readable on dark background, no text contrast issues, data colors match light render perfectly, theme adaptation is flawless.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All text clearly readable in both themes — title 24pt, labels 20pt,
+          ticks 16pt, legend 16pt
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements, legend positioned well, appropriate spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 and marker size of 8 are well-suited for 12 data
-          points per series
+        comment: All 4 lines visible with distinct styles, line width 3 is consistent
+          and appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable; however blue/light blue could be challenging
-          for some colorblind viewers, though line styles provide redundant encoding
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("Month", "Performance Score") but lack units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), legend well-placed in upper left
+        comment: Okabe-Ito palette used, CVD-safe, line styles provide non-color distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect (4800×2700), well-balanced proportions, generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format, axis labels descriptive and clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito 1-4 in order, backgrounds correct,
+          both themes render identically for data'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional palette and style usage, but design is relatively straightforward
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, proper legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear trends visible, but lacks strong visual hierarchy or focal
+          point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with multiple styled lines
+        comment: Correct multi-series line plot with line style distinction
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time (months), Y=performance scores correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: All 4 standard line styles present (solid, dashed, dotted, dash-dot),
-          legend included, consistent line widths
-      - id: SC-04
-        name: Data Range
+        comment: 'All required line styles present: solid, dashed, dotted, dash-dot.
+          Legend maps to series. Consistent line width.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points with appropriate range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: months (1-12), Y: performance scores (85-135), all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly match each series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-styled · matplotlib · pyplots.ai"'
+        comment: Title correct format, legend present and functional
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all 4 line styles with clear differentiation, varied trends
-          (upward, fluctuating, declining patterns)
+        comment: All 4 line styles demonstrated, trends visible, sufficient data points
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: CPU benchmark scenario is plausible but somewhat generic; could be
-          more specific (e.g., specific benchmark names)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Performance scores starting around 100 and varying within realistic
-          bounds
+        comment: CPU performance benchmark is realistic and neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ranges for both axes, trends are clear
     code_quality:
       score: 10
       max: 10
@@ -167,40 +175,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: No unnecessary functions/classes, straightforward structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set to 42, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported, both used
+        comment: Only os, matplotlib.pyplot, numpy — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Appropriate complexity, no fake UI, theme tokens properly implemented
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png, current matplotlib API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent matplotlib usage: proper ax methods, spine control, theme
+          tokens, grid configuration'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses matplotlib's Axes methods correctly, but no particularly advanced
-          features like custom line styles or annotations
+        comment: Good use of linestyle parameter, but could showcase more unique matplotlib
+          capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - multi-series-lines
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive
+  - line-styles
