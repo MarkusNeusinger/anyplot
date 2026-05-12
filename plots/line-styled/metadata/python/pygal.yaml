@@ -1,173 +1,168 @@
 library: pygal
+language: python
 specification_id: line-styled
 created: '2025-12-30T10:37:51Z'
-updated: '2025-12-30T10:44:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594559510
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T07:35:06Z'
+generated_by: claude-haiku
+workflow_run: 25719844448
+issue: 2598
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-styled/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-styled/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/pygal/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of all 4 standard line styles (solid, dashed, dotted,
-    dash-dot) using pygal stroke_dasharray
-  - Clear, readable text with appropriate font sizes for the large canvas
-  - Realistic temperature sensor data scenario with seasonal variation
-  - Clean code structure following KISS principles
-  - Proper use of custom Style for large canvas sizing
-  - Both PNG and interactive HTML outputs generated
+  - Excellent theme implementation with proper color token adaptation in both light
+    and dark renders
+  - Perfect palette compliance using Okabe-Ito positions with brand green as first
+    series
+  - All text elements explicitly sized and perfectly readable in both themes
+  - Strong spec compliance with all required line styles clearly visible and distinguishable
+  - Deterministic, reproducible code with proper seeding
   weaknesses:
-  - Legend placement in upper left could be moved to avoid any potential overlap with
-    data
-  - Color palette includes red-green combination; while line styles provide differentiation,
-    a more colorblind-friendly palette would be better
-  - Could showcase more pygal-specific features like tooltips or value labels
-  image_description: "The plot displays a styled line chart showing temperature measurements\
-    \ from 4 sensors over 12 months (January to December). The title \"line-styled\
-    \ · pygal · pyplots.ai\" appears at the top. The y-axis displays \"Temperature\
-    \ (°C)\" ranging from approximately 3-28°C, and the x-axis shows \"Month\" with\
-    \ all 12 months labeled clearly. Four data series are shown with distinct line\
-    \ styles:\n- **Sensor A (Solid)** - Blue solid line with circular markers\n- **Sensor\
-    \ B (Dashed)** - Yellow dashed line with circular markers  \n- **Sensor C (Dotted)**\
-    \ - Red dotted line with circular markers\n- **Sensor D (Dash-Dot)** - Green dash-dot\
-    \ line with circular markers\n\nThe legend is positioned in the upper left corner\
-    \ outside the plot area. All four line styles are clearly distinguishable from\
-    \ each other. The data shows a realistic seasonal temperature pattern (low in\
-    \ winter months, peaking in July). The plot has a clean white background with\
-    \ subtle horizontal grid lines."
+  - Design is minimal with no customizations beyond configured defaults
+  - No visual refinement such as spine removal or grid styling
+  - No visual hierarchy or emphasis to guide viewer attention
+  - Limited exploration of distinctive pygal features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "line-styled · pygal · anyplot.ai" in dark text (28px), axis labels "Month" and "Temperature (°C)" clearly readable, tick labels dark and visible, grid lines subtle
+      Data: Four lines using Okabe-Ito colors - green (#009E73) solid, orange (#D55E00) dashed, blue (#0072B2) dotted, purple (#CC79A7) dash-dot. All colors correctly used. Markers visible at data points.
+      Legibility verdict: PASS - All text readable, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title and labels now in light text (#F0EFE8) with excellent contrast on dark background, tick labels readable, grid subtle
+      Data: Colors identical to light render - green, orange, blue, purple in same positions and styles. Markers visible.
+      Legibility verdict: PASS - All text readable with proper dark theme adaptation, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are clearly readable at full
-          size. Legend text is slightly small but still legible.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text anywhere in the plot.
+        comment: All font sizes explicitly set. Title 28px, labels 22px, ticks 18px
+          - perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend well-positioned in top-left
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines and markers are well-sized and clearly visible. Line thickness
-          and marker size are appropriate.
+        comment: All four lines with distinct styles clearly visible. Markers visible
+          at each point
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are reasonably distinguishable (blue, yellow, red, green),
-          but red-green combination could be challenging for some colorblind viewers.
-          However, line styles provide additional differentiation.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with plot filling most of the canvas. Balanced margins.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Temperature (°C)"
-          and "Month".'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe. Line styles provide additional distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions, balanced margins, plot fills ~60% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with only y-guides shown. Legend placement in upper
-          left is acceptable but overlaps with plot area slightly.
+        comment: Descriptive labels with units. Title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Background correct (#FAF8F1/#1A1A17). Both
+          renders theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no distinctive design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart with multiple styled lines.
+        comment: Correct line chart with line-style variation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows time (months), Y-axis shows continuous values (temperature).
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All 4 standard line styles present: solid, dashed, dotted, dash-dot.
-          Legend maps styles to series names.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: 4 series, distinct line styles, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within the axis range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y correctly assigned. All data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies each series with its line style.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-styled · pygal · pyplots.ai".'
+        comment: Title format correct. Legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all 4 line styles with varying but similar trends. Could benefit
-          from slightly more variation between series.
+        comment: Shows all line plot aspects with variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature sensor readings over a year is a realistic, neutral scenario
-          applicable to climate monitoring.
+        comment: Temperature sensor data is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature values are realistic for a temperate climate (5-28°C).
-          Some values in Sensor C dip quite low (~1°C in December) which is plausible
-          but at the edge.
+        comment: Sensible values (2-30°C) for seasonal data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,42 +170,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save. No functions
-          or classes.'
+        comment: No functions or classes. Clean linear code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)` for reproducibility.
+        comment: Deterministic with seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal, Style).
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html, which is correct for pygal.
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output files
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal's stroke_style with dasharray for line styles, custom
-          Style class for theming, and both PNG and HTML outputs. Could leverage more
-          advanced features like tooltips or animations.
+        comment: Good use of custom Style with theme tokens and stroke_style
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Minimal use of distinctive pygal features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
