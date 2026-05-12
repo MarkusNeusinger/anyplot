@@ -1,13 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 line-filled: Filled Line Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-12
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from plotnine import aes, element_line, element_text, geom_area, geom_line, ggplot, labs, theme, theme_minimal
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_area,
+    geom_line,
+    ggplot,
+    labs,
+    scale_x_continuous,
+    theme,
+    theme_minimal,
+)
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data - Monthly website traffic over a year
 np.random.seed(42)
@@ -22,20 +42,28 @@ df = pd.DataFrame({"Month": months, "Visitors": visitors})
 # Plot
 plot = (
     ggplot(df, aes(x="Month", y="Visitors"))
-    + geom_area(fill="#306998", alpha=0.4)
-    + geom_line(color="#306998", size=2)
-    + labs(x="Month", y="Website Visitors", title="line-filled · plotnine · pyplots.ai")
+    + geom_area(fill=BRAND, alpha=0.4)
+    + geom_line(color=BRAND, size=2)
+    + labs(
+        x="Month",
+        y="Website Visitors",
+        title="line-filled · plotnine · anyplot.ai",
+    )
+    + scale_x_continuous(breaks=range(1, 13))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        panel_grid_major=element_line(color="#cccccc", size=0.5, alpha=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_line(alpha=0),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        plot_title=element_text(size=24, color=INK),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
