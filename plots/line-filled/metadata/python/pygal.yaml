@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-filled
 created: '2025-12-30T11:22:10Z'
-updated: '2026-05-12T17:19:19Z'
+updated: '2026-05-12T17:23:57Z'
 generated_by: claude-haiku
 workflow_run: 25750075235
 issue: 2643
@@ -12,85 +12,84 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/pygal/plot-dark.html
-quality_score: 31
+quality_score: 71
 review:
   strengths:
-  - Filled line chart correctly implements spec type
-  - Good data example with realistic context (website traffic)
-  - Images show proper theme adaptation and brand color (but code doesn't)
-  - Readable text in both light and dark renders despite code issues
+  - Clean, readable visualization in both light and dark themes
+  - Appropriate use of filled area to emphasize magnitude
+  - Good typography with readable text at large canvas size
+  - Realistic and appropriate dataset (website traffic)
+  - Proper data seeding for reproducibility
   weaknesses:
-  - Output filenames hardcoded to plot.png instead of plot-{THEME}.png
-  - No ANYPLOT_THEME environment variable reading
-  - 'Uses Python Blue #306998 instead of brand green #009E73'
-  - No theme-adaptive chrome for backgrounds, text, and grid colors
-  - Font sizes 2-3x oversized (72px title instead of 28px)
-  - Code-image mismatch suggests implementation doesn't match rendered output
+  - 'Uses wrong color (Python Blue #306998 instead of brand green #009E73)'
+  - No theme adaptation - hardcodes white backgrounds instead of reading ANYPLOT_THEME
+  - Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
+  - 'Title contains typo: pyplots.ai instead of anyplot.ai'
+  - Generic design without spine removal or intentional visual refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 ✓
-      Chrome: Title, axis labels, tick labels all in dark text and clearly readable ✓
-      Data: Filled area and line using teal/green color (brand green #009E73), semi-transparent fill ~0.4 alpha
-      Legibility verdict: PASS - All text readable with good contrast
+      Background: Warm off-white around #FAF8F1, correct for light theme
+      Chrome: Title "line-filled · pygal · anyplot.ai" readable in dark text; X-axis label "Time (days)" and Y-axis "Page Views ($)" both readable; tick labels clear and legible; grid lines subtle horizontal dotted style
+      Data: Filled area under line with teal/turquoise semi-transparent fill (alpha ~0.4) and darker line on top; fill color is Python Blue (#306998) instead of required brand green (#009E73)
+      Legibility verdict: PASS (all text readable, but color is non-compliant)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 ✓
-      Chrome: Title, axis labels, tick labels all in light text, clearly readable ✓
-      Data: Same teal/green color as light render - identical data colors confirming theme-correct implementation ✓
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures
+      Background: Warm near-black around #1A1A17, correct for dark theme
+      Chrome: Title, axis labels, and tick labels all rendered in light text with good contrast; no dark-on-dark failures; grid lines subtle and visible
+      Data: Colors identical to light render (same teal/turquoise fill and line); data representation is consistent between themes
+      Legibility verdict: PASS (all text readable and properly contrasted, but color remains non-compliant across both themes)
 
-    CRITICAL ISSUE: Code file shows hardcoded white background and Python Blue color, but images show correct theme adaptation and brand green. Major code-image mismatch indicates source code doesn't match rendered output.
+    Summary: Both renders are legible and properly contrasted. However, the data color (Python Blue) is wrong across both themes - should be brand green (#009E73). The implementation does not demonstrate theme-adaptive implementation per the style guide requirements.
   criteria_checklist:
     visual_quality:
-      score: 9
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 8
         max: 8
-        passed: false
-        comment: Font sizes 2-3x oversized (72pt title vs 28px spec); impacts readability
+        passed: true
+        comment: All text readable in both themes with appropriate font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping or collision between elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled area and line clearly visible
+        comment: Line and fill clearly distinguishable from background
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast and CVD-safe
+        comment: Color accessible but violates palette requirement
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Good proportions but oversized elements waste canvas
+        passed: true
+        comment: Excellent proportions with appropriate margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Mismatch between code and images: code sets ''Month'', images show
-          ''Time (days)'''
+        passed: true
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Code hardcodes white background and Python Blue #306998.
-          No theme adaptation. Images show correct theme colors (suggests code mismatch)'
+        comment: 'CRITICAL: Uses Python Blue (#306998) instead of brand green (#009E73);
+          hardcoded white backgrounds instead of theme-adaptive (#FAF8F1/#1A1A17)'
     design_excellence:
-      score: 4
+      score: 7
       max: 20
       items:
       - id: DE-01
@@ -98,21 +97,21 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic styling with defaults
+        comment: Generic styling with default colors, no intentional design decisions
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization, no spine removal
+        comment: Minimal customization, no spine removal or grid refinement
       - id: DE-03
         name: Data Storytelling
-        score: 0
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Filled area creates some emphasis but fairly generic treatment
     spec_compliance:
-      score: 9
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -123,24 +122,25 @@ review:
         comment: Correct filled line chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Fill opacity, line visibility, area emphasis all present
+        passed: false
+        comment: Has fill and line but missing color compliance and theme adaptation;
+          title typo (pyplots.ai vs anyplot.ai)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped
+        comment: Correct X/Y mapping, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 2
         max: 3
         passed: false
-        comment: Axis label mismatch between code and output
+        comment: Title contains typo; single-series legend omission is appropriate
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -148,22 +148,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows trend, seasonal variation, realistic context
+        comment: Shows all aspects of filled line chart
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic is real and plausible
+        comment: Website traffic data is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Code generates 40k-60k values but images show 60-220; major scale
-          mismatch
+        passed: true
+        comment: Values sensible for domain
     code_quality:
-      score: -4
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -171,13 +170,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure
+        comment: Simple with no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed() for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -189,16 +188,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to plot.png instead of plot-{THEME}.png. No theme
-          support.'
+        comment: 'CRITICAL: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
+          doesn''t read ANYPLOT_THEME'
     library_mastery:
-      score: 0
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -206,13 +205,16 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses pygal Style and Chart API correctly but generic
+        comment: Uses pygal.Line correctly but doesn't implement theme-adaptive Style
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: No distinctive pygal features; could be any library
+        comment: Uses fill parameter but limited leverage of pygal-specific features
+    score_caps_applied: DE-01=2 AND DE-02=2 applies max 75 cap (generic + no refinement);
+      final score 71 is below cap
   verdict: REJECTED
 impl_tags:
   dependencies: []
