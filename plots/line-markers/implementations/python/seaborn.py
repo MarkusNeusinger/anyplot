@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-markers: Line Plot with Markers
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-05-12
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-12
 """
 
 import os
