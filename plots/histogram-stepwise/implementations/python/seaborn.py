@@ -1,34 +1,69 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-stepwise: Step Histogram
 Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Quality: 92 | Updated: 2025-12-31
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — positions 1 and 2
+OKABE_ITO = ["#009E73", "#D55E00"]
+
+# Configure seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
 # Data - Simulating response times (ms) for two different services
 np.random.seed(42)
-service_a = np.random.exponential(scale=50, size=500) + 20  # Faster service
-service_b = np.random.exponential(scale=80, size=500) + 40  # Slower service
+service_a = np.random.exponential(scale=50, size=500) + 20
+service_b = np.random.exponential(scale=80, size=500) + 40
 
-# Create plot (4800x2700 px at 300 dpi = 16x9 inches)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Step histograms - using histplot with element='step' and fill=False
-sns.histplot(service_a, bins=30, element="step", fill=False, color="#306998", linewidth=3, label="Service A", ax=ax)
+# Step histograms
+sns.histplot(service_a, bins=30, element="step", fill=False, color=OKABE_ITO[0], linewidth=3, label="Service A", ax=ax)
+sns.histplot(service_b, bins=30, element="step", fill=False, color=OKABE_ITO[1], linewidth=3, label="Service B", ax=ax)
 
-sns.histplot(service_b, bins=30, element="step", fill=False, color="#FFD43B", linewidth=3, label="Service B", ax=ax)
+# Style
+ax.set_xlabel("Response Time (ms)", fontsize=20, color=INK)
+ax.set_ylabel("Count", fontsize=20, color=INK)
+ax.set_title("histogram-stepwise · seaborn · anyplot.ai", fontsize=24, color=INK, fontweight="medium")
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.legend(fontsize=16, loc="upper right", framealpha=0.95)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK_SOFT)
 
-# Labels and styling
-ax.set_xlabel("Response Time (ms)", fontsize=20)
-ax.set_ylabel("Count", fontsize=20)
-ax.set_title("histogram-stepwise · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=16, loc="upper right")
-ax.grid(True, alpha=0.3, linestyle="--")
-
+# Save
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
