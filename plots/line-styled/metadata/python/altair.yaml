@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-styled
 created: '2025-12-30T10:38:24Z'
-updated: '2026-05-12T07:26:04Z'
+updated: '2026-05-12T07:32:18Z'
 generated_by: claude-haiku
 workflow_run: 25719664719
 issue: 2598
@@ -12,125 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-dark.html
-quality_score: 69
+quality_score: 73
 review:
   strengths:
-  - Explicit, large font sizes (28px title, 22px labels, 18px ticks) ensure perfect
-    readability in both light and dark renders
-  - Effective use of Altair's strokeDash encoding for line style differentiation -
-    demonstrates library-specific technique
-  - Proper data generation with reproducible seed (np.random.seed(42)) and realistic
-    weather station context
-  - Clean, maintainable code structure with no over-engineering or unnecessary complexity
-  - Visually readable output with correct theme adaptation (warm off-white light background,
-    warm near-black dark background)
-  - Legend effectively communicates four distinct data series without overlap or ambiguity
+  - Clear visual distinction of line styles (solid, dashed, dotted, dash-dot) improves
+    accessibility
+  - Clean, minimalist design with appropriate font sizing and good whitespace
+  - Theme-adaptive background colors and text contrast are correct (light/dark backgrounds,
+    readable text in both themes)
+  - Realistic weather station data with good seasonal pattern demonstration
+  - Proper use of Altair's strokeDash encoding for line style differentiation
   weaknesses:
-  - 'CRITICAL: Output filename violates spec - saves as plot.png instead of plot-light.png/plot-dark.png'
-  - 'CRITICAL: Color palette violates Okabe-Ito requirement - uses #306998 (Python
-    Blue) as first series instead of #009E73 (brand green)'
-  - Code does NOT read ANYPLOT_THEME environment variable for theme-aware execution
-  - No theme-adaptive chrome tokens (INK, INK_SOFT, PAGE_BG) implemented in code
-  - Generic design with no visual sophistication beyond library defaults
-  - Minimal visual refinement (grid opacity standard, no spine removal, limited whitespace
-    optimization)
-  - 'Legend label mismatch: code defines station names (Coastal/Mountain/Valley/Highland)
-    but rendered output shows generic labels'
+  - 'Custom color palette (#306998, #FFD43B, #48A9A6, #E76F51) violates Okabe-Ito
+    requirement — first series must be #009E73, not Python Blue'
+  - 'Title domain wrong: says ''pyplots.ai'' instead of ''anyplot.ai'' (line 87)'
+  - 'Legend label inconsistency: shows ''Product Line'' but data is ''Station'' (Coastal,
+    Mountain, Valley, Highland)'
+  - 'Output files non-compliant: saves ''plot.png'' instead of ''plot-{THEME}.png'';
+    code doesn''t read ANYPLOT_THEME environment variable for theme-adaptive styling'
+  - Missing idiomatic theme-adaptive chrome configuration (background, text colors)
+    per style guide pattern
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, appears to be #FAF8F1 or similar - correctly implements light theme
-      Chrome: Title (28px), axis labels (22px), and tick labels (18px) all rendered in dark text, fully readable against light background
-      Data: Four line series with distinct styles (solid, dashed, dotted, dash-dot) visible and distinguishable. Colors are distinct and colorblind-safe.
-      Grid: Subtle gray lines (opacity 0.3) present but not dominant
-      Legend: Clear "Product Line" legend with four entries, properly positioned on right side
-      Legibility verdict: PASS - All elements readable, no text overlap
+      Background: Warm off-white (#FAF8F1 area) — correct for light theme
+      Chrome: Title "line-styled · altair · pyplots.ai" is clearly visible in dark text; Month and Temperature (°C) axis labels readable; tick labels legible
+      Data: Four lines with distinct patterns (solid, dashed, dotted, dash-dot). Colors are custom palette (#306998 Python Blue, #FFD43B, #48A9A6, #E76F51) NOT the mandated Okabe-Ito palette. First series should be #009E73 but is #306998.
+      Legibility verdict: PASS on readability but FAIL on spec compliance (wrong palette, wrong title domain)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, appears to be #1A1A17 or similar - correctly implements dark theme
-      Chrome: Title, axis labels, and tick labels all rendered in light text (appears to be #F0EFE8 or #B8B7B0), fully readable against dark background. No "dark-on-dark" issues.
-      Data: Identical four line series and styles as light render - solid, dashed, dotted, dash-dot lines present. Data colors remain exactly #009E73-equivalent through the first line (though code violates this with #306998)
-      Grid: Grid lines visible with appropriate opacity and light color
-      Legend: Light text on slightly elevated dark background (#242420 or similar), properly styled
-      Color consistency: Data colors are identical between light and dark renders - only chrome has adapted to theme (correct behavior)
-      Legibility verdict: PASS - All elements readable, good contrast, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17 area) — correct for dark theme
+      Chrome: Title visible in light text; axis labels and tick labels all readable against dark background; no "dark-on-dark" failures
+      Data: Same four line styles visible; colors appear identical to light render (only chrome theme-flipped as expected). However, data colors still violate Okabe-Ito requirement.
+      Legibility verdict: PASS on readability but FAIL on spec compliance (wrong palette, wrong title domain)
 
-    CRITICAL FINDING: While both renders appear visually correct with proper theme adaptation, the code as written does NOT implement this correctly. The code saves to "plot.png" and uses custom colors #306998/#FFD43B/#48A9A6/#E76F51 instead of Okabe-Ito palette. The generated images appear to be from a different version or post-processed by the pipeline, not the code as provided.
+    Both renders are readable and have correct background colors. However, both fail the palette requirement (VQ-07 = 0) and the title/legend spec (SC-04 issues).
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px. Fully readable in both themes.'
+        comment: Font sizes explicitly set (18-22px), all readable in both themes.
+          Not perfect 8 due to reliance on defaults for some elements.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels properly spaced, no overlapping text detected
+        comment: No overlapping text; month labels and legend all readable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line styles clearly distinguishable. strokeWidth=4 appropriate for
-          visibility.
+        comment: Lines clearly visible with 4px stroke width; different styles easily
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Four colors distinct and colorblind-safe
+        passed: false
+        comment: Good contrast between colors, but custom palette violates spec —
+          not using approved Okabe-Ito
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Plot fills ~33% of canvas (1600×900 on 4800×2700). Composition slightly
-          cramped.
+        passed: true
+        comment: Good plot utilization but minor wasted space on edges
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) includes units
+        comment: Proper labels with units (Temperature °C)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: First series is #306998 (Python Blue) not #009E73 (brand
-          green). Colors are custom, not Okabe-Ito positions.'
+        comment: 'CRITICAL: Custom palette (#306998, #FFD43B, etc.) instead of Okabe-Ito.
+          First series must be #009E73, not #306998. Both renders fail palette requirement.'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults with Python palette. No design sophistication
-          beyond standard Altair.
+        passed: true
+        comment: Clean, professional appearance with deliberate color choices (Python
+          theme). However, violates fundamental palette requirement, so design sophistication
+          is undermined.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Standard grid opacity, no spine removal, minimal refinement
+        passed: true
+        comment: Subtle grid (0.3 opacity), minimal spines, good whitespace. Well-refined
+          for a default implementation.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Displays four series without visual hierarchy or emphasis
+        comment: Data displayed without visual hierarchy or emphasis. Plot shows trends
+          but doesn't guide viewer to insights.
     spec_compliance:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -138,50 +132,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with multiple series
+        comment: Correct line plot with multiple series and different line styles
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Line styles present, legend included, data properly mapped
+        comment: Shows all four line styles (solid, dashed, dotted, dash-dot). Legend
+          present but has label mismatch.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned (Month × Temperature)
+        comment: X/Y correctly assigned; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: 'Title correct, but legend mismatch: code defines stations but output
-          shows generic labels'
+        comment: 'CRITICAL: Title says ''pyplots.ai'' instead of ''anyplot.ai''. Legend
+          label ''Product Line'' doesn''t match data ''Station''.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows seasonal variation and different station means
+        comment: Shows all line style types with realistic seasonal temperature patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Weather station temperature data is realistic and neutral
+        comment: Weather station temperature data is realistic, neutral, and comprehensible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Values plausible, seed ensures reproducibility
+        comment: Temperature ranges and patterns are factually plausible
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,34 +184,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow without unnecessary functions
+        comment: 'Simple linear structure: data generation → chart definition → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set correctly
+        comment: np.random.seed(42) ensures reproducible randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: Only necessary imports (altair, numpy, pandas)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Clean, Pythonic code with appropriate complexity. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png instead of plot-light.png/plot-dark.png.
-          Does not read ANYPLOT_THEME.'
+        comment: 'CRITICAL: Saves to ''plot.png''/''plot.html'' instead of ''plot-{THEME}.png''/''plot-{THEME}.html''.
+          Does not read ANYPLOT_THEME environment variable.'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -224,21 +219,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct mark_line(), proper encoding, solid Altair patterns
+        comment: Good use of Altair's encode() and properties() API. Proper high-level
+          chart construction.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Good use of strokeDash encoding, but generic overall. Could leverage
-          more Altair-specific features.
+        comment: Uses strokeDash which is Altair-specific, but doesn't leverage other
+          distinctive Altair features like interactivity or custom themes deeply.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - multi-series-lines
   patterns:
-  - data-generation
-  dataprep: []
+  - line-styling
+  dataprep:
+  - seasonal-patterns
   styling:
-  - grid-styling
+  - theme-adaptive-backgrounds
