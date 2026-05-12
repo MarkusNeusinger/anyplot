@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-markers
 created: '2025-12-30T10:38:14Z'
-updated: '2026-05-12T03:44:27Z'
+updated: '2026-05-12T03:50:25Z'
 generated_by: claude-haiku
 workflow_run: 25711578409
 issue: 2599
@@ -15,44 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-mark
 quality_score: 76
 review:
   strengths:
-  - Excellent text legibility with large explicitly-sized fonts perfectly scaled for
-    high-resolution output (72pt title, 48pt axis labels)
-  - Perfect visual output in both light and dark renders with correct theme adaptation
-    and readability in the generated images
-  - Strong spec compliance with accurate plot type, correct data mapping, and proper
-    formatting
-  - Good data quality with realistic temperature scenario and meaningful variation
-    across three sensor series
-  - Clean layout with no visual defects, no overlapping elements, and well-proportioned
-    canvas usage
-  - Markers appropriately sized and clearly distinguishable from connecting lines
+  - 'Explicit Typography: Font sizes precisely set for large canvas (72px title, 48px
+    labels) with excellent readability in both themes'
+  - 'Theme-Adaptive Chrome: Both renders correctly apply theme colors (dark text on
+    light, light text on dark) with perfect background colors (#FAF8F1 and #1A1A17)'
+  - 'Clean Data Representation: 12 data points per series with appropriate marker
+    size (16px) and line width (6px), no visual crowding'
+  - 'Proper Multi-Series Handling: Three series clearly distinguished without overlap,
+    legend properly positioned and labeled'
   weaknesses:
-  - 'Source code hardcodes colors instead of Okabe-Ito palette—violates VQ-07. Code
-    should use OKABE_ITO tuple with first series always #009E73'
-  - Code does not read ANYPLOT_THEME environment variable; hardcodes white background
-    and static colors instead of theme-adaptive tokens
-  - Output files saved as plot.png/plot.html instead of plot-{THEME}.png and plot-{THEME}.html
-    pattern
-  - Title hardcodes 'pyplots.ai' instead of 'anyplot.ai'
-  - Missing visual hierarchy—three sensor series displayed with equal visual weight,
-    no emphasis on patterns or insights
-  - Code does not follow pygal library guide requirements for theme-aware styling—critical
-    issues from Attempt 1 not fixed
+  - 'Palette Non-Compliance: Code hardcodes colors (#306998, #FFD43B, #E74C3C) instead
+    of Okabe-Ito palette. First series must be #009E73, second #D55E00, third #0072B2'
+  - 'Missing Theme Environment Variable: Code does not read os.environ[ANYPLOT_THEME].
+    Hard-coded background=''white'' prevents dark theme rendering. Must use theme
+    tokens from default-style-guide.md'
+  - 'Wrong Output File Names: Saves as plot.png and plot.html, must be plot-{THEME}.png
+    and plot-{THEME}.html for dual-render pipeline'
+  - 'Generic Design: No visual refinement (spines not removed), default grid styling,
+    no visual hierarchy to guide viewer toward insights'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified - correct
-      Chrome: Title "line-markers · pygal · anyplot.ai" (dark text), axis labels "Month" and "Temperature (°C)" (dark), tick labels (Jan-Dec, temperature values) all dark text - all readable with excellent contrast
-      Data: Three series in Okabe-Ito colors: Sensor A (green #009E73), Sensor B (orange #D55E00), Sensor C (blue #0072B2); round markers visible at each point; connecting lines show seasonal patterns clearly
-      Legibility verdict: PASS - All elements clearly readable, no text collisions, excellent dark-on-light contrast
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "line-markers · pygal · anyplot.ai" clearly visible in dark text. Axis labels "Month" and "Temperature (°C)" with units, all tick labels readable. Legend "Sensor A, B, C" positioned top-left without overlap.
+      Data: Three distinct series (teal/green, orange, blue) with clear markers and connecting lines. Markers size 16px, line width 6px - appropriately scaled for 12 points per series.
+      Legibility verdict: PASS - all text readable, high contrast (dark on light), no overlap, no unreadable elements
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified - correct
-      Chrome: Title, axis labels, and tick labels all rendered in light text (#F0EFE8 or similar), fully visible against dark background - no dark-on-dark failures
-      Data: Three data colors identical to light render (green, blue, orange), confirming theme-independent data color handling; markers and lines equally visible against dark surface
-      Legibility verdict: PASS - All elements readable with correct theme adaptation, no legibility issues
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8 approximately). All readable against dark background. Legend readable. Grid lines visible and subtle.
+      Data: Same three series colors as light render (teal, orange, blue) - data colors do NOT change between themes, only chrome. Markers and lines clearly visible against dark background.
+      Legibility verdict: PASS - all text readable, proper light-on-dark contrast, no dark-on-dark failures, grid visible but not dominant
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,77 +55,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizing (72pt title, 48pt labels) renders perfectly
-          in both themes with no readability issues
+        comment: Font sizes explicitly set (72px title, 48px labels, 42px ticks).
+          All readable in both light and dark themes with perfect contrast.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements have excellent spacing; no overlapping or collision
-          issues
+        comment: No overlapping elements. Legend positioned cleanly top-left. Month
+          labels well-spaced along x-axis.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (16px) and stroke width (6px) optimally sized for 12-point
-          sparse dataset
+        comment: Markers (size 16) and lines (width 6) clearly visible and proportioned
+          for 12 data points. No crowding.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (positions 1-3) provides CVD-safe colors with excellent
-          contrast
+        comment: Three series use distinct hues (teal, orange, blue) with good luminance
+          separation. CVD-safe palette intended.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced 4800×2700 canvas with 100px margins and proper whitespace
-          utilization
+        comment: Plot fills ~60% of 4800×2700 canvas. Balanced margins (100px). Legend
+          and plot well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units; title format correct
+        comment: 'Descriptive labels with units: ''Temperature (°C)'' and ''Month''.
+          Title format correct.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'Critical code issue: hardcoded colors (#306998, #FFD43B, #E74C3C)
-          instead of Okabe-Ito. Rendered output correct but code violates requirement.
-          Deduction: -1 for code-output mismatch.'
+        comment: 'CRITICAL: Code hardcodes colors (#306998, #FFD43B, #E74C3C) instead
+          of Okabe-Ito. Theme backgrounds correct (#FAF8F1, #1A1A17) but palette definition
+          non-compliant.'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional large-font styling and balanced proportions, but no
-          custom design choices beyond defaults
+        comment: Well-configured defaults with professional sizings, but uses Python
+          color scheme. No custom design thinking.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Y-axis guides with generous margins show intentionality; could benefit
-          from additional refinement
+        comment: Minimal refinement. Y-axis grid visible but no spines removed. Default
+          styling with increased font sizes.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Seasonal patterns visible but lacks visual hierarchy or emphasis
-          to guide viewer to insights
+        comment: Data displayed but doesn't guide viewer toward insight. No visual
+          hierarchy or emphasis.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -138,27 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with visible markers
+        comment: Correct line plot with markers as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Lines, markers, multiple series (3 sensors) all present
+        comment: Markers visible at each point, multiple series shown, lines connect
+          points.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (months) and Y-axis (temperature) correctly mapped
+        comment: X-axis (months 0-11) and Y-axis (temperature) correctly mapped. All
+          12 points visible per series.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend shows accurate series names
+        passed: false
+        comment: Title format rendered correctly in image. Legend labels match. But
+          code shows hardcoded issues.
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -166,22 +165,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple series with varying patterns demonstrate sparse data visualization
+        comment: Shows full range of line-marker features. Three series with varying
+          trends. Demonstrates sparsity with 12 discrete points.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Temperature sensor scenario with 12-month seasonal cycle is realistic
-          and neutral
+        comment: Temperature sensor data (20-27°C range) is realistic and plausible.
+          Neutral science context.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Temperature range (14-27°C) and monthly sampling are factually plausible
+        comment: Values plausible for temperature sensors over 12 months. Random noise
+          makes relationships somewhat artificial.
     code_quality:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -189,57 +190,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple and direct: imports → data → chart → save'
+        comment: 'Linear flow: imports → data → styling → plot → save. No unnecessary
+          functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed (42) ensures deterministic output
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: 'Only necessary imports: numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Does not read ANYPLOT_THEME environment variable; hardcodes
-          white background instead of theme-adaptive tokens'
+        comment: 'CRITICAL: Hardcoded colors and backgrounds ignore ANYPLOT_THEME
+          environment variable. No theme token support.'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png/plot.html instead of plot-{THEME}.png
-          pattern; title says ''pyplots.ai'' not ''anyplot.ai'''
+        comment: 'CRITICAL: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html.
+          Pipeline cannot dual-render.'
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Ignores pygal library guide requirements for theme-adaptive styling.
-          Guide shows ANYPLOT_THEME pattern on lines 67-80.
+        passed: true
+        comment: Uses pygal.Line() correctly with standard configuration (show_dots,
+          stroke_style). Follows basic patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses basic Style configuration without leveraging pygal's interactive
-          capabilities or unique features
+        passed: true
+        comment: Uses show_dots=True and custom Style object, but doesn't leverage
+          theme tokens correctly.
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
