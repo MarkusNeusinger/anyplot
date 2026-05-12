@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-stepwise: Step Histogram
 Library: highcharts unknown | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-12
+Quality: 92/100 | Created: 2026-05-12
 """
 
 import os
