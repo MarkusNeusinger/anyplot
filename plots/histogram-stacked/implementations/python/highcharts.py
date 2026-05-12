@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-12
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,11 +18,22 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first color always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data: Generate three groups with different distributions
 np.random.seed(42)
-group_a = np.random.normal(loc=45, scale=12, size=150)  # Centered around 45
-group_b = np.random.normal(loc=55, scale=10, size=120)  # Centered around 55
-group_c = np.random.normal(loc=65, scale=15, size=100)  # Centered around 65
+group_a = np.random.normal(loc=45, scale=12, size=150)
+group_b = np.random.normal(loc=55, scale=10, size=120)
+group_c = np.random.normal(loc=65, scale=15, size=100)
 
 # Combine all data to determine common bin edges
 all_data = np.concatenate([group_a, group_b, group_c])
@@ -43,77 +55,83 @@ chart.options.chart = {
     "type": "column",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 300,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 100,
+    "marginLeft": 100,
+    "marginRight": 100,
+    "marginTop": 100,
 }
 
 # Title
 chart.options.title = {
-    "text": "histogram-stacked · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "histogram-stacked · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
+    "margin": 30,
 }
-
-# Subtitle
-chart.options.subtitle = {"text": "Measurement Distribution by Sensor Type", "style": {"fontSize": "42px"}}
 
 # X-axis (categories for bins)
 chart.options.x_axis = {
     "categories": bin_labels,
-    "title": {"text": "Measurement Range", "style": {"fontSize": "48px"}, "margin": 40},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Measurement Range (units)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Frequency", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Frequency (count)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0,0,0,0.1)",
-    "stackLabels": {"enabled": False},
+    "gridLineColor": GRID,
 }
 
 # Plot options for stacking
-chart.options.plot_options = {
-    "column": {"stacking": "normal", "borderWidth": 1, "borderColor": "#ffffff", "dataLabels": {"enabled": False}}
-}
+chart.options.plot_options = {"column": {"stacking": "normal", "borderWidth": 0, "dataLabels": {"enabled": False}}}
 
 # Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "36px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "align": "right",
     "verticalAlign": "top",
     "layout": "vertical",
-    "x": -50,
-    "y": 100,
+    "x": -20,
+    "y": 20,
 }
-
-# Colors - colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#9467BD"]
 
 # Add series for each group
 series_a = ColumnSeries()
 series_a.data = [int(c) for c in counts_a]
-series_a.name = "Sensor A"
-series_a.color = colors[0]
+series_a.name = "Group A"
+series_a.color = OKABE_ITO[0]
 
 series_b = ColumnSeries()
 series_b.data = [int(c) for c in counts_b]
-series_b.name = "Sensor B"
-series_b.color = colors[1]
+series_b.name = "Group B"
+series_b.color = OKABE_ITO[1]
 
 series_c = ColumnSeries()
 series_c.data = [int(c) for c in counts_c]
-series_c.name = "Sensor C"
-series_c.color = colors[2]
+series_c.name = "Group C"
+series_c.color = OKABE_ITO[2]
 
 chart.add_series(series_a)
 chart.add_series(series_b)
 chart.add_series(series_c)
 
 # Export to PNG via Selenium
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -124,11 +142,15 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
+
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -145,11 +167,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
