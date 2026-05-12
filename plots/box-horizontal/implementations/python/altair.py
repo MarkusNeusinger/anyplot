@@ -1,13 +1,24 @@
-""" pyplots.ai
+""" anyplot.ai
 box-horizontal: Horizontal Box Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-12
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Response times by service type
 np.random.seed(42)
@@ -43,11 +54,11 @@ df["Service"] = pd.Categorical(df["Service"], categories=medians.index, ordered=
 chart = (
     alt.Chart(df)
     .mark_boxplot(
-        box=alt.MarkConfig(color="#306998"),
-        median=alt.MarkConfig(color="#FFD43B", size=3),
-        outliers=alt.MarkConfig(color="#306998", size=80),
-        ticks=alt.MarkConfig(color="#306998"),
-        rule=alt.MarkConfig(color="#306998"),
+        box=alt.MarkConfig(color=BRAND),
+        median=alt.MarkConfig(color=INK, size=3),
+        outliers=alt.MarkConfig(color=BRAND, size=80),
+        ticks=alt.MarkConfig(color=BRAND),
+        rule=alt.MarkConfig(color=BRAND),
     )
     .encode(
         x=alt.X("Response Time (ms):Q", title="Response Time (ms)", scale=alt.Scale(zero=False)),
@@ -55,12 +66,26 @@ chart = (
         tooltip=["Service:N", "Response Time (ms):Q"],
     )
     .properties(
-        width=1400, height=800, title=alt.Title("box-horizontal · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("box-horizontal · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, labelLimit=300)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.12,
+        labelColor=INK_SOFT,
+        labelFontSize=18,
+        titleColor=INK,
+        titleFontSize=22,
+        labelLimit=300,
+    )
+    .configure_title(color=INK)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .interactive()
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

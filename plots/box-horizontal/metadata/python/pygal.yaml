@@ -1,36 +1,225 @@
 library: pygal
+language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:34:54Z'
-updated: '2025-12-30T10:00:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593351461
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T01:19:48Z'
+generated_by: claude-haiku
+workflow_run: 25706859723
+issue: 2548
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/pygal/plot.html
-quality_score: 68
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Correct horizontal box plot with all statistical elements (median, quartiles,
+    whiskers, outliers)
+  - 'Proper theme-adaptive styling with correct background colors (#FAF8F1 light,
+    #1A1A17 dark)'
+  - Theme-adaptive text colors for title, axis labels, and ticks—readable in both
+    renders
+  - 'Excellent code quality: clean, reproducible, deterministic with seed'
+  - Proper spec compliance for plot type, features, and data mapping
+  - Realistic, plausible salary data with sensible distributions
+  weaknesses:
+  - 'Palette Compliance (VQ-07): First series must be brand green (#009E73), but visually
+    appears as pale peachy/gold tone—critical violation of core palette requirement'
+  - Categories not sorted by median value, missing the optimization suggested in the
+    spec
+  - Design is purely functional without visual sophistication or refinement
+  - Limited use of pygal-specific features beyond basic box plot rendering
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required
+      Chrome: Title, axis labels, tick labels all in dark text—clearly readable
+      Data: Five horizontal box plots (Software Engineer, Data Scientist, Product Manager, Designer, DevOps Engineer) with salary distributions on x-axis (0-220K USD)
+      Legibility verdict: PASS—all text and elements clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required
+      Chrome: All text in light color—clearly readable against dark surface; no dark-on-dark failures
+      Data: Same box plots with identical data colors to light render (only chrome flipped appropriately)
+      Legibility verdict: PASS—all text and elements clearly visible
+
+    Color consistency verified: Data colors remain identical between renders (only chrome theme-adapts). However, first series color does not visually match the required brand green (#009E73)—appears pale peachy/gold instead.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text properly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with no element collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All box plot elements clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette used, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: First series should be brand green (#009E73), but appears pale peachy/gold—critical
+          violation
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional but generic; minimal custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Standard styling, no exceptional visual polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Categories not sorted by median; no visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal box plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All elements present: median, quartiles, whiskers, outliers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format; legend matches data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All aspects shown; realistic distributions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Salary ranges are plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible salary values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Direct, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic with seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: HorizontalBox workaround is justified; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct file naming
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of Style; HorizontalBox workaround is non-standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Theme tokens used; limited other distinctive features
+  verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Creative solution using dynamic class creation to achieve horizontal box plot
-    in pygal
-  - Excellent real-world scenario (service response times)
-  - Good use of pygal custom Style system with appropriate font sizes for 4800x2700
-    canvas
-  - Proper use of Tukey box mode for statistical accuracy
-  - Clean colorblind-safe color palette
-  weaknesses:
-  - Category labels are NOT displayed on the y-axis - they only appear in the legend
-    at bottom, which defeats the purpose of a horizontal box plot
-  - Excessive whitespace on right side - x-axis extends to 3200ms but data only reaches
-    ~1800ms, wasting ~40% of plot width
-  - Outlier dots are very small and difficult to see against the white background
-  - Legend is redundant when it should complement y-axis labels, not replace them
