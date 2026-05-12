@@ -1,21 +1,42 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 97/100 | Created: 2025-12-30
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
+
+import os
+import pathlib
 
 import numpy as np
 import pandas as pd
-from plotnine import aes, element_text, geom_histogram, ggplot, labs, scale_fill_manual, theme, theme_minimal
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_histogram,
+    ggplot,
+    labs,
+    scale_fill_manual,
+    theme,
+    theme_minimal,
+)
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Plant growth measurements across different soil types
 np.random.seed(42)
 
-# Generate realistic plant height data for three soil types
-soil_a = np.random.normal(loc=25, scale=5, size=150)  # Sandy soil
-soil_b = np.random.normal(loc=30, scale=6, size=120)  # Loamy soil
-soil_c = np.random.normal(loc=22, scale=4, size=100)  # Clay soil
+soil_a = np.random.normal(loc=25, scale=5, size=150)
+soil_b = np.random.normal(loc=30, scale=6, size=120)
+soil_c = np.random.normal(loc=22, scale=4, size=100)
 
 df = pd.DataFrame(
     {
@@ -24,24 +45,34 @@ df = pd.DataFrame(
     }
 )
 
-# Create stacked histogram
+# Plot
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.4),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24, weight="medium"),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=18),
+    legend_position="right",
+    figure_size=(16, 9),
+)
+
 plot = (
     ggplot(df, aes(x="height", fill="soil_type"))
-    + geom_histogram(bins=20, position="stack", alpha=0.85, color="white", size=0.3)
-    + labs(x="Plant Height (cm)", y="Frequency", title="histogram-stacked · plotnine · pyplots.ai", fill="Soil Type")
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#4ECDC4"])
+    + geom_histogram(bins=20, position="stack", alpha=0.85, color=PAGE_BG, size=0.4)
+    + labs(x="Plant Height (cm)", y="Frequency", title="histogram-stacked · plotnine · anyplot.ai", fill="Soil Type")
+    + scale_fill_manual(values=OKABE_ITO)
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_position="right",
-    )
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot_dir = pathlib.Path(__file__).parent
+plot_dir.mkdir(parents=True, exist_ok=True)
+plot.save(str(plot_dir / f"plot-{THEME}.png"), dpi=300)
