@@ -1,13 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-line: Polar Line Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: altair 6.0.0 | Python 3.13
+Quality: pending | Created: 2025-12-30
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove current directory from path to avoid importing this file as altair
+cwd = os.getcwd()
+if cwd in sys.path:
+    sys.path.remove(cwd)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1-2 for two series)
+OKABE_ITO = ["#009E73", "#D55E00"]
 
 # Data - Seasonal temperature pattern (cyclical)
 np.random.seed(42)
@@ -15,14 +37,14 @@ months = np.arange(0, 360, 30)  # 12 months as degrees
 month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 # Two cities with different seasonal patterns
-city_a_temp = np.array([5, 7, 12, 18, 24, 28, 30, 29, 24, 17, 10, 6])  # Northern hemisphere
-city_b_temp = np.array([28, 27, 24, 18, 12, 8, 7, 9, 14, 20, 24, 27])  # Southern hemisphere
+city_a_temp = np.array([5, 7, 12, 18, 24, 28, 30, 29, 24, 17, 10, 6])
+city_b_temp = np.array([28, 27, 24, 18, 12, 8, 7, 9, 14, 20, 24, 27])
 
-# Normalize temperatures to 0-1 range for better polar visualization
+# Normalize temperatures to 0-1 range for polar visualization
 city_a_norm = (city_a_temp - city_a_temp.min()) / (city_a_temp.max() - city_a_temp.min()) * 0.4 + 0.3
 city_b_norm = (city_b_temp - city_b_temp.min()) / (city_b_temp.max() - city_b_temp.min()) * 0.4 + 0.3
 
-# Convert polar to cartesian for Altair (doesn't have native polar)
+# Convert polar to cartesian for Altair
 theta_rad_months = np.radians(months)
 theta_rad_closed = np.append(theta_rad_months, theta_rad_months[0])
 
@@ -70,27 +92,28 @@ labels_df = pd.DataFrame(labels)
 # Concentric grid circles
 circles_chart = (
     alt.Chart(grid_df)
-    .mark_line(strokeWidth=1.5, stroke="#cccccc", opacity=0.5)
+    .mark_line(strokeWidth=1.5, opacity=0.5)
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.1, 1.1])),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.1, 1.1])),
         detail="r:N",
         order="order:O",
+        color=alt.value(INK_SOFT),
     )
 )
 
 # Radial grid lines
 radials_chart = (
     alt.Chart(radials_df)
-    .mark_rule(strokeWidth=1.5, stroke="#cccccc", opacity=0.5)
-    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
+    .mark_rule(strokeWidth=1.5, opacity=0.5)
+    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value(INK_SOFT))
 )
 
 # Month labels
 labels_chart = (
     alt.Chart(labels_df)
-    .mark_text(fontSize=22, fontWeight="bold", color="#333333")
-    .encode(x="x:Q", y="y:Q", text="label:N")
+    .mark_text(fontSize=22, fontWeight="bold")
+    .encode(x="x:Q", y="y:Q", text="label:N", color=alt.value(INK))
 )
 
 # Data lines
@@ -102,9 +125,17 @@ lines_chart = (
         y="y:Q",
         color=alt.Color(
             "city:N",
-            scale=alt.Scale(domain=["Northern City", "Southern City"], range=["#306998", "#FFD43B"]),
+            scale=alt.Scale(domain=["Northern City", "Southern City"], range=OKABE_ITO),
             legend=alt.Legend(
-                title="City", titleFontSize=20, labelFontSize=18, orient="bottom", direction="horizontal"
+                title="City",
+                titleFontSize=20,
+                labelFontSize=18,
+                orient="bottom",
+                direction="horizontal",
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                titleColor=INK,
+                labelColor=INK_SOFT,
             ),
         ),
         order="order:O",
@@ -119,9 +150,7 @@ points_chart = (
         x="x:Q",
         y="y:Q",
         color=alt.Color(
-            "city:N",
-            scale=alt.Scale(domain=["Northern City", "Southern City"], range=["#306998", "#FFD43B"]),
-            legend=None,
+            "city:N", scale=alt.Scale(domain=["Northern City", "Southern City"], range=OKABE_ITO), legend=None
         ),
     )
 )
@@ -133,16 +162,19 @@ chart = (
         width=1200,
         height=1200,
         title=alt.Title(
-            text="polar-line · altair · pyplots.ai",
+            text="polar-line · altair · anyplot.ai",
             subtitle="Monthly Temperature Patterns",
             fontSize=28,
             subtitleFontSize=22,
             anchor="middle",
+            color=INK,
+            subtitleColor=INK_SOFT,
         ),
+        background=PAGE_BG,
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
 # Save (1200 * 3 = 3600 for square format)
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
