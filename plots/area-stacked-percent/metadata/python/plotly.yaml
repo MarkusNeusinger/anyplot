@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:22:20Z'
-updated: '2026-05-12T11:08:10Z'
+updated: '2026-05-12T11:14:20Z'
 generated_by: claude-haiku
 workflow_run: 25730196318
 issue: 2647
@@ -12,37 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-dark.html
-quality_score: 75
+quality_score: 70
 review:
   strengths:
-  - Perfect text legibility in both light and dark renders with explicit font sizing
-  - Correct 100% stacked area chart structure with proper normalization
-  - Real-world, plausible energy market data showing realistic trends
-  - Clean, straightforward code with good reproducibility (seed set)
-  - Well-formatted title and legend matching specification requirements
+  - Correct 100% stacked area chart implementation with proper percentage normalization
+  - Clean, reproducible code with seed set for determinism
+  - Appropriate real-world energy transition data that demonstrates all chart features
+  - Text legibility passes in both light and dark renders
+  - Proper use of Plotly's stackgroup and groupnorm features
   weaknesses:
-  - 'CRITICAL: Custom color palette violates mandatory Okabe-Ito requirement — first
-    series must be #009E73, not #306998'
-  - Missing theme-adaptive code handling ANYPLOT_THEME environment variable
-  - Generic Plotly styling with no design polish or intentional visual hierarchy
-  - No distinctive library features leveraged beyond basic stacking
+  - 'Color palette is NOT Okabe-Ito standard - first series should be #009E73 but
+    uses #306998; must follow canonical order'
+  - Title URL is incorrect (pyplots.ai instead of anyplot.ai)
+  - Missing theme-adaptive chrome - code does not read ANYPLOT_THEME environment variable
+    and apply theme tokens
+  - Wrong output filenames - saves as plot.png instead of plot-{THEME}.png and plot.html
+    instead of plot-{THEME}.html
+  - No visual refinement - grid styling and layout are generic defaults with minimal
+    customization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title, axis labels (Year, Market Share %), and tick labels (2015-2024, 0%-100%) all clearly visible in dark text with high contrast. Legend at top with clear category names. Subtle grid lines visible.
-      Data: Five stacked areas (Coal/teal, Natural Gas/orange, Wind/blue, Solar/magenta, Hydro/yellow) showing realistic energy market composition over time. All areas clearly distinguishable and readable.
-      Legibility verdict: PASS — all text and data elements are fully readable.
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "area-stacked-percent · plotly · pyplots.ai" (URL wrong, should be anyplot.ai), axis labels "Year" and "Market Share (%)" with units, tick labels all readable in dark text
+      Data: Five stacked areas - Coal (green), Natural Gas (orange), Wind (blue), Solar (pink), Hydro (yellow). Colors are NOT Okabe-Ito palette.
+      Legibility verdict: PASS - all text readable in light theme
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels all in light text with excellent contrast against dark background. No dark-on-dark failures. Legend readable with light text. Grid lines subtle but visible.
-      Data: Identical color positioning and values to light render — only chrome has flipped (background, text color, grid color). Coal, Natural Gas, Wind, Solar, Hydro areas maintain same visual hierarchy as light render.
-      Legibility verdict: PASS — no dark-on-dark failures, all elements readable in dark theme.
-
-    Both renders confirm proper theme adaptation for chrome (backgrounds, text, grid) while maintaining identical data colors — meets the theme-adaptive requirement despite source code missing environment variable handling. Both render outputs are correctly named plot-light.png and plot-dark.png.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, and tick labels all rendered in light text, clearly readable against dark background
+      Data: Same five colors as light render (green, orange, blue, pink, yellow) - identical data colors between themes is correct
+      Legibility verdict: PASS - all text readable in dark theme, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -50,71 +52,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
-          perfectly readable in both renders
+        comment: All text properly sized and explicitly set
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, legend clearly positioned
+        comment: Clean layout with no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All stacked areas clearly visible and distinguishable
+        comment: All stacked areas clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Good contrast between series
+        passed: false
+        comment: Good contrast but palette not Okabe-Ito
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, balanced margins
+        comment: Perfect layout with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive with units, correct title format
+        passed: false
+        comment: Y-axis has units but title URL is wrong
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses custom colors instead of Okabe-Ito. First series
-          #306998 (Python blue), NOT #009E73 (required brand color). Violates mandatory
-          style guide rule.'
+        comment: Palette is NOT Okabe-Ito standard
     design_excellence:
-      score: 6
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic Plotly styling with non-compliant color palette, no intentional
-          design hierarchy
+        comment: Generic styling with default configuration
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Standard defaults, minimal customization
+        comment: Minimal customization beyond colors
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual emphasis or hierarchy
+        comment: No visual hierarchy or emphasis
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,19 +126,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: All features present and working
+        comment: All features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, axes show all data
+        comment: Correct X/Y mapping
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title and legend format correct
+        passed: false
+        comment: Legend correct but title URL wrong
     data_quality:
       score: 15
       max: 15
@@ -150,21 +148,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of stacked area plots
+        comment: Shows all energy source trends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world energy scenario, neutral and plausible
+        comment: Real energy transition scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values and proportions for domain
+        comment: Factually accurate proportions
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -172,33 +170,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow, no unnecessary functions
+        comment: Simple linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic data
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only numpy and plotly
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Clean Pythonic code
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Correct output file naming
+        passed: false
+        comment: Wrong filenames - plot.png instead of plot-{THEME}.png
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -206,22 +204,21 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct use of go.Scatter with stacking, but missing theme-adaptive
-          code from library rules
+        comment: Uses stackgroup/groupnorm but missing theme adaptation
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic implementation, could work in any library
+        comment: Custom hover templates but generic overall
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - normalization
   styling: []
