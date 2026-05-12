@@ -1,163 +1,170 @@
 library: plotly
+language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:37:26Z'
-updated: '2025-12-30T10:43:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594557680
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-05-12T05:35:20Z'
+generated_by: claude-haiku
+workflow_run: 25715287098
+issue: 2601
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and balanced layout
-  - Proper implementation of stacked histogram using consistent bin edges across all
-    groups
-  - Realistic manufacturing QC scenario with meaningful overlapping distributions
-  - Clean, readable code following KISS principles
-  - Both PNG and HTML outputs generated correctly
+  - Perfect visual quality with excellent text legibility and element visibility
+  - Flawless palette compliance with Okabe-Ito colors and theme-correct chrome in
+    both renders
+  - Clean, idiomatic Plotly code with proper theme tokenization and reproducibility
+  - All spec requirements met - correct stacked histogram type with proper composition
+    showing
+  - Strong data storytelling - stacking naturally creates visual hierarchy showing
+    contribution of each line
   weaknesses:
-  - Uses manual histogram calculation with go.Bar instead of more idiomatic Plotly
-    histogram traces
-  - Does not leverage Plotly interactive features like custom hover templates
-  image_description: 'The plot displays a stacked histogram showing product weight
-    distributions from three production lines. The x-axis shows "Product Weight (g)"
-    ranging from approximately 170g to 370g, and the y-axis shows "Frequency" from
-    0 to 70. Three distinct colors are used: dark blue (#306998) for Line A at the
-    bottom of each stack, yellow (#FFD43B) for Line B in the middle, and teal (#4ECDC4)
-    for Line C on top. The title "histogram-stacked · plotly · pyplots.ai" is centered
-    at the top. A legend in the upper right corner identifies each production line
-    with a subtle white background and border. The distributions overlap meaningfully,
-    with Line A centered around 250g, Line B around 280g, and Line C around 260g.
-    Bars show proper stacking where total height represents combined frequency.'
+  - Design excellence is competent but follows standard patterns - could benefit from
+    more sophisticated aesthetic customization
+  - Library mastery uses standard Plotly features effectively but doesn't leverage
+    distinctive library-specific capabilities (e.g., animation, advanced interactivity)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title, axis labels, tick labels all dark (#1A1A17, #4A4A44) and clearly readable against light background
+      Data: Three-series stacked histogram with Okabe-Ito colors - green (#009E73), orange (#D55E00), blue (#0072B2). All bars clearly visible with good separation.
+      Legibility verdict: PASS - All text is explicit-sized (28px title, 22px labels, 18px ticks) and perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title and labels are light-colored (#F0EFE8, #B8B7B0) with excellent contrast on dark background. No dark-on-dark failures.
+      Data: Identical data colors to light render (green, orange, blue) - only chrome flips for theme adaptation. All bars equally visible.
+      Legibility verdict: PASS - Theme adaptation is flawless with light text on dark surface, maintaining readability
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text; all elements properly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar widths are well-proportioned, colors clearly distinguishable
+        comment: Bars clearly visible; stacking well-defined; colors vivid
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good contrast, blue/yellow/teal palette is colorblind-friendly, though
-          yellow on white could be slightly better
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Product Weight (g)" and "Frequency" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette; colorblind-safe; good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout; balanced margins; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend is well-placed but could have slightly more
-          contrast
+        comment: Title format correct; axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito order (1=#009E73, 2=#D55E00, 3=#0072B2); backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark); theme-correct chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; clean layout; no custom palette or exceptional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid; generous whitespace; clean styling; good execution
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Stacking creates clear visual hierarchy; focal point visible at 250g
+          peak; color contrast guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked histogram
+        comment: Correct stacked histogram; barmode='stack' properly configured
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous variable (weight) properly binned, categories properly
-          stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Same bin boundaries for all groups, distinct colors, legend with
-          group labels
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stacking, distinct colors, legend, same bins
+          for all groups'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible; composition properly stacked
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Line A, B, C
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "histogram-stacked · plotly · pyplots.ai"
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping distributions with different centers and spreads,
-          demonstrates stacking well
+        comment: 'Shows all aspects: multiple groups, clear stacking, composition
+          changes across bins'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product weights from production lines is a realistic manufacturing
-          QC scenario
+        comment: Manufacturing scenario is plausible and neutral; weight values realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for product weights, though 150 samples per
-          group is modest
+        comment: Values sensible; proportions logical; scale appropriate for domain
     code_quality:
       score: 10
       max: 10
@@ -167,41 +174,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: No functions/classes; straightforward flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set; deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: Only used imports (os, sys, numpy, plotly)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format (plot-{THEME}.png and .html)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly idiomatic: go.Figure, go.Bar, dict configuration, proper
+          hovertemplate'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses go.Bar with barmode="stack" which is correct but basic; could
-          leverage plotly.express histogram with color parameter for more idiomatic
-          approach, or add hover templates for interactivity
+        comment: Good use of native stacking and hover templates; could leverage more
+          distinctive Plotly features
+    score_caps: []
+    total: 91
+    max: 100
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling: []
