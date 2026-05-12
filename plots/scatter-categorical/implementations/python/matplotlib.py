@@ -1,17 +1,32 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-12
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - Iris-like measurements with species categories
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Generate data for 3 plant species with different characteristics
+# Okabe-Ito palette (canonical order)
+OKABE_ITO = [
+    "#009E73",  # bluish green — ALWAYS first series
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+]
+
+# Data — plant species with distinct petal characteristics
+np.random.seed(42)
 n_per_group = 40
 
 # Species A: Smaller petals
@@ -26,55 +41,42 @@ species_b_y = np.random.normal(1.3, 0.2, n_per_group)
 species_c_x = np.random.normal(5.5, 0.6, n_per_group)
 species_c_y = np.random.normal(2.0, 0.3, n_per_group)
 
-# Colors - Python Blue, Python Yellow, and a complementary teal
-colors = ["#306998", "#FFD43B", "#2AA198"]
 categories = ["Species A", "Species B", "Species C"]
+markers = ["o", "s", "^"]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Plot each category with distinct colors and markers
-ax.scatter(
-    species_a_x,
-    species_a_y,
-    s=200,
-    c=colors[0],
-    alpha=0.8,
-    label=categories[0],
-    marker="o",
-    edgecolors="white",
-    linewidths=0.5,
-)
-ax.scatter(
-    species_b_x,
-    species_b_y,
-    s=200,
-    c=colors[1],
-    alpha=0.8,
-    label=categories[1],
-    marker="s",
-    edgecolors="#666666",
-    linewidths=0.5,
-)
-ax.scatter(
-    species_c_x,
-    species_c_y,
-    s=200,
-    c=colors[2],
-    alpha=0.8,
-    label=categories[2],
-    marker="^",
-    edgecolors="white",
-    linewidths=0.5,
-)
+scatter_data = [
+    (species_a_x, species_a_y, OKABE_ITO[0], markers[0]),
+    (species_b_x, species_b_y, OKABE_ITO[1], markers[1]),
+    (species_c_x, species_c_y, OKABE_ITO[2], markers[2]),
+]
+
+for i, (x, y, color, marker) in enumerate(scatter_data):
+    ax.scatter(x, y, s=200, c=color, alpha=0.8, label=categories[i], marker=marker, edgecolors=PAGE_BG, linewidth=0.5)
 
 # Labels and styling
-ax.set_xlabel("Petal Length (cm)", fontsize=20)
-ax.set_ylabel("Petal Width (cm)", fontsize=20)
-ax.set_title("scatter-categorical · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
-ax.legend(fontsize=16, loc="upper left", framealpha=0.9)
+ax.set_xlabel("Petal Length (cm)", fontsize=20, color=INK)
+ax.set_ylabel("Petal Width (cm)", fontsize=20, color=INK)
+ax.set_title("scatter-categorical · matplotlib · anyplot.ai", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+
+# Legend
+leg = ax.legend(fontsize=16, loc="upper left")
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

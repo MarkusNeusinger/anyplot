@@ -1,20 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-12
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is ALWAYS #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - Product performance across regions
 np.random.seed(42)
 n_per_group = 40
 
-# Generate distinct clusters for each region
 regions = ["North", "South", "West", "East"]
-colors = ["#306998", "#FFD43B", "#8B5CF6", "#10B981"]
 
 data = {
     "North": {"x": np.random.normal(35, 8, n_per_group), "y": np.random.normal(75, 10, n_per_group)},
@@ -26,49 +37,59 @@ data = {
 # Plot
 fig = go.Figure()
 
-for region, color in zip(regions, colors):
+for i, region in enumerate(regions):
     fig.add_trace(
         go.Scatter(
             x=data[region]["x"],
             y=data[region]["y"],
             mode="markers",
             name=region,
-            marker=dict(size=14, color=color, opacity=0.7, line=dict(width=1, color="white")),
+            marker={"size": 14, "color": OKABE_ITO[i], "opacity": 0.7, "line": {"width": 1, "color": PAGE_BG}},
             hovertemplate=f"{region}<br>Marketing: %{{x:.1f}}%<br>Sales: %{{y:.1f}}%<extra></extra>",
         )
     )
 
 # Layout
 fig.update_layout(
-    title=dict(text="scatter-categorical · plotly · pyplots.ai", font=dict(size=28), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Marketing Investment (%)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0,0,0,0.1)",
-        gridwidth=1,
-        showgrid=True,
-    ),
-    yaxis=dict(
-        title=dict(text="Sales Growth (%)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0,0,0,0.1)",
-        gridwidth=1,
-        showgrid=True,
-    ),
-    legend=dict(
-        title=dict(text="Region", font=dict(size=20)),
-        font=dict(size=18),
-        bordercolor="rgba(0,0,0,0.2)",
-        borderwidth=1,
-        x=1.02,
-        y=0.5,
-        yanchor="middle",
-    ),
-    template="plotly_white",
-    margin=dict(l=80, r=150, t=80, b=80),
-    plot_bgcolor="white",
+    title={
+        "text": "scatter-categorical · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": "Marketing Investment (%)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "showgrid": True,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": "Sales Growth (%)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "showgrid": True,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    legend={
+        "title": {"text": "Region", "font": {"size": 20, "color": INK}},
+        "font": {"size": 18, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "x": 1.02,
+        "y": 0.5,
+        "yanchor": "middle",
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    margin={"l": 80, "r": 150, "t": 80, "b": 80},
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
