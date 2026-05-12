@@ -1,14 +1,35 @@
-""" pyplots.ai
+"""pyplots.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Quality: pending | Created: 2026-05-12
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Legend, LegendItem
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = [
+    "#009E73",  # bluish green - first series
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+]
 
 # Data - Test scores by study method (educational context)
 np.random.seed(42)
@@ -33,36 +54,45 @@ data = {
     ),
 }
 
-# Colors - Python Blue for violin, golden yellow for box
-violin_color = "#306998"
-box_color = "#FFD43B"
-
 # Create figure with categorical x-axis
 p = figure(
     width=4800,
     height=2700,
-    title="violin-box \u00b7 bokeh \u00b7 pyplots.ai",
+    title="violin-box · bokeh · pyplots.ai",
     x_axis_label="Study Method",
     y_axis_label="Test Score",
     x_range=categories,
     toolbar_location=None,
 )
 
-# Styling for 4800x2700 px
-p.title.text_font_size = "36pt"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
+# Theme-adaptive styling
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Grid styling - visible but subtle
+p.title.text_color = INK
+p.title.text_font_size = "28pt"
+
+p.xaxis.axis_label_text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_font_size = "22pt"
+
+p.xaxis.major_label_text_color = INK_SOFT
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_font_size = "18pt"
+
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+# Grid styling - subtle
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_dash = "dashed"
-
-# Background styling
-p.background_fill_color = None
-p.border_fill_color = None
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_dash = "solid"
 
 # Violin width scaling (0.4 = 40% of category spacing)
 violin_width = 0.38
@@ -78,7 +108,7 @@ all_outliers_x = []
 all_outliers_y = []
 
 # Draw violins with embedded box plots for each category
-for cat in categories:
+for i, cat in enumerate(categories):
     values = np.array(data[cat])
     n = len(values)
 
@@ -105,7 +135,8 @@ for cat in categories:
     xs_left = [(cat, float(xl)) for xl in x_left]
     xs_right = [(cat, float(xr)) for xr in x_right[::-1]]
 
-    # Draw violin patch
+    # Draw violin patch with Okabe-Ito color
+    violin_color = OKABE_ITO[i % len(OKABE_ITO)]
     vr = p.patch(
         xs_left + xs_right,
         list(y_grid) + list(y_grid[::-1]),
@@ -127,14 +158,15 @@ for cat in categories:
 
     # Draw box inside violin (IQR from Q1 to Q3)
     box_width = 0.08
+    box_fill_color = violin_color  # Same color as violin
     br = p.quad(
         left=[(cat, -box_width)],
         right=[(cat, box_width)],
         top=[q3],
         bottom=[q1],
-        fill_color=box_color,
+        fill_color=box_fill_color,
         fill_alpha=0.9,
-        line_color="black",
+        line_color=INK,
         line_width=3,
     )
     if box_renderer is None:
@@ -146,15 +178,15 @@ for cat in categories:
         y0=[median],
         x1=[(cat, box_width * 1.3)],
         y1=[median],
-        line_color="black",
+        line_color=INK,
         line_width=5,
     )
     if median_renderer is None:
         median_renderer = mr
 
     # Whiskers (vertical lines from box to whisker limits)
-    p.segment(x0=[cat], y0=[q1], x1=[cat], y1=[whisker_low], line_color="black", line_width=3)
-    p.segment(x0=[cat], y0=[q3], x1=[cat], y1=[whisker_high], line_color="black", line_width=3)
+    p.segment(x0=[cat], y0=[q1], x1=[cat], y1=[whisker_low], line_color=INK_SOFT, line_width=3)
+    p.segment(x0=[cat], y0=[q3], x1=[cat], y1=[whisker_high], line_color=INK_SOFT, line_width=3)
 
     # Whisker caps
     cap_width = 0.05
@@ -163,7 +195,7 @@ for cat in categories:
         y0=[whisker_low],
         x1=[(cat, cap_width)],
         y1=[whisker_low],
-        line_color="black",
+        line_color=INK_SOFT,
         line_width=3,
     )
     p.segment(
@@ -171,7 +203,7 @@ for cat in categories:
         y0=[whisker_high],
         x1=[(cat, cap_width)],
         y1=[whisker_high],
-        line_color="black",
+        line_color=INK_SOFT,
         line_width=3,
     )
 
@@ -185,14 +217,7 @@ for cat in categories:
 if len(all_outliers_x) > 0:
     outlier_source = ColumnDataSource(data={"x": all_outliers_x, "y": all_outliers_y})
     outlier_renderer = p.scatter(
-        x="x",
-        y="y",
-        source=outlier_source,
-        size=18,
-        fill_color="white",
-        line_color="black",
-        line_width=3,
-        marker="circle",
+        x="x", y="y", source=outlier_source, size=18, fill_color="white", line_color=INK, line_width=3, marker="circle"
     )
 
 # Create legend
@@ -205,15 +230,36 @@ if outlier_renderer is not None:
     legend_items.append(LegendItem(label="Outliers", renderers=[outlier_renderer]))
 
 legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "20pt"
+legend.label_text_color = INK_SOFT
+legend.label_text_font_size = "16pt"
+legend.background_fill_color = ELEVATED_BG
+legend.border_line_color = INK_SOFT
 legend.glyph_height = 30
 legend.glyph_width = 30
 legend.spacing = 15
 legend.padding = 20
-legend.background_fill_alpha = 0.8
 p.add_layout(legend, "right")
 
-# Save outputs
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save HTML output
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
