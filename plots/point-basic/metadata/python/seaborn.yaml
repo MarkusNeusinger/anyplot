@@ -1,158 +1,186 @@
 library: seaborn
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:31:12Z'
-updated: '2025-12-30T09:40:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593348794
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T01:02:28Z'
+generated_by: claude-sonnet
+workflow_run: 25706346445
+issue: 2551
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent horizontal orientation for category label readability as recommended
-    in spec
-  - Clear visual hierarchy with well-sized points and error bars with caps
-  - Helpful reference line showing overall mean with legend explanation
-  - Good use of varying confidence interval widths to demonstrate uncertainty differences
-  - Proper title format and axis labeling with units
+  - 'Perfect theme adaptation: both light and dark renders pass all readability checks
+    with no dark-on-dark or light-on-light failures'
+  - All font sizes explicitly set (24/20/16pt), meeting the full 8/8 VQ-01 requirement
+  - seaborn native bootstrap CI (errorbar=(ci, 95)) used idiomatically — avoids manual
+    scipy computation
+  - Realistic log-normal latency distribution produces naturally asymmetric, credible
+    confidence intervals
+  - Reference line at overall mean creates an effective focal point; Analytics outlier
+    immediately stands out
   weaknesses:
-  - Error bars drawn manually with matplotlib errorbar instead of using seaborn native
-    confidence interval features
-  - All confidence intervals are symmetric around estimates; real-world CIs are often
-    asymmetric
-  image_description: The plot displays a horizontal point estimate chart showing satisfaction
-    scores (scale 1-10) for six products (A through F). Each product is represented
-    by a blue circular marker (#306998) with horizontal error bars extending to show
-    confidence intervals. The error bars have clear caps at endpoints. A vertical
-    dashed yellow/gold line indicates the overall mean (6.9). The title follows the
-    correct format "point-basic · seaborn · pyplots.ai". X-axis is labeled "Satisfaction
-    Score (1-10)" and Y-axis is labeled "Product". A legend in the lower right explains
-    the overall mean reference line. The plot has a clean white background with subtle
-    vertical grid lines (alpha ~0.3). The layout is well-balanced with the chart filling
-    the canvas appropriately.
+  - 'DE-01 not reaching 6+: design is correct and clean but could be elevated with
+    stronger typographic hierarchy (e.g., a subtitle or annotation on the Analytics
+    outlier)'
+  - 'LM-02: bootstrap CI is seaborn-specific but the implementation does not showcase
+    additional seaborn statistical features (e.g., overlaying sns.stripplot for raw
+    data or using native_scale=True)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "point-basic · seaborn · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Response Time (ms)" and "API Endpoint" in dark INK (#1A1A17), 20pt, clearly readable. Tick labels in INK_SOFT (#4A4A44), 16pt, clearly readable. Legend "Overall Mean (103 ms)" in dark text on #FFFDF6 elevated background.
+      Data: All six endpoint points in brand green #009E73 with capped error bars. Dashed reference line in #D55E00 (Okabe-Ito position 2). Subtle x-axis grid (alpha=0.10).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8, clearly readable against dark background. Axis labels in #F0EFE8, clearly readable. Tick labels in #B8B7B0 (INK_SOFT dark), clearly readable — no dark-on-dark text failures. Legend on #242420 elevated background with light text.
+      Data: Points and error bars in identical #009E73 green (same as light render). Reference line in identical #D55E00. Data colors are theme-invariant as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set; both renders
+          fully readable
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements across either render
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points clearly visible with appropriate marker size (15), error bars
-          thick (3px) with visible caps
+        comment: markersize=12 with linewidth=2.5 error bars clearly visible; reference
+          line prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Satisfaction Score (1-10)" includes units/scale, "Product" is descriptive'
+        comment: Teal (#009E73) vs orange (#D55E00); CVD-safe Okabe-Ito combination,
+          not red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal layout uses canvas well; balanced margins; legend does
+          not overlap data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Response Time (ms) with units; API Endpoint descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series #009E73; reference line #D55E00 (Okabe-Ito pos 2);
+          backgrounds #FAF8F1/#1A1A17 correct; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: brand color, warm background, L-shaped
+          spines, reference line. Not publication-ready — no exceptional typography
+          hierarchy or annotation'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle x-axis grid (alpha=0.10), theme-correct
+          legend. Good refinement above minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Reference line creates focal point; Analytics outlier visually prominent
+          with wide CI (170-235ms). Viewer immediately identifies above/below-baseline
+          services
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct point estimate plot with confidence intervals
+        comment: Correct point estimate plot with CIs, horizontal orientation per
+          spec recommendation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, estimates on X-axis (horizontal orientation
-          as spec recommends)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Points visible, confidence intervals with caps, reference line included
-          as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Point estimates (means), 95% CIs, capped error bars, reference line
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 3-10 shows all data with context
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = estimate values (ms), Y = categories; all 6 endpoints displayed
+          with full CI range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes overall mean line
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "point-basic · seaborn · pyplots.ai"
+        comment: Title 'point-basic · seaborn · anyplot.ai' correct; legend shows
+          reference line label
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying confidence interval widths (0.5 to 1.5), points above/below
-          mean, but all CIs are symmetric
+        comment: Wide range of estimates (50-200ms) and CI widths; demonstrates narrow
+          vs wide uncertainty
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product satisfaction ratings is a real, neutral business scenario
+        comment: API endpoint response times in microservices context; specific named
+          services; log-normal distribution is technically accurate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Satisfaction scores 5.9-8.1 on 1-10 scale are realistic; could show
-          wider range of estimates
+        comment: Auth Service ~50ms, Analytics ~200ms; realistic API latency range;
+          log-normal produces plausible asymmetric CIs
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,11 +188,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Linear Imports -> Data -> Plot -> Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -172,15 +200,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: os, matplotlib, numpy, pandas, seaborn — all used, none superfluous
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; strict=True in zip shows Python 3.10+ awareness;
+          no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn API
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves as plot-{THEME}.png with correct dpi, bbox_inches, facecolor;
+          seaborn 0.14+ errorbar API used correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.pointplot with errorbar=(ci, 95) is canonical seaborn approach;
+          orient=h correct; axes-level API with ax=ax; sns.set_theme for global rc
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Bootstrap CI via errorbar=(ci, 95) is seaborn-specific (automatic
+          statistical computation); err_kws and capsize show API depth. Could have
+          layered sns.stripplot for raw data overlay
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
