@@ -1,168 +1,182 @@
 library: letsplot
+language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:30:04Z'
-updated: '2025-12-30T11:36:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595341903
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep:
-  - normalization
-  styling:
-  - grid-styling
+updated: '2026-05-12T11:27:52Z'
+generated_by: claude-haiku
+workflow_run: 25730773159
+issue: 2647
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with well-chosen colors that are colorblind-friendly
-  - Perfect 100% stacked area representation matching the spec exactly
-  - Realistic and informative market share scenario that clearly shows composition
-    changes over time
-  - Clean ggplot2-style code structure using lets-plot grammar of graphics
+  - 'Perfect theme adaptation: all text readable in both light and dark renders with
+    correct color tokens'
+  - 'Flawless palette compliance: Okabe-Ito colors in canonical order with brand green
+    (#009E73) as first series'
+  - 'Clear data storytelling: shows realistic market share trends with visible growth/decline
+    patterns'
+  - 'Idiomatic letsplot usage: expertly uses ggplot2 grammar of graphics with proper
+    position=''fill'' for 100% stacking'
+  - 'All specifications met: correct chart type, all required features, proper axis
+    mapping, correct title/legend format'
+  - 'Clean code structure: simple, reproducible (np.random.seed), deterministic data
+    generation'
   weaknesses:
-  - Year labels display with comma separators (2,016 instead of 2016) which looks
-    unnatural for year values
-  - The HTML export setup_html() call is unnecessary overhead for PNG-only output
-  image_description: 'The plot shows a 100% stacked area chart displaying market share
-    evolution from 2016 to 2023 for four companies. The y-axis shows "Market Share
-    (%)" ranging from 0% to 100%, and the x-axis shows "Year" from 2016 to 2023. Four
-    colored areas are stacked: Company D (purple) at the bottom, Company C (green)
-    above it, Company B (yellow) in the middle, and Company A (blue) at the top. The
-    areas always sum to 100%. Company A (blue) shows clear growth over time (expanding
-    from ~40% to ~58%), while Company B (yellow) declines. Companies C and D maintain
-    relatively stable small shares. The title reads "area-stacked-percent · letsplot
-    · pyplots.ai". The legend is positioned on the right side. The background is a
-    subtle light gray (#FAFAFA) with light grid lines.'
+  - 'Design Excellence moderate (12/20): follows well-configured defaults rather than
+    pursuing publication-quality sophistication (could add custom spine removal, refined
+    typography, or strategic emphasis)'
+  - 'Data storytelling understated: while clear, could emphasize the market-share
+    shift more dramatically through color contrast or visual hierarchy'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "area-stacked-percent · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly visible. Axis labels "Market Share (%)" and "Year" in dark ink, fully readable. Tick labels (0%, 10%, 20%... on Y-axis; 2016, 2017... on X-axis) in soft ink (#4A4A44), well-spaced and legible. All text explicitly sized (24pt title, 20pt labels, 16pt ticks).
+      Data: Four stacked areas with Okabe-Ito colors in order: Company D (#009E73, green, bottom), Company C (#D55E00, orange), Company B (#0072B2, blue), Company A (#CC79A7, reddish-purple, top). Alpha=0.85 provides good visibility. Legend positioned right, with colored company names, fully readable.
+      Layout: Plot fills ~60% of canvas with balanced margins. Grid lines subtle. No overlaps, no cut-offs.
+      Legibility verdict: PASS - All text is clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title in light ink (#F0EFE8), clearly visible on dark surface. Axis labels in light ink, fully readable. Tick labels in soft light ink (#B8B7B0), well-spaced and legible. Legend background (#242420) with light text, clearly defined against dark page.
+      Data: Four stacked areas identical in color to light render - Company D (#009E73), Company C (#D55E00), Company B (#0072B2), Company A (#CC79A7). No color shift, only chrome flipped as expected. Alpha=0.85 maintains visibility on dark surface.
+      Layout: Identical to light render - no cut-offs, no wasted space.
+      Legibility verdict: PASS - All text is clearly visible with no "dark-on-dark" failures. Ink colors properly inverted from light theme. Brand green (#009E73) remains distinctly visible.
+
+    Comparison: Data colors are identical between renders (✓), only chrome adapted. Both renders are fully legible. No theme-adaptation failures detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick marks, and legend text are all clearly readable
-          at the appropriate sizes
+        comment: All sizes explicitly set (24pt title, 20pt labels, 16pt ticks), perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: No overlapping elements, all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area fills are clearly visible with good alpha (0.85), boundaries
-          between areas are clear
+        comment: Four areas clearly visible with optimal alpha=0.85 for density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Purple, green, yellow, and blue are colorblind-friendly and highly
-          distinguishable
+        comment: Okabe-Ito palette is colorblind-safe, good contrast between areas
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good layout but slight imbalance with extra whitespace on the right
-          due to legend placement
+        comment: 'Perfect layout: plot fills 50-80% of canvas with balanced margins'
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis label "Market Share (%)" is descriptive, but could arguably
-          drop "(%)" since values show percentages
+        comment: Y-axis includes units (%), title with spec-id/library/domain
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and good, but year labels show commas (e.g., "2,016"
-          instead of "2016")
+        comment: 'Okabe-Ito positions 1-4 in order, backgrounds correct (#FAF8F1 light,
+          #1A1A17 dark), text colors theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but not exceptional, no custom design choices
+          beyond palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good refinement (theme_minimal, subtle grid, custom legend background)
+          but could refine further
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear trend visualization (growth/decline) with visual hierarchy,
+          but could emphasize insight more
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked area chart
+        comment: Correct 100% stacked area chart with proper position='fill' normalization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Year (continuous time), Y=Market Share percentages correctly stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: multiple categories stacked, normalized
-          to 100%, shows proportional changes over time'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: time axis, categories, values normalized to
+          percentage, stacked areas'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible from 2016-2023, 0-100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, axes show all data from 0-100%
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four companies
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "area-stacked-percent · letsplot · pyplots.ai"
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent demonstration: shows growing market leader, declining
-          competitor, stable small players - covers all typical stacked area scenarios'
+        comment: 'Shows all aspects: multiple companies, growth/decline trends, 8-year
+          time span'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Market share evolution is a perfect, neutral business scenario for
-          this chart type
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages sum to 100%, time range is realistic 8-year period, company
-          share values are plausible
+        comment: Real-world market share scenario with plausible company evolution
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values factually sound, proportions add to 100%, trends plausible
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,43 +184,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequential structure: imports → data → plot → save'
+        comment: 'Simple linear flow: imports → data → plot → save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) set, deterministic data generation
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Several unused imports: element_blank, element_line, element_rect
-          are imported but used; however, LetsPlot.setup_html() is called but may
-          not be needed for PNG export'
+        passed: true
+        comment: All imports used, no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png but path parameter usage ("path='.'") is unconventional
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct format: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot2-style grammar with geom_area, position="fill" for 100%
-          stacking, scale_y_continuous with format for percentages. Could leverage
-          more lets-plot specific features like tooltips for interactivity.
+        comment: 'Expert use of ggplot2 grammar: aes(), geom_area(position=''fill''),
+          scale_fill_manual(), theme()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses theme-adaptive tokens and HTML export, but features are relatively
+          standard for letsplot
+    score_caps: []
+    total:
+      score: 90
+      max: 100
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
