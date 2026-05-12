@@ -1,11 +1,11 @@
 spec_id: line-markers
 title: Line Plot with Markers
 created: '2025-12-30T10:30:00Z'
-updated: '2025-12-30T10:30:00Z'
+updated: '2026-05-12T14:35:00Z'
 issue: 2599
 suggested: claude-code
 tags:
   plot_type: [line, scatter]
   domain: [general, scientific]
-  features: [markers, data-points, sparse-data]
+  features: [basic, markers]
   data_type: [numeric, continuous]
