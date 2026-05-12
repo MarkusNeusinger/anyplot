@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 box-horizontal: Horizontal Box Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2025-12-30
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,28 +18,50 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Response times by service type (realistic scenario)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Data - Response times by service type with explicit outliers
 np.random.seed(42)
 
 categories = ["API Gateway", "Database Query", "File Upload", "Authentication", "Payment Processing"]
 
 # Generate data with different distributions for each service
-# Each category needs: [low, q1, median, q3, high]
+# Include explicit outliers to better demonstrate box plot capabilities
 data = []
 for cat in categories:
     if cat == "API Gateway":
-        values = np.random.normal(50, 15, 200)  # Fast, consistent
+        values = np.random.normal(50, 15, 200)
     elif cat == "Database Query":
-        values = np.random.normal(120, 40, 200)  # Moderate with variation
+        values = np.random.normal(120, 40, 200)
     elif cat == "File Upload":
-        values = np.random.normal(250, 80, 200)  # Slow, high variance
+        values = np.random.normal(250, 80, 200)
     elif cat == "Authentication":
-        values = np.random.normal(30, 8, 200)  # Very fast
+        values = np.random.normal(30, 8, 200)
     else:  # Payment Processing
-        values = np.random.normal(180, 50, 200)  # Moderate-slow
+        values = np.random.normal(180, 50, 200)
 
     # Ensure positive values
     values = np.maximum(values, 5)
+
+    # Add explicit outliers to better demonstrate box plot
+    outlier_indices = np.random.choice(len(values), size=3, replace=False)
+    if cat == "API Gateway":
+        values[outlier_indices] = [150, 160, 170]
+    elif cat == "Database Query":
+        values[outlier_indices] = [320, 350, 380]
+    elif cat == "File Upload":
+        values[outlier_indices] = [600, 620, 640]
+    elif cat == "Authentication":
+        values[outlier_indices] = [120, 130, 140]
+    else:  # Payment Processing
+        values[outlier_indices] = [450, 480, 510]
 
     # Calculate quartiles
     q1, median, q3 = np.percentile(values, [25, 50, 75])
@@ -56,67 +79,67 @@ chart.options = HighchartsOptions()
 # Chart configuration - use full 4800x2700 with proper margins
 chart.options.chart = {
     "type": "boxplot",
-    "inverted": True,  # This makes it horizontal
+    "inverted": True,
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginLeft": 450,  # Extra space for category labels and axis title
-    "marginBottom": 220,  # Extra space for value axis labels and title
+    "backgroundColor": PAGE_BG,
+    "marginLeft": 450,
+    "marginBottom": 220,
     "marginTop": 180,
     "marginRight": 120,
 }
 
 # Title
 chart.options.title = {
-    "text": "box-horizontal · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
-    "y": 60,
+    "text": "box-horizontal · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "600", "color": INK},
+    "y": 40,
 }
 
 # Subtitle for context
 chart.options.subtitle = {
     "text": "Response Time Distribution by Service Type",
-    "style": {"fontSize": "42px", "color": "#666666"},
-    "y": 120,
+    "style": {"fontSize": "22px", "color": INK_SOFT},
+    "y": 90,
 }
 
 # X-axis (categories - shown on left due to inverted)
 chart.options.x_axis = {
     "categories": categories,
-    "title": {"text": "Service Type", "style": {"fontSize": "42px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "36px"}, "x": -10},
-    "lineWidth": 2,
-    "lineColor": "#333333",
+    "title": {"text": "Service Type", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Y-axis (values - shown on bottom due to inverted)
 chart.options.y_axis = {
-    "title": {"text": "Response Time (ms)", "style": {"fontSize": "42px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "32px"}, "y": 30},
-    "gridLineColor": "#e0e0e0",
+    "title": {"text": "Response Time (ms)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "gridLineColor": GRID,
     "gridLineWidth": 1,
     "min": 0,
-    "lineWidth": 2,
-    "lineColor": "#333333",
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Legend
 chart.options.legend = {"enabled": False}
 
-# Plot options for boxplot styling
+# Plot options for boxplot styling using Okabe-Ito palette
 chart.options.plot_options = {
     "boxplot": {
-        "fillColor": "rgba(48, 105, 152, 0.7)",  # Python Blue with transparency
-        "color": "#306998",  # Box outline color
-        "lineWidth": 4,
-        "medianColor": "#FFD43B",  # Python Yellow for median
-        "medianWidth": 8,
-        "stemColor": "#306998",
-        "stemWidth": 4,
-        "whiskerColor": "#306998",
+        "fillColor": BRAND,
+        "color": BRAND,
+        "lineWidth": 3,
+        "medianColor": INK,
+        "medianWidth": 4,
+        "stemColor": BRAND,
+        "stemWidth": 2,
+        "whiskerColor": BRAND,
         "whiskerLength": "40%",
-        "whiskerWidth": 4,
-        "pointWidth": 80,
+        "whiskerWidth": 2,
+        "pointWidth": 70,
     }
 }
 
@@ -128,13 +151,21 @@ series.data = data
 chart.add_series(series)
 
 # Download Highcharts JS files (required for headless Chrome)
+headers = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+    "Accept": "text/javascript",
+    "Referer": "https://www.highcharts.com/",
+}
+
 highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+highcharts_req = urllib.request.Request(highcharts_url, headers=headers)
+with urllib.request.urlopen(highcharts_req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # BoxPlot requires highcharts-more.js
 highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
+highcharts_more_req = urllib.request.Request(highcharts_more_url, headers=headers)
+with urllib.request.urlopen(highcharts_more_req, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
 # Generate HTML with INLINE scripts
@@ -146,20 +177,20 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0; padding:0; overflow:hidden;">
+<body style="margin:0; padding:0; overflow:hidden; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+# Write HTML for interactive version (theme-suffixed)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -172,10 +203,8 @@ chrome_options.add_argument("--force-device-scale-factor=1")
 driver = webdriver.Chrome(options=chrome_options)
 driver.set_window_size(4800, 2700)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
-
-print("Generated plot.png and plot.html")
+Path(temp_path).unlink()
