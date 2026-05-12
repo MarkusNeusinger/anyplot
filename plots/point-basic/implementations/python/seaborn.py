@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 point-basic: Point Estimate Plot
-Library: seaborn 0.13.2 | Python 3.13.11
+Library: seaborn | Python 3.13
 Quality: 92/100 | Created: 2025-12-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,71 +12,95 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data: Product satisfaction ratings with confidence intervals
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1 — first series
+REF_COLOR = "#D55E00"  # Okabe-Ito position 2 — reference line
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data: API endpoint response times (ms) — log-normal for realistic right-skewed latency
 np.random.seed(42)
-categories = ["Product A", "Product B", "Product C", "Product D", "Product E", "Product F"]
-estimates = [7.2, 6.5, 8.1, 5.9, 7.8, 6.2]
-# Varying confidence interval widths to show different uncertainty levels
-ci_widths = [0.8, 1.2, 0.5, 1.5, 0.7, 1.1]
-lower = [e - w for e, w in zip(estimates, ci_widths, strict=True)]
-upper = [e + w for e, w in zip(estimates, ci_widths, strict=True)]
+endpoints = ["Auth Service", "Search API", "Product Catalog", "Cart Service", "Payment API", "Analytics"]
+# (mu, sigma) for log-normal → naturally asymmetric bootstrap CIs
+lognorm_params = [
+    (3.8, 0.40),  # Auth Service:      ~50ms mean
+    (4.7, 0.50),  # Search API:       ~130ms mean
+    (4.4, 0.35),  # Product Catalog:   ~90ms mean
+    (4.0, 0.45),  # Cart Service:      ~60ms mean
+    (4.5, 0.30),  # Payment API:      ~100ms mean
+    (5.1, 0.60),  # Analytics:        ~200ms mean
+]
 
-df = pd.DataFrame({"Product": categories, "Satisfaction": estimates, "Lower": lower, "Upper": upper})
+records = []
+for endpoint, (mu, sigma) in zip(endpoints, lognorm_params, strict=True):
+    times = np.random.lognormal(mu, sigma, 80)
+    for t in times:
+        records.append({"Endpoint": endpoint, "Response Time (ms)": t})
 
-# Create plot (4800x2700 px at 300 dpi = 16x9 inches)
-fig, ax = plt.subplots(figsize=(16, 9))
+df = pd.DataFrame(records)
 
-# Plot points using seaborn pointplot
-# Using horizontal orientation for better label readability
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+# Seaborn native 95% bootstrap CI — asymmetric due to log-normal skew
 sns.pointplot(
     data=df,
-    x="Satisfaction",
-    y="Product",
+    x="Response Time (ms)",
+    y="Endpoint",
     orient="h",
-    color="#306998",
+    color=BRAND,
     markers="o",
-    markersize=15,
-    linestyle="none",  # Remove connecting lines between points
-    err_kws={"linewidth": 0},  # We'll draw custom error bars for more control
+    markersize=12,
+    linestyle="none",
+    errorbar=("ci", 95),
+    err_kws={"linewidth": 2.5},
+    capsize=0.3,
     ax=ax,
 )
 
-# Draw error bars with caps manually for better control
-for i, (_, row) in enumerate(df.iterrows()):
-    ax.errorbar(
-        x=row["Satisfaction"],
-        y=i,
-        xerr=[[row["Satisfaction"] - row["Lower"]], [row["Upper"] - row["Satisfaction"]]],
-        fmt="none",
-        color="#306998",
-        capsize=8,
-        capthick=3,
-        elinewidth=3,
-    )
-
-# Add reference line at overall mean
-overall_mean = np.mean(estimates)
+# Reference line at overall mean
+overall_mean = df["Response Time (ms)"].mean()
 ax.axvline(
     x=overall_mean,
-    color="#FFD43B",
+    color=REF_COLOR,
     linestyle="--",
     linewidth=2.5,
-    alpha=0.8,
-    label=f"Overall Mean ({overall_mean:.1f})",
+    alpha=0.85,
+    label=f"Overall Mean ({overall_mean:.0f} ms)",
 )
 
-# Labels and styling (scaled for 4800x2700)
-ax.set_xlabel("Satisfaction Score (1-10)", fontsize=20)
-ax.set_ylabel("Product", fontsize=20)
-ax.set_title("point-basic · seaborn · pyplots.ai", fontsize=24)
+# Style
+ax.set_xlabel("Response Time (ms)", fontsize=20, color=INK)
+ax.set_ylabel("API Endpoint", fontsize=20, color=INK)
+ax.set_title("point-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--", axis="x")
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.xaxis.grid(True, alpha=0.10, linewidth=0.8)
 
-# Legend
-ax.legend(fontsize=16, loc="lower right")
-
-# Set x-axis limits to show context
-ax.set_xlim(3, 10)
+ax.legend(fontsize=16, loc="upper right", frameon=True)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
