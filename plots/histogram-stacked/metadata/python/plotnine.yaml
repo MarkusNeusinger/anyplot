@@ -1,153 +1,166 @@
 library: plotnine
+language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:39:17Z'
-updated: '2025-12-30T10:49:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594560694
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/plotnine/plot.png
-preview_html: null
-quality_score: 97
-impl_tags:
-  dependencies: []
-  techniques:
-  - edge-highlighting
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-12T05:42:41Z'
+generated_by: claude-haiku
+workflow_run: 25715505897
+issue: 2601
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper stacking via position=stack
-  - Comprehensive theme customization with appropriate font sizes for 4800x2700 output
-  - Realistic and engaging data scenario (plant growth across soil types)
-  - Perfect title format and axis labels with units
-  - Clean KISS code structure with reproducible seed
-  - White bar borders enhance visual separation between stacked segments
+  - Perfect visual quality across all metrics with excellent legibility in both light
+    and dark themes
+  - 'Flawless palette compliance: Okabe-Ito colors in correct order with proper theme-adaptive
+    chrome'
+  - Complete spec compliance with all stacked histogram features implemented correctly
+  - Excellent data quality with realistic plant growth scenario and meaningful distributions
+  - Clean, Pythonic code following plotnine best practices
+  - Proper theme rendering showing strong understanding of theme-adaptive tokens
   weaknesses:
-  - Could use scale_fill_brewer for more colorblind-safe colors instead of manual
-    hex values
-  image_description: 'The plot displays a stacked histogram showing plant height distributions
-    across three soil types. The x-axis shows "Plant Height (cm)" ranging from 10
-    to 50, and the y-axis shows "Frequency" from 0 to about 68. Three distinct colors
-    represent the soil types: dark blue (#306998) for Clay Soil, yellow (#FFD43B)
-    for Loamy Soil, and teal (#4ECDC4) for Sandy Soil. The bars are stacked on top
-    of each other, with white borders separating segments (alpha=0.85). The distributions
-    show different peaks: Sandy Soil peaks around 25cm, Loamy Soil around 30cm, and
-    Clay Soil around 22cm. The legend is positioned on the right side. The title "histogram-stacked
-    · plotnine · pyplots.ai" is prominently displayed at the top. The plot uses a
-    minimal theme with subtle gray gridlines on a white background.'
+  - Design Excellence is moderate (10/20) - the plot has a professional appearance
+    but lacks distinctive aesthetic sophistication or custom design elements
+  - Limited visual hierarchy - the plot displays data effectively but doesn't emphasize
+    particular insights or create narrative focus
+  - Could benefit from additional visual refinement touches (e.g., spine removal,
+    enhanced grid styling)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct)
+      Chrome: Title "histogram-stacked · plotnine · anyplot.ai" in dark text clearly visible; X-axis label "Plant Height (cm)" with units; Y-axis "Frequency"; tick labels 10-55 on x-axis and 0-70 on y-axis all readable
+      Data: Three soil types with Okabe-Ito colors: Sandy Soil #0072B2 (bottom), Loamy Soil #D55E00 (middle), Clay Soil #009E73 (top); first series is correct green #009E73; bars have white edges
+      Legibility verdict: PASS - All text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct, not pure black)
+      Chrome: Title, axis labels, and tick labels are light-colored and clearly readable; no dark-on-dark issues; legend on right with light text
+      Data: Colors identical to light render - Sandy Soil #0072B2, Loamy Soil #D55E00, Clay Soil #009E73; bars clearly distinguishable
+      Legibility verdict: PASS - All text clearly readable against dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text perfectly readable at full size
+        comment: Font sizes explicitly set; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with good alpha and white borders
+        comment: Bars well-sized and visible across distribution
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors distinguishable but could be more colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent proportions, plot fills canvas well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Plant Height (cm)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16×9 figure with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle, legend placement acceptable
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito correct order; theme-correct chrome both renders
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; not exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good customization; could be more polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without narrative emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct stacked histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y and fill correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: All spec features present (stacking, colors, legend)
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correct and descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: histogram-stacked · plotnine · pyplots.ai'
+        comment: Title format and legend correct
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct distributions with different means and spreads
+        comment: Shows all aspects across three groups
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Excellent plant growth scenario (science/agriculture)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Realistic plant heights (10-50 cm)
+        comment: Realistic plant growth scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually plausible values
     code_quality:
       score: 10
       max: 10
@@ -157,33 +170,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save
+        comment: Simple linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Fixed seed (42)
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current APIs
+        comment: Clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
-      items: []
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses some library-specific features but fairly standard
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
