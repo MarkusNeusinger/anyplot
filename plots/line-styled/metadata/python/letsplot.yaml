@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-styled
 created: '2025-12-30T10:44:00Z'
-updated: '2026-05-12T07:33:46Z'
+updated: '2026-05-12T07:38:31Z'
 generated_by: claude-haiku
 workflow_run: 25720018856
 issue: 2598
@@ -12,39 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 83
 review:
   strengths:
-  - Perfect spec compliance - all line styles (solid, dashed, dotted, dash-dot) implemented
-    correctly with clear legend mapping
-  - Excellent theme adaptation - both light and dark renders are fully readable with
-    proper Okabe-Ito colors and theme-correct chrome
-  - Clean, maintainable code with reproducible data generation (np.random.seed(42))
-  - Proper use of Okabe-Ito palette with correct first series color (#009E73 for Paris)
-  - Realistic, contextual data showing rainfall patterns across real cities (Paris,
-    Athens, Seattle, Delhi)
-  - Well-executed Typography hierarchy with appropriate sizing for large 4800×2700px
-    canvas
+  - Perfect visual quality with excellent theme adaptation in both light and dark
+    renders
+  - Complete specification compliance with all required line styles (solid, dashed,
+    dotted, dash-dot) and proper legend mapping
+  - Clean, reproducible code with deterministic data generation and proper use of
+    Okabe-Ito palette
+  - Realistic rainfall data from multiple cities with appropriate scaling and context
+  - Proper theme-adaptive chrome throughout with correct background colors and text
+    contrast in both themes
   weaknesses:
-  - Design excellence is moderate - functional but lacks distinctive visual refinement
-    or design innovation
-  - Library mastery is average - uses linetype effectively but doesn't explore other
-    distinctive lets_plot features (annotations, custom legend styling, interactive
-    features)
-  - No exceptional visual storytelling - straightforward implementation without emphasis
-    or focal point beyond basic legend
+  - Generic aesthetic design with standard theme defaults and no visual refinement
+    beyond requirements
+  - No visual hierarchy or data storytelling elements to create focal points
+  - Minimal use of distinctive letsplot features beyond basic API
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) with subtle grid lines
-      Chrome: Title "line-styled · letsplot · anyplot.ai" (24pt, dark text), X-axis "Day of Month" (20pt), Y-axis "Rainfall (mm)" (20pt), tick labels (16pt dark-soft), legend with City and linetype labels (16pt) - all clearly readable against light background
-      Data: Four trend lines with distinct styles - Paris (solid, #009E73 green), Athens (dashed, #D55E00 vermillion), Seattle (dotted, #0072B2 blue), Delhi (dash-dot, #CC79A7 reddish-purple). Points visible at alpha=0.7. Line width consistent at size=2
-      Legibility verdict: PASS - all text clearly readable, grid subtle, data colors vivid and distinct
+      Chrome: Title "line-styled · letsplot · anyplot.ai" clearly readable in dark text; x-axis labeled "Day of Month" (0-30), y-axis "Rainfall (mm)" (3-22 range); all tick labels and axis titles in dark INK color; legend positioned right with city names
+      Data: Four rainfall series distinguished by line styles (Paris solid green #009E73, Athens dashed orange #D55E00, Seattle dotted blue #0072B2, Delhi dash-dot purple #CC79A7); data points added with alpha=0.7; all colors match Okabe-Ito first-series green as primary
+      Legibility verdict: PASS - all text is readable against light background, data lines are clearly distinguishable by style
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid lines (rgba with appropriate opacity)
-      Chrome: Title clearly visible in light text (#F0EFE8), axis labels in light text, tick labels in light-soft text (#B8B7B0), legend text properly colored - all readable on dark surface
-      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7) - only chrome flipped for theme adaptation. Line styles (solid, dashed, dotted, dash-dot) equally visible on dark background. Points maintain alpha=0.7
-      Legibility verdict: PASS - no dark-on-dark failures, all text readable, brand green still vibrant, proper theme-adaptive color mapping
+      Background: Warm near-black (#1A1A17) with subtle grid lines
+      Chrome: Title clearly visible in light text (#F0EFE8); x-axis and y-axis labels readable; tick labels in INK_SOFT color (#B8B7B0); legend positioned identically to light render with good contrast
+      Data: All four data colors are identical to light render (confirming proper theme-independence for data); line styles (solid, dashed, dotted, dash-dot) are clearly visible; data points maintain alpha=0.7
+      Legibility verdict: PASS - no dark-on-dark contrast issues; all text is readable; data lines are clearly distinguishable against dark background; grid provides subtle reference without competing with data
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,74 +51,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes - title
-          24pt, labels 20pt, ticks 16pt
+        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions, legend positioned right, title and labels have
-          proper spacing
+        comment: All text readable; legend well-positioned; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four distinct line styles visible, points clear with alpha=0.7, consistent
-          line width
+        comment: Four line styles clearly distinguishable; data points visible with
+          alpha=0.7
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (CVD-safe), positions 1-4 in order, line styles
-          provide non-color distinction
+        comment: Okabe-Ito palette used correctly; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, nothing cut off, generous margins and whitespace
+        comment: 1600x900 base (scaled 3x) with good proportions; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units - X: ''Day of Month'', Y: ''Rainfall
-          (mm)'', title follows spec format'
+        comment: Descriptive with units (Day of Month, Rainfall (mm))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order maintained, backgrounds correct
-          (#FAF8F1 light/#1A1A17 dark), theme-adaptive chrome perfect'
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds for both
+          themes'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional execution but standard styling, no exceptional design
-          innovation
+        comment: Generic styling with standard palette; no distinctive design thought
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Functional refinement, subtle grid, generous whitespace but lacks
-          distinctive visual polish
+        comment: Minimal customization beyond requirements
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clear hierarchy and legend, data patterns visible, but no exceptional
-          focal point or emphasis
+        comment: No visual hierarchy or focal point created
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with styled lines
+        comment: Correct line plot with multiple styled series
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All line styles (solid, dashed, dotted, longdash) implemented, legend
-          maps styles to series
+        comment: All line styles present (solid, dashed, dotted, dash-dot); legend
+          shows mapping
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Day 1-30, Y: Rainfall 3-22mm, axes show all data'
+        comment: X/Y correct; axes show all data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-styled · letsplot · anyplot.ai'', legend shows City
-          with colors and line types'
+        comment: Correct title format; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -162,21 +151,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of line plot with distinct trends and style variation
+        comment: All aspects of line plotting shown; trends clear
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic rainfall data for real cities, plausible values with natural
-          patterns, neutral comparison
+        comment: Rainfall data realistic (Paris, Athens, Seattle, Delhi); neutral
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Monthly rainfall data (1-30 days) and realistic mm/day values for
-          cities
+        comment: Values (3-22 mm/day) sensible for rainfall domain
     code_quality:
       score: 10
       max: 10
@@ -186,7 +174,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes, straightforward implementation
+        comment: No functions/classes; straightforward code
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,44 +186,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot imported and used
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, well-structured theme tokens
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-light.png, plot-dark.png, plus HTML outputs with correct
-          naming
+        comment: Saves as plot-{THEME}.png and .html correctly
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Perfect lets_plot grammar: ggplot() + geom_line() + geom_point()
-          + scales + theme() + ggsize() + ggsave()'
+        passed: false
+        comment: Standard ggplot2-style grammar; correct but not exceptional
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses linetype aesthetic effectively but doesn't explore other distinctive
-          lets_plot features
+        comment: Uses scale_linetype_manual for line styles; good use of distinctive
+          feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
