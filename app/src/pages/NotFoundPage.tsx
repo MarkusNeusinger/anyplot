@@ -32,9 +32,12 @@ export function NotFoundPage() {
         <Box
           component={Link}
           to="/"
+          aria-label="Go home"
           sx={{ color: colors.primary, fontFamily: typography.mono, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
         >
-          <Box component="span" sx={{ color: 'var(--ink-muted)' }}>page</Box>.home()
+          <span aria-hidden="true">
+            <Box component="span" sx={{ color: 'var(--ink-muted)' }}>page</Box>.home()
+          </span>
         </Box>
       </Box>
     </>

@@ -24,6 +24,7 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
     <Box
       component="button"
       onClick={onClick}
+      aria-label={`Browse ${name} examples`}
       sx={{
         all: 'unset',
         boxSizing: 'border-box',
@@ -104,7 +105,7 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
         alignItems: 'center',
         transition: 'color 0.2s',
       }}>
-        <span aria-label={`Browse ${name} examples`}>.explore()</span>
+        <span aria-hidden="true">.explore()</span>
       </Box>
     </Box>
   );

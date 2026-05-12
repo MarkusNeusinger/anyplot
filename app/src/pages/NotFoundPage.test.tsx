@@ -20,7 +20,7 @@ describe('NotFoundPage', () => {
 
   it('renders link back to home', () => {
     render(<NotFoundPage />);
-    const link = screen.getByText('.home()').closest('a');
+    const link = screen.getByRole('link', { name: /go home/i });
     expect(link).toHaveAttribute('href', '/');
   });
 });
