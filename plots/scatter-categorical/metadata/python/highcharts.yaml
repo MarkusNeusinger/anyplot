@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:40:05Z'
-updated: '2026-05-12T13:18:12Z'
+updated: '2026-05-12T13:23:37Z'
 generated_by: claude-haiku
 workflow_run: 25736496805
 issue: 2597
@@ -12,33 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/highcharts/plot-dark.html
-quality_score: 49
+quality_score: 87
 review:
   strengths:
-  - All text elements properly sized and readable in both themes
-  - Marker styling with white edges provides clear definition
-  - Okabe-Ito palette correctly applied with theme-adaptive chrome
-  - Data realistically demonstrates different growth patterns across fertilizer types
-  - Clean, reproducible code with proper seed management
+  - 'Perfect visual quality: all text legible, no overlap, elements properly sized'
+  - 'Excellent palette compliance: correct Okabe-Ito first series (#009E73), theme-adaptive
+    chrome in both renders'
+  - 'Perfect spec compliance: correct scatter plot type, all required features, proper
+    labeling with units'
+  - Clean, reproducible code with proper theme adaptation and Selenium export handling
+  - Realistic, meaningful data context (agricultural study with clear performance
+    differences between fertilizers)
   weaknesses:
-  - Legend is completely missing — specification requires 'Include legend for category
-    identification' but no legend appears in either render
-  - Generic design with minimal aesthetic sophistication or visual hierarchy
-  - No emphasis or visual storytelling to guide viewer interpretation
+  - Design excellence is standard/well-configured rather than exceptional—no distinctive
+    visual hierarchy or emphasis
+  - Limited visual storytelling—data displayed clearly but without strategic emphasis
+    on Fertilizer B outperformance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "scatter-categorical · highcharts · anyplot.ai", axis labels "Nitrogen Applied (kg/ha)" and "Plant Growth (cm)", tick labels all clearly readable in dark text against light background
-      Data: Three categorical scatter series colored with Okabe-Ito positions 1–3 (#009E73 green, #D55E00 orange, #0072B2 blue). Markers have white edges for definition and are clearly visible. Data shows fertilizer types with different growth responses.
-      Legibility verdict: PASS (all text readable)
-      CRITICAL: Legend is NOT visible — no category labels mapping colors to Fertilizer A/B/C
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title, axis labels "Nitrogen Applied (kg/ha)" and "Plant Growth (cm)", and tick labels all clearly visible in dark text (#1A1A17). Legend in top-right shows Fertilizer A/B/C with color indicators, all readable.
+      Data: Green (#009E73), Orange (#D55E00), and Blue (#0072B2) scatter points well-distributed across plot area. Marker radius 8 with white edge provides clear definition. Clear positive correlation visible for all three categories.
+      Legibility verdict: PASS – all text sharp and readable against light background, no "light-on-light" failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, axis labels, and tick labels all rendered in light text, clearly readable against dark background
-      Data: Identical data colors (#009E73, #D55E00, #0072B2) as light render — only chrome changed (as spec requires). Markers clearly visible.
-      Legibility verdict: PASS (all text readable, no dark-on-dark failures)
-      CRITICAL: Legend is NOT visible — missing category identification
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title and axis labels rendered in light text (#F0EFE8), tick labels in INK_SOFT (#B8B7B0). All text clearly readable with no dark-on-dark failures. Legend properly styled with light text on dark elevated background (#242420).
+      Data: All three category colors remain identical to light render—green (#009E73), orange (#D55E00), blue (#0072B2) unchanged. Data markers stand out clearly against dark surface. Same spatial distribution and patterns as light render.
+      Legibility verdict: PASS – all text readable, proper contrast, brand green visible and vibrant, no theme-adaptation issues.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,51 +50,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px)
-          — perfectly readable in both themes
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, markers show expected density-driven
-          clustering
+        comment: No overlapping text elements; axis labels, ticks, and legend all
+          clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers at 8px radius clearly visible with white edges, excellent
-          contrast against background
+        comment: Marker radius 8 optimal for 120 data points (40 per category); all
+          points clearly visible with 0.8 opacity
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, good contrast, no red-green-only
-          signaling
+        comment: Okabe-Ito palette is CVD-safe; good contrast across all series and
+          backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 50-80% of canvas with balanced margins and good whitespace
+        comment: 4800×2700 landscape used effectively; balanced margins; legend placement
+          in top-right clear and non-floating
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id/library/domain; axes labeled with units (kg/ha,
+        comment: Title format correct; axis labels descriptive with units (kg/ha,
           cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; colors follow Okabe-Ito order; backgrounds
-          correct (#FAF8F1 light / #1A1A17 dark); theme chrome perfect'
+        comment: 'First series #009E73 (brand green) correct; multi-series follows
+          Okabe-Ito (#D55E00, #0072B2); backgrounds #FAF8F1/#1A1A17 correct; theme
+          tokens (INK, INK_SOFT, GRID) applied correctly in both renders'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -101,25 +104,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with Okabe-Ito palette and white
-          marker edges, but no custom design thinking or visual sophistication beyond
-          defaults
+        comment: Well-configured Okabe-Ito palette and marker styling (edge colors
+          set to PAGE_BG), but standard Highcharts aesthetic without exceptional polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Marker styling with white edges shows some refinement, but mostly
-          relies on Highcharts defaults
+        passed: true
+        comment: Legend styled with backgroundColor and borderColor; minimal grid;
+          clean layout—good visual polish applied
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy, emphasis, or focal points
-          to guide viewer — Fertilizer B's superior performance is not highlighted
+        comment: Data displayed clearly showing three performance tiers, but lacks
+          visual hierarchy/emphasis to highlight Fertilizer B outperformance
     spec_compliance:
-      score: 9
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,28 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with categorical grouping
+        comment: Correct scatter plot with three categorical series
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: 'CRITICAL FAILURE: Specification requires ''Include legend for category
-          identification'' — legend is completely missing in both renders'
+        passed: true
+        comment: 'All features present: scatter markers, categorical colors, legend,
+          proper X/Y mapping'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly assigned (Nitrogen vs. Growth), all data visible,
-          categories color-coded
+        comment: X=Nitrogen Applied, Y=Plant Growth, all data visible across both
+          axes
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct, but legend missing — should show Fertilizer
-          A/B/C labels matching colors
+        passed: true
+        comment: Title 'scatter-categorical · highcharts · anyplot.ai' correct; legend
+          labels match data (Fertilizer A/B/C)
     data_quality:
       score: 15
       max: 15
@@ -158,22 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of categorical scatter: three distinct groups
-          with different correlation patterns and variance levels'
+        comment: 'Shows all aspects: three distinct categories with different growth/variance
+          patterns—Fertilizer B clearly outperforms'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant growth study with fertilizer types is realistic, neutral, and
-          scientifically plausible
+        comment: Real-world agricultural study (nitrogen vs. plant growth); neutral,
+          descriptive labels; plausible domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Nitrogen (15–85 kg/ha) and growth (0–72 cm) are realistic agricultural
-          scales
+        comment: Nitrogen 15–85 kg/ha realistic; growth 5–72 cm proportional; positive
+          correlations align with agronomic principles
     code_quality:
       score: 10
       max: 10
@@ -183,34 +185,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot config → output, no unnecessary abstractions
+        comment: 'Linear: imports → data → options → export; no unnecessary functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (json, os, tempfile, time, urllib, pathlib, numpy,
-          selenium)
+        comment: 'All imports used: json, os, tempfile, time, urllib, pathlib, numpy,
+          selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward, no over-engineering, no fake functionality
+        comment: Appropriate complexity; no over-engineering or fake functionality;
+          exception handling for JS download
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html; uses current
+          Highcharts API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -218,16 +222,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Chart() construction with options dict, JSON serialization,
-          environment-based theming, Selenium headless export — good patterns
+        comment: 'Idiomatic Highcharts pattern: build options dict, set series with
+          ScatterSeries pattern, use JSON serialization for JS'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses Selenium for headless rendering (required) and marker styling,
-          but mostly standard scatter plot setup
-  verdict: REJECTED
+        passed: true
+        comment: Implements Selenium headless export with inline JS embedding (distinctive
+          to Highcharts PNG workflow); marker styling with edge colors; theme-adaptive
+          color token pattern
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -235,6 +240,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
