@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-markers: Line Plot with Markers
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2025-12-30
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-12
 """
 
 import os
