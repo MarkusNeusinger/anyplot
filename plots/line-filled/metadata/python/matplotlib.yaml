@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: line-filled
 created: '2025-12-30T11:21:36Z'
-updated: '2026-05-12T17:01:00Z'
+updated: '2026-05-12T17:07:02Z'
 generated_by: claude-haiku
 workflow_run: 25749253315
 issue: 2643
@@ -12,46 +12,211 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 78
 review:
   strengths:
-  - Excellent text legibility at full resolution with explicit font sizing (24/20/16pt)
-  - Correct brand green palette (#009E73) with theme-adaptive dark render showing
-    identical data colors
-  - Realistic seasonal trend in website traffic data with clear visual emphasis through
-    fill
-  - Clean, simple code structure (KISS); proper seeding for reproducibility
-  - Perfect specification compliance on plot type and required features
+  - Professional appearance with correct plot type and structure
+  - Excellent data choice demonstrating seasonal variation
+  - All text readable and well-positioned in light render
+  - Clean, reproducible code with proper seed for consistency
+  - Appropriate axis labels with units and descriptive titles
   weaknesses:
-  - 'Y-axis label missing units: ''Website Visitors'' should be ''Website Visitors
-    (thousands)'''
-  - Output filename hardcoded as plot.png instead of plot-{THEME}.png per guidelines
-  - 'Code does not implement theme-adaptive chrome: missing ANYPLOT_THEME environment
-    variable handling and color token application (PAGE_BG, INK, INK_SOFT)'
-  - 'Design Excellence below expectations: no spine removal, generic grid styling,
-    minimal aesthetic customization beyond defaults'
+  - Title uses 'pyplots.ai' instead of 'anyplot.ai'
+  - Output filename hardcoded as 'plot.png' instead of 'plot-{THEME}.png'
+  - No ANYPLOT_THEME environment variable handling - missing theme adaptation
+  - 'Dark theme background appears pure black instead of warm #1A1A17'
+  - 'Fill color is #306998 (Python Blue) instead of #009E73 (Okabe-Ito brand green)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "line-filled · matplotlib · anyplot.ai" in dark text (INK); axis labels "Month of Year" and "Website Visitors" in dark; 12 month tick labels (Jan–Dec) all readable; grid lines subtle and dashed
-      Data: Brand green fill (#009E73) beneath visible dark green line; values range 35k–68k visitors showing seasonal peak in July
-      Legibility verdict: PASS - all text clearly readable against light background with excellent contrast
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all clearly readable against light background - dark text works well
+      Data: Filled area in teal-green with 40% alpha; line overlay in darker green; shows seasonal variation peaking in July
+      Colors: Green fill and line visible and properly contrasted
+      Legibility verdict: PASS - all elements clearly readable
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (#1A1A17 or similar), not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light text (INK_SOFT) and clearly visible; grid lines subtle
-      Data: Brand green (#009E73) - identical to light render, confirming proper theme-independent data color handling
-      Legibility verdict: PASS - all text readable against dark background; no dark-on-dark failures; strong contrast maintained
+      Background: Appears to be pure black or near-black; should be warm #1A1A17 - ISSUE
+      Chrome: Title, axis labels, tick labels are light-colored and readable against dark background
+      Data: Green fill and line colors appear identical to light render (correct)
+      Colors: Green remains visible and distinguishable
+      Text legibility: Generally readable but background tone is slightly harsh (pure black vs warm near-black)
+      Legibility verdict: PASS (readable, but with background color compliance issue)
 
-    Both renders confirm:
-    - Okabe-Ito position 1 (#009E73) maintained across themes
-    - Only chrome elements (text, background, grid) adapt; data colors stay constant
-    - No visual hierarchy issues or accessibility failures
-  verdict: APPROVED
+    Overall: Both renders are legible, but the dark theme background color deviates from specification.
+  verdict: REJECTED
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Readable but relies on defaults, not explicitly set
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; month labels well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line and fill clearly visible and distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe colors with adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good utilization with minor margin issues
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Dark background is pure black not #1A1A17; no theme adaptation in
+          code'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid styling present; lacks spine refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Seasonal trend clearly visible
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled line plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Fill, line overlay, baseline all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 0
+        max: 3
+        passed: false
+        comment: Title says 'pyplots.ai' instead of 'anyplot.ai'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows seasonal variation and baseline
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic is real and neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values are plausible for annual traffic
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Lacks theme-adaptation logic
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Saves as 'plot.png' not 'plot-{THEME}.png'; no ANYPLOT_THEME handling
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct matplotlib patterns but basic
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Standard fill_between and plot usage
 impl_tags:
   dependencies: []
-  techniques:
-  - manual-ticks
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
