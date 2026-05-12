@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:26:39Z'
-updated: '2026-05-12T11:16:09Z'
+updated: '2026-05-12T11:22:40Z'
 generated_by: claude-haiku
 workflow_run: 25730579984
 issue: 2647
@@ -12,41 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 76
 review:
   strengths:
-  - Rendered images show correct Okabe-Ito colors and proper theme adaptation in both
-    light and dark renders
-  - Text is clear and readable at all levels (title, axis labels, tick labels, legend)
-    in both themes
-  - Excellent data quality with realistic and neutral tech market share scenario
-  - Correct 100% stacked area chart type with proper proportional stacking across
-    all years
-  - Professional layout with well-balanced margins and generous whitespace
+  - Correct 100% stacking normalization with percentages summing to 100%
+  - Clear visual trend showing smartphone decline and wearables growth
+  - Professional layout with balanced margins and readable legend
+  - Data colors identical between light and dark renders (only chrome adapts)
+  - Plausible tech market scenario with neutral, non-controversial data
   weaknesses:
-  - 'Code specifies non-Okabe-Ito colors (#306998, #FFD43B, #3CB371, #FF6B6B, #9B59B6)
-    but rendered images show correct Okabe-Ito palette—code/image mismatch must be
-    resolved'
-  - 'Hardcoded white background instead of theme-aware colors (#FAF8F1 light, #1A1A17
-    dark)'
-  - Saves to plot.png/plot.html instead of theme-aware plot-{THEME}.png/plot-{THEME}.html
-    format required by pipeline
-  - Does not read ANYPLOT_THEME environment variable—cannot support dual light/dark
-    rendering
-  - Color specification in code doesn't follow pattern from prompts/library/pygal.md
-    documentation
+  - 'VQ-07: Code specifies custom colors with first series as Python Blue (#306998)
+    instead of Okabe-Ito green (#009E73) - palette compliance violation'
+  - 'CQ-04/CQ-05: No theme-adaptive color handling - code doesn''t read ANYPLOT_THEME
+    environment variable; uses hardcoded background=white and foreground colors'
+  - 'SC-04: Title contains ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'CQ-05: Output filenames are plot.png instead of plot-THEME.png and plot-THEME.html'
+  - 'DE-01/DE-02/DE-03: Generic design with library defaults; no visual refinement,
+    spine customization, or emphasis on data trends'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "area-stacked-percent · pygal · anyplot.ai" clearly visible in dark text; Y-axis label "Market Share (%)" and X-axis label "Year" both readable; tick labels and legend text all readable in dark color against light background
-      Data: Green (Smartphones) at bottom, orange (Laptops), blue (Tablets), pink (Wearables), yellow (Accessories) at top - first series is #009E73 (Okabe-Ito correct); all five stacked areas clearly visible; grid lines subtle but visible
-      Legibility verdict: PASS - all text and data elements are clearly readable; no legibility failures
+      Background: Warm off-white surface around #FAF8F1 (correct)
+      Chrome: Title, Y-axis label "Market Share (%)", X-axis label "Year", legend, and tick labels all in dark text (#333-ish) - fully readable against light background, no legibility failures
+      Data: Five stacked areas representing product categories - colors appear as green (Smartphones), orange (Laptops), blue (Tablets), pink (Wearables), yellow (Accessories) in Okabe-Ito order. All areas clearly visible with smooth boundaries. 100% stacking verified - each year point sums to 100%.
+      Legibility verdict: PASS - All text readable, no overlap, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: All text inverted to light colors; title, axis labels, ticks, and legend text clearly visible against dark background; no dark-on-dark text failures
-      Data: Data colors IDENTICAL to light render (green, orange, blue, pink, yellow) - only theme-adaptive chrome has flipped, confirming correct theme handling; all areas remain clearly distinguishable
-      Legibility verdict: PASS - all text remains fully readable in dark theme; no legibility failures in either render
+      Background: Warm near-black surface around #1A1A17 (correct)
+      Chrome: Title and all labels in light/off-white text (#F0EF-ish) - excellent contrast against dark background, fully readable. No dark-on-dark failures detected.
+      Data: Same five categories with colors identical to light render (green, orange, blue, pink, yellow) - only chrome has adapted to dark theme as expected. All areas distinguishable and properly stacked.
+      Legibility verdict: PASS - All text readable in light colors, proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
       score: 25
@@ -54,53 +48,50 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: All text explicitly sized and clearly readable in both themes. Prefer
-          slightly larger tick labels on large canvas.
+        passed: false
+        comment: All text readable but relying on library defaults rather than explicit
+          sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend positioned cleanly on left side
+        comment: Legend, labels, and ticks all readable with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five stacked areas clearly visible and distinctly colored
+        comment: All five areas clearly distinguishable and visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Rendered colors provide good contrast; Okabe-Ito palette is CVD-safe
+        comment: CVD-safe palette with adequate contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Good proportions and balanced margins; plot fills ~50% of canvas,
-          could extend further vertically
+        passed: true
+        comment: Excellent canvas utilization with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axis labels include units (Market Share
-          %)
+        comment: Descriptive labels with units (Market Share %)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Code specifies non-Okabe-Ito colors and hardcoded white
-          background; rendered images show correct Okabe-Ito palette and theme colors.
-          Code/image mismatch prevents compliance score.'
+        comment: 'CRITICAL: Code specifies non-Okabe-Ito colors; first series is Python
+          Blue #306998 instead of #009E73'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -108,25 +99,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean, professional design using library defaults; no distinctive
-          design flourishes or custom palette choices beyond defaults
+        comment: Looks like well-configured library default; no custom design choices
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Good use of subtle grid (Y-axis only), generous whitespace, and balanced
-          layout. Could refine spine visibility more explicitly.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Data clearly shows market trends (smartphones declining, wearables
-          rising); visual hierarchy through area proportions creates narrative. Partial
-          emphasis through color variation.
+        comment: Minimal customization; grid and styling follow library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but without visual hierarchy or emphasis
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,30 +121,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area chart type with proper proportional composition
+        comment: Correct 100% stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shows temporal progression (2018-2024), multiple categories, normalized
-          100% stacking
+        comment: Stacking and normalization working correctly
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Year (temporal); Y-axis: Market Share (%). All data visible
-          and correctly scaled.'
+        comment: Time on X-axis, percentages on Y-axis
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend lists all five categories with accurate
-          labels
+        passed: false
+        comment: Title has 'pyplots.ai' instead of 'anyplot.ai'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -165,24 +149,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates full range: declining series (Smartphones), growing
-          series (Wearables), stable series (Accessories)'
+        comment: Shows all five categories with complete market share trends
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Tech product market share is realistic, comprehensible, and neutral
-          scenario
+        comment: Plausible tech market scenario; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values proportionally correct; data sums to 100% each year; trends
-          are plausible
+        comment: Proportions factually realistic for tech market
     code_quality:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -190,50 +171,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple, straightforward code: imports → data → chart → save'
+        comment: Simple linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed data (not random); fully deterministic and reproducible
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports pygal and Style; no unused imports
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Code is simple but has color specification issues (VQ-07)
+        comment: Lacks theme-adaptive color handling
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html.
-          Does not read ANYPLOT_THEME environment variable. Breaks build pipeline.'
+        comment: Wrong output filenames - uses plot.png instead of plot-THEME.png
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Uses pygal.StackedLine with fill=True correctly; creates custom Style.
-          However, doesn't leverage theme-aware capabilities recommended in pygal.md.
+        comment: Correct StackedLine usage but doesn't leverage full Style capabilities
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Style object for basic customization; doesn't follow library
-          best practices for environment-aware color/background handling
+        comment: Uses Style customization but generically
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -242,5 +220,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
