@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-markers: Line Plot with Markers
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-12
+Quality: 76/100 | Updated: 2026-05-12
 """
 
 import numpy as np
