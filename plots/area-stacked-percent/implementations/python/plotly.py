@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 76/100 | Updated: 2026-05-12
 """
 
 import numpy as np

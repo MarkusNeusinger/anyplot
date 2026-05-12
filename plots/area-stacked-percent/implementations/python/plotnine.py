@@ -1,14 +1,20 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-12
 """
 
-import numpy as np
-import pandas as pd
-from plotnine import (
+import os
+import sys
+
+
+sys.path = [p for p in sys.path if p != os.path.dirname(__file__)]
+
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_area,
     ggplot,
@@ -21,16 +27,24 @@ from plotnine import (
 )
 
 
-# Data - Market share evolution of tech product categories
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Okabe-Ito palette - first position is ALWAYS #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Market share evolution with more dramatic proportion shifts
 years = list(range(2015, 2025))
 
-# Generate category data with realistic trends
-smartphones = [45, 43, 40, 38, 36, 35, 34, 33, 32, 31]
-tablets = [25, 23, 20, 18, 16, 14, 12, 11, 10, 9]
-wearables = [5, 8, 12, 15, 18, 20, 22, 24, 26, 28]
-laptops = [25, 26, 28, 29, 30, 31, 32, 32, 32, 32]
+# Generate category data with realistic and dramatic trends
+smartphones = [50, 48, 44, 40, 35, 32, 28, 25, 22, 20]
+tablets = [28, 26, 22, 18, 15, 12, 10, 8, 6, 5]
+wearables = [4, 8, 14, 20, 26, 32, 38, 42, 46, 48]
+laptops = [18, 18, 20, 22, 24, 24, 24, 25, 26, 27]
 
 # Create DataFrame in long format for plotnine
 df_list = []
@@ -56,25 +70,30 @@ df["Category"] = pd.Categorical(
 plot = (
     ggplot(df, aes(x="Year", y="Percent", fill="Category"))
     + geom_area(position="stack", alpha=0.85)
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#4ECDC4", "#E76F51"])
+    + scale_fill_manual(values=OKABE_ITO)
     + scale_x_continuous(breaks=range(2015, 2025, 2))
     + scale_y_continuous(breaks=[0, 25, 50, 75, 100], labels=["0%", "25%", "50%", "75%", "100%"])
     + labs(
-        title="area-stacked-percent · plotnine · pyplots.ai", x="Year", y="Market Share (%)", fill="Product Category"
+        title="area-stacked-percent · plotnine · anyplot.ai", x="Year", y="Market Share (%)", fill="Product Category"
     )
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(alpha=0),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        plot_title=element_text(size=24, weight="bold", color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        legend_position="bottom",
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
