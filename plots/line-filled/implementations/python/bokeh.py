@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 line-filled: Filled Line Plot
-Library: bokeh 3.8.1 | Python 3.13.11
+Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-12
 """
 
