@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:31:33Z'
-updated: '2026-05-12T01:08:51Z'
+updated: '2026-05-12T01:16:00Z'
 generated_by: claude-haiku
 workflow_run: 25706722322
 issue: 2548
@@ -12,34 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Flawless theme compliance: both renders perfectly readable with proper dark/light
-    adaptation'
-  - 'Perfect visual quality: excellent text sizing, no overlap, balanced layout'
-  - Clean, idiomatic Altair code with clear structure
-  - Realistic, neutral data with good feature coverage (outliers, varying distributions)
-  - All specification requirements met
+  - 'Perfect theme-adaptive styling: Light and dark renders both readable with correct
+    colors (#FAF8F1 and #1A1A17 backgrounds)'
+  - 'Text legibility: All font sizes explicitly set (title 28px, labels 22px, ticks
+    18px), perfectly readable'
+  - 'Complete spec compliance: Horizontal box plot with quartiles, whiskers, outliers;
+    sorted by median for easy comparison'
+  - 'Realistic data context: Response times by service type with varied distributions
+    showing outliers and different spreads'
+  - 'Clean code structure: Proper seed, deterministic data generation, idiomatic altair
+    API usage'
+  - 'Okabe-Ito palette: Correct colors for categorical data with proper theme-adaptive
+    chrome'
   weaknesses:
-  - 'Design excellence could be improved: styling is functional but generic (default
-    appearance)'
-  - 'Visual refinement is minimal: no custom grid styling, spines handled implicitly
-    by Altair'
-  - Data storytelling relies solely on sorting; no visual emphasis or focal points
-    beyond the natural structure
+  - 'Design Excellence: Uses well-configured defaults rather than distinctive design
+    sophistication (DE-01: 4/8)'
+  - 'Visual refinement: Minimal customization beyond theme tokens; grid and axis styling
+    adequate but not exceptional (DE-02: 4/6)'
+  - 'Data storytelling: Sorted order provides structure but lacks visual hierarchy
+    or emphasis to guide viewer (DE-03: 2/6)'
+  - 'Library mastery: Correct idiomatic usage but doesn''t leverage distinctive altair
+    features like transforms or selections (LM-02: 1/5)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and readable
-      Chrome: Title, axis labels (with units), tick labels all dark and clearly visible against light surface
-      Data: Green boxes (#009E73 brand), cyan whiskers, teal outliers. All clearly distinguishable.
-      Legibility verdict: PASS - perfect contrast and readability
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title "box-horizontal · altair · anyplot.ai" (dark #1A1A17 text, 28px), axis labels "Response Time (ms)" and "Service Type" (22px dark text), tick labels (18px dark), grid subtle at 12% opacity
+      Data: Six service types each rendered as horizontal box plot with quartile boxes, whiskers to 1.5*IQR, and outliers shown as points. Services sorted by median value (Cache Lookup fastest, File Storage slowest). Box colors appear to follow Okabe-Ito palette (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9)
+      Legibility verdict: PASS - all text clearly readable, excellent contrast, no overlaps
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and readable
-      Chrome: Title, axis labels, tick labels all light-colored and clearly visible against dark surface. No dark-on-dark issues.
-      Data: Identical green (#009E73), cyan, and teal colors as light render - confirms proper theme adaptation
-      Legibility verdict: PASS - all elements readable with proper contrast in dark theme
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Title in light color (#F0EFE8 text), axis labels and tick labels all light-colored and clearly visible against dark background, grid subtle at 12% opacity
+      Data: Identical box colors to light render (data colors stay constant per spec), same service ordering, same outlier patterns - confirms proper theme-adaptive chrome implementation
+      Legibility verdict: PASS - all text perfectly readable, no dark-on-dark conflicts, excellent contrast throughout
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,47 +58,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
-          Perfectly readable in both themes.
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px
+          - perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Service names well-spaced.
+        comment: Service names well-spaced on y-axis, no text overlap or collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All boxes, whiskers, outliers clearly visible and appropriately sized.
+        comment: Box, whisker, and outlier elements clearly visible; outlier size=80
+          appropriate for canvas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Good contrast.
+        comment: Okabe-Ito palette provides CVD-safe colors with excellent contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, plot fills 50-80% of canvas, balanced margins.
+        comment: Plot fills ~60% of canvas with balanced margins, excellent proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units. Correct title format.
+        comment: 'Labels with units: ''Response Time (ms)'', ''Service Type''; title
+          in spec format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, data colors identical
-          across themes, chrome properly adapted.'
+        comment: 'Okabe-Ito palette correct; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); theme-adaptive chrome perfect in both renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -98,22 +108,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default styling. No custom palette or design flourishes
-          beyond standard conventions.
+        comment: Well-configured default styling with theme-aware tokens - looks like
+          good library defaults rather than distinctive design
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Clean layout with subtle grid. Minimal customization beyond Altair
-          defaults.
+        comment: 'Some refinement: grid opacity/color adjusted, axis colors configured,
+          mark colors set - but minimal customization beyond defaults'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Data sorted by median provides hierarchy, but no special emphasis
-          or focal points.
+        comment: Sorting by median creates structure and visual hierarchy; services
+          progress from fast to slow
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect horizontal box plot implementation.
+        comment: Correct horizontal box plot with all statistical elements
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required elements: median, quartiles, whiskers, outliers.'
+        comment: Quartile boxes, whiskers, outliers all present; sorted by median
+          for easier comparison
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. Axes show all data.
+        comment: 'X-axis: Response Time (numeric); Y-axis: Service (categorical) -
+          correct orientation and mapping'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed.
+        comment: Title 'box-horizontal · altair · anyplot.ai' in correct format; tooltip
+          shows service and response time
     data_quality:
       score: 15
       max: 15
@@ -151,20 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: varying distributions, outliers, asymmetrical
-          whiskers.'
+        comment: 'Shows all box plot aspects: tight distributions (Cache Lookup),
+          wide distributions (File Storage), outliers present'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Response times by service is realistic and neutral.
+        comment: 'Real-world scenario: response time distributions by service type
+          - neutral, relevant, professional context'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-500ms range is realistic for service monitoring.
+        comment: Response times 5-400ms range is factually plausible; outliers and
+          distributions make sense
     code_quality:
       score: 10
       max: 10
@@ -174,49 +189,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports, data, plot, save.'
+        comment: Imports → data generation → chart creation → save; no functions or
+          classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) ensures deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports.
+        comment: 'All imports used: os, altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No fake UI or over-engineering.
+        comment: Clean Pythonic code, appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API.
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent high-level API usage with proper encoding and configure_*
-          methods.
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Uses mark_boxplot() and interactive mode. Good use of Altair-specific
-          functionality.
+        comment: Correct usage of alt.Chart().mark_boxplot() with proper encode/configure
+          methods - correct but doesn't leverage advanced patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; .interactive() is basic; could be replicated with
+          minor changes in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -224,5 +240,6 @@ impl_tags:
   - hover-tooltips
   patterns:
   - data-generation
+  - groupby-aggregation
   dataprep: []
   styling: []
