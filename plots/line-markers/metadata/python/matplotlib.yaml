@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: line-markers
 created: '2025-12-30T10:38:02Z'
-updated: '2026-05-12T03:23:30Z'
+updated: '2026-05-12T03:31:24Z'
 generated_by: claude-haiku
 workflow_run: 25711186309
 issue: 2599
@@ -12,37 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mark
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 57
+quality_score: 76
 review:
   strengths:
-  - Clean data generation with realistic weather scenario
-  - Well-sized markers clearly distinguishable
-  - Proper font sizes explicitly set
-  - Good layout balance and legend placement
-  - Correct plot type with all required features
+  - Text legibility perfect with explicit font sizing (title 24pt, labels 20pt, ticks
+    16pt)
+  - 'Data quality excellent: realistic weather scenario with clear variation across
+    stations'
+  - No overlapping text or visibility issues
+  - Proper marker shapes (circles, squares, triangles) and white edges for definition
+  - Well-balanced layout and canvas utilization
+  - All text readable in both light and dark themes
   weaknesses:
-  - 'CRITICAL: Hardcoded colors violate Okabe-Ito palette (first series should be
-    #009E73, not #306998)'
-  - 'CRITICAL: No theme-adaptive chrome - does not read ANYPLOT_THEME environment
-    variable'
-  - 'CRITICAL: Wrong output filename - saves as plot.png instead of plot-light.png/plot-dark.png'
-  - 'Dark render background appears pure black instead of warm #1A1A17'
-  - Missing matplotlib theme tokens (PAGE_BG, INK, INK_SOFT, etc.)
+  - 'Title domain typo: ''pyplots.ai'' must be ''anyplot.ai'''
+  - 'Color palette non-compliant: code uses #306998, #FFD43B, #E74C3C instead of Okabe-Ito
+    #009E73, #D55E00, #0072B2'
+  - Missing theme-adaptive tokens (ANYPLOT_THEME, PAGE_BG, INK, INK_SOFT) and theme-aware
+    output filename (should be plot-{THEME}.png not plot.png)
+  - Top and right spines not removed per default style guide
+  - Generic design with no visual refinement beyond defaults
+  - Dashed grid style is decorative; should use subtle y-axis-only grid
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (~#FAF8F1), appropriate for light theme
-      Chrome: Title, axis labels "Day" and "Temperature (°C)", tick labels all clearly visible with dark text
-      Data: Three series shown - green circles (Coastal), orange squares (Inland), blue triangles (Mountain); markers 12pt with white edges; lines 3pt thickness; clear separation between series
-      Legibility verdict: PASS - all text readable, good contrast
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "line-markers · matplotlib · pyplots.ai" in dark text (readable but has typo - should be anyplot.ai). Axis labels "Day" and "Temperature (°C)" in dark font. Tick labels readable. Legend with three station names present.
+      Data: Three lines with distinct colors (cyan/teal for Coastal, orange for Inland, blue for Mountain). Markers: filled circles, squares, triangles with white edges at each data point. Lines with linewidth=3.
+      Legibility verdict: PASS - all text dark and clearly visible on light background
 
     Dark render (plot-dark.png):
-      Background: Appears to be near-pure black (should be warm #1A1A17 per style guide)
-      Chrome: Title and axis labels appear light-colored, tick labels readable; however background color appears incorrect (pure black rather than warm near-black)
-      Data: Same three series colors as light render (green, orange, blue) - correctly identical between themes per Okabe-Ito rules; markers and lines clearly visible
-      Legibility verdict: PASS (readable) but FAIL (wrong background color - pure black violates style guide #1A1A17 requirement)
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light gray text (readable). Axis labels in light text. Tick labels light and readable. Legend frame and text appear adapted to dark theme.
+      Data: Identical three line colors to light render (cyan/teal, orange, blue) - data colors correctly consistent across themes. Markers render identically.
+      Legibility verdict: PASS - all text light-colored and visible on dark background; no dark-on-dark failures detected. Grid lines visible in both renders.
+
+    Both renders show theme adaptation working correctly for text and background, though source code lacks explicit theme tokens - suggests pipeline processing or caching discrepancy with rendered images.
   criteria_checklist:
     visual_quality:
-      score: 13
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -50,44 +56,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text elements well-separated, no overlapping or collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized and distinct
+        comment: Marker size 12 well-adapted to 14-point dataset, lines and markers
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe
+        comment: Distinct colors, good contrast with background, different marker
+          shapes aid CVD-safety
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced proportions
+        comment: Plot fills canvas appropriately, balanced margins, no wasted space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: 'Descriptive labels with units: Temperature (°C), Day'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Wrong palette - uses #306998 instead of #009E73 for first
-          series; no theme-adaptive chrome'
+        comment: 'CODE ISSUE: Hard-coded colors #306998, #FFD43B, #E74C3C are not
+          Okabe-Ito. Must use #009E73, #D55E00, #0072B2. Missing theme-adaptive tokens
+          (ANYPLOT_THEME, PAGE_BG, INK, INK_SOFT). Output filename should be plot-{THEME}.png
+          not plot.png'
     design_excellence:
       score: 8
       max: 20
@@ -97,21 +108,25 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Library defaults, no exceptional design
+        comment: Well-configured defaults but generic matplotlib appearance. No custom
+          design touches or distinctive visual choices.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization
+        comment: Minimal customization. Spines not removed (all four visible). Dashed
+          grid is decorative. Should use subtle y-axis-only solid grid per default
+          style.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy
+        comment: Data displayed but no visual hierarchy or emphasis. Three stations
+          shown without interpretation or focal point.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -119,27 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with markers
+        comment: Correct line plot with markers, three series
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple series with distinct marker shapes
+        comment: 'All spec features present: lines, markers, multiple series, distinct
+          marker shapes'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned
+        comment: X/Y correctly assigned, all data visible, axes appropriate
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match
+        passed: false
+        comment: 'CRITICAL: Title has ''pyplots.ai'' instead of ''anyplot.ai''. Legend
+          labels correct.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -147,21 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all plot features
+        comment: Shows all line-plot features with three distinct series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real weather scenario
+        comment: Weather data from coastal/inland/mountain stations is plausible and
+          realistic
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plausible temperature ranges
+        comment: 6-22°C temperature range and 14-day period are realistic
     code_quality:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -169,47 +187,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple structure
+        comment: 'Clean flow: imports, data, plot, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only matplotlib.pyplot and numpy imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Readable and straightforward, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png instead of plot-light.png/plot-dark.png'
+        comment: 'CRITICAL: Saves to plot.png instead of plot-{THEME}.png. Must use
+          theme-specific output filenames.'
     library_mastery:
-      score: 2
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
         passed: false
-        comment: Does not implement theme adaptation
+        comment: Uses ax.plot() correctly via Axes API, proper subplots setup. Could
+          leverage more sophisticated patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage
+        comment: Marker styles and edges are good but generic. No distinctive matplotlib-specific
+          features used.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -217,6 +238,8 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - edge-highlighting
