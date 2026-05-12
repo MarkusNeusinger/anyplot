@@ -1,162 +1,172 @@
 library: matplotlib
+language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:21:16Z'
-updated: '2025-12-30T11:24:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595333911
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - grid-styling
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-12T09:19:13Z'
+generated_by: claude-haiku
+workflow_run: 25724974770
+issue: 2645
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of histtype="step" to create clean outline-only histograms
-  - Two overlapping distributions demonstrate the key advantage of step histograms
-    (comparison without visual clutter)
-  - Appropriate line width (3) makes steps clearly visible
-  - Colorblind-safe color palette with good contrast
-  - Realistic temperature data scenario that is immediately understandable
-  - Clean, minimal code following KISS principles
+  - Perfect theme-adaptive rendering with equal readability in both light and dark
+    modes
+  - Correct specification compliance implementing step histogram with proper overlay
+    technique
+  - Okabe-Ito palette correctly applied with strong visual hierarchy via color and
+    line style
+  - Clean, maintainable code with robust data generation and proper theme token handling
+  - All text elements clearly visible in both themes with no legibility failures
   weaknesses:
-  - Legend positioned in upper right may overlap with data in some cases; consider
-    upper left or outside plot
-  - Both distributions have similar shapes (normal); varying the spread or adding
-    a third distribution would better showcase the comparison capability
-  image_description: The plot displays two step histograms comparing temperature distributions.
-    The blue line ("Morning") shows a distribution centered around 15°C with a peak
-    frequency of ~29, while the yellow/gold line ("Afternoon") shows a distribution
-    centered around 22-24°C with a peak frequency of ~24. Both distributions are rendered
-    as step outlines only (no fill), creating clean overlapping comparisons. The title
-    reads "histogram-stepwise · matplotlib · pyplots.ai" at the top. X-axis shows
-    "Temperature (°C)" ranging from ~5 to ~37, Y-axis shows "Frequency" ranging from
-    0 to 30. A legend in the upper right identifies the two series. A subtle dashed
-    grid aids readability.
+  - Design Excellence modest - uses standard matplotlib conventions; could explore
+    subtle alpha-blending or background color zones
+  - Library Mastery underutilized - only demonstrates basic-to-intermediate features;
+    could leverage more distinctive matplotlib capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and professional
+      Chrome: Title "histogram-stepwise · matplotlib · anyplot.ai" (24pt, dark), X-axis "Score (%)" (20pt, dark), Y-axis "Number of Students" (20pt, dark), tick labels (16pt, soft gray), legend with semi-transparent white frame - all clearly readable
+      Data: Two overlapping step histograms - Multiple Choice (green #009E73, solid line) shows symmetric distribution ~72%, Essay Exam (orange #D55E00, dashed line) shows right-skewed distribution. Colors distinct and vibrant.
+      Legibility verdict: PASS - all elements readable with strong contrast and no overlaps
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and professional
+      Chrome: Title and axis labels now in light text (#F0EFE8) for proper dark-theme contrast, tick labels in soft gray (#B8B7B0), legend frame in elevated background (#242420) with light text - all clearly readable
+      Data: Identical green (#009E73) and orange (#D55E00) step histograms; colors unchanged from light render confirming proper theme-adaptive implementation
+      Legibility verdict: PASS - all elements readable in dark theme, no dark-on-dark failures, brand green clearly visible, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All text explicit sized, readable in both themes, proper color tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend positioned away from data
+        comment: No text collisions, legend positioned clearly, histograms distinguishable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step lines at linewidth=3 are clearly visible and well-suited for
-          the data
+        comment: Both step lines clearly visible, 3pt linewidth appropriate, solid/dashed
+          easily distinguished
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, good use of 16:9 aspect
-          ratio
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" and "Frequency" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1 and 2, CVD-safe palette, sufficient contrast
+          both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 well-proportioned, no cut-offs, generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but legend could be better positioned
-          to avoid overlap with data area
+        comment: Title format correct, axes labeled with units, legend clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order maintained, backgrounds correct,
+          both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional palette use, dashed line adds hierarchy, legend refined;
+          relies on standard conventions
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, good whitespace; could enhance alpha-blending
+          or grid subtlety
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Overlaid distributions compare shapes well, visual hierarchy via
+          color/style; could emphasize insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step histogram using histtype="step"
+        comment: Correct step histogram with histtype=step and no fill
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature values correctly binned and counted
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step lines (outline only), no fill, multiple distributions overlaid
-          for comparison
-      - id: SC-04
-        name: Data Range
+        comment: Outline only, horizontal segments, vertical connectors, overlaid
+          distributions all correct
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Score 0-100, Y: Count 0-30, all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Morning and Afternoon
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: "histogram-stepwise · matplotlib · pyplots.ai"'
+        comment: Format correct, labels match, legend positioned well
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows two overlapping distributions well, but distributions could
-          show more distinct characteristics (e.g., different spreads or shapes)
+        comment: Both histogram aspects shown, distinct shapes, realistic data
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Morning vs afternoon temperature comparison is a real, neutral, comprehensible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (5-37°C) are realistic for daily temperature variations
+        comment: MC (μ=72, σ=8) and Essay (beta-skewed) realistic, neutral educational
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30 bins appropriate for 250 points, 0-100 range sensible
     code_quality:
       score: 10
       max: 10
@@ -166,40 +176,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No functions/classes, straightforward data+plot+save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported, both used
+        comment: Only os, sys, matplotlib, numpy; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: No fake UI, theme via environment variable, robust path handling
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib's histtype="step" correctly, but could leverage additional
-          features like different linestyles for better distinction
+        comment: High-level API, proper fig/ax pattern, axes methods, clean theme
+          tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses histtype=step correctly, line style variation nice; limited
+          advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - grid-styling
