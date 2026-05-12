@@ -1,125 +1,156 @@
-""" pyplots.ai
+"""anyplot.ai
 line-markers: Line Plot with Markers
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-12
 """
 
+import base64
+import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
-from highcharts_core.chart import Chart
-from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Monthly temperature readings at a weather station
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Data - Stock price tracking with different patterns
 np.random.seed(42)
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+days = np.arange(0, 60)
 
-# Temperature data for two locations (realistic seasonal patterns)
-base_temp_1 = np.array([2, 4, 8, 12, 17, 21, 24, 23, 19, 13, 7, 3])
-base_temp_2 = np.array([5, 7, 11, 15, 20, 24, 27, 26, 22, 16, 10, 6])
+# Three stocks with distinct patterns
+stock_a = 100 + 0.5 * days + np.random.normal(0, 1, 60)
+stock_b = 95 + np.cumsum(np.random.normal(0, 2, 60))
+stock_c = 110 + 0.1 * days + np.random.normal(0, 0.8, 60)
 
-# Add slight variation
-temp_station_a = base_temp_1 + np.random.uniform(-1, 1, 12)
-temp_station_b = base_temp_2 + np.random.uniform(-1, 1, 12)
-
-# Create chart
-chart = Chart(container="container")
-chart.options = HighchartsOptions()
-
-# Chart configuration
-chart.options.chart = {
-    "type": "line",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 250,
-    "marginLeft": 180,
-    "spacingBottom": 50,
+# Prepare chart configuration
+chart_config = {
+    "chart": {
+        "type": "line",
+        "width": 4800,
+        "height": 2700,
+        "backgroundColor": PAGE_BG,
+        "marginBottom": 250,
+        "marginLeft": 180,
+        "spacingBottom": 50,
+        "style": {"color": INK},
+    },
+    "colors": OKABE_ITO,
+    "title": {"text": "line-markers · highcharts · anyplot.ai", "style": {"fontSize": "28px", "color": INK}},
+    "xAxis": {
+        "title": {"text": "Day", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
+        "min": 0,
+        "max": 59,
+    },
+    "yAxis": {
+        "title": {"text": "Price ($)", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineWidth": 1,
+        "gridLineColor": GRID,
+    },
+    "legend": {
+        "enabled": True,
+        "itemStyle": {"fontSize": "16px", "color": INK_SOFT},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
+        "align": "right",
+        "verticalAlign": "top",
+        "layout": "vertical",
+        "x": -50,
+        "y": 100,
+    },
+    "plotOptions": {
+        "line": {"lineWidth": 3, "marker": {"enabled": True, "radius": 8, "lineWidth": 2, "lineColor": PAGE_BG}}
+    },
+    "series": [
+        {
+            "name": "Stock A",
+            "data": [[int(d), round(float(p), 1)] for d, p in zip(days, stock_a, strict=False)],
+            "color": OKABE_ITO[0],
+            "marker": {"symbol": "circle", "fillColor": OKABE_ITO[0]},
+        },
+        {
+            "name": "Stock B",
+            "data": [[int(d), round(float(p), 1)] for d, p in zip(days, stock_b, strict=False)],
+            "color": OKABE_ITO[1],
+            "marker": {"symbol": "diamond", "fillColor": OKABE_ITO[1]},
+        },
+        {
+            "name": "Stock C",
+            "data": [[int(d), round(float(p), 1)] for d, p in zip(days, stock_c, strict=False)],
+            "color": OKABE_ITO[2],
+            "marker": {"symbol": "triangle", "fillColor": OKABE_ITO[2]},
+        },
+    ],
 }
 
-# Title
-chart.options.title = {
-    "text": "line-markers · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
-}
 
-# Subtitle
-chart.options.subtitle = {"text": "Monthly Temperature Readings at Two Weather Stations", "style": {"fontSize": "32px"}}
+def download_js(urls, timeout=30, max_retries=3):
+    if not isinstance(urls, list):
+        urls = [urls]
 
-# X-axis
-chart.options.x_axis = {
-    "categories": months,
-    "title": {"text": "Month", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
-}
+    for url in urls:
+        for attempt in range(max_retries):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=timeout) as response:
+                    return response.read().decode("utf-8")
+            except Exception:
+                if attempt == max_retries - 1:
+                    continue
+                time.sleep(1)
 
-# Y-axis
-chart.options.y_axis = {
-    "title": {"text": "Temperature (°C)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-}
+    raise RuntimeError("Failed to download Highcharts JS from all sources")
 
-# Legend
-chart.options.legend = {
-    "enabled": True,
-    "itemStyle": {"fontSize": "32px"},
-    "symbolRadius": 8,
-    "align": "right",
-    "verticalAlign": "top",
-    "layout": "vertical",
-    "x": -50,
-    "y": 100,
-}
 
-# Plot options for line with markers
-chart.options.plot_options = {
-    "line": {"lineWidth": 5, "marker": {"enabled": True, "radius": 12, "lineWidth": 3, "lineColor": "#ffffff"}}
-}
-
-# Series 1 - Station A (Python Blue)
-series_a = LineSeries()
-series_a.name = "Station A (Coastal)"
-series_a.data = [round(float(t), 1) for t in temp_station_a]
-series_a.color = "#306998"
-series_a.marker = {"symbol": "circle", "fillColor": "#306998", "radius": 14}
-
-# Series 2 - Station B (Python Yellow)
-series_b = LineSeries()
-series_b.name = "Station B (Inland)"
-series_b.data = [round(float(t), 1) for t in temp_station_b]
-series_b.color = "#FFD43B"
-series_b.marker = {"symbol": "diamond", "fillColor": "#FFD43B", "radius": 14}
-
-chart.add_series(series_a)
-chart.add_series(series_b)
-
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+highcharts_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11.4.3/highcharts.js",
+    "https://code.highcharts.com/highcharts.js",
+]
+highcharts_js = download_js(highcharts_urls)
 
 # Generate HTML with inline scripts
-html_str = chart.to_js_literal()
+js_config = json.dumps(chart_config)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{html_str}</script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {{
+        Highcharts.chart('container', {js_config});
+    }});
+    </script>
 </body>
 </html>"""
+
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -127,20 +158,21 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--force-device-scale-factor=1")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+
+screenshot_config = {"captureBeyondViewport": True, "clip": {"x": 0, "y": 0, "width": 4800, "height": 2700, "scale": 1}}
+result = driver.execute_cdp_cmd("Page.captureScreenshot", screenshot_config)
+with open(f"plot-{THEME}.png", "wb") as f:
+    f.write(base64.b64decode(result["data"]))
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Also save interactive HTML version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
