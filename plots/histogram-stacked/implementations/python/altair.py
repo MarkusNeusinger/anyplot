@@ -1,28 +1,35 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-12
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Test scores from three different study methods
 np.random.seed(42)
 
-# Generate realistic test score distributions for three study methods
-method_a = np.random.normal(loc=72, scale=10, size=150)  # Traditional study
-method_b = np.random.normal(loc=78, scale=8, size=120)  # Active recall
-method_c = np.random.normal(loc=68, scale=12, size=100)  # Passive reading
+method_a = np.random.normal(loc=72, scale=10, size=150)
+method_b = np.random.normal(loc=78, scale=8, size=120)
+method_c = np.random.normal(loc=68, scale=12, size=100)
 
-# Clip to valid score range (0-100)
 method_a = np.clip(method_a, 0, 100)
 method_b = np.clip(method_b, 0, 100)
 method_c = np.clip(method_c, 0, 100)
 
-# Create DataFrame
 df = pd.DataFrame(
     {
         "Score": np.concatenate([method_a, method_b, method_c]),
@@ -34,7 +41,7 @@ df = pd.DataFrame(
     }
 )
 
-# Create stacked histogram using binned bar chart
+# Plot
 chart = (
     alt.Chart(df)
     .mark_bar(opacity=0.85, stroke="white", strokeWidth=0.5)
@@ -50,23 +57,24 @@ chart = (
         ),
         color=alt.Color(
             "Study Method:N",
-            scale=alt.Scale(
-                domain=["Traditional Study", "Active Recall", "Passive Reading"],
-                range=["#306998", "#FFD43B", "#E67E22"],
-            ),
+            scale=alt.Scale(domain=["Traditional Study", "Active Recall", "Passive Reading"], range=OKABE_ITO),
             legend=alt.Legend(title="Study Method", titleFontSize=18, labelFontSize=16, orient="right"),
         ),
         order=alt.Order("Study Method:N", sort="ascending"),
     )
     .properties(
-        width=1600, height=900, title=alt.Title("histogram-stacked · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("histogram-stacked · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[2, 2])
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0.5)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK, fontSize=28)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG (scale_factor=3 gives 4800x2700)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save interactive HTML version
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
