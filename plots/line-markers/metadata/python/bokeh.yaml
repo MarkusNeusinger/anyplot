@@ -1,160 +1,183 @@
 library: bokeh
+language: python
 specification_id: line-markers
 created: '2025-12-30T10:40:49Z'
-updated: '2025-12-30T10:50:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594557478
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-markers/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-markers/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - manual-ticks
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-12T03:38:52Z'
+generated_by: claude-haiku
+workflow_run: 25711382630
+issue: 2599
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of different marker shapes (circle, square, triangle) for series
-    differentiation
-  - Clean implementation of monthly temperature data with realistic seasonal patterns
-  - Good color palette that is colorblind-accessible (blue, yellow, red)
-  - Properly sized text for the 4800x2700 canvas
-  - Both PNG and interactive HTML outputs generated
-  - Good use of ColumnDataSource for data management
+  - Correct Okabe-Ito palette usage with first series as brand green (#009E73)
+  - Excellent theme-adaptive styling with proper contrast in both light and dark renders
+  - Clear visual distinction between three series using different marker shapes (circle,
+    square, triangle)
+  - Realistic, well-chosen data example with proper seasonal temperature patterns
+  - Proper legend implementation using Bokeh's Legend class with all styling details
+  - Explicit font sizing appropriate for 4800×2700 canvas
+  - Proper data mapping with axis labels including units
+  - Idiomatic Bokeh usage with ColumnDataSource and proper API patterns
   weaknesses:
-  - Legend text and glyph sizes could be slightly larger for better visibility at
-    full canvas size
-  image_description: The plot displays a line chart with markers showing monthly temperature
-    readings for three weather stations over 12 months (January to December). Station
-    A is represented in blue with circular markers, Station B in yellow with square
-    markers, and Station C in red/coral with triangle markers. All three lines follow
-    a seasonal temperature pattern peaking in July-August. The title reads "line-markers
-    · bokeh · pyplots.ai" at the top left. The legend is positioned in the upper left
-    corner showing all three stations. X-axis shows month abbreviations (Jan-Dec),
-    Y-axis shows "Temperature (°C)" ranging from 0 to ~25. A subtle dashed grid is
-    visible in the background.
+  - Top and right spines not removed - could improve visual refinement (DE-02)
+  - No visual hierarchy or emphasis through color contrast or size variation (DE-03)
+  - Design is well-executed but follows defaults rather than showing aesthetic sophistication
+    (DE-01)
+  - Legend styling while correct, doesn't demonstrate distinctive Bokeh features (LM-02)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required - clearly visible and not pure white
+      Chrome: Title "line-markers · bokeh · anyplot.ai" (28pt) is bold and prominent in dark text (#1A1A17). Axis labels "Month" and "Temperature (°C)" (22pt) are clearly readable. Tick labels (18pt) in secondary color (#4A4A44) are distinct and readable. Grid lines at 10% opacity are visible but appropriately subtle. Legend box with proper background (#FFFDF6) and border is positioned top-left with clear labels
+      Data: Three line plots with markers - Station A (green #009E73 circles), Station B (orange #D55E00 squares), Station C (blue #0072B2 triangles). Lines (width=4) and markers (size=18) are clearly visible. Data shows realistic seasonal temperature variation from ~2°C to ~26°C across 12 months
+      Legibility verdict: PASS - All text is easily readable at full resolution. High contrast between text and light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required - clearly distinct from pure black, maintaining the warm tone
+      Chrome: Title remains bold and prominent in light text (#F0EFE8) against dark background. Axis labels (#F0EFE8) are clearly visible. Tick labels (#B8B7B0 - soft secondary) are readable though more subtle than light render, which is appropriate for secondary elements. Grid lines at 10% opacity are subtly visible. Legend text in secondary color (#B8B7B0) on elevated background (#242420) is readable with proper contrast. X-axis month labels are visible
+      Data: Identical data colors to light render (green, orange, blue maintained) - only the chrome elements adapt to theme, not the data colors. All three series remain clearly distinguishable. Lines and markers have same visual weight as light render
+      Legibility verdict: PASS - All elements are readable in dark theme. Text-on-dark contrast is maintained appropriately. No "dark-on-dark" failures. Data colors provide excellent contrast against dark background
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          canvas size
+        comment: All text readable; dark theme secondary colors are subtle but clear.
+          Explicit font sizing applied throughout (28pt title, 22pt labels, 18pt ticks)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: Legend properly positioned top-left, no text overlap, clear spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (size=20) are clearly visible and lines (width=4) are well-proportioned
+        comment: Three marker shapes (circle, square, triangle) clearly visible and
+          distinguishable; line thickness (4px) and marker size (18) well-proportioned
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red colors are colorblind-distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, though plot could use slightly more of the canvas
-          width
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Temperature (°C)", X-axis labeled "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette highly CVD-safe; excellent contrast and luminance
+          differences between series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 canvas well-utilized; plot fills ~50-70% of canvas with
+          balanced margins; nothing cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but legend is somewhat small relative
-          to canvas size
+        comment: Y-axis includes units '(°C)'; title follows correct format 'line-markers
+          · bokeh · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), multi-series follow Okabe-Ito
+          order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); chrome colors theme-adaptive;
+          data colors identical between themes'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults; professional polish but no exceptional
+          or innovative design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid appropriately subtle (10% alpha); legend styling is clean; spines
+          not removed (could improve polish)
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly with realistic seasonal patterns, but no visual
+          emphasis or focal point through hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with markers chart type
+        comment: Correct line plot with markers; all spec requirements met (distinct
+          marker shapes, visible markers, proportional sizing)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X shows months, Y shows temperature values correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows multiple series with different marker shapes as spec requires
-      - id: SC-04
-        name: Data Range
+        comment: Lines, markers, multiple series, legend, proper title and axis labels
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (months 1-12), Y-axis (temperatures); all data points visible
+          and correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three stations
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "line-markers · bokeh · pyplots.ai"
+        comment: Title format correct; legend labels 'Station A/B/C' are clear and
+          descriptive
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series, different marker shapes, seasonal variation
+        comment: 'Shows all aspects: multiple series, seasonal patterns, variation
+          within each station, full annual cycle'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature readings for weather stations is a neutral, realistic
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (0-26°C) are realistic for seasonal patterns
+        comment: Real-world plausible scenario (weather station data); neutral topic
+          (nature/climate); comprehensible and relatable
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature values realistic for Earth (2-26°C range); seasonal pattern
+          correct; random variation (±1.5°C) plausible
     code_quality:
       score: 10
       max: 10
@@ -164,40 +187,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flat structure: imports → data → plot → save'
+        comment: 'Linear flow: imports → data → sources → figure → plot → styling
+          → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy (data), selenium (screenshot), bokeh (plotting),
+          stdlib (system)'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh APIs
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
+          functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct output format: plot-{THEME}.png and plot-{THEME}.html; using
+          current Bokeh 3.9.0 API'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, interactive HTML output, custom tick label
-          overrides, Legend model configuration
+        comment: 'Expert use of Bokeh patterns: figure(), ColumnDataSource, line/scatter
+          plot methods, Legend class, theme-adaptive styling, proper save workflow'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses Legend class (Bokeh-specific), but mostly standard techniques.
+          Could leverage more Bokeh-distinctive features like callbacks or interactive
+          tools
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - custom-legend
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
