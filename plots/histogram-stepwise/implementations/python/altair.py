@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-stepwise: Step Histogram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-12
@@ -50,15 +50,22 @@ chart = (
     )
     .configure_axis(
         domainColor=INK_SOFT,
+        domainOpacity=1,
         tickColor=INK_SOFT,
         gridColor=INK,
-        gridOpacity=0.10,
+        gridOpacity=0.06,
         labelColor=INK_SOFT,
         labelFontSize=18,
         titleColor=INK,
         titleFontSize=22,
+        labelPadding=10,
+        titlePadding=12,
     )
-    .configure_title(color=INK)
+    .configure_axisBottom(domainColor=INK_SOFT, domainOpacity=1, domainWidth=1.5)
+    .configure_axisLeft(domainColor=INK_SOFT, domainOpacity=1, domainWidth=1.5)
+    .configure_axisRight(domainOpacity=0)
+    .configure_axisTop(domainOpacity=0)
+    .configure_title(color=INK, fontSize=28, anchor="start", offset=16)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
