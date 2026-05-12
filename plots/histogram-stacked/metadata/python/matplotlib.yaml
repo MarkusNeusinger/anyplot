@@ -1,164 +1,170 @@
 library: matplotlib
+language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:38:07Z'
-updated: '2025-12-30T10:45:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594557552
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - edge-highlighting
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-12T05:28:20Z'
+generated_by: claude-haiku
+workflow_run: 25715148757
+issue: 2601
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent realistic data scenario with server response times across geographic
-    regions
-  - Clean stacking visualization with good color separation using white edge lines
-  - All three distributions have distinct characteristics (different means, scales,
-    and sample sizes)
-  - Perfect title format and axis labeling with units
-  - Good use of alpha for slight transparency while maintaining visibility
+  - Excellent theme adaptation with proper color tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    threaded throughout—both renders are readable and data colors are identical
+  - Clean code structure with deterministic seeding and appropriate data clipping
+  - Proper use of Okabe-Ito palette in canonical order; brand green (#009E73) correctly
+    placed first
+  - Strong visual quality across all dimensions (text, layout, visibility, accessibility)
+  - Legend and grid styling professionally executed
+  - Specification compliance is perfect (plot type, features, data mapping, title
+    format)
   weaknesses:
-  - No distinctive matplotlib features beyond basic histogram; could use annotations,
-    custom spine styling, or statistical overlays
-  - Legend visual separation could be enhanced with a border or better background
-  image_description: 'The plot displays a stacked histogram showing server response
-    times (in milliseconds) across three geographic regions. The x-axis shows "Response
-    Time (ms)" ranging from approximately 10 to 140ms. The y-axis shows "Number of
-    Requests" ranging from 0 to about 75. Three colored segments are stacked: US-East
-    (blue/#306998), Europe (yellow/#FFD43B), and Asia-Pacific (green/#5BA85B). The
-    US-East distribution peaks around 45ms, Europe around 65ms, and Asia-Pacific extends
-    to higher values around 80-100ms. The title reads "histogram-stacked · matplotlib
-    · pyplots.ai" and a legend is positioned in the upper right corner. White edge
-    lines separate the bars, and a subtle y-axis grid is visible.'
+  - Limited use of matplotlib-specific features; could enhance with hatching, per-group
+    edge styling, or step-filled alternatives
+  - Data storytelling could be strengthened with visual emphasis (e.g., color contrast
+    variation or focal-point design) to guide viewer attention
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required
+      Chrome: Title, x-label (Response Time (ms)), y-label (Number of Requests), and tick labels all clearly readable in dark text (INK color); legend in upper right with proper elevated background styling
+      Data: Three server regions (US-East #009E73 green, Europe #D55E00 orange, Asia-Pacific #0072B2 blue) stacked within 20 bins; bar edges defined with page-background color for clarity
+      Legibility verdict: PASS - All text readable, excellent contrast on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required
+      Chrome: Title, axis labels, and tick labels all clearly readable in light text (INK token adapted); legend background flipped to dark elevated tone (#242420); spines (left/bottom) in INK_SOFT color
+      Data: Identical colors to light render (green #009E73, orange #D55E00, blue #0072B2); stacking preserved exactly; bar edges properly styled; grid lines subtle and visible
+      Legibility verdict: PASS - All text readable, no dark-on-dark failures, excellent contrast on dark background
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: Font sizes explicit (title=24, labels=20, ticks=16); readable in
+          both themes with proper color tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Clean legend placement, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars are well-sized with good alpha (0.9) and white edge
-          lines for distinction
+        comment: All bars clearly visible with stacking properly rendered
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and green are distinguishable and avoid red-green issues,
-          though yellow-green adjacent could be slightly better
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Response Time (ms)" and "Number
-          of Requests"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures colorblind safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned (16×9 figsize), tight_layout prevents waste
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid only on y-axis is good, but legend could use slightly better
-          visual separation
+        passed: true
+        comment: Descriptive labels with units and proper title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Okabe-Ito order, correct backgrounds,
+          both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional palette use, theme-aware styling, spines removed. No
+          distinctive matplotlib features applied.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid (alpha=0.10), generous whitespace, elevated
+          background styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shows distribution and composition clearly; lacks focal-point emphasis
+          or visual hierarchy variation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked histogram
+        comment: Correct stacked histogram with uniform bins
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous variable (response time) binned, category (region) for
-          stacking
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Same bin boundaries for all groups, distinct colors, legend with
-          labels, total height shows combined frequency
-      - id: SC-04
-        name: Data Range
+        comment: Three groups stacked with distinct colors and legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify all three regions
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-stacked · matplotlib · pyplots.ai"'
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping distributions, different group sizes (200, 180,
-          150), varying means and spreads
+        comment: Full histogram with all regions in every bin
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Server response times by region is a realistic, neutral technical
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times 10-160ms are realistic for web services
+        comment: Server response times by region is plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for response-time domain
     code_quality:
       score: 10
       max: 10
@@ -168,40 +174,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Simple, direct code without unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: No fake interactivity or simulated UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ax.hist() with stacked=True, theme tokens throughout, high-level
+          API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Basic ax.hist() with stacked=True is standard usage, no distinctive
-          matplotlib features like custom styling, annotations, or advanced formatting
+        comment: Basic stacked histogram without matplotlib-specific enhancements
+          (hatching, edge styling, step-filled)
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
