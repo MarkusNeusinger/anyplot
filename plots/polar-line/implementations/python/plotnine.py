@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-line: Polar Line Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-12
+Quality: 89/100 | Created: 2026-05-12
 """
 
 import os
