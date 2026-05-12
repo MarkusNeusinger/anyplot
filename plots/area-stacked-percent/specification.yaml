@@ -1,11 +1,11 @@
 spec_id: area-stacked-percent
 title: 100% Stacked Area Chart
 created: '2025-12-30T11:00:00Z'
-updated: '2025-12-30T11:00:00Z'
+updated: '2026-05-12T10:53:57Z'
 issue: 2647
 suggested: claude-code
 tags:
-  plot_type: [area, stacked, percentage]
+  plot_type: [area]
+  data_type: [numeric, continuous, timeseries, multivariate]
   domain: [business, finance]
-  features: [normalized, composition, time-series]
-  data_type: [numeric, continuous]
+  features: [stacked, normalized, composition]
