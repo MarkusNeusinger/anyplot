@@ -1,13 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-stepwise: Step Histogram
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: pygal | Python 3.13
+Quality: 91/100 | Updated: 2026-05-12
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data
 np.random.seed(42)
@@ -33,20 +45,18 @@ step_data.append((bin_edges[-1], 0))
 
 # Custom style for large canvas
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),
-    title_font_size=48,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=32,
-    value_font_size=28,
-    stroke_width=4,
-    opacity=1.0,
-    opacity_hover=1.0,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
 # Create XY chart for step lines
@@ -54,11 +64,11 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="histogram-stepwise · pygal · pyplots.ai",
-    x_title="Value",
-    y_title="Frequency",
+    title="histogram-stepwise · pygal · anyplot.ai",
+    x_title="Value (cm)",
+    y_title="Frequency (count)",
     show_dots=False,
-    stroke_style={"width": 4},
+    stroke_style={"width": 3},
     fill=False,
     show_legend=False,
     show_y_guides=True,
@@ -70,5 +80,5 @@ chart = pygal.XY(
 chart.add("Distribution", step_data)
 
 # Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
