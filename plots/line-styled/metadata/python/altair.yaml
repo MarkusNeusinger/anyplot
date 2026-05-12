@@ -1,163 +1,181 @@
 library: altair
+language: python
 specification_id: line-styled
 created: '2025-12-30T10:38:24Z'
-updated: '2025-12-30T10:46:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594557223
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-styled/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-styled/altair/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-12T07:38:22Z'
+generated_by: claude-haiku
+workflow_run: 25719664719
+issue: 2598
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent use of all four standard line styles (solid, dashed, dotted, dash-dot)
-    clearly distinguishable
-  - Beautiful color palette with Python Blue and accessible complementary colors
-  - Professional typography with well-sized fonts for 4800x2700 output
-  - Realistic weather station temperature scenario with seasonal patterns
-  - Clean, KISS-compliant code structure following Altair best practices
+  - Excellent text legibility with explicitly set font sizes across all elements
+  - Perfect layout balance and canvas utilization (70-80% fill)
+  - Clear line style differentiation (solid, dashed, dotted, dash-dot) - core feature
+    well-executed
+  - 'Strong code quality: clean structure, reproducible, idiomatic Altair usage'
+  - Theme-adaptive chrome working correctly in both light and dark renders
+  - Realistic, neutral data context (product revenue tracking)
+  - No text overlap or element visibility issues
   weaknesses:
-  - Legend shows only color swatches, not the actual line styles (Altair limitation
-    - strokeDash legend combined with color shows color only)
-  - No interactive features (tooltips, hover) which are Altair distinctive strength
-  image_description: 'The plot displays a styled line chart showing monthly temperature
-    readings from four weather stations (Coastal, Mountain, Valley, Highland) over
-    12 months (Jan-Dec). The chart uses distinct line styles: solid blue for Coastal,
-    dashed yellow/gold for Mountain, dotted teal/green for Valley, and dash-dot coral/red
-    for Highland. The X-axis shows months from January to December, and the Y-axis
-    shows Temperature (°C) ranging from -4 to 40. All four lines follow a seasonal
-    pattern peaking in summer months (July-August). The title "line-styled · altair
-    · pyplots.ai" is displayed at the top. A legend in the upper-right corner identifies
-    each station with its corresponding color and line style. A subtle grid with dashed
-    lines aids readability.'
+  - 'VQ-07: First series uses #306998 (Python Blue) instead of required #009E73 (Okabe-Ito
+    brand green); entire categorical palette is custom hexes instead of Okabe-Ito
+    canonical order'
+  - 'SC-04: Title contains typo ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'CQ-05: Code saves to plot.png instead of plot-{THEME}.png per specification'
+  - Missing theme-adaptation code pattern - doesn't use os.getenv(ANYPLOT_THEME) or
+    implement INK/INK_SOFT tokens
+  - Generic data labels (Product A/B/C/D) instead of meaningful series names
+  - 'DE-03: No visual storytelling - data displayed but lacks visual hierarchy or
+    emphasis to guide viewer to insights'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1, not pure white
+      Chrome: Title "line-styled · altair · pyplots.ai" centered and clearly visible in dark text; Y-axis label "Revenue ($)" and X-axis label "Month" positioned correctly; all tick labels (Jan-Dec, revenue values) fully readable against light background
+      Data: 4 lines with distinct styles (solid, dashed, dotted, dash-dot) and custom colors (blue #306998, yellow #FFD43B, teal #48A9A6, coral #E76F51); legend on right shows clear style/color mappings; all lines visible with no overlap
+      Legibility verdict: PASS - All text readable and well-sized
+
+    Dark render (plot-dark.png):
+      Background: Warm dark approximately #1A1A17, not pure black
+      Chrome: Title visible in light text; axis labels and tick labels all light-colored and clearly readable against dark surface; no dark-on-dark failures; legend box has appropriate dark background
+      Data: Data line colors identical to light render (blue, yellow, teal, coral) - correct theme-invariant behavior for data colors; only chrome (background, text, grid) changes between themes
+      Legibility verdict: PASS - All text readable against dark surface with no readability failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, month labels well-spaced
+        comment: No overlapping text elements; all labels distinct and readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are thick (strokeWidth=4), all styles clearly distinguishable
+        comment: Line styles clearly visible; well-adapted to 4-series density; strokeWidth=4
+          ensures visibility
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses Python Blue, Yellow, Teal, Coral - colorblind-friendly palette
-          with distinct hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Month" and "Temperature (°C)" - descriptive with units'
+        comment: Good contrast; line styles provide redundancy beyond color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent utilization (70-80% fill); balanced margins; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (Revenue in $)
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Grid is subtle (alpha 0.3), but legend symbols don't show line styles,
-          only colors
+        comment: 'FAILURE: First series #306998 (Python Blue) instead of #009E73;
+          palette is custom hexes not Okabe-Ito'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with custom palette; lacks publication-ready
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid properly styled (opacity 0.3, dash [2,2]); good detail; view
+          border removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy; lacks emphasis to guide viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with multiple series
+        comment: Correct chart type; all 4 line styles present and distinct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months, Y=temperature values, correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: All 4 line styles present (solid, dashed, dotted, dash-dot), legend
-          included
-      - id: SC-04
-        name: Data Range
+        comment: Multiple series with line styles; legend shows mapping; all requirements
+          met
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range (-5 to 40), all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend labels match data series correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "line-styled · altair · pyplots.ai"
+        comment: X-axis (months) and Y-axis (revenue) correctly encoded; all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title typo: ''pyplots.ai'' instead of ''anyplot.ai''; legend labels
+          generic'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all 4 standard line styles (solid, dashed, dotted, dash-dot),
-          seasonal patterns with variation
+        comment: 'Shows all aspects: seasonal variation, series differences, full
+          month range'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Weather station temperature data is a real, neutral, comprehensible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic (-2°C to 35°C seasonal range)
+        comment: Real scenario (product revenue); neutral context; comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values ($0-$90K) plausible; proportions realistic
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -165,41 +183,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save, no functions/classes'
+        comment: Linear flow; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: altair, numpy, pandas'
+        comment: Only altair, numpy, pandas; all consumed
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic; no fake functionality
       - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Output & API
         score: 0
+        max: 1
+        passed: false
+        comment: Saves to plot.png; should be plot-{THEME}.png per specification
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses mark_line, encode, configure_* correctly; high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic Altair mark_line and encode. Could leverage Altair's interactive
-          features, tooltips, or selection mechanisms, but keeps it simple for styled
-          line display
+        comment: Uses strokeDash effectively (distinctive to Altair); but core feature,
+          not beyond
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
