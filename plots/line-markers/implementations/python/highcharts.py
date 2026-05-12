@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-markers: Line Plot with Markers
 Library: highcharts unknown | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-12
+Quality: 89/100 | Updated: 2026-05-12
 """
 
 import base64
