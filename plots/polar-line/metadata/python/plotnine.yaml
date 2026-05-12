@@ -1,0 +1,247 @@
+library: plotnine
+language: python
+specification_id: polar-line
+created: '2026-05-12T22:53:07Z'
+updated: '2026-05-12T23:02:02Z'
+generated_by: claude-haiku
+workflow_run: 25766766514
+issue: 2692
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect visual quality: all text sizes explicitly set (title 24pt, labels 20pt,
+    ticks 16pt) and readable in both themes'
+  - 'Exemplary palette compliance: first series is #009E73 (Okabe-Ito pos 1), second
+    series #D55E00 (pos 2), both identical across light/dark renders'
+  - 'Clean code structure: KISS pattern with proper seed (np.random.seed(42)), theme-adaptive
+    tokens correctly applied throughout'
+  - 'Proper plotnine idioms: layer composition (geom_path + geom_point), manual color
+    scaling, custom theme — all idiomatic usage'
+  - 'Strong data context: realistic hourly activity patterns over two weeks, clear
+    visual comparison between Week 1 and Week 2'
+  weaknesses:
+  - 'Code/image discrepancy: code specifies x="" and y="" (empty axis labels), but
+    rendered images show ''Radial Magnitude'' labels — investigate version mismatch'
+  - 'Design excellence is competent but not exceptional (DE-01=4): plot is well-configured
+    default without distinctive aesthetic choices'
+  - 'Data variation: both activity patterns follow similar sinusoidal shapes; could
+    benefit from more pronounced difference between weeks to strengthen data storytelling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface, not pure white.
+      Chrome: Title, axis labels, and tick labels all dark and clearly readable. Legend positioned top-right with light background and dark text.
+      Data: Two lines representing Week 1 (teal #009E73) and Week 2 (orange #D55E00) showing hourly activity patterns in circular layout. Markers visible at each data point. Grid lines subtle but visible.
+      Legibility verdict: PASS — all text readable, good contrast, no "light-on-light" failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all light and clearly readable against dark background. NO dark-on-dark failures. Legend positioned identically to light render with dark background and light text.
+      Data: Identical colors to light render (Week 1 teal #009E73, Week 2 orange #D55E00) — data colors constant across themes. Markers and lines equally distinct.
+      Legibility verdict: PASS — all text readable in both renders, theme-adaptive chrome working correctly.
+
+    Both renders demonstrate proper theme adaptation. Data colors (Okabe-Ito palette) identical in both; only background, text, and grid chrome adapt by theme.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping text elements; all labels fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines (size=1.5) and markers (size=3.5) optimally sized for 48 total
+          points across two series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) provides excellent contrast
+          and CVD safety'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; legend properly
+          positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Rendered images show descriptive axis labels; title follows spec
+          format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00 (Okabe-Ito positions 1-2);
+          background #FAF8F1 (light)/#1A1A17 (dark); text colors theme-adaptive; colors
+          identical in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Looks like well-configured library default; no exceptional design
+          choices or custom color harmony
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: theme_minimal() removes spines, grid subtle (alpha
+          0.08), generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color contrast (teal vs orange) shows week-to-week
+          comparison; patterns somewhat similar, limiting emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: polar line plot with lines connecting points
+          in circular layout'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: multiple series, color differentiation, cyclical
+          angular data, continuous radius'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Polar-to-Cartesian conversion correct (theta_rad, radius → x, y);
+          axes show full range (-80 to 80)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''polar-line · plotnine · anyplot.ai'' (correct format);
+          legend labels: ''Period'' with ''Week 1'', ''Week 2'' (correct)'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows variation between weeks with sinusoidal patterns and random
+          noise; would benefit from more pronounced difference
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Realistic scenario: hourly activity patterns over two weeks (24
+          hours × 2 weeks = 48 points); neutral and plausible'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values range ~-60 to +50; scale is plausible for activity magnitude
+          over 24-hour cycles
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean sequential flow: theme tokens → data generation → dataframe
+          → plot creation → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, plotnine components'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using ggsave(); correct API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert plotnine patterns: ggplot API with geoms, scale_color_manual,
+          element_text/element_rect/element_line theming'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer composition and custom theme, but polar conversion is
+          manual workaround (plotnine lacks native polar projection)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
