@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2025-12-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-12
 """
 
 import os
