@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-categorical: Categorical Scatter Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-12
@@ -46,31 +46,33 @@ df = pd.DataFrame(
     }
 )
 
-# Plot
+# Plot with shape variation for visual hierarchy and distinction
 plot = (
-    ggplot(df, aes(x="Temperature (°C)", y="Growth Rate (%)", color="Treatment"))
-    + geom_point(size=3, alpha=0.75)
+    ggplot(df, aes(x="Temperature (°C)", y="Growth Rate (%)", color="Treatment", shape="Treatment"))
+    + geom_point(size=3.5, alpha=0.8, stroke=0.8)
     + scale_color_manual(values=OKABE_ITO[:4])
+    + scale_shape_manual(values=[21, 22, 23, 24])  # Circle, square, diamond, triangle
     + labs(
         x="Temperature (°C)",
         y="Growth Rate (%)",
         title="scatter-categorical · letsplot · anyplot.ai",
         color="Treatment",
+        shape="Treatment",
     )
     + ggsize(1600, 900)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=None),
-        panel_grid_major=element_line(color=INK, size=0.3),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.15),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(size=20, color=INK),
+        axis_title=element_text(size=20, color=INK, face="bold"),
         axis_text=element_text(size=16, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK, face="bold"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
         legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK),
+        legend_title=element_text(size=16, color=INK, face="bold"),
     )
 )
 
