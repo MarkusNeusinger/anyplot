@@ -1,13 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: altair | Python 3.13
+Quality: 92/100 | Updated: 2026-05-12
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Generate realistic response time data for different server tiers
 np.random.seed(42)
@@ -28,7 +38,6 @@ enterprise_uncached = np.random.normal(55, 12, n_per_group // 2)
 data.extend([(v, "Enterprise") for v in np.concatenate([enterprise_cached, enterprise_uncached])])
 
 df = pd.DataFrame(data, columns=["Response Time (ms)", "Server Tier"])
-# Ensure positive values for response times
 df["Response Time (ms)"] = df["Response Time (ms)"].clip(lower=5)
 
 # Create violin plot layer using transform_density
@@ -45,13 +54,7 @@ violin = (
             title=None,
             axis=alt.Axis(labels=False, values=[0], grid=False, ticks=False),
         ),
-        color=alt.Color(
-            "Server Tier:N",
-            scale=alt.Scale(
-                domain=["Basic", "Standard", "Premium", "Enterprise"],
-                range=["#306998", "#FFD43B", "#4B8BBE", "#8BC34A"],
-            ),
-        ),
+        color=alt.Color("Server Tier:N", scale=alt.Scale(domain=groups, range=OKABE_ITO)),
     )
 )
 
@@ -61,11 +64,11 @@ boxplot = (
     .mark_boxplot(
         extent="min-max",
         size=25,
-        median={"stroke": "white", "strokeWidth": 2},
-        box={"fill": "#333333", "fillOpacity": 0.7},
-        outliers={"size": 60, "strokeWidth": 2},
+        median={"stroke": INK_SOFT, "strokeWidth": 2},
+        box={"fill": INK_SOFT, "fillOpacity": 0.3},
+        outliers={"size": 60, "strokeWidth": 2, "stroke": INK_SOFT},
     )
-    .encode(y=alt.Y("Response Time (ms):Q", title="Response Time (ms)"), x=alt.value(0), color=alt.value("#333333"))
+    .encode(y=alt.Y("Response Time (ms):Q", title="Response Time (ms)"), x=alt.value(0), color=alt.value(INK_SOFT))
 )
 
 # Layer violin and box plots first, then facet
@@ -78,16 +81,29 @@ chart = (
             "Server Tier:N",
             header=alt.Header(titleFontSize=20, labelFontSize=18, labelOrient="bottom"),
             title=None,
-            sort=["Basic", "Standard", "Premium", "Enterprise"],
+            sort=groups,
         )
     )
-    .properties(title=alt.Title("violin-box · altair · pyplots.ai", fontSize=28, anchor="middle", offset=20))
-    .configure_axis(labelFontSize=16, titleFontSize=20, gridOpacity=0.3)
-    .configure_view(stroke=None)
-    .configure_legend(titleFontSize=18, labelFontSize=16, symbolSize=200, orient="right")
+    .properties(
+        title=alt.Title("violin-box · altair · anyplot.ai", fontSize=28, anchor="middle", offset=20), background=PAGE_BG
+    )
+    .configure_axis(
+        labelFontSize=16,
+        titleFontSize=20,
+        gridOpacity=0.0,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_view(stroke=None, fill=PAGE_BG)
+    .configure_legend(
+        titleFontSize=18, labelFontSize=16, symbolSize=200, orient="right", titleColor=INK, labelColor=INK_SOFT
+    )
+    .configure_title(color=INK)
     .resolve_scale(x="independent")
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
