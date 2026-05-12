@@ -1,165 +1,179 @@
 library: altair
+language: python
 specification_id: polar-line
 created: '2025-12-30T16:33:18Z'
-updated: '2025-12-30T16:44:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601056929
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-line/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-line/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep:
-    - normalization
-  styling: []
+updated: '2026-05-12T22:49:46Z'
+generated_by: claude-haiku
+workflow_run: 25766566072
+issue: 2692
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent creative workaround for Altair's lack of native polar coordinates by
-    converting to Cartesian space
-  - Beautiful visual design with well-constructed grid circles and radial lines
-  - Compelling data story comparing Northern vs Southern hemisphere temperature patterns
-  - Clean, readable code structure with good inline comments
-  - Proper use of Altair's layering system to combine grid, labels, and data
-  - Color choices provide excellent accessibility and visual contrast
+  - 'Theme adaptation flawless: all chrome elements properly adapt via INK/INK_SOFT
+    tokens; both renders readable and visually coherent'
+  - 'Correct Okabe-Ito palette compliance: positions 1–2 used in order; data colors
+    identical between light and dark'
+  - 'Professional polar construction: layered approach clean and effective; manual
+    polar-to-Cartesian conversion correct'
+  - 'Strong spec adherence: cyclical data, multiple series, proper grid, legend, correct
+    plot type'
+  - 'Code quality excellent: simple, reproducible, no unnecessary abstractions'
   weaknesses:
-  - No radius scale labels showing what the concentric circles represent (temperature
-    values)
-  image_description: The plot displays a polar line chart showing monthly temperature
-    patterns for two cities. A blue line represents "Northern City" and a yellow/gold
-    line represents "Southern City". The chart has 12 month labels (Jan-Dec) arranged
-    clockwise starting from the right (Jan at ~0°/360°, progressing counterclockwise
-    through the months ending at Dec). Four concentric gray circles form the grid
-    background, with 12 radial lines extending from the center to each month position.
-    Both city lines form closed polygons connecting data points marked with filled
-    circles. The Northern City shows peak values around Jul (summer) and low values
-    around Jan (winter), while the Southern City shows the opposite pattern - demonstrating
-    hemisphere seasonality. The title "polar-line · altair · pyplots.ai" appears at
-    the top with subtitle "Monthly Temperature Patterns". A legend at the bottom identifies
-    the two city series.
+  - 'Design Excellence: lacks distinctive visual polish—grid could be more refined;
+    visual hierarchy could emphasize contrast more'
+  - 'Library Features: does not leverage Altair''s interactive capabilities (selections,
+    transformations) that would demonstrate advanced mastery'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle page surface appearance
+      Chrome: Title "polar-line · altair · anyplot.ai" (bold, 28px), subtitle "Monthly Temperature Patterns" (22px), month labels (Jan–Dec) positioned around circle (22px) — all dark text on light background with excellent contrast and legibility
+      Data: Two polar lines representing Northern City (#009E73) and Southern City (#D55E00) connected by points; concentric grid circles and 12 radial lines visible but subtle (opacity 0.5); legend at bottom with styled background showing both series
+      Legibility verdict: PASS — all text clearly readable; grid lines visible but not dominant; data markers and lines clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with slight warm tone
+      Chrome: Title, subtitle, month labels are light gray (#F0EFE8 for title, #B8B7B0 for labels) — all clearly readable on dark background with no dark-on-dark failures; grid lines visible
+      Data: Northern City and Southern City data colors are identical to light render (#009E73 and #D55E00); points and lines clearly visible; legend positioned at bottom with light text on dark background
+      Legibility verdict: PASS — all text readable against dark surface; brand green (#009E73) visible and distinct; no text legibility issues; grid/chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, and month labels are all clearly readable with appropriate
-          font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; month labels well-spaced around the perimeter
+        comment: All text properly sized and readable in both themes; title (28px),
+          subtitle (22px), labels (18-22px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Month labels well-spaced around circle; grid and data do not create
+          confusing overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines and points are well-sized, though points could be slightly
-          larger for optimal visibility
+        comment: Points (size 250, opacity 0.9) and lines (strokeWidth 4) clearly
+          visible; grid circles and radials (opacity 0.5) visible but subtle
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) have excellent contrast and are
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; legend at bottom is slightly far from chart
-          but acceptable
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No axis labels for radius values (no temperature scale visible)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid circles are subtle (opacity 0.5), legend is clear and well-placed
+        comment: Okabe-Ito positions 1–2; colorblind-safe; adequate contrast; no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600) appropriate for symmetric polar plot; generous
+          margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title identifies plot type, library, source; subtitle provides data
+          context; month labels show angular axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #D55E00; backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark); theme tokens properly applied'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Solid design with thoughtful layering; color selection intentional;
+          grid refined but could be more distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid subtle, whitespace generous, legend styled; could enhance with
+          more refined visual treatment
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear visual hierarchy and circular guidance through temporal cycle;
+          could emphasize focal point more distinctly
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar line plot with connected points
+        comment: Correct polar line plot with lines in polar coordinates
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angle=months (theta), radius=temperature magnitude
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series, connected lines, polar coordinates, grid lines
-      - id: SC-04
-        name: Data Range
+        comment: Multiple series, cyclical data, grid, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the polar area
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Theta/radius correctly mapped; months fully visible; normalized radius
+          (0.3–0.7) appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Northern and Southern cities
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "polar-line · altair · pyplots.ai"
+        comment: Title format correct; subtitle provides context; legend labels match
+          data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series with contrasting seasonal patterns (hemisphere
-          comparison)
+        comment: Demonstrates polar lines with multiple series and seasonal variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Temperature patterns for cities in different hemispheres is a natural
-          and educational use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (5-30°C range) are realistic for seasonal patterns
+        comment: Temperature data realistic and neutral; Northern/Southern hemisphere
+          patterns plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature values (0–30) sensible; normalized radius allows both
+          series visible
     code_quality:
       score: 10
       max: 10
@@ -169,43 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → chart layers → save'
+        comment: No functions/classes; straightforward implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42), though data is actually deterministic arrays
+        comment: np.random.seed(42) ensures deterministic results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: Only used imports present
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: No fake UI or simulated interactivity; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper alt.Chart(), alt.layer(), alt.Color(), alt.Scale(), alt.Legend()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Altair lacks native polar support, so the implementation manually
-          converts to Cartesian coordinates. While this is a valid workaround, it
-          doesn't showcase Altair's declarative strengths (the chart is essentially
-          built manually with mark_line and mark_rule). The layering approach is reasonable
-          but not a distinctive Altair feature.
+        comment: Demonstrates layering and manual polar-to-Cartesian; could leverage
+          interactive selections or transformations
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - polar-projection
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - publication-ready
+  - alpha-blending
