@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-05-12
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-12
 """
 
 import os
