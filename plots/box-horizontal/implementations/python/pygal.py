@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-horizontal: Horizontal Box Plot
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-05-12
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 78/100 | Updated: 2026-05-12
 """
 
 import os
