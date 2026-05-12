@@ -1,14 +1,46 @@
-""" pyplots.ai
+"""anyplot.ai
 box-horizontal: Horizontal Box Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-12
 """
 
-import numpy as np
-from bokeh.io import export_png
-from bokeh.models import FactorRange
-from bokeh.plotting import figure
+import sys
+from pathlib import Path
 
+
+# Remove script directory from sys.path to avoid circular import of bokeh
+_script_dir = str(Path(__file__).parent)
+sys.path[:] = [p for p in sys.path if p != _script_dir and p != ""]
+
+import os  # noqa: E402
+import time  # noqa: E402
+
+import bokeh.io  # noqa: E402
+import bokeh.models  # noqa: E402
+import bokeh.plotting  # noqa: E402
+import numpy as np  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.chrome.options import Options  # noqa: E402
+
+
+output_file = bokeh.io.output_file
+save = bokeh.io.save
+FactorRange = bokeh.models.FactorRange
+figure = bokeh.plotting.figure
+
+# Change to script directory for output files
+os.chdir(Path(__file__).parent)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BRAND = "#009E73"
+ALT_COLOR = "#D55E00"
 
 # Data - Response times (ms) by service type
 np.random.seed(42)
@@ -19,8 +51,8 @@ categories = ["Cache Layer", "API Gateway", "Authentication", "Database Query", 
 data = {
     "Cache Layer": np.random.normal(15, 5, 80),
     "API Gateway": np.random.normal(45, 12, 80),
-    "Authentication": np.concatenate([np.random.normal(65, 15, 75), [130, 145, 150]]),  # Outliers
-    "Database Query": np.concatenate([np.random.normal(120, 30, 80), [220, 240]]),  # Some slow queries
+    "Authentication": np.concatenate([np.random.normal(65, 15, 75), [130, 145, 150]]),
+    "Database Query": np.concatenate([np.random.normal(120, 30, 80), [220, 240]]),
     "File Storage": np.random.normal(200, 50, 80),
 }
 
@@ -51,20 +83,15 @@ for cat in categories:
 
     stats[cat] = {"q1": q1, "q2": q2, "q3": q3, "upper": upper, "lower": lower}
 
-# Create figure with categorical y-axis (horizontal orientation)
+# Plot
 p = figure(
     width=4800,
     height=2700,
     y_range=FactorRange(*categories),
     x_axis_label="Response Time (ms)",
     y_axis_label="Service Type",
-    title="box-horizontal · bokeh · pyplots.ai",
+    title="box-horizontal · bokeh · anyplot.ai",
 )
-
-# Colors
-box_color = "#306998"
-median_color = "#FFD43B"
-whisker_color = "#444444"
 
 # Box and whisker dimensions
 box_height = 0.6
@@ -79,9 +106,9 @@ for cat in categories:
         left=[s["q1"]],
         right=[s["q3"]],
         height=box_height,
-        fill_color=box_color,
+        fill_color=BRAND,
         fill_alpha=0.7,
-        line_color="#1a3a5c",
+        line_color=INK_SOFT,
         line_width=2,
     )
 
@@ -91,14 +118,14 @@ for cat in categories:
         left=[s["q2"] - 1],
         right=[s["q2"] + 1],
         height=box_height,
-        fill_color=median_color,
-        line_color=median_color,
+        fill_color=ALT_COLOR,
+        line_color=ALT_COLOR,
         line_width=0,
     )
 
     # Draw whiskers (horizontal lines from box to whisker ends)
-    p.hbar(y=[cat], left=[s["lower"]], right=[s["q1"]], height=0.02, fill_color=whisker_color, line_color=whisker_color)
-    p.hbar(y=[cat], left=[s["q3"]], right=[s["upper"]], height=0.02, fill_color=whisker_color, line_color=whisker_color)
+    p.hbar(y=[cat], left=[s["lower"]], right=[s["q1"]], height=0.02, fill_color=INK_SOFT, line_color=INK_SOFT)
+    p.hbar(y=[cat], left=[s["q3"]], right=[s["upper"]], height=0.02, fill_color=INK_SOFT, line_color=INK_SOFT)
 
     # Draw whisker caps (vertical lines at whisker ends)
     p.hbar(
@@ -106,44 +133,73 @@ for cat in categories:
         left=[s["lower"] - 0.5],
         right=[s["lower"] + 0.5],
         height=cap_height,
-        fill_color=whisker_color,
-        line_color=whisker_color,
+        fill_color=INK_SOFT,
+        line_color=INK_SOFT,
     )
     p.hbar(
         y=[cat],
         left=[s["upper"] - 0.5],
         right=[s["upper"] + 0.5],
         height=cap_height,
-        fill_color=whisker_color,
-        line_color=whisker_color,
+        fill_color=INK_SOFT,
+        line_color=INK_SOFT,
     )
 
 # Draw outliers
 if outliers_x:
     p.scatter(
-        x=outliers_x, y=outliers_y, size=15, fill_color="white", line_color=box_color, line_width=2, marker="circle"
+        x=outliers_x, y=outliers_y, size=15, fill_color=ALT_COLOR, line_color=INK_SOFT, line_width=2, marker="circle"
     )
 
-# Style settings
+# Style
 p.title.text_font_size = "28pt"
+p.title.text_color = INK
+
 p.xaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
 # Grid styling
-p.xgrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = [6, 4]
-p.ygrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_dash = [6, 4]
+p.xgrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.0
 
-# Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "white"
+# Background and borders
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
 # Axis styling
-p.xaxis.axis_line_color = "#666666"
-p.yaxis.axis_line_color = "#666666"
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Save
-export_png(p, filename="plot.png")
+# Save HTML
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
