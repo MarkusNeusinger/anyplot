@@ -1,159 +1,179 @@
 library: altair
+language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:21:47Z'
-updated: '2025-12-30T11:26:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595340150
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/altair/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-05-12T09:28:19Z'
+generated_by: claude-haiku
+workflow_run: 25725250325
+issue: 2645
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of step histogram concept using manual bin calculation
-    and mark_line with step-after interpolation
-  - Perfect title format following pyplots.ai convention
-  - Clean bimodal data distribution clearly demonstrates the step histogram visualization
-  - Good use of Altair declarative grammar with proper encoding types
-  - Saves both PNG and HTML outputs as expected for Altair
+  - Perfect visual quality with all text sizes explicitly set and readable in both
+    light and dark themes
+  - Theme-adaptive chrome correctly implemented throughout (chrome flips appropriately,
+    data colors stay constant)
+  - 'Correct palette compliance: brand green #009E73 used consistently, backgrounds
+    are proper warm tones'
+  - Clean, idiomatic altair implementation with proper use of mark_line() and step-after
+    interpolation
+  - Complete spec compliance with all required features (step lines, no fill, proper
+    bin representation)
+  - Excellent data quality showing a realistic bimodal distribution
+  - Proper canvas utilization with balanced layout
   weaknesses:
-  - Axis labels lack units (e.g., could specify what is being measured)
-  - Single distribution only - spec mentions overlaying multiple distributions as
-    an application
-  - Could leverage Altair interactive features like tooltips for the HTML output
-  image_description: The plot displays a step histogram (outline only, no fill) with
-    a blue line color (#306998). The x-axis is labeled "Measurement Value" ranging
-    from approximately 6 to 70, and the y-axis is labeled "Frequency" ranging from
-    0 to 70. The title reads "histogram-stepwise · altair · pyplots.ai" at the top
-    center. The data shows a bimodal distribution with one peak around 25-27 (frequency
-    ~67) and a smaller second peak around 44-46 (frequency ~31). The step-line visualization
-    creates clear horizontal segments at each bin's count level connected by vertical
-    segments, exactly as specified. The layout is clean with subtle grid lines, no
-    fill in the histogram, and excellent use of the canvas space.
+  - 'Design Excellence is moderate: while technically correct, lacks artistic sophistication
+    or distinctive visual enhancement'
+  - Visual refinement could be elevated with more generous whitespace, refined grid
+    styling, or strategic color/typography choices
+  - 'No visual storytelling: plot displays the data but doesn''t create emphasis or
+    guide the viewer to insights'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly rendered
+      Chrome: Title (28px dark), axis labels (22px dark), tick labels (18px dark INK_SOFT) - all clearly readable against light background
+      Data: Brand green (#009E73) step line with 3px stroke, clearly visible with bimodal distribution peaks around 25 and 45
+      Legibility verdict: PASS - all text fully readable, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly rendered
+      Chrome: Title, axis labels, and tick labels all rendered in light colors (INK and INK_SOFT) - all clearly readable against dark background, no dark-on-dark failures
+      Data: Brand green (#009E73) step line - identical to light render, only chrome has flipped as intended
+      Legibility verdict: PASS - all text fully readable, theme adaptation correct throughout
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: No overlapping text elements; all labels clear and distinct
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line stroke width of 3 is excellent for visibility
+        comment: Step line with strokeWidth=3 is clearly visible and adapted to the
+          distribution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color (#306998) is accessible
+        comment: 'Brand green #009E73 has excellent contrast on both light and dark
+          backgrounds'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins
+        comment: Plot fills 60-70% of canvas with balanced margins; nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units specified
+        comment: Descriptive labels (Measurement Value, Frequency); title format correct
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid at 0.3 alpha is good, no legend needed
+        comment: 'Perfect: brand green #009E73, backgrounds #FAF8F1 (light)/#1A1A17
+          (dark), theme-adaptive chrome correct in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with clean styling; uses Okabe-Ito
+          palette and theme tokens but lacks artistic enhancement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: axes configured with transparency on top/right,
+          grid subtly styled at 6% opacity'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual hierarchy or emphasis created
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step histogram with outline only
+        comment: Perfect step histogram with correct step-function representation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X = measurement values, Y = frequency counts
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step lines, no fill, horizontal segments at count levels, vertical
-          connectors
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: step lines (no fill), horizontal segments
+          at count level, vertical segments connecting bins'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate axis scaling
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned (Measurement Value × Frequency); axes show
+          full data range (6–70)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series step histogram
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: histogram-stepwise · altair · pyplots.ai'
+        comment: Title format correct; legend appropriately omitted for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bimodal distribution shows step histogram well, but only one distribution
-          (spec mentions overlaying)
+        comment: 'Shows all aspects: clear bimodal distribution with two peaks'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Neutral "Measurement Value" context is appropriate
+        comment: 'Realistic synthetic data: two normal distributions concatenated;
+          neutral domain'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable, 500 data points is good
+        comment: Proportions correct; scale and frequency counts factually sound
     code_quality:
       score: 10
       max: 10
@@ -163,40 +183,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Clean linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used and all necessary
+        comment: 'Only used imports: os, altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct: saves as plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative encoding and mark_line with interpolate,
-          but could leverage more distinctive features like tooltips or interactivity
+        comment: 'Expert use of altair: alt.Chart() with mark_line(), proper encode()
+          for x/y/order, configure_* methods for theme adaptation'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses interpolate='step-after' which is distinctive to altair; theme-adaptive
+          chrome well-executed
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling: []
