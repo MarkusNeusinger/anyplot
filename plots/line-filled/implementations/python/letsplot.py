@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-filled: Filled Line Plot
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-12
+Quality: 90/100 | Updated: 2026-05-12
 """
 
 import os
