@@ -1,15 +1,49 @@
 library: plotnine
+language: python
 specification_id: line-markers
 created: '2025-12-30T10:37:30Z'
-updated: '2025-12-30T10:43:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594558022
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-markers/plotnine/plot.png
-preview_html: null
-quality_score: 91
+updated: '2026-05-12T03:33:18Z'
+generated_by: claude-haiku
+workflow_run: 25711512586
+issue: 2599
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Perfect visual quality across both themes with excellent text legibility and proper
+    contrast
+  - 'Complete spec compliance: line plot with visible markers, different shapes for
+    series distinction, proportional sizing'
+  - 'Proper theme adaptation: Okabe-Ito palette compliance, correct backgrounds (#FAF8F1
+    light / #1A1A17 dark), all chrome properly colored'
+  - Clean, reproducible code with idiomatic plotnine patterns and deterministic output
+    via seed
+  - Realistic, well-scaled data showing clear seasonal trends with neutral station
+    context
+  weaknesses:
+  - 'Design sophistication could be enhanced: consider adding white marker edges for
+    visual definition, or removing the panel border for minimalist aesthetic'
+  - 'Limited visual hierarchy emphasis: could use size variation, strategic color
+    contrast, or focal point techniques to make the peak temperature pattern more
+    dramatic'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required
+      Chrome: Title in bold dark INK (#1A1A17) is prominent and readable. Axis labels (Month, Temperature (°C)) are clearly visible in dark color. Tick labels are rendered in INK_SOFT (#4A4A44) with good contrast. Legend background is elevated (#FFFDF6) with proper text contrast. Panel border subtle and defined.
+      Data: Two series clearly differentiated: Coastal Station in brand green (#009E73) with circle markers, Inland Station in vermillion (#D55E00) with square markers. Lines are solid and visible. Markers are proportionally sized (size=5) relative to line width (size=1.5). Twelve data points per series clearly visible with no overlap.
+      Legibility verdict: PASS - All text is readable, markers and lines clearly distinguish the two weather stations, seasonal trend is obvious
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required
+      Chrome: Title rendered in light INK (#F0EFE8) with strong contrast against dark background. Axis labels in same light color, fully readable. Tick labels in INK_SOFT (#B8B7B0) provide secondary contrast without glare. Legend background in dark elevated tone (#242420) with light text. Panel border subtle and visible.
+      Data: Coastal Station green (#009E73) and Inland Station orange (#D55E00) are IDENTICAL to light render - only chrome flipped as designed. Circle and square markers are equally visible on dark surface. Lines maintain solid appearance and clarity.
+      Legibility verdict: PASS - No dark-on-dark failures, all text readable, data colors maintain identity from light render, grid lines subtly visible without competing with data
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -17,195 +51,6 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent use of plotnine grammar of graphics with proper aesthetic mappings for
-    color and shape
-  - 'Well-chosen colorblind-safe color palette (blue #306998 and yellow #FFD43B)'
-  - Realistic and meaningful data scenario comparing coastal vs inland temperature
-    patterns
-  - Proper marker and line sizing for visibility at the target resolution
-  - Clean readable code following KISS principles
-  weaknesses:
-  - X-axis displays numeric month values (1, 2.5, 5, 7.5, 10, 12.5) instead of month
-    names (Jan, Feb, etc.) - the month_labels were created but not used on the axis
-  image_description: The plot shows a line chart with markers displaying monthly temperature
-    data for two weather stations (Coastal Station and Inland Station) over 12 months.
-    The Coastal Station is represented by a blue line (#306998) with circular markers,
-    while the Inland Station uses a golden-yellow line (#FFD43B) with square markers.
-    The X-axis shows "Month" with numeric values from 1-12.5, and the Y-axis shows
-    "Temperature (°C)" ranging from approximately 2-28°C. Both lines follow a seasonal
-    pattern peaking in summer months (July-August). The title correctly reads "line-markers
-    · plotnine · pyplots.ai". A legend on the right side identifies both weather stations.
-    The plot uses a minimal theme with subtle gridlines.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text is perfectly readable: title is large and clear, axis labels
-          are well-sized, tick labels are legible'
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels are clearly separated
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Markers are clearly visible (size=5), lines are appropriately thick
-          (size=1.5), good contrast against background
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast and are colorblind-safe
-          (blue-yellow is one of the safest combinations)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, legend is positioned appropriately
-          on the right
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis has units "Temperature (°C)" but X-axis shows "Month" as numeric
-          values rather than month names, losing some context
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: false
-        comment: Grid is subtle, but legend title says "Weather Station" while the
-          data labels say "Coastal Station"/"Inland Station" - the legend separates
-          color and shape into two entries even though they map to the same variable
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line plot with markers
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is continuous (months), Y is temperature values, correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Lines with visible markers, different marker shapes for multiple
-          series (circles vs squares), markers clearly visible against lines
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 12 months visible, temperature range covers all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend shows "Coastal Station" and "Inland Station" correctly, but
-          the X-axis shows numeric month values (1-12.5) instead of month labels,
-          making it less intuitive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-markers · plotnine · pyplots.ai"'
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Shows two distinct series with different patterns: coastal (milder,
-          less extreme) vs inland (more extreme temperature swings) - excellent demonstration
-          of the plot type'
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Weather station temperature comparison is a perfect, neutral real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature values are realistic (2-29°C seasonal range), appropriate
-          for temperate climate locations
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" but adds verbose=False which is fine
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent use of plotnine''s grammar of graphics: aes mapping, geom_line
-          + geom_point combination, scale_color_manual and scale_shape_manual for
-          custom aesthetics, theme_minimal with detailed theme customization'
-  verdict: APPROVED
+  styling:
+  - alpha-blending
+  - grid-styling
