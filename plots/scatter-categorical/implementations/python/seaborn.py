@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 95/100 | Created: 2025-12-30
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-12
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,60 +12,90 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - Iris-like flower measurements with species categories
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - canonical order, first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Configure seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data - IoT sensor readings across three sensor types
 np.random.seed(42)
 
-# Create data for three flower species with distinct patterns
 n_per_group = 50
 
-# Species A: smaller petals, tight cluster
-species_a_x = np.random.normal(1.5, 0.3, n_per_group)
-species_a_y = np.random.normal(0.3, 0.1, n_per_group)
+# Temperature sensors: readings range 15-35°C, with humidity correlation
+temp_x = np.random.normal(25, 4, n_per_group)
+temp_y = np.random.normal(55, 10, n_per_group)
 
-# Species B: medium petals, wider spread
-species_b_x = np.random.normal(4.5, 0.8, n_per_group)
-species_b_y = np.random.normal(1.4, 0.3, n_per_group)
+# Pressure sensors: readings range 995-1015 hPa, with higher variance
+pressure_x = np.random.normal(1005, 5, n_per_group)
+pressure_y = np.random.normal(65, 12, n_per_group)
 
-# Species C: larger petals, elongated cluster
-species_c_x = np.random.normal(5.8, 0.6, n_per_group)
-species_c_y = np.random.normal(2.1, 0.4, n_per_group)
+# Humidity sensors: readings range 30-90%, with temperature correlation
+humidity_x = np.random.normal(28, 4.5, n_per_group)
+humidity_y = np.random.normal(72, 11, n_per_group)
 
 df = pd.DataFrame(
     {
-        "Petal Length (cm)": np.concatenate([species_a_x, species_b_x, species_c_x]),
-        "Petal Width (cm)": np.concatenate([species_a_y, species_b_y, species_c_y]),
-        "Species": ["Setosa"] * n_per_group + ["Versicolor"] * n_per_group + ["Virginica"] * n_per_group,
+        "Ambient Value": np.concatenate([temp_x, pressure_x, humidity_x]),
+        "Sensor Output": np.concatenate([temp_y, pressure_y, humidity_y]),
+        "Sensor Type": ["Temperature"] * n_per_group + ["Pressure"] * n_per_group + ["Humidity"] * n_per_group,
     }
 )
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Custom colorblind-safe palette using Python colors first
-custom_palette = ["#306998", "#FFD43B", "#6A9F58"]
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
 sns.scatterplot(
     data=df,
-    x="Petal Length (cm)",
-    y="Petal Width (cm)",
-    hue="Species",
-    palette=custom_palette,
+    x="Ambient Value",
+    y="Sensor Output",
+    hue="Sensor Type",
+    palette=OKABE_ITO,
     s=200,
     alpha=0.7,
-    edgecolor="white",
+    edgecolor=PAGE_BG,
     linewidth=0.5,
     ax=ax,
 )
 
 # Styling
-ax.set_title("scatter-categorical · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
-ax.set_xlabel("Petal Length (cm)", fontsize=20)
-ax.set_ylabel("Petal Width (cm)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.set_title("scatter-categorical · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_xlabel("Ambient Value", fontsize=20, color=INK)
+ax.set_ylabel("Sensor Output", fontsize=20, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Legend styling
-ax.legend(title="Species", fontsize=16, title_fontsize=18, loc="upper left", framealpha=0.9)
+# Grid
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+
+# Legend
+ax.legend(title="Sensor Type", fontsize=16, title_fontsize=18, loc="upper left")
+
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

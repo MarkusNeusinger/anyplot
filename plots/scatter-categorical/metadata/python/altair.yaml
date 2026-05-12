@@ -1,41 +1,234 @@
 library: altair
+language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:38:39Z'
-updated: '2025-12-30T10:49:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594556298
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/altair/plot.html
-quality_score: 100
+updated: '2026-05-12T13:08:18Z'
+generated_by: claude-haiku
+workflow_run: 25736162766
+issue: 2597
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect Visual Quality with explicit font sizing in both themes
+  - Exemplary theme-adaptive implementation with light/dark renders both beautiful
+    and readable
+  - Complete spec compliance with correct data mapping and title/legend format
+  - Realistic iris dataset demonstrating the plot type comprehensively
+  - Idiomatic Altair code with clean method chaining and proper encoding patterns
+  weaknesses:
+  - Design Excellence (DE-01) scores only 4/8 - follows configured defaults without
+    custom design sophistication
+  - Visual Refinement (DE-02) could be improved by removing top/right spines for cleaner
+    appearance
+  - Library Mastery (LM-02) uses standard Altair patterns without exceptionally distinctive
+    or creative choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "scatter-categorical · altair · anyplot.ai" clearly visible in dark text (INK color); axis labels "Petal Length (cm)" and "Petal Width (cm)" readable; tick labels properly sized and spaced
+      Data: Green circles (Setosa, #009E73), orange squares (Versicolor, #D55E00), blue triangles (Virginica, #0072B2) - correct Okabe-Ito positions 1-3; distinct clustering visible
+      Legend: "Species" title with three entries, positioned on right side with light background (ELEVATED_BG)
+      Legibility verdict: PASS - All text fully readable, no overlaps, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title clearly visible in light text (INK color #F0EFE8); axis labels and tick labels in appropriate light secondary text (INK_SOFT #B8B7B0) - no dark-on-dark failures
+      Data: Green (#009E73), orange (#D55E00), blue (#0072B2) - identical to light render, confirming consistent category identity
+      Grid: Subtle and visible, properly colored for dark theme
+      Legend: Light text on elevated dark surface (#242420) with light stroke (INK_SOFT) - all readable
+      Legibility verdict: PASS - All text fully readable, proper theme adaptation, no dark-on-dark issues, chrome colors correct
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; legend properly positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 150 markers with size=200, opacity=0.7; shape encoding adds distinction;
+          optimal visibility
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; color + shape encodings provide multiple
+          accessibility signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px composition; 60-70% plot area utilization; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, third #0072B2 correct; backgrounds
+          proper (#FAF8F1 light, #1A1A17 dark); theme chrome perfect both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-polished defaults; lacks custom design sophistication beyond
+          library configuration
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good grid/legend styling; could improve by removing top/right spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; iris clustering demonstrates species relationships
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct categorical scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: X/Y variables, category variable, legend,
+          shape encoding'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct mapping; all data visible in axes range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format; legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all three species with distinct clustering patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris dataset; real, well-known, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Petal measurements factually correct and proportional
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extraneous dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic; theme-token pattern clean and maintainable
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct file naming (plot-{THEME}.png/html); proper scale_factor=3.0
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert method chaining; proper encoding (alt.Color, alt.Shape); correct
+          configure_* patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses shape encoding and configure methods well, but standard Altair
+          patterns without exceptional creativity
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Perfect use of redundant encoding (color + shape) for maximum accessibility
-  - Well-chosen Iris-inspired data with three clearly separable clusters
-  - Excellent font sizing across all text elements (title, axes, legend)
-  - Good use of Altair declarative features including tooltips for interactivity
-  - Clean code structure following KISS principles
-  weaknesses:
-  - None - implementation meets all quality criteria
-  image_description: The plot displays a categorical scatter plot showing Iris-like
-    petal measurements for three plant species. Setosa (blue circles) clusters tightly
-    in the bottom-left corner with petal lengths ~0.9-2.0 cm and widths ~0-0.4 cm.
-    Versicolor (yellow squares) occupies the middle region with petal lengths ~3.0-5.5
-    cm and widths ~0.9-2.0 cm. Virginica (olive-green triangles) extends to the upper-right
-    with petal lengths ~4.5-8.0 cm and widths ~1.0-2.7 cm. The three species form
-    well-separated clusters showing clear categorical distinction. Title reads "scatter-categorical
-    · altair · pyplots.ai" and axis labels include units (cm). Legend is positioned
-    in the upper-right corner with appropriately sized symbols.
-  verdict: APPROVED
+  styling:
+  - grid-styling
+  - custom-legend
+  - alpha-blending
