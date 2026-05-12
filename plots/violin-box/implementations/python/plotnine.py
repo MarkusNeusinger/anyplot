@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-12
@@ -53,24 +53,30 @@ anyplot_theme = plotnine.theme(
     panel_background=plotnine.element_rect(fill=PAGE_BG, color=None),
     panel_grid_major=plotnine.element_line(color=INK, size=0.3, alpha=0.10),
     panel_grid_minor=plotnine.element_line(color=INK, size=0.2, alpha=0.05),
-    panel_border=plotnine.element_rect(color=INK_SOFT, fill=None, size=0.5),
-    axis_title=plotnine.element_text(color=INK, size=20),
+    panel_border=plotnine.element_blank(),
+    axis_title=plotnine.element_text(color=INK, size=20, weight="bold"),
     axis_text=plotnine.element_text(color=INK_SOFT, size=16),
-    axis_line=plotnine.element_line(color=INK_SOFT, size=0.5),
-    plot_title=plotnine.element_text(color=INK, size=24, weight="medium"),
+    axis_line_x=plotnine.element_line(color=INK_SOFT, size=0.7),
+    axis_line_y=plotnine.element_line(color=INK_SOFT, size=0.7),
+    axis_ticks=plotnine.element_line(color=INK_SOFT, size=0.4),
+    axis_ticks_length=3,
+    plot_title=plotnine.element_text(color=INK, size=24, weight="bold"),
     legend_background=plotnine.element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=plotnine.element_text(color=INK_SOFT, size=16),
-    legend_title=plotnine.element_text(color=INK, size=16),
+    legend_title=plotnine.element_text(color=INK, size=16, weight="bold"),
     figure_size=(16, 9),
 )
 
 plot = (
     plotnine.ggplot(data, plotnine.aes(x="Group", y="Value", fill="Group"))
-    + plotnine.geom_violin(alpha=0.6, color=INK_SOFT, size=0.6, width=0.9)
-    + plotnine.geom_boxplot(width=0.2, alpha=0.85, color=INK_SOFT, fill=ELEVATED_BG, size=0.5, outlier_size=3)
-    + plotnine.scale_fill_manual(values=OKABE_ITO)
+    + plotnine.geom_violin(alpha=0.65, color=INK_SOFT, size=0.7, width=0.85)
+    + plotnine.geom_boxplot(
+        width=0.25, alpha=0.9, color=INK_SOFT, fill=ELEVATED_BG, size=0.6, outlier_size=4, outlier_alpha=0.7
+    )
+    + plotnine.scale_fill_manual(values=OKABE_ITO, name="Product", guide=plotnine.guide_legend(nrow=1))
     + plotnine.labs(title="violin-box · plotnine · anyplot.ai", x="Product Category", y="Satisfaction Score (points)")
     + anyplot_theme
+    + plotnine.theme(legend_position="top", legend_direction="horizontal")
 )
 
 # Save to script directory
