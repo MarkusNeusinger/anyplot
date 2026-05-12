@@ -1,162 +1,174 @@
 library: pygal
+language: python
 specification_id: polar-line
 created: '2025-12-30T16:30:04Z'
-updated: '2025-12-30T16:37:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601059647
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T22:53:26Z'
+generated_by: claude-haiku
+workflow_run: 25766734129
+issue: 2692
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-line/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-line/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - explicit-figure
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent choice of monthly temperature data demonstrating cyclical patterns perfectly
-    suited for polar visualization
-  - Strong color contrast between blue and yellow series that is colorblind-accessible
-  - Clean code structure following KISS principles with well-organized custom styling
-  - Good use of pygal Radar chart features including inner_radius for visual appeal
-  - Title follows exact specification format
+  - 'Perfect theme compliance: both light and dark renders apply theme tokens correctly
+    without color/readability failures'
+  - Explicit font sizing throughout ensures text legibility at large canvas (4800×2700px)
+  - 'Okabe-Ito palette perfectly applied: first series #009E73, second #D55E00, identical
+    across themes'
+  - 'Excellent data choice: wind speed by hour reveals clear cyclical pattern and
+    comparison story'
+  - Clean, linear code structure with no over-engineering
+  - Polar (radar) chart type correctly chosen for cyclical, 24-hour data domain
   weaknesses:
-  - Missing axis title or label indicating units (radial axis should show Temperature
-    in °C)
-  - Dot markers could be slightly larger for better visibility at 4800x2700 resolution
-  - Could showcase additional pygal features like tooltips or value display on hover
-  image_description: 'The plot displays a radar/polar line chart with monthly labels
-    (Jan through Dec) arranged around the perimeter. Two data series are shown: "Northern
-    City" in blue (#306998) and "Coastal City" in yellow (#FFD43B). The blue line
-    shows dramatic seasonal variation with peaks around July (27°C) and troughs in
-    winter months (2-4°C). The yellow line shows more moderate variation (10-23°C
-    range). Concentric polygonal grid lines mark values from 0 to 24. Data points
-    are marked with dots at each month position. The title "polar-line · pygal · pyplots.ai"
-    appears at the top center. A legend at the bottom identifies the two city series.'
+  - 'Design Excellence is solid but not exceptional: style is a well-configured library
+    default rather than distinctive visual polish (DE-01=5 vs. publication-level 8)'
+  - 'Library Mastery is competent but generic: could leverage more pygal-distinctive
+    features beyond Style and Radar basics (LM-02=3)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct)
+      Chrome: Title "polar-line · pygal · anyplot.ai" prominent and readable; 24-hour labels (00:00–23:00) radially arranged and legible; legend at bottom clear with descriptive labels "Breezy Day" and "Calm Day"; all text dark (#1A1A17) and readable
+      Data: Two series in Okabe-Ito colors — Breezy Day in #009E73 (green, position 1) showing peaks ~10.8 m/s; Calm Day in #D55E00 (orange, position 2) showing peaks ~5.9 m/s; lines connected with visible dots at each of 24 points; grid subtle but visible (concentric circles and radial spokes)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct)
+      Chrome: Same title, hour labels, and legend; all text rendered in light color (#F0EFE8 or similar) and fully readable against dark background; no dark-on-dark failures
+      Data: Series colors identical to light render — #009E73 (green) and #D55E00 (orange) preserved; lines and dots clearly visible; grid adapted for dark theme and remains subtle
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and month labels are clearly readable at large font sizes;
-          radial value labels (0-24) slightly small but acceptable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; months are well-spaced around the perimeter
+        comment: All font sizes explicitly set in Style object; title 28px, labels
+          18px, ticks 16px—all perfectly readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 radial hour labels well-spaced; legend at bottom clear; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines have good stroke width (6px), dots are visible (size 12); could
-          be slightly larger for the resolution
+        comment: Dots at 16px and lines at 3px stroke width optimal for 24-point series;
+          both clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space with balanced margins; slight excess whitespace
-          on left and right edges
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Month labels present but no axis title indicating what the radial
-          values represent (temperature/°C missing)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dotted lines; legend well-placed at bottom
+        comment: Okabe-Ito colors have strong contrast; CVD-safe; no red-green-only
+          signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart centered with generous margins; fills ~65% of 4800×2700 canvas;
+          balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; hour labels descriptive; radius axis shows
+          numeric scale
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds correct; text
+          theme-adaptive; both renders chrome-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom Style with explicit fonts and theme-adaptive colors; professional
+          but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: fill=False keeps lines clean; dots visible; custom inner_radius;
+          above defaults but could be more refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Two series reveal clear narrative (breezy vs. calm day); cyclical
+          pattern obvious; wind-speed magnitude differences guide viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Radar chart correctly represents polar line visualization with connected
-          points around circular axis
+        comment: Pygal Radar is correct for polar line spec
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta (months) and radius (temperature) correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series, connected lines, cyclical data visualization all
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Lines, multiple series, cyclical layout, grid all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data values visible within 0-24 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angular axis=hours; radius=wind speed; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Northern City and Coastal City
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows exact format "polar-line · pygal · pyplots.ai"
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows two series with contrasting patterns (high vs low variation);
-          could demonstrate more edge cases
+        comment: Shows both daily patterns, peak variations, full 24-hour cycle
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature data is a perfect real-world application of polar/cyclical
-          visualization
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic (2-27°C for northern climate, 10-23°C
-          for coastal)
+        comment: Meteorological data; neutral, real-world plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind values realistic (1.6–10.8 m/s); diurnal pattern matches physics
     code_quality:
       score: 10
       max: 10
@@ -166,40 +178,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → style → chart → render structure
+        comment: Imports → Data → Style → Chart → Render; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) even though data is deterministic
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style are imported and used
+        comment: os, numpy, pygal, pygal.style all used; no extras
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Pythonic; theme-adaptive tokens clean; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses Radar chart, Style object, high-level API; follows pygal conventions
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses Radar chart, custom Style, inner_radius, dots_size; could leverage
-          more pygal-specific features like tooltips or animations
+        passed: false
+        comment: Style theming and inner_radius are pygal-specific; fairly standard
+          beyond that
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready

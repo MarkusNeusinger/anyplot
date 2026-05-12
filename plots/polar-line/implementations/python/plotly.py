@@ -1,12 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 polar-line: Polar Line Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-12
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
 
 # Data - Average hourly temperature pattern (two seasons)
 np.random.seed(42)
@@ -36,8 +49,8 @@ fig.add_trace(
         theta=hours_closed,
         mode="lines+markers",
         name="Summer",
-        line=dict(color="#FFD43B", width=4),
-        marker=dict(size=10, color="#FFD43B"),
+        line=dict(color=OKABE_ITO[0], width=4),
+        marker=dict(size=10, color=OKABE_ITO[0]),
         hovertemplate="Hour: %{theta}°<br>Temp: %{r:.1f}°C<extra>Summer</extra>",
     )
 )
@@ -49,8 +62,8 @@ fig.add_trace(
         theta=hours_closed,
         mode="lines+markers",
         name="Winter",
-        line=dict(color="#306998", width=4),
-        marker=dict(size=10, color="#306998"),
+        line=dict(color=OKABE_ITO[1], width=4),
+        marker=dict(size=10, color=OKABE_ITO[1]),
         hovertemplate="Hour: %{theta}°<br>Temp: %{r:.1f}°C<extra>Winter</extra>",
     )
 )
@@ -58,8 +71,8 @@ fig.add_trace(
 # Layout
 fig.update_layout(
     title=dict(
-        text="Hourly Temperature Pattern · polar-line · plotly · pyplots.ai",
-        font=dict(size=28),
+        text="Hourly Temperature Pattern · polar-line · plotly · anyplot.ai",
+        font=dict(size=28, color=INK),
         x=0.5,
         xanchor="center",
     ),
@@ -67,29 +80,31 @@ fig.update_layout(
         radialaxis=dict(
             visible=True,
             range=[0, 35],
-            tickfont=dict(size=18),
-            title=dict(text="Temperature (°C)", font=dict(size=20)),
-            gridcolor="rgba(0,0,0,0.2)",
-            ticksuffix="°C",
+            tickfont=dict(size=18, color=INK_SOFT),
+            title=dict(text="Temperature (°C)", font=dict(size=22, color=INK)),
+            gridcolor=GRID,
         ),
         angularaxis=dict(
-            tickfont=dict(size=16),
+            tickfont=dict(size=16, color=INK_SOFT),
             direction="clockwise",
-            rotation=90,  # Start from top (midnight)
+            rotation=90,
             tickmode="array",
             tickvals=list(range(0, 360, 15)),
             ticktext=hour_labels,
-            gridcolor="rgba(0,0,0,0.2)",
+            gridcolor=GRID,
         ),
-        bgcolor="rgba(255,255,255,0.9)",
+        bgcolor=PAGE_BG,
     ),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     legend=dict(
-        font=dict(size=20), x=1.05, y=0.5, bgcolor="rgba(255,255,255,0.8)", bordercolor="rgba(0,0,0,0.3)", borderwidth=1
+        font=dict(size=18, color=INK_SOFT), x=1.05, y=0.5, bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1
     ),
-    template="plotly_white",
     margin=dict(l=80, r=150, t=100, b=80),
 )
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
