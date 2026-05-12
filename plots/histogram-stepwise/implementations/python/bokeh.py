@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-stepwise: Step Histogram
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-05-12
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-12
 """
 
 import os
