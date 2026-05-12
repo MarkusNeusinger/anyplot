@@ -1,70 +1,80 @@
 # ruff: noqa: F405
-"""pyplots.ai
+"""anyplot.ai
 line-styled: Styled Line Plot
 Library: lets-plot | Python 3.13
 Quality: pending | Created: 2025-12-30
 """
 
+import os
+
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
+from lets_plot import *  # noqa: F403, F401
 
 
 LetsPlot.setup_html()
 
-# Data - Monthly temperature readings from different weather stations
-np.random.seed(42)
-months = np.arange(1, 13)
-month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Temperature patterns for different climate zones
-base_temp = np.array([2, 4, 8, 12, 17, 21, 24, 23, 19, 13, 7, 3])
-coastal = base_temp + np.random.randn(12) * 0.5 + 3
-continental = base_temp + np.random.randn(12) * 0.8 - 2
-mountain = base_temp + np.random.randn(12) * 0.6 - 8
-mediterranean = base_temp + np.random.randn(12) * 0.4 + 5
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Daily rainfall across different cities over a month
+np.random.seed(42)
+days = np.arange(1, 31)
+
+# Realistic rainfall patterns for different cities (mm/day)
+paris = 15 + np.cumsum(np.random.randn(30) * 2) / 5
+athens = 5 + np.cumsum(np.random.randn(30) * 1) / 5
+seattle = 20 + np.cumsum(np.random.randn(30) * 2.5) / 5
+delhi = 8 + np.cumsum(np.random.randn(30) * 1.5) / 5
 
 # Create long-format DataFrame for lets-plot
 df = pd.DataFrame(
     {
-        "Month": np.tile(months, 4),
-        "Month_Name": np.tile(month_names, 4),
-        "Temperature": np.concatenate([coastal, continental, mountain, mediterranean]),
-        "Station": np.repeat(["Coastal", "Continental", "Mountain", "Mediterranean"], 12),
+        "Day": np.tile(days, 4),
+        "Rainfall": np.concatenate([paris, athens, seattle, delhi]),
+        "City": np.repeat(["Paris", "Athens", "Seattle", "Delhi"], 30),
     }
+)
+
+# Custom theme for anyplot
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.2),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=16, color=INK),
+    legend_position="right",
 )
 
 # Create plot with different line styles
 plot = (
-    ggplot(df, aes(x="Month", y="Temperature", color="Station", linetype="Station"))
-    + geom_line(size=2.5)
-    + geom_point(size=5, alpha=0.8)
-    + scale_color_manual(values=["#306998", "#FFD43B", "#DC2626", "#22C55E"])
+    ggplot(df, aes(x="Day", y="Rainfall", color="City", linetype="City"))
+    + geom_line(size=2)
+    + geom_point(size=3.5, alpha=0.7)
+    + scale_color_manual(values=OKABE_ITO)
     + scale_linetype_manual(values=["solid", "dashed", "dotted", "longdash"])
-    + scale_x_continuous(breaks=months.tolist(), labels=month_names)
     + labs(
-        x="Month",
-        y="Temperature (°C)",
-        title="line-styled · letsplot · pyplots.ai",
-        color="Climate Zone",
-        linetype="Climate Zone",
+        x="Day of Month", y="Rainfall (mm)", title="line-styled · letsplot · anyplot.ai", color="City", linetype="City"
     )
-    + theme_minimal()
-    + theme(
-        plot_title=element_text(size=28, face="bold"),
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        legend_title=element_text(size=20),
-        legend_text=element_text(size=18),
-        legend_position="right",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
-        panel_grid_minor=element_line(color="#DDDDDD", size=0.3),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale 3x = 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactive viewing
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
