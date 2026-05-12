@@ -1,172 +1,177 @@
 library: plotly
+language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:37:46Z'
-updated: '2025-12-30T10:44:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594554925
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  - alpha-blending
-  - edge-highlighting
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-12T13:13:17Z'
+generated_by: claude-haiku
+workflow_run: 25735940026
+issue: 2597
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent color palette that is colorblind-accessible (blue, yellow, purple, green)
-  - Clean layout with proper margins and well-positioned legend
-  - Good use of hovertemplate for interactive exploration in HTML output
-  - White marker borders provide visual distinction for overlapping points
-  - Realistic business context (regional product performance)
-  - Proper title format following pyplots.ai conventions
+  - Perfect text legibility and contrast in both light and dark themes — no theme-adaptation
+    failures
+  - Precise palette compliance — Okabe-Ito colors correctly applied with green as
+    first series
+  - Clean, focused scatter plot that clearly shows categorical relationships
+  - Appropriate marker transparency (0.7) and white edge styling for overlapping point
+    definition
+  - Realistic, neutral data context with good domain plausibility
+  - Clean code following plotly conventions with deterministic seed
+  - Correct HTML + PNG output format for interactive library
   weaknesses:
-  - Grid alpha at 0.1 is perhaps too subtle; 0.2-0.3 would provide better reference
-    without being distracting
-  - Legend border is minimal but could be removed entirely for cleaner look
-  - Some sales growth values exceed 100% which is mathematically possible but unusual
-  image_description: 'The plot displays a categorical scatter plot showing the relationship
-    between Marketing Investment (%) on the X-axis and Sales Growth (%) on the Y-axis.
-    Four distinct regions are represented: North (blue/steel blue), South (yellow/gold),
-    West (purple/violet), and East (green/teal). Each region forms a visually distinguishable
-    cluster of approximately 40 data points. The title "scatter-categorical · plotly
-    · pyplots.ai" is centered at the top. The legend is positioned on the right side
-    with a "Region" header and shows all four categories. Grid lines are subtle (light
-    gray), and the background is clean white. Markers have slight transparency (0.7)
-    with white borders, making overlapping points still distinguishable.'
+  - Design excellence is minimal — mostly default styling with no custom aesthetic
+    choices beyond palette
+  - Spines not removed (top/right should follow style guide defaults for visual refinement)
+  - No visual hierarchy or emphasis across regions — all treated equally, missing
+    opportunity for storytelling
+  - Limited exploitation of plotly's distinctive features (colorbar, annotations,
+    secondary axes, 3D not used)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title, axis labels, tick labels are dark text (#1A1A17 INK) - all clearly readable against light background
+      Data: Okabe-Ito palette correctly applied - green (#009E73) North, orange (#D55E00) South, blue (#0072B2) West, pink (#CC79A7) East. Markers have white edges and 0.7 opacity. First series is correct green (#009E73).
+      Legibility verdict: PASS - all text readable, no light-on-light failures, good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Title, axis labels, tick labels are light text (#F0EFE8, #B8B7B0 INK_SOFT) - all clearly visible against dark background. No dark-on-dark failures detected.
+      Data: Identical colors to light render (only chrome adapted) - green, orange, blue, pink all unchanged. Markers with white edges clearly visible. Grid subtle but visible.
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, proper contrast
+
+    Both renders confirm: Okabe-Ito palette is identical between themes (positions 1-7 unchanged), only chrome (backgrounds, text colors, grid) adapts to theme. No theme-adaptation failures in either render.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          output resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No text overlap anywhere; legend is well-separated from data
+        comment: Font sizes correct (title 28px, axis 22px, ticks 18px), readable
+          in both themes with proper theme tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collision, all elements visible, marker opacity prevents
+          obscuration
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are appropriately sized (14px) with good alpha (0.7) for
-          ~160 total points; slight deduction as some points in dense areas could
-          benefit from slightly smaller markers
+        comment: Marker size 14px appropriate, white edges provide definition, 160
+          points visible with 0.7 opacity
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, purple, and green palette is colorblind-safe; no red-green
-          only distinctions
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; legend positioned neatly
-          to the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Marketing Investment (%)" and "Sales
-          Growth (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe, distinct hues used
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 correct, nothing cut off, margins 80,150,80,80 appropriate
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha 0.1 which is good, but legend could use a
-          cleaner appearance (border is visible but thin)
+        comment: Labels include units, descriptive and clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito 1-4 in order, backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling, default palette, no custom aesthetic choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Good grid styling, but spines not removed (should follow defaults)
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual hierarchy, all regions equally weighted, no focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Correct scatter plot with categorical coloring
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y continuous variables correctly assigned, category mapped
-          to color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors per category, legend,
-          transparency for overlapping points'
-      - id: SC-04
-        name: Data Range
+        comment: X/Y continuous, categories present, distinct colors, legend, colorblind-safe
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Marketing Investment, Y=Sales Growth, categories=Regions, ranges
+          appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps colors to region names with clear "Region"
-          title
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "scatter-categorical · plotly · pyplots.ai" format
+        comment: Title format correct, legend labels match specification
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows four distinct clusters with different center positions; demonstrates
-          category separation well. Minor deduction: clusters overlap somewhat which
-          is realistic but doesn''t show maximum distinction'
+        comment: All scatter-categorical aspects shown, four distinct regions with
+          clear patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product performance across regions is a believable business scenario;
-          neutral topic
+        comment: Product performance data is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Percentage values are reasonable (20-120%), though some sales growth
-          values above 100% are unusual
+        comment: Value ranges sensible (percentages), balanced 40 points per region
     code_quality:
       score: 10
       max: 10
@@ -176,41 +181,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure; no functions or classes
+        comment: Simple script, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used, both necessary
+        comment: Only os, numpy, plotly - all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: Appropriate complexity, native plotly interactivity not faked
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with custom hovertemplate for interactivity (visible
-          in HTML output), white marker borders. Could leverage more plotly-specific
-          features like animations or more advanced hover info
+        comment: Plotly.graph_objects used idiomatically, follows conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Includes hovertemplate but limited use of plotly-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
