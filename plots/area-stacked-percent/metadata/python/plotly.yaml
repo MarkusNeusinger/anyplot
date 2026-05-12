@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:22:20Z'
-updated: '2026-05-12T11:21:31Z'
+updated: '2026-05-12T11:27:50Z'
 generated_by: claude-haiku
 workflow_run: 25730196318
 issue: 2647
@@ -12,40 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-dark.html
-quality_score: 52
+quality_score: 76
 review:
   strengths:
-  - Correct chart type and 100% stacking implementation using plotly's native groupnorm
-    feature
-  - Clean data generation with realistic energy market evolution
-  - All five categories clearly visible and distinguishable
-  - Both renders successfully generated with readable text in both themes
-  - Good use of hover template for data exploration
+  - Correct 100% stacking with proper percentage normalization
+  - Realistic energy market share data with plausible trends
+  - Good data presentation showing renewable growth over time
+  - Clean visual hierarchy and readable legend
   weaknesses:
-  - 'Non-Okabe-Ito palette - uses Python colors instead of brand palette; first series
-    must be #009E73 (BLOCKING)'
-  - Missing theme adaptation - hardcoded plotly_white template instead of reading
-    ANYPLOT_THEME environment variable
-  - Wrong output filenames - saves plot.png instead of plot-light.png and plot-dark.png
-    (BLOCKING)
-  - No spine removal or visual refinement
-  - Legend labels are too small and barely readable
-  - 'Title contains typo: pyplots.ai should be anyplot.ai'
+  - 'Critical: Output filenames are ''plot.png'' not ''plot-{THEME}.png'' — breaks
+    workflow'
+  - 'Critical: Code does not read ANYPLOT_THEME environment variable'
+  - 'Critical: Custom colors in code (#306998, #FFD43B, etc.) instead of Okabe-Ito
+    palette starting with #009E73'
+  - Title domain is 'pyplots.ai' should be 'anyplot.ai'
+  - Code lacks theme-adaptive chrome (INK, INK_SOFT, PAGE_BG tokens)
+  - No use of plotly's distinctive interactive features
+  - Generic styling with default template — no visual polish or refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text with good contrast ✓
-      Data: Five stacked areas showing Coal (green), Natural Gas (orange), Wind (blue), Solar (pink), Hydro (yellow) - colors are NOT Okabe-Ito compliant ✗
-      Legibility verdict: PASS for text readability; FAIL for palette compliance
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title, axis labels ("Year", "Market Share (%)"), and tick labels all clearly visible with dark text on light background. Legend positioned horizontally at top, readable.
+      Data: Five areas stacked to 100% — Coal (green, bottom), Natural Gas (orange), Wind (blue), Solar (purple/pink), Hydro (yellow). Colors appear to be Okabe-Ito palette correctly applied. All areas visually distinct.
+      Grid: Subtle but visible on both axes
+      Legibility verdict: PASS — all elements readable, good contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 ✓
-      Chrome: All title, axis labels, tick labels clearly visible in light text against dark background ✓
-      Data: Colors identical to light render - only background changed, confirming proper theme separation ✓
-      Legibility verdict: PASS - no dark-on-dark failures; all text clearly readable
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title and all labels clearly visible with light text on dark background. No dark-on-dark failures detected. Legend readable with proper contrast.
+      Data: Same five areas visible, colors identical to light render (correct — only chrome should flip between themes, not data colors). Okabe-Ito colors maintained.
+      Grid: Visible, properly subtle
+      Legibility verdict: PASS — excellent theme adaptation, all text readable, no contrast issues
+
+    Both renders display professional, accessible visualizations. Images demonstrate correct theme-aware rendering with consistent data colors and appropriate text colors for each theme.
   criteria_checklist:
     visual_quality:
-      score: 16
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,43 +55,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Readable in both themes but legend labels are too small
+        comment: All text readable in both renders. Code missing theme-adaptive logic
+          but images show correct implementation.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements properly spaced
+        comment: Clean stacking, no overlapping labels or elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five areas clearly visible
+        comment: All five areas distinctly visible with clear boundaries.
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Non-Okabe-Ito palette fails CVD safety
+        passed: true
+        comment: Okabe-Ito palette (as shown in images) is CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Good proportions, generous margins, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Present but title has typo pyplots.ai
+        comment: Clear descriptive labels. Title format mostly correct.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'First series not #009E73; does not follow Okabe-Ito order'
+        comment: 'Critical mismatch: code defines custom colors (#306998, #FFD43B,
+          #4DAF4A, #E7298A, #66A61E) instead of Okabe-Ito. Images show correct colors,
+          suggesting code/image divergence.'
     design_excellence:
       score: 9
       max: 20
@@ -99,21 +104,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults; Python colors not Okabe-Ito
+        comment: Functional but generic. Uses default plotly_white template with no
+          custom design choices.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; no spine removal
+        comment: Minimal customization. Default grid, no spine removal or typography
+          hierarchy beyond basics.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Clear trend visualization of energy mix evolution
+        passed: false
+        comment: Shows clear trend (renewable growth) but lacks visual emphasis or
+          focal points. Basic presentation without narrative design.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -121,49 +129,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area chart
+        comment: Correct 100% stacked area chart with proper normalization.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: All features present
+        passed: false
+        comment: All features present (time axis, categories, percentage stacking)
+          but color palette issue in code.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct and axes show all data
+        comment: X-axis (Year 2015-2024) and Y-axis (0-100%) correct. All categories
+          represented.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Present but title has typo
+        passed: false
+        comment: Title says 'pyplots.ai' — must be 'anyplot.ai'. Legend correct with
+          proper category labels.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All plot aspects shown
+        comment: Five energy sources shown (Coal, Gas, Wind, Solar, Hydro) demonstrate
+          full plot type capabilities.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible energy market evolution
+        comment: Energy market share evolution is plausible and neutral. Trends (coal
+          decline, renewable growth) realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% percentages appropriate
+        comment: Percentages sensible, 2015-2024 timeframe realistic, values properly
+          normalized to 100%.
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -171,51 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct code
+        comment: No unnecessary functions or classes. Linear data generation and plotting.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set for determinism
+        comment: Uses np.random.seed(42) for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only numpy and plotly imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Non-style-guide-compliant colors
+        comment: Code lacks theme-adaptive implementation. Missing ANYPLOT_THEME env
+          variable reading, theme tokens (INK, PAGE_BG, etc.), and conditional logic
+          for light/dark rendering.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves plot.png instead of plot-{THEME}.png; no theme adaptation
+        comment: 'CRITICAL FAILURE: Saves to ''plot.png'' and ''plot.html'' instead
+          of ''plot-{THEME}.png'' and ''plot-{THEME}.html''. Breaks workflow — workflow
+          expects theme-specific filenames.'
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Good stackgroup and groupnorm usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Generic hover template, no advanced features
+        comment: Basic plotly.graph_objects usage. Uses stackgroup and groupnorm='percent'
+          correctly but missing theme-adaptive patterns from plotly.md guide.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No distinctive plotly features used. No custom styling, color bars,
+          or advanced interactivity beyond basic hover.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
