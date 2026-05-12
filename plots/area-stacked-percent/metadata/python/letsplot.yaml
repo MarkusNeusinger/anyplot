@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:30:04Z'
-updated: '2026-05-12T11:20:18Z'
+updated: '2026-05-12T11:27:52Z'
 generated_by: claude-haiku
 workflow_run: 25730773159
 issue: 2647
@@ -12,36 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders are flawless with readable
-    text and identical data colors'
-  - Excellent technical execution with all text sizes explicitly set and proper palette
-    compliance
-  - Clean code structure following KISS principle with deterministic data and idiomatic
-    letsplot usage
-  - Strong spec compliance and data quality with realistic market-share scenario and
-    plausible trends
+  - 'Perfect theme adaptation: all text readable in both light and dark renders with
+    correct color tokens'
+  - 'Flawless palette compliance: Okabe-Ito colors in canonical order with brand green
+    (#009E73) as first series'
+  - 'Clear data storytelling: shows realistic market share trends with visible growth/decline
+    patterns'
+  - 'Idiomatic letsplot usage: expertly uses ggplot2 grammar of graphics with proper
+    position=''fill'' for 100% stacking'
+  - 'All specifications met: correct chart type, all required features, proper axis
+    mapping, correct title/legend format'
+  - 'Clean code structure: simple, reproducible (np.random.seed), deterministic data
+    generation'
   weaknesses:
-  - Generic design sophistication relying on library defaults without custom refinement
-    or visual emphasis
-  - 'Low library distinctiveness: implementation uses standard ggplot2 patterns transferable
-    to plotnine with minimal changes'
-  - Standard visual hierarchy without premium polish, accent colors, or focal-point
-    emphasis
+  - 'Design Excellence moderate (12/20): follows well-configured defaults rather than
+    pursuing publication-quality sophistication (could add custom spine removal, refined
+    typography, or strategic emphasis)'
+  - 'Data storytelling understated: while clear, could emphasize the market-share
+    shift more dramatically through color contrast or visual hierarchy'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 with subtle, non-intrusive styling.
-      Chrome: Title "area-stacked-percent · letsplot · anyplot.ai" is dark and large; axis labels "Year" and "Market Share (%)" are clearly visible with units; tick labels (2,016-2,023 and 0%-105%) render in softer dark tone without overlap; gridlines are subtle but visible.
-      Data: Four stacked areas with Okabe-Ito colors—green (#009E73) at bottom for Company D, orange (#D55E00) for Company C, blue (#0072B2) for Company B, reddish-purple (#CC79A7) at top for Company A. All boundaries are crisp and colors are distinct. The legend is clearly labeled "Company" with four entries.
-      Legibility verdict: PASS - All text is crisp and readable; no overlaps; excellent contrast between dark text and light background.
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "area-stacked-percent · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly visible. Axis labels "Market Share (%)" and "Year" in dark ink, fully readable. Tick labels (0%, 10%, 20%... on Y-axis; 2016, 2017... on X-axis) in soft ink (#4A4A44), well-spaced and legible. All text explicitly sized (24pt title, 20pt labels, 16pt ticks).
+      Data: Four stacked areas with Okabe-Ito colors in order: Company D (#009E73, green, bottom), Company C (#D55E00, orange), Company B (#0072B2, blue), Company A (#CC79A7, reddish-purple, top). Alpha=0.85 provides good visibility. Legend positioned right, with colored company names, fully readable.
+      Layout: Plot fills ~60% of canvas with balanced margins. Grid lines subtle. No overlaps, no cut-offs.
+      Legibility verdict: PASS - All text is clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17, not pure black, maintaining visual warmth.
-      Chrome: Title is light-colored (#F0EFE8) and prominent; axis labels render in light tone; tick labels are in light-gray (#B8B7B0) and fully readable against the dark background; no dark-on-dark failures detected—all text is sufficiently light to contrast with background; gridlines remain subtle but visible.
-      Data: Four areas are identical in color to the light render (green #009E73, orange #D55E00, blue #0072B2, reddish-purple #CC79A7)—confirming that only chrome (background, text, grid) has flipped, not data colors. Legend renders with light text on dark elevated background (#242420) and is fully readable.
-      Legibility verdict: PASS - No dark-on-dark issues; all text is clearly visible; data colors remain consistent with light render; theme adaptation is flawless.
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title in light ink (#F0EFE8), clearly visible on dark surface. Axis labels in light ink, fully readable. Tick labels in soft light ink (#B8B7B0), well-spaced and legible. Legend background (#242420) with light text, clearly defined against dark page.
+      Data: Four stacked areas identical in color to light render - Company D (#009E73), Company C (#D55E00), Company B (#0072B2), Company A (#CC79A7). No color shift, only chrome flipped as expected. Alpha=0.85 maintains visibility on dark surface.
+      Layout: Identical to light render - no cut-offs, no wasted space.
+      Legibility verdict: PASS - All text is clearly visible with no "dark-on-dark" failures. Ink colors properly inverted from light theme. Brand green (#009E73) remains distinctly visible.
+
+    Comparison: Data colors are identical between renders (✓), only chrome adapted. Both renders are fully legible. No theme-adaptation failures detected.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,47 +59,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: All sizes explicitly set (24pt title, 20pt labels, 16pt ticks), perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No colliding text elements; clean layout throughout
+        comment: No overlapping elements, all text fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four areas perfectly visible and distinguishable; optimal sizing
-          for data density
+        comment: Four areas clearly visible with optimal alpha=0.85 for density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; excellent contrast
+        comment: Okabe-Ito palette is colorblind-safe, good contrast between areas
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect canvas utilization with balanced margins; legend well-positioned
+        comment: 'Perfect layout: plot fills 50-80% of canvas with balanced margins'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (Market Share %); title matches spec format
+        comment: Y-axis includes units (%), title with spec-id/library/domain
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; multi-series follows Okabe-Ito order; backgrounds
-          are theme-correct (#FAF8F1 light, #1A1A17 dark); chrome is theme-adaptive
-          in both renders'
+        comment: 'Okabe-Ito positions 1-4 in order, backgrounds correct (#FAF8F1 light,
+          #1A1A17 dark), text colors theme-adaptive'
     design_excellence:
       score: 12
       max: 20
@@ -102,22 +107,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with clean palette; lacks custom
-          design touches or premium polish
+        comment: Well-configured defaults but not exceptional, no custom design choices
+          beyond palette
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Uses theme_minimal() effectively; subtle gridlines and clean layout;
-          minimal customization beyond defaults
+        comment: Good refinement (theme_minimal, subtle grid, custom legend background)
+          but could refine further
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: 'Clear visual narrative: Company A growing (40%→58%), Company B declining
-          (35%→22%); market share dynamics evident through stacking order'
+        comment: Clear trend visualization (growth/decline) with visual hierarchy,
+          but could emphasize insight more
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect 100% stacked area chart; position=fill correctly normalizes
-          all areas
+        comment: Correct 100% stacked area chart with proper position='fill' normalization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: percentage contribution, temporal progression,
-          category identification, normalized totals'
+        comment: 'All features present: time axis, categories, values normalized to
+          percentage, stacked areas'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Year (continuous/temporal); Y: Market Share percentage (0-100%);
-          Fill: Company (categorical)'
+        comment: X/Y correctly assigned, axes show all data from 0-100%
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data categories
+        comment: Title format correct, legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -158,22 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows four distinct trends: growth, decline, stability, and small
-          decline; all stacked-percent aspects demonstrated'
+        comment: 'Shows all aspects: multiple companies, growth/decline trends, 8-year
+          time span'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Market share evolution is real-world plausible and neutral; no controversial
-          content
+        comment: Real-world market share scenario with plausible company evolution
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All percentages sum to 100%; proportions are realistic; trends logically
-          coherent
+        comment: All values factually sound, proportions add to 100%, trends plausible
     code_quality:
       score: 10
       max: 10
@@ -183,50 +184,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save; no unnecessary
-          complexity'
+        comment: 'Simple linear flow: imports → data → plot → save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) set, deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used, no unused dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; uses current ggsave API
+        comment: 'Correct format: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Excellent grammar-of-graphics idiom: ggplot() + geom_area() + scales
-          + theme; proper layer composition'
+        comment: 'Expert use of ggplot2 grammar: aes(), geom_area(position=''fill''),
+          scale_fill_manual(), theme()'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic usage—position=fill for stacking is standard across ggplot2-style
-          libraries; could be plotnine with minimal changes
+        comment: Uses theme-adaptive tokens and HTML export, but features are relatively
+          standard for letsplot
+    score_caps: []
+    total:
+      score: 90
+      max: 100
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -234,6 +238,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - normalization
-  styling: []
+  dataprep: []
+  styling:
+  - alpha-blending
