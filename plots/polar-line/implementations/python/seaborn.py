@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-line: Polar Line Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-12
+Quality: 94/100 | Updated: 2026-05-12
 """
 
 import os
