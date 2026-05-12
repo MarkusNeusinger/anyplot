@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: plotly 6.5.0 | Python 3.13
-Quality: 93/100 | Updated: 2026-05-12
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-12
 """
 
 import os
