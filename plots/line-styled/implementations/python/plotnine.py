@@ -1,82 +1,101 @@
-""" pyplots.ai
+"""anyplot.ai
 line-styled: Styled Line Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-12-30
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_line,
     ggplot,
     labs,
     scale_color_manual,
     scale_linetype_manual,
+    scale_x_continuous,
     theme,
     theme_minimal,
 )
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - quarterly product performance over 3 years
 np.random.seed(42)
-quarters = np.arange(1, 13)  # 12 quarters (3 years)
+quarters = np.arange(1, 13)
 quarter_labels = [f"Q{(i - 1) % 4 + 1} {2022 + (i - 1) // 4}" for i in quarters]
 
 # Generate realistic sales trends for different product lines
 base = 100
-product_a = base + np.cumsum(np.random.randn(12) * 5 + 3)  # Strong growth
-product_b = base + np.cumsum(np.random.randn(12) * 4 + 1)  # Moderate growth
-product_c = base + np.cumsum(np.random.randn(12) * 6 - 0.5)  # Volatile, slight decline
-product_d = base + np.cumsum(np.random.randn(12) * 3 + 2)  # Steady growth
+product_a = base + np.cumsum(np.random.randn(12) * 5 + 3)
+product_b = base + np.cumsum(np.random.randn(12) * 4 + 1)
+product_c = base + np.cumsum(np.random.randn(12) * 6 - 0.5)
+product_d = base + np.cumsum(np.random.randn(12) * 3 + 2)
 
 # Create long-format DataFrame for plotnine
 df = pd.DataFrame(
     {
         "Quarter": np.tile(quarters, 4),
-        "Quarter_Label": np.tile(quarter_labels, 4),
         "Sales": np.concatenate([product_a, product_b, product_c, product_d]),
         "Product": ["Product A"] * 12 + ["Product B"] * 12 + ["Product C"] * 12 + ["Product D"] * 12,
     }
 )
 
-# Define line styles and colors
+# Define line styles and colors using Okabe-Ito palette
 linetype_values = {"Product A": "solid", "Product B": "dashed", "Product C": "dotted", "Product D": "dashdot"}
 color_values = {
-    "Product A": "#306998",  # Python Blue
-    "Product B": "#FFD43B",  # Python Yellow
-    "Product C": "#4CAF50",  # Green
-    "Product D": "#E91E63",  # Pink
+    "Product A": OKABE_ITO[0],
+    "Product B": OKABE_ITO[1],
+    "Product C": OKABE_ITO[2],
+    "Product D": OKABE_ITO[3],
 }
+
+# Theme-adaptive styling
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.08),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.4),
+    plot_title=element_text(color=INK, size=24, weight="medium"),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=18),
+    figure_size=(16, 9),
+)
 
 # Create plot
 plot = (
     ggplot(df, aes(x="Quarter", y="Sales", color="Product", linetype="Product"))
-    + geom_line(size=2)
+    + geom_line(size=1.8)
+    + scale_x_continuous(breaks=quarters, labels=quarter_labels, limits=(0.5, 12.5))
     + scale_linetype_manual(values=linetype_values)
     + scale_color_manual(values=color_values)
     + labs(
-        title="line-styled · plotnine · pyplots.ai",
+        title="line-styled · plotnine · anyplot.ai",
         x="Quarter",
         y="Sales (thousands USD)",
         color="Product Line",
         linetype="Product Line",
     )
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        panel_grid_major=element_line(color="#cccccc", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#eeeeee", size=0.25, alpha=0.2),
-    )
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
