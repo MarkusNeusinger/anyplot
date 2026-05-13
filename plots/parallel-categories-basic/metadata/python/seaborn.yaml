@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:04:01Z'
-updated: '2026-05-13T17:10:51Z'
+updated: '2026-05-13T17:18:02Z'
 generated_by: claude-haiku
 workflow_run: 25814195366
 issue: 2501
@@ -12,86 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 65
+quality_score: 48
 review:
   strengths:
-  - Correct parallel categories implementation with proper ribbon widths and observation
-    flows
-  - Well-structured data generation with realistic Titanic-style patterns
-  - Good layout with clear axis positioning and readable legend in light mode
-  - Proper data mapping across five dimensions without overlap or collisions
+  - Correct parallel categories structure with flowing ribbons
+  - Multiple dimensions properly layered and ordered
+  - Realistic Titanic-style data with sensible survival probabilities
+  - Legend and dimension labels present
   weaknesses:
-  - 'Dark mode is unreadable — category labels are dark-on-dark against #1A1A17 background'
-  - Uses forbidden sns.color_palette('colorblind') instead of required Okabe-Ito palette
-  - Saves as plot.png instead of plot-{THEME}.png; doesn't read ANYPLOT_THEME environment
-    variable
-  - No theme adaptation — background colors, text colors, and all chrome are hardcoded
-    for light mode only
-  - Generic styling with no design intent or visual hierarchy beyond the plot type
-    itself
+  - Missing ANYPLOT_THEME environment variable reading - code is hardcoded for light
+    theme only
+  - 'Wrong palette - using colorblind instead of Okabe-Ito; first series is not #009E73
+    brand green'
+  - 'Light background is pure white (#FFFFFF) instead of required #FAF8F1 warm off-white'
+  - Dark render shows broken theme with white bars on dark background (no chrome adaptation)
+  - Output file naming doesn't include theme identifier
+  - 'Title contains typo: pyplots.ai should be anyplot.ai'
+  - Category labels have inconsistent positioning and overlap with ribbons
+  - Ribbon alpha (0.55) makes individual flows hard to trace
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title and dimension labels (Class, Sex, Age Group, Embarked, Outcome) in dark text, clearly visible at top. All category labels (First, Second, Third, Male, Female, Child, Adult, Senior, Queenstown, Cherbourg, Southampton, Survived, Lost) positioned outside bars in dark text — all readable against light background.
-      Data: Five parallel dimensions with ribbon connectors. Ribbons properly show width-proportional observation flows between categories. Colors: green (First), orange (Second), blue (Third). Legend present at bottom.
-      Legibility verdict: PASS — all text elements readable
+      Background: Pure white (#FFFFFF), not the required warm off-white (#FAF8F1) - VIOLATION
+      Chrome: Title, dimension labels (Class, Sex, Age Group, Embarked, Outcome), and category labels all use dark text. Readable on light background.
+      Data: Uses teal/green, orange, and blue ribbons to show flow between categories across 5 dimensions. Category bars are dark gray (#3a3a3a) with white edges. Legend at bottom shows three class categories.
+      Legibility verdict: PASS for text readability, but FAIL for palette compliance (wrong colors, not Okabe-Ito)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Dimension labels at top use colored text (class_palette[0], likely blue-ish) — somewhat visible. **CRITICAL FAILURE: Category labels throughout are rendered in dark/black text against dark background, creating dark-on-dark failures.** Labels like Male, Female, Child, Adult, Southampton, Cherbourg, Queenstown, Survived, Lost are nearly invisible. Legend frame appears adapted.
-      Data: Ribbon colors identical to light render (green, orange, blue) — correct. Ribbon structure and flows match light render.
-      Legibility verdict: FAIL — category labels are illegible on dark background. Dark-on-dark text is a critical accessibility failure.
+      Background: Dark/black surface (intended to be #1A1A17), but the visualization is broken
+      Chrome: Title and labels appear in light colors (readable on dark background). However, the category bars are WHITE instead of being theme-adapted - they should use dark theme tokens but are hardcoded light.
+      Data: Ribbon colors appear identical to light render (correct - data colors should stay the same). But the bars, edges, and background are not theme-adapted, indicating the code does not read ANYPLOT_THEME environment variable.
+      Legibility verdict: FAIL - Dark render shows critical theme-adaptation failure. The bars are wrong-theme (white instead of dark), indicating missing theme support in the code.
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 18
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 6
         max: 8
         passed: false
-        comment: 'Dark render has dark-on-dark text. Category labels default to black
-          and are illegible on #1A1A17 background.'
+        comment: Text readable but mixed font sizes without consistent explicit sizing
+          strategy
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All text positioned outside bars; no collisions
+        passed: false
+        comment: Some ribbon-label collision visible, especially with middle dimension
+          categories
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All ribbons, bars, and labels clearly visible in light render
+        comment: Ribbons visible but alpha=0.55 makes individual flows hard to trace
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Uses colorblind-safe palette but not the required Okabe-Ito specification
+        comment: Colorblind palette provided but wrong palette (not Okabe-Ito)
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions; nothing cut off; generous whitespace
+        comment: Reasonable canvas usage but margins could be more generous
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title and dimension labels present and descriptive
+        passed: false
+        comment: Title has typo (pyplots.ai vs anyplot.ai), generic dimension labels
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Uses sns.color_palette(''colorblind'') instead of Okabe-Ito. Background
-          saved as pure white instead of #FAF8F1 light / #1A1A17 dark.'
+        comment: 'CRITICAL: Pure white background instead of #FAF8F1, dark render
+          bars not theme-adapted, wrong palette (colorblind not Okabe-Ito), first
+          series not #009E73'
     design_excellence:
-      score: 4
+      score: 5
       max: 20
       items:
       - id: DE-01
@@ -99,21 +102,21 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic palette; standard matplotlib styling; no design intent
+        comment: Generic library styling, default colors, no intentional design hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 2
         max: 6
         passed: false
-        comment: Axes off (good), but minimal polish otherwise
+        comment: Axes off, minimal customization beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 1
         max: 6
         passed: false
-        comment: Flows shown but no visual hierarchy or focal point
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -121,81 +124,81 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories with ribbons
+        comment: Correct parallel categories implementation
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 5 dimensions; ribbon widths proportional; colored by class
+        passed: false
+        comment: Multiple dimensions and ribbons present, missing proper theme support
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Multiple dimensions mapped to vertical axes; flows correct
+        comment: Dimensions and categories correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Title and legend present with correct labels
+        passed: false
+        comment: Title contains typo, legend present but formatting issues
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Parallel categories with ribbon flows across all dimensions
+        comment: Shows multiple dimensions and categories
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Titanic-style dataset; realistic survival patterns; neutral domain
+        comment: Titanic-style data with realistic patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 samples; 2-3 categories per dimension; density appropriate
+        comment: Values and proportions are plausible
     code_quality:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward
+        comment: Straightforward but uses complex path generation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Seed set: np.random.seed(42)'
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Imports are relevant and clean
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: No fake UI, but missing theme-adaptation logic
+        comment: 'CRITICAL: Does not read ANYPLOT_THEME, hardcodes colors and styling'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png with hardcoded white instead of plot-{THEME}.png
+        comment: Saves to plot.png instead of theme-aware f"plot-{THEME}.png" naming
     library_mastery:
       score: 4
       max: 10
@@ -205,24 +208,23 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses matplotlib.patches appropriately but ignores seaborn theme API
+        comment: Uses seaborn for styling but matplotlib patches for plotting (not
+          idiomatic mix)
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Bezier ribbon technique present but not unique to seaborn
+        comment: Uses matplotlib path primitives, not seaborn-specific features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - patches
+  - manual-ticks
   - custom-legend
   patterns:
   - data-generation
-  - groupby-aggregation
-  - explicit-figure
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
