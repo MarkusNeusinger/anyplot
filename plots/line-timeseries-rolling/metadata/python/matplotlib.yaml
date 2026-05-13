@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:48:15Z'
-updated: '2026-05-13T13:05:47Z'
+updated: '2026-05-13T13:11:43Z'
 generated_by: claude-haiku
 workflow_run: 25800546286
 issue: 2786
@@ -12,42 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-time
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Theme-adaptive chrome excellence: both light and dark renders properly implement
-    the style guide with no dark-on-dark or light-on-light failures'
-  - Clean, readable implementation with proper imports, deterministic seeding, and
-    idiomatic matplotlib usage
-  - 'Specification fidelity: all required features correctly implemented with accurate
-    data mapping'
-  - 'Visual clarity: dual-layer visualization with semi-transparent raw data and bold
-    rolling average creates excellent hierarchy'
-  - 'Proper palette compliance: uses Okabe-Ito colors in canonical order, CVD-safe
-    and consistent across themes'
+  - Flawless theme adaptation with readable light and dark renders
+  - Excellent visual hierarchy showing rolling average as focal point
+  - Spec-compliant legend and title format
+  - Clean, publication-quality code with reproducibility
+  - Correct Okabe-Ito palette and proper theme-token usage
   weaknesses:
-  - 'Generic design execution: lacks distinctive choices and custom styling beyond
-    defaults'
-  - 'No advanced matplotlib techniques: relies on basic plotting without leveraging
-    specialized features'
+  - Standard library usage without distinctive matplotlib features (no custom formatters
+    or advanced techniques)
+  - Could enhance storytelling with annotations on trend breakpoints or extrema
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) in dark ink #1A1A17 - all clearly readable
-      Data: Daily Temperature as thin orange line (#D55E00, alpha=0.4), 7-Day Rolling Average as bold green line (#009E73, linewidth=3.5)
-      Legend: Upper left corner on elevated background #FFFDF6, clearly distinguishes both series
-      Grid: Subtle on both axes (alpha=0.1), aids reading without competing
-      Legibility verdict: PASS - no light-on-light issues, all elements readable
+      Background: Warm off-white (#FAF8F1), correct page surface
+      Chrome: Title (24pt, #1A1A17), axis labels (20pt, #1A1A17), tick labels (16pt, #4A4A44) — all readable against light surface
+      Data: Orange raw data (#D55E00, linewidth=1, alpha=0.4) and green rolling average (#009E73, linewidth=3.5) are clearly visible and distinct
+      Grid: Subtle (alpha=0.1) on both axes, improves readability without competing with data
+      Legend: Upper left, light background with edge, text clearly readable
+      Legibility verdict: PASS — all text is easily readable, no contrast failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct
-      Chrome: Title, axis labels, tick labels in light ink (#F0EFE8/#B8B7B0) - all clearly readable on dark surface
-      Data: Orange (#D55E00) and green (#009E73) colors identical to light render - proper theme independence
-      Legend: Dark-adapted background #242420 with light text - properly styled
-      Grid: Subtle and visible
-      Spines: Light-colored for definition
-      Legibility verdict: PASS - no dark-on-dark issues, brand green and orange remain vibrant
-      Color consistency: Okabe-Ito data colors identical between renders, only chrome adapted
+      Background: Warm near-black (#1A1A17), correct page surface
+      Chrome: Title (24pt, #F0EFE8), axis labels (20pt, #F0EFE8), tick labels (16pt, #B8B7B0) — all readable against dark surface, no dark-on-dark failures
+      Data: Orange (#D55E00) and green (#009E73) are identical to light render, maintaining category consistency across themes
+      Grid: Subtle and visible, same alpha=0.1 styling
+      Legend: Dark background (#242420, elevated), edges (#B8B7B0), text readable
+      Legibility verdict: PASS — both data and chrome are readable, proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,73 +50,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes appropriate for 4800x2700 canvas. Fully readable in
-          both themes.
+        comment: Title/labels/ticks explicitly styled with theme tokens, readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Date labels rotated 30°, legend positioned away from data. Zero overlapping
-          text.
+        comment: All text well-separated, legend clear, date labels rotated for readability
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both raw data and rolling average clearly visible with density-appropriate
-          alpha.
+        comment: Raw data thin/transparent as secondary, rolling average 3.5pt prominent,
+          grid subtle
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with strong contrast.
+        comment: Okabe-Ito palette colorblind-safe, no red-green dependency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with dpi=300 produces correct 4800x2700px. Good proportions
-          and whitespace.
+        comment: Landscape 16:9 (4800x2700px), proper proportions, tight_layout applied
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id, library, site. Axis labels include units.
+        comment: Spec-compliant title, axes labeled with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series green #009E73, multi-series follows Okabe-Ito order,
-          backgrounds correct, both renders theme-correct.'
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          theme-correct'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean and professional. Solid execution but no distinctive or exceptional
-          design choices.
+        comment: Professional polish, intentional hierarchy, spines removed; could
+          add distinctive features
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, grid subtle, whitespace generous. Minimal customization
-          beyond defaults.
+        comment: Spines removed, subtle grid, generous whitespace, legend frame styled,
+          date rotation
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dual-layer visualization with color and weight contrast creates good
-          hierarchy.
+        comment: Clear visual hierarchy, rolling average is focal point, could add
+          annotations for extrema
     spec_compliance:
       score: 15
       max: 15
@@ -134,26 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series with rolling average overlay.
+        comment: Line time series with overlay, correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features implemented: raw data, rolling average, legend with
-          window size, grid.'
+        comment: Raw data thin/alpha, rolling average prominent, legend clear, window
+          size in legend, grid both axes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: dates, Y: temperature. Correct mapping and full data range.'
+        comment: Date x-axis, Temperature y-axis, 180 points, 7-day center rolling
+          window
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clearly distinguish series.
+        comment: Spec-compliant title format, legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -163,22 +154,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: raw fluctuations, trend, seasonal pattern. 180
-          points adequate for 7-day window.'
+        comment: Shows raw data, rolling average, trend visualization
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperature data spanning winter to summer is realistic and
-          neutral.
+        comment: 6 months daily temperature with seasonal pattern, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range (-5 to +25°C) over 6 months is realistic with proper
-          units.
+        comment: -5 to 30°C range sensible, axes properly formatted
     code_quality:
       score: 10
       max: 10
@@ -188,31 +176,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no unnecessary functions or classes.
+        comment: Pure script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42), deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, proper matplotlib API usage.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
       score: 6
       max: 10
@@ -222,13 +210,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes-based API correct. Theme-adaptive chrome via standard patterns.
+        comment: Axes methods, high-level API, theme-adaptive pattern
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Standard matplotlib features only. No specialized techniques.
+        comment: Standard library usage, well-executed but not novel
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -237,8 +225,8 @@ impl_tags:
   - data-generation
   - explicit-figure
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - grid-styling
