@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 icicle-basic: Basic Icicle Chart
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2025-05-13
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 65/100 | Updated: 2026-05-13
 """
 
 import os
