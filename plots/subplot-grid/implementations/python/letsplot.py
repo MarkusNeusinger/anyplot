@@ -1,8 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 75/100 | Updated: 2026-05-13
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,25 @@ from lets_plot import *
 
 
 LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive colors
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (colorblind-safe)
+OKABE_ITO = [
+    "#009E73",  # 1: brand green
+    "#D55E00",  # 2: vermillion
+    "#0072B2",  # 3: blue
+    "#CC79A7",  # 4: reddish purple
+    "#E69F00",  # 5: orange
+    "#56B4E9",  # 6: sky blue
+    "#F0E442",  # 7: yellow
+]
 
 # Data - Financial dashboard theme
 np.random.seed(42)
@@ -37,61 +58,72 @@ returns_df = pd.DataFrame({"return": daily_returns})
 # Rolling 10-day average for price
 price_df["rolling_avg"] = pd.Series(price).rolling(window=10, min_periods=1).mean()
 
+# Theme-adaptive plot styling
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    axis_ticks=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=16),
+)
+
 # Create individual plots
 
-# Top left: Price line chart
+# Top left: Price line chart (brand green for primary, orange for secondary)
 price_plot = (
     ggplot(price_df, aes(x="day", y="price"))
-    + geom_line(color="#306998", size=1.5)
-    + geom_line(aes(y="rolling_avg"), color="#FFD43B", size=1.2, linetype="dashed")
+    + geom_line(color=OKABE_ITO[0], size=1.5)
+    + geom_line(aes(y="rolling_avg"), color=OKABE_ITO[1], size=1.2, linetype="dashed")
     + labs(x="Trading Day", y="Price ($)", title="Stock Price with 10-Day Moving Average")
     + theme_minimal()
-    + theme(axis_title=element_text(size=18), axis_text=element_text(size=14), plot_title=element_text(size=20))
+    + anyplot_theme
 )
 
-# Top right: Volume bar chart
+# Top right: Volume bar chart (blue)
 volume_plot = (
     ggplot(volume_df, aes(x="day", y="volume"))
-    + geom_bar(stat="identity", fill="#306998", alpha=0.7, width=0.8)
+    + geom_bar(stat="identity", fill=OKABE_ITO[2], alpha=0.8, width=0.8)
     + labs(x="Trading Day", y="Volume (Millions)", title="Daily Trading Volume")
     + theme_minimal()
-    + theme(axis_title=element_text(size=18), axis_text=element_text(size=14), plot_title=element_text(size=20))
+    + anyplot_theme
 )
 
-# Bottom left: Returns histogram
+# Bottom left: Returns histogram (reddish purple bars, brand green reference line)
 returns_plot = (
     ggplot(returns_df, aes(x="return"))
-    + geom_histogram(fill="#306998", color="#1a3a52", bins=20, alpha=0.8)
-    + geom_vline(xintercept=0, color="#FFD43B", size=1.5, linetype="dashed")
+    + geom_histogram(fill=OKABE_ITO[3], color=INK_SOFT, bins=20, alpha=0.8)
+    + geom_vline(xintercept=0, color=OKABE_ITO[0], size=1.5, linetype="dashed")
     + labs(x="Daily Return (%)", y="Frequency", title="Distribution of Daily Returns")
     + theme_minimal()
-    + theme(axis_title=element_text(size=18), axis_text=element_text(size=14), plot_title=element_text(size=20))
+    + anyplot_theme
 )
 
 # Bottom right: Scatter plot - price vs volume relationship
 scatter_df = pd.DataFrame({"abs_return": np.abs(daily_returns), "volume": volume[1:] / 1_000_000})
 scatter_plot = (
     ggplot(scatter_df, aes(x="abs_return", y="volume"))
-    + geom_point(color="#306998", size=4, alpha=0.7)
-    + geom_smooth(method="lm", color="#FFD43B", size=1.5)
+    + geom_point(color=OKABE_ITO[4], size=4, alpha=0.7)
+    + geom_smooth(method="lm", color=OKABE_ITO[0], size=1.5, fill=None)
     + labs(x="Absolute Return (%)", y="Volume (Millions)", title="Volume vs Price Movement")
     + theme_minimal()
-    + theme(axis_title=element_text(size=18), axis_text=element_text(size=14), plot_title=element_text(size=20))
+    + anyplot_theme
 )
 
 # Combine into 2x2 grid using gggrid
 grid_plot = gggrid([price_plot, volume_plot, returns_plot, scatter_plot], ncol=2)
 
 # Add overall title
-final_plot = (
-    grid_plot
-    + ggsize(1600, 900)
-    + ggtitle("subplot-grid · lets-plot · pyplots.ai")
-    + theme(plot_title=element_text(size=28))
-)
+final_plot = grid_plot + ggsize(1600, 900) + ggtitle("letsplot · anyplot.ai") + anyplot_theme
 
 # Save as PNG (scale=3 for 4800x2700, path='.' to save in current directory)
-ggsave(final_plot, "plot.png", path=".", scale=3)
+ggsave(final_plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Also save as HTML for interactive version
-ggsave(final_plot, "plot.html", path=".")
+ggsave(final_plot, f"plot-{THEME}.html", path=".")
