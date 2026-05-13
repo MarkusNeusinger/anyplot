@@ -6,17 +6,14 @@ title: Subplot Grid Layout
 
 # Specification tracking
 created: 2025-12-30T17:27:39Z
-updated: null
+updated: 2026-05-13T16:30:00Z
 issue: 2782
 suggested: MarkusNeusinger
 
 # Classification tags (applies to all library implementations)
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
-  plot_type:
-    - subplot
-    - grid
-    - multi-panel
+  plot_type: []
   data_type:
     - numeric
     - categorical
@@ -29,3 +26,5 @@ tags:
     - layout
     - customizable
     - composite
+    - subplot
+    - grid
