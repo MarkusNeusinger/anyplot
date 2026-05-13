@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: pending | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-13
 """
 
 import os
