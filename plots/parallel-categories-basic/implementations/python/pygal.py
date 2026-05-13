@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-13
 """
+
+import os
 
 import cairosvg
 import numpy as np
@@ -10,90 +12,94 @@ import pygal
 from pygal.style import Style
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
 # Set seed for reproducibility
 np.random.seed(42)
 
-# Data: Product journey from category through channel to outcome
-# This shows customer flow through a purchase funnel
-categories = ["Category", "Channel", "Payment", "Outcome"]
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
 
-# Define values for each dimension
+# Data: Product journey from category through distribution channel to outcome
+# Changed from Online/Store/Mobile to Distribution Channels (Direct/Wholesale/Retail)
+categories = ["Category", "Distribution", "Payment", "Outcome"]
+
 dimension_values = {
     "Category": ["Electronics", "Clothing", "Home & Garden", "Sports"],
-    "Channel": ["Online", "Store", "Mobile App"],
+    "Distribution": ["Direct", "Wholesale", "Retail"],
     "Payment": ["Credit Card", "Debit Card", "Digital Wallet"],
     "Outcome": ["Completed", "Returned", "Cancelled"],
 }
 
-
-# Generate flow data - counts of observations for each path
-# Structure: (dim1_value, dim2_value, dim3_value, dim4_value): count
+# Generate realistic distribution channel data
 np.random.seed(42)
-flows = {}
-
-# Generate realistic shopping journey data
 base_counts = {
-    # Electronics patterns - high online, good completion
-    ("Electronics", "Online", "Credit Card", "Completed"): 450,
-    ("Electronics", "Online", "Credit Card", "Returned"): 85,
-    ("Electronics", "Online", "Digital Wallet", "Completed"): 280,
-    ("Electronics", "Online", "Digital Wallet", "Returned"): 45,
-    ("Electronics", "Store", "Credit Card", "Completed"): 320,
-    ("Electronics", "Store", "Debit Card", "Completed"): 180,
-    ("Electronics", "Mobile App", "Digital Wallet", "Completed"): 220,
-    ("Electronics", "Mobile App", "Digital Wallet", "Cancelled"): 75,
-    ("Electronics", "Online", "Credit Card", "Cancelled"): 40,
-    # Clothing patterns - balanced channels, higher returns
-    ("Clothing", "Online", "Credit Card", "Completed"): 380,
-    ("Clothing", "Online", "Credit Card", "Returned"): 120,
-    ("Clothing", "Online", "Debit Card", "Completed"): 190,
-    ("Clothing", "Online", "Debit Card", "Returned"): 65,
-    ("Clothing", "Store", "Credit Card", "Completed"): 410,
-    ("Clothing", "Store", "Debit Card", "Completed"): 250,
-    ("Clothing", "Store", "Debit Card", "Returned"): 40,
-    ("Clothing", "Mobile App", "Digital Wallet", "Completed"): 175,
-    ("Clothing", "Mobile App", "Credit Card", "Completed"): 130,
-    ("Clothing", "Online", "Digital Wallet", "Cancelled"): 45,
-    # Home & Garden - more store visits
-    ("Home & Garden", "Store", "Credit Card", "Completed"): 380,
-    ("Home & Garden", "Store", "Debit Card", "Completed"): 290,
-    ("Home & Garden", "Store", "Debit Card", "Returned"): 55,
-    ("Home & Garden", "Online", "Credit Card", "Completed"): 210,
-    ("Home & Garden", "Online", "Credit Card", "Returned"): 40,
-    ("Home & Garden", "Online", "Digital Wallet", "Completed"): 145,
-    ("Home & Garden", "Mobile App", "Digital Wallet", "Completed"): 95,
-    # Sports - mobile-friendly, good completion
-    ("Sports", "Mobile App", "Digital Wallet", "Completed"): 260,
-    ("Sports", "Mobile App", "Credit Card", "Completed"): 185,
-    ("Sports", "Online", "Credit Card", "Completed"): 295,
-    ("Sports", "Online", "Debit Card", "Completed"): 175,
-    ("Sports", "Store", "Credit Card", "Completed"): 220,
-    ("Sports", "Store", "Debit Card", "Completed"): 165,
-    ("Sports", "Store", "Debit Card", "Returned"): 30,
+    # Electronics - balanced across channels
+    ("Electronics", "Direct", "Credit Card", "Completed"): 450,
+    ("Electronics", "Direct", "Credit Card", "Returned"): 85,
+    ("Electronics", "Direct", "Digital Wallet", "Completed"): 280,
+    ("Electronics", "Direct", "Digital Wallet", "Returned"): 45,
+    ("Electronics", "Wholesale", "Credit Card", "Completed"): 320,
+    ("Electronics", "Wholesale", "Debit Card", "Completed"): 180,
+    ("Electronics", "Retail", "Digital Wallet", "Completed"): 220,
+    ("Electronics", "Retail", "Digital Wallet", "Cancelled"): 75,
+    ("Electronics", "Direct", "Credit Card", "Cancelled"): 40,
+    # Clothing - higher retail presence
+    ("Clothing", "Direct", "Credit Card", "Completed"): 320,
+    ("Clothing", "Direct", "Credit Card", "Returned"): 95,
+    ("Clothing", "Direct", "Debit Card", "Completed"): 150,
+    ("Clothing", "Direct", "Debit Card", "Returned"): 50,
+    ("Clothing", "Retail", "Credit Card", "Completed"): 480,
+    ("Clothing", "Retail", "Debit Card", "Completed"): 290,
+    ("Clothing", "Retail", "Debit Card", "Returned"): 45,
+    ("Clothing", "Wholesale", "Digital Wallet", "Completed"): 200,
+    ("Clothing", "Wholesale", "Credit Card", "Completed"): 155,
+    ("Clothing", "Direct", "Digital Wallet", "Cancelled"): 35,
+    # Home & Garden - more wholesale/retail
+    ("Home & Garden", "Retail", "Credit Card", "Completed"): 420,
+    ("Home & Garden", "Retail", "Debit Card", "Completed"): 320,
+    ("Home & Garden", "Retail", "Debit Card", "Returned"): 60,
+    ("Home & Garden", "Direct", "Credit Card", "Completed"): 190,
+    ("Home & Garden", "Direct", "Credit Card", "Returned"): 35,
+    ("Home & Garden", "Direct", "Digital Wallet", "Completed"): 120,
+    ("Home & Garden", "Wholesale", "Digital Wallet", "Completed"): 110,
+    # Sports - strong direct/retail mix
+    ("Sports", "Direct", "Digital Wallet", "Completed"): 280,
+    ("Sports", "Direct", "Credit Card", "Completed"): 200,
+    ("Sports", "Retail", "Credit Card", "Completed"): 310,
+    ("Sports", "Retail", "Debit Card", "Completed"): 195,
+    ("Sports", "Wholesale", "Credit Card", "Completed"): 240,
+    ("Sports", "Wholesale", "Debit Card", "Completed"): 180,
+    ("Sports", "Wholesale", "Debit Card", "Returned"): 35,
 }
 
-# Colors for first dimension (Category) - colorblind-safe
+# Category colors use Okabe-Ito palette (first series is brand green #009E73)
 category_colors = {
-    "Electronics": "#306998",  # Python Blue
-    "Clothing": "#FFD43B",  # Python Yellow
-    "Home & Garden": "#4ECDC4",  # Teal
-    "Sports": "#E17055",  # Coral
+    "Electronics": OKABE_ITO[0],  # #009E73 (bluish green - brand)
+    "Clothing": OKABE_ITO[1],  # #D55E00 (vermillion)
+    "Home & Garden": OKABE_ITO[2],  # #0072B2 (blue)
+    "Sports": OKABE_ITO[3],  # #CC79A7 (reddish purple)
 }
 
-# Secondary colors for middle dimensions - distinct from category colors
+# Secondary colors for middle dimensions - distinct but complementary
 dimension_colors = {
-    "Channel": {"Online": "#7B68EE", "Store": "#20B2AA", "Mobile App": "#FF69B4"},
+    "Distribution": {"Direct": "#7B68EE", "Wholesale": "#20B2AA", "Retail": "#FF69B4"},
     "Payment": {"Credit Card": "#9370DB", "Debit Card": "#3CB371", "Digital Wallet": "#FF6347"},
     "Outcome": {"Completed": "#32CD32", "Returned": "#FFA500", "Cancelled": "#DC143C"},
 }
 
-# Custom style for pygal
+# Custom style for pygal with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     title_font_size=72,
 )
 
@@ -132,7 +138,7 @@ chart_height = 2700 - margin_top - margin_bottom
 n_dims = len(categories)
 x_positions = [margin_left + i * chart_width / (n_dims - 1) for i in range(n_dims)]
 bar_width = 120
-gap_ratio = 0.05  # Gap between categories on each axis
+gap_ratio = 0.05
 
 # Calculate totals for each category in each dimension
 dim_totals = {}
@@ -146,7 +152,7 @@ for dim_idx, dim_name in enumerate(categories):
         dim_totals[dim_idx][cat] = total
 
 # Calculate node positions
-node_positions = {}  # {(dim_idx, category): (y_top, y_bottom, x)}
+node_positions = {}
 
 for dim_idx, dim_name in enumerate(categories):
     x = x_positions[dim_idx]
@@ -177,7 +183,7 @@ for dim_idx, dim_name in enumerate(categories):
         if height < 1:
             continue
 
-        # Color based on dimension - use category colors for first dim, dimension colors for others
+        # Color based on dimension
         if dim_idx == 0:
             fill_color = category_colors[cat]
         else:
@@ -187,14 +193,14 @@ for dim_idx, dim_name in enumerate(categories):
     <rect x="{x - bar_width / 2:.0f}" y="{y_top:.0f}" width="{bar_width:.0f}" height="{height:.0f}"
           fill="{fill_color}" stroke="white" stroke-width="2" opacity="0.9"/>'''
 
-    # Add dimension label at top (escape & for Home & Garden)
+    # Add dimension label at top
     dim_name_escaped = dim_name.replace("&", "&amp;")
     parallel_svg += f'''
     <text x="{x:.0f}" y="{margin_top - 60:.0f}" text-anchor="middle"
           font-size="48" font-weight="bold" font-family="DejaVu Sans, sans-serif"
-          fill="#333333">{dim_name_escaped}</text>'''
+          fill="{INK}">{dim_name_escaped}</text>'''
 
-# Add category labels for each dimension
+# Add category labels for each dimension with improved legibility
 for dim_idx, dim_name in enumerate(categories):
     x = x_positions[dim_idx]
     for cat in dimension_values[dim_name]:
@@ -213,8 +219,8 @@ for dim_idx, dim_name in enumerate(categories):
             label_x = x
             anchor = "middle"
 
-        # Use consistent readable font size (minimum 28px for all labels)
-        font_size = max(28, min(36, height * 0.35))
+        # Use consistent readable font size (minimum 32px for better legibility)
+        font_size = max(32, min(40, height * 0.35))
 
         # Escape special characters
         cat_escaped = cat.replace("&", "&amp;")
@@ -224,19 +230,18 @@ for dim_idx, dim_name in enumerate(categories):
             parallel_svg += f'''
     <text x="{label_x:.0f}" y="{y_center:.0f}" text-anchor="{anchor}"
           font-size="{font_size:.0f}" font-family="DejaVu Sans, sans-serif"
-          fill="#333333" dominant-baseline="middle">{cat_escaped}</text>'''
+          fill="{INK}" dominant-baseline="middle">{cat_escaped}</text>'''
         else:
             # Middle dimension labels - below each bar segment
-            label_y = y_bottom + 35
+            label_y = y_bottom + 40
             parallel_svg += f'''
     <text x="{label_x:.0f}" y="{label_y:.0f}" text-anchor="{anchor}"
           font-size="{font_size:.0f}" font-family="DejaVu Sans, sans-serif"
-          fill="#333333">{cat_escaped}</text>'''
+          fill="{INK}">{cat_escaped}</text>'''
 
 # Calculate flow offsets for drawing ribbons
-# Track cumulative position for each (dim_idx, category, direction)
-source_offsets = {}  # For outgoing flows
-target_offsets = {}  # For incoming flows
+source_offsets = {}
+target_offsets = {}
 
 for dim_idx in range(n_dims):
     for cat in dimension_values[categories[dim_idx]]:
@@ -251,19 +256,19 @@ for dim_idx in range(n_dims - 1):
     x0 = x_positions[dim_idx]
     x1 = x_positions[dim_idx + 1]
 
-    # Calculate total for normalization at each dimension
+    # Calculate total for normalization
     dim1_total = sum(dim_totals[dim_idx].values())
     dim2_total = sum(dim_totals[dim_idx + 1].values())
 
     # Aggregate flows between consecutive dimensions
     flow_aggregates = {}
     for path, count in base_counts.items():
-        key = (path[dim_idx], path[dim_idx + 1], path[0])  # Include first category for color
+        key = (path[dim_idx], path[dim_idx + 1], path[0])
         if key not in flow_aggregates:
             flow_aggregates[key] = 0
         flow_aggregates[key] += count
 
-    # Sort flows for consistent drawing (by source category order)
+    # Sort flows for consistent drawing
     sorted_flows = sorted(
         flow_aggregates.items(),
         key=lambda x: (dimension_values[dim1_name].index(x[0][0]), dimension_values[dim2_name].index(x[0][1])),
@@ -329,13 +334,13 @@ for idx, (cat, color) in enumerate(category_colors.items()):
     parallel_svg += f'''
     <rect x="{lx:.0f}" y="{legend_y:.0f}" width="50" height="50" fill="{color}" stroke="none"/>
     <text x="{lx + 70:.0f}" y="{legend_y + 38:.0f}" text-anchor="start"
-          font-size="40" font-family="DejaVu Sans, sans-serif" fill="#333333">{cat_escaped}</text>'''
+          font-size="40" font-family="DejaVu Sans, sans-serif" fill="{INK}">{cat_escaped}</text>'''
 
 # Add subtitle
 parallel_svg += f'''
     <text x="2400" y="{chart_height + margin_top + 200:.0f}" text-anchor="middle"
           font-size="36" font-style="italic" font-family="DejaVu Sans, sans-serif"
-          fill="#666666">Customer Purchase Journey Flows by Product Category</text>'''
+          fill="{INK_SOFT}">Product Category Distribution Flows</text>'''
 
 parallel_svg += "\n</g>"
 
@@ -343,27 +348,27 @@ parallel_svg += "\n</g>"
 svg_with_parallel = base_svg.replace("</svg>", f"{parallel_svg}\n</svg>")
 
 # Save SVG
-with open("plot.svg", "w") as f:
+with open(f"plot-{THEME}.svg", "w") as f:
     f.write(svg_with_parallel)
 
 # Render to PNG
-cairosvg.svg2png(bytestring=svg_with_parallel.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg_with_parallel.encode("utf-8"), write_to=f"plot-{THEME}.png")
 
 # Save HTML for interactive version
-with open("plot.html", "w") as f:
-    f.write("""<!DOCTYPE html>
+with open(f"plot-{THEME}.html", "w") as f:
+    f.write(f"""<!DOCTYPE html>
 <html>
 <head>
     <title>parallel-categories-basic · pygal · pyplots.ai</title>
     <style>
-        body { margin: 0; padding: 20px; background: #f5f5f5; font-family: sans-serif; }
-        .container { max-width: 100%; margin: 0 auto; }
-        object { width: 100%; height: auto; }
+        body {{ margin: 0; padding: 20px; background: {PAGE_BG}; font-family: sans-serif; }}
+        .container {{ max-width: 100%; margin: 0 auto; }}
+        object {{ width: 100%; height: auto; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <object type="image/svg+xml" data="plot.svg">
+        <object type="image/svg+xml" data="plot-{THEME}.svg">
             Parallel categories diagram not supported
         </object>
     </div>

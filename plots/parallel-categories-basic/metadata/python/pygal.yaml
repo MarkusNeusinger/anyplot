@@ -1,221 +1,245 @@
 library: pygal
+language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T21:54:55Z'
-updated: '2025-12-30T22:03:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20606635585
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T17:23:09Z'
+generated_by: claude-haiku
+workflow_run: 25814422139
+issue: 2501
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - cairosvg
-  techniques:
-  - bezier-curves
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/pygal/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent parallel categories visualization with clear flow ribbons connecting
-    four dimensions
-  - Colorblind-safe palette with distinct colors for each product category
-  - Well-proportioned ribbons showing customer journey flows with appropriate opacity
-  - Clean layout with dimension labels at top and category labels positioned outside
-    bars
-  - Realistic e-commerce scenario with plausible purchase journey data
+  - Clear parallel categories visualization with proper ribbon flow representation
+    and proportional widths
+  - Excellent theme handling with correct light/dark backgrounds (#FAF8F1/#1A1A17)
+    and theme-adaptive text colors
+  - All text readable and well-positioned in both light and dark renders with proper
+    contrast
+  - Correct use of Okabe-Ito palette for primary data encoding (ribbons colored by
+    first dimension as per spec)
+  - Realistic and neutral business scenario data (product journey through distribution
+    channels)
+  - Clean code structure with proper reproducibility (deterministic seed) and correct
+    output format
   weaknesses:
-  - Middle dimension category labels (Channel, Payment) are positioned below bars
-    but could overlap with ribbons in denser visualizations
-  - Cancelled outcome label at bottom right is quite small and harder to read than
-    other labels
-  image_description: 'The plot displays a parallel categories diagram with four vertical
-    dimensions: Category, Channel, Payment, and Outcome. The Category dimension on
-    the left shows four stacked colored bars (Electronics in blue, Clothing in yellow,
-    Home & Garden in teal, Sports in coral). Curved ribbons flow from each category
-    through the middle dimensions (Channel showing Online/Store/Mobile App; Payment
-    showing Credit Card/Debit Card/Digital Wallet) to the Outcome dimension on the
-    right (Completed/Returned/Cancelled). The ribbons are semi-transparent and colored
-    by their source category, allowing visual tracking of customer purchase journeys.
-    The title "parallel-categories-basic · pygal · pyplots.ai" appears at the top
-    center. A legend at the bottom shows the four category colors, with an italic
-    subtitle describing the visualization.'
+  - 'Title contains typo: ''pyplots.ai'' instead of ''anyplot.ai'' (SC-04, VQ-06)'
+  - Secondary dimension bars (Distribution, Payment, Outcome) use custom hex colors
+    instead of Okabe-Ito palette, violating style guide consistency (VQ-07)
+  - Library mastery is moderate - custom SVG overlay approach, while pragmatic, is
+    not idiomatic pygal usage (LM-01)
+  - Design excellence could be improved with more visual refinement and clear visual
+    hierarchy (DE-01, DE-03)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly rendered
+      Chrome: Title, dimension labels (Category, Distribution, Payment, Outcome), category names all clearly visible in dark text (#1A1A17) with excellent contrast
+      Data: Four category bars on left use Okabe-Ito colors correctly (Electronics=#009E73, Clothing=#D55E00, Home & Garden=#0072B2, Sports=#CC79A7). Ribbons flow between dimensions with 40% opacity showing data paths. Secondary dimension bars present.
+      Legend: Clear legend at bottom showing category colors with labels
+      Legibility verdict: PASS - All elements readable, high contrast, proper sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly rendered
+      Chrome: Title, dimension labels, category names all clearly visible in light text with excellent contrast against dark background. No dark-on-dark text issues.
+      Data: Category colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7), confirming proper theme-adaptive chrome only. Ribbons flow patterns maintained. Data readability equivalent to light render.
+      Legend: Clear legend showing category colors with labels visible
+      Legibility verdict: PASS - All elements readable, proper light-text contrast, theme adaptation successful
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'Title is large and clear, dimension headers bold, category labels
-          readable. Minor: "Cancelled" label at bottom right is smaller than other
-          outcome labels'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, category labels positioned outside bars, ribbons
-          flow cleanly
+        comment: All text clearly readable in both light and dark themes with proper
+          font sizing and contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Layout well-organized, no overlapping or colliding text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Ribbons clearly visible with good opacity (0.4), bars well-sized.
-          Ribbons appropriately show flow proportions
+        comment: All ribbons and bars clearly visible and distinguishable from background
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Colorblind-safe palette: blue, yellow, teal, coral - all distinguishable'
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, plot fills most of the space. Small margin imbalance
-          at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for parallel categories but dimension headers are descriptive
-          (Category, Channel, Payment, Outcome)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette for primary data is colorblind-safe with adequate
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper proportions, good use of 4800x2700 canvas, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
         max: 2
         passed: false
-        comment: Legend is present and well-placed, no grid needed for this chart
-          type
+        comment: 'Title has typo: ''pyplots.ai'' instead of ''anyplot.ai''; legend
+          labels present but title needs correction'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Primary data (ribbons) correctly uses Okabe-Ito; secondary dimension
+          bars use custom hex colors instead of Okabe-Ito palette
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean design but generic; custom dimension colors don't add meaningful
+          visual refinement or polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal customization; spines handled appropriately, grid absent
+          (suitable), but little additional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Flow is clear but secondary dimension colors may add confusion rather
+          than enhance storytelling
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel categories visualization with ribbons connecting
-          dimensions
+        comment: Correct parallel categories visualization with proper ribbon representation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Four categorical dimensions correctly mapped: Category → Channel
-          → Payment → Outcome'
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Ribbons proportional to counts, colored by first dimension, multiple
-          dimensions shown
-      - id: SC-04
-        name: Data Range
+        comment: All dimensions present, ribbons proportional to counts as specified
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All categories visible in each dimension
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend shows category colors but middle dimensions use different
-          colors not explained
-      - id: SC-06
-        name: Title Format
+        comment: Correct mapping of data to visual elements, axes show all data
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "parallel-categories-basic · pygal · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Legend present with category colors, but title contains typo (pyplots.ai
+          vs anyplot.ai)
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows flows across 4 dimensions with varying proportions, includes
-          completed/returned/cancelled outcomes. Could show more variation in return
-          rates
+        comment: All 4 dimensions covered with appropriate variety (3-4 values per
+          dimension)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real e-commerce customer journey scenario with plausible product
-          categories and channels
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Transaction counts are realistic (hundreds per path), proportions
-          make sense
+        comment: Product journey through distribution channels is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for business context (customer counts reasonable)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code builds SVG manually which is complex but necessary for pygal
-          parallel categories. Uses procedural structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: Straightforward, no unnecessary functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: cairosvg, numpy, pygal, Style'
+        comment: 'Only necessary imports: os, cairosvg, numpy, pygal'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Custom SVG approach appropriate for parallel categories visualization
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.svg, plot.html)
-    library_features:
-      score: 4
-      max: 5
+        comment: 'Correct output format: plot-{THEME}.png, .svg, .html'
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Creatively uses pygal's XY chart as base and builds custom SVG elements.
-          Shows deep understanding of pygal's SVG rendering but relies heavily on
-          manual SVG construction
+        passed: false
+        comment: Uses pygal.XY() as base but primarily hand-coded SVG; pragmatic but
+          not idiomatic pygal
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Bezier curves for ribbons and custom SVG overlay show some sophistication
+          but limited library-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - bezier-curves
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending

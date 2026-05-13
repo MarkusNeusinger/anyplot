@@ -1,15 +1,245 @@
 library: altair
+language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:11:58Z'
-updated: '2025-12-30T00:35:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585401220
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/altair/plot.html
-quality_score: 90
+updated: '2026-05-13T17:16:52Z'
+generated_by: claude-haiku
+workflow_run: 25814449056
+issue: 2501
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/altair/plot-dark.html
+quality_score: 96
+review:
+  strengths:
+  - Sophisticated bezier-curve implementation creates elegant flowing ribbons with
+    proper width encoding
+  - Flawless theme adaptation with theme-dependent chrome and preserved Okabe-Ito
+    data colors in both renders
+  - Excellent text legibility across all elements (title, labels, counts) in both
+    light and dark themes
+  - Professional multi-layer composition with precisely positioned boxes, flows, and
+    legend
+  - Proper use of altair's encoding API with correct data types (Q, N) and scale management
+  - Strong spec compliance with all required features (3 dimensions, ribbon width
+    proportional to count, proper title/legend)
+  - Clean code structure with deterministic data generation (seed=42) and reproducible
+    output
+  weaknesses:
+  - Could add interactive hover tooltips to trace specific flows (Altair supports
+    this feature)
+  - Legend could be more visually integrated rather than positioned as a simple box
+    to the right
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified in the style guide
+      Chrome: Title "parallel-categories-basic · altair · anyplot.ai" rendered in dark text (#1A1A17); dimension headers (Channel, Category, Outcome) and category labels clearly visible in bold 18px font; count labels in secondary text color (#4A4A44); legend title and labels fully readable
+      Data: Three dimensions represented as colored boxes with connecting bezier-curve ribbons; boxes use Okabe-Ito palette (Direct=green, Search=orange, Social=blue, Email=purple); ribbon widths proportional to observation counts; flows smoothly guide eye from Channel through Category to Outcome; all data colors clear and distinct
+      Legibility verdict: PASS - All text elements have excellent contrast and readability against the light background; no unreadable elements
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified; not pure black, provides appropriate contrast
+      Chrome: Title and all labels rendered in light text (#F0EFE8 for primary, #B8B7B0 for secondary); box strokes and borders in appropriate secondary color; all elements readable against dark surface with proper contrast
+      Data: Identical data colors to light render - boxes and ribbons preserve exact Okabe-Ito palette (green #009E73, orange #D55E00, blue #0072B2, purple #CC79A7); only chrome flips, data colors unchanged as required; flows and structure identical
+      Legibility verdict: PASS - No dark-on-dark failures; all text legible; theme adaptation is clean and professional
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text (title 28px, labels 18px, counts 15px) explicitly set and
+          readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Text labels positioned with dx offset, legend placed right, no overlapping
+          elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All boxes clearly visible with distinct colors, ribbons semi-transparent
+          (0.65) but clearly visible, varying stroke widths effectively show counts
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; colors not sole signal (also encoded
+          in position and flow width)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 pixel base (scales to 4800x2700); good proportions, generous
+          whitespace, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is descriptive with library and site name; dimension headers
+          clear and properly positioned
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette applied correctly; backgrounds theme-dependent
+          (#FAF8F1 light, #1A1A17 dark); data colors identical between renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom implementation with bezier curves and careful positioning
+          shows sophisticated design; intentional color coding and layout optimization
+          evident
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, no grid, generous whitespace, subtle box strokes,
+          semi-transparent ribbons with rounded caps; refined throughout
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Flow direction guides eye left-to-right; ribbon widths show counts;
+          colors trace flows; clear focal points through prominence; sorted positioning
+          minimizes crossings
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel categories plot with ribbon widths proportional
+          to counts
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 categorical dimensions, ribbon widths proportional to counts, color-coded
+          flows, proper legend
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dimensions properly spaced, category positions scaled by count, colors
+          correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, and site; legend shows flow colors
+          with channel names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full customer journey through 3 dimensions; comprehensive demonstration
+          of parallel categories plot type
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Marketing channel scenario realistic and neutral; standard channel
+          names, product categories, and outcomes
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 customers aggregated into ~30-40 flows; scale prevents visual
+          overload while showing meaningful patterns
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward procedural code with clear variable names; no unnecessary
+          functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; fully deterministic and reproducible
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports (os, sys, altair, numpy, pandas); all used;
+          sys.path manipulation is legitimate
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; no faked interactivity; appropriate complexity; clean
+          and readable
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current Altair API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of layer API, correct data types (Q, N), appropriate marks,
+          theme configuration via environment variable, manual scale control
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Advanced bezier curve implementation, multi-layer composition with
+          precise positioning, custom legend, theme-adaptive styling; could explore
+          more interactive features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -21,194 +251,8 @@ impl_tags:
   - data-generation
   - matrix-construction
   - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Column headers now correctly positioned above boxes, improving readability
-  - Creative bezier curve implementation for smooth flow ribbons
-  - Excellent customer journey e-commerce data scenario demonstrating the parallel
-    categories concept
-  - Good layered composition using Altair declarative approach
-  - Flow Colors legend added to explain channel-to-color mapping
-  - Proper title format and dual output (PNG + HTML)
-  weaknesses:
-  - Category and Outcome columns use uniform grey instead of distinct colors per category,
-    reducing visual interest
-  - Some thinner flow ribbons are harder to trace across the full diagram
-  - Count labels positioned to the right of boxes overlap with ribbon starting points
-    on some boxes
-  image_description: 'The plot displays a parallel categories diagram with three vertical
-    dimensions: Channel (left), Category (middle), and Outcome (right). The Channel
-    dimension shows four colored bars: Email (purple, 31 count), Social (light blue,
-    35), Direct (dark blue, 66), and Search (yellow, 68). The Category column shows
-    grey bars for Sports, Electronics, Home, and Clothing. The Outcome column shows
-    grey bars for Browse, Abandon, and Purchase. Smooth bezier curve ribbons connect
-    categories across dimensions, colored by source channel. Column headers appear
-    in blue text above each dimension. A "Flow Colors" legend on the right maps colors
-    to channels. The title "parallel-categories-basic · altair · pyplots.ai" appears
-    at the top.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title 28pt, labels 18pt, headers 24pt. All readable, tick counts
-          slightly small but acceptable.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels clearly separated.
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Ribbons visible with appropriate width proportional to count. Some
-          thin flows harder to trace.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Good color choices: blue, yellow, purple palette is colorblind-friendly.'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, plot well-centered with balanced margins.
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for parallel categories (no traditional axes), headers serve
-          this purpose.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend present and well-positioned, no grid needed.
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct parallel categories with ribbons connecting categorical dimensions.
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Three categorical dimensions correctly displayed with width-proportional
-          ribbons.
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Ribbons show flow, width proportional to count. Color by first dimension
-          (Channel) as spec suggests. Missing: interactive highlighting noted in spec.'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All categories visible and properly scaled.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Flow Colors legend accurately maps channel to color.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "{spec-id} · {library} · pyplots.ai".'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows multi-dimensional categorical flow well. 3 dimensions with
-          4, 4, and 3 categories each. Could show more variation in flow patterns.
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer journey e-commerce scenario is excellent, comprehensible
-          real-world application.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: 200 customers with realistic distribution. Counts are sensible.
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear structure but complex bezier calculation loop adds
-          some complexity.
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) ensures reproducibility.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used (altair, numpy, pandas).
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair 5.x API.
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
-        max: 5
-        passed: true
-        comment: Creative use of Altair's layered composition, mark_line for bezier
-          flows, mark_rect for boxes, mark_text for labels, mark_square for legend.
-          Excellent use of declarative grammar.
-  verdict: APPROVED
+  styling:
+  - publication-ready
+  - alpha-blending
