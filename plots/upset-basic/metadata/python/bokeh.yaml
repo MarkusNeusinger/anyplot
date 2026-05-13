@@ -1,0 +1,252 @@
+library: bokeh
+language: python
+specification_id: upset-basic
+created: '2026-05-13T21:26:57Z'
+updated: '2026-05-13T21:49:52Z'
+generated_by: claude-sonnet
+workflow_run: 25826665591
+issue: 5250
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Complete, correct UpSet plot with all three canonical components in proper alignment
+    via linked axes
+  - Degree-based color coding adds genuine analytical value — directly addresses the
+    spec suggestion to use color to distinguish intersection degree
+  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
+    fully readable with correct chrome tokens throughout'
+  - 'Clean code: shared Range1d objects elegantly handle multi-panel axis alignment,
+    FixedTicker with overrides handles categorical-style numeric axes idiomatically'
+  weaknesses:
+  - 'Okabe-Ito canonical order not followed for degree colors: degree-2 uses blue
+    (position 3 = #0072B2) instead of vermillion (position 2 = #D55E00), skipping
+    the second color'
+  - No HoverTool implemented despite Bokeh generating interactive HTML — a major missed
+    opportunity; tooltips on bars showing gene counts and on matrix dots showing set
+    membership would be highly distinctive
+  - Corner legend panel oversized relative to legend content, creating unbalanced
+    whitespace in the top-left quadrant
+  - Experiment labels (Exp A–F) are generic — more descriptive names would improve
+    data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "upset-basic · bokeh · anyplot.ai" clearly readable (dark text). "Intersection Size" y-axis label and "Set Size" x-axis label both readable. Tick labels and count annotations (77, 64, 59...) readable. Set names Exp A–F readable on matrix panel.
+      Data: Four-panel UpSet layout. Intersection bars colored by degree — green (#009E73) for degree-1, blue for degree-2, orange for degree-3+. Horizontal set-size bars all green. Dot matrix with filled colored active dots, hollow outline inactive dots, thick green connecting segments. Degree legend in top-left panel.
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, count annotations, set names all rendered in light off-white text — fully readable against dark surface. No dark-on-dark failures detected. Legend text readable.
+      Data: Colors identical to light render — same green (#009E73), blue, orange for degree coding. Data color identity across themes confirmed.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 28pt, axis labels 18-20pt, ticks
+          16-17pt). All text readable in both themes. Minor deduction for small count
+          annotation labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Active dots (size 34), connecting segments (line_width 14), and bars
+          well-sized for canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; green/blue/orange are distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: '4-panel layout fills most canvas. Minor deduction: corner legend
+          panel oversized for its content'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Intersection Size, Set Size. Title in correct
+          format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), first series #009E73. Partial:
+          degree-2 uses #0072B2 (position 3) instead of #D55E00 (position 2), skipping
+          canonical Okabe-Ito order'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: degree-based color coding adds design intent. Clean
+          multi-panel composition. Not publication-ready — corner panel underutilized'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha 0.08-0.10), tick marks hidden, INK_SOFT axis lines,
+          inactive dot low alpha. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Degree color coding communicates intersection structure. Sorted bars
+          guide viewer. Clear focal point on largest intersections.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct UpSet plot with all three canonical components
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Intersections sorted by size, connected dots, set-size bars, intersection
+          bars, degree shading
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Matrix rows=sets, columns=intersections, connecting lines show combinations
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Degree legend clearly labels all three categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows degree-1, degree-2, and degree-3+ intersections with appropriate
+          variety across 6 sets
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Genomic differential expression scenario is plausible and neutral.
+          Minor: Exp A-F labels are generic'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 800 genes, 6 experiments, intersection sizes 21-77 are realistic
+          for genomic data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure with clear section comments, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, time, pathlib, numpy, bokeh, selenium'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code, shared Range1d for linked panels, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png using current Bokeh
+          API and Selenium pattern
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Shared Range1d for linked panel axes, FixedTicker with major_label_overrides,
+          gridplot, segment for connecting lines. Missing ColumnDataSource.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Linked axis ranges with shared Range1d is genuinely Bokeh-specific.
+          Inverted x-axis via Range1d(max*1.20, 0) is clean Bokeh idiom. Missed: no
+          HoverTool despite interactive HTML output'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - manual-ticks
+  - annotations
+  - subplots
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
