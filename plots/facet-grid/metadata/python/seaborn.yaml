@@ -1,170 +1,187 @@
 library: seaborn
+language: python
 specification_id: facet-grid
 created: '2025-12-30T16:29:26Z'
-updated: '2025-12-30T16:35:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601057090
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T03:27:16Z'
+generated_by: claude-haiku
+workflow_run: 25776214869
+issue: 2696
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/facet-grid/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - grid-styling
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of seaborn FacetGrid for creating a 3×4 grid layout with row and
-    column faceting
-  - Clean, realistic business data scenario (marketing spend vs sales revenue)
-  - Good marker sizing and transparency for the data density
-  - Proper title format and descriptive axis labels with units
-  - Systematic variation in data relationships across regions and quarters
+  - Excellent theme adaptation with consistent Okabe-Ito palette across light and
+    dark renders
+  - Strong FacetGrid + regplot integration with thoughtful styling (edge colors, alpha
+    blending, custom line styling)
+  - 'Perfect code structure: clean data generation, explicit font sizing throughout,
+    reproducible seed'
+  - Intelligent layout optimization removing redundant y-axis labels on non-leftmost
+    columns
+  - All text sizes explicitly set (title 26pt, labels 18pt, ticks 14pt) ensuring full
+    readability at canvas resolution
+  - Proper brand color usage (#009E73) as primary data color with consistent secondary
+    styling
   weaknesses:
-  - Y-axis label repeats on every row when shared axes could display it only once
-    on the left edge
-  - Could benefit from regression lines (lmplot or regplot) to highlight the varying
-    relationships across facets
-  image_description: The plot displays a 3×4 grid of scatter plots (12 subplots total).
-    Each subplot shows Marketing Spend ($k) on the x-axis (range 5-30) vs Sales Revenue
-    ($k) on the y-axis (range ~10-55). The columns are labeled Q1, Q2, Q3, Q4 (quarters)
-    at the top, and rows are labeled Region A, Region B, Region C on the right side.
-    All data points are rendered in a consistent blue color (#306998) with white edge
-    borders, slight transparency, and appear well-sized for the data density (25 points
-    per cell). The title "facet-grid · seaborn · pyplots.ai" appears centered at the
-    top in bold. Grid lines are subtle dashed lines. The data shows a positive correlation
-    between marketing spend and sales revenue, with intercepts increasing across quarters
-    and slopes varying by region.
+  - 'Visual storytelling could be enhanced: each facet shows data relationship but
+    plot doesn''t emphasize key insights or trends across facets'
+  - 'Design sophistication is solid but standard: uses configured library defaults
+    rather than custom palette or exceptional aesthetic choices'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no visible pure whites.
+      Chrome: Title "facet-grid · seaborn · anyplot.ai" (26pt, dark text), axis labels "Production Cost ($)" and "Profit Margin (%)" (18pt, dark text), tick labels (14pt), month/product labels (18pt) all clearly readable against light background.
+      Data: Markers in brand green (#009E73) with white edges, regression lines in soft secondary color with subtle alpha. Colors are vivid and distinct.
+      Grid: Subtle horizontal/vertical lines at alpha=0.12, visible but not dominant.
+      Layout: 3 rows (Electronics, Apparel, Food) × 4 columns (Jan, Feb, Mar, Apr) faceted grid with balanced margins and generous whitespace.
+      Legibility verdict: PASS — all text is readable, data markers are clear, no contrast issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with no visible pure blacks.
+      Chrome: Title in light text (#F0EFE8), axis labels in light text (18pt), tick labels in soft light text, month/product labels in light text — all clearly readable against dark background.
+      Data: Markers in IDENTICAL brand green (#009E73) as light render, regression lines in soft secondary color. Data colors do not change between themes (only chrome adapts).
+      Grid: Subtle lines at alpha=0.12, visible and consistent with light render.
+      Layout: Identical structure to light render, no cut-off content, proper spacing maintained.
+      Legibility verdict: PASS — no dark-on-dark failures, all text is readable, data is clearly visible. The brand green has excellent luminance contrast against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is readable; title, axis labels, and tick labels are appropriately
-          sized. Slight deduction as tick labels could be marginally larger for the
-          high-resolution output.
+        comment: All font sizes explicitly set (title 26pt, labels 18pt, ticks 14pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere in the plot.
+        comment: No overlapping text; facet layout is clean and organized
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized (s=150) with good alpha (0.7) for 25 points
-          per panel.
+        comment: Markers (s=140, alpha=0.75) perfectly adapted to ~30 points per facet;
+          regression lines clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe; no color distinction
-          needed.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout overall; the grid fills the canvas well, though the right-side
-          row labels feel slightly cramped.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: "Marketing Spend ($k)" and "Sales Revenue
-          ($k)".'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Good contrast; Okabe-Ito palette is CVD-safe; edge colors provide
+          definition
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins; plot fills appropriate canvas
+          proportion
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines and alpha=0.3. No legend needed
-          for single-color plot. However, axes are shared but Y-axis labels repeat
-          on every row unnecessarily.
+        comment: 'Descriptive with units: ''Production Cost ($)'', ''Profit Margin
+          (%)'', facet labels clear'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; chrome colors
+          theme-adaptive ✓; data colors identical between themes ✓'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured design with intentional color choices, theme tokens,
+          and marker styling; above default but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: false
+        comment: Subtle grid (alpha=0.12), generous whitespace, edge-color refinement;
+          very good but not perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Clear data presentation across facets but no visual emphasis or focal
+          point to highlight key insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct faceted grid plot using seaborn's FacetGrid.
+        comment: Correct FacetGrid with scatter + regression overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped; categorical faceting by row (Region) and column
-          (Quarter).
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has numeric X/Y, two categorical faceting variables, shared axes
-          scales.
-      - id: SC-04
-        name: Data Range
+        comment: Row (Product Line) and column (Month) faceting; base scatter plot;
+          regression lines
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes ranges.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Production Cost, Y: Profit Margin correctly assigned; axes show
+          all data'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; facet labels are accurate.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "facet-grid · seaborn · pyplots.ai".
+        comment: Title 'facet-grid · seaborn · anyplot.ai'; facet labels clear (Electronics/Apparel/Food,
+          Jan-Apr)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across both faceting dimensions (regions have different
-          slopes, quarters have different intercepts). Could show more dramatic differences
-          between facets.
+        comment: Shows variation by product line, seasonality by month, cost-margin
+          relationship, trend in each facet
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Marketing spend vs sales revenue is a realistic business scenario.
+        comment: Real business scenario; neutral product types (Electronics, Apparel,
+          Food); realistic values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable ($5k-30k spend, $10k-55k revenue), though relationship
-          could be more varied.
+        comment: Production Cost 800-1400 is realistic; Profit Margin 5-40% matches
+          expected business proportions
     code_quality:
       score: 10
       max: 10
@@ -174,41 +191,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; follows imports → data → plot → save structure.
+        comment: 'Linear flow: imports → data → theme → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and seaborn imported; all used.
+        comment: 'All imports used: os, plt, numpy, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API.
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses seaborn's FacetGrid which is a signature feature, but could
-          leverage additional seaborn features like regplot for regression lines or
-          color encoding with hue.
+        comment: Expert use of FacetGrid, map_dataframe, set_titles, set_axis_labels;
+          seaborn's recommended patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: FacetGrid + regplot overlay combo is distinctive to seaborn; map_dataframe
+          pattern is seaborn-specific and hard to replicate cleanly in other libraries
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,68 +1,112 @@
-""" pyplots.ai
+""" anyplot.ai
 facet-grid: Faceted Grid Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-13
 """
 
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
 
-# Data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"
+
+# Data - Differentiated scenario: Production Cost vs Profit Margin by Product Line and Month
 np.random.seed(42)
 
-# Create dataset with two categorical faceting variables
-categories_row = ["Region A", "Region B", "Region C"]
-categories_col = ["Q1", "Q2", "Q3", "Q4"]
+product_lines = ["Electronics", "Apparel", "Food"]
+months = ["Jan", "Feb", "Mar", "Apr"]
 
 data = []
-for row_cat in categories_row:
-    for col_cat in categories_col:
-        n_points = 25
-        # Vary the relationship by region and quarter
-        base_slope = 0.6 + 0.2 * categories_row.index(row_cat)
-        intercept = 10 + 5 * categories_col.index(col_cat)
+for product_idx, product in enumerate(product_lines):
+    for month_idx, month in enumerate(months):
+        n_points = 30
+        # Vary profit margin by product line (Electronics: high margin but higher cost,
+        # Apparel: moderate, Food: low margin, high volume)
+        base_margin = 15 + 10 * product_idx
+        margin_noise = np.random.normal(0, 3, n_points)
 
-        x = np.random.uniform(5, 30, n_points)
-        noise = np.random.normal(0, 3, n_points)
-        y = intercept + base_slope * x + noise
+        # Cost varies by month (seasonality)
+        base_cost = 800 + 200 * month_idx
+        cost_var = np.random.uniform(-100, 100, n_points)
+
+        # Profit margin increases with cost for some products
+        cost = base_cost + cost_var
+        profit_margin = base_margin + 0.01 * (cost - base_cost) + margin_noise
+        profit_margin = np.clip(profit_margin, 5, 40)
 
         for i in range(n_points):
             data.append(
-                {"Marketing Spend ($k)": x[i], "Sales Revenue ($k)": y[i], "Region": row_cat, "Quarter": col_cat}
+                {
+                    "Production Cost ($)": cost[i],
+                    "Profit Margin (%)": profit_margin[i],
+                    "Product Line": product,
+                    "Month": month,
+                }
             )
 
 df = pd.DataFrame(data)
 
+# Setup theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK_MUTED,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
 # Plot
-sns.set_context("talk", font_scale=1.3)
-sns.set_style("whitegrid")
+g = sns.FacetGrid(df, row="Product Line", col="Month", height=3.8, aspect=1.1, margin_titles=True)
 
-g = sns.FacetGrid(df, row="Region", col="Quarter", height=4.5, aspect=1.1, margin_titles=True)
-
+# Map scatterplot with regression line
 g.map_dataframe(
-    sns.scatterplot,
-    x="Marketing Spend ($k)",
-    y="Sales Revenue ($k)",
-    color="#306998",
-    s=150,
-    alpha=0.7,
-    edgecolor="white",
-    linewidth=0.5,
+    sns.regplot,
+    x="Production Cost ($)",
+    y="Profit Margin (%)",
+    scatter_kws={"color": BRAND, "s": 140, "alpha": 0.75, "edgecolor": PAGE_BG, "linewidths": 0.8},
+    line_kws={"color": INK_SOFT, "linewidth": 2.5, "alpha": 0.6},
+    ci=None,
 )
 
 # Styling
-g.set_titles(row_template="{row_name}", col_template="{col_name}", size=20)
-g.set_axis_labels("Marketing Spend ($k)", "Sales Revenue ($k)", fontsize=18)
+g.set_titles(row_template="{row_name}", col_template="{col_name}", size=18, fontweight="medium")
 
-for ax in g.axes.flat:
+# Remove y-axis label repetition: only show on leftmost column
+for i, ax in enumerate(g.axes.flat):
     ax.tick_params(axis="both", labelsize=14)
-    ax.grid(True, alpha=0.3, linestyle="--")
+    ax.grid(True, alpha=0.12, linestyle="-", linewidth=0.7)
 
-g.figure.suptitle("facet-grid · seaborn · pyplots.ai", fontsize=26, fontweight="bold", y=1.02)
+    # Only leftmost column keeps y-axis label
+    if i % 4 != 0:
+        ax.set_ylabel("")
+
+# Set labels once globally
+g.set_axis_labels("Production Cost ($)", "Profit Margin (%)", fontsize=18)
+
+# Add main title
+g.figure.suptitle("facet-grid · seaborn · anyplot.ai", fontsize=26, fontweight="medium", y=0.995, color=INK)
 
 g.tight_layout()
 
 # Save
-g.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
