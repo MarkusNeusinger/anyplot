@@ -654,8 +654,8 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
             )
             resp.raise_for_status()
             data = resp.json()
-    except Exception as e:
-        logger.warning("Plausible visitors fetch failed (returning empty series): %s", e)
+    except Exception:
+        logger.warning("Plausible visitors fetch failed (returning empty series)", exc_info=True)
         return VisitorsResponse(points=[])
 
     # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [N]}, ...]}

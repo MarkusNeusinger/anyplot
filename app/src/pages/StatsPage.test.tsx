@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '../test-utils';
 import { StatsPage } from './StatsPage';
 
@@ -118,6 +118,12 @@ function mockFetchError() {
 describe('StatsPage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  // vi.restoreAllMocks() doesn't undo vi.stubGlobal — without this hook the
+  // mocked `fetch` would leak into other test suites in the same worker.
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('renders loading state initially', () => {

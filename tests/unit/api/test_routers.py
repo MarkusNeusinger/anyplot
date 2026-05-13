@@ -1792,11 +1792,18 @@ class TestInsightsRouter:
             assert response.json()["points"] == []
 
     def test_visitors_parses_plausible_response(self, client: TestClient) -> None:
-        """Visitor counts from Plausible should be merged into the zero-filled 30-day series."""
+        """Visitor counts from Plausible should be merged into the zero-filled 30-day series.
+
+        Time is frozen via a patched `datetime` in the module under test so the
+        "today" the endpoint computes for zero-filling matches the "today" the
+        fake Plausible response references, regardless of when the test runs
+        (UTC midnight was the flakiness risk).
+        """
         from datetime import datetime as _dt
         from datetime import timezone as _tz
 
-        today_iso = _dt.now(_tz.utc).date().isoformat()
+        frozen_now = _dt(2026, 5, 13, 12, 0, 0, tzinfo=_tz.utc)
+        today_iso = frozen_now.date().isoformat()
 
         class _MockResp:
             status_code = 200
@@ -1817,10 +1824,16 @@ class TestInsightsRouter:
             async def post(self, *_args, **_kwargs):
                 return _MockResp()
 
+        class _FrozenDatetime(_dt):
+            @classmethod
+            def now(cls, tz=None):  # type: ignore[override]
+                return frozen_now if tz is _tz.utc else frozen_now.replace(tzinfo=None)
+
         with (
             patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
             patch("api.routers.insights.settings") as mock_settings,
             patch("api.routers.insights.httpx.AsyncClient", return_value=_MockClient()),
+            patch("api.routers.insights.datetime", _FrozenDatetime),
         ):
             mock_settings.plausible_api_key = "test-key"
             mock_settings.plausible_site_id = "anyplot.ai"
