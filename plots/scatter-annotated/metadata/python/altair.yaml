@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:49:20Z'
-updated: '2026-05-13T11:12:48Z'
+updated: '2026-05-13T11:18:18Z'
 generated_by: claude-haiku
 workflow_run: 25795263793
 issue: 2790
@@ -12,36 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Flawless theme adaptation: data colors identical in light/dark, chrome correctly
-    themed in both renders'
-  - Proper text legibility across all elements and themes; no contrast failures
-  - Clean, professional code with idiomatic altair usage (layer composition, proper
-    encoding)
-  - Realistic, neutral data with clear visual hierarchy guiding viewer
-  - All spec requirements met exactly as requested
+  - 'Excellent visual quality across all dimensions (VQ: 30/30)'
+  - Perfect spec compliance and data quality
+  - Clean, maintainable code with proper reproducibility
+  - Strong idiomatic Altair usage with effective layer composition
+  - 'Flawless theme adaptation: data colors identical between renders, chrome correctly
+    inverted'
+  - Well-chosen example data demonstrating the plot type effectively
+  - 'No visual defects: readable in both light and dark themes'
   weaknesses:
-  - 'Design excellence could be elevated: connector line styling or label positioning
-    refinement could reduce proximity conflicts'
-  - Limited exploration of library-distinctive features beyond basic marks; could
-    leverage altair-specific interactivity or advanced encoding techniques
+  - Design sophistication is competent but not exceptional—relies on well-configured
+    defaults rather than distinctive aesthetic choices
+  - Visual refinement is minimal—mostly library defaults with subtle grid customization
+  - No visual hierarchy or storytelling emphasis beyond displaying the annotated data
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid at 10% opacity
-      Chrome: Title "scatter-annotated · altair · anyplot.ai" in bold dark text (#1A1A17, fontSize=28); axis labels "Revenue (Billions USD)" and "Profit Margin (%)" in dark text (labelFontSize=18); tick labels clearly visible
-      Data: 10 green circles (#009E73, opacity=0.7) positioned by revenue vs profit margin; company names in bold dark text to upper-left of each point; thin subtle connector lines (#4A4A44, opacity=0.3) linking labels to points
-      Legibility verdict: PASS - all elements clearly readable, high contrast, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title (28px, dark ink), axis labels (22px, dark ink), tick labels (18px, soft ink) all clearly readable against light surface
+      Data: 10 green points (#009E73, opacity=0.7) with bold company name labels (18px) offset via dx/dy; connector lines (opacity=0.3) subtle but visible
+      Legibility verdict: PASS - All text elements readable, no dark-on-dark issues, excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid at 10% opacity
-      Chrome: Title in light text (#F0EFE8); axis labels and tick labels in light/secondary light text (#B8B7B0); all clearly visible against dark background
-      Data: 10 green circles (#009E73) - IDENTICAL color to light render; company names in light text; connector lines adapted to dark theme palette
-      Legibility verdict: PASS - all elements clearly readable, high contrast, no dark-on-dark issues; data colors match light render exactly (only chrome adapted)
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and axis labels render in light ink (#F0EFE8), tick labels in soft ink (#B8B7B0); all clearly readable against dark surface. NO dark-on-dark text failures detected.
+      Data: Green points (#009E73) identical to light render, confirming correct theme implementation; connector lines properly adapted
+      Legibility verdict: PASS - All text elements readable, perfect dark theme chrome, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -49,72 +50,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set; readable in both light and dark themes
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px,
+          text 18px); all perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Generally well-placed labels with offsets; minor proximity issues
-          in denser regions
+        comment: Text labels positioned with dx/dy offset; no overlapping elements
+          detected
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 10 points visible; labels distinct; connector lines subtle but
-          present
+        comment: Points (size=250, opacity=0.7) clearly visible; labels (fontSize=18,
+          bold) fully readable; connector lines visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green brand color; CVD-safe; no red-green sole signal
+        comment: 'Colorblind-safe Okabe-Ito #009E73; good contrast between markers
+          and backgrounds'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 canvas scaled 3× to 4800×2700; proportions excellent; nothing
-          cut off
+        comment: Plot fills 70-80% of canvas with balanced margins; no content cut-off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title formatted correctly
+        comment: 'Descriptive labels with units: Revenue (Billions USD) and Profit
+          Margin (%)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); both renders theme-adaptive'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; text colors theme-adaptive;
+          both renders correct'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Clean, professional layout with theme-aware styling. Correct token
-          usage. Could benefit from additional visual refinement.
+        passed: false
+        comment: Well-configured defaults with clean theme adaptation and thoughtful
+          connector lines, but presentation remains fundamentally library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: No unnecessary spines; subtle grid; generous whitespace. Connector
-          lines add refinement.
+        passed: false
+        comment: Subtle grid (opacity=0.10) and connector lines add some refinement,
+          but mostly library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear narrative: tech company positioning by revenue vs. profitability.
-          Visual hierarchy guides viewer.'
+        passed: false
+        comment: Data displayed clearly with annotations but no visual hierarchy or
+          emphasis beyond showing the data
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot with text annotations; exactly matches specification
+        comment: Correct scatter plot with text annotations
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Points, labels, connector lines, readable text, realistic data—all
-          present
+        comment: Scatter points, text labels, x/y mapping all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = revenue, Y = profit margin; scales appropriate; all data shown
+        comment: X (Revenue), Y (Profit Margin), Labels (Company names) correctly
+          assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted (single series)
+        comment: Title format correct; no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -153,19 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of scatter-annotated shown; 10 representative points
+        comment: Shows full range of profit margins (6-55%) and revenue (19-574B);
+          good spread demonstrates plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real tech company data; revenue and margins realistic and neutral
+        comment: Real tech companies with factually accurate financial data; neutral,
+          comprehensible context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for domain (0-620B USD revenue, 0-60% margin)
+        comment: All values and proportions align with real-world facts
     code_quality:
       score: 10
       max: 10
@@ -175,49 +180,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; direct chart construction
+        comment: Imports → data → plot → save; no functions/classes; clean structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic output
+        comment: np.random.seed(42); deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, altair, numpy, pandas'
+        comment: 'Only used imports: os, altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; straightforward altair patterns
+        comment: Clean Pythonic code; layer composition well-structured; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves as plot-{THEME}.png/.html with scale_factor=3.0; current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Layer composition with +, proper encoding, theme tokens. Well-executed
-          altair patterns.
+        comment: Expert use of high-level Altair API; all methods correctly applied
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Uses mark_text for annotations, mark_line for connectors, layer composition.
-          Could explore more library features.
+        passed: false
+        comment: Uses declarative layer composition and theme-adaptive configuration;
+          good library-specific patterns but not exceptional
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -230,3 +234,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
