@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
-Library: plotly 5.24.1 | Python 3.13.11
-Quality: 93/100 | Updated: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-13
 """
 
 import os
