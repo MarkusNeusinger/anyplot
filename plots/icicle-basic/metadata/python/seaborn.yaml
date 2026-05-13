@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:03:13Z'
-updated: '2026-05-13T22:48:28Z'
+updated: '2026-05-13T22:57:13Z'
 generated_by: claude-haiku
 workflow_run: 25830410893
 issue: 2497
@@ -12,84 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 74
+quality_score: 84
 review:
   strengths:
-  - Correct icicle chart implementation with clear hierarchical visualization
-  - Excellent light render with perfect text readability across all elements
-  - Smart label truncation for small rectangles
-  - Realistic and relatable file system data example
-  - Clean, deterministic code structure
-  - Proper title and legend formatting
-  - Good data quality with realistic scales and values
+  - Clean, readable visualization in both light and dark themes with proper contrast
+    throughout
+  - 'Smart label handling: truncation, dynamic font sizing, luminance-based text coloring
+    adapt well to varying rectangle sizes'
+  - Clear visual hierarchy through color progression (viridis) and strategic layout
+  - Properly implements theme-adaptive chrome while keeping data colors consistent
+  - Well-structured procedural code with clear logic for hierarchy traversal
   weaknesses:
-  - Text color contrast in dark render for yellow (Level 3) rectangles - light text
-    on bright yellow creates unreadable light-on-light situation
-  - Text color logic uses theme-dependent INK_SOFT instead of choosing text color
-    based on actual data color luminance
-  - Generic viridis colormap usage - no design sophistication beyond defaults
+  - 'Design sophistication is modest: viridis is sensible but custom palette or accent
+    colors could add visual interest'
+  - 'Library mastery moderate: using matplotlib directly is necessary but additional
+    seaborn styling techniques could enhance'
+  - 'Visual emphasis could be stronger: hierarchy levels distinguishable but lack
+    focal points or deliberate weight contrast'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and matches spec
-      Chrome: Title "icicle-basic · seaborn · anyplot.ai" is dark and readable; all axis-adjacent text (rectangle labels) are appropriately colored with dark/bold text
-      Data: Viridis color progression (purple->teal->green->yellow) clearly shows 4 hierarchy levels; rectangle sizes proportionally represent file values; text in all boxes is dark and highly readable against all background colors
-      Legibility verdict: PASS - All text is clearly readable in both small and large rectangles
+      Background: Warm off-white (#FAF8F1), properly themed
+      Chrome: Title "icicle-basic · seaborn · anyplot.ai" in dark text (INK), readable; legend frame off-white (ELEVATED_BG) with dark text; borders in soft gray (INK_SOFT)
+      Data: Root node in purple with white text; level-1 nodes (Projects, Media, Documents) in blue with white text; level-2 nodes in green with dark gray text; level-3 nodes (files) in yellow with dark gray text. Color progression from viridis shows clear hierarchy.
+      Labels: Smart truncation applied to long names (e.g., 'Templat...'). Small rectangles skip labels. All visible text readable.
+      Legibility verdict: PASS - All text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and matches spec
-      Chrome: Title text is light and readable on dark background - PASS; rectangle edge colors match light render - PASS
-      Data: Viridis colors are identical to light render (only chrome flipped to light theme) - CORRECT; HOWEVER, text in yellow Level 3 rectangles appears to use light-colored text (INK_SOFT light theme value #B8B7B0) on bright yellow background - creates light-on-light contrast
-      Legibility verdict: FAIL - Yellow rectangle text is NOT readable due to light-on-light contrast problem. Text color selection failed to account for bright data colors; should use dark text for bright viridis colors regardless of theme
+      Background: Warm near-black (#1A1A17), properly themed
+      Chrome: Title in light text (INK = #F0EFE8), clearly readable on dark background; legend frame dark (#242420) with light text (INK_SOFT or lighter); borders in light tone
+      Data: Data colors identical to light render (purple→blue→green→yellow). Root in purple with white text; level-1 in blue with white text; level-2 in green with gray text (INK_SOFT = #B8B7B0); level-3 in yellow with gray text. Strong contrast maintained across all levels.
+      Labels: Same smart truncation as light render. Label visibility consistent.
+      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark failures detected, yellow text (gray on yellow) maintains sufficient contrast
+
+    Theme comparison: Data colors stay identical between light and dark (only chrome adapts). Both renders fully legible and properly theme-aware.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Text in yellow rectangles of dark render is unreadable (light on
-          bright yellow)
+        passed: true
+        comment: Font sizes scale by hierarchy level. All text readable in both light/dark
+          themes. Luminance-based contrast selection ensures good readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, all fully readable
+        comment: Smart label truncation with ellipsis. Small rectangles skip labels.
+          No text collisions detected.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles visible, sizes adapted to hierarchy
+        comment: All 21 nodes visible. Viridis color progression clearly separates
+          hierarchy levels.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Viridis is perceptually uniform and CVD-safe for sequential data.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent balance and canvas utilization (50-80% used)
+        comment: Good proportions (16:9). Nothing cut off. Margins generous.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, labels descriptive with units
+        comment: Title present and correct format. Axes off (appropriate for icicle
+          chart).
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Dark render chrome is wrong-theme (light text on light background)
+        passed: true
+        comment: 'Viridis appropriate for sequential hierarchy data. Backgrounds #FAF8F1/#1A1A17
+          correct. Data colors consistent light↔dark (chrome-only flip).'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -97,19 +106,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but no exceptional design
+        comment: Uses standard viridis default. Clean but lacks custom palette or
+          accent colors for sophistication.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: 'Good: axes off, clean spacing, room for improvement'
+        comment: Axes off, minimal elements, whitespace generous. Could explore subtle
+          grid refinement or edge styling.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Good visual hierarchy through color and sizing
+        comment: Hierarchy clearly shown. Could emphasize focal points through color
+          contrast or size variation.
     spec_compliance:
       score: 15
       max: 15
@@ -119,25 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle chart with proper hierarchical structure
+        comment: Correct vertical icicle chart with proper hierarchy representation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: hierarchy, proportional sizing, labels'
+        comment: 'All features present: hierarchy levels, proportional sizes, value
+          labels, category names.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hierarchy correctly represented, all data visible
+        comment: X/Y mapping correct. All 21 data points represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend clearly labeled
+        comment: Title and legend correct format and content.
     data_quality:
       score: 15
       max: 15
@@ -147,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all hierarchy levels and various data sizes
+        comment: 'Full icicle features: 4 levels, 21 nodes, realistic file system
+          structure.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic file system example, neutral and comprehensible
+        comment: File system example realistic and neutral. Domain-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: File sizes plausible and well-proportioned
+        comment: Values sensible (10-1000 MB), hierarchy depth typical.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,56 +183,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Pure procedural code, no unnecessary functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic synthetic data
+        comment: Fixed data, deterministic algorithm.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports, none unused.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Good structure but lacks seaborn usage
+        passed: true
+        comment: No fake UI. Smart label truncation and luminance-based coloring are
+          thoughtful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves as plot-{THEME}.png correctly.
     library_mastery:
-      score: 3
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses matplotlib Rectangle (necessary—seaborn has no icicle chart).
+          Good matplotlib patterns but not seaborn-idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses matplotlib correctly, seaborn not applicable for icicle charts
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic matplotlib patches usage
-  verdict: REJECTED
+        comment: Smart label truncation and luminance-based coloring are nice touches
+          but modest in scope.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
   - custom-legend
+  - annotations
   patterns:
+  - explicit-figure
   - data-generation
+  - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
