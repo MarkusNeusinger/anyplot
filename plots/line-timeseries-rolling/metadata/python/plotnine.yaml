@@ -1,152 +1,168 @@
 library: plotnine
+language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T18:40:03Z'
-updated: '2025-12-30T18:42:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20603334572
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - wide-to-long
-  dataprep:
-    - rolling-window
-  styling:
-    - alpha-blending
-    - grid-styling
+updated: '2026-05-13T13:15:01Z'
+generated_by: claude-haiku
+workflow_run: 25801082878
+issue: 2786
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper aesthetics mapping for
-    color, alpha, and size
-  - Clear visual distinction between raw data (lighter blue, thin line) and rolling
-    average (prominent yellow, thicker line)
-  - Proper title format following pyplots.ai conventions
-  - Good use of scale_alpha_manual and scale_size_manual for visual differentiation
-  - Well-structured data transformation to long format for ggplot-style plotting
+  - Perfect theme adaptation with identical data colors across light/dark renders
+  - 'Excellent legibility: all text sizes explicitly set and readable at full resolution'
+  - 'Strong spec compliance: all required features present and functioning correctly'
+  - Realistic, neutral temperature data demonstrating clear trend-smoothing narrative
+  - Idiomatic plotnine usage with distinctive features (scale_*_manual, mizani integration)
+  - Clean, reproducible code following KISS structure and best practices
   weaknesses:
-  - X-axis date labels are slightly crowded with 7-day breaks over 6 months - could
-    use monthly breaks for cleaner appearance
-  image_description: 'The plot displays a time series of daily temperature data from
-    January 2024 to July 2024. The raw daily temperature data is shown as a thin blue/gray
-    line with semi-transparency (alpha ~0.5), exhibiting significant day-to-day fluctuations
-    typical of temperature readings. Overlaid on top is a prominent yellow/golden
-    line representing the 7-day rolling average, which is thicker and fully opaque.
-    The chart shows a clear seasonal trend: temperatures start near 0°C in January,
-    rise steadily through spring, peak around 20-25°C in late April/May, and begin
-    declining into summer. The title "line-timeseries-rolling · plotnine · pyplots.ai"
-    appears at the top. X-axis shows dates labeled by month (Jan 2024, Feb 2024, etc.)
-    with rotated labels. Y-axis shows "Temperature (°C)" ranging from approximately
-    -5 to 28. A legend on the right distinguishes "Daily Temperature" and "7-Day Rolling
-    Average". The grid is subtle with light gray lines.'
+  - 'Design Excellence at default levels: uses library defaults without exceptional
+    polish or custom refinements'
+  - 'Visual storytelling could be stronger: rolling average emphasis could be more
+    dramatic through color pop or strategic labeling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark ink (#1A1A17/#4A4A44) - perfectly readable with strong contrast
+      Data: Raw daily temperature (green #009E73, thin, alpha=0.5) + 7-day rolling average (orange #D55E00, thick, alpha=1.0); 6-month seasonal progression visible; grid subtle at 10% opacity
+      Legibility verdict: PASS - all text and data elements clearly readable, excellent contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and axis labels shift to light ink (#F0EFE8/#B8B7B0) - all readable against dark background with proper contrast; no dark-on-dark failures
+      Data: Colors identical to light render (green #009E73, orange #D55E00) - confirms theme-independent data colors and theme-adaptive chrome only
+      Legibility verdict: PASS - all elements readable, theme adaptation confirmed, no dark-on-dark text failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, rotated x-axis labels prevent collision
+        comment: Zero overlapping text; dates rotated 30°, all labels clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines well-sized, raw data appropriately transparent, rolling average
-          prominent
+        comment: 'Both series optimally visible: raw data (thin, 0.5 alpha) vs rolling
+          average (thick, 1.0 alpha) well-distinguished'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast, distinguishable for colorblind
-          users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Temperature (°C)" and "Date"'
+        comment: Okabe-Ito colors provide strong contrast and CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 16:9 composition, plot fills ~65% with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Temperature (°C), Date'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1-2 correct, backgrounds theme-correct, chrome
+          properly adaptive
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; professional but generic styling without
+          custom touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid, refined typography, adequate whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through size/alpha; rolling average emphasis
+          could be stronger
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line plot with rolling average overlay
+        comment: Correct time series + rolling average overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, Temperature on Y, correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Raw data with transparency, prominent rolling average, clear legend
-          with window size
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: raw data, rolling average, legend, dual-axis
+          grid'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct, 180 points span full axis range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend clearly labels "Daily Temperature" and "7-Day Rolling Average"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-timeseries-rolling · plotnine · pyplots.ai"'
+        comment: Title format correct, legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both raw volatility and smoothed trend, seasonal pattern clearly
-          visible
+        comment: Shows seasonal progression, noise dynamics, and trend smoothing
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Daily temperature readings are a real, neutral, comprehensible scenario
+        comment: Real-world temperature scenario, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Seasonal pattern and noise realistic, standard rolling window
     code_quality:
       score: 10
       max: 10
@@ -156,11 +172,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Clear flow, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -168,29 +184,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extraneous dependencies
+        comment: All imports used, no bloat
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine''s ggplot2-style grammar: aesthetic mapping
-          (aes), scale_*_manual functions, theme customization, proper long-format
-          data transformation'
+        comment: Expert ggplot composition, mizani integration, theme extension
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses scale_*_manual, guides suppression, categorical ordering, mizani
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
+  - grid-styling
