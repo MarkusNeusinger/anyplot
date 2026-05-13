@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: icicle-basic
 created: '2026-05-13T22:40:39Z'
-updated: '2026-05-13T22:43:54Z'
+updated: '2026-05-13T22:49:56Z'
 generated_by: claude-haiku
 workflow_run: 25830490662
 issue: 2497
@@ -12,93 +12,85 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 82
 review:
   strengths:
-  - Perfect spec compliance and correct icicle chart implementation
-  - Perfect data quality with realistic, neutral file system scenario
-  - Perfect code quality with KISS structure and deterministic data
-  - Theme-adaptive chrome correctly implemented with correct background colors and
-    text colors
-  - Clear visual hierarchy through color-by-level organization
-  - Professional, clean icicle chart with no overlapping elements
-  - Correct Okabe-Ito palette usage with brand green as first series
-  - Excellent canvas layout utilization with balanced margins
+  - 'Excellent visual quality: both renders perfectly readable with proper theme adaptation'
+  - 'Spec compliance flawless: all hierarchical features correctly implemented'
+  - 'Theme-token pattern correctly applied: backgrounds, text colors, and borders
+    all theme-aware'
+  - 'Clean, maintainable code: clear structure, reasonable helper function'
+  - 'Okabe-Ito palette properly sequenced by hierarchy level: strong visual consistency'
+  - 'Proper icicle orientation and sizing: hierarchy depth and proportional sizes
+    both clear'
   weaknesses:
-  - Design Excellence too low (9/20) - plot looks like well-configured library defaults
-    without distinctive aesthetic polish
-  - VQ-01 could be improved - text on colored backgrounds may benefit from contrast
-    optimization
-  - No visual refinement beyond library defaults - lacks subtle styling that would
-    elevate design
-  - Visual storytelling is moderate - lacks focal points or emphasis that guide viewer
-    to key insights
-  - Library Mastery not fully leveraging Plotly's advanced features - could enhance
-    with more styling customization
+  - 'Generic design excellence: color-by-level is functional but not visually refined'
+  - 'Missing distinctive Plotly features: basic Icicle without custom interactions
+    or polish'
+  - 'Limited visual hierarchy: no techniques (color contrast, emphasis, sizing variation)
+    to guide viewer attention'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "icicle-basic · plotly · anyplot.ai" is centered and clearly readable in dark text. No axis labels (N/A for icicle). All text is dark-colored and legible.
-      Data: Root node in brand green (#009E73) on left; level-1 in orange (#D55E00); level-2 in blue (#0072B2). White borders between rectangles. Hierarchy clearly visible through spatial adjacency and color-by-level.
-      Legibility verdict: PASS - All text readable, proper contrast maintained
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title centered at top in dark INK (#1A1A17) at 28px, all rectangle labels in 16px dark text, all clearly readable
+      Data: Root node green (#009E73 - BRAND), level-1 orange (#D55E00 - OI[1]), level-2 blue (#0072B2 - OI[2]), white 2px borders between rectangles
+      Legibility verdict: PASS - all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface, not pure black
-      Chrome: Title in light text, clearly readable. All text light-colored (cream/off-white) for readability on dark surface.
-      Data: Data colors identical to light render - root in #009E73, level-1 in orange, level-2 in blue. White borders remain visible. Hierarchy structure identical to light render.
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, brand green clearly visible
-
-    Both renders pass theme-readability checks. Data colors are constant across themes; only chrome (background, text) adapts.
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title and all labels in light INK (#F0EFE8) at proper sizes, excellent contrast against dark background
+      Data: Colors identical to light render - root green, level-1 orange, level-2 blue, light-gray borders readable
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, brand green still visible
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (16px), readable in both themes
+        comment: Title 28px, labels 16px, both themes fully readable
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Labels fit within rectangles, minor redundant duplication in arrays
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles visible and well-proportioned
+        comment: All rectangles visible, proportional sizing, clear 2px borders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette, CVD-safe, strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with 60-70% plot fill and balanced margins
+        comment: Well-balanced proportions, generous margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title present and descriptive
+        comment: Title descriptive and centered, no axes needed for icicle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, follows Okabe-Ito, backgrounds correct, data
-          colors identical across themes'
+        comment: Okabe-Ito sequence correct, backgrounds theme-correct, both renders
+          proper
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -106,19 +98,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks distinctive polish
+        comment: Functional color-by-level, no custom refinements
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults
+        comment: Clean minimal styling, no additional refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Color hierarchy exists but lacks focal points or emphasis
+        comment: Clear hierarchy but no focal point or narrative guidance
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +120,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle chart type
+        comment: Correct icicle chart via go.Icicle()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: Hierarchy, values, labels, parent-child all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mapping and visibility
+        comment: Idiomatic icicle orientation, all 14 nodes shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct; legend appropriately omitted
+        comment: Title correct, legend properly omitted
     data_quality:
       score: 15
       max: 15
@@ -156,19 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all icicle aspects
+        comment: 4-level file system hierarchy, 14 nodes, comprehensive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world file system scenario
+        comment: Plausible file sizes, neutral, real-world applicable
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic proportions
+        comment: Values sensible (100 to 8), realistic distribution
     code_quality:
       score: 10
       max: 10
@@ -178,54 +170,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Simple and direct, reasonable helper function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Hardcoded data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only os, pandas, plotly - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Correct file outputs at proper resolution
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expertly uses go.Icicle()
+        comment: Proper go.Icicle() usage, custom hovertemplate shows awareness
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses distinctive Icicle trace but could leverage more advanced features
-  verdict: REJECTED
+        comment: Basic usage without distinctive enhancements
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
