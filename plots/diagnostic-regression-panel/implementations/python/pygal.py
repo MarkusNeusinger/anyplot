@@ -1,7 +1,7 @@
 """ anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 70/100 | Created: 2026-05-13
+Quality: 74/100 | Created: 2026-05-13
 """
 
 import os
