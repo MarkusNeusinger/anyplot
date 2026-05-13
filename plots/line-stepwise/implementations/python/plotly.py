@@ -1,12 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 line-stepwise: Step Line Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 98/100 | Created: 2025-12-30
+Library: plotly | Python 3.13
+Quality: pending | Created: 2025-12-30
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Server response time monitoring (discrete state changes)
 np.random.seed(42)
@@ -40,7 +51,7 @@ response_times = np.array(
     ]
 )
 
-# Create step line plot
+# Plot
 fig = go.Figure()
 
 fig.add_trace(
@@ -48,47 +59,50 @@ fig.add_trace(
         x=hours,
         y=response_times,
         mode="lines+markers",
-        line=dict(
-            shape="hv",  # Step: horizontal then vertical
-            color="#306998",
-            width=4,
-        ),
-        marker=dict(size=14, color="#306998", line=dict(color="white", width=2)),
+        line={"shape": "hv", "color": BRAND, "width": 4},
+        marker={"size": 14, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}},
         name="Response Time",
         hovertemplate="Hour: %{x}<br>Response: %{y} ms<extra></extra>",
     )
 )
 
-# Layout
+# Style
 fig.update_layout(
-    title=dict(text="line-stepwise · plotly · pyplots.ai", font=dict(size=28), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Hour of Day", font=dict(size=22)),
-        tickfont=dict(size=18),
-        tickmode="linear",
-        tick0=0,
-        dtick=2,
-        range=[-0.5, 23.5],
-        showgrid=True,
-        gridcolor="rgba(128, 128, 128, 0.2)",
-        gridwidth=1,
-    ),
-    yaxis=dict(
-        title=dict(text="Response Time (ms)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        range=[35, 95],
-        showgrid=True,
-        gridcolor="rgba(128, 128, 128, 0.2)",
-        gridwidth=1,
-    ),
-    template="plotly_white",
+    title={
+        "text": "line-stepwise · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": "Hour of Day", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "tickmode": "linear",
+        "tick0": 0,
+        "dtick": 2,
+        "range": [-0.5, 23.5],
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": "Response Time (ms)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "range": [35, 95],
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     showlegend=False,
-    margin=dict(l=100, r=80, t=120, b=100),
-    plot_bgcolor="white",
+    margin={"l": 100, "r": 80, "t": 120, "b": 100},
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
