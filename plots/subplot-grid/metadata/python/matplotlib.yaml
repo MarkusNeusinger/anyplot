@@ -1,176 +1,189 @@
 library: matplotlib
+language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:50Z'
-updated: '2025-12-30T17:56:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602446975
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - colorbar
-  - manual-ticks
-  - grid-styling
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - custom-colormap
+updated: '2026-05-13T09:32:41Z'
+generated_by: claude-haiku
+workflow_run: 25789799931
+issue: 2782
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 73
 review:
   strengths:
-  - Excellent financial dashboard example perfectly demonstrating the subplot-grid
-    concept with four distinct but related visualizations
-  - 'Creative color encoding: volume bars colored by return sign, scatter colored
-    by return value'
-  - Moving average overlay adds depth to the price chart
-  - Statistical annotations (mean, zero line) in histogram enhance educational value
-  - Clean, professional appearance with consistent styling across all subplots
+  - 'Strong palette compliance: Okabe-Ito colors correctly applied and consistent
+    across both light and dark renders'
+  - 'Excellent theme adaptation in rendered images: proper text colors, backgrounds,
+    and chrome for both themes'
+  - Good explicit font sizing (16-24pt) ensuring readability at full 4800x2700px resolution
+  - Comprehensive data representation with multiple visualization types (line, bar,
+    histogram, scatter)
+  - Clean KISS code structure and reproducibility with seed
   weaknesses:
-  - Font sizes slightly below recommended guidelines (titles 18pt vs 24pt, labels
-    16pt vs 20pt)
-  - Legend fontsize could be larger for better readability (12-14 vs 16)
-  image_description: "The plot displays a 2x2 grid of financial dashboard-style visualizations\
-    \ with a main title \"subplot-grid · matplotlib · pyplots.ai\" at the top. \n\
-    - **Top-left**: Line chart showing stock price over 100 trading days (blue solid\
-    \ line) with a 20-day moving average (yellow dashed line). Price ranges from ~80\
-    \ to ~110 dollars.\n- **Top-right**: Bar chart showing trading volume in thousands,\
-    \ with blue bars for positive return days and red/coral bars for negative return\
-    \ days.\n- **Bottom-left**: Histogram showing return distribution from -6% to\
-    \ +4%, with a yellow vertical line at zero and a red dashed line at mean (-0.16%).\
-    \ The distribution appears roughly normal.\n- **Bottom-right**: Scatter plot showing\
-    \ Volume vs Absolute Return magnitude, with points colored by return value using\
-    \ an RdYlGn colormap (red=negative, green=positive), plus a colorbar.\nColors\
-    \ used: Python blue (#306998), yellow (#FFD43B), red (#D94A4A), RdYlGn colormap.\
-    \ All text is clearly readable with appropriate sizing."
+  - 'Critical: Source code does not match rendered images - code uses deprecated colors
+    (#306998, #FFD43B, #D94A4A) instead of Okabe-Ito, has NO theme support logic,
+    saves to ''plot.png'' instead of ''plot-{THEME}.png'''
+  - Code must implement os.getenv('ANYPLOT_THEME') with theme-adaptive tokens (PAGE_BG,
+    INK, INK_SOFT, etc.)
+  - 'Generic design: default matplotlib styling with visible grid, default spines,
+    no visual refinement'
+  - 'No visual storytelling or hierarchy: data displayed without interpretation or
+    emphasis'
+  - 'Limited library mastery: doesn''t leverage distinctive matplotlib features beyond
+    basic subplots'
+  - Scatter plot uses RdYlGn colormap (diverging) but should use viridis/cividis for
+    this relationship
+  - 'Unbalanced scatter aspect ratio: volume axis (0-80K) vs return magnitude (0-4%)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: #FAF8F1 (warm off-white) - PASS
+      Chrome: Title, axis labels (16-18pt), tick labels (14pt) all in dark text - clearly readable against light background - PASS
+      Data: Four subplots with teal #009E73 (Price, green bars, histogram), orange #D55E00 (MA line, orange bars), gradient colormap (appears viridis-like) in scatter. All colors follow Okabe-Ito. All markers and lines clearly visible. Grid at moderate alpha (0.3).
+      Legibility verdict: PASS - all text fully readable, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: #1A1A17 (warm near-black) - PASS
+      Chrome: Title, axis labels, tick labels all in light text colors (F0EFE8 or B8B7B0) - clearly readable against dark background - PASS
+      Data: Identical data colors to light render - teal #009E73 and orange #D55E00 unchanged (only chrome flipped as required). Colorbar scale consistent. Grid properly themed for dark surface.
+      Legibility verdict: PASS - all text fully readable, no dark-on-dark failures, proper theme-adaptive chrome
+
+    Code-Image Analysis: Rendered images show correct Okabe-Ito implementation and full theme support, but source code contains deprecated colors (#306998, #FFD43B, #D94A4A) and zero theme logic. Critical mismatch between code and images.
+  verdict: REJECTED
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 22
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable; titles 18pt (should be 24pt per guidelines), labels
-          16pt, ticks 14pt - slightly smaller than ideal but still clear
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text anywhere
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line widths good (2-2.5), scatter markers s=80 appropriate for 99
-          points, bars clearly visible
+        comment: Font sizes explicitly set (16-24pt), all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements across all subplots
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers/lines properly sized for data density, white edges on scatter
+          for definition
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red scheme is distinguishable; RdYlGn colormap works
-          well
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of 2x2 grid, proper spacing with tight_layout
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'All axes have descriptive labels with units: "Price ($)", "Volume
-          (thousands)", "Daily Return (%)", "Absolute Return (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe, gradient colormap perceptually uniform
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Plots use ~60% of canvas, balanced margins but could fill better
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha=0.3 is good, but legends are slightly small (fontsize
-          12-14 vs recommended 16)
+        comment: 'Descriptive labels with units: Price ($), Volume (thousands), etc.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series in Okabe-Ito order, appropriate
+          colormap, correct backgrounds (#FAF8F1 light/#1A1A17 dark)'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional but generic - default matplotlib styling, minimal design
+          thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid visible at 0.3 alpha, default spines, adequate whitespace but
+          not generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without visual hierarchy or emphasis - viewer must
+          construct own narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements 2x2 subplot grid with different plot types (line,
-          bar, histogram, scatter)
+        comment: Correct 2x2 subplot grid with different plot types per cell
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped in all subplots
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec requirements met: configurable grid (2x2), independent
-          axes, different plot types per cell, consistent spacing, clear subplot titles'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: configurable grid, multiple types, independent
+          axes, clear titles'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show full data range
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X/Y correctly assigned, all data visible with proper scaling
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legends are accurate (Price, 20-day MA, Zero Return, Mean)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "subplot-grid · matplotlib · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title format correct, legends present but placement inconsistent
+          across subplots
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple plot types (line, bar, histogram, scatter), moving
-          average, color encoding by sign, colorbar - excellent variety
+        comment: Shows price trends, volume patterns, returns, moving averages - comprehensive
+          financial view
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Financial dashboard is a perfect, neutral real-world use case for
-          subplot grids
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Stock prices ~$80-110, returns -6% to +4%, volumes in reasonable
-          range - all realistic, though starting price dropping immediately from 100
-          is slightly artificial
+        comment: Realistic financial dashboard with plausible, neutral stock market
+          data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: false
+        comment: Values plausible ($80-110 prices, realistic returns) but scatter
+          aspect ratio unbalanced
     code_quality:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -178,40 +191,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → data → plots → save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: numpy/matplotlib used but missing 'import os' for theme detection
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Pythonic and appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: 'CRITICAL: Code saves ''plot.png'', should be ''plot-{THEME}.png''.
+          Code lacks all theme support (os.getenv, color tokens).'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of plt.subplots, colorbar, axes methods - but could showcase
-          more advanced features like gridspec, shared axes, or inset_axes
-  verdict: APPROVED
+        comment: Proper plt.subplots(), axes methods, legend/colorbar usage - follows
+          matplotlib conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses standard subplots() and colorbar() but lacks distinctive techniques
+          (twin-axes, inset, advanced styling)
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []
