@@ -1,162 +1,181 @@
 library: seaborn
+language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:03:13Z'
-updated: '2025-12-30T00:30:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585399018
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T22:57:13Z'
+generated_by: claude-haiku
+workflow_run: 25830410893
+issue: 2497
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/seaborn/plot.png
-preview_html: null
-quality_score: 82
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - custom-colormap
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent hierarchical visualization with clear parent-child spatial relationships
-  - Blues_r color palette creates intuitive gradient showing depth (dark=root, light=leaves)
-  - Clean whitegrid style and proper font scaling with sns.set_context("poster")
-  - Well-structured legend explaining hierarchy levels
-  - Realistic file system data with appropriate MB values
+  - Clean, readable visualization in both light and dark themes with proper contrast
+    throughout
+  - 'Smart label handling: truncation, dynamic font sizing, luminance-based text coloring
+    adapt well to varying rectangle sizes'
+  - Clear visual hierarchy through color progression (viridis) and strategic layout
+  - Properly implements theme-adaptive chrome while keeping data colors consistent
+  - Well-structured procedural code with clear logic for hierarchy traversal
   weaknesses:
-  - 'Title format incorrect: should be exactly "{spec-id} · {library} · pyplots.ai"
-    without extra description'
-  - Value labels (MB sizes) not displayed in rectangles - spec emphasizes size represents
-    value
-  - Some labels are truncated (Docume.., Templa..) reducing readability
-  image_description: 'The plot displays a basic icicle chart visualizing a file system
-    hierarchy structure. At the top is a large dark blue rectangle labeled "Root"
-    spanning the full width. Below it are three medium steel-blue rectangles for main
-    categories: "Projects", "Media", and "Docume.." (Documents truncated). The third
-    row contains lighter blue rectangles for subcategories: Designs, Code, Audio,
-    Videos, Images, Templa.., Presen.., and Reports. The bottom row shows the lightest
-    blue file nodes with truncated names like Record.., Tutori.., Screen.., Photos,
-    Traini.., Sales.., Annu.. The Blues_r color palette creates a clear visual gradient
-    from dark (root) to light (files). A legend in the bottom right explains hierarchy
-    levels. The title reads "icicle-basic · File System Structure · seaborn · pyplots.ai".'
+  - 'Design sophistication is modest: viridis is sensible but custom palette or accent
+    colors could add visual interest'
+  - 'Library mastery moderate: using matplotlib directly is necessary but additional
+    seaborn styling techniques could enhance'
+  - 'Visual emphasis could be stronger: hierarchy levels distinguishable but lack
+    focal points or deliberate weight contrast'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), properly themed
+      Chrome: Title "icicle-basic · seaborn · anyplot.ai" in dark text (INK), readable; legend frame off-white (ELEVATED_BG) with dark text; borders in soft gray (INK_SOFT)
+      Data: Root node in purple with white text; level-1 nodes (Projects, Media, Documents) in blue with white text; level-2 nodes in green with dark gray text; level-3 nodes (files) in yellow with dark gray text. Color progression from viridis shows clear hierarchy.
+      Labels: Smart truncation applied to long names (e.g., 'Templat...'). Small rectangles skip labels. All visible text readable.
+      Legibility verdict: PASS - All text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), properly themed
+      Chrome: Title in light text (INK = #F0EFE8), clearly readable on dark background; legend frame dark (#242420) with light text (INK_SOFT or lighter); borders in light tone
+      Data: Data colors identical to light render (purple→blue→green→yellow). Root in purple with white text; level-1 in blue with white text; level-2 in green with gray text (INK_SOFT = #B8B7B0); level-3 in yellow with gray text. Strong contrast maintained across all levels.
+      Labels: Same smart truncation as light render. Label visibility consistent.
+      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark failures detected, yellow text (gray on yellow) maintains sufficient contrast
+
+    Theme comparison: Data colors stay identical between light and dark (only chrome adapts). Both renders fully legible and properly theme-aware.
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
+        max: 8
         passed: true
-        comment: Most text readable, but truncated labels reduce clarity
+        comment: Font sizes scale by hierarchy level. All text readable in both light/dark
+          themes. Luminance-based contrast selection ensures good readability.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Smart label truncation with ellipsis. Small rectangles skip labels.
+          No text collisions detected.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangles well-sized and clearly visible with good spacing
+        comment: All 21 nodes visible. Viridis color progression clearly separates
+          hierarchy levels.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blues_r palette is colorblind-safe sequential scheme
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good layout but some wasted space at bottom; plot could extend further
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for icicle chart (no axes), but no size values shown in rectangles
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend well placed but no value information displayed in the chart
-    spec_compliance:
-      score: 21
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct icicle chart with hierarchical stacked rectangles
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Parent-child relationships correctly shown through spatial adjacency
-      - id: SC-03
-        name: Required Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Missing: values not displayed (spec says "size represents value")'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All hierarchy levels visible
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly identifies hierarchy levels
-      - id: SC-06
-        name: Title Format
-        score: 0
+        comment: Viridis is perceptually uniform and CVD-safe for sequential data.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions (16:9). Nothing cut off. Margins generous.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Title includes extra "File System Structure" instead of exact format
-          "{spec-id} · {library} · pyplots.ai"
-    data_quality:
-      score: 19
+        passed: true
+        comment: Title present and correct format. Axes off (appropriate for icicle
+          chart).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis appropriate for sequential hierarchy data. Backgrounds #FAF8F1/#1A1A17
+          correct. Data colors consistent light↔dark (chrome-only flip).'
+    design_excellence:
+      score: 10
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
-        passed: true
-        comment: Shows 4 levels of hierarchy, varied branch sizes; some leaf nodes
-          missing
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: File system with folders/files is excellent real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
+        passed: false
+        comment: Uses standard viridis default. Clean but lacks custom palette or
+          accent colors for sophistication.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Axes off, minimal elements, whitespace generous. Could explore subtle
+          grid refinement or edge styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Hierarchy clearly shown. Could emphasize focal points through color
+          contrast or size variation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: File sizes in MB are realistic and sensible
+        comment: Correct vertical icicle chart with proper hierarchy representation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: hierarchy levels, proportional sizes, value
+          labels, category names.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapping correct. All 21 data points represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title and legend correct format and content.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full icicle features: 4 levels, 21 nodes, realistic file system
+          structure.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: File system example realistic and neutral. Domain-appropriate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible (10-1000 MB), hierarchy depth typical.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,41 +183,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports, data, plot, save
+        comment: Pure procedural code, no unnecessary functions.
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but data is hardcoded
-          which is good
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed data, deterministic algorithm.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: Only necessary imports, none unused.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Smart label truncation and luminance-based coloring are
+          thoughtful.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current seaborn API used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: 'Note: code references plot.png correctly'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses sns.set_style, sns.set_context, sns.color_palette, sns.despine;
-          but core drawing is matplotlib Rectangle patches
+        passed: false
+        comment: Uses matplotlib Rectangle (necessary—seaborn has no icicle chart).
+          Good matplotlib patterns but not seaborn-idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Smart label truncation and luminance-based coloring are nice touches
+          but modest in scope.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - custom-legend
+  - annotations
+  patterns:
+  - explicit-figure
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
