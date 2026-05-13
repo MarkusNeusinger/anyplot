@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91 | Updated: 2026-05-13
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-13
 """
 
 import os
