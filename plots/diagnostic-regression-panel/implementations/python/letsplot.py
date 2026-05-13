@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 86/100 | Created: 2026-05-13
 """
 
 import os
