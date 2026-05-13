@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 88/100 | Created: 2025-12-30
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 65/100 | Updated: 2026-05-13
 """
 
 import matplotlib.patches as mpatches
