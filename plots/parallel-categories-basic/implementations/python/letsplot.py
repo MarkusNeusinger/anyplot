@@ -1,14 +1,17 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-13
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     geom_rect,
@@ -26,6 +29,16 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first 3 colors for the 3 channels)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Customer journey data with multiple categorical dimensions
 # Dimensions: Channel (acquisition), Product Category, Purchase Size, Outcome
@@ -80,8 +93,8 @@ categories = {
     "Outcome": ["Completed", "Abandoned"],
 }
 
-# Colors for the first dimension (Channel) - used to color ribbons
-channel_colors = {"Online": "#306998", "Store": "#27AE60", "Mobile": "#FFD43B"}
+# Colors for the first dimension (Channel) - using Okabe-Ito palette
+channel_colors = {"Online": OKABE_ITO[0], "Store": OKABE_ITO[1], "Mobile": OKABE_ITO[2]}
 
 # Calculate totals for each dimension-category combination
 dimension_totals = {dim: {} for dim in dimensions}
@@ -255,11 +268,7 @@ plot = (
         aes(x="x", y="y", group="flow_id", fill="channel"), data=df_flows, alpha=0.5, color="white", size=0.08
     )
     + geom_rect(
-        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
-        data=df_nodes,
-        fill="#2C3E50",
-        color="#1A252F",
-        size=1.2,
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=df_nodes, fill=INK_SOFT, color=INK, size=1.2
     )
     + geom_text(
         aes(x="x", y="y", label="label"),
@@ -267,10 +276,10 @@ plot = (
         size=18,
         hjust=0.5,
         fontface="bold",
-        color="#1A1A1A",
+        color=INK,
     )
     + geom_text(
-        aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "category"], size=14, color="#333333"
+        aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "category"], size=16, color=INK_SOFT
     )
     + scale_fill_manual(
         values={
@@ -280,25 +289,26 @@ plot = (
         },
         name="Acquisition Channel",
     )
-    + labs(title="parallel-categories-basic · letsplot · pyplots.ai")
+    + labs(title="parallel-categories-basic · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=26, face="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=26, face="bold", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18, face="bold"),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, face="bold", color=INK),
         legend_position="bottom",
+        legend_background=element_blank(),
     )
     + scale_x_continuous(limits=[-0.02, 1.02])
     + scale_y_continuous(limits=[-0.02, 1.02])
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+# Save as PNG (scale 3x for 4800 × 2700 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
