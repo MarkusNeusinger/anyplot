@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:48:00Z'
-updated: '2026-05-13T07:31:36Z'
+updated: '2026-05-13T07:38:49Z'
 generated_by: claude-haiku
 workflow_run: 25784694099
 issue: 2781
@@ -12,34 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - Full spec compliance with all required features present
-  - Proper theme-adaptive color tokens and backgrounds in both renders
-  - Excellent text legibility across both light and dark themes with appropriate font
-    sizes
-  - Clean code structure with deterministic data and proper Altair idioms
-  - All text readable with no overlapping elements or visibility issues
-  - Correct asymmetric error bar visualization with visible caps and central points
+  - Flawless theme adaptation with perfect color and contrast consistency across both
+    light and dark renders
+  - Excellent visual quality with all font sizes explicitly set and perfectly readable
+  - Masterful use of Altair-specific features (y2 encoding, mark_tick for caps, layering
+    composition)
+  - Complete spec compliance with asymmetric error bars, caps, points, and clear annotation
+  - Realistic product quality data demonstrating diverse asymmetry patterns
+  - Clean, reproducible code with proper structure and deterministic data generation
   weaknesses:
-  - 'DE-01 (Aesthetic Sophistication): Generic styling with defaults - could benefit
-    from custom design choices'
-  - 'DE-02 (Visual Refinement): Minimal customization beyond core requirements'
-  - 'LM-02 (Distinctive Features): Limited use of advanced Altair features beyond
-    basic interactivity'
+  - Design could use more sophisticated visual hierarchy or custom styling elements
+    beyond library defaults
+  - Visual refinement is good but relies on library configuration rather than distinctive
+    customization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines (10% opacity)
-      Chrome: Title "errorbar-asymmetric · altair · anyplot.ai" is black, clearly visible at 28px. Y-axis label "Quality Score (10th–90th Percentile)" and X-axis label "Product" are dark text at 22px, fully readable. Tick labels (both axes) are at 18px in dark gray, clear against the light background. No dark-on-light failures.
-      Data: Six products (A-F) displayed with central quality scores as filled circles (#009E73 brand green with light gray stroke). Asymmetric error bars extend above and below each point. Caps (horizontal tick marks) clearly mark the 10th-90th percentile bounds. Annotation text at bottom right ("Error bars show 10th–90th percentile range") is italic gray, readable.
-      Legibility verdict: PASS — all elements are readable and well-contrasted
+      Background: Warm off-white (#FAF8F1) with subtle grid at ~10% opacity
+      Chrome: Title in dark ink (#1A1A17) at 28px, axis labels in dark ink at 22px, tick labels at 18px — all crisp and readable
+      Data: Six products displayed with central quality score points (size 300, filled circles with soft gray stroke) in brand green (#009E73), asymmetric error bars in matching teal extending above and below, horizontal caps at ends of bars clearly visible
+      Annotation: "Error bars show 10th–90th percentile range" positioned at lower right in italicized muted ink (#6B6A63)
+      Legibility verdict: PASS — all text is sharp and easily readable against the light surface
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle light-colored grid lines (10% opacity)
-      Chrome: Title is light-colored text, clearly visible against dark background at 28px. Y-axis and X-axis labels are light text at 22px. Tick labels are in light gray (INK_SOFT token #B8B7B0), clear and legible — no dark-on-dark failures. All text colors properly adapted to dark theme.
-      Data: Identical data colors and styling to light render — central points and error bars are the same #009E73 green, clearly visible on dark surface. Caps are visible. Annotation text is light-colored italic gray, readable. Data colors are **identical** between light and dark; only chrome (background, text, grid) has flipped to light colors.
-      Legibility verdict: PASS — all elements readable, proper theme adaptation confirmed
+      Background: Warm near-black (#1A1A17) with subtle grid using light-themed opacity
+      Chrome: Title in light ink (#F0EFE8) at 28px, axis labels in light ink at 22px, tick labels at 18px — all crisp and perfectly visible on dark background
+      Data: Identical to light render — central points and error bars in the same brand green (#009E73), confirming data colors are theme-independent
+      Annotation: "Error bars show 10th–90th percentile range" in light italicized text, clearly readable
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures; grid lines are visible without being dominant
+      Theme verification: Data colors match light render exactly; only chrome (background, text, grid opacity) adapts to dark theme as required
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,48 +53,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes (title 28px,
-          axis labels 22px, ticks 18px)
+        comment: Title 28px, labels 22px, ticks 18px — all explicitly set and perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions
+        comment: No overlapping text — product labels well-spaced, axis labels clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars, caps, and central points all clearly visible
+        comment: Points size 300, error bar width and caps optimally adapted to data
+          density (6 products)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito brand green (#009E73) is colorblind-safe with good contrast
-          in both themes
+        comment: 'Okabe-Ito #009E73 is colorblind-safe; good contrast throughout'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 landscape format with good proportions and margins
+        comment: 5025×2976px (close to target), plot fills 50-70% canvas, balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and axis labels with percentile context
+        comment: Y-axis with units context (10th–90th Percentile), title matches format
+          specification
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green (#009E73), backgrounds (#FAF8F1 light, #1A1A17 dark),
-          theme-adaptive chrome all correct'
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme-adaptive
+          chrome perfect in both renders'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -99,21 +104,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic styling with defaults; no custom palette or design thinking
-          beyond core implementation
+        comment: Professional and clean, but follows library defaults without exceptional
+          customization — no custom palette or distinctive visual choices
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Minimal customization; grid is subtle but no special refinements
+        comment: 'Good: subtle grid, generous whitespace, clean layout — uses library
+          defaults with minor customization'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Functional visualization with annotation; no special visual hierarchy
-          or emphasis techniques
+        comment: Annotation provides context; asymmetry is visible through the data
+          visualization itself; moderate visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar plot with caps
+        comment: Asymmetric error bar plot correctly implemented with all variants
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: x (categorical), y (numeric), error_lower,
-          error_upper, visible caps, annotation'
+        comment: Error bars (asymmetric), caps, central points, and explanatory annotation
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x, y, y2 encodings with appropriate scale domain
+        comment: Products on X (nominal), quality scores on Y with appropriate 50-105
+          domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and percentile range annotation
+        comment: 'Title: ''errorbar-asymmetric · altair · anyplot.ai'' ✓, annotation
+          explains data'
     data_quality:
       score: 15
       max: 15
@@ -152,20 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of asymmetric error bar plot covered
+        comment: 'Shows all aspects: 6 products with varied asymmetry patterns (some
+          upper-heavy, some lower-heavy)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic quality scores with plausible asymmetric bounds; neutral
-          context
+        comment: Product quality scores are real-world plausible (50-105 range); neutral
+          business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scale 50-105 is sensible for product quality scores
+        comment: Values factually correct and appropriate for quality scores with
+          10th-90th percentile framing
     code_quality:
       score: 10
       max: 10
@@ -175,54 +185,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple procedural code with no unnecessary functions/classes
+        comment: 'Linear: imports → data → plot → save; no unnecessary functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic via np.random.seed(42)
+        comment: np.random.seed(42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, altair, numpy, pandas'
+        comment: 'All imports used: os (theme), sys (path), altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate layer composition
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output files: plot-{THEME}.png and plot-{THEME}.html'
+        comment: 'Correct: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Solid use of mark_rule, mark_tick, mark_point, layer composition;
-          proper encodings
+        comment: Expert use of alt.Chart().mark_*(), y2 encoding, alt.layer(), configure_*
+          — all idiomatic altair patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Good use of tooltips and HTML export for interactivity
+        comment: Leverages altair-specific y2 encoding for error range, mark_tick
+          for caps, layering composition, and native tooltips
+    score_caps:
+      applied: false
+      note: 'No caps triggered: VQ-02=6 (not 0), VQ-03=6 (not 0), SC-01=5 (not 0),
+        DQ-02=5 (not 0), not (DE-01 ≤2 AND DE-02 ≤2), CQ-04=2 (not 0)'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
   patterns:
