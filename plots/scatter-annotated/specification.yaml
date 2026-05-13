@@ -6,7 +6,7 @@ title: Annotated Scatter Plot with Text Labels
 
 # Specification tracking
 created: 2025-12-30T17:35:03Z
-updated: null
+updated: 2026-05-13T10:57:30Z
 issue: 2790
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - point
   data_type:
     - numeric
     - continuous
@@ -25,5 +24,4 @@ tags:
     - research
   features:
     - annotated
-    - labeled
     - 2d
