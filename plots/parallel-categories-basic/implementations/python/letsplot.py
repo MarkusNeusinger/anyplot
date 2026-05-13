@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-12-30
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-13
 """
 
 import os
