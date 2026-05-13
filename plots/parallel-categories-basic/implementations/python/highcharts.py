@@ -1,7 +1,7 @@
 """ anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-13
+Quality: 77/100 | Updated: 2026-05-13
 """
 
 import os

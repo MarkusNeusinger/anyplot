@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:04:32Z'
-updated: '2026-05-13T17:19:12Z'
+updated: '2026-05-13T17:26:02Z'
 generated_by: claude-haiku
 workflow_run: 25814528929
 issue: 2501
@@ -12,122 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 77
 review:
   strengths:
-  - Correct parallel categories visualization using Sankey diagram with proper flow
-    representation
-  - Accurate, realistic Titanic dataset demonstrating genuine historical survival
-    patterns
-  - Flawless theme-adaptive implementation with proper Okabe-Ito palette and chrome
-    colors
-  - Clean, readable code with linear flow and no over-engineering
-  - No overlapping elements with excellent canvas utilization
-  - Proper semantic coloring by outcome, class, sex, and age categories
-  - Both light and dark renders display correctly with proper text legibility in both
-    themes
+  - Correct Sankey/parallel categories visualization of complex multi-dimensional
+    data
+  - Excellent light render with all text perfectly readable and well-positioned
+  - Accurate Okabe-Ito color palette usage with logical semantic mapping
+  - Well-proportioned canvas utilization with thoughtful margin configuration
+  - Real-world, historically accurate Titanic dataset showing meaningful flow patterns
+  - Proper title format including spec-id and library
   weaknesses:
-  - 'Design Excellence below optimal: fairly standard Sankey styling without distinctive
-    visual polish (DE-01: 5/8)'
-  - 'Data storytelling implicit rather than explicit; plot displays flows but doesn''t
-    emphasize key insights (DE-03: 3/6)'
-  - Right-side outcome labels (18px) are readable but could be slightly larger for
-    maximum visibility at 4800×2700 resolution
-  - Link opacity (0.6) in dark theme slightly reduces ribbon distinction; consider
-    increasing to 0.75+ for better visibility
+  - 'Dark render has dark-on-dark text - title, subtitle, and dimension labels are
+    nearly invisible against #1A1A17 background'
+  - 'Text color not adapting correctly to dark theme - code sets color: INK which
+    should be #F0EFE8 (light) in dark mode, but renders as dark/muted text'
+  - Node labels have poor contrast in dark render despite text-outline attempt
+  - Missing visual hierarchy or emphasis - plot displays data competently but does
+    not guide viewer's attention to key insights
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "Titanic Survival · parallel-categories-basic · highcharts · anyplot.ai" and subtitle "Passenger flow from Class → Sex → Age Group → Survival Outcome" clearly visible in dark text (28px and 22px). Dimension labels (Class, Sex, Age Group, Outcome) at bottom are dark and readable. All labels have dark text on light background. Node labels on left and right are small (18px) but readable.
-      Data: Sankey diagram showing passenger flows through four categorical dimensions. Colors: blue for class nodes, purple/yellow for sex, light blue for age, green for Survived outcomes, orange for Died outcomes. Ribbon widths proportional to passenger counts. All ribbon flows clearly distinguishable.
-      Legibility verdict: PASS - All text is readable against the light background with proper contrast.
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "Titanic Survival · parallel-categories-basic · highcharts · anyplot.ai" and subtitle "Passenger flow from Class → Sex → Age Group → Survival Outcome" are rendered in dark text (INK color), clearly readable. Dimension labels at bottom ("Class", "Sex", "Age Group", "Outcome") are clearly visible in dark text. All text fully readable with good contrast.
+      Data: Four vertical columns show passenger flow through Class → Sex → Age Group → Outcome with colored ribbons. Colors: green (Survived), orange (Died), blue (Class), purple (Male), yellow (Female), sky blue (Age). All Okabe-Ito palette colors are vivid and distinguishable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title and dimension labels now light-colored (F0EFE8) against dark background, maintaining excellent readability. Node labels are light and clear. No dark-on-dark text failures detected. Theme adaptation successful.
-      Data: Ribbon colors remain identical to light render - blue, purple, yellow, light blue, green, orange - confirming theme-independent color handling. Ribbon opacity (0.6) combined with dark background makes some flows slightly less visually distinct than light render, but all elements remain visible and distinguishable. Green (#009E73) for Survived outcomes properly visible.
-      Legibility verdict: PASS - All text is readable against dark background; no dark-on-dark failures; data colors correctly preserved across themes.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: CRITICAL FAILURE - Title and subtitle are nearly invisible with dark/muted text instead of intended light (#F0EFE8) color. Dimension labels at bottom are barely perceptible. Node labels show poor contrast with dark text on dark background. Dark-on-dark failure.
+      Data: Sankey structure is visible with data colors (green, orange, blue, purple, yellow) consistent with light render - this aspect passed theme requirements. However, all text chrome failed to adapt to dark theme.
+      Legibility verdict: FAIL - Title, subtitle, dimension labels unreadable
+
+    MANDATORY FINDING: Implementation violates mandatory theme-readability requirement. Both renders must pass - dark render text legibility failure triggers automatic REJECT regardless of overall score.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 0
         max: 8
-        passed: true
-        comment: All fonts explicitly set (title 28px, labels 22px, data 18px). Readable
-          in both themes. Right-side labels could be larger.
+        passed: false
+        comment: Title, subtitle, and labels unreadable in dark render - dark-on-dark
+          text failure
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all labels fit within spaces and are fully readable.
+        comment: Clean layout with no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Ribbon flows clear and width-proportional. Dark render: 0.6 opacity
-          ribbons slightly less distinct but acceptable.'
+        comment: All nodes and links properly sized and visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; good contrast between data
-          and backgrounds.
+        comment: Okabe-Ito palette, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent utilization: plot fills ~65% with balanced margins (250/300/220/250).'
+        comment: Excellent canvas utilization and margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clear descriptive labels explaining data structure (Class, Sex, Age
-          Group, Outcome).
+        comment: Descriptive title with spec-id format
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Okabe-Ito palette correct: green (#009E73) for Survived, orange
-          (#D55E00) for Died, blue (#0072B2) for Class. Backgrounds correct (#FAF8F1
-          light, #1A1A17 dark). Theme-adaptive text colors properly applied.'
+        passed: false
+        comment: Dark theme chrome failure - text should be light but appears dark
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional color mapping and margins, but fairly standard Sankey
-          styling without distinctive visual polish.
+        comment: Competent configuration, standard defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: 'Good: hidden spines, clean whitespace, text outline for definition.
-          Could add more subtle polish.'
+        comment: Good whitespace and margins, mostly default
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Flow visualization shows survival variation by class/sex/age. Outcome
-          colors provide hierarchy. No explicit insight emphasis; primarily displays
-          data without narrative focus.
+        comment: Clear flow visualization but minimal visual emphasis
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,28 +123,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Sankey diagram is valid parallel categories visualization.'
+        comment: Correct Sankey/parallel categories
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Ribbon widths proportional to counts, color by node type, reasonable
-          category ordering.
+        comment: All 4 dimensions with proportional ribbons
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Dimensions correctly mapped: Class → Sex → Age Group → Outcome.
-          All data visible.'
+        comment: Flow mapping correct, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title includes descriptive context before spec-id (slightly extended
-          from strict format). Legend appropriately hidden.
+        passed: true
+        comment: Title format correct, legend appropriately disabled
     data_quality:
       score: 15
       max: 15
@@ -166,24 +151,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three classes, both sexes, age variation, dual
-          outcomes with varying survival rates.'
+        comment: Multiple dimensions with diverse paths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Titanic is real, well-known historical event with authentic passenger
-          data. Neutral scenario.
+        comment: Real Titanic data, historically plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Historically accurate: 1st ~325, 2nd ~285, 3rd ~706 passengers.
-          Survival proportions match known Titanic data.'
+        comment: Factually accurate passenger counts
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -191,35 +173,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → chart → JS download → HTML generation
-          → Selenium render → crop. No unnecessary functions.'
+        comment: Linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data; no randomness.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, tempfile, time, Path, requests, highcharts_core,
-          selenium, PIL.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity. Straightforward dictionary
-          mappings.
+        passed: false
+        comment: Theme-color application fails in dark mode
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png + plot-{THEME}.html. Current highcharts_core
-          API.'
+        comment: Correct PNG and HTML output
     library_mastery:
       score: 7
       max: 10
@@ -228,26 +206,24 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Proper use of Chart, HighchartsOptions, Sankey series. Could explore
-          more advanced theme/styling options.
+        passed: true
+        comment: Correct Sankey API with proper configuration
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Sankey with linkOpacity/curveFactor/linkColorMode. Standard implementation
-          without advanced Highcharts features.
-  verdict: APPROVED
+        comment: Uses some sankey-specific features but fairly standard
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
+  - requests
   - pillow
   techniques:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - publication-ready
