@@ -1,13 +1,41 @@
-""" pyplots.ai
+"""anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: altair | Python 3.13
+Quality: pending | Created: 2025-05-13
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove script directory from sys.path to avoid importing local altair.py
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (colorblind-safe)
+OKABE_ITO = [
+    "#009E73",  # brand green (position 1)
+    "#D55E00",  # vermillion (position 2)
+    "#0072B2",  # blue (position 3)
+    "#CC79A7",  # reddish purple (position 4)
+    "#E69F00",  # orange (position 5)
+    "#56B4E9",  # sky blue (position 6)
+    "#F0E442",  # yellow (position 7)
+]
 
 # Data - Customer journey through product categories
 np.random.seed(42)
@@ -20,11 +48,28 @@ outcomes = np.random.choice(["Purchase", "Abandon", "Browse"], n_customers, p=[0
 df = pd.DataFrame({"Channel": channels, "Category": categories, "Outcome": outcomes})
 agg_df = df.groupby(["Channel", "Category", "Outcome"]).size().reset_index(name="count")
 
-# Dimension x-positions and colors for all dimensions
+# Dimension x-positions
 x_pos = {"Channel": 0, "Category": 250, "Outcome": 500}
-channel_colors = {"Direct": "#306998", "Search": "#FFD43B", "Social": "#4B8BBE", "Email": "#7B68A2"}
-category_colors = {"Electronics": "#E57373", "Clothing": "#81C784", "Home": "#64B5F6", "Sports": "#FFB74D"}
-outcome_colors = {"Purchase": "#4CAF50", "Abandon": "#F44336", "Browse": "#9E9E9E"}
+
+# Color maps using Okabe-Ito palette
+channel_colors = {
+    "Direct": OKABE_ITO[0],  # brand green
+    "Search": OKABE_ITO[1],  # vermillion
+    "Social": OKABE_ITO[2],  # blue
+    "Email": OKABE_ITO[3],  # reddish purple
+}
+category_colors = {
+    "Electronics": OKABE_ITO[0],  # green
+    "Clothing": OKABE_ITO[1],  # vermillion
+    "Home": OKABE_ITO[2],  # blue
+    "Sports": OKABE_ITO[3],  # reddish purple
+}
+outcome_colors = {
+    "Purchase": OKABE_ITO[0],  # green
+    "Abandon": OKABE_ITO[1],  # vermillion
+    "Browse": OKABE_ITO[2],  # blue
+}
+
 scale_factor = 3.5
 
 # Calculate y-positions for each category in each dimension
@@ -32,19 +77,22 @@ channel_totals = agg_df.groupby("Channel")["count"].sum().sort_values(ascending=
 category_totals = agg_df.groupby("Category")["count"].sum().sort_values(ascending=False)
 outcome_totals = agg_df.groupby("Outcome")["count"].sum().sort_values(ascending=False)
 
-channel_pos, y = {}, 0
+channel_pos = {}
+y = 0
 for cat in channel_totals.index:
     h = channel_totals[cat] * scale_factor
     channel_pos[cat] = {"y0": y, "y1": y + h, "total": channel_totals[cat]}
     y += h + 12
 
-category_pos, y = {}, 0
+category_pos = {}
+y = 0
 for cat in category_totals.index:
     h = category_totals[cat] * scale_factor
     category_pos[cat] = {"y0": y, "y1": y + h, "total": category_totals[cat]}
     y += h + 12
 
-outcome_pos, y = {}, 0
+outcome_pos = {}
+y = 0
 for cat in outcome_totals.index:
     h = outcome_totals[cat] * scale_factor
     outcome_pos[cat] = {"y0": y, "y1": y + h, "total": outcome_totals[cat]}
@@ -72,7 +120,7 @@ for _, row in ch_cat_flows.iterrows():
             "y0": src_y,
             "x1": x_pos["Category"],
             "y1": tgt_y,
-            "strokeWidth": max(4, cnt * 2.0),
+            "strokeWidth": max(5, cnt * 2.0),
             "color": channel_colors[ch],
         }
     )
@@ -92,7 +140,7 @@ for _, row in cat_out_flows.iterrows():
             "y0": src_y,
             "x1": x_pos["Outcome"],
             "y1": tgt_y,
-            "strokeWidth": max(4, cnt * 2.0),
+            "strokeWidth": max(5, cnt * 2.0),
             "color": channel_colors[dom_ch],
         }
     )
@@ -128,7 +176,7 @@ for dim, pos_dict in [("Channel", channel_pos), ("Category", category_pos), ("Ou
                 "y1": pos["y1"],
                 "y_mid": (pos["y0"] + pos["y1"]) / 2,
                 "total": pos["total"],
-                "color": color_maps[dim].get(cat, "#666666"),
+                "color": color_maps[dim].get(cat, INK_SOFT),
             }
         )
 
@@ -138,7 +186,7 @@ max_y = box_df["y1"].max() + 80
 # Visualization layers
 flows = (
     alt.Chart(bezier_df)
-    .mark_line(opacity=0.6, strokeCap="round")
+    .mark_line(opacity=0.65, strokeCap="round")
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-50, 680])),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-70, max_y])),
@@ -151,7 +199,7 @@ flows = (
 
 boxes = (
     alt.Chart(box_df)
-    .mark_rect(stroke="white", strokeWidth=2, cornerRadius=4)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=2, cornerRadius=4)
     .encode(
         x=alt.X("x:Q", axis=None),
         x2="x2:Q",
@@ -164,16 +212,16 @@ boxes = (
 labels = (
     alt.Chart(box_df)
     .mark_text(align="left", baseline="middle", fontSize=18, fontWeight="bold", dx=58)
-    .encode(x="x:Q", y="y_mid:Q", text="category:N", color=alt.value("#333333"))
+    .encode(x="x:Q", y="y_mid:Q", text="category:N", color=alt.value(INK))
 )
 
 counts = (
     alt.Chart(box_df)
-    .mark_text(align="left", baseline="middle", fontSize=16, dx=58, dy=22)
-    .encode(x="x:Q", y="y_mid:Q", text=alt.Text("total:Q", format="d"), color=alt.value("#555555"))
+    .mark_text(align="left", baseline="middle", fontSize=15, dx=58, dy=24)
+    .encode(x="x:Q", y="y_mid:Q", text=alt.Text("total:Q", format="d"), color=alt.value(INK_SOFT))
 )
 
-# Headers positioned well above the boxes
+# Headers positioned above the boxes
 headers_df = pd.DataFrame(
     {
         "x": [x_pos["Channel"] + 25, x_pos["Category"] + 25, x_pos["Outcome"] + 25],
@@ -184,7 +232,7 @@ headers_df = pd.DataFrame(
 headers = (
     alt.Chart(headers_df)
     .mark_text(fontSize=24, fontWeight="bold")
-    .encode(x="x:Q", y="y:Q", text="header:N", color=alt.value("#306998"))
+    .encode(x="x:Q", y="y:Q", text="header:N", color=alt.value(INK))
 )
 
 # Legend for Channel colors (flow color coding) using square marks
@@ -200,14 +248,14 @@ legend_marks = (
 legend_labels = (
     alt.Chart(legend_df)
     .mark_text(align="left", baseline="middle", fontSize=16, dx=18)
-    .encode(x="x:Q", y="y:Q", text="label:N", color=alt.value("#333333"))
+    .encode(x="x:Q", y="y:Q", text="label:N", color=alt.value(INK_SOFT))
 )
 
 legend_title_df = pd.DataFrame({"x": [600], "y": [-25], "text": ["Flow Colors"]})
 legend_title = (
     alt.Chart(legend_title_df)
     .mark_text(fontSize=18, fontWeight="bold", align="left")
-    .encode(x="x:Q", y="y:Q", text="text:N", color=alt.value("#306998"))
+    .encode(x="x:Q", y="y:Q", text="text:N", color=alt.value(INK))
 )
 
 # Combine layers
@@ -216,13 +264,14 @@ chart = (
     .properties(
         width=1600,
         height=900,
+        background=PAGE_BG,
         title=alt.Title(
-            "parallel-categories-basic · altair · pyplots.ai", fontSize=28, anchor="middle", color="#333333", offset=30
+            "parallel-categories-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK, offset=30
         ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
 )
 
 # Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
