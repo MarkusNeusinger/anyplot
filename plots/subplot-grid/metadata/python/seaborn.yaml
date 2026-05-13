@@ -1,178 +1,176 @@
 library: seaborn
+language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:01Z'
-updated: '2025-12-30T17:54:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602447496
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T09:22:40Z'
+generated_by: claude-haiku
+workflow_run: 25789899723
+issue: 2782
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - colorbar
-  - grid-styling
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - custom-colormap
 review:
   strengths:
-  - Excellent 2x2 grid layout with four distinct plot types (line, bar, histogram,
-    scatter) demonstrating subplot versatility
-  - Financial dashboard scenario with realistic stock data showing price trends, volume,
-    returns distribution, and price-volume relationships
-  - Strong seaborn usage with lineplot, histplot, and scatterplot functions plus matplotlib
-    integration for hybrid approach
-  - Good color coding with blue/yellow scheme for positive/negative returns and RdBu
-    diverging palette for scatter plot
-  - Proper title format following spec-id · library · pyplots.ai convention
-  - Clean KISS code structure with reproducible seed and logical data flow
-  weaknesses:
-  - X-axis date labels in top-left subplot could use rotation or fewer ticks for better
-    readability
-  - Volume bar chart uses matplotlib ax.bar instead of seaborn barplot - could leverage
-    more seaborn-native functions
-  image_description: 'The plot displays a 2x2 grid financial dashboard with the main
-    title "subplot-grid · seaborn · pyplots.ai" at the top. **Top-left**: A line chart
-    showing "Stock Price" over time from January to May 2024, with price ranging from
-    ~$85 to ~$110, rendered in blue (#306998). The x-axis shows dates with some rotation,
-    y-axis labeled "Price ($)". **Top-right**: A bar chart showing "Trading Volume"
-    with alternating blue and yellow bars (representing positive/negative return days),
-    x-axis showing "Trading Day" (0-100), y-axis "Volume (Millions)" (0-10). **Bottom-left**:
-    A histogram showing "Daily Returns Distribution" with blue bars, a yellow dashed
-    vertical line at zero labeled "Zero Return", x-axis "Daily Return (%)" ranging
-    from -4 to 4, y-axis "Frequency" (0-11). **Bottom-right**: A scatter plot showing
-    "Price vs Volume" with points colored using a RdBu (red-blue) diverging colormap
-    based on daily return, point sizes varying by volume, with a colorbar indicating
-    "Daily Return (%)" from -4 to +2. All subplots have subtle grid lines and clear
-    axis labels with units.'
+  - Perfect theme adaptation with zero dark-on-dark failures in both light and dark
+    renders
+  - Diverse multi-panel composition demonstrating line, histogram, scatter, and dual-axis
+    techniques in cohesive narrative
+  - 'Flawless Okabe-Ito palette compliance with brand green #009E73 as first series'
+  - Clean, idiomatic seaborn code with proper theme token system and explicit text
+    sizing
+  - All text legibility verified at 4800×2700px with readable contrast in both themes
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, NOT pure white
+      Chrome: Title, subplot titles, axis labels, tick labels all dark INK (#1A1A17) and INK_SOFT (#4A4A44)
+      Data: Green temperature line (#009E73), orange humidity histogram (#D55E00), viridis scatter (Hour hue), blue AQI bars (#0072B2), reddish-purple pressure line (#CC79A7)
+      Grid: Subtle y-axis grid with alpha=0.10, visible but not dominant
+      Legibility verdict: PASS - All text is clearly readable with proper contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, NOT pure black
+      Chrome: Title, subplot titles, axis labels, tick labels all light INK (#F0EFE8) and INK_SOFT (#B8B7B0)
+      Data: Colors are IDENTICAL to light render - green #009E73, orange #D55E00, viridis, blue #0072B2, reddish-purple #CC79A7 (data-color invariance confirmed)
+      Grid: Subtle grid with alpha=0.10, visible against dark surface
+      Legibility verdict: PASS - All text is clearly readable, NO dark-on-dark failures (all text is light colored)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable; subplot titles 20pt, axis labels 16pt, ticks 12pt
-          - slightly below recommended 24/20/16 but still clear
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; date labels have rotation applied
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
+          Perfectly readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. 2×2 grid with proper spacing. Legend positioned
+          optimally.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line, bars, histogram bins, and scatter points all clearly visible;
-          scatter sizes 50-300 appropriate for 100 points
+        comment: 'All elements clearly visible: line width 3, histogram alpha 0.7,
+          scatter s=150 alpha 0.8, bars alpha 0.6.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow scheme is colorblind-safe; RdBu palette for scatter is
-          accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good 2x2 grid utilization; slight crowding in date labels but well-balanced
-          overall
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'All axes have descriptive labels with units: "Price ($)", "Volume
-          (Millions)", "Daily Return (%)", "Frequency"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito CVD-safe. Viridis for continuous. Adequate contrast throughout.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800×2700px canvas. Plot fills ~70% with balanced margins.
+          tight_layout optimized.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3; legend in histogram subplot placed well;
-          scatter colorbar works but could be better integrated
+        comment: 'Title: ''subplot-grid · seaborn · anyplot.ai''. All axis labels
+          include units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Multi-series follows Okabe-Ito order. Viridis
+          for continuous. Backgrounds #FAF8F1/#1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Multi-panel composition with intentional hierarchy. Diverse plot
+          types show thoughtful design. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace. Good attention
+          to detail with edge coloring.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Multi-panel narrative guides viewer through environmental monitoring.
+          Visual progression reinforces hierarchy.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct subplot grid with 4 distinct plot types: line, bar, histogram,
-          scatter'
+        comment: Correct 2×2 subplot grid with different plot types per cell.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: All variables correctly assigned to appropriate axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid dimensions configurable, each cell has different plot type,
-          consistent spacing, clear subplot titles
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: configurable dimensions, multiple plot types,
+          independent axes, clear titles.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X/Y mapping correct. Hour→Temperature, Humidity→Frequency, Temperature×Humidity,
+          Hour→AQI/Pressure.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Histogram legend correct; scatter legend disabled but colorbar provided
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "subplot-grid · seaborn · pyplots.ai"
+        comment: Title format correct. All subplots titled. Legends with correct labels.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple subplot types, different scales, varied visualization
-          approaches; could show shared axes example
+        comment: 'Demonstrates all subplot capabilities: time series, distribution,
+          bivariate, dual-axis.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Financial dashboard is a perfect real-world scenario with plausible
-          stock data
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Stock prices ~$85-110 realistic, returns -5% to +4% realistic, volumes
-          in millions appropriate
+        comment: Real-world plausible environmental monitoring. Neutral, understandable
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All values plausible: Temperature (5–20°C), Humidity (40–80%), AQI
+          (40–80), Pressure (~1012–1014 hPa).'
     code_quality:
       score: 10
       max: 10
@@ -182,40 +180,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'No functions/classes. Clean sequence: setup → data → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, pandas, seaborn'
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas, seaborn.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All APIs current
+        comment: Appropriate complexity, no over-engineering, no fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert sns.set_theme() usage, axes-level API (preferred), ax.twinx()
+          idiomatically applied.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn's lineplot, histplot, scatterplot with hue/size encoding;
-          volume bars use matplotlib ax.bar instead of seaborn barplot
+        comment: Uses twinx() for dual-axis and multi-panel composition. Could leverage
+          more seaborn-specific features.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - twin-axes
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
