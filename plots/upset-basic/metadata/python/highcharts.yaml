@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: upset-basic
 created: '2026-05-13T21:18:36Z'
-updated: '2026-05-13T21:25:55Z'
+updated: '2026-05-13T21:44:53Z'
 generated_by: claude-sonnet
 workflow_run: 25825937687
 issue: 5250
@@ -12,50 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all UpSet components (intersection bars, set-size bars,
-    dot matrix, connectors) correctly implemented and coordinated'
-  - 'Exemplary data quality: realistic RNA-seq stress-response scenario with plausible
-    membership probabilities and intersection size distribution'
-  - 'Flawless code quality: clean KISS structure, seed set, only used imports, produces
-    both HTML and PNG artifacts'
-  - 'Excellent theme adaptation: INK/INK_SOFT/GRID tokens applied throughout, both
-    renders pass legibility checks'
+  - Three-panel UpSet layout (intersection bars, set bars, dot matrix) implemented
+    cleanly with precise CSS positioning of three coordinated Highcharts instances
+  - Brand green (#009E73) used correctly for all active data elements; inactive dots
+    use theme-adaptive neutral
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, GRID tokens applied throughout
+    both renders'
+  - Realistic RNA-seq / gene-stressor biological context with plausible set and intersection
+    sizes
+  - 'All spec features present: sorted intersections, connecting lines, set size bars,
+    intersection cardinality bars'
+  - KISS structure with no functions/classes, seed(42), clean imports, correct dual
+    HTML+PNG output
   weaknesses:
-  - 'DE-01/DE-02 low: The design is correct but generic — the layout needs more visual
-    polish (e.g., degree-based coloring of active dots and connector lines, subtle
-    background striping for set rows, or emphasis on the top-1 intersection)'
-  - 'DE-03 low: No storytelling — the largest intersection or a biologically meaningful
-    one could be highlighted (brighter fill, data label above the bar, bold connector)
-    to guide the viewer to the key insight'
-  - 'LM-01 partial: Raw JSON dicts are used instead of the highcharts_core Python
-    API; this works but is less idiomatic for the library'
+  - Screenshot captures 4800×2561 instead of 4800×2700 — bottom row (Oxidative) is
+    right at the edge with no bottom padding; add marginBottom or reduce BOTTOM_H
+    to ensure the last matrix row has breathing room
+  - Data labels on intersection bars not explicitly configured — Highcharts only shows
+    partial labels by default (5/15 bars); add dataLabels:{enabled:true} or disable
+    them entirely for a cleaner look
+  - 'DE-01/DE-03 below threshold: no visual hierarchy beyond sorted order; consider
+    degree-based color gradient on bars (single-set green → multi-set darker), or
+    a subtle annotation on the dominant intersection'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "upset-basic · highcharts · anyplot.ai" in dark ink, clearly readable. "Intersection Size" y-axis label rotated vertically, readable. "Set Size" label on set-bars chart readable. Set name labels (Hypoxia, Heat Stress, Nutrient Dep., UV Damage, Oxidative) in INK_SOFT, readable. Tick values in dark gray, readable.
-      Data: Intersection bars in brand green #009E73 (first/only data series, correct). Set-size bars in dark gray (INK_SOFT for light theme). Active dots in green, inactive in light gray (#D0CFC8). Green connector lines link active set members per intersection column.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, no pure white
+      Chrome: Title "upset-basic · highcharts · anyplot.ai" in dark ink at top, readable. Y-axis label "Intersection Size" (rotated, 24px) and "Set Size" visible. Set-name labels (Hypoxia, Heat Stress, Nutrient Dep., UV Damage, Oxidative) in INK_SOFT, readable. Tick labels in 18-22px range, readable.
+      Data: 15 green (#009E73) intersection bars descending from ~98 to ~14 in top-right panel. Five grey horizontal set-size bars on bottom-left. Dot matrix: active dots in brand green, inactive dots in light grey (#D0CFC8). Vertical connecting lines (lineWidth:10) in brand green link co-active sets in same intersection. Alternating row backgrounds in matrix add subtle structure.
+      Issues: Screenshot is 4800×2561 (not 4800×2700) — Oxidative row visible but just at the bottom edge with minimal padding. Data labels shown on only first 5 bars (Highcharts default partial labeling).
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title and all text elements in light cream/off-white (INK #F0EFE8 / INK_SOFT #B8B7B0), clearly readable against near-black background. No dark-on-dark failures observed. Set name labels and tick values in light gray, fully readable.
-      Data: Intersection bars remain brand green #009E73 — identical to light render (data colors unchanged). Set-size bars adapt to lighter gray (INK_SOFT #B8B7B0 for dark theme), visible against dark background. Active dots remain green, inactive dots adapt to darker gray (#3A3A35). Connector lines remain green.
-      Legibility verdict: PASS
+      Background: Near-black #1A1A17 — correct, no pure black
+      Chrome: Title in light #F0EFE8 — clearly readable. Y-axis labels and tick text in #B8B7B0 (INK_SOFT dark). Set-name labels light-colored and readable. No dark-on-dark failures detected.
+      Data: Bar colors (#009E73) are identical to light render. Active dots remain brand green. Inactive dots shift to dark grey (#3A3A35), visible against the dark background. Set-size bars are light grey (INK_SOFT dark theme). Connecting lines remain brand green.
+      Legibility verdict: PASS — all text readable against dark background; chrome correctly flipped; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 34px, y-axis 24px, ticks 18-22px),
-          meet/exceed style guide minimums, readable in both themes
+        comment: Sizes explicitly set throughout (title 34px, axis 24px, ticks 18-22px);
+          all readable in both themes; -1 for data labels not configured (partial
+          default labeling on bars)
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -67,60 +74,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Dots (radius=20), bars, and connectors clearly visible at canvas
-          scale
+        comment: Dots (radius 20), connecting lines (width 10), bars all well-sized
+          for 4800px canvas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green on gray/dark background, Okabe-Ito CVD-safe
+        comment: CVD-safe Okabe-Ito brand green; good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Top-left quadrant intentionally empty (correct UpSet layout); canvas
-          captured at 2561px vs 2700px indicates slight bottom truncation
+        passed: false
+        comment: Screenshot 4800x2561 not 4800x2700; Oxidative row at bottom edge
+          with no breathing room; overall three-panel layout is well-proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Intersection Size and Set Size are descriptive; set names serve as
-          row labels
+        comment: '''Intersection Size'' and ''Set Size'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for all active data, backgrounds #FAF8F1/#1A1A17,
-          chrome fully theme-adaptive via INK/INK_SOFT tokens'
+        comment: 'First (and only) data series uses #009E73; backgrounds #FAF8F1/#1A1A17
+          correct; all chrome theme-adaptive'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean multi-panel layout, correct color use; falls in well-configured
-          library default tier, not publication-ready
+        passed: true
+        comment: 'Above defaults: intentional brand-green/neutral-grey pairing, clean
+          multi-panel layout; not yet FiveThirtyEight-level'
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (0.10 opacity), alternating row backgrounds in matrix,
+          minimal chrome, separator at 0.25 opacity
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Separator line with opacity, subtle GRID token, legend disabled;
-          could go further with degree-based dot coloring, more refined borders
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Intersections sorted descending (good) but no visual emphasis on
-          key intersections; viewer must find the story
+        comment: Sorted descending creates natural visual hierarchy; meaningful gene-stressor
+          labels; no degree-based coloring or focal-point emphasis beyond ordering
     spec_compliance:
       score: 15
       max: 15
@@ -130,22 +136,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Full UpSet plot with intersection bars, set-size bars, dot matrix,
-          and connectors
+        comment: Full UpSet plot with all three required panels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted descending, connected dots, set-size bars on left, intersection
-          bars on top, connectors visible
+        comment: Sorted intersections, connecting lines, set size bars, intersection
+          cardinality bars — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Matrix rows=sets, columns=intersections, connectors link active set
-          rows per column
+        comment: Sets on Y-axis, intersections on X-axis, correct alignment between
+          panels
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -154,30 +159,30 @@ review:
         comment: Title 'upset-basic · highcharts · anyplot.ai' correct; no legend
           needed
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows single-set, two-set, and multi-set intersections; 5 biologically
-          distinct sets; 15 largest intersections
+        comment: Shows single-set, two-set, three-set intersections; good variation
+          in sizes; -1 for showing only 15 of 31 possible intersections (minor)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RNA-seq differential expression gene sets under 5 stress conditions
-          — real scientific scenario, neutral topic
+        comment: RNA-seq differential expression / gene stressor experiment context
+          is scientific, neutral, and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Membership probabilities (19-32%) yield plausible counts; intersection
-          sizes (14-98) realistic for gene overlap analysis
+        comment: Set sizes ~180-280 genes, intersection sizes 14-98; proportions realistic
+          for gene overlap analysis
     code_quality:
       score: 10
       max: 10
@@ -187,59 +192,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data → configs → HTML → screenshot;
-          no functions or classes'
+        comment: 'Linear flow: imports → data → chart configs → HTML → Selenium screenshot;
+          no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib,
-          numpy, selenium'
+        comment: All imports (json, os, tempfile, time, urllib.request, pathlib, numpy,
+          selenium) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; multi-chart JSON-dict approach justified by complex
-          multi-panel layout
+        comment: Well-organized config dictionaries; bitwise intersection enumeration
+          is appropriate for the domain
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses Highcharts 11.3.0
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Highcharts correctly but builds raw JSON dicts injected into
-          JS rather than using highcharts_core Python API
+        passed: true
+        comment: Correct Highcharts config-object patterns; proper use of column/bar/scatter/line
+          series; container-based rendering
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Three coordinated Highcharts instances with absolute HTML positioning
-          — Highcharts-specific approach for custom multi-panel layout
-  verdict: REJECTED
+        passed: true
+        comment: CSS-positioned multi-chart layout is distinctively Highcharts; combined
+          scatter+line series for dot-matrix with connectors leverages Highcharts
+          flexibility
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
   - subplots
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
