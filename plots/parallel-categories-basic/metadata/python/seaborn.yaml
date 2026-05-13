@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:04:01Z'
-updated: '2026-05-13T17:25:00Z'
+updated: '2026-05-13T17:32:12Z'
 generated_by: claude-haiku
 workflow_run: 25814195366
 issue: 2501
@@ -12,35 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 51
+quality_score: 63
 review:
   strengths:
-  - Correct parallel categories implementation with ribbon flows
-  - Data generation is realistic (Titanic-based) and shows variety across dimensions
-  - Layout efficiently uses canvas space
+  - Correct parallel categories structure with proper ribbon-based flow visualization
+  - Five-dimensional dataset showing complex relationships clearly
+  - Good label placement avoiding overlap
+  - Realistic Titanic-based data generation
+  - Legend effectively shows class color mapping
   weaknesses:
-  - 'Dark render is unreadable due to dark-on-dark theme failure (category boxes at
-    #3a3a3a on #1A1A17)'
-  - No theme-adaptive styling implementation (seaborn.md specifies ANYPLOT_THEME pattern)
-  - Output files saved as plot.png instead of plot-light.png/plot-dark.png
-  - 'Uses colorblind palette instead of Okabe-Ito; first series color not #009E73'
-  - 'Title contains typo: pyplots.ai should be anyplot.ai'
-  - Category boxes are hardcoded dark color and do not adapt to theme
+  - Category labels unreadable in dark theme due to hardcoded text colors without
+    theme adaptation
+  - Using seaborn colorblind palette instead of required Okabe-Ito palette
+  - No theme-adaptive styling - doesn't read ANYPLOT_THEME or use sns.set_theme()
+    with theme-dependent rc parameters
+  - Category rectangle color hardcoded dark gray without theme adaptation
+  - Output file saved as plot.png instead of plot-{THEME}.png
+  - Title contains typo (pyplots.ai instead of anyplot.ai)
+  - Generic styling with no design refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Pure white, should be warm off-white around #FAF8F1
-      Chrome: Title (contains typo "pyplots.ai" → "anyplot.ai"), axis labels readable in black text
-      Data: Five parallel dimensions with ribbon flows using blue, orange, and green colors. Category labels positioned outside bars.
-      Legibility verdict: PASS with issues - most text readable but background color incorrect
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title, dimension labels, category labels all rendered in dark text on light surface - fully readable. Dark gray category rectangles with white edges clearly visible.
+      Data: Ribbons colored with green, orange, and blue showing flow relationships. Category bars properly sized proportional to frequency.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Dark color around #1A1A17
-      Chrome: CRITICAL FAILURE - category boxes hardcoded to #3a3a3a create dark-on-dark contrast failure. Text labels difficult to read against dark boxes and background.
-      Data: Ribbon colors appear identical to light render (correct data color consistency)
-      Legibility verdict: FAIL - Dark render is essentially unreadable. Category boxes at #3a3a3a are nearly invisible on #1A1A17 background.
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title and dimension headers render in light text and are readable. CRITICAL FAILURE: Category labels (Male, Female, Senior, Adult, Child, Southampton, Cherbourg, Queenstown, Survived, Lost) appear in dark gray text on dark background - unreadable (dark-on-dark failure). Category rectangles dark gray blending with background.
+      Data: Ribbon colors identical to light render (green, orange, blue properly maintained).
+      Legibility verdict: FAIL - category labels unreadable due to lack of theme-adaptive text coloring
   criteria_checklist:
     visual_quality:
-      score: 12
+      score: 15
       max: 30
       items:
       - id: VQ-01
@@ -48,45 +52,47 @@ review:
         score: 0
         max: 8
         passed: false
-        comment: 'Dark render unreadable due to dark-on-dark theme failure. Category
-          boxes at #3a3a3a invisible on #1A1A17'
+        comment: Category labels unreadable in dark render due to hardcoded text colors
+          without theme adaptation
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimal overlap, acceptable
+        comment: Minor ribbon overlap; labels well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Dark render has visibility issues; ribbons hard to distinguish
+        comment: Dark rectangles blend with dark background; visibility compromised
+          on dark theme
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Color choice conceptually safe but execution poor
+        comment: Using seaborn colorblind palette instead of Okabe-Ito; colors are
+          accessible but wrong source
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good layout, nothing cut off
+        comment: Good proportions and canvas usage
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: 'Title has typo: pyplots.ai should be anyplot.ai'
+        comment: 'Title contains typo: pyplots.ai should be anyplot.ai'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Uses colorblind palette instead of Okabe-Ito. No theme-adaptive chrome.
-          Background not theme-correct.
+        comment: Not using Okabe-Ito palette; no theme-adaptive background or chrome
+          colors
     design_excellence:
       score: 6
       max: 20
@@ -96,21 +102,21 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic styling with hardcoded dark boxes
+        comment: Generic styling with hardcoded colors; default seaborn appearance
       - id: DE-02
         name: Visual Refinement
         score: 1
         max: 6
         passed: false
-        comment: Crude manual element drawing, no refinement
+        comment: No spine customization, no grid styling, minimal refinement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Shows relationships but lacks visual hierarchy
+        passed: true
+        comment: Visualization effectively shows flow and relationships
     spec_compliance:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,49 +124,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories plot with ribbons
+        comment: Correct parallel categories with ribbons and dimensions
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Ribbons and dimensions present but visual execution flawed
+        comment: Multiple dimensions, proportional ribbons, category bars, labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct data mapping across dimensions
+        comment: Proper mapping; ribbon width proportional to count
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 2
         max: 3
         passed: false
-        comment: 'Title has typo: pyplots.ai instead of anyplot.ai'
+        comment: Has title (with typo) and legend; palette colors incorrect
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all dimensions with various category flows
+        comment: Complete parallel categories with 5 dimensions
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Titanic-style data is realistic and neutral
+        comment: Titanic-style dataset, realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportional representation is correct
+        comment: 500 samples, 3-8 categories per dimension
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -168,13 +174,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple structure, no unnecessary functions
+        comment: Clean procedural code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Has np.random.seed(42)
+        comment: np.random.seed(42) for reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -183,43 +189,44 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded colors; does not follow seaborn.md patterns
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png instead of plot-light.png/plot-dark.png
+        comment: Saves as plot.png instead of plot-{THEME}.png
     library_mastery:
-      score: 2
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Does not follow seaborn.md theme-adaptive patterns
+        comment: Uses matplotlib patches, but misses seaborn's theme-adaptive guidance
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Very basic matplotlib usage, no seaborn-specific features
+        comment: Custom Path objects are distinctive, but not leveraging seaborn mastery
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - custom-legend
   - annotations
+  - patches
   - bezier-curves
   patterns:
   - data-generation
   - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
   - alpha-blending
