@@ -1,16 +1,53 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: pygal | Python 3.13
+Quality: 91/100 | Updated: 2025-05-13
 """
 
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
 
-# Data - Company market performance (market cap vs revenue)
-np.random.seed(42)
+# Workaround: pygal.py file in cwd conflicts with pygal package.
+# Remove current directory from sys.path before importing.
+_original_path = sys.path[:]
+while "" in sys.path:
+    sys.path.remove("")
+if sys.path[0].endswith("implementations/python"):
+    sys.path.pop(0)
+
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+sys.path = _original_path
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette: first series = #009E73 (brand green)
+OKABE_ITO = (
+    "#009E73",  # 1: bluish green (brand)
+    "#D55E00",  # 2: vermillion
+    "#0072B2",  # 3: blue
+    "#CC79A7",  # 4: reddish purple
+    "#E69F00",  # 5: orange
+    "#56B4E9",  # 6: sky blue
+    "#F0E442",  # 7: yellow
+    "#009E73",  # 8: cycle back to brand for 8+ companies
+    "#D55E00",
+    "#0072B2",
+    "#CC79A7",
+    "#E69F00",
+)
+
+# Data - Tech company market performance
 companies = [
     "TechFlow",
     "DataPrime",
@@ -26,82 +63,56 @@ companies = [
     "DigiTech",
 ]
 
-# Generate realistic market cap (x) and revenue (y) data in billions
-# Spread out to avoid overlap
+# Market cap (x) and annual revenue (y) in billions
 market_cap = np.array([15, 45, 75, 105, 135, 25, 55, 85, 115, 145, 35, 95])
 revenue = np.array([8, 22, 35, 28, 48, 12, 18, 42, 32, 55, 15, 38])
 
-# Create color palette - cycle through distinct colors for each company
-colors = (
-    "#306998",  # Python Blue
-    "#FFD43B",  # Python Yellow
-    "#E74C3C",  # Red
-    "#2ECC71",  # Green
-    "#9B59B6",  # Purple
-    "#3498DB",  # Light Blue
-    "#E67E22",  # Orange
-    "#1ABC9C",  # Teal
-    "#34495E",  # Dark Gray
-    "#F39C12",  # Gold
-    "#16A085",  # Dark Teal
-    "#8E44AD",  # Dark Purple
-)
-
-# Custom style for large canvas with larger value font for annotations
+# Custom style with theme-adaptive colors and chrome
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=colors,
-    title_font_size=48,
-    label_font_size=32,
-    major_label_font_size=28,
-    legend_font_size=24,
-    value_font_size=28,  # Font size for annotations
-    tooltip_font_size=24,
-    stroke_width=2,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=16,
+    stroke_width=3,
 )
 
-# Store company names for value formatter
-company_data = {}
-
-# Create XY chart (scatter plot)
+# Create scatter chart
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="scatter-annotated · pygal · pyplots.ai",
+    title="scatter-annotated · pygal · anyplot.ai",
     x_title="Market Cap (Billion $)",
     y_title="Annual Revenue (Billion $)",
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=6,
+    show_legend=False,
     show_x_guides=True,
     show_y_guides=True,
-    dots_size=18,
+    dots_size=16,
     stroke=False,
     show_dots=True,
-    truncate_label=-1,
-    x_label_rotation=0,
     range=(0, 65),
     xrange=(0, 165),
     print_values=True,
     print_values_position="top",
 )
 
-# Add each company as individual series with its own color for legend identification
-# Use formatter dict to show company name instead of coordinates
+# Add each company as individual series with Okabe-Ito color and annotation
 for i, company in enumerate(companies):
-    company_data[(market_cap[i], revenue[i])] = company
     chart.add(
         company,
         [{"value": (market_cap[i], revenue[i]), "label": company, "formatter": lambda x, c=company: c}],
-        dots_size=20,
+        dots_size=18,
         formatter=lambda x, c=company: c,
     )
 
-# Render to PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Render to PNG and HTML with theme suffix
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
