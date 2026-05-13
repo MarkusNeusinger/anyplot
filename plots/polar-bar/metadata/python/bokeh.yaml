@@ -1,163 +1,163 @@
 library: bokeh
+language: python
 specification_id: polar-bar
 created: '2025-12-30T16:30:56Z'
-updated: '2025-12-30T16:39:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601057120
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-bar/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-bar/bokeh/plot.html
+updated: '2026-05-13T01:12:10Z'
+generated_by: claude-haiku
+workflow_run: 25771701242
+issue: 2693
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/bokeh/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - patches
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent use of Bokeh wedge glyph to create authentic polar bars
-  - Clean mathematical transformation from compass directions to Bokeh angle system
-  - Professional styling with Python blue (#306998) color scheme throughout
-  - Good use of ColumnDataSource for data organization
-  - Reference circles and radial lines provide clear visual guides
-  - Color intensity mapping to frequency adds extra visual dimension
+  - Perfect visual quality across all 8 criteria with excellent legibility in both
+    light and dark themes
+  - Accurate polar coordinate mapping for wind direction and frequency representation
+  - Strong data storytelling with clear visual hierarchy showing prevailing wind patterns
+  - Clean, reproducible code following style guide specifications precisely
+  - Meteorologically realistic wind frequency distribution demonstrating proper domain
+    knowledge
   weaknesses:
-  - Scale labels show percent symbol but data represents raw frequency counts, which
-    is semantically inconsistent
-  - No legend or annotation explaining what the colors and values represent
-  image_description: The plot displays a polar bar chart (wind rose) with 8 compass
-    directions (N, NE, E, SE, S, SW, W, NW) arranged in a circle. The bars are rendered
-    as wedges radiating from the center, with the W (West) direction having the longest
-    bar extending to approximately 75% of the radius, followed by SW (Southwest).
-    The bars use a Blues8 color palette where darker blues indicate higher frequencies.
-    Three concentric dashed reference circles are visible at 7%, 14%, and 22% intervals
-    with subtle gray labeling. Direction labels are displayed in bold blue (#306998)
-    text around the outer perimeter. The title "polar-bar · bokeh · pyplots.ai" appears
-    at the top in Python blue. The background is a subtle off-white (#fafafa), and
-    the overall layout is clean and well-balanced in a square 3600×3600 format.
+  - 'Design Excellence (14/20): Visual refinement could be enhanced with more sophisticated
+    grid styling or refined typography hierarchy'
+  - 'Limited interactive features: Despite using Bokeh, misses opportunities to showcase
+    distinctive features like hover tooltips or callbacks'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - properly rendered, not pure white
+      Chrome: Title "polar-bar · bokeh · anyplot.ai" in dark ink (#1A1A17) at 28pt; compass labels (N, NE, E, SE, S, SW, W, NW) in dark ink at 22pt; frequency scale labels in soft ink (#4A4A44) at 16pt. All readable with good contrast.
+      Data: Eight colored wedges using Okabe-Ito palette (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442) radiating outward. First series is brand green #009E73. Concentric dashed reference circles and radial guide lines provide scale context.
+      Legibility verdict: PASS - all text clearly legible in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - properly rendered, not pure black
+      Chrome: Title in light ink (#F0EFE8) at 28pt; compass labels in light ink at 22pt; frequency labels in soft light ink (#B8B7B0) at 16pt. All clearly visible against dark background. No dark-on-dark failures.
+      Data: Eight colored wedges identical in color to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442). Concentric circles and radial lines rendered in low-alpha soft color for subtle guidance.
+      Legibility verdict: PASS - all text clearly legible in dark theme, no contrast issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 42pt, direction labels at 32pt, scale labels at 20pt - all
-          perfectly readable
+        comment: All text properly sized and colored for theme with high contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels well-spaced around perimeter
+        comment: Labels well-positioned with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wedges are clearly visible with good alpha (0.9) and distinct borders
+        comment: Wedges prominent, reference elements appropriately subtle
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blues8 sequential palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of square canvas, plot fills ~65% of area, minor whitespace
-          at edges
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: No traditional axis labels (acceptable for polar plot, but no legend
-          explaining what values represent)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed reference circles, no legend needed for this simple
-          visualization
+        comment: Okabe-Ito palette with CVD-safe colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format appropriate, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard format with clear compass directions
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first, correct theme backgrounds, proper adaptation
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional palette usage with intentional styling choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean and minimal but could enhance grid sophistication
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with prevailing wind pattern prominent
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar bar/wind rose chart type using wedges
+        comment: Correct polar bar chart implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Directions correctly mapped to angles, frequencies to bar lengths
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: bars radiating outward, 8 compass directions,
-          color encoding magnitude'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: direction labels, frequencies, scale'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the plot area
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angles and radii correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Direction labels accurate, scale labels correct
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "polar-bar · bokeh · pyplots.ai"'
+        comment: Standard format with implicit spatial legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying frequencies across directions with clear pattern (prevailing
-          W/SW winds), could show more extreme variation
+        comment: All 8 compass directions with varied frequencies
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Wind frequency data is a classic, neutral meteorological scenario
+        comment: Meteorologically plausible wind pattern
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible wind frequencies, though labeling as "%" is
-          slightly misleading for raw counts
+        comment: Sensible scaling with visible reference markers
     code_quality:
       score: 10
       max: 10
@@ -167,40 +167,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports → data → plot → save'
+        comment: Direct linear flow, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Deterministic with seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Bokeh API used
+        comment: Clear angle conversion logic, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct file naming and current API usage
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of Bokeh's wedge glyph, ColumnDataSource, Label annotations,
-          and figure customization
+        comment: Proper ColumnDataSource, figure, wedge, Label usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Core features used well but misses hover tooltips/callbacks
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - polar-projection
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome

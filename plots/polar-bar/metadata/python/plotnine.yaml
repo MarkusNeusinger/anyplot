@@ -1,216 +1,60 @@
 library: plotnine
+language: python
 specification_id: polar-bar
 created: '2025-12-30T16:31:23Z'
-updated: '2025-12-30T16:43:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601058272
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-bar/plotnine/plot.png
-preview_html: null
-quality_score: 91
+updated: '2026-05-13T01:16:56Z'
+generated_by: claude-haiku
+workflow_run: 25771839294
+issue: 2693
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect Visual Quality: all text sizes explicitly set, zero overlap, flawless
+    readability in both light and dark themes'
+  - 'Flawless Theme Compliance: data colors identical across themes (Okabe-Ito #009E73
+    brand green first), backgrounds correct (#FAF8F1 light / #1A1A17 dark), text colors
+    theme-adaptive using INK/INK_SOFT tokens'
+  - 'Spec Compliance: correct polar wind rose with all 8 compass directions, frequency
+    magnitudes properly mapped, title format accurate'
+  - Clean, reproducible code with KISS structure and idiomatic plotnine usage (ggplot
+    + geoms + theme tokens)
+  - Realistic meteorological data with authentic compass bearings and plausible wind
+    frequency distribution
+  weaknesses:
+  - 'DE-01 MODERATE: well-configured defaults but lacks custom/distinctive aesthetic
+    design touches (score 4/8 rather than 6+)'
+  - 'DE-03 MODERATE: data storytelling relies on bar-size variation alone; could emphasize
+    dominant frequencies through strategic color intensity or focal-point contrast'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white ✓
+      Chrome: Title in large dark text (24pt), direction labels bold (16pt N/NE/E/SE/S/SW/W/NW), frequency labels soft gray (10pt, 20%/15%/10%/5%) — all clearly readable against light surface
+      Data: Eight wedge bars in Okabe-Ito palette (N=#009E73, NE=#D55E00, E=#0072B2, SE=#CC79A7, S=#E69F00, SW=#56B4E9, W=#F0E442, NW=#009E73), first series brand green ✓. Concentric circles and radial spokes subtle, alpha=0.15
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black ✓
+      Chrome: Title in light text (#F0EFE8), direction labels bold light text, frequency labels soft gray/muted light text — all readable against dark surface, no dark-on-dark failures ✓
+      Data: Wedge colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442, #009E73) — only chrome flipped ✓. Grid circles/spokes visible, subtle
+      Legibility verdict: PASS ✓
+
+    Both renders theme-correct, data colors consistent, all text readable. Theme adaptation is flawless.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - patches
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent manual construction of polar coordinate system using geom_polygon wedges
-  - 'Clean layered composition: gridlines → spokes → wedges → labels'
-  - Proper compass angle convention (N=0°, clockwise) correctly converted to Cartesian
-    coordinates
-  - Appropriate use of 1:1 aspect ratio for circular visualization
-  - Professional appearance with subtle gridlines and balanced colors
-  weaknesses:
-  - Figure size is 12x12 instead of the recommended 16x9 landscape (though square
-    is acceptable for polar plots)
-  - Missing frequency unit in title or labels (e.g., days or %)
-  image_description: The plot displays a polar bar chart (wind rose) with 8 compass
-    direction wedges radiating from the center. The wedges alternate between Python
-    Blue (#306998) and Yellow (#FFD43B) colors. Compass directions (N, NE, E, SE,
-    S, SW, W, NW) are labeled around the perimeter in bold text. Concentric dashed
-    circular gridlines at intervals of 5, 10, 15, and 20 are visible with frequency
-    labels (5, 10, 15, 20) positioned along the NNE axis. The SW direction has the
-    longest wedge (frequency ~22), followed by S (~18), N (~15), and E (~12). The
-    title "Wind Direction Frequency · polar-bar · plotnine · pyplots.ai" appears at
-    the top. The plot uses a square 1:1 aspect ratio with clean white background and
-    subtle gray gridlines.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is 24pt and clearly readable, compass labels are bold and well-sized
-          at 16pt, frequency labels are legible at 10pt
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all labels positioned with adequate spacing
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Wedges are clearly visible with good sizing, appropriate alpha (0.85),
-          dark outlines for contrast
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue and yellow are distinguishable, though alternating pattern could
-          be more colorblind-friendly with additional differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square format perfect for polar chart, plot fills canvas well, balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No axis labels (though this is appropriate for polar charts where
-          compass directions serve this purpose)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Subtle dashed gridlines with appropriate alpha, no legend needed
-          as colors are for visual appeal only
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct polar bar chart (wind rose) with wedge-shaped bars radiating
-          from center
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angle represents direction, bar length represents magnitude/frequency
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 8 compass directions, bars extend outward from center, gridlines
-          for magnitude reference
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, gridlines extend appropriately beyond max value
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed (colors are decorative), compass labels are accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "{description} · {spec-id} · {library} · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows varied frequencies across 8 directions demonstrating the wind
-          rose pattern, though single-category only (no stacked example)
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Wind direction frequency is the classic use case for polar bar charts,
-          plausible distribution pattern
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Frequency values (5-22) are realistic for wind measurements, though
-          no units specified
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data → geometry construction → plot
-          → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set (though not used since data is hardcoded,
-          good practice)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but figure_size is (12,12) not (12,12) @ 300dpi
-          = 3600x3600 as expected
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
-        max: 5
-        passed: true
-        comment: Creative use of geom_polygon to construct polar wedges, geom_path
-          for gridlines, geom_segment for spokes, geom_text for labels. Demonstrates
-          plotnine's layered grammar of graphics approach. Since plotnine lacks native
-          coord_polar(), the manual Cartesian-to-polar transformation is an impressive
-          workaround that stays within the library.
-  verdict: APPROVED
+  styling:
+  - alpha-blending
+  - grid-styling
+  - minimal-chrome
