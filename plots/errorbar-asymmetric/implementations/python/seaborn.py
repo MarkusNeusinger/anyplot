@@ -1,13 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 errorbar-asymmetric: Asymmetric Error Bars Plot
 Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Quality: 92/100 | Updated: 2026-05-13
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data: Battery life measurements across device models (10th-90th percentile)
 np.random.seed(42)
@@ -24,36 +35,50 @@ error_lower = np.array([1.2, 2.5, 0.8, 3.2, 1.5, 2.0, 1.0, 2.8])
 # Upper errors: distance from median to 90th percentile
 error_upper = np.array([2.8, 1.5, 2.2, 1.8, 3.5, 1.2, 2.6, 1.4])
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
+# Create figure with theme-aware background
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot points using seaborn scatterplot
-sns.scatterplot(x=x, y=y, s=400, color="#306998", zorder=5, ax=ax)
-
-# Add asymmetric error bars using matplotlib errorbar (seaborn doesn't have native asymmetric errorbar)
-ax.errorbar(
-    x=x,
-    y=y,
-    yerr=[error_lower, error_upper],
-    fmt="none",
-    ecolor="#306998",
-    elinewidth=3,
-    capsize=10,
-    capthick=3,
-    zorder=4,
+# Configure seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
 )
 
-# Style
-ax.set_xticks(x)
-ax.set_xticklabels(devices, fontsize=16)
-ax.set_xlabel("Device Model", fontsize=20)
-ax.set_ylabel("Battery Life (hours)", fontsize=20)
-ax.set_title("errorbar-asymmetric · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="y", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
+# Plot points using seaborn scatterplot
+sns.scatterplot(x=x, y=y, s=400, color=BRAND, zorder=5, ax=ax)
 
-# Add annotation explaining the error bars
+# Add asymmetric error bars using matplotlib errorbar
+ax.errorbar(
+    x=x, y=y, yerr=[error_lower, error_upper], fmt="none", ecolor=BRAND, elinewidth=3, capsize=10, capthick=3, zorder=4
+)
+
+# Style with theme-aware colors
+ax.set_xticks(x)
+ax.set_xticklabels(devices, fontsize=16, color=INK_SOFT)
+ax.set_xlabel("Device Model", fontsize=20, color=INK)
+ax.set_ylabel("Battery Life (hours)", fontsize=20, color=INK)
+ax.set_title("errorbar-asymmetric · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+ax.grid(True, alpha=0.10, linestyle="-", linewidth=0.8)
+
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+
+# Add theme-aware annotation explaining the error bars
 ax.annotate(
     "10th–90th percentile",
     xy=(0.98, 0.02),
@@ -61,8 +86,9 @@ ax.annotate(
     fontsize=14,
     ha="right",
     va="bottom",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#306998", "alpha": 0.8},
+    color=INK,
+    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 1.5, "alpha": 0.9},
 )
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
