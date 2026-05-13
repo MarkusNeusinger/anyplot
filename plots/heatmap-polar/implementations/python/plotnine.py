@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-13
@@ -20,8 +20,8 @@ from plotnine import (  # noqa: E402
     element_blank,
     element_rect,
     element_text,
-    geom_label,
     geom_polygon,
+    geom_text,
     ggplot,
     labs,
     scale_fill_cmap,
@@ -77,28 +77,36 @@ for d_idx in range(7):
 
 df_poly = pd.DataFrame(poly_rows)
 
-# Day labels at ring midpoints, slightly inside the 12am sector
-df_day = pd.DataFrame({"px": [0.4] * 7, "py": [d + 1.5 for d in range(7)], "label": days})
+# Day labels centered on 12am axis at each ring's radial midpoint
+df_day = pd.DataFrame({"px": [0] * 7, "py": [d + 1.5 for d in range(7)], "label": days})
 
 # Outer boundary radius for annotation placement
 R_OUT = 8.0
 
+# Peak annotation position: 9:30am direction, just outside the outermost ring
+h_ann = 9.5
+theta_ann = np.pi / 2 - h_ann * (2 * np.pi / 24)
+r_ann = R_OUT + 0.6
+x_ann = r_ann * np.cos(theta_ann)
+y_ann = r_ann * np.sin(theta_ann)
+
 plot = (
     ggplot(df_poly, aes(x="px", y="py", group="g", fill="v"))
-    + geom_polygon(color=PAGE_BG, size=0.2)
-    + geom_label(
+    + geom_polygon(color=ELEVATED_BG, size=0.15)
+    + geom_text(
         data=df_day,
         mapping=aes(x="px", y="py", label="label"),
         inherit_aes=False,
         color=INK,
-        fill=ELEVATED_BG,
-        size=9,
-        ha="left",
+        size=14,
+        ha="center",
+        va="center",
     )
-    + annotate("text", x=0, y=R_OUT + 0.6, label="12am", color=INK_SOFT, size=11, ha="center", va="bottom")
-    + annotate("text", x=R_OUT + 0.6, y=0, label="6am", color=INK_SOFT, size=11, ha="left", va="center")
-    + annotate("text", x=0, y=-(R_OUT + 0.6), label="12pm", color=INK_SOFT, size=11, ha="center", va="top")
-    + annotate("text", x=-(R_OUT + 0.6), y=0, label="6pm", color=INK_SOFT, size=11, ha="right", va="center")
+    + annotate("text", x=0, y=R_OUT + 0.7, label="12am", color=INK_SOFT, size=16, ha="center", va="bottom")
+    + annotate("text", x=R_OUT + 0.7, y=0, label="6am", color=INK_SOFT, size=16, ha="left", va="center")
+    + annotate("text", x=0, y=-(R_OUT + 0.7), label="12pm", color=INK_SOFT, size=16, ha="center", va="top")
+    + annotate("text", x=-(R_OUT + 0.7), y=0, label="6pm", color=INK_SOFT, size=16, ha="right", va="center")
+    + annotate("text", x=x_ann, y=y_ann, label="Peak 9am–1pm\nweekdays", color=INK_SOFT, size=12, ha="left", va="top")
     + coord_equal()
     + scale_fill_cmap(cmap_name="viridis", name="Visits/hr")
     + labs(title="Website Traffic · heatmap-polar · plotnine · anyplot.ai", x="", y="")
@@ -112,10 +120,10 @@ plot = (
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_line=element_blank(),
-        plot_title=element_text(color=INK, size=22, ha="center"),
+        plot_title=element_text(color=INK, size=24, ha="center"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(color=INK_SOFT, size=14),
-        legend_title=element_text(color=INK, size=14),
+        legend_text=element_text(color=INK_SOFT, size=16),
+        legend_title=element_text(color=INK, size=16),
     )
 )
 
