@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-13
 """
 
 import os
+import pathlib
 
 import numpy as np
 import pandas as pd
@@ -13,61 +14,79 @@ from lets_plot import *  # noqa: F403, F405
 
 LetsPlot.setup_html()
 
-# Data - Performance scores across departments
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BOX_COLOR = "#009E73"  # Brand green - first series
+POINT_COLOR = "#D55E00"  # Vermillion - second series
+
+# Data - Uptime scores across service tiers
 np.random.seed(42)
 
-departments = ["Engineering", "Marketing", "Sales", "Support"]
-n_per_dept = [35, 28, 32, 25]
+tiers = ["Basic", "Professional", "Enterprise", "Elite"]
+n_per_tier = [32, 38, 35, 28]
 
 data = []
-for dept, n in zip(departments, n_per_dept, strict=True):
-    if dept == "Engineering":
-        # Slightly higher scores with some high performers
+for tier, n in zip(tiers, n_per_tier, strict=True):
+    if tier == "Basic":
+        # Lower uptime, more variability
         scores = np.concatenate(
             [
-                np.random.normal(78, 8, n - 3),
-                np.array([95, 97, 42]),  # High performers and one outlier
+                np.random.normal(94.5, 2.5, n - 2),
+                np.array([88.2, 91.5]),  # Some lower outliers
             ]
         )
-    elif dept == "Marketing":
-        # Wider spread
-        scores = np.random.normal(72, 12, n)
-    elif dept == "Sales":
-        # Bimodal-ish with some low outliers
+    elif tier == "Professional":
+        # Moderate uptime, consistent
+        scores = np.random.normal(97.8, 1.8, n)
+    elif tier == "Enterprise":
+        # High uptime, tight distribution
         scores = np.concatenate(
             [
-                np.random.normal(75, 7, n - 2),
-                np.array([35, 38]),  # Low outliers
+                np.random.normal(99.2, 0.9, n - 1),
+                np.array([96.5]),  # One lower performer
             ]
         )
-    else:  # Support
-        # Tighter distribution
-        scores = np.random.normal(70, 6, n)
+    else:  # Elite
+        # Very high uptime, minimal variance
+        scores = np.random.normal(99.7, 0.5, n)
 
-    scores = np.clip(scores, 20, 100)
+    scores = np.clip(scores, 85, 100)
     for score in scores:
-        data.append({"Department": dept, "Performance Score": score})
+        data.append({"Service Tier": tier, "Uptime (%)": score})
 
 df = pd.DataFrame(data)
 
+# Custom theme
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_major_x=element_blank(),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24),
+)
+
 # Plot - box plot with jittered strip overlay
 plot = (
-    ggplot(df, aes(x="Department", y="Performance Score"))
-    + geom_boxplot(fill="#306998", color="#1a3d5c", alpha=0.6, width=0.6, outlier_alpha=0)
-    + geom_jitter(color="#FFD43B", size=4, alpha=0.7, width=0.15)
-    + labs(title="cat-box-strip · letsplot · pyplots.ai", x="Department", y="Performance Score")
+    ggplot(df, aes(x="Service Tier", y="Uptime (%)"))
+    + geom_boxplot(fill=BOX_COLOR, color=INK_SOFT, alpha=0.7, width=0.5, outlier_alpha=0)
+    + geom_jitter(color=POINT_COLOR, size=4, alpha=0.65, width=0.12)
+    + labs(title="cat-box-strip · letsplot · anyplot.ai", x="Service Tier", y="Uptime (%)")
     + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        panel_grid_major_x=element_blank(),
-        panel_grid_minor=element_blank(),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
-# Save - use absolute path to current directory
-output_dir = os.path.dirname(os.path.abspath(__file__))
-ggsave(plot, os.path.join(output_dir, "plot.png"), scale=3)
-ggsave(plot, os.path.join(output_dir, "plot.html"))
+# Save
+output_dir = pathlib.Path.cwd()
+ggsave(plot, str(output_dir / f"plot-{THEME}.png"), scale=3)
+ggsave(plot, str(output_dir / f"plot-{THEME}.html"))
