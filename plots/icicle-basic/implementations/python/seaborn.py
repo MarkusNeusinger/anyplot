@@ -1,21 +1,23 @@
-"""pyplots.ai
+"""anyplot.ai
 icicle-basic: Basic Icicle Chart
-Library: seaborn 0.13.2 | Python 3.13
-Quality: 82/100 | Created: 2025-12-30
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-05-13
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
-from matplotlib.patches import Patch, Rectangle
+from matplotlib.patches import Rectangle
 
 
-# Set seaborn style for consistent appearance
-sns.set_style("whitegrid")
-sns.set_context("poster", font_scale=0.9)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Hierarchical data: File system structure
-# Format: (name, parent, value in MB)
 hierarchy_data = [
     ("Root", None, 1000),
     ("Documents", "Root", 350),
@@ -49,7 +51,7 @@ for name, parent, _value in hierarchy_data:
     if parent and parent in nodes:
         nodes[parent]["children"].append(name)
 
-# Calculate levels inline (KISS principle)
+# Calculate levels
 levels = {}
 for name in nodes:
     level = 0
@@ -61,7 +63,7 @@ for name in nodes:
 
 max_level = max(levels.values())
 
-# Calculate totals inline (sum of children or own value if leaf)
+# Calculate totals (sum of children or own value if leaf)
 totals = {}
 sorted_nodes = sorted(nodes.keys(), key=lambda x: levels[x], reverse=True)
 for name in sorted_nodes:
@@ -71,7 +73,7 @@ for name in sorted_nodes:
     else:
         totals[name] = sum(totals[child] for child in children)
 
-# Calculate positions for icicle chart using stack-based iteration
+# Calculate icicle chart positions
 rectangles = []
 stack = [("Root", 0.0, 1.0, 0)]
 
@@ -95,18 +97,18 @@ while stack:
             stack.append((child, current_x, current_x + child_width, level + 1))
             current_x += child_width
 
-# Create DataFrame for seaborn color mapping
 rect_df = pd.DataFrame(rectangles)
 n_levels = max_level + 1
 
-# Use seaborn to create color palette based on hierarchy level
-palette = sns.color_palette("Blues_r", n_colors=n_levels + 2)[1:-1]
-level_colors = {i: palette[i] for i in range(n_levels)}
+# Use viridis colormap for hierarchy levels (theme-independent, works on both light and dark)
+cmap = plt.colormaps["viridis"]
+level_colors = {i: cmap(i / (n_levels - 1)) for i in range(n_levels)}
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Create figure and axes
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Draw rectangles using matplotlib with seaborn-derived colors
+# Draw rectangles
 gap = 0.005
 for _, rect in rect_df.iterrows():
     x = rect["x"] + gap
@@ -116,55 +118,48 @@ for _, rect in rect_df.iterrows():
     level = int(rect["level"])
     color = level_colors[level]
 
-    patch = Rectangle((x, y), w, h, facecolor=color, edgecolor="white", linewidth=2)
+    patch = Rectangle((x, y), w, h, facecolor=color, edgecolor=INK_SOFT, linewidth=1.5)
     ax.add_patch(patch)
 
-# Add text labels with values for rectangles
-for _, rect in rect_df.iterrows():
-    level = int(rect["level"])
-    # Only label if rectangle is wide enough
-    if rect["width"] < 0.03:
+    # Add text labels with names and values
+    if rect["width"] < 0.02:
         continue
 
-    # Position in center of rectangle
     cx = rect["x"] + rect["width"] / 2
     cy = rect["y"] + rect["height"] / 2
 
-    # Choose font size based on level and available space
-    fontsize = 14 if level <= 1 else (12 if level == 2 else 10)
-    text_color = "white" if level < 2 else "#1a3a5c"
+    # Determine text color for contrast
+    rgb = color[:3]
+    luminance = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+    text_color = INK_SOFT if luminance > 0.5 else "#F5F5F5"
 
-    # Format value display (in MB)
+    fontsize = 16 if level == 0 else (14 if level == 1 else (12 if level == 2 else 10))
+
+    # Format value
     value = int(rect["value"])
     if value >= 1000:
-        value_str = f"{value / 1000:.1f} GB"
+        value_str = f"{value / 1000:.1f}GB"
     else:
-        value_str = f"{value} MB"
+        value_str = f"{value}MB"
 
-    # Determine available characters based on rectangle width
+    # Smart label truncation
     name = rect["name"]
-    available_chars = max(6, int(rect["width"] * 120))
+    available_width = rect["width"]
+    available_chars = max(5, int(available_width * 100))
 
-    # Decide what to display based on available space
     if len(name) <= available_chars:
-        # Full name fits
-        display_text = f"{name}\n{value_str}"
-    elif available_chars >= 10:
-        # Medium space: abbreviate name smartly
-        if "." in name and len(name.split(".")[-1]) <= 4:
-            # Preserve file extension
-            ext = "." + name.split(".")[-1]
-            base_chars = available_chars - len(ext) - 2
-            if base_chars > 0:
-                name = name[:base_chars] + ".." + ext
-            else:
-                name = name[: available_chars - 2] + "…"
-        else:
-            name = name[: available_chars - 1] + "…"
         display_text = f"{name}\n{value_str}"
     else:
-        # Small: just show value
-        display_text = value_str
+        if "." in name:
+            parts = name.rsplit(".", 1)
+            ext = "." + parts[1]
+            base_chars = available_chars - len(ext) - 1
+            if base_chars > 0:
+                display_text = f"{parts[0][:base_chars]}…\n{value_str}"
+            else:
+                display_text = value_str
+        else:
+            display_text = f"{name[: available_chars - 1]}…\n{value_str}"
 
     ax.text(
         cx,
@@ -184,26 +179,35 @@ ax.set_ylim(0, 1)
 ax.set_aspect("auto")
 ax.axis("off")
 
-# Title with exact spec format: {spec-id} · {library} · pyplots.ai
-ax.set_title("icicle-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+# Title
+ax.text(
+    0.5,
+    0.98,
+    "icicle-basic · seaborn · anyplot.ai",
+    ha="center",
+    va="top",
+    fontsize=24,
+    fontweight="medium",
+    color=INK,
+    transform=ax.transAxes,
+)
 
-# Add legend for hierarchy levels using seaborn palette
-legend_labels = ["Root", "Category", "Subcategory", "Files"][:n_levels]
+# Legend for hierarchy levels
+legend_labels = ["Level 0", "Level 1", "Level 2", "Level 3"][:n_levels]
 legend_patches = [
-    Patch(facecolor=palette[i], edgecolor="white", linewidth=1.5, label=legend_labels[i]) for i in range(n_levels)
+    plt.Line2D([0], [0], marker="s", color="w", markerfacecolor=level_colors[i], markersize=12, label=legend_labels[i])
+    for i in range(n_levels)
 ]
 ax.legend(
     handles=legend_patches,
     loc="lower right",
     fontsize=14,
     framealpha=0.95,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
     title="Hierarchy Level",
     title_fontsize=16,
-    edgecolor="#cccccc",
 )
 
-# Use seaborn's despine for clean appearance
-sns.despine(left=True, bottom=True)
-
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
