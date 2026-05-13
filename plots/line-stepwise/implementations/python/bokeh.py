@@ -1,29 +1,41 @@
-""" pyplots.ai
+""" anyplot.ai
 line-stepwise: Step Line Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-13
 """
 
-import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource
-from bokeh.plotting import figure
+import os
+import time
+from pathlib import Path
 
+import numpy as np
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data - CPU usage readings over time with discrete state changes
 np.random.seed(42)
 n_points = 24
 hours = np.arange(n_points)
 
-# Create realistic CPU usage that stays at levels then jumps
-base_levels = [35, 45, 75, 85, 90, 80, 60, 40, 30, 25, 40, 55, 70, 85, 95, 90, 75, 60, 50, 45, 35, 30, 25, 20]
-cpu_usage = np.array(base_levels[:n_points], dtype=float)
+# Realistic CPU usage that stays at levels then jumps
+# Removed random noise to better represent discrete state changes
+cpu_usage = np.array(
+    [35, 42, 55, 72, 85, 92, 88, 70, 55, 40, 32, 28, 35, 52, 78, 88, 95, 90, 75, 60, 48, 42, 32, 25], dtype=float
+)
 
-# Add small noise to make it realistic
-cpu_usage += np.random.uniform(-2, 2, n_points)
-cpu_usage = np.clip(cpu_usage, 0, 100)
-
-# Create step function data by duplicating points
+# Create step function data by duplicating points for post-step behavior
 # For 'post' step style: value changes after the point
 x_step = []
 y_step = []
@@ -34,49 +46,86 @@ for i in range(len(hours)):
         x_step.append(hours[i + 1])
         y_step.append(cpu_usage[i])
 
-# Create data source
+# Create data source for the step line
 source = ColumnDataSource(data={"x": x_step, "y": y_step})
 
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="line-stepwise · bokeh · pyplots.ai",
+    title="line-stepwise · bokeh · anyplot.ai",
     x_axis_label="Hour of Day",
     y_axis_label="CPU Usage (%)",
 )
 
 # Plot step line
-p.line(x="x", y="y", source=source, line_width=4, line_color="#306998", line_alpha=0.9)
+p.line(x="x", y="y", source=source, line_width=4, line_color=BRAND, line_alpha=0.9)
 
-# Add markers at actual data points for clarity
+# Add markers at actual data points for clarity - larger for visibility
 marker_source = ColumnDataSource(data={"x": hours, "y": cpu_usage})
+p.scatter(x="x", y="y", source=marker_source, size=16, color=BRAND, alpha=0.9)
 
-p.scatter(x="x", y="y", source=marker_source, size=12, color="#306998", alpha=0.9)
+# Add HoverTool for enhanced interactivity
+hover = HoverTool(tooltips=[("Hour", "@x{0}"), ("Usage", "@y{0.0}%")])
+p.add_tools(hover)
 
 # Style text sizes for large canvas
 p.title.text_font_size = "28pt"
+p.title.text_color = INK
 p.xaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_dash = "dashed"
+# Theme-adaptive styling
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Background
-p.background_fill_color = "#fafafa"
+# Subtle grid with theme-adaptive colors
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
+# Legend styling if present
+if p.legend:
+    p.legend.background_fill_color = ELEVATED_BG
+    p.legend.border_line_color = INK_SOFT
+    p.legend.label_text_color = INK_SOFT
 
 # Axis ranges
 p.y_range.start = 0
 p.y_range.end = 105
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-
-# Also save as HTML for interactive version
-output_file("plot.html")
+# Save as HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome using Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
