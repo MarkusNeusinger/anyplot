@@ -1,78 +1,85 @@
-""" pyplots.ai
+"""anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: pygal | Python 3.13
+Quality: pending | Created: 2025-05-13
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Data - Plant growth measurements (cm) under different light conditions
+# Theme tokens from environment
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (colorblind-safe, first series is brand green #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Data - Test scores across education levels
 np.random.seed(42)
-categories = ["Full Sun", "Partial Shade", "Full Shade", "Artificial"]
+categories = ["High School", "Bachelor's", "Master's", "PhD"]
 data = {
-    "Full Sun": np.random.normal(45, 8, 35),
-    "Partial Shade": np.random.normal(38, 10, 40),
-    "Full Shade": np.random.normal(25, 6, 30),
-    "Artificial": np.random.normal(35, 12, 38),
+    "High School": np.random.normal(68, 12, 45),
+    "Bachelor's": np.random.normal(78, 10, 50),
+    "Master's": np.random.normal(82, 8, 38),
+    "PhD": np.random.normal(85, 7, 42),
 }
 
-# Add realistic variation and some outliers
-data["Full Sun"] = np.append(data["Full Sun"], [68, 72, 28])
-data["Partial Shade"] = np.append(data["Partial Shade"], [65, 15])
-data["Full Shade"] = np.append(data["Full Shade"], [42, 10])
-data["Artificial"] = np.append(data["Artificial"], [70, 12])
+# Add realistic outliers
+data["High School"] = np.append(data["High School"], [95, 48])
+data["Bachelor's"] = np.append(data["Bachelor's"], [58, 98])
+data["Master's"] = np.append(data["Master's"], [62, 95])
+data["PhD"] = np.append(data["PhD"], [65, 100])
 
-# Group colors - distinct for each category (colorblind-safe)
-group_colors = ["#306998", "#FFD43B", "#4CAF50", "#E07B39"]
+# Clamp all values to 0-100 range
+for key in data:
+    data[key] = np.clip(data[key], 0, 100)
 
-# Build color sequence: 6 elements per box (box, median, 2 whiskers, 2 caps) + 1 strip = 7 per category
-# But we draw all boxes first (6*4=24), then all strips (4)
-# So color sequence needs: 6 of color1, 6 of color2, 6 of color3, 6 of color4, then 1 each for strips
+# Color sequence: 6 colors for box plot elements + 4 for strip points (one per category)
 color_sequence = []
-for c in group_colors:
-    color_sequence.extend([c] * 6)  # 6 box elements per category
-for c in group_colors:
-    color_sequence.append(c)  # 1 strip series per category
+for i in range(4):
+    color_sequence.extend([OKABE_ITO[i]] * 6)  # 6 box elements per category
+for i in range(4):
+    color_sequence.append(OKABE_ITO[i])  # 1 strip series per category
 
-# Custom style for 4800x2700 px canvas
+# Custom style for 4800x2700 px canvas with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#999999",
-    guide_stroke_color="#e0e0e0",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=tuple(color_sequence),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=44,
-    legend_font_size=44,
-    value_font_size=36,
-    opacity=0.6,
-    opacity_hover=0.8,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    opacity=0.7,
 )
 
 # Create XY chart for combined box plot with strip overlay
-# X-axis = Category position, Y-axis = Plant Height (cm)
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="cat-box-strip · pygal · pyplots.ai",
-    x_title="Light Condition",
-    y_title="Plant Height (cm)",
+    title="cat-box-strip · pygal · anyplot.ai",
+    x_title="Education Level",
+    y_title="Test Score",
     show_legend=False,
     stroke=True,
     fill=True,
     dots_size=0,
-    show_x_guides=False,
+    show_x_guides=True,
     show_y_guides=True,
     xrange=(0, 5),
-    range=(0, 80),
-    margin=80,
+    range=(0, 105),
+    margin=100,
     explicit_size=True,
 )
 
@@ -80,14 +87,13 @@ chart = pygal.XY(
 box_width = 0.25
 cap_width = 0.15
 
-# Pre-compute all components
+# Pre-compute box plot components and strip points
 strip_data = []
 box_data = []
 
 for i, (category, values) in enumerate(data.items()):
     center_x = i + 1  # X position for this group (1, 2, 3, 4)
     values = np.array(values)
-    color = group_colors[i]
 
     # --- Box Plot Statistics ---
     median = float(np.median(values))
@@ -96,16 +102,16 @@ for i, (category, values) in enumerate(data.items()):
     iqr = q3 - q1
     whisker_low = float(max(values.min(), q1 - 1.5 * iqr))
     whisker_high = float(min(values.max(), q3 + 1.5 * iqr))
-    box_data.append((center_x, median, q1, q3, whisker_low, whisker_high, color))
+    box_data.append((center_x, median, q1, q3, whisker_low, whisker_high))
 
     # --- Strip Points with Jitter ---
     np.random.seed(42 + i)
     jitter = np.random.uniform(-0.12, 0.12, len(values))
     strip_points = [(center_x + j, float(v)) for j, v in zip(jitter, values, strict=True)]
-    strip_data.append((category, strip_points, color))
+    strip_data.append((category, strip_points))
 
-# First, draw box plots (so strip points appear on top)
-for center_x, median, q1, q3, whisker_low, whisker_high, _color in box_data:
+# Draw box plots first (so strip points appear on top)
+for center_x, median, q1, q3, whisker_low, whisker_high in box_data:
     # IQR box (filled rectangle)
     quartile_box = [
         (center_x - box_width, q1),
@@ -133,19 +139,19 @@ for center_x, median, q1, q3, whisker_low, whisker_high, _color in box_data:
     chart.add("", cap_top, stroke=True, fill=False, show_dots=False, stroke_style={"width": 6})
 
 # Add strip points on top with transparency
-for _category, strip_points, _color in strip_data:
-    chart.add("", strip_points, stroke=False, fill=False, dots_size=18)
+for _category, strip_points in strip_data:
+    chart.add("", strip_points, stroke=False, fill=False, dots_size=16)
 
 # X-axis labels for categories
 chart.x_labels = [
     {"value": 0, "label": ""},
-    {"value": 1, "label": "Full Sun"},
-    {"value": 2, "label": "Partial Shade"},
-    {"value": 3, "label": "Full Shade"},
-    {"value": 4, "label": "Artificial"},
+    {"value": 1, "label": "High School"},
+    {"value": 2, "label": "Bachelor's"},
+    {"value": 3, "label": "Master's"},
+    {"value": 4, "label": "PhD"},
     {"value": 5, "label": ""},
 ]
 
 # Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
