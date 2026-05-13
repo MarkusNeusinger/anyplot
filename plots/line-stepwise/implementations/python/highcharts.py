@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-stepwise: Step Line Plot
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2025-12-21
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-13
 """
 
 import os
