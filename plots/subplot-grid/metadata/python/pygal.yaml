@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:29Z'
-updated: '2026-05-13T09:45:04Z'
+updated: '2026-05-13T09:51:09Z'
 generated_by: claude-haiku
 workflow_run: 25790570388
 issue: 2782
@@ -12,114 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-dark.html
-quality_score: 75
+quality_score: 81
 review:
   strengths:
-  - Excellent grid layout and spacing calculation using PIL for proper 2x2 alignment
-  - Clean use of theme tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED) throughout Style
-    objects for both themes
-  - Deterministic random seed (np.random.seed(42)) ensures reproducible synthetic
-    data
-  - Comprehensive business dashboard context with realistic financial metrics
-  - Generates both PNG and interactive HTML outputs for full pygal interactivity support
+  - Excellent subplot grid layout with consistent spacing and alignment across all
+    four panels
+  - Dashboard-style composition effectively combines four different chart types (line,
+    bar, scatter, histogram) in a cohesive figure
+  - Proper theme-adaptive text colors and backgrounds - all text readable in both
+    light and dark renders with no legibility issues
+  - Realistic and neutral business metrics (revenue trends, category sales, ROI analysis,
+    order distribution) demonstrate data quality
+  - Both PNG and interactive HTML outputs generated correctly with proper file naming
+    convention
+  - Reproducible implementation using numpy seed for deterministic scatter data generation
   weaknesses:
-  - 'CRITICAL: Bar chart and Histogram violate hard color rule — must use BRAND (#009E73)
-    for first series, not COLOR_2 (#D55E00). Change bar_style colors and hist_style
-    colors definitions.'
-  - 'CRITICAL: Provided images show ''bokeh'' implementation with different data (Stock
-    Price, Daily Trading, Risk/Return) vs code specification (Monthly Revenue, Sales,
-    Ad Spend, Daily Orders) — pipeline failure preventing render verification. Must
-    regenerate plot-light.png and plot-dark.png.'
-  - PIL title rendering uses 'subplot-grid · pygal · anyplot.ai' which cannot be verified
-    in images due to mismatch.
-  - Minimal use of pygal-specific advanced features beyond basic Style API — grid
-    assembly via PIL rather than pygal-native composition.
-  - Color differentiation between subplots (bar+histogram both secondary color) may
-    obscure visual hierarchy; justify intentional color variation or standardize to
-    BRAND.
+  - Scatter plot uses cyan/light blue instead of brand green (#009E73) - violates
+    first-series-always-green rule from style guide
+  - Custom style colors not being applied correctly by pygal - bar and histogram render
+    in green despite code specifying COLOR_2 (#D55E00)
+  - Color rendering disconnect suggests Style object colors aren't reaching pygal
+    chart rendering engine
+  - Pygal default styling (visible spines, borders) reduces visual refinement compared
+    to more polished implementations
+  - 'Library mastery issue: not effectively leveraging pygal''s Style system for color
+    application across all chart types'
   image_description: |-
     Light render (plot-light.png):
-      CRITICAL MISMATCH: Images provided show 'subplot-grid · bokeh · anyplot.ai' with bokeh-specific data (Stock Price Over Time line chart, Daily Trading Volume histogram, Risk vs Return Analysis scatter, Daily Returns Distribution histogram). This does NOT match the pygal code specification which should show Monthly Revenue, Sales by Category, Ad Spend vs ROI, and Daily Order Volume. Background appears to be warm off-white appropriate for light theme (#FAF8F1). Text is readable in dark ink where shown. However, the entire chart content mismatches the implementation being reviewed. CANNOT VERIFY ACTUAL PYGAL RENDERS.
+      Background: Warm off-white (#FAF8F1) - correct surface for light theme
+      Chrome: Title "subplot-grid · pygal · anyplot.ai" in dark text (#1A1A17), axis labels and tick labels in soft dark ink (#4A4A44) - all readable
+      Data: Line chart with teal-green line/dots; bar chart with green bars; scatter plot with cyan/light-blue dots; histogram with green bars
+      Layout: 2×2 grid with consistent spacing, good proportions, nothing cut off
+      Legibility verdict: PASS (all text readable, grid spacing consistent)
 
     Dark render (plot-dark.png):
-      CRITICAL MISMATCH: Same bokeh implementation shown with dark background (appears to be near-black #1A1A17 as expected). Text appears light-colored and readable. Data colors appear to be identical between light and dark render (teal line, orange bars, multi-colored scatter, blue histogram), suggesting proper theme adaptation only on chrome. However, this is the bokeh implementation, not pygal. Both renders confirm images are from different implementation/stale pipeline outputs. CANNOT VERIFY ACTUAL PYGAL RENDERS DUE TO IMAGE MISMATCH.
+      Background: Warm near-black (#1A1A17) - correct surface for dark theme
+      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in soft light ink (#B8B7B0) - all readable, no dark-on-dark failures
+      Data: All data colors identical to light render (teal-green line/bars, cyan scatter points) - good consistency between themes
+      Layout: Identical grid structure to light render, proportions maintained
+      Legibility verdict: PASS (all text readable, no dark-on-dark failures, colors consistent with light render)
 
-    Verdict: IMAGE VERIFICATION FAILED - Rendered images do not correspond to the code being reviewed. Regeneration required before proper visual quality assessment can be completed.
+    Critical Issue: Scatter plot uses cyan instead of brand green (#009E73), violating first-series-always-green rule. Bar/histogram colors rendered as green despite code specifying COLOR_2 (#D55E00).
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Font sizes set explicitly (72px title, 22px labels) but actual rendering
-          cannot be verified due to image mismatch
+        passed: true
+        comment: All titles, axis labels, tick labels readable in both light and dark
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Grid layout with calculated spacing prevents overlaps
+        comment: Consistent spacing, no text or element collisions across grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Different chart types are visually distinct
+        comment: All data markers, lines, bars clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Palette structure supports accessibility
+        comment: Adequate contrast, intended use of colorblind-safe palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2x2 grid proportions and margins well-calculated
+        comment: Excellent 2×2 grid proportions, nothing cut off, well-balanced layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Each subplot has descriptive titles with units
+        comment: All subplots titled descriptively with proper units and labels
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'HARD RULE VIOLATION: Bar and Histogram use COLOR_2 (#D55E00) instead
-          of BRAND (#009E73). First categorical series must always be #009E73 per
-          style guide.'
+        comment: 'CRITICAL: Scatter plot uses cyan instead of brand green; bar/histogram
+          colors don''t match intended COLOR_2; violates first-series-always-green
+          rule'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 5
         max: 8
         passed: false
-        comment: Business context present but color violation undermines design. Theme
-          token usage appropriate.
+        comment: Professional subplot layout and custom theme tokens, but color rendering
+          issues reduce polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Clean grid layout, good spacing, subtle approach appropriate
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Four chart types show complementary metrics but limited visual hierarchy
+        comment: Subtle grid lines and good spacing, but pygal defaults (spines, borders)
+          remain visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Dashboard-style layout effectively combines metrics with clear hierarchy
+          and visual organization
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,28 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Multiple distinct subplots in 2x2 grid'
+        comment: Correct subplot grid implementation with multiple distinct chart
+          types
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All specification requirements present
+        comment: Configurable 2×2 grid, different plot types per cell, independent
+          axes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly assigned for each chart type
+        comment: X/Y axes correct for each chart type, all data visible and properly
+          scaled
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title branding cannot be verified due to image mismatch; expected
-          'pygal' but images show 'bokeh'
+        passed: true
+        comment: Main title follows spec format, all subplots properly titled
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -156,22 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates line, bar, scatter, histogram — comprehensive chart
-          type coverage
+        comment: Demonstrates 4 distinct chart types (line, bar, scatter, histogram)
+          with comprehensive metrics
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Business dashboard (revenue, sales, ROI, orders) is realistic and
-          neutral
+        comment: Financial dashboard with realistic business metrics (revenue, sales,
+          ROI, order volume)
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Values sensible but scale variation significant (revenue 120-248K
-          vs daily orders 50-300)
+        passed: true
+        comment: Value ranges sensible for respective metrics and domains
     code_quality:
       score: 9
       max: 10
@@ -181,55 +192,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward procedural code, no unnecessary abstractions
+        comment: Straightforward chart creation and composition without unnecessary
+          complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: Uses np.random.seed(42) for deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, numpy, pygal, PIL, cairosvg) are used
+        comment: All imports are used (pygal, cairosvg, PIL, numpy)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI or simulated interactivity
+        passed: false
+        comment: PIL image stitching works but inelegant; pygal lacks native subplot
+          support
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves correctly as plot-{THEME}.png and plot-{THEME}.html but output
-          cannot be verified
+        passed: true
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Correct Style API usage but grid assembly via PIL is somewhat non-idiomatic
-          (pygal.Multi() exists with limitations)
+        comment: Correct pygal API for individual charts, PIL workaround reasonable
+          but not idiomatic. Color application via Style system not working.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses cairosvg for SVG→PNG conversion; minimal pygal-specific advanced
-          features
+        comment: Custom Style objects show intent but color rendering failures indicate
+          incomplete style system mastery
   verdict: REJECTED
 impl_tags:
   dependencies:
-  - cairosvg
   - pillow
+  - cairosvg
   techniques:
   - subplots
   - html-export
