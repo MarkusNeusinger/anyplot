@@ -1,7 +1,7 @@
 """ anyplot.ai
 facet-grid: Faceted Grid Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-13
+Quality: 85/100 | Updated: 2026-05-13
 """
 
 import os
