@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-05-13
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-13
 """
 
 import os
