@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 upset-basic: UpSet Plot for Multi-Set Intersection Analysis
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-13
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 79/100 | Created: 2026-05-13
 """
 
 import os
