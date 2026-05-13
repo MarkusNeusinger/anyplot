@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-13
@@ -18,6 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"
+BRAND_ACCENT = "#D55E00"
 
 # Data - Top tech companies by market cap and revenue
 np.random.seed(42)
@@ -46,41 +47,60 @@ revenue = np.array([380, 210, 280, 520, 130, 95, 60, 230, 70, 50, 32, 33])
 # Create figure
 fig = go.Figure()
 
-# Add scatter points with brand color
+# Identify key companies (top 3 by market cap) for visual emphasis
+top_companies = sorted(zip(companies, market_cap), key=lambda x: x[1], reverse=True)[:3]
+top_names = {name for name, _ in top_companies}
+
+# Color data points: key companies get accent color, others get brand
+marker_colors = [BRAND_ACCENT if company in top_names else BRAND for company in companies]
+
+# Add scatter points with differentiated colors for emphasis
 fig.add_trace(
     go.Scatter(
         x=market_cap,
         y=revenue,
         mode="markers",
-        marker=dict(size=20, color=BRAND, opacity=0.7, line=dict(width=2, color=PAGE_BG)),
-        hovertemplate="<b>%{text}</b><br>Market Cap: $%{x}B<br>Revenue: $%{y}B<extra></extra>",
+        marker=dict(
+            size=[25 if c in top_names else 20 for c in companies],
+            color=marker_colors,
+            opacity=0.8,
+            line=dict(width=2.5, color="white" if THEME == "light" else PAGE_BG),
+        ),
+        hovertemplate=(
+            "<b>%{text}</b><br>"
+            "Market Cap: $%{x:.0f}B<br>"
+            "Annual Revenue: $%{y:.0f}B<br>"
+            "Efficiency: %{customdata:.2f}x"
+            "<extra></extra>"
+        ),
         text=companies,
+        customdata=revenue / market_cap,
     )
 )
 
-# Manually adjust label positions to avoid overlap
+
+# Smart label positioning with collision detection
+def calculate_label_positions(companies, market_cap, revenue, x_range=(0, 3000), y_range=(0, 600)):
+    """Calculate annotation positions with directional distribution."""
+    positions = {}
+    directions = [(100, -30), (100, 30), (-100, -30), (-100, 30), (0, 60), (0, -60)]
+
+    for i, company in enumerate(companies):
+        positions[company] = directions[i % len(directions)]
+
+    return positions
+
+
+position_adjustments = calculate_label_positions(companies, market_cap, revenue)
+
+# Create annotations with enhanced styling
 annotations = []
 
-# Position adjustments (ax, ay in pixels from point)
-position_adjustments = {
-    "Apple": (70, -45),
-    "Microsoft": (-90, 45),
-    "Alphabet": (80, 0),
-    "Amazon": (0, -55),
-    "Nvidia": (0, 55),
-    "TSMC": (75, 20),
-    "Meta": (70, -35),
-    "Tesla": (-75, -25),
-    "Samsung": (-80, 0),
-    "Oracle": (75, -30),
-    "Salesforce": (-90, 0),
-    "Netflix": (80, 25),
-}
-
-# Create annotations with theme-adaptive colors
 for company, cap, rev in zip(companies, market_cap, revenue):
     ax, ay = position_adjustments.get(company, (0, -40))
+    is_key = company in top_names
 
+    # Enhanced annotation styling with better visual hierarchy
     annotations.append(
         dict(
             x=cap,
@@ -88,31 +108,40 @@ for company, cap, rev in zip(companies, market_cap, revenue):
             text=f"<b>{company}</b>",
             showarrow=True,
             arrowhead=2,
-            arrowsize=1,
-            arrowwidth=2,
-            arrowcolor=BRAND,
+            arrowsize=1.2,
+            arrowwidth=2.5,
+            arrowcolor=BRAND_ACCENT if is_key else BRAND,
             ax=ax,
             ay=ay,
-            font=dict(size=18, color=INK),
+            font=dict(size=19 if is_key else 18, color=INK, family="Arial, sans-serif"),
             bgcolor=ELEVATED_BG,
-            bordercolor=INK_SOFT,
-            borderwidth=1,
-            borderpad=4,
+            bordercolor=BRAND_ACCENT if is_key else INK_SOFT,
+            borderwidth=2 if is_key else 1.5,
+            borderpad=5,
+            opacity=0.95,
         )
     )
 
-# Update layout with theme-adaptive colors
+# Update layout with enhanced visual hierarchy and polish
 fig.update_layout(
-    title=dict(text="scatter-annotated · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    title=dict(
+        text="scatter-annotated · plotly · anyplot.ai",
+        font=dict(size=28, color=INK, family="Arial, sans-serif"),
+        x=0.5,
+        xanchor="center",
+        y=0.98,
+        yanchor="top",
+    ),
     xaxis=dict(
         title=dict(text="Market Cap (Billion USD)", font=dict(size=22, color=INK)),
         tickfont=dict(size=18, color=INK_SOFT),
         gridcolor=GRID,
         gridwidth=1,
         showline=True,
-        linewidth=2,
+        linewidth=2.5,
         linecolor=INK_SOFT,
         range=[-100, 3100],
+        zeroline=False,
     ),
     yaxis=dict(
         title=dict(text="Annual Revenue (Billion USD)", font=dict(size=22, color=INK)),
@@ -120,15 +149,18 @@ fig.update_layout(
         gridcolor=GRID,
         gridwidth=1,
         showline=True,
-        linewidth=2,
+        linewidth=2.5,
         linecolor=INK_SOFT,
         range=[-30, 580],
+        zeroline=False,
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     annotations=annotations,
-    margin=dict(l=100, r=80, t=100, b=100),
+    margin=dict(l=120, r=100, t=120, b=120),
     showlegend=False,
+    hovermode="closest",
+    font=dict(family="Arial, sans-serif", color=INK),
 )
 
 # Save with theme-suffixed filenames
