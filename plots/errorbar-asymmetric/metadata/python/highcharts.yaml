@@ -1,171 +1,179 @@
 library: highcharts
+language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:48:53Z'
-updated: '2025-12-30T18:07:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602452781
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T07:36:18Z'
+generated_by: claude-haiku
+workflow_run: 25784959632
+issue: 2781
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of Highcharts native errorbar series type with proper caps/whiskers
-  - Clean colorblind-safe color scheme (blue/yellow Python colors)
-  - Good realistic financial forecasting scenario with appropriate asymmetry
-  - Proper inclusion of highcharts-more.js for errorbar support
-  - Clear legend explaining what the asymmetric bounds represent (10th-90th percentile)
-  - Subtitle provides context for the confidence interval interpretation
+  - Perfect Visual Quality (30/30) with explicit font sizing and flawless readability
+    in both light and dark themes
+  - Correct Okabe-Ito palette implementation with brand color as primary series and
+    proper secondary color
+  - Native Highcharts errorbar series implementation demonstrates true library mastery
+  - Excellent theme adaptation with perfect text color, background, and gridline adjustments
+    between themes
+  - Realistic quarterly sales forecast scenario with meaningful asymmetric confidence
+    interval bounds
+  - Complete spec compliance with all required features correctly mapped and labeled
   weaknesses:
-  - Library version shows as "unknown" in the header comment (minor metadata issue)
-  image_description: The plot displays a quarterly sales forecast with asymmetric
-    error bars on a white background. Six data points (Q1 2024 through Q2 2025) are
-    shown as yellow diamond markers with blue outlines, positioned along the x-axis
-    by quarter. Each point has a blue vertical error bar extending asymmetrically
-    above and below, with visible horizontal caps (whiskers) at both ends. The title
-    "errorbar-asymmetric · highcharts · pyplots.ai" appears at top center in bold,
-    with a subtitle explaining the 10th-90th percentile confidence intervals. The
-    y-axis shows "Sales Forecast (Million USD)" ranging from ~10.5 to 24, and the
-    x-axis shows "Quarter". A legend in the upper-right corner identifies "Point Estimate"
-    (diamond) and "10th-90th Percentile Range" (blue line). The layout is clean with
-    good use of canvas space and subtle gray gridlines.
+  - 'Minor: Could make gridlines even more subtle for maximum refinement'
+  - 'Minor: Could explore additional Highcharts-specific features beyond core errorbar
+    implementation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - PASS
+      Chrome: Title (48px), subtitle (32px), axis labels (36px), tick labels (28px) - all clearly readable in dark text against light background
+      Data: Teal/green diamond markers (#009E73 - brand color) for point estimates; orange error bars (#D55E00) with horizontal whisker caps showing asymmetric 10th-90th percentile ranges
+      Layout: Excellent spacing with legend in upper-right; Y-axis gridlines are subtle and support readability
+      Legibility verdict: PASS - All elements perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - PASS
+      Chrome: Title, subtitle, axis labels rendered in light text (#F0EFE8); tick labels in softer tone (#B8B7B0) - all clearly readable against dark background
+      Data: Diamond markers IDENTICAL to light render (#009E73); error bars IDENTICAL to light render (#D55E00) - perfect color fidelity confirming proper theme-independent data colors
+      Layout: Legend has elevated dark background (#242420) with light text; gridlines remain subtle
+      Theme-adaptation: No "dark-on-dark" failures - all text elements are appropriately light-colored
+      Legibility verdict: PASS - All elements perfectly readable, no theme-related failures
+
+    Both renders demonstrate perfect theme duality with identical data colors, proper chrome adaptation, and flawless readability in both themes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable.
-          Font sizes are appropriate for the 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated.
+        comment: All font sizes explicitly set (48/36/28px); perfectly readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping text; excellent layout with proper spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Diamond markers are well-sized and visible. Error bars have good
-          stem width and visible caps. Markers could be slightly larger for optimal
-          visibility.
+        comment: Diamond markers and error bars optimally sized and clearly distinguished
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe; no red-green
-          combinations.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization with appropriate margins. Plot area uses
-          space well, though legend positioning slightly compact.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units "(Million USD)"; X-axis has
-          "Quarter".
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette provides excellent CVD-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-70% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate. Legend is functional but could have
-          slightly better symbol representation.
+        comment: 'Descriptive with units: Sales Forecast (Million USD)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, secondary #D55E00, backgrounds theme-correct,
+          text colors theme-adaptive, data colors identical between themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color choice, diamond marker emphasis, thoughtful subtitle
+          explaining error bounds
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean plot, subtle gridlines, good whitespace, effective legend positioning
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Realistic business context; visual hierarchy through color distinction
+          between estimates and ranges
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct asymmetric error bar plot using Highcharts native errorbar
-          series type.
+        comment: Correct asymmetric errorbar plot with central estimates
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (quarters) and Y (sales values) correctly assigned with proper
-          error bounds.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: asymmetric errors, visible caps, legend
-          explaining bounds, appropriate data points (6).'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: asymmetric error bars with caps, central values,
+          categorical x-axis'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis auto-scales appropriately to show all data and error ranges.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis quarters, Y-axis sales; all data visible and properly scaled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Point Estimate" and "10th-90th Percentile
-          Range".
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title follows format but header in file shows "unknown" for library
-          version.
+        comment: Title follows {spec-id} · {library} · anyplot.ai format; legend labels
+          descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear asymmetry with larger upside potential vs downside risk.
-          Good variety in error magnitudes across quarters.
+        comment: Demonstrates full variety of error bar asymmetry with realistic variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Financial forecasting scenario is realistic and neutral. Sales figures
-          in millions USD are plausible.
+        comment: Quarterly sales forecast with percentile-based confidence intervals;
+          neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for quarterly sales (12-18M range). Error bounds
-          are proportionally sensible.
+        comment: Plausible values for sales forecast in millions USD; realistic proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,41 +181,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → chart config → series →
-          export.'
+        comment: 'Straightforward: imports → config → data → chart → export'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
+        comment: Uses np.random.seed(42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used; no unnecessary imports.
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code; native errorbar series (not simulating); appropriate
+          helper functions
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts Core API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Note: Header shows "highcharts unknown" for version.'
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Highcharts Core SDK with proper instantiation and configuration
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses native Highcharts errorbar series type with whiskerLength and
-          stemWidth configuration. Good use of highcharts-more.js module.
+        comment: Uses Highcharts native errorbar series with whisker configuration;
+          imports highcharts-more.js
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
