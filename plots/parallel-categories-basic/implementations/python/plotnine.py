@@ -1,21 +1,21 @@
-""" pyplots.ai
+"""anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-13
 """
 
+import os
 import sys
 
 
 # Prevent current directory from shadowing the plotnine package
-sys.path = [p for p in sys.path if not p.endswith("implementations")]
+sys.path = [p for p in sys.path if not p.endswith("implementations") and not p.endswith("python")]
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from plotnine import (  # noqa: E402
     aes,
     annotate,
-    coord_cartesian,
     element_blank,
     element_text,
     geom_polygon,
@@ -29,8 +29,25 @@ from plotnine import (  # noqa: E402
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for categorical data
+OKABE_ITO = [
+    "#009E73",  # Brand green - first series
+    "#D55E00",  # Vermillion
+    "#0072B2",  # Blue
+    "#CC79A7",  # Reddish purple
+    "#E69F00",  # Orange
+    "#56B4E9",  # Sky blue
+    "#F0E442",  # Yellow
+]
+
 # Data - Customer journey data with multiple categorical dimensions
-# Each row represents aggregated counts for a specific path through dimensions
 np.random.seed(42)
 
 # Define category combinations and realistic counts
@@ -76,7 +93,7 @@ path_data = [
 
 path_counts = pd.DataFrame(path_data, columns=["channel", "product", "customer_type", "outcome", "count"])
 
-# Define dimensions and their category orders (ordered to minimize ribbon crossings)
+# Define dimensions and their category orders
 dimensions = [
     {"name": "channel", "label": "Channel", "categories": ["Online", "Store", "Mobile"]},
     {"name": "product", "label": "Product", "categories": ["Electronics", "Clothing", "Home"]},
@@ -84,8 +101,11 @@ dimensions = [
     {"name": "outcome", "label": "Outcome", "categories": ["Purchased", "Abandoned"]},
 ]
 
-# Color by outcome - Python Blue for abandoned, Yellow for purchased
-outcome_colors = {"Purchased": "#FFD43B", "Abandoned": "#306998"}
+# Color by outcome - using Okabe-Ito palette
+outcome_colors = {
+    "Purchased": OKABE_ITO[0],  # Brand green
+    "Abandoned": OKABE_ITO[2],  # Blue
+}
 
 # Layout parameters
 n_dims = len(dimensions)
@@ -103,11 +123,7 @@ for dim_idx, dim in enumerate(dimensions):
     col_name = dim["name"]
 
     # Calculate totals for this dimension
-    if col_name == "outcome":
-        totals = path_counts.groupby(col_name)["count"].sum()
-    else:
-        totals = path_counts.groupby(col_name)["count"].sum()
-
+    totals = path_counts.groupby(col_name)["count"].sum()
     grand_total = totals.sum()
     current_y = y_start
 
@@ -121,8 +137,8 @@ for dim_idx, dim in enumerate(dimensions):
             "y_bottom": current_y - height,
             "height": height,
             "count": count,
-            "flow_offset_out": 0,  # For outgoing flows (right side)
-            "flow_offset_in": 0,  # For incoming flows (left side)
+            "flow_offset_out": 0,
+            "flow_offset_in": 0,
         }
         current_y = current_y - height - node_gap
 
@@ -140,7 +156,7 @@ for (dim_idx, cat), pos in node_positions.items():
             "label_y": (pos["y_top"] + pos["y_bottom"]) / 2,
             "count": pos["count"],
             "display_label": str(cat),
-            "fill_color": outcome_colors.get(cat, "#888888"),
+            "fill_color": INK_SOFT,
         }
     )
 nodes_df = pd.DataFrame(node_data)
@@ -162,7 +178,7 @@ for _, path_row in path_counts.iterrows():
         src_pos = node_positions[(dim_idx, from_cat)]
         tgt_pos = node_positions[(dim_idx + 1, to_cat)]
 
-        # Calculate flow height proportional to count at source and target
+        # Calculate flow height proportional to count
         src_total = sum(path_counts[path_counts[dimensions[dim_idx]["name"]] == from_cat]["count"])
         flow_height_src = (count / src_total) * src_pos["height"] if src_total > 0 else 0
 
@@ -204,37 +220,44 @@ for _, path_row in path_counts.iterrows():
 
 flows_df = pd.DataFrame(flow_polygons)
 
+# Create background rectangle data
+bg_rect = pd.DataFrame({"xmin": [0], "xmax": [1], "ymin": [-0.05], "ymax": [1.05]})
+
 # Create the plot
 plot = (
     ggplot()
+    # Background rectangle
+    + geom_rect(bg_rect, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=PAGE_BG, color=PAGE_BG)
     # Flow polygons with transparency - colored by outcome
     + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="outcome"), alpha=0.5)
-    # Node rectangles - use neutral gray for all nodes
+    # Node rectangles
     + geom_rect(
-        nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill="#555555", color="white", size=0.8
+        nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=INK_SOFT, color=PAGE_BG, size=0.8
     )
-    # Category labels on nodes
+    # Count labels on nodes
     + geom_text(
         nodes_df[nodes_df["count"] >= 20],
         aes(x=(nodes_df["xmin"] + nodes_df["xmax"]) / 2, y="label_y", label="count"),
         ha="center",
         va="center",
         size=10,
-        color="white",
+        color=PAGE_BG,
         fontweight="bold",
     )
     + scale_fill_manual(values=outcome_colors, name="Outcome", breaks=["Purchased", "Abandoned"])
-    + labs(title="parallel-categories-basic · plotnine · pyplots.ai", x="", y="")
-    + coord_cartesian(xlim=(0, 1), ylim=(-0.02, 1.02))
+    + labs(title="parallel-categories-basic · plotnine · anyplot.ai", x="", y="")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_background=element_blank(),
+        panel_background=element_blank(),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
+        legend_background=element_blank(),
+        legend_title=element_text(size=16, weight="bold", color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
         legend_position="right",
     )
 )
@@ -242,17 +265,10 @@ plot = (
 # Add dimension labels at top
 for dim_idx, dim in enumerate(dimensions):
     plot = plot + annotate(
-        "text",
-        x=x_positions[dim_idx],
-        y=0.98,
-        label=dim["label"],
-        size=14,
-        color="#333333",
-        fontweight="bold",
-        ha="center",
+        "text", x=x_positions[dim_idx], y=0.98, label=dim["label"], size=14, color=INK, fontweight="bold", ha="center"
     )
 
-# Add category labels beside each node (all dimensions)
+# Add category labels beside each node
 for (dim_idx, cat), pos in node_positions.items():
     label = str(cat)
     label_y = (pos["y_top"] + pos["y_bottom"]) / 2
@@ -264,8 +280,8 @@ for (dim_idx, cat), pos in node_positions.items():
             x=x_positions[dim_idx] - node_width / 2 - 0.01,
             y=label_y,
             label=label,
-            size=10,
-            color="#333333",
+            size=11,
+            color=INK_SOFT,
             ha="right",
             va="center",
         )
@@ -276,8 +292,8 @@ for (dim_idx, cat), pos in node_positions.items():
             x=x_positions[dim_idx] + node_width / 2 + 0.01,
             y=label_y,
             label=label,
-            size=10,
-            color="#333333",
+            size=11,
+            color=INK_SOFT,
             ha="left",
             va="center",
         )
@@ -288,10 +304,10 @@ for (dim_idx, cat), pos in node_positions.items():
             x=x_positions[dim_idx],
             y=pos["y_bottom"] - 0.015,
             label=label,
-            size=9,
-            color="#333333",
+            size=11,
+            color=INK_SOFT,
             ha="center",
             va="top",
         )
 
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
