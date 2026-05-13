@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 83/100 | Created: 2026-05-13
+Quality: 85/100 | Created: 2026-05-13
 """
 
 import os
