@@ -1,163 +1,187 @@
 library: matplotlib
+language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:49:45Z'
-updated: '2025-12-30T18:01:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602450818
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-13T11:11:52Z'
+generated_by: claude-haiku
+workflow_run: 25794869584
+issue: 2790
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent manual offset positioning for annotations prevents all label overlaps
-  - Connector lines from labels to points add clarity without visual clutter
-  - Realistic tech company data with plausible market cap and revenue figures
-  - Clean, readable code following KISS principles
-  - Proper font sizing for 4800x2700 output resolution
+  - Perfect visual quality (30/30) with flawless palette compliance and theme adaptation
+  - Impeccable readability across both light and dark renders with no text legibility
+    issues
+  - All 15 annotation labels completely visible without overlap through thoughtful
+    offset management
+  - Excellent spec compliance with all required scatter plot and annotation features
+    present
+  - High data quality with realistic, plausible technology company business scenario
+  - Clean, reproducible, Pythonic code with proper theme tokenization
+  - Thoughtful marker edge color handling (PAGE_BG) for subtle definition in both
+    light and dark themes
   weaknesses:
-  - Does not use adjustText or similar library for automatic label placement as suggested
-    in spec (though manual approach works well for this dataset)
-  image_description: 'The plot displays a scatter chart with 15 data points representing
-    technology companies. Each point is rendered as a moderately large circle (~s=250)
-    in Python Blue (#306998) with white edge outlines and 0.7 alpha transparency.
-    The X-axis shows "Market Capitalization ($ Billions)" ranging from 0 to 240, while
-    the Y-axis displays "Annual Revenue ($ Billions)" from 0 to 70. Each data point
-    has a company name label (e.g., "QuantumAI", "ByteWorks", "TechCorp") connected
-    by subtle gray connector lines. The title follows the required format: "scatter-annotated
-    · matplotlib · pyplots.ai". A dashed gray grid with 0.3 alpha provides reference
-    lines. The layout is 16:9 landscape format with good margins.'
+  - Design Excellence is moderate (11/20); lacks exceptional aesthetic sophistication
+    beyond well-configured library defaults
+  - Visual hierarchy could be improved with strategic emphasis on key companies or
+    insights
+  - Library Mastery could leverage adjustText library mentioned in spec for more sophisticated
+    automated label positioning
+  - Data storytelling is functional but not intentional; could benefit from visual
+    emphasis or color variation to highlight key patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "scatter-annotated · matplotlib · anyplot.ai" in dark text; axis labels "Market Capitalization ($ Billions)" and "Annual Revenue ($ Billions)" in dark text; tick labels in dark gray (INK_SOFT); all clearly readable
+      Data: 15 company names with green markers (#009E73, Okabe-Ito brand) connected by thin gray arrows; carefully offset to eliminate overlap; markers have subtle edges
+      Grid: Subtle horizontal grid lines visible at alpha=0.15
+      Legibility verdict: PASS - All text is fully legible against light background with high contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, and tick labels all in light text (INK/INK_SOFT), clearly readable against dark background; no dark-on-dark issues
+      Data: Company markers remain identical green (#009E73) as in light render (confirming proper theme-adaptive design); arrows are light gray; annotations positioned identically
+      Grid: Subtle horizontal grid lines visible
+      Legibility verdict: PASS - All text is fully readable against dark background with no dark-on-dark failures
+
+    Both renders: Data colors (green markers) are identical between light and dark themes. Only chrome (background, text, grid, arrow colors) flips appropriately. Perfect theme adaptation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, annotations
-          at 13pt - all perfectly readable
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks,
+          13pt annotations); perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All annotations are carefully offset with custom positioning to avoid
-          overlap; no text collision
+        comment: Custom offset management keeps all 15 company labels completely readable
+          without collision
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size s=250 is appropriate for 15 points; alpha=0.7 allows
-          visibility of any overlap
+        comment: Markers (s=250, alpha=0.7) perfectly adapted to 15-point data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single Python Blue color with white edge; no color-based differentiation
-          needed
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, plot fills ~60% of area, slight imbalance with
-          more whitespace on left side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Market Capitalization
-          ($ Billions)" and "Annual Revenue ($ Billions)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito brand green (#009E73) with excellent CVD-safe contrast
+          on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is appropriate (alpha=0.3), but no legend present; however,
-          this plot type doesn't require a legend since data is annotated directly
+        passed: true
+        comment: 'Descriptive with units: ''Market Capitalization ($ Billions)'',
+          ''Annual Revenue ($ Billions)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1 (light) / #1A1A17 (dark),
+          theme-adaptive chrome flawless in both renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean, professional design using brand green and proper typography
+          hierarchy; looks like well-configured library default, not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid (alpha=0.15), balanced whitespace
+          shows deliberate customization above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Company positioning reveals market cap vs. revenue relationship;
+          lacks visual emphasis or hierarchy to guide viewer to key insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct annotated scatter plot
+        comment: Correct scatter plot type with text annotations as specified
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned (market cap vs revenue)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scatter points, text labels, connecting
-          lines, alpha transparency'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: scatter plot, text labels, connecting
+          arrows'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding (0-240 and 0-70)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned (market cap vs. revenue); axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type (annotations serve as identification)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: 'Title format correct: ''scatter-annotated · matplotlib · anyplot.ai'';
+          no legend needed for single-series'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variety: small companies (ByteWorks), large ones (QuantumAI),
-          spread across the range demonstrating correlation'
+        comment: 'Shows all aspects: 15 companies with variety across market cap (18–225B)
+          and revenue (4–65B) ranges'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Tech company market cap vs revenue is a real, neutral business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for tech companies (market cap 18-225B, revenue
-          4-65B)
+        comment: Real, neutral technology company business scenario (market cap vs.
+          annual revenue)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values are plausible and proportionally realistic for tech companies
     code_quality:
       score: 10
       max: 10
@@ -167,43 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → annotations → styling
-          → save'
+        comment: 'Clean linear structure: imports, data, plot, annotations, save;
+          no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set (though data is actually deterministic
-          arrays)
+        comment: Deterministic hardcoded company and market data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: Only os, matplotlib.pyplot, numpy imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current ax.annotate API correctly
+        comment: Pythonic, appropriate complexity, no fake functionality, offset list
+          iteration is clean
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct API usage
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses basic annotate() method; could have used adjustText library
-          or more advanced annotation features, but the manual offset approach is
-          acceptable for the data size
+        passed: true
+        comment: Correct fig/ax pattern, idiomatic scatter() and annotate() usage;
+          doesn't leverage advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses annotate() with custom arrowprops (matplotlib-specific); manual
+          offset management is valid but doesn't leverage adjustText library mentioned
+          in spec
+    score_caps:
+      applied: false
+      details: No score caps triggered
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
