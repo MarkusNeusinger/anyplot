@@ -14,20 +14,18 @@ A step function plot where values remain constant until the next change, creatin
 
 ## Data
 
-The visualization requires:
-- **X variable**: Continuous or discrete variable (often time)
-- **Y variable**: Values that change at specific points
-
-Example structure:
+- `x` (numeric) — Time or independent variable; can be continuous or discrete
+- `y` (numeric) — Values that change at specific points
+- Size: 50-500 points (depending on temporal frequency)
+- Example:
 ```
-X    | Value
+x    | y
 -----|-------
 0    | 100
 1    | 100
 2    | 150
 3    | 150
 4    | 125
-...
 ```
 
 ## Notes
