@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
 Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Quality: pending | Created: 2025-12-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,65 +13,80 @@ import seaborn as sns
 from adjustText import adjust_text
 
 
-# Set seaborn theme for consistent styling
-sns.set_theme(style="whitegrid", palette="colorblind")
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
 
-# Data: Technology companies with revenue vs market cap
+# Set seaborn theme with adaptive colors
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data: Startup companies with revenue vs operating margin
 np.random.seed(42)
-companies = [
-    "TechCorp",
-    "DataSys",
-    "CloudNet",
-    "AILabs",
-    "CyberSec",
-    "NetFlow",
-    "AppWorks",
-    "CodeBase",
-    "DevOps",
-    "QuantumX",
-    "ByteLogic",
-    "StreamIO",
-    "VirtualAI",
-    "SecureIT",
-    "SmartHub",
+startups = [
+    "TechVenture",
+    "DataFlow",
+    "CloudScale",
+    "NeuralAI",
+    "SecureNet",
+    "EdgeCompute",
+    "ApiPlatform",
+    "DevTools",
+    "QuantumOps",
+    "ByteShift",
+    "StreamHub",
+    "AutoScale",
+    "MetaSync",
+    "SignalLabs",
+    "FusionCore",
 ]
-n_points = len(companies)
+n_points = len(startups)
 
-# Revenue (billions) and Market Cap (billions) - realistic tech company scale
-revenue = np.random.uniform(5, 80, n_points)
-market_cap = revenue * np.random.uniform(2, 8, n_points) + np.random.randn(n_points) * 10
+# Revenue (millions) and Operating Margin (%)
+revenue = np.random.uniform(10, 150, n_points)
+operating_margin = np.random.uniform(5, 35, n_points) + 0.1 * revenue + np.random.randn(n_points) * 5
+operating_margin = np.clip(operating_margin, -20, 45)
 
-# Create DataFrame for seaborn
-df = pd.DataFrame({"company": companies, "revenue": revenue, "market_cap": market_cap})
+# Create DataFrame
+df = pd.DataFrame({"company": startups, "revenue": revenue, "operating_margin": operating_margin})
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Create figure and plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Use seaborn scatterplot with DataFrame
+# Scatter plot with Okabe-Ito brand color
 sns.scatterplot(
-    data=df,
-    x="revenue",
-    y="market_cap",
-    s=200,
-    alpha=0.7,
-    color=sns.color_palette("colorblind")[0],
-    edgecolor="white",
-    linewidth=1.5,
-    ax=ax,
+    data=df, x="revenue", y="operating_margin", s=250, alpha=0.7, color=BRAND, edgecolor=PAGE_BG, linewidth=1.5, ax=ax
 )
 
 # Create text annotations with initial offset (collect for adjustText)
 texts = []
 for _, row in df.iterrows():
-    # Start labels slightly offset from points
-    offset_x = 3.0
-    offset_y = 12.0
+    offset_x = 4.0
+    offset_y = 1.5
     text = ax.text(
         row["revenue"] + offset_x,
-        row["market_cap"] + offset_y,
+        row["operating_margin"] + offset_y,
         row["company"],
         fontsize=14,
-        color="#333333",
+        color=INK_SOFT,
         ha="left",
         va="bottom",
     )
@@ -79,23 +96,33 @@ for _, row in df.iterrows():
 adjust_text(
     texts,
     x=df["revenue"].values,
-    y=df["market_cap"].values,
-    arrowprops={"arrowstyle": "-", "color": "#888888", "alpha": 0.6, "lw": 1.0},
-    expand=(1.5, 1.5),
+    y=df["operating_margin"].values,
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "alpha": 0.5, "lw": 0.8},
+    expand=(1.3, 1.3),
     force_text=(0.3, 0.3),
     force_points=(0.3, 0.3),
     ax=ax,
 )
 
 # Labels and styling
-ax.set_xlabel("Annual Revenue ($ Billion)", fontsize=20)
-ax.set_ylabel("Market Capitalization ($ Billion)", fontsize=20)
-ax.set_title("scatter-annotated · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Annual Revenue ($ Million)", fontsize=20, color=INK)
+ax.set_ylabel("Operating Margin (%)", fontsize=20, color=INK)
+ax.set_title("scatter-annotated · seaborn · anyplot.ai", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+
+# Grid on y-axis only
+ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, linestyle="-")
+ax.xaxis.grid(False)
 
 # Adjust axis limits to accommodate labels
-ax.set_xlim(0, max(revenue) + 15)
-ax.set_ylim(min(market_cap) - 30, max(market_cap) + 60)
+ax.set_xlim(-10, max(revenue) + 25)
+ax.set_ylim(min(operating_margin) - 8, max(operating_margin) + 10)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
