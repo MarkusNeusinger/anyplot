@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-30
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-13
 """
 
 import altair as alt
