@@ -1,171 +1,169 @@
 library: letsplot
+language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:06:40Z'
-updated: '2025-12-30T00:26:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585405473
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - bezier-curves
-  - layer-composition
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-13T17:21:46Z'
+generated_by: claude-haiku
+workflow_run: 25814634786
+issue: 2501
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Clean KISS flat structure without functions or classes (addressed previous feedback)
-  - Excellent custom implementation using geom_polygon for smooth curved ribbons with
-    easing
-  - Professional color scheme that is colorblind-accessible
-  - Realistic e-commerce customer journey scenario with meaningful category names
-  - Labels include counts for quantitative context
-  - Both PNG and HTML outputs for static and interactive viewing
-  - No text overlap with alternating label positions
+  - Perfect palette compliance with correct Okabe-Ito colors and theme adaptation
+    in both renders
+  - Complex geometry beautifully executed—smooth ribbon curves with easing function
+    create polished professional appearance
+  - Excellent spec compliance—all required features for parallel categories plot present
+    and working correctly
+  - Realistic, well-chosen customer journey data that clearly demonstrates all dimensions
+    and flows
+  - Proper theme-adaptive chrome—text colors correctly switch between light/dark renders
+    while data colors remain constant
   weaknesses:
-  - Category label text could be slightly larger (size 14 → 16) for optimal readability
-    at 4800×2700
-  image_description: 'The plot displays a parallel categories diagram with 4 vertical
-    dimensions (Channel, Product, Size, Outcome) connected by smooth curved ribbons.
-    The ribbons are colored by acquisition channel: blue (#306998) for Online, green
-    (#27AE60) for Store, and yellow (#FFD43B) for Mobile. Each category node is rendered
-    as a dark blue-gray rectangle with labels showing the category name and count
-    in parentheses (e.g., "Online (270)", "Completed (579)"). Dimension headers appear
-    in bold at the top of each vertical axis. The legend at the bottom shows "Acquisition
-    Channel" with the three color mappings. The ribbons use 50% alpha transparency
-    allowing overlapping flows to be distinguished.'
+  - 'Minor: hjust variable calculated in lines 239-250 but never passed to geom_text()
+    call—dead code that could be removed'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct and clean
+      Chrome: Title "parallel-categories-basic · letsplot · anyplot.ai" bold and dark. Dimension headers (Channel, Product, Size, Outcome) in bold dark text, fully readable. Category labels with counts positioned alternately left/right to avoid overlap, all readable in dark text.
+      Data: Three ribbon flows in Okabe-Ito colors — green (#009E73) for Online, orange (#D55E00) for Store, blue (#0072B2) for Mobile. Ribbons have white borders for clarity and semi-transparent fill (alpha=0.5). Node rectangles in soft dark gray (#4A4A44).
+      Legibility verdict: PASS — All text clearly readable against light background, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct and clean
+      Chrome: Title and headers rendered in light text (#F0EFE8), clearly visible against dark background. Category labels in soft light gray (#B8B7B0), readable with good contrast. No dark-on-dark failures.
+      Data: Ribbon colors identical to light render (green, orange, blue) — only chrome has adapted for theme. Node rectangles in light gray for visibility on dark background.
+      Legibility verdict: PASS — All text readable against dark background with proper contrast, no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and dimension headers are clearly readable. Category labels
-          are readable but could be slightly larger for optimal viewing at full resolution
-          (size 14 vs recommended 16+)
+        comment: All font sizes explicitly set with proper scaling for 4800×2700 resolution
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlaps; labels positioned on alternating sides of nodes
-          to prevent collision
+        comment: Text well-positioned with alternating left/right placement for middle
+          dimensions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Ribbons are well-sized with appropriate alpha (0.5), nodes are distinct
-          dark rectangles
+        comment: Ribbons, nodes, and headers all clearly visible with good definition
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, green, and yellow are colorblind-safe (not red-green dependent)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with plot occupying ~70% of space; bottom area
-          has some unused whitespace
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for this plot type (no traditional axes); dimension headers serve
-          this purpose
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No distracting grid (appropriate for this plot), legend well-placed
-          at bottom
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect use of landscape format with balanced margins and spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear descriptive title present, axis labels appropriately omitted
+          for this chart type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Perfect compliance—Okabe-Ito colors with correct backgrounds and
+          theme-adaptive chrome
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, smooth easing curves for ribbons, professional above-default
+          appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean minimal design with white ribbon borders for clarity
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy guides viewer through customer journey flow
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel categories with width-proportional ribbons
+        comment: Correct parallel categories plot with proportional ribbons
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Four categorical dimensions correctly mapped with flow counts
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Ribbons proportional to count, colored by first dimension (Channel),
-          proper category ordering
-      - id: SC-04
-        name: Data Range
+        comment: All features present—4 dimensions, proportional ribbons, channel
+          coloring
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All categories and flows visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct mapping across all dimensions and flows
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Acquisition Channel" with accurate color
-          mapping
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "parallel-categories-basic · letsplot · pyplots.ai"'
+        comment: Title format correct, legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple channels, products, sizes, and outcomes with varied
-          flow sizes; could show more extreme contrasts
+        comment: Shows all 4 dimensions with multiple categories each
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: E-commerce customer journey is a perfect, neutral, realistic scenario
+        comment: Professional customer journey scenario, neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible (45, 32, 18, etc.) though some flows are quite
-          similar in size
+        comment: Values are plausible observation counts
     code_quality:
       score: 9
       max: 10
@@ -175,42 +173,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Now uses flat structure without functions/classes (improved from
-          previous attempt)
+        comment: Linear structure—data, calculation, plot, save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded list), no random seed needed
+        comment: Deterministic data, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Minor: hjust calculated but never used in geom_text()—dead code'
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" but path="." may cause issues
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format as plot-{THEME}.png and .html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar (geom_polygon, geom_rect, geom_text, theme_minimal)
-          appropriately, but this is a custom implementation rather than a native
-          lets-plot parallel categories geom
+        comment: Proper ggplot composition, correct theme token usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Advanced geom_polygon with custom easing function shows library mastery
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
