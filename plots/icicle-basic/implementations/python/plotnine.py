@@ -1,20 +1,43 @@
-""" pyplots.ai
+"""anyplot.ai
 icicle-basic: Basic Icicle Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-05-13
 """
 
-import pandas as pd
-from plotnine import aes, element_text, geom_rect, geom_text, ggplot, labs, scale_fill_manual, theme, theme_void
+import os
 
+import pandas as pd
+from plotnine import (
+    aes,
+    element_rect,
+    element_text,
+    geom_rect,
+    geom_text,
+    ggplot,
+    labs,
+    scale_fill_manual,
+    theme,
+    theme_void,
+)
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for hierarchy levels
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
 
 # Data: File system hierarchy with sizes (MB)
-# Increased small node values to ensure visibility
 data = [
     {"name": "root", "parent": "", "value": 0},
     {"name": "Documents", "parent": "root", "value": 0},
     {"name": "Photos", "parent": "root", "value": 0},
     {"name": "Projects", "parent": "root", "value": 0},
+    {"name": "Archive", "parent": "root", "value": 0},
     {"name": "Reports", "parent": "Documents", "value": 450},
     {"name": "Invoices", "parent": "Documents", "value": 280},
     {"name": "Notes", "parent": "Documents", "value": 180},
@@ -29,6 +52,8 @@ data = [
     {"name": "Config", "parent": "WebApp", "value": 200},
     {"name": "Models", "parent": "DataSci", "value": 520},
     {"name": "Scripts", "parent": "DataSci", "value": 300},
+    {"name": "Old2023", "parent": "Archive", "value": 1200},
+    {"name": "Old2022", "parent": "Archive", "value": 950},
 ]
 
 df = pd.DataFrame(data)
@@ -38,7 +63,6 @@ name_to_idx = {row["name"]: idx for idx, row in df.iterrows()}
 children_map = {name: df[df["parent"] == name]["name"].tolist() for name in df["name"]}
 
 # Calculate values for non-leaf nodes (bottom-up aggregation)
-# Process nodes from leaves up using iterative approach
 processed = set()
 while len(processed) < len(df):
     for _, row in df.iterrows():
@@ -66,7 +90,6 @@ max_depth = max(depths.values())
 
 # Build icicle rectangles using iterative BFS
 rects = []
-# Queue: (name, x_start, x_end)
 layout_queue = [("root", 0.0, 1.0)]
 
 while layout_queue:
@@ -84,7 +107,7 @@ while layout_queue:
     kids = children_map[name]
     if kids:
         kid_values = [(k, df.loc[name_to_idx[k], "value"]) for k in kids]
-        kid_values.sort(key=lambda x: -x[1])  # Sort by value descending
+        kid_values.sort(key=lambda x: -x[1])
         total_value = sum(v for _, v in kid_values)
         if total_value > 0:
             curr_x = x_start
@@ -95,14 +118,8 @@ while layout_queue:
 
 rect_df = pd.DataFrame(rects)
 
-# Color palette by depth - using distinct colors (fixed yellow similarity issue)
-colors = {
-    0: "#306998",  # Python Blue - root
-    1: "#4B8BBE",  # Lighter blue - level 1
-    2: "#FFD43B",  # Python Yellow - level 2
-    3: "#8B4513",  # SaddleBrown - level 3 (distinct from yellow)
-    4: "#90B4CE",  # Light steel blue - level 4
-}
+# Color palette by depth using Okabe-Ito
+colors = {0: OKABE_ITO[0], 1: OKABE_ITO[1], 2: OKABE_ITO[2], 3: OKABE_ITO[3], 4: OKABE_ITO[4], 5: OKABE_ITO[5]}
 rect_df["fill_color"] = rect_df["depth"].map(colors)
 
 # Calculate label positions and widths
@@ -111,50 +128,63 @@ rect_df["x_center"] = (rect_df["xmin"] + rect_df["xmax"]) / 2
 rect_df["y_center"] = (rect_df["ymin"] + rect_df["ymax"]) / 2
 
 # Labels: show name + value for wide rectangles, name only for medium, hide for very narrow
-# Lowered threshold to ensure more labels show value (fix for truncated labels)
 rect_df["label"] = rect_df.apply(
     lambda r: f"{r['name']}\n({int(r['value'])} MB)" if r["width"] > 0.05 else (r["name"] if r["width"] > 0.02 else ""),
     axis=1,
 )
 
-# Convert depth to categorical with proper labels for legend
-level_labels = {0: "Level 0 (Root)", 1: "Level 1", 2: "Level 2", 3: "Level 3", 4: "Level 4 (Leaf)"}
+# Convert depth to categorical with descriptive labels
+level_labels = {
+    0: "Level 0 (Root)",
+    1: "Level 1 (Folders)",
+    2: "Level 2 (Subfolders)",
+    3: "Level 3 (Groups)",
+    4: "Level 4 (Items)",
+    5: "Level 5 (Leaf)",
+}
 rect_df["depth_label"] = pd.Categorical(
     rect_df["depth"].map(level_labels), categories=list(level_labels.values()), ordered=True
 )
 
-# Also update dark_bg and light_bg with labels
+# Separate light and dark backgrounds for text color contrast
 dark_bg = rect_df[rect_df["depth"].isin([0, 1, 3])]
-light_bg = rect_df[rect_df["depth"].isin([2, 4])]
+light_bg = rect_df[rect_df["depth"].isin([2, 4, 5])]
 
-# Create plot using plotnine grammar of graphics
+# Create plot
 plot = (
     ggplot(rect_df)
     + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="depth_label"), color="white", size=1.5)
-    + geom_text(aes(x="x_center", y="y_center", label="label"), data=dark_bg, size=11, color="white", fontweight="bold")
+    + geom_text(aes(x="x_center", y="y_center", label="label"), data=dark_bg, size=11, color=INK)
     + geom_text(
-        aes(x="x_center", y="y_center", label="label"), data=light_bg, size=11, color="black", fontweight="bold"
+        aes(x="x_center", y="y_center", label="label"),
+        data=light_bg,
+        size=11,
+        color=INK if THEME == "light" else INK_SOFT,
     )
     + scale_fill_manual(
         values={
-            "Level 0 (Root)": "#306998",
-            "Level 1": "#4B8BBE",
-            "Level 2": "#FFD43B",
-            "Level 3": "#8B4513",
-            "Level 4 (Leaf)": "#90B4CE",
+            "Level 0 (Root)": OKABE_ITO[0],
+            "Level 1 (Folders)": OKABE_ITO[1],
+            "Level 2 (Subfolders)": OKABE_ITO[2],
+            "Level 3 (Groups)": OKABE_ITO[3],
+            "Level 4 (Items)": OKABE_ITO[4],
+            "Level 5 (Leaf)": OKABE_ITO[5],
         },
         name="Hierarchy Level",
     )
-    + labs(title="icicle-basic · plotnine · pyplots.ai")
+    + labs(title="icicle-basic · plotnine · anyplot.ai")
     + theme_void()
     + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         figure_size=(16, 9),
-        plot_title=element_text(size=28, ha="center", weight="bold"),
+        plot_title=element_text(size=28, ha="center", weight="bold", color=INK),
         legend_position="right",
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
