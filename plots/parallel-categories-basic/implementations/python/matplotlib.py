@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-13
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -11,10 +13,16 @@ import pandas as pd
 from matplotlib.path import Path
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Data: Product purchase flow (Channel -> Category -> Outcome)
 np.random.seed(42)
 
-# Create synthetic categorical data representing customer purchase flow
 n_samples = 500
 channels = np.random.choice(["Online", "Store", "Mobile"], size=n_samples, p=[0.4, 0.35, 0.25])
 categories = np.random.choice(["Electronics", "Clothing", "Home", "Sports"], size=n_samples, p=[0.3, 0.25, 0.25, 0.2])
@@ -30,11 +38,12 @@ dim_categories = {
     "Outcome": ["Purchased", "Returned", "Abandoned"],
 }
 
-# Color palette for the first dimension (source) - distinct colors for clear differentiation
-colors = {"Online": "#1F77B4", "Store": "#FF7F0E", "Mobile": "#2CA02C"}
+# Okabe-Ito palette for channel colors
+colors = {"Online": "#009E73", "Store": "#D55E00", "Mobile": "#0072B2"}
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Calculate positions for each dimension
 n_dims = len(dimensions)
@@ -50,10 +59,8 @@ for dim in dimensions:
     counts = df[dim].value_counts()
     total = counts.sum()
 
-    # Calculate heights proportional to counts
     heights = {cat: counts.get(cat, 0) / total for cat in cats}
 
-    # Stack categories vertically
     y_start = 0.05
     y_end = 0.95
     available_height = y_end - y_start
@@ -78,10 +85,8 @@ for i in range(n_dims - 1):
     x1 = x_positions[i]
     x2 = x_positions[i + 1]
 
-    # Get flow counts between categories
     flow_counts = df.groupby([dim1, dim2]).size().reset_index(name="count")
 
-    # Track current y position for each category to stack ribbons
     current_y_left = {cat: category_positions[dim1][cat][0] for cat in dim_categories[dim1]}
     current_y_right = {cat: category_positions[dim2][cat][0] for cat in dim_categories[dim2]}
 
@@ -92,25 +97,6 @@ for i in range(n_dims - 1):
         cat2 = row[dim2]
         count = row["count"]
 
-        # Calculate ribbon heights
-        h1 = (
-            (count / total)
-            * (category_positions[dim1][cat1][1] - category_positions[dim1][cat1][0])
-            / category_heights[dim1][cat1]
-        )
-        h2 = (
-            (count / total)
-            * (category_positions[dim2][cat2][1] - category_positions[dim2][cat2][0])
-            / category_heights[dim2][cat2]
-        )
-
-        # Ribbon corners
-        y1_bottom = current_y_left[cat1]
-        y1_top = (
-            y1_bottom + h1 * (category_positions[dim1][cat1][1] - category_positions[dim1][cat1][0]) / h1
-            if h1 > 0
-            else y1_bottom
-        )
         y1_top = current_y_left[cat1] + (count / df[dim1].value_counts()[cat1]) * (
             category_positions[dim1][cat1][1] - category_positions[dim1][cat1][0]
         )
@@ -120,21 +106,21 @@ for i in range(n_dims - 1):
             category_positions[dim2][cat2][1] - category_positions[dim2][cat2][0]
         )
 
-        # Create bezier path for smooth ribbon
+        y1_bottom = current_y_left[cat1]
+
         x_ctrl1 = x1 + dim_width + (x2 - x1 - 2 * dim_width) * 0.4
         x_ctrl2 = x1 + dim_width + (x2 - x1 - 2 * dim_width) * 0.6
 
-        # Path vertices
         vertices = [
-            (x1 + dim_width, y1_bottom),  # Start bottom left
-            (x_ctrl1, y1_bottom),  # Control point 1
-            (x_ctrl2, y2_bottom),  # Control point 2
-            (x2 - dim_width, y2_bottom),  # End bottom right
-            (x2 - dim_width, y2_top),  # End top right
-            (x_ctrl2, y2_top),  # Control point 3
-            (x_ctrl1, y1_top),  # Control point 4
-            (x1 + dim_width, y1_top),  # Start top left
-            (x1 + dim_width, y1_bottom),  # Close path
+            (x1 + dim_width, y1_bottom),
+            (x_ctrl1, y1_bottom),
+            (x_ctrl2, y2_bottom),
+            (x2 - dim_width, y2_bottom),
+            (x2 - dim_width, y2_top),
+            (x_ctrl2, y2_top),
+            (x_ctrl1, y1_top),
+            (x1 + dim_width, y1_top),
+            (x1 + dim_width, y1_bottom),
         ]
 
         codes = [
@@ -151,21 +137,18 @@ for i in range(n_dims - 1):
 
         path = Path(vertices, codes)
 
-        # Get color based on first dimension category
         if i == 0:
             color = colors[cat1]
         else:
-            # For subsequent flows, trace back to original channel
             orig_cat = df[df[dim1] == cat1]["Channel"].mode()
             if len(orig_cat) > 0:
-                color = colors.get(orig_cat.iloc[0], "#306998")
+                color = colors.get(orig_cat.iloc[0], INK_SOFT)
             else:
-                color = "#306998"
+                color = INK_SOFT
 
-        patch = mpatches.PathPatch(path, facecolor=color, edgecolor="white", linewidth=0.5, alpha=0.6)
+        patch = mpatches.PathPatch(path, facecolor=color, edgecolor=PAGE_BG, linewidth=0.5, alpha=0.6)
         ax.add_patch(patch)
 
-        # Update current positions
         current_y_left[cat1] = y1_top
         current_y_right[cat2] = y2_top
 
@@ -175,23 +158,21 @@ for i, dim in enumerate(dimensions):
     for cat in dim_categories[dim]:
         y_start, y_end = category_positions[dim][cat]
 
-        # Draw rectangle for category
         rect = mpatches.Rectangle(
             (x - dim_width, y_start),
             dim_width * 2,
             y_end - y_start,
-            facecolor="#2C3E50",
-            edgecolor="white",
+            facecolor=ELEVATED_BG,
+            edgecolor=INK_SOFT,
             linewidth=2,
         )
         ax.add_patch(rect)
 
-        # Add category label
-        ax.text(x, (y_start + y_end) / 2, cat, ha="center", va="center", fontsize=14, fontweight="bold", color="white")
+        ax.text(x, (y_start + y_end) / 2, cat, ha="center", va="center", fontsize=14, fontweight="bold", color=INK)
 
 # Add dimension labels
 for i, dim in enumerate(dimensions):
-    ax.text(x_positions[i], 1.02, dim, ha="center", va="bottom", fontsize=20, fontweight="bold", color="#2C3E50")
+    ax.text(x_positions[i], 1.02, dim, ha="center", va="bottom", fontsize=20, fontweight="bold", color=INK)
 
 # Styling
 ax.set_xlim(-0.15, 1.15)
@@ -200,21 +181,21 @@ ax.set_aspect("equal")
 ax.axis("off")
 
 # Title
-ax.set_title(
-    "parallel-categories-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20, color="#2C3E50"
-)
+ax.set_title("parallel-categories-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", pad=20, color=INK)
 
 # Legend
 legend_patches = [mpatches.Patch(color=colors[ch], alpha=0.6, label=ch) for ch in ["Online", "Store", "Mobile"]]
-ax.legend(
+leg = ax.legend(
     handles=legend_patches,
     loc="lower right",
     fontsize=16,
     title="Channel",
     title_fontsize=18,
-    framealpha=0.9,
     bbox_to_anchor=(1.12, 0.0),
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
