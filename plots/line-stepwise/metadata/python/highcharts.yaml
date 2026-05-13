@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:45:53Z'
-updated: '2026-05-13T15:33:45Z'
+updated: '2026-05-13T15:39:33Z'
 generated_by: claude-haiku
 workflow_run: 25808895035
 issue: 2600
@@ -15,33 +15,38 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-step
 quality_score: 85
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and full readability in both
-    themes
-  - Complete spec compliance with proper step line implementation and correct title
-    format
-  - Excellent data quality with realistic inventory scenario and appropriate scale
-  - Clean, reproducible code with proper KISS structure and seed-based determinism
-  - Proper theme adaptation with correct Okabe-Ito palette (#009E73) across both renders
+  - Perfect theme-adaptive rendering with correct Okabe-Ito palette (#009E73) in both
+    light and dark modes
+  - Excellent legibility across all text elements with explicitly sized fonts (title
+    28px, labels 22px, ticks 18px)
+  - Step line visualization correctly implements 'left' alignment with clear horizontal-then-vertical
+    transitions
+  - Comprehensive data example showing full range of inventory behavior (increases,
+    decreases, multiple steps)
+  - Clean code structure using highcharts idiomatic patterns (Chart, LineSeries, HighchartsOptions,
+    Selenium export)
+  - Proper theme token usage (INK, INK_SOFT, GRID, PAGE_BG, ELEVATED_BG) applied consistently
   weaknesses:
-  - 'Design Excellence relies on library defaults without customization (DE-01/DE-02:
-    6/20)'
-  - Minimal visual refinement - grid lines present but not optimized for clarity
-  - No visual storytelling beyond direct data display - plot is functional but not
-    inspiring
+  - 'Design Excellence could be elevated with more sophisticated visual refinement:
+    remove unnecessary chart borders/spines, refine grid styling (reduce alpha or
+    remove entirely for sparse data), or add subtle styling touches'
+  - Visual storytelling could emphasize the step pattern more explicitly through design
+    (e.g., annotation highlighting a key transition or color contrast emphasizing
+    volatility)
+  - Library mastery could leverage more distinctive highcharts features (advanced
+    tooltip styling, custom legend, interactive annotations in HTML output)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 - correct theme surface
-      Chrome: Title "line-stepwise · highcharts · anyplot.ai" in dark text; X-axis "Day", Y-axis "Inventory Units" labels in dark text; tick labels (0-20 on X, 66-124 on Y) all clearly readable in secondary dark color
-      Data: Step line plot in #009E73 (Okabe-Ito brand green) with circular markers at each step transition, showing discrete inventory changes; horizontal segments show value persistence, vertical segments show instantaneous changes
-      Grid: Subtle vertical and horizontal grid lines visible but not dominant
-      Legibility verdict: PASS - all text is clearly readable with excellent contrast
+      Background: Warm off-white (#FAF8F1), not pure white. Provides excellent contrast.
+      Chrome: Title "line-stepwise · highcharts · anyplot.ai" in dark text (28px), X-axis label "Day" (22px), Y-axis label "Inventory Units" (22px), tick labels in secondary dark color (18px) — all clearly readable against light surface. Subtle grid lines visible.
+      Data: Step line plot in brand green (#009E73) with circular markers (radius 8). Line width 3px. Horizontal-then-vertical transitions clear. 20 data points showing inventory changes from 60–120 units over days 0–19. All data visible, no overlap.
+      Legibility verdict: PASS — all text readable, no theme-readability failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17 - correct theme surface
-      Chrome: Title in light text (#F0EFE8); axis labels in light text; tick labels in secondary light color (#B8B7B0) - all clearly readable against dark background
-      Data: Step line plot in #009E73 (identical to light render) - data colors perfectly preserved across themes
-      Grid: Subtle grid lines visible and properly themed
-      Legibility verdict: PASS - all text is readable; no dark-on-dark failures; data color consistency confirmed
+      Background: Warm near-black (#1A1A17), not pure black. Excellent contrast for light elements.
+      Chrome: Title, axis labels, tick labels all in light colors — clearly visible against dark surface. Subtle grid lines visible. No dark-on-dark text issues.
+      Data: Step line and markers render in identical green (#009E73) as light render. Data colors unchanged, only chrome adapted to theme (background, text, grid colors flipped to light variants). Step pattern equally clear.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, brand green visible and accessible.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,50 +57,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
-          perfectly readable at 4800x2700
+        comment: 'All font sizes explicitly set and readable: title 28px, labels 22px,
+          ticks 18px'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all labels fully readable
+        comment: No overlapping text; all elements fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 3px and markers radius 8 are well-adapted to 20-point
-          dataset, clearly visible
+        comment: Markers (radius 8) and line (width 3px) perfectly adapted to 20-point
+          sparse data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is colorblind-safe with good contrast against
-          both backgrounds'
+        comment: 'Okabe-Ito palette #009E73 has good contrast; CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Margins (bottom 200, left 180, top 150) are well-balanced, plot fills
-          60-70% of canvas
+        comment: 4800×2700 canvas with balanced margins (top 150, left 180, bottom
+          200); plot fills 50-70% of space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with implicit units (Day, Inventory Units)
+        comment: Title format correct; Y-axis 'Inventory Units' has units; X-axis
+          'Day' is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct backgrounds (#FAF8F1 light, #1A1A17 dark), data color #009E73
-          identical across themes, text colors theme-correct'
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) and #1A1A17 (dark);
+          theme-adaptive chrome correct in both renders'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -103,22 +108,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with correct palette usage, but no
-          distinctive design choices or custom sophistication
+        comment: Well-configured library default; correct Okabe-Ito palette but no
+          custom design touches or exceptional visual choices
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Standard library defaults with minimal customization; grid lines
-          visible but not optimized
+        comment: Margins and spacing adequate; minimal customization of grid or spines;
+          mostly library defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy, emphasis, or narrative
-          enhancement
+        comment: Data clearly displayed (inventory changes, discrete steps) but no
+          visual hierarchy or emphasis to guide narrative
     spec_compliance:
       score: 15
       max: 15
@@ -128,29 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step line implementation using highcharts line series with
-          step='left'
+        comment: Step line chart with 'left' alignment; correct chart type with all
+          subtypes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: discrete changes, horizontal-vertical
-          transitions, value persistence'
+        comment: 'All features present: discrete state changes, clear step pattern,
+          markers on transitions'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (Days 0-19) and Y-axis (Inventory 60-124) correctly mapped
-          and fully visible
+        comment: X-axis (days 0–19) and Y-axis (inventory 60–120) correctly mapped;
+          all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''line-stepwise · highcharts · anyplot.ai'',
-          legend appropriately disabled for single-series'
+        comment: Title 'line-stepwise · highcharts · anyplot.ai' correct; legend disabled
+          appropriately for single series
     data_quality:
       score: 15
       max: 15
@@ -160,22 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete step function behavior with multiple up/down changes
-          and varying step sizes
+        comment: 'Shows all aspects of step-line behavior: increases, decreases, sustained
+          levels, multiple transitions'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic inventory management scenario with clear domain labels
-          and neutral context
+        comment: Real, neutral inventory management scenario; comprehensible and non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible inventory values (60-124 units), realistic proportions,
-          factually correct for warehouse domain
+        comment: Inventory range 60–120 units and 20-day period realistic; proportions
+          factually plausible
     code_quality:
       score: 10
       max: 10
@@ -185,35 +189,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → chart config → export,
-          no unnecessary functions'
+        comment: 'Linear flow: imports → data → chart config → series → HTML generation
+          → screenshot; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation
+        comment: np.random.seed(42) set; data deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, tempfile, time, urllib, Path, numpy, highcharts_core,
-          selenium)
+        comment: All imports (os, tempfile, time, urllib, numpy, highcharts, selenium)
+          used appropriately
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with proper complexity and no over-engineering
+        comment: Clean, Pythonic code; no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output files: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -221,21 +225,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct highcharts_core usage patterns (Chart, HighchartsOptions,
-          LineSeries, add_series), theme-adaptive configuration
+        comment: Uses Chart, HighchartsOptions, LineSeries correctly; proper pattern
+          for highcharts; doesn't leverage advanced API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses highcharts step parameter, Selenium headless export, and HTML
-          export alongside PNG
+        passed: false
+        comment: Uses step configuration and Selenium export (somewhat distinctive)
+          but mostly generic line plot implementation
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
