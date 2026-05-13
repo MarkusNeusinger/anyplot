@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2025-12-30
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,9 +13,11 @@ from lets_plot import (
     aes,
     coord_polar,
     element_line,
+    element_rect,
     element_text,
     geom_bar,
     ggplot,
+    ggsave,
     ggsize,
     labs,
     scale_fill_manual,
@@ -21,45 +25,51 @@ from lets_plot import (
     theme,
     theme_minimal,
 )
-from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
 
-# Data - Wind direction frequency data (8 compass directions)
-np.random.seed(42)
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette + adaptive neutral for 8 compass directions
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
+DIRECTION_COLORS = OKABE_ITO + [NEUTRAL]
+
+# Data - Monsoon wind pattern (SW-dominant, distinct from westerlies)
 directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+frequencies = np.array([3, 5, 6, 12, 28, 35, 6, 5])
 
-# Generate realistic wind frequency data
-frequencies = np.array([15, 8, 12, 5, 10, 18, 22, 14])
-
-# Create DataFrame - direction as categorical factor
+# Create DataFrame
 df = pd.DataFrame(
     {"direction": pd.Categorical(directions, categories=directions, ordered=True), "frequency": frequencies}
 )
 
 # Create polar bar chart (wind rose)
-# Use coord_polar to wrap bars in a circle
 plot = (
     ggplot(df, aes(x="direction", y="frequency", fill="direction"))
-    + geom_bar(stat="identity", color="white", size=0.8, alpha=0.85, width=0.95)
-    + coord_polar(start=-np.pi / 8)  # Rotate so N is at top
-    + scale_fill_manual(values=["#306998", "#4A90C2", "#FFD43B", "#F5A623", "#7B68EE", "#9B59B6", "#2ECC71", "#27AE60"])
+    + geom_bar(stat="identity", color="white", size=0.5, alpha=0.85, width=0.95)
+    + coord_polar(start=-np.pi / 8)
+    + scale_fill_manual(values=DIRECTION_COLORS)
     + scale_y_continuous(limits=[0, None], expand=[0, 0.5])
-    + labs(title="polar-bar · letsplot · pyplots.ai", x="", y="Frequency (%)")
+    + labs(title="polar-bar · letsplot · anyplot.ai", x="", y="Frequency (%)")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title_y=element_text(size=18),
-        axis_text=element_text(size=14),
-        legend_position="none",  # Hide legend (labels shown around chart)
-        panel_grid_major=element_line(color="#CCCCCC", size=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        plot_title=element_text(size=24, color=INK, face="bold"),
+        axis_title_y=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        legend_position="none",
     )
-    + ggsize(1200, 1200)  # Square for polar chart
+    + ggsize(1200, 1200)
 )
 
-# Save as PNG (scale 3x for high resolution: 3600x3600 for square polar)
-ggsave(plot, "plot.png", scale=3, path=".")
-
-# Save interactive HTML
-ggsave(plot, "plot.html", path=".")
+# Save as PNG and HTML (theme-suffixed)
+ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
