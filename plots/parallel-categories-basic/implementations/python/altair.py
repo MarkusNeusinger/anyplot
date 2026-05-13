@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: altair | Python 3.13
-Quality: pending | Created: 2025-05-13
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-13
 """
 
 import os
