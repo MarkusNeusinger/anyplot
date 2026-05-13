@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 74/100 | Updated: 2026-05-13
@@ -6,6 +6,9 @@ Quality: 74/100 | Updated: 2026-05-13
 
 import os
 import sys
+import xml.etree.ElementTree as ET
+
+import cairosvg
 
 
 # Workaround: pygal.py file in cwd conflicts with pygal package.
@@ -112,7 +115,30 @@ for i, company in enumerate(companies):
         formatter=lambda x, c=company: c,
     )
 
-# Render to PNG and HTML with theme suffix
-chart.render_to_png(f"plot-{THEME}.png")
+# Render to SVG and fix label colors to match INK theme token
+svg_bytes = chart.render()
+
+# Parse SVG and fix label text colors
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+root = ET.fromstring(svg_bytes)
+ns = {"svg": "http://www.w3.org/2000/svg"}
+
+# Find all text elements and fix those that contain company names
+for text_elem in root.findall(".//svg:text", ns):
+    text_content = "".join(text_elem.itertext()).strip()
+    if text_content in companies:
+        # Set fill color to INK using style attribute to ensure it takes precedence
+        current_style = text_elem.get("style", "")
+        if current_style:
+            text_elem.set("style", f"{current_style};fill:{INK}!important")
+        else:
+            text_elem.set("style", f"fill:{INK}")
+
+# Re-serialize SVG and render PNG
+modified_svg = ET.tostring(root, encoding="utf-8")
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(modified_svg)
+
+# Convert SVG to PNG using cairosvg
+cairosvg.svg2png(bytestring=modified_svg, write_to=f"plot-{THEME}.png")
