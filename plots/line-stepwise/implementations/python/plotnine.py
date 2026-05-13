@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-stepwise: Step Line Plot
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-13
 """
 
 import os
