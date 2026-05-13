@@ -1,18 +1,34 @@
-""" pyplots.ai
+"""anyplot.ai
 facet-grid: Faceted Grid Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-13
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = [
+    "#009E73",  # brand green
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+]
+
 # Data
 np.random.seed(42)
 
-# Create sample data with two categorical variables for faceting
 regions = ["North", "South", "East"]
 seasons = ["Spring", "Summer", "Fall", "Winter"]
 
@@ -20,30 +36,35 @@ data = []
 for region in regions:
     for season in seasons:
         n_points = 25
-        # Generate temperature vs energy consumption relationship
-        # Different patterns per region/season combination
-        base_temp = {"North": 10, "South": 25, "East": 18}[region]
-        season_offset = {"Spring": 5, "Summer": 15, "Fall": 0, "Winter": -10}[season]
+        # Base temperature varies by region and season
+        base_temps = {"North": 5, "South": 20, "East": 15}
+        season_offsets = {"Spring": 5, "Summer": 10, "Fall": 2, "Winter": -8}
 
-        temp = np.random.normal(base_temp + season_offset, 5, n_points)
-        # Energy consumption varies with temperature
-        energy = 100 + (temp - 15) ** 2 * 0.3 + np.random.normal(0, 10, n_points)
+        base_temp = base_temps[region] + season_offsets[season]
+        temp = np.random.normal(base_temp, 4, n_points)
+
+        # Energy consumption: U-shaped relationship with temperature
+        energy = 120 + (temp - base_temp) ** 2 * 0.2 + np.random.normal(0, 8, n_points)
 
         for t, e in zip(temp, energy, strict=True):
             data.append({"Temperature": t, "Energy": e, "Region": region, "Season": season})
 
 df = pd.DataFrame(data)
 
-# Plot - Faceted grid: rows = regions, columns = seasons
-fig, axes = plt.subplots(nrows=len(regions), ncols=len(seasons), figsize=(16, 9), sharex=True, sharey=True)
+# Plot
+fig, axes = plt.subplots(
+    nrows=len(regions), ncols=len(seasons), figsize=(16, 9), sharex=True, sharey=True, facecolor=PAGE_BG
+)
 
-# Colors for regions
-colors = {"North": "#306998", "South": "#FFD43B", "East": "#4DAF4A"}
+# Color map: regions to Okabe-Ito palette
+region_colors = {region: OKABE_ITO[i] for i, region in enumerate(regions)}
 
 # Create scatter plots in each facet
 for i, region in enumerate(regions):
     for j, season in enumerate(seasons):
         ax = axes[i, j]
+        ax.set_facecolor(PAGE_BG)
+
         subset = df[(df["Region"] == region) & (df["Season"] == season)]
 
         ax.scatter(
@@ -51,33 +72,37 @@ for i, region in enumerate(regions):
             subset["Energy"],
             s=120,
             alpha=0.7,
-            color=colors[region],
-            edgecolor="white",
+            color=region_colors[region],
+            edgecolors=PAGE_BG,
             linewidth=0.5,
         )
 
-        # Add grid
-        ax.grid(True, alpha=0.3, linestyle="--")
+        # Subtle grid
+        ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 
         # Column headers (top row only)
         if i == 0:
-            ax.set_title(season, fontsize=18, fontweight="bold")
+            ax.set_title(season, fontsize=18, color=INK, fontweight="medium")
 
-        # Row labels (rightmost column only)
-        if j == len(seasons) - 1:
-            ax.annotate(
-                region, xy=(1.05, 0.5), xycoords="axes fraction", fontsize=16, fontweight="bold", va="center", ha="left"
-            )
+        # Row labels (left side)
+        if j == 0:
+            ax.set_ylabel(region, fontsize=18, color=INK, fontweight="medium")
 
-        # Tick parameters
-        ax.tick_params(axis="both", labelsize=12)
+        # Tick styling
+        ax.tick_params(axis="both", labelsize=14, colors=INK_SOFT, labelcolor=INK_SOFT)
+
+        # Spine styling
+        for spine in ("top", "right"):
+            ax.spines[spine].set_visible(False)
+        for spine in ("left", "bottom"):
+            ax.spines[spine].set_color(INK_SOFT)
 
 # Shared axis labels
-fig.supxlabel("Temperature (°C)", fontsize=20, y=0.02)
-fig.supylabel("Energy Consumption (kWh)", fontsize=20, x=0.02)
+fig.text(0.5, 0.02, "Temperature (°C)", ha="center", fontsize=20, color=INK)
+fig.text(0.02, 0.5, "Energy Consumption (kWh)", va="center", rotation="vertical", fontsize=20, color=INK)
 
 # Main title
-fig.suptitle("facet-grid · matplotlib · pyplots.ai", fontsize=24, y=0.98)
+fig.suptitle("facet-grid · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, y=0.98)
 
-plt.tight_layout(rect=[0.04, 0.04, 0.95, 0.95])
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.tight_layout(rect=[0.05, 0.05, 1, 0.96])
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
