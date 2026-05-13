@@ -1,7 +1,7 @@
 """ anyplot.ai
 upset-basic: UpSet Plot for Multi-Set Intersection Analysis
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Created: 2026-05-13
+Quality: 86/100 | Created: 2026-05-13
 """
 
 import os
