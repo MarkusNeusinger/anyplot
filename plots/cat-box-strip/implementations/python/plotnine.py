@@ -1,7 +1,7 @@
 """ anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-13
+Quality: 85/100 | Updated: 2026-05-13
 """
 
 import os

@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:30:02Z'
-updated: '2026-05-13T05:43:30Z'
+updated: '2026-05-13T05:49:29Z'
 generated_by: claude-haiku
 workflow_run: 25780574620
 issue: 2695
@@ -12,42 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Exceptional visual quality with perfect text legibility and explicit font sizing
-    across both renders
-  - 'Flawless spec compliance: implements box-strip visualization exactly as specified
-    with all required features'
-  - Excellent theme adaptation with correct Okabe-Ito palette colors identical in
-    both light and dark renders
-  - Clean, reproducible code with deterministic data generation and idiomatic plotnine
-    usage
-  - Strong data quality with realistic botany scenario demonstrating varied distributions
-    across treatment groups
+  - Perfect visual quality with all text legible in both themes
+  - Excellent theme-adaptive chrome implementation with no dark-on-dark or light-on-light
+    failures
+  - Comprehensive data representation combining box plot summary with individual point
+    visibility
+  - Clean, reproducible code with proper seeding and idiomatic plotnine patterns
+  - 'Proper Okabe-Ito palette compliance with first series #009E73 and multi-series
+    canonical order'
   weaknesses:
-  - Design execution is competent but generic, relying on library defaults rather
-    than custom aesthetic choices (DE-01=4/8)
-  - Visual refinement could be stronger with removal of panel border and even subtler
-    grid styling (DE-02=4/6)
-  - Data storytelling lacks visual emphasis on key insight—fertilizer effects are
-    clear but not highlighted (DE-03=4/6)
-  - No library-specific techniques leveraged; implementation uses generic grammar-of-graphics
-    patterns available across multiple ggplot2-like libraries (LM-02=1/5)
+  - Design excellence is modest; no custom refinements or distinctive aesthetic choices
+    beyond library defaults
+  - Limited visual storytelling; data displayed clearly but without strategic emphasis
+    or visual hierarchy to guide insight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title (24pt) and axis labels (20pt) in dark INK, tick labels (16pt) in INK_SOFT, legend on right with light frame — all readable and correctly sized
-      Data: Four treatment groups with Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 purple); boxes show median/quartiles with jittered points overlaid at alpha=0.6
-      Grid: Subtle (alpha=0.10 major, 0.05 minor) and non-distracting
-      Legibility verdict: PASS — all text and data elements clearly visible
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title in 24pt dark ink (#1A1A17), axis labels 20pt, tick labels 16pt secondary text (#4A4A44); all clearly readable
+      Data: Okabe-Ito colors (green #009E73 for Control, orange #D55E00, blue #0072B2, purple #CC79A7); box plots alpha=0.7, points alpha=0.6
+      Grid: Subtle horizontal lines (alpha 0.10 major, 0.05 minor)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and axis labels now in light INK (#F0EFE8), tick labels in light INK_SOFT (#B8B7B0), legend frame uses elevated background (#242420) — all readable with proper contrast
-      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7) confirming proper theme separation — only chrome adapts
-      Grid: Subtle and visible, no issues
-      Legibility verdict: PASS — no dark-on-dark failures; brand green clearly visible; both renders maintain identical data color identity
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title and labels in light text (#F0EFE8 and #B8B7B0); all clearly readable against dark background
+      Data: Okabe-Ito colors identical to light render (same #009E73, #D55E00, #0072B2, #CC79A7); only chrome colors changed
+      Grid: Light-colored subtle gridlines with opacity, appropriately visible
+      Legibility verdict: PASS - no dark-on-dark failures; all text readable; theme adaptation complete
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,51 +52,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: All sizes explicitly set; title 24pt, labels 20pt, ticks 16pt; fully
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-axis labels well-spaced; legend positioned
-          cleanly
+        comment: No text collisions; box and jitter widths properly balanced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 40 points per group with appropriate alpha (0.6 points, 0.7 boxes);
-          all distinguishable
+        comment: 160 data points with optimal alpha (box 0.7, points 0.6); markers
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; good contrast and alpha blending
-          throughout
+        comment: Okabe-Ito palette CVD-safe; adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format, plot fills 60-70% of canvas, balanced margins, generous
-          whitespace
+        comment: Perfect 16:9 proportions; 50-70% canvas utilization; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Plant Growth (cm)' includes units; title matches spec format
+        comment: Descriptive with units (Plant Growth (cm))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; Okabe-Ito order maintained; backgrounds
-          correct; chrome theme-adaptive'
+        comment: 'First series #009E73; Okabe-Ito positions 1-4; backgrounds #FAF8F1/#1A1A17;
+          theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -110,21 +101,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; professional but lacks custom design innovation
+        comment: Well-configured defaults; no distinctive design flourishes
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid customized with specific alphas; could remove panel border for
-          cleaner look
+        comment: Spines removed by theme_minimal; subtle grid; minimal customization
+          beyond defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear visual hierarchy but could emphasize key insight (fertilizer
-          effect progression)
+        comment: Clear display with natural hierarchy; no special emphasis or visual
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -134,19 +125,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Box plot + strip overlay correctly implemented
+        comment: Correct box + strip combination
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: boxes, whiskers, jittered points with transparency'
+        comment: Box, strip, jitter, transparency all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Fertilizer, Y=Growth(cm), Color=Fertilizer; all correct
+        comment: X/Y correct; all data visible; colors map to categories
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -162,19 +153,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distribution variation and outliers across groups
+        comment: Shows medians, quartiles, whiskers, individual points; distributions
+          vary (control tight, treatments improving, C bimodal)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant growth experiment; real-world botany scenario; neutral
+        comment: Plant growth scenario; realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 15-55cm realistic; proportions factually plausible
+        comment: Values 15-55cm appropriate for plant growth; proportions sensible
     code_quality:
       score: 10
       max: 10
@@ -184,33 +176,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure; no unnecessary functions
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully deterministic
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: Only used imports; sys.path handled properly
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and appropriate complexity
+        comment: Clean, Pythonic; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filename and API usage
+        comment: Saves as plot-{THEME}.png; current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -218,14 +210,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ggplot() + geom_*() pattern and theme()
+        comment: Expert ggplot grammar; all patterns idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic patterns easily replicated in other ggplot2-like libraries
-  verdict: REJECTED
+        comment: Proper choices but generic/standard approach; no distinctive library-specific
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -235,4 +228,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
