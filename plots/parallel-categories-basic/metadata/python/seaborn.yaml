@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:04:01Z'
-updated: '2026-05-13T17:18:02Z'
+updated: '2026-05-13T17:25:00Z'
 generated_by: claude-haiku
 workflow_run: 25814195366
 issue: 2501
@@ -12,89 +12,83 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 48
+quality_score: 51
 review:
   strengths:
-  - Correct parallel categories structure with flowing ribbons
-  - Multiple dimensions properly layered and ordered
-  - Realistic Titanic-style data with sensible survival probabilities
-  - Legend and dimension labels present
+  - Correct parallel categories implementation with ribbon flows
+  - Data generation is realistic (Titanic-based) and shows variety across dimensions
+  - Layout efficiently uses canvas space
   weaknesses:
-  - Missing ANYPLOT_THEME environment variable reading - code is hardcoded for light
-    theme only
-  - 'Wrong palette - using colorblind instead of Okabe-Ito; first series is not #009E73
-    brand green'
-  - 'Light background is pure white (#FFFFFF) instead of required #FAF8F1 warm off-white'
-  - Dark render shows broken theme with white bars on dark background (no chrome adaptation)
-  - Output file naming doesn't include theme identifier
+  - 'Dark render is unreadable due to dark-on-dark theme failure (category boxes at
+    #3a3a3a on #1A1A17)'
+  - No theme-adaptive styling implementation (seaborn.md specifies ANYPLOT_THEME pattern)
+  - Output files saved as plot.png instead of plot-light.png/plot-dark.png
+  - 'Uses colorblind palette instead of Okabe-Ito; first series color not #009E73'
   - 'Title contains typo: pyplots.ai should be anyplot.ai'
-  - Category labels have inconsistent positioning and overlap with ribbons
-  - Ribbon alpha (0.55) makes individual flows hard to trace
+  - Category boxes are hardcoded dark color and do not adapt to theme
   image_description: |-
     Light render (plot-light.png):
-      Background: Pure white (#FFFFFF), not the required warm off-white (#FAF8F1) - VIOLATION
-      Chrome: Title, dimension labels (Class, Sex, Age Group, Embarked, Outcome), and category labels all use dark text. Readable on light background.
-      Data: Uses teal/green, orange, and blue ribbons to show flow between categories across 5 dimensions. Category bars are dark gray (#3a3a3a) with white edges. Legend at bottom shows three class categories.
-      Legibility verdict: PASS for text readability, but FAIL for palette compliance (wrong colors, not Okabe-Ito)
+      Background: Pure white, should be warm off-white around #FAF8F1
+      Chrome: Title (contains typo "pyplots.ai" → "anyplot.ai"), axis labels readable in black text
+      Data: Five parallel dimensions with ribbon flows using blue, orange, and green colors. Category labels positioned outside bars.
+      Legibility verdict: PASS with issues - most text readable but background color incorrect
 
     Dark render (plot-dark.png):
-      Background: Dark/black surface (intended to be #1A1A17), but the visualization is broken
-      Chrome: Title and labels appear in light colors (readable on dark background). However, the category bars are WHITE instead of being theme-adapted - they should use dark theme tokens but are hardcoded light.
-      Data: Ribbon colors appear identical to light render (correct - data colors should stay the same). But the bars, edges, and background are not theme-adapted, indicating the code does not read ANYPLOT_THEME environment variable.
-      Legibility verdict: FAIL - Dark render shows critical theme-adaptation failure. The bars are wrong-theme (white instead of dark), indicating missing theme support in the code.
+      Background: Dark color around #1A1A17
+      Chrome: CRITICAL FAILURE - category boxes hardcoded to #3a3a3a create dark-on-dark contrast failure. Text labels difficult to read against dark boxes and background.
+      Data: Ribbon colors appear identical to light render (correct data color consistency)
+      Legibility verdict: FAIL - Dark render is essentially unreadable. Category boxes at #3a3a3a are nearly invisible on #1A1A17 background.
   criteria_checklist:
     visual_quality:
-      score: 18
+      score: 12
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 0
         max: 8
         passed: false
-        comment: Text readable but mixed font sizes without consistent explicit sizing
-          strategy
+        comment: 'Dark render unreadable due to dark-on-dark theme failure. Category
+          boxes at #3a3a3a invisible on #1A1A17'
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: Some ribbon-label collision visible, especially with middle dimension
-          categories
+        passed: true
+        comment: Minimal overlap, acceptable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Ribbons visible but alpha=0.55 makes individual flows hard to trace
+        passed: false
+        comment: Dark render has visibility issues; ribbons hard to distinguish
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Colorblind palette provided but wrong palette (not Okabe-Ito)
+        comment: Color choice conceptually safe but execution poor
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Reasonable canvas usage but margins could be more generous
+        comment: Good layout, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Title has typo (pyplots.ai vs anyplot.ai), generic dimension labels
+        comment: 'Title has typo: pyplots.ai should be anyplot.ai'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Pure white background instead of #FAF8F1, dark render
-          bars not theme-adapted, wrong palette (colorblind not Okabe-Ito), first
-          series not #009E73'
+        comment: Uses colorblind palette instead of Okabe-Ito. No theme-adaptive chrome.
+          Background not theme-correct.
     design_excellence:
-      score: 5
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -102,19 +96,19 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic library styling, default colors, no intentional design hierarchy
+        comment: Generic styling with hardcoded dark boxes
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Axes off, minimal customization beyond defaults
-      - id: DE-03
-        name: Data Storytelling
         score: 1
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Crude manual element drawing, no refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Shows relationships but lacks visual hierarchy
     spec_compliance:
       score: 11
       max: 15
@@ -124,25 +118,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories implementation
+        comment: Correct parallel categories plot with ribbons
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Multiple dimensions and ribbons present, missing proper theme support
+        passed: true
+        comment: Ribbons and dimensions present but visual execution flawed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dimensions and categories correctly mapped
+        comment: Correct data mapping across dimensions
       - id: SC-04
         name: Title & Legend
         score: 0
         max: 3
         passed: false
-        comment: Title contains typo, legend present but formatting issues
+        comment: 'Title has typo: pyplots.ai instead of anyplot.ai'
     data_quality:
       score: 13
       max: 15
@@ -152,79 +146,81 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows multiple dimensions and categories
+        comment: Shows all dimensions with various category flows
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Titanic-style data with realistic patterns
+        comment: Titanic-style data is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions are plausible
+        comment: Proportional representation is correct
     code_quality:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Straightforward but uses complex path generation
+        comment: Simple structure, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Has np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Imports are relevant and clean
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Does not read ANYPLOT_THEME, hardcodes colors and styling'
+        comment: Hardcoded colors; does not follow seaborn.md patterns
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png instead of theme-aware f"plot-{THEME}.png" naming
+        comment: Saves as plot.png instead of plot-light.png/plot-dark.png
     library_mastery:
-      score: 4
+      score: 2
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses seaborn for styling but matplotlib patches for plotting (not
-          idiomatic mix)
+        comment: Does not follow seaborn.md theme-adaptive patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses matplotlib path primitives, not seaborn-specific features
+        comment: Very basic matplotlib usage, no seaborn-specific features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - bezier-curves
   - patches
-  - manual-ticks
   - custom-legend
+  - annotations
+  - bezier-curves
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
