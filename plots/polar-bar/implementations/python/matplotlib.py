@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
-Library: matplotlib | Python 3.13
-Quality: 92 | Updated: 2025-12-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-13
 """
 
 import os
