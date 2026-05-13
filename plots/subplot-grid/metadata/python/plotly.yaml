@@ -1,173 +1,183 @@
 library: plotly
+language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:49:58Z'
-updated: '2025-12-30T18:01:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602446641
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-05-13T09:24:32Z'
+generated_by: claude-haiku
+workflow_run: 25789999160
+issue: 2782
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-dark.html
+quality_score: 97
 review:
   strengths:
-  - Excellent demonstration of Plotly's make_subplots capability with different chart
-    types in each cell
-  - Well-chosen financial dashboard scenario that naturally requires multiple visualization
-    types
-  - Clean color scheme using Python blue (#306998) and yellow (#FFD43B) consistently
-  - Proper use of specs parameter to define chart types per cell
-  - Good axis labeling with units throughout
-  - Interactive HTML export alongside static PNG
+  - Perfect theme adaptation with both renders fully readable and correct color-token
+    application
+  - Excellent library mastery demonstrated through make_subplots with specs for per-cell
+    plot type definition
+  - Real-world financial dashboard context with realistic data generation including
+    technical indicators and proper correlation
+  - Professional typography hierarchy and consistent styling across all four subplots
+  - Flawless color compliance with Okabe-Ito palette correctly applied and data colors
+    identical between themes
+  - Clean, straightforward code with deterministic seeding and appropriate complexity
   weaknesses:
-  - Missing grid lines would improve readability of individual subplots (add gridcolor
-    and showgrid to axes)
-  - Scatter markers in bottom-right subplot could be slightly larger (12-14 instead
-    of 10) for better visibility
-  image_description: 'The plot displays a 2x2 grid of financial dashboard visualizations
-    with a clean white background. **Top-left**: A line chart showing stock price
-    (blue solid line ~$80-110 range) with a 20-day moving average (yellow dashed line)
-    over dates from Jan 7 to Feb 25, 2024. **Top-right**: A bar chart showing trading
-    volume (green/red bars for positive/negative returns, range 0-3M). **Bottom-left**:
-    A histogram of daily returns distribution (blue bars, roughly normal distribution
-    from -4% to +4%). **Bottom-right**: A scatter plot showing price vs volume relationship
-    (blue dots). The main title "subplot-grid · plotly · pyplots.ai" appears centered
-    at the top. A legend is positioned on the right side showing all series. All subplot
-    titles are clearly visible and axis labels include units where appropriate.'
+  - 'Minor design refinement opportunity: legend styling could include more sophisticated
+    visual treatments such as custom positioning or enhanced visual hierarchy'
+  - 'Minor design opportunity: data storytelling could emphasize key insights more
+    explicitly, such as highlighting peak price points or volume extremes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title (28px, dark #1A1A17), axis labels (22px), tick labels (18px), subplot titles (20px) all clearly readable against light surface. Legend positioned top-right with light elevated background (#FFFDF6) and subtle INK_SOFT border
+      Data: Stock price line (#009E73 - Okabe-Ito position 1), moving average dashed line (#D55E00 - position 2), volume bars in dual colors, histogram bars, scatter markers all clearly visible with appropriate opacity values
+      Legibility verdict: PASS - All text fully readable; no light-on-light failures; theme tokens properly applied
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Title (light #F0EFE8), axis labels, tick labels, subplot titles all clearly readable against dark surface. No dark-on-dark failures detected. Legend background is elevated dark (#242420) with light border (#B8B7B0). Grid lines subtle but visible.
+      Data: Data colors identical to light render (#009E73, #D55E00 preserved); only chrome has adapted to theme. Markers, lines, and bars all clearly distinguishable from dark background
+      Legibility verdict: PASS - All text fully readable; theme adaptation flawless; no legibility failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is clearly readable; title at 32pt, subplot titles at 20pt,
-          axis labels at 18pt, tick labels at 14pt - slightly below optimal for 4800px
-          width
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Title 28px, axis labels 22px, tick labels 18px, subplot titles 20px
+          - all clearly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text non-overlapping; legend clearly positioned; subplot spacing
+          well-managed (h=0.1, v=0.12)
       - id: VQ-03
         name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers, lines, bars, histogram all clearly visible with appropriate
+          sizing (line width 3, marker size 14, opacity 0.75-0.8)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette used (#009E73, #D55E00); CVD-safe; no problematic
+          contrasts'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2x2 grid well-proportioned for 4800x2700; nothing cut off; margins
+          appropriate (l:80, r:150, t:120, b:80)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title clear with brand attribution; axis labels descriptive with
+          units (Date, Price ($), Volume, Daily Return (%), Frequency)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series follows Okabe-Ito; backgrounds
+          #FAF8F1/#1A1A17; theme-adaptive chrome fully applied'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 7
         max: 8
         passed: true
-        comment: Line width of 3 is good, scatter markers at size 10 are visible but
-          could be slightly larger for the 60 data points
-      - id: VQ-04
-        name: Color Accessibility
+        comment: Custom theme tokens, intentional hierarchy, professional financial
+          context, legend styled with border - minor refinement opportunity in legend
+          design
+      - id: DE-02
+        name: Visual Refinement
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Uses blue/yellow for price/MA (easily distinguishable), green/red
-          for volume direction with good contrast
-      - id: VQ-05
-        name: Layout Balance
+        comment: Grid subtle (opacity 0.10); generous whitespace; clean margins; minimal
+          decoration - very clean design
+      - id: DE-03
+        name: Data Storytelling
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Excellent 2x2 grid layout with proper spacing (0.1 horizontal, 0.12
-          vertical), plot fills canvas well
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'All axes have descriptive labels with units: "Price ($)", "Volume",
-          "Daily Return (%)", "Frequency"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: No grid lines visible in the plots (plotly_white template), legend
-          positioned well but could benefit from subtle grid
+        comment: Clear narrative flow through four subplots; color consistency aids
+          understanding; could emphasize key insights more explicitly
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements a 2x2 subplot grid with 4 different plot types
-          (line, bar, histogram, scatter)
+        comment: Correct 2x2 subplot grid with mixed plot types (line, bar, histogram,
+          scatter)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned in all subplots
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has configurable grid (2x2), different plot types per cell, clear
-          subplot titles, consistent spacing
-      - id: SC-04
-        name: Data Range
+        comment: Grid dimensions configurable, independent axes, different plot types
+          per cell, consistent spacing, clear labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show full data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped in all subplots; axes show complete data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify all series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "subplot-grid · plotly · pyplots.ai"
+        comment: Title correct format; legend labels accurate for all series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Demonstrates all subplot grid features: 4 different plot types,
-          related but distinct visualizations, shared theme'
+        comment: Demonstrates 4+ plot types with technical indicators (moving average),
+          volume, distribution, and correlation
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Financial dashboard is a realistic use case, but stock starting at
-          exactly $100 and data period of exactly 60 days feels slightly synthetic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic values: stock price $80-110, volume 0.5M-3M, returns -4%
-          to +4%'
+        comment: Realistic stock price walk, correlated volume, plausible returns,
+          professional financial dashboard
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stock price $80-110, volume 500K-3M, returns -4% to +4% - all realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,42 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save, no functions/classes'
+        comment: No functions/classes; straightforward procedural code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, plotly.graph_objects, make_subplots)
+        comment: All imports used; no redundancy
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake features; appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to 'plot.png' but also saves 'plot.html' (extra file, but not
-          incorrect)
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses make_subplots with specs for different chart types, plotly_white
-          template, and HTML export for interactivity. Could have leveraged more Plotly-specific
-          features like hover customization or shared axes between subplots.
+        comment: make_subplots(), go.Scatter/Bar/Histogram, specs parameter, proper
+          add_trace() pattern, update_layout()
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: make_subplots with mixed types, specs for per-cell definition, spacing
+          control, multi-cell legend, theme-adaptive tokens
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
