@@ -1,14 +1,23 @@
-""" anyplot.ai
+"""anyplot.ai
 facet-grid: Faceted Grid Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-13
 """
 
 import os
+import sys
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+
+# Remove the script's directory from sys.path to avoid shadowing matplotlib package
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from matplotlib import gridspec  # noqa: E402
+from scipy.stats import linregress  # noqa: E402
 
 
 # Theme tokens
@@ -17,6 +26,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette - first series is always #009E73
 OKABE_ITO = [
@@ -51,58 +61,77 @@ for region in regions:
 
 df = pd.DataFrame(data)
 
-# Plot
-fig, axes = plt.subplots(
-    nrows=len(regions), ncols=len(seasons), figsize=(16, 9), sharex=True, sharey=True, facecolor=PAGE_BG
+# Create figure with GridSpec for sophisticated layout control
+fig = plt.figure(figsize=(16, 9), facecolor=PAGE_BG)
+gs = gridspec.GridSpec(
+    len(regions), len(seasons), figure=fig, hspace=0.35, wspace=0.3, left=0.08, right=0.98, top=0.92, bottom=0.10
 )
 
 # Color map: regions to Okabe-Ito palette
 region_colors = {region: OKABE_ITO[i] for i, region in enumerate(regions)}
 
-# Create scatter plots in each facet
+# Create scatter plots in each facet with trend lines
 for i, region in enumerate(regions):
     for j, season in enumerate(seasons):
-        ax = axes[i, j]
+        ax = fig.add_subplot(gs[i, j])
         ax.set_facecolor(PAGE_BG)
 
         subset = df[(df["Region"] == region) & (df["Season"] == season)]
 
+        # Scatter plot
         ax.scatter(
             subset["Temperature"],
             subset["Energy"],
             s=120,
             alpha=0.7,
             color=region_colors[region],
-            edgecolors=PAGE_BG,
-            linewidth=0.5,
+            edgecolors="white",
+            linewidth=0.8,
+            zorder=3,
         )
+
+        # Trend line for visual emphasis and pattern highlighting
+        if len(subset) > 1:
+            x_sorted = np.sort(subset["Temperature"].values)
+            slope, intercept, _, _, _ = linregress(subset["Temperature"].values, subset["Energy"].values)
+            y_trend = slope * x_sorted + intercept
+            ax.plot(x_sorted, y_trend, color=INK_MUTED, linewidth=2.5, alpha=0.4, linestyle="-", zorder=1)
 
         # Subtle grid
         ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+        ax.xaxis.grid(True, alpha=0.08, linewidth=0.6, color=INK_SOFT)
 
         # Column headers (top row only)
         if i == 0:
-            ax.set_title(season, fontsize=18, color=INK, fontweight="medium")
+            ax.set_title(season, fontsize=20, color=INK, fontweight="semibold")
 
         # Row labels (left side)
         if j == 0:
-            ax.set_ylabel(region, fontsize=18, color=INK, fontweight="medium")
+            ax.set_ylabel(region, fontsize=20, color=INK, fontweight="semibold")
+
+        # Only show labels on outer edges
+        if i < len(regions) - 1:
+            ax.set_xticklabels([])
+        if j > 0:
+            ax.set_yticklabels([])
 
         # Tick styling
-        ax.tick_params(axis="both", labelsize=14, colors=INK_SOFT, labelcolor=INK_SOFT)
+        ax.tick_params(axis="both", labelsize=14, colors=INK_SOFT, labelcolor=INK_SOFT, length=5, width=0.8)
 
         # Spine styling
         for spine in ("top", "right"):
             ax.spines[spine].set_visible(False)
         for spine in ("left", "bottom"):
             ax.spines[spine].set_color(INK_SOFT)
+            ax.spines[spine].set_linewidth(1.2)
 
 # Shared axis labels
-fig.text(0.5, 0.02, "Temperature (°C)", ha="center", fontsize=20, color=INK)
-fig.text(0.02, 0.5, "Energy Consumption (kWh)", va="center", rotation="vertical", fontsize=20, color=INK)
+fig.text(0.5, 0.02, "Temperature (°C)", ha="center", fontsize=22, color=INK, fontweight="medium")
+fig.text(
+    0.01, 0.5, "Energy Consumption (kWh)", va="center", rotation="vertical", fontsize=22, color=INK, fontweight="medium"
+)
 
-# Main title
-fig.suptitle("facet-grid · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, y=0.98)
+# Main title with enhanced typography
+fig.suptitle("facet-grid · matplotlib · anyplot.ai", fontsize=26, fontweight="semibold", color=INK, y=0.97)
 
-plt.tight_layout(rect=[0.05, 0.05, 1, 0.96])
 plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
