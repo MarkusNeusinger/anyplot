@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-05-13
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-13
 """
 
 import os
