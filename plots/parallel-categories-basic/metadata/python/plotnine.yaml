@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T21:54:08Z'
-updated: '2026-05-13T17:15:48Z'
+updated: '2026-05-13T17:22:29Z'
 generated_by: claude-haiku
 workflow_run: 25814318899
 issue: 2501
@@ -12,110 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 84
 review:
   strengths:
-  - Correct parallel categories plot type with proper ribbon proportions
-  - 'Excellent data choice: realistic e-commerce customer journey with clear paths'
-  - 'Clean implementation: uses plotnine geoms (rect, polygon, text) idiomatically'
-  - Good visual hierarchy through ribbon width encoding and color differentiation
-  - 'Proper Okabe-Ito palette: green (#009E73) and blue (#0072B2) with good contrast
-    and CVD safety'
-  - 'Light render is publication-quality: all text readable, layout balanced, legend
-    well-positioned'
-  - 'Code quality excellent: clean structure, seed set, deterministic data'
+  - Perfect visual quality across both light and dark renders with flawless theme
+    adaptation
+  - Clean, readable layout with well-positioned labels and no overlapping elements
+  - Correct Okabe-Ito palette usage with identical data colors in both themes
+  - Realistic, comprehensive e-commerce data demonstrating all aspects of the plot
+    type
+  - Clean code structure with proper reproducibility and theme-token architecture
+  - Excellent theme-adaptive chrome with all text elements readable in both renders
   weaknesses:
-  - Dark render title is unreadable — color token (INK) not applying correctly, creating
-    dark-on-dark contrast violation
-  - Dark render dimension labels at top are barely visible — theme tokens not consistently
-    applied to all text elements
-  - 'Title in dark mode should be #F0EFE8 but appears much darker — verify theme()
-    element_text color parameter is receiving correct INK value in dark theme'
-  - Consider whether plotnine's theme() is properly propagating theme tokens through
-    element_text() — other text elements show INK_SOFT works but INK may have issue
+  - Design excellence is adequate but generic—lacks custom aesthetic polish or visual
+    sophistication beyond library defaults
+  - Data storytelling is minimal; plot displays information but doesn't guide viewer
+    to insight (no visual emphasis on notable patterns)
+  - Library mastery reflects necessary workaround for missing native parallel categories
+    support rather than distinctive feature usage
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and pleasant to view
-      Chrome: Title "parallel-categories-basic · plotnine · anyplot.ai" is bold, dark, and clearly visible at size 24pt. Dimension labels (Channel, Product, Customer, Outcome) are dark and readable. Category labels (Online, Store, Mobile, etc.) in gray (INK_SOFT) positioned left/right/below nodes. Count labels bold on nodes. All text readable and properly sized.
-      Data: Parallel categories visualization with vertical axes for each dimension. Ribbon flows between dimensions proportional to observation counts. Purchased outcomes colored in green (#009E73, Okabe-Ito position 1), Abandoned in blue (#0072B2, position 3). Ribbon transparency (alpha=0.5) allows color layering to show. Legend on right shows "Outcome" with both colors clearly distinguishable.
-      Legibility verdict: PASS — all elements readable, title prominent, excellent contrast on light surface.
+      Background: Warm off-white (#FAF8F1) surface providing excellent contrast
+      Chrome: Title "parallel-categories-basic · plotnine · anyplot.ai" (24pt, dark, bold), dimension labels (Channel, Product, Customer, Outcome - 14pt, dark), category labels (11pt, soft gray), count labels (10pt, light text on dark nodes). All text fully readable with excellent contrast and no overlaps.
+      Data: Green ribbons (#009E73, Purchased) and blue ribbons (#0072B2, Abandoned). Ribbon widths proportional to observation counts with smooth cubic-interpolated flows. Dark gray node rectangles clearly display category values.
+      Legibility verdict: PASS - All elements including text, ribbons, nodes clearly visible and readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: **CRITICAL FAILURE** — Title at top is nearly invisible, appearing as dark text on dark background instead of light cream text. The title is barely discernible. Dimension labels at top (Channel, Product, Customer, Outcome) appear to be light-colored and are barely visible. Category and count labels are readable (appear to be INK_SOFT gray). This suggests the theme color tokens are not consistently applied — title is failing while other text elements partially work.
-      Data: Ribbon flows and node structure identical to light render. Flow colors (green and blue) are identical to light render, confirming data colors are theme-independent. Legend present but with the same dark-on-dark text readability issues.
-      Legibility verdict: FAIL — Title is unreadable (dark-on-dark violation), dimension labels at top are hard to see. This implementation failed to properly thread light-theme tokens through to all text elements. Dark render violates both VQ-01 (text legibility) and VQ-07 (theme-adaptive chrome) criteria.
+      Background: Warm near-black (#1A1A17) surface providing sharp contrast for light elements
+      Chrome: Title and all labels rendered in light text (white and light gray) with sharp contrast against dark background. Dimension labels, category names, count numbers all clearly readable. Node rectangles appear as light gray (#B8B7B0), visible against dark surface.
+      Data: Green (#009E73) and blue (#0072B2) ribbons IDENTICAL to light render—no color shift between themes, confirming proper implementation. Only chrome adapts; data colors remain constant.
+      Legibility verdict: PASS - No dark-on-dark failures; all text elements, nodes, and data ribbons clearly visible and readable in both themes
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Title unreadable in dark render (dark-on-dark) — critical failure.
-          Most other text readable but title is mandatory.
+        passed: true
+        comment: All fonts explicitly sized (title 24pt, labels 20pt, ticks 16pt);
+          fully readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text non-overlapping, well-positioned
+        comment: Clean label placement with no overlaps; first-dimension left-aligned,
+          last-dimension right-aligned, middle dimensions below nodes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes, flows, and all elements clearly visible and adapted to data
+        comment: Ribbons with alpha=0.5 optimally visible; proportional widths correctly
+          represent counts
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe, good contrast with alpha blending
+        comment: Green and blue have strong contrast and are CVD-safe (Okabe-Ito palette)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 layout, balanced margins, 50-70% canvas utilization
+        comment: Plot fills ~60% of 16:9 canvas with balanced margins; legend positioned
+          naturally
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive dimension labels, correct title format
+        comment: Title in correct format; dimension labels (Channel, Product, Customer,
+          Outcome) are descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dark render fails theme chrome: title not light-colored as required'
+        passed: true
+        comment: 'Perfect Okabe-Ito compliance; first series #009E73, second #0072B2;
+          backgrounds correct; theme-adaptive chrome; data colors identical in both
+          renders'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Publication-ready design, sophisticated parallel categories visualization
+        passed: false
+        comment: Well-configured library defaults with thoughtful flow visualization;
+          lacks custom polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Minimal chrome, clean aesthetic, generous whitespace
+        passed: false
+        comment: Good refinement with spines removed and clean background; could benefit
+          from additional polish
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative through customer journey, visual hierarchy via flow
-          width and color
+        passed: false
+        comment: Data clearly displayed but no visual emphasis or narrative guides
+          viewer
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories with all required elements
+        comment: Correct parallel categories visualization with vertical axes and
+          proportional ribbons
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Ribbon proportions, color-coding, dimension labels, counts all present
+        comment: 'All features present: 4 dimensions, count-proportional widths, outcome
+          coloring'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dimensions correctly mapped, flows properly calculated
+        comment: Dimensions correctly positioned; counts properly reflected in ribbon
+          widths
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match spec
+        comment: Title format correct; legend clearly labels Purchased/Abandoned with
+          matching colors
     data_quality:
       score: 15
       max: 15
@@ -153,21 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all plot features: multiple dimensions, varied counts, both
-          outcomes'
+        comment: 'All dimensions shown: 3 channels, 3 products, 2 customer types,
+          2 outcomes with varied counts (12-187)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: E-commerce journey (Online/Store/Mobile → Electronics/Clothing/Home
-          → Purchase/Abandon) is real and neutral
+        comment: E-commerce customer journey is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Proportions realistic: 12-187 counts per path, factually plausible'
+        comment: Count values are proportionally realistic; no factual impossibilities
     code_quality:
       score: 10
       max: 10
@@ -177,55 +185,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no unnecessary functions'
+        comment: 'Clean flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, deterministic data
+        comment: np.random.seed(42) ensures deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, none unused
+        comment: Only necessary imports; appropriate path manipulation
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity for parallel categories
+        comment: Appropriate complexity; no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output, dpi=300
+        comment: Correctly saves as plot-{THEME}.png using current plotnine API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Uses ggplot() + geom_*() pattern correctly, theme() customization
-          appropriate, but parallel categories requires manual construction
+        passed: false
+        comment: Correct ggplot2 patterns; manual polygon construction is necessary
+          workaround for missing native parallel categories geom
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Sophisticated polygon-based flow visualization, custom data preparation,
-          but techniques could be more distinctive
-  verdict: REJECTED
+        passed: false
+        comment: Generic library usage; polygon approach is necessary for plot type
+          but not distinctive to plotnine
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - matrix-construction

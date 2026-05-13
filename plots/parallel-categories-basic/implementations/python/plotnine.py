@@ -1,7 +1,7 @@
 """ anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 75/100 | Updated: 2026-05-13
+Quality: 84/100 | Updated: 2026-05-13
 """
 
 import os
