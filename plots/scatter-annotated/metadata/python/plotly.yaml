@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:49:25Z'
-updated: '2026-05-13T11:10:26Z'
+updated: '2026-05-13T11:18:09Z'
 generated_by: claude-haiku
 workflow_run: 25795066115
 issue: 2790
@@ -12,38 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Perfect theme adaptation with flawless text color and background changes across
-    light and dark modes
-  - Excellent spec compliance with all required features including scatter points,
-    annotations, connecting arrows, and transparency
-  - Clean, reproducible code with simple structure and minimal dependencies
-  - Well-positioned annotations that successfully eliminate overlaps while maintaining
-    readability
+  - 'Theme adaptation excellence: both light and dark renders flawlessly legible with
+    correctly adapted chrome and identical data colors'
+  - 'Comprehensive annotations: all 12 points labeled with smart directional positioning
+    and color-coded emphasis arrows providing clear visual hierarchy'
+  - 'Explicit sizing throughout: all text elements (title 28px, labels 22px, ticks
+    18px, annotations 18-19px) explicitly set and perfectly readable at full resolution'
+  - 'Realistic, comprehensible data: real tech companies with factually plausible
+    market cap vs revenue relationships telling a coherent business story'
+  - 'Clean implementation: straightforward code structure, proper theme token usage,
+    deterministic output, no over-engineering'
   weaknesses:
-  - Design is functional but generic - could benefit from more sophisticated aesthetic
-    choices beyond brand color and defaults
-  - Label positioning uses hard-coded position_adjustments rather than leveraging
-    dynamic libraries like adjustText
-  - Visual hierarchy is functional but could create stronger emphasis on key data
-    insights through strategic visual choices
+  - 'Design sophistication: color differentiation and marker sizing are effective
+    but subtle—implemented as thoughtful defaults rather than distinctive publication-ready
+    aesthetics'
+  - 'Visual storytelling: plot displays data clearly but lacks deeper narrative emphasis
+    or exceptional visual insight framing beyond straightforward color hierarchy'
+  - 'Annotation positioning: uses cyclic directional offsets rather than adaptive
+    collision-avoidance, limiting scalability for larger or differently distributed
+    datasets'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title "scatter-annotated · plotly · anyplot.ai" in dark INK (#1A1A17) at top, axis labels "Market Cap (Billion USD)" and "Annual Revenue (Billion USD)" clearly visible with matching dark text, tick labels in INK_SOFT (#4A4A44) are readable, subtle grid with 10% opacity
-      Data: 12 teal circles (#009E73) at correct coordinates with 0.7 opacity and white borders, each with annotation box containing company name in dark text on light elevated background (#FFFDF6), connected by green arrows (#009E73)
-      Legibility verdict: PASS - all text elements fully readable with strong contrast
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title (28px) "scatter-annotated · plotly · anyplot.ai" in dark text, clearly visible. Axis labels "Market Cap (Billion USD)" and "Annual Revenue (Billion USD)" in 22px dark text with units. Tick labels (18px) in muted dark text. All text readable against light background.
+      Data: 12 tech companies plotted. Primary series (9 companies) in green #009E73, secondary series (top 3 by market cap: Apple, Microsoft, Alphabet) in orange #D55E00. Markers 20-25px with white edges, 0.8 opacity. Each point annotated with label in styled box with color-coded arrow.
+      Grid: Subtle gridlines, visible but not dominant
+      Legibility verdict: PASS - All text clearly readable, excellent contrast, no dark-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color
-      Chrome: Title and axis labels in light text (INK #F0EFE8) against dark background with excellent visibility, tick labels in INK_SOFT (#B8B7B0) are readable, subtle grid with 10% light opacity
-      Data: Same teal circles (#009E73) identical to light render - color preserved across themes, annotation boxes now have dark elevated backgrounds (#242420) with light borders (INK_SOFT) and light text, green arrows maintain visibility
-      Legibility verdict: PASS - all text elements fully readable, no dark-on-dark failures, brand green visible and distinguishable
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title in light text (#F0EFE8-equivalent), clearly visible against dark background. Axis labels in light text, tick labels in muted light text. All text readable against dark background.
+      Data: Colors identical to light render—green #009E73 and orange #D55E00 on same company groups. Markers and arrows maintain visibility and distinction.
+      Grid: Adapted to dark theme with appropriate opacity
+      Legibility verdict: PASS - All text clearly readable in light colors, no dark-on-dark failures, data colors preserved, excellent theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,49 +58,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
-          Title, axis labels, tick labels, and annotations all perfectly readable
-          in both themes
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px,
+          annotations 18-19px). Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5.5
+        score: 6
         max: 6
         passed: true
-        comment: Manual position adjustments eliminate overlaps very effectively.
-          All 12 labels clearly readable with no collisions
+        comment: 12 annotations with directional offsets. All labels fully readable
+          with clear separation via color-coded arrows.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size 20 with opacity 0.7 well-adapted to 12-point dataset.
-          All elements clearly visible and distinct
+        comment: Markers 20-25px, opacity 0.8, white edges. Well-sized for 12-point
+          dataset. Colors distinct from background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 with excellent contrast. Colorblind-safe'
+        comment: Okabe-Ito palette (CVD-safe). Good contrast. No red-green-only signaling.
+          Marker edges enhance discernibility.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3.5
+        score: 4
         max: 4
         passed: true
-        comment: 4800×2700px with reasonable margins. Well-balanced layout with nothing
-          cut off
+        comment: Plot fills ~60% of canvas. Balanced margins. Excellent whitespace
+          management. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Axis labels descriptive with units
+        comment: 'Descriptive with units: ''Market Cap (Billion USD)'' and ''Annual
+          Revenue (Billion USD)''. Title correctly formatted.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Okabe-Ito pos 1). Backgrounds correct (#FAF8F1
-          light, #1A1A17 dark). Both renders theme-correct with proper text adaptation'
+        comment: 'First series #009E73 (brand), second #D55E00 (Okabe-Ito pos 2).
+          Backgrounds correct. Text and grid colors theme-adapted correctly in both
+          renders.'
     design_excellence:
       score: 13
       max: 20
@@ -103,22 +112,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Uses brand green and theme tokens correctly but lacks distinctive
-          aesthetic choices beyond well-configured defaults
+        comment: Color differentiation for hierarchy, marker sizing, directional arrows.
+          Above defaults but not publication-ready aesthetic.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle grid, styled axes, generous whitespace, annotation boxes with
-          borders and fills. Good but room for more polish
+        comment: Subtle grid, balanced whitespace, annotation styling adds polish.
+          Some refinement evident but minimal explicit customization.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Clearly shows market cap vs. revenue relationship. Annotations create
-          narrative focus with good visual hierarchy
+        comment: Visual hierarchy through color emphasis on top 3 companies. Good
+          focal point but lacking deeper narrative framing.
     spec_compliance:
       score: 15
       max: 15
@@ -128,50 +137,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot type with text annotations
+        comment: Correct scatter plot with text annotation feature.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter points, labels, connecting arrows,
-          transparency, collision avoidance'
+        comment: X/Y scatter, label annotations on all points, directional arrows,
+          color-coded emphasis—all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis market cap, Y-axis revenue. All 12 points correctly mapped
+        comment: X=market cap, Y=revenue. Axes show full data range. Correct assignment.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Single-series, no legend needed (appropriate)
+        comment: Title 'scatter-annotated · plotly · anyplot.ai' correct. No legend
+          needed (all points labeled). Hover provides efficiency metric.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows full range with 12 real tech companies at different positions
+        comment: Shows diverse company sizes, varying revenue scales, high-margin
+          and high-revenue profiles, efficiency range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real tech companies with realistic, proportionally accurate market
-          caps and revenues
+        comment: Real companies, real domain (tech market cap vs revenue), neutral
+          and non-controversial, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges (market cap 250-2800B, revenue 33-520B) aligned with
-          real-world facts
+        comment: Market cap 250–2800B and revenue 32–520B values plausible for major
+          tech firms. Relationships factually reasonable (Amazon high revenue/lower
+          cap, Apple high cap/moderate revenue).
     code_quality:
       score: 10
       max: 10
@@ -181,58 +193,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple structure: imports → theme → data → figure → layout → save'
+        comment: 'Linear flow: imports → tokens → data → figure → annotations → layout
+          → save. Helper function is simple and focused.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set. Data fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly imported and used
+        comment: os, numpy, plotly.graph_objects all used. No dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with appropriate complexity
+        comment: Clean, Pythonic. Appropriate complexity. No fake UI or simulated
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Width/height/scale
+          correct for target resolution.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper go.Figure/go.Scatter/annotation API usage with theme-adaptive
-          layout
+        comment: Expert use of go.Figure(), go.Scatter(), add_trace(), update_layout().
+          Smart customdata for hover metrics.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Demonstrates annotation system well but could leverage adjustText
-          or other plotly-specific features
+        comment: Uses annotation positioning with directional offsets, color-coded
+          arrows, marker size variation. Good but fairly standard plotly workflows.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
