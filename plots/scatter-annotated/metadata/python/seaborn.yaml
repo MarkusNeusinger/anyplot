@@ -1,167 +1,172 @@
 library: seaborn
+language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:47:43Z'
-updated: '2025-12-30T18:06:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602451004
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T11:08:11Z'
+generated_by: claude-haiku
+workflow_run: 25794969275
+issue: 2790
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-  - adjusttext
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of adjustText library for automatic label positioning with subtle
-    connecting lines
-  - Proper seaborn theming with whitegrid and colorblind palette
-  - Text sizes optimized for the 4800x2700 resolution
-  - Realistic tech company scenario matching spec application examples
-  - Good marker sizing (s=200) and alpha (0.7) for the data density
-  - Clean, readable code structure following KISS principles
+  - Excellent text legibility with explicit font sizing across all elements in both
+    themes
+  - Professional theme adaptation using token-based approach; both light and dark
+    renders are perfectly readable
+  - Smart use of adjustText library with arrow styling to prevent annotation overlap
+  - Proper Okabe-Ito color compliance (#009E73 identical in both themes)
+  - Clean code structure with reproducible random seed
+  - Idiomatic seaborn usage with proper theme configuration
   weaknesses:
-  - Grid styling could be more subtle (consider reducing grid alpha or using a lighter
-    style)
-  image_description: The plot displays a scatter visualization of 15 technology companies
-    with Annual Revenue ($ Billion) on the X-axis (0-80) and Market Capitalization
-    ($ Billion) on the Y-axis (~25-350). Each blue data point (with white edge) represents
-    a company and has a text label annotation connected by subtle gray lines. The
-    labels include company names like VirtualAI, CloudNet, DataSys, QuantumX, CodeBase,
-    AILabs, DevOps, TechCorp, NetFlow, SecureIT, CyberSec, SmartHub, ByteLogic, AppWorks,
-    and StreamIO. The title follows the correct format "scatter-annotated · seaborn
-    · pyplots.ai". The plot uses a clean whitegrid background with subtle blue gridlines.
-    Labels are well-distributed using adjustText, with minimal overlap visible.
+  - 'DE-03: Plot displays data clearly but lacks visual storytelling through emphasis
+    or visual hierarchy—no focal point guides viewer to a particular insight about
+    startup metrics'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title in dark text (fontsize=24), axis labels in dark text (fontsize=20), tick labels (fontsize=16) — all clearly visible and readable
+      Data: 15 teal markers (#009E73, Okabe-Ito position 1) with alpha=0.7; company labels positioned near points with subtle gray connecting arrows; scatter pattern shows revenue vs operating margin relationship
+      Legibility verdict: PASS — all text readable, no contrast issues, markers clearly distinguishable from background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title in light text, axis labels in light text, tick labels in light gray — all clearly visible; no "dark-on-dark" failures detected; spines and grid rendered in light gray
+      Data: Teal markers (#009E73) identical to light render — data colors are theme-independent as required; connecting arrows and labels in light gray; all annotation text readable
+      Legibility verdict: PASS — all text readable on dark background, excellent contrast, data colors match light render perfectly
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: adjustText handles most overlaps well, very minor proximity between
-          some labels (e.g., AILabs/DevOps area)
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Markers at s=200 with alpha=0.7 are perfectly sized for 15 data points
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: adjustText prevents all label collisions with connecting arrows;
+          no overlapping text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 points with s=250 and alpha=0.7; markers perfectly adapted to
+          data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind palette, good contrast with blue markers
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, slight excess whitespace on left side due to x-axis
-          starting at 0
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Annual Revenue ($ Billion)" and
-          "Market Capitalization ($ Billion)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single Okabe-Ito color with excellent contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed (single color), but grid could be more subtle (currently
-          default whitegrid)
+        comment: Descriptive labels with units; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; background #FAF8F1/#1A1A17; chrome colors
+          theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with token-based theme adaptation and professional
+          adjustText integration; not quite publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: spines removed, grid customized, whitespace balanced; margins
+          could be slightly more generous'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but lacks visual hierarchy or emphasis to
+          guide viewer to insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct annotated scatter plot
+        comment: Correct scatter plot with annotations
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned (revenue vs market cap)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: text labels, connecting lines from labels
-          to points, alpha transparency on points'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: scatter, text labels, connecting arrows'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-annotated · seaborn · pyplots.ai"'
+        comment: Title format correct; labels serve legend purpose
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows good variation in both dimensions, positive correlation visible,
-          some clustering that tests label adjustment
+        comment: Shows varied data with good distribution across domains
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech companies with revenue/market cap is a realistic, neutral business
-          scenario matching spec application examples
+        comment: Realistic startup metrics; neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for large tech companies ($5-80B revenue, ~$30-330B
-          market cap), though some market cap multiples are quite high
+        comment: Plausible values with realistic proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +174,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Clean linear structure with no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn, adjustText)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using explicit color instead of hue for single-color plot triggers
-          a minor style note, but functional
+        comment: Pythonic and appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format with high DPI
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn scatterplot with DataFrame and set_theme, but the annotation
-          work is done via matplotlib text and adjustText rather than seaborn-specific
-          features
+        comment: Expert seaborn patterns with proper theme setup
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses adjustText library integration for overlap handling
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - adjusttext
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
+  - edge-highlighting
