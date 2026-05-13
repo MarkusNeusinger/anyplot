@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: diagnostic-regression-panel
 created: '2026-05-13T16:13:34Z'
-updated: '2026-05-13T16:41:03Z'
+updated: '2026-05-13T16:54:01Z'
 generated_by: claude-sonnet
 workflow_run: 25810636564
 issue: 5242
@@ -12,128 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnosti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/pygal/plot-dark.html
-quality_score: 74
+quality_score: 80
 review:
   strengths:
-  - 'Full spec compliance: all four diagnostic subplots correct (Residuals vs Fitted,
-    Normal Q-Q, Scale-Location, Residuals vs Leverage) with LOWESS smoothers, zero
-    reference line, 45° Q-Q line, and Cook''s distance contours at 0.5 and 1.0'
-  - 'Proper Okabe-Ito palette via Style object with first series #009E73; theme-adaptive
-    chrome (INK, INK_MUTED, PAGE_BG) correctly applied to both light and dark renders'
-  - Correct title format 'diagnostic-regression-panel · pygal · anyplot.ai' present;
-    axis labels descriptive including √|Standardized Residuals| notation
-  - Realistic synthetic data with genuine heteroscedasticity (variance proportional
-    to |x1|) producing meaningful patterns across all four diagnostic panels
-  - Both HTML (interactive SVG) and PNG outputs generated correctly; reproducible
-    with np.random.seed(42)
+  - All four diagnostic panels (Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals
+    vs Leverage) implemented correctly with proper statistical derivations
+  - Both themes render cleanly with correct background colors and fully readable chrome
+    in light and dark modes
+  - Okabe-Ito palette applied correctly across all panels with consistent first-series
+    green
+  - Cook's distance contours at 0.5 and 1.0 levels add quantitative context to the
+    Residuals vs Leverage panel
+  - LOWESS smoothers correctly placed in panels 1 and 3 to reveal patterns
+  - Canvas assembly matches 4800x2700 target resolution
   weaknesses:
-  - 'Label overlap in Q-Q plot: influential point labels #10 and #31 collide into
-    ''#10#31'' — arrange labels with offsets to prevent overlap'
-  - 'Font sizes below recommendations for pixel-based libraries: label_font_size=18
-    (needs 22px), major_label_font_size=16 (needs 18px); text reads somewhat small
-    in the 4800×2700 panel context'
-  - 'DE-02 low: pygal doesn''t expose spine removal but grid could be hidden or subdued
-    further; each subplot has default grid lines competing with the data'
-  - 'KISS structure violated: make_style() and chart_to_pil() helper functions defined
-    — flatten into top-level code for compliance with CQ-01'
-  - 'LM-02 low: implementation doesn''t leverage distinctive pygal features (e.g.,
-    custom value formatters, tooltips config, per-point label dicts, or SVG CSS injection)
-    — currently generic XY usage'
+  - Missing influential point index labels in all four subplots — spec explicitly
+    requires labeling 2-3 highest Cook's distance observations with their indices
+  - No overall figure title (diagnostic-regression-panel · pygal · anyplot.ai) embedded
+    in the PNG — HTML carries it but PNG deliverable does not
+  - Axis label font size (18px) is below the recommended 22px for pygal at this canvas
+    size
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
-      Chrome: Main title "diagnostic-regression-panel · pygal · anyplot.ai" centered at top in dark ink, clearly readable. Subplot titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage") visible in each panel. Axis labels (e.g. "Fitted values", "Standardized Residuals", "√|Standardized Residuals|", "Leverage") and tick labels are readable though slightly small for the panel scale. Grid lines subtle via foreground_subtle token.
-      Data: First series rendered in #009E73 (teal/green) — correct Okabe-Ito position 1. Zero reference and LOWESS lines use Okabe-Ito positions 2 (#D55E00) and 3 (#0072B2). Orange-coded outlier points visible in scatter panels. Cook's distance contour curves visible in Residuals vs Leverage subplot. Influential point labels (#31, #22, #106) annotated across subplots, though #10 and #31 collide in Q-Q plot showing as "#10#31".
-      Legibility verdict: PASS — all text readable; minor label overlap in Q-Q plot does not affect main chrome legibility.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Subplot titles (Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage) in dark text, clearly readable. Axis labels (Fitted values, Residuals, Theoretical Quantiles, Standardized Residuals, Leverage, sqrt|Standardized Residuals|) dark and legible. Tick labels dark and readable.
+      Data: First series (scatter points) = #009E73 green across all panels. Second series (reference/LOWESS lines) = #D55E00 orange. Third series (additional Cook's contour / LOWESS) = #0072B2 blue. All elements visible against warm off-white background.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title and subplot titles appear as light text on dark background, clearly readable. Axis labels and tick labels show in light ink tone (F0EFE8 / INK_MUTED) — no dark-on-dark failures observed. Grid lines present but subdued via INK_MUTED styling.
-      Data: Data colors are identical to light render — teal (#009E73) scatter, orange/blue reference lines, same color cycling. Only the background and text chrome flips between themes. Cook's distance contours and LOWESS curves remain visible.
-      Legibility verdict: PASS — both renders are theme-correct with no dark-on-dark or light-on-light failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: All subplot titles, axis labels, and tick labels rendered in light text — clearly readable against the dark background. No dark-on-dark failures observed anywhere. Brand green #009E73 remains fully visible on the dark surface.
+      Data: Colors identical to light render — green scatter, orange and blue lines. Only background/chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=26, labels=18, major=16) but below
-          pixel-based recommendations (28/22/18px); text readable but somewhat small
-          at panel scale
+        comment: Readable in both themes; axis labels 18px slightly below recommended
+          22px for pygal
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: 'Influential point labels #10 and #31 collide in Q-Q plot as ''#10#31'';
-          some label crowding elsewhere'
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 120 points at dots_size=2.5 are visible but on the small side for
-          the panel; LOWESS lines and Cook's contours clearly visible
+        comment: No text collisions; dense scatter in Residuals vs Leverage is expected
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: LOWESS, Cook's contours, scatter all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; multiple series distinguishable
-          by color
+        comment: Okabe-Ito CVD-safe palette used throughout
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2x2 grid fills 4800x2700 well; some whitespace at subplot title areas
-          but overall good proportions
+        comment: Correct 4800x2700 combined canvas; no overall figure title in PNG
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels including √|Standardized Residuals| mathematical
-          notation; all four subplots labeled appropriately
+        comment: Descriptive subplot axis labels with appropriate descriptions
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1
-          and #1A1A17 correct; theme-adaptive INK/INK_MUTED tokens applied'
+        comment: 'First series #009E73, second #D55E00, third #0072B2; backgrounds
+          correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default with correct palette and theme tokens;
-          not visually exceptional
+        passed: true
+        comment: Above default; Okabe-Ito intentionally applied, consistent cross-panel
+          styling, professional appearance
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Library defaults with minimal customization; grid lines could be
-          disabled or hidden; spine removal not exposed in pygal
+        passed: true
+        comment: Proper Style object with theme-adaptive tokens; stroke differentiation;
+          limited further refinement in pygal
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Influential point labels create visual hierarchy; Cook's distance
-          contours contextualize leverage; LOWESS smoother guides reader; data shows
-          genuine heteroscedasticity pattern
+        comment: Four-panel diagnostic narrative coherent; weakened by missing influential
+          point labels
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -141,65 +127,60 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct 2x2 panel: Residuals vs Fitted, Normal Q-Q, Scale-Location,
-          Residuals vs Leverage — all required subtypes present'
+        comment: XY scatter for data, XY line for smoothers/references — correct
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: LOWESS in subplots 1&3, zero reference line, 45° Q-Q line, Cook's
-          distance contours at 0.5 and 1.0, influential point labels present
+        passed: false
+        comment: All four panels with LOWESS and Cook's contours; MISSING influential
+          point index labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All four subplots correctly map x/y axes per spec
+        comment: Correct X/Y mappings across all four panels
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'diagnostic-regression-panel · pygal · anyplot.ai' present;
-          show_legend=False appropriate for labeled panel
+        passed: false
+        comment: Individual subplot titles correct; no overall figure title in PNG
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Data shows heteroscedasticity, near-normal residuals with tails,
-          scale-location pattern, leverage distribution with influential points —
-          all diagnostic aspects covered
+        comment: All four diagnostic types, LOWESS, Cook's at 0.5 and 1.0; missing
+          influential point labels
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible two-predictor regression scenario with realistic heteroscedasticity;
-          abstract variable names (x1, x2) rather than real-world domain
+        comment: Two-predictor OLS with mild heteroscedasticity; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Fitted values, residuals, leverage, and Cook's distance all at realistic
-          scales for 120-observation regression with 3 parameters
+        comment: Realistic scales for n=120 regression scenario
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: 'Two helper functions defined: make_style() and chart_to_pil(); violates
-          no-functions requirement but minimal'
+        passed: true
+        comment: Two small helper functions (make_style, chart_to_pil); concise and
+          practical
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,21 +192,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation necessary for package resolution
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Helper functions add slight verbosity; no fake UI or over-engineering
+        passed: true
+        comment: Clean, organized, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current pygal API used
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,26 +214,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Style object, XY chart type, stroke/dots_size parameters idiomatically;
-          correct SVG-to-PNG pipeline with cairosvg
+        comment: Correct pygal.XY, Style object, cairosvg, stroke parameter differentiation
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Does not leverage pygal's per-point label dicts, custom value formatters,
-          or tooltip customization; generic XY scatter usage that could be replicated
-          in any library
-  verdict: REJECTED
+        passed: true
+        comment: stroke=True/False toggle, HTML interactive SVG grid, PIL panel assembly
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - statsmodels
   - pillow
-  - cairosvg
   techniques:
-  - html-export
   - subplots
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
