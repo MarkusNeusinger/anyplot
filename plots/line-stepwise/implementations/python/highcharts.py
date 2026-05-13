@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 line-stepwise: Step Line Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-13
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,95 +18,86 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Server response time over monitoring period (discrete changes)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
+# Data - Discrete inventory levels over time
 np.random.seed(42)
-hours = np.arange(0, 24)
-# Simulate server response times that change discretely throughout the day
-base_response = 45
-response_times = np.zeros(24)
-response_times[0:6] = base_response + np.random.randint(0, 10, 6)  # Night: low load
-response_times[6:9] = base_response + 25 + np.random.randint(0, 15, 3)  # Morning spike
-response_times[9:12] = base_response + 15 + np.random.randint(0, 10, 3)  # Mid-morning
-response_times[12:14] = base_response + 30 + np.random.randint(0, 20, 2)  # Lunch peak
-response_times[14:17] = base_response + 20 + np.random.randint(0, 15, 3)  # Afternoon
-response_times[17:20] = base_response + 35 + np.random.randint(0, 20, 3)  # Evening peak
-response_times[20:24] = base_response + 5 + np.random.randint(0, 10, 4)  # Night decline
+days = np.arange(0, 20)
+inventory = np.array([100, 100, 85, 85, 85, 70, 70, 95, 95, 110, 110, 90, 90, 75, 75, 75, 120, 120, 105, 105])
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration for 4800x2700 px
+# Chart configuration
 chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 250,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 200,
     "marginLeft": 180,
     "marginTop": 150,
+    "style": {"color": INK},
 }
 
 # Title
 chart.options.title = {
-    "text": "line-stepwise · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "line-stepwise · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
-
-chart.options.subtitle = {"text": "Server Response Time (24-Hour Monitoring)", "style": {"fontSize": "32px"}}
 
 # X-axis configuration
 chart.options.x_axis = {
-    "title": {"text": "Hour of Day", "style": {"fontSize": "40px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "28px"}, "y": 35},
-    "categories": [f"{h:02d}:00" for h in hours],
-    "tickInterval": 2,
-    "lineWidth": 2,
-    "tickWidth": 2,
+    "title": {"text": "Day", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
+    "gridLineWidth": 1,
 }
 
 # Y-axis configuration
 chart.options.y_axis = {
-    "title": {"text": "Response Time (ms)", "style": {"fontSize": "40px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "28px"}, "x": -10},
-    "min": 40,
-    "max": 100,
-    "gridLineColor": "#e0e0e0",
+    "title": {"text": "Inventory Units", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
     "gridLineWidth": 1,
-    "lineWidth": 2,
 }
 
 # Plot options - enable step line
-chart.options.plot_options = {
-    "line": {
-        "step": "left",  # Step before the point (horizontal-then-vertical)
-        "lineWidth": 6,
-        "marker": {"enabled": True, "radius": 12, "symbol": "circle"},
-    }
-}
+chart.options.plot_options = {"line": {"step": "left", "lineWidth": 3, "marker": {"radius": 8, "enabled": True}}}
 
 # Legend configuration
-chart.options.legend = {
-    "enabled": True,
-    "itemStyle": {"fontSize": "28px"},
-    "align": "right",
-    "verticalAlign": "top",
-    "x": -50,
-    "y": 100,
-}
+chart.options.legend = {"enabled": False}
+
+# Set colors
+chart.options.colors = [BRAND]
 
 # Create series
 series = LineSeries()
-series.name = "Response Time"
-series.data = [float(v) for v in response_times]
-series.color = "#306998"  # Python Blue
-series.marker = {"fillColor": "#306998", "lineWidth": 2, "lineColor": "#ffffff"}
+series.name = "Inventory"
+series.data = [float(v) for v in inventory]
+series.color = BRAND
+series.marker = {"fillColor": BRAND, "lineWidth": 0}
 
 chart.add_series(series)
 
 # Download Highcharts JS for headless Chrome
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -116,38 +108,21 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
+
+# Save the HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save the HTML file for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    # For the saved HTML, use CDN for broader compatibility
-    html_cdn = (
-        """<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>"""
-        + html_str
-        + """</script>
-</body>
-</html>"""
-    )
-    f.write(html_cdn)
-
-# Take screenshot with headless Chrome
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
@@ -157,8 +132,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
