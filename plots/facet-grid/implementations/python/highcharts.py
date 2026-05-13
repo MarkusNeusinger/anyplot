@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 facet-grid: Faceted Grid Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-13
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,6 +16,17 @@ from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for soil types
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data
 np.random.seed(42)
@@ -45,19 +57,16 @@ n_cols = len(light_conditions)
 # Calculate subplot dimensions with margins
 chart_width = 4800
 chart_height = 2700
-margin_top = 200
-margin_bottom = 140
-margin_left = 200
-margin_right = 120
-spacing = 80
+margin_top = 240
+margin_bottom = 180
+margin_left = 240
+margin_right = 200
+spacing = 100
 
 plot_area_width = chart_width - margin_left - margin_right
 plot_area_height = chart_height - margin_top - margin_bottom
 subplot_width = (plot_area_width - spacing * (n_cols - 1)) / n_cols
 subplot_height = (plot_area_height - spacing * (n_rows - 1)) / n_rows
-
-# Colors for facets - colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#9467BD"]
 
 # Build series data for each facet
 series_list = []
@@ -85,24 +94,23 @@ for row_idx, soil in enumerate(soil_types):
                 "height": 0,
                 "min": 15,
                 "max": 105,
-                "lineWidth": 2,
-                "lineColor": "#333333",
-                "tickWidth": 2,
-                "tickLength": 10,
-                "labels": {"style": {"fontSize": "20px", "color": "#333333"}, "y": 30},
+                "lineWidth": 3,
+                "lineColor": INK_SOFT,
+                "tickWidth": 3,
+                "tickLength": 12,
+                "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}, "y": 40},
                 "title": {
                     "text": "Water (mm)" if row_idx == n_rows - 1 else None,
-                    "style": {"fontSize": "24px", "color": "#333333"},
-                    "y": 55,
+                    "style": {"fontSize": "26px", "color": INK},
+                    "y": 70,
                 },
-                "gridLineWidth": 1,
-                "gridLineColor": "rgba(0,0,0,0.15)",
-                "gridLineDashStyle": "Dash",
+                "gridLineWidth": 2,
+                "gridLineColor": GRID,
                 "offset": 0,
             }
         )
 
-        # Create y-axis for this subplot
+        # Create y-axis for this subplot - fix for consistent label display
         y_axis_id = f"y{row_idx * n_cols + col_idx}"
         y_axes.append(
             {
@@ -113,20 +121,19 @@ for row_idx, soil in enumerate(soil_types):
                 "height": subplot_height,
                 "min": 0,
                 "max": 50,
-                "lineWidth": 2,
-                "lineColor": "#333333",
-                "tickWidth": 2,
-                "tickLength": 10,
-                "labels": {"style": {"fontSize": "20px", "color": "#333333"}, "x": -15},
+                "lineWidth": 3,
+                "lineColor": INK_SOFT,
+                "tickWidth": 3,
+                "tickLength": 12,
+                "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}, "x": -20},
                 "title": {
                     "text": "Growth (cm)" if col_idx == 0 else None,
-                    "style": {"fontSize": "24px", "color": "#333333"},
+                    "style": {"fontSize": "26px", "color": INK},
                     "rotation": 270,
-                    "x": -50,
+                    "x": -60,
                 },
-                "gridLineWidth": 1,
-                "gridLineColor": "rgba(0,0,0,0.15)",
-                "gridLineDashStyle": "Dash",
+                "gridLineWidth": 2,
+                "gridLineColor": GRID,
                 "offset": 0,
             }
         )
@@ -140,11 +147,11 @@ for row_idx, soil in enumerate(soil_types):
                 "xAxis": row_idx * n_cols + col_idx,
                 "yAxis": row_idx * n_cols + col_idx,
                 "marker": {
-                    "radius": 10,
+                    "radius": 12,
                     "symbol": "circle",
-                    "fillColor": colors[row_idx % len(colors)],
+                    "fillColor": OKABE_ITO[row_idx % len(OKABE_ITO)],
                     "lineWidth": 2,
-                    "lineColor": "#333333",
+                    "lineColor": PAGE_BG,
                 },
                 "showInLegend": False,
             }
@@ -160,11 +167,11 @@ for col_idx, light in enumerate(light_conditions):
         {
             "labels": [
                 {
-                    "point": {"x": left, "y": margin_top - 60, "xAxis": None, "yAxis": None},
+                    "point": {"x": left, "y": margin_top - 100, "xAxis": None, "yAxis": None},
                     "text": f"Light: {light}",
                     "backgroundColor": "transparent",
                     "borderWidth": 0,
-                    "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#333333"},
+                    "style": {"fontSize": "30px", "fontWeight": "bold", "color": INK},
                 }
             ],
             "labelOptions": {"useHTML": True},
@@ -178,11 +185,11 @@ for row_idx, soil in enumerate(soil_types):
         {
             "labels": [
                 {
-                    "point": {"x": chart_width - margin_right + 50, "y": top, "xAxis": None, "yAxis": None},
+                    "point": {"x": chart_width - margin_right + 100, "y": top, "xAxis": None, "yAxis": None},
                     "text": f"Soil: {soil}",
                     "backgroundColor": "transparent",
                     "borderWidth": 0,
-                    "style": {"fontSize": "26px", "fontWeight": "bold", "color": "#333333"},
+                    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
                     "rotation": 90,
                 }
             ],
@@ -199,8 +206,8 @@ chart.options.chart = {
     "type": "scatter",
     "width": chart_width,
     "height": chart_height,
-    "backgroundColor": "#ffffff",
-    "style": {"fontFamily": "Arial, sans-serif"},
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "Arial, sans-serif", "color": INK},
     "marginTop": margin_top,
     "marginBottom": margin_bottom,
     "marginLeft": margin_left,
@@ -208,15 +215,15 @@ chart.options.chart = {
 }
 
 chart.options.title = {
-    "text": "Plant Growth Study · facet-grid · highcharts · pyplots.ai",
-    "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#333333"},
-    "y": 55,
+    "text": "facet-grid · highcharts · anyplot.ai",
+    "style": {"fontSize": "34px", "fontWeight": "bold", "color": INK},
+    "y": 60,
 }
 
 chart.options.subtitle = {
-    "text": "Growth by Soil Type (rows) and Light Condition (columns)",
-    "style": {"fontSize": "26px", "color": "#666666"},
-    "y": 110,
+    "text": "Plant Growth by Soil Type (rows) and Light Condition (columns)",
+    "style": {"fontSize": "24px", "color": INK_SOFT},
+    "y": 120,
 }
 
 chart.options.credits = {"enabled": False}
@@ -228,7 +235,7 @@ chart.options.annotations = annotations
 
 chart.options.plot_options = {
     "scatter": {
-        "marker": {"radius": 10, "states": {"hover": {"enabled": True, "lineColor": "#333333"}}},
+        "marker": {"radius": 12, "states": {"hover": {"enabled": True}}},
         "states": {"inactive": {"opacity": 1}},
     }
 }
@@ -242,15 +249,58 @@ chart.options.tooltip = {
 # Generate JavaScript
 html_str = chart.to_js_literal()
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS with fallback
+highcharts_js = None
+for url in ["https://code.highcharts.com/highcharts.js", "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"]:
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+            break
+    except Exception:
+        continue
 
-# Download annotations module
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
-    annotations_js = response.read().decode("utf-8")
+if highcharts_js is None:
+    local_paths = [
+        Path(__file__).resolve().parent.parent.parent.parent / "node_modules" / "highcharts" / "highcharts.js",
+        Path("node_modules/highcharts/highcharts.js"),
+    ]
+    for p in local_paths:
+        if p.exists():
+            highcharts_js = p.read_text(encoding="utf-8")
+            break
+
+if highcharts_js is None:
+    raise RuntimeError("Failed to download Highcharts JS from CDN or find local copy")
+
+# Download annotations module with fallback
+annotations_js = None
+for url in [
+    "https://code.highcharts.com/modules/annotations.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@11/modules/annotations.js",
+]:
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            annotations_js = response.read().decode("utf-8")
+            break
+    except Exception:
+        continue
+
+if annotations_js is None:
+    local_paths = [
+        Path(__file__).resolve().parent.parent.parent.parent
+        / "node_modules"
+        / "highcharts"
+        / "modules"
+        / "annotations.js",
+        Path("node_modules/highcharts/modules/annotations.js"),
+    ]
+    for p in local_paths:
+        if p.exists():
+            annotations_js = p.read_text(encoding="utf-8")
+            break
+
+if annotations_js is None:
+    raise RuntimeError("Failed to download annotations module from CDN or find local copy")
 
 # Generate HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
@@ -260,14 +310,14 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{annotations_js}</script>
 </head>
-<body style="margin:0; padding:0;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: {chart_width}px; height: {chart_height}px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Save HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML with theme-suffixed filename
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Create screenshot with Selenium
@@ -280,13 +330,12 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4900,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(4900, 2800)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()

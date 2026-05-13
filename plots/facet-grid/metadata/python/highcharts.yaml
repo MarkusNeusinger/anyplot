@@ -1,15 +1,242 @@
 library: highcharts
+language: python
 specification_id: facet-grid
 created: '2025-12-30T16:40:06Z'
-updated: '2025-12-30T16:54:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601061463
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T03:46:21Z'
+generated_by: claude-haiku
+workflow_run: 25776596236
+issue: 2696
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/facet-grid/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/facet-grid/highcharts/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Perfect visual quality across all technical criteria — all text readable in both
+    themes, palette Okabe-Ito compliant, no overlaps
+  - 'Solid facet-grid implementation: correct 3×3 structure with row/column faceting
+    and shared axes'
+  - Realistic, plausible plant growth data that clearly demonstrates the faceting
+    concept
+  - Clean, reproducible code with proper theme handling and appropriate scaling for
+    4800×2700 canvas
+  - Proper use of Highcharts' multi-axis capability and annotations for facet labels
+  weaknesses:
+  - 'Design Excellence conservative: uses library defaults with minimal customization
+    or visual refinement beyond functional requirements'
+  - No visual hierarchy or emphasis to guide viewer to insights — data is displayed
+    but not interpreted
+  - 'Aesthetic sophistication limited: no custom design flourishes, intentional typography
+    hierarchy, or polish that would elevate it beyond defaults'
+  - Library mastery functional but not creative — uses distinctive Highcharts features
+    in straightforward way rather than leveraging for exceptional visual impact
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "Plant Growth Faceted Analysis" bold and clear, subtitle informative. Axis labels "Water (mm)" and "Growth (cm)" visible with units. Tick labels and facet labels (Light conditions: Low/Medium/High; Soil types: Sandy/Loamy/Clay) all readable in dark text. Column and row headers properly positioned.
+      Data: 3×3 grid of scatter plots showing plant growth vs water across soil types and light conditions. First series (Sandy) uses brand green #009E73, followed by orange #D55E00 (Loamy) and blue #0072B2 (Clay). Markers at radius 12px with white edges are clearly visible. All 225 data points distinguishable.
+      Legibility verdict: PASS - all text perfectly readable, high contrast, no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: All text rendered in light colors (#F0EFE8 for primary, #B8B7B0 for secondary). Title, axis labels, tick labels, and facet headers all clearly readable against dark background. No dark-on-dark text failures. Grid lines subtle and visible.
+      Data: Identical colors to light render - teal (#009E73), orange (#D55E00), blue (#0072B2) preserved across theme change, confirming proper color management. Markers clearly visible against dark background.
+      Legibility verdict: PASS - all elements readable, theme chrome correctly inverted while data colors stay constant, no contrast failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 34px, axis labels 26px, tick
+          labels 22px, facet labels 28-30px. Both themes perfectly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Facet labels and axes well-positioned with adequate
+          spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers at radius 12px optimally sized for ~225 data points. All
+          points clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette colorblind-safe with excellent contrast. No red-green
+          sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape with balanced margins. Plot fills canvas appropriately
+          without wasted space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct, axes include units (Water mm, Growth cm). Subtitle
+          provides context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order maintained. Backgrounds #FAF8F1/#1A1A17
+          correct. Both renders theme-correct chrome.'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no custom design flourishes or intentional
+          visual hierarchy beyond faceting structure.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and marker edges present, but minimal polish. Library
+          defaults with basic customization.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Facet grid shows comparison structure, but no visual hierarchy or
+          emphasis to guide viewer to insights.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct facet-grid: 3×3 grid of scatter plots (rows: soil type,
+          columns: light condition).'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: row/column faceting, shared axes, facet labels,
+          scatter base plot.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Water (x, mm) vs. Growth (y, cm) correctly mapped with full data
+          range visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, subtitle informative, legend appropriately
+          disabled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Data shows all facet-grid aspects: multi-dimensional comparison,
+          variation within facets, systematic analysis.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plant growth by soil and light is real, scientifically plausible,
+          neutral scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values realistic (water 20-100mm, growth 0-50cm). Proportions factually
+          correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Sequential: imports → theme → data → chart → export. No unnecessary
+          abstractions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, numpy, highcharts_core, selenium, pathlib,
+          tempfile, time, urllib.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct theme-suffixed filenames (plot-light.png, plot-dark.png)
+          and HTML variants. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Chart/HighchartsOptions, multi-axis layout, annotations module,
+          Selenium export. Follows recommended patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses multi-axis and annotations appropriately, but functionally rather
+          than creatively.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -21,188 +248,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent implementation of a complex 3×3 faceted grid using Highcharts multi-axis
-    capability
-  - Colorblind-safe palette with clear visual distinction between soil types (blue/yellow/purple)
-  - Realistic plant growth study with meaningful data patterns showing light and soil
-    effects
-  - Proper use of annotations module for column and row facet labels
-  - Correct title format and subtitle explaining the faceting structure
-  - Shared axis scales across all facets enabling direct comparison
-  weaknesses:
-  - Y-axis label shows 'Values' instead of 'Growth (cm)' in middle and right columns
-    (inconsistent labeling)
-  - Text sizes could be larger for optimal readability at 4800×2700 resolution
-  image_description: 'The plot displays a 3×3 faceted grid of scatter plots showing
-    "Plant Growth Study". The columns represent light conditions (Low, Medium, High)
-    with bold labels at the top. The rows represent soil types (Sandy, Loamy, Clay)
-    labeled on the right side. Each subplot shows scatter points with Water (mm) on
-    X-axis (range 15-105) and Growth (cm) on Y-axis (range 0-55). Colors are colorblind-safe:
-    Blue (#306998) for Sandy row, Yellow (#FFD43B) for Loamy row, and Purple (#9467BD)
-    for Clay row. Points show clear positive correlation between water and growth,
-    with higher growth values in High light conditions. The main title uses the correct
-    format "facet-grid · highcharts · pyplots.ai". A subtitle explains the faceting
-    structure.'
-  criteria_checklist:
-    visual_quality:
-      score: 35
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Text is readable but could be slightly larger for optimal 4800×2700
-          display
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Markers well-sized (radius 10) with dark borders for 25 points per
-          facet
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette (blue, yellow, purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight imbalance with row labels on right
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Y-axis shows "Growth (cm)" but middle/right columns show "Values"
-          label (bug)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Dashed grid is subtle, legend disabled as expected for faceted plot
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct faceted grid with scatter subplots
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Water, Y=Growth correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Faceting by row (soil) and column (light), shared scales, category
-          labels
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed, facet labels accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct: "Plant Growth Study · facet-grid · highcharts · pyplots.ai"'
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows variation across all 9 facets with different patterns per soil/light
-          combo
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Plant growth study is neutral, scientifically plausible scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Water 20-100mm, Growth 0-50cm are realistic values
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Linear imports → data → plot → save structure
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
-        max: 2
-        passed: false
-        comment: All imports used, though some like urllib could be abstracted
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: true
-        comment: Unknown library version
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Highcharts multi-axis capability and annotations module well,
-          but could leverage more interactive features
-  verdict: APPROVED
+  styling:
+  - publication-ready
