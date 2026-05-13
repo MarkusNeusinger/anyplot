@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:29Z'
-updated: '2026-05-13T09:36:39Z'
+updated: '2026-05-13T09:45:04Z'
 generated_by: claude-haiku
 workflow_run: 25790570388
 issue: 2782
@@ -12,109 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 75
 review:
   strengths:
-  - Perfect visual quality across both themes with no legibility failures
-  - Clean 2×2 grid layout with excellent spacing and alignment
-  - Proper theme adaptation — colors stay identical, only chrome (text/backgrounds)
-    flips
-  - Comprehensive data coverage showing diverse plot types (line, bar, scatter, histogram)
-  - Reproducible code with clear data generation and proper pygal Style configuration
-  - Functional, realistic financial dashboard context
+  - Excellent grid layout and spacing calculation using PIL for proper 2x2 alignment
+  - Clean use of theme tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED) throughout Style
+    objects for both themes
+  - Deterministic random seed (np.random.seed(42)) ensures reproducible synthetic
+    data
+  - Comprehensive business dashboard context with realistic financial metrics
+  - Generates both PNG and interactive HTML outputs for full pygal interactivity support
   weaknesses:
-  - Design excellence moderate — professional but generic styling without sophisticated
-    visual refinement
-  - Library mastery limited — manual PIL image compositing rather than library-specific
-    patterns or idiomatic pygal approaches for complex layouts
+  - 'CRITICAL: Bar chart and Histogram violate hard color rule — must use BRAND (#009E73)
+    for first series, not COLOR_2 (#D55E00). Change bar_style colors and hist_style
+    colors definitions.'
+  - 'CRITICAL: Provided images show ''bokeh'' implementation with different data (Stock
+    Price, Daily Trading, Risk/Return) vs code specification (Monthly Revenue, Sales,
+    Ad Spend, Daily Orders) — pipeline failure preventing render verification. Must
+    regenerate plot-light.png and plot-dark.png.'
+  - PIL title rendering uses 'subplot-grid · pygal · anyplot.ai' which cannot be verified
+    in images due to mismatch.
+  - Minimal use of pygal-specific advanced features beyond basic Style API — grid
+    assembly via PIL rather than pygal-native composition.
+  - Color differentiation between subplots (bar+histogram both secondary color) may
+    obscure visual hierarchy; justify intentional color variation or standardize to
+    BRAND.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface.
-      Chrome: Title "subplot-grid · pygal · anyplot.ai" centered at top in dark text; axis labels and tick labels all clearly readable in dark text; grid lines subtle but present.
-      Data: 2×2 grid of subplots — top-left shows line chart with teal (#009E73) line and dots; top-right shows bar chart with orange (#D55E00) bars; bottom-left shows scatter with teal dots showing positive correlation; bottom-right shows orange histogram with normal distribution. All elements clearly distinguishable.
-      Legibility verdict: PASS — all text readable, good contrast, no element overlap.
+      CRITICAL MISMATCH: Images provided show 'subplot-grid · bokeh · anyplot.ai' with bokeh-specific data (Stock Price Over Time line chart, Daily Trading Volume histogram, Risk vs Return Analysis scatter, Daily Returns Distribution histogram). This does NOT match the pygal code specification which should show Monthly Revenue, Sales by Category, Ad Spend vs ROI, and Daily Order Volume. Background appears to be warm off-white appropriate for light theme (#FAF8F1). Text is readable in dark ink where shown. However, the entire chart content mismatches the implementation being reviewed. CANNOT VERIFY ACTUAL PYGAL RENDERS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Same title, axis labels, and tick labels now in light text; all clearly visible against dark background; grid lines subtle but present with appropriate opacity.
-      Data: Identical data colors to light render — teal line and dots in line/scatter charts, orange bars and histogram. No dark-on-dark failures. Brand green (#009E73) clearly visible on dark surface.
-      Legibility verdict: PASS — all text readable, proper dark theme adaptation, no legibility issues.
+      CRITICAL MISMATCH: Same bokeh implementation shown with dark background (appears to be near-black #1A1A17 as expected). Text appears light-colored and readable. Data colors appear to be identical between light and dark render (teal line, orange bars, multi-colored scatter, blue histogram), suggesting proper theme adaptation only on chrome. However, this is the bokeh implementation, not pygal. Both renders confirm images are from different implementation/stale pipeline outputs. CANNOT VERIFY ACTUAL PYGAL RENDERS DUE TO IMAGE MISMATCH.
+
+    Verdict: IMAGE VERIFICATION FAILED - Rendered images do not correspond to the code being reviewed. Regeneration required before proper visual quality assessment can be completed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All text fully readable in both light and dark themes
+        passed: false
+        comment: Font sizes set explicitly (72px title, 22px labels) but actual rendering
+          cannot be verified due to image mismatch
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean grid layout with no overlapping elements or labels
+        comment: Grid layout with calculated spacing prevents overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, bars clearly visible and well-spaced
+        comment: Different chart types are visually distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Strong contrast between teal and orange; colorblind-safe Okabe-Ito
-          palette
+        comment: Palette structure supports accessibility
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent 2×2 proportions, generous margins, nothing cut off
+        comment: 2x2 grid proportions and margins well-calculated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units across all subplots
+        comment: Each subplot has descriptive titles with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Brand green #009E73 in line/scatter; backgrounds #FAF8F1 light /
-          #1A1A17 dark; chrome properly theme-adapted'
+        passed: false
+        comment: 'HARD RULE VIOLATION: Bar and Histogram use COLOR_2 (#D55E00) instead
+          of BRAND (#009E73). First categorical series must always be #009E73 per
+          style guide.'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 3
         max: 8
         passed: false
-        comment: Professional polish but generic styling; well-chosen colors but no
-          distinctive visual design
+        comment: Business context present but color violation undermines design. Theme
+          token usage appropriate.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Good whitespace and subtle grid; minimal custom refinement beyond
-          defaults
+        passed: true
+        comment: Clean grid layout, good spacing, subtle approach appropriate
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Clear layout hierarchy via 2×2 grid and main title; functional dashboard
-          approach
+        comment: Four chart types show complementary metrics but limited visual hierarchy
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -122,28 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct subplot grid with 4 distinct chart types
+        comment: 'Correct: Multiple distinct subplots in 2x2 grid'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: configurable grid, different plot types,
-          consistent spacing'
+        comment: All specification requirements present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct data mapping across all subplots with appropriate axes
+        comment: X/Y axes correctly assigned for each chart type
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Correct title format; legends omitted where appropriate
+        passed: false
+        comment: Title branding cannot be verified due to image mismatch; expected
+          'pygal' but images show 'bokeh'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -151,21 +156,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive coverage of subplot types: line, bar, scatter, histogram'
+        comment: Demonstrates line, bar, scatter, histogram — comprehensive chart
+          type coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic financial dashboard context; neutral, non-controversial
+        comment: Business dashboard (revenue, sales, ROI, orders) is realistic and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Sensible scales for domain (revenue $K, ROI %, order counts)
+        passed: false
+        comment: Values sensible but scale variation significant (revenue 120-248K
+          vs daily orders 50-300)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -173,50 +181,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward approach, no unnecessary abstraction
+        comment: Straightforward procedural code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic via np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, BytesIO, cairosvg, numpy, pygal, PIL, Style)
+        comment: All imports (os, numpy, pygal, PIL, cairosvg) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or unnecessary complexity
+        comment: No fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: 'Correct output format: plot-{THEME}.png and plot-{THEME}.html'
+        passed: false
+        comment: Saves correctly as plot-{THEME}.png and plot-{THEME}.html but output
+          cannot be verified
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Proper pygal Style configuration; manual PIL compositing is pragmatic
-          but not library-native
+        comment: Correct Style API usage but grid assembly via PIL is somewhat non-idiomatic
+          (pygal.Multi() exists with limitations)
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Generic usage; relies on manual image composition rather than library-specific
-          patterns
-  verdict: APPROVED
+        comment: Uses cairosvg for SVG→PNG conversion; minimal pygal-specific advanced
+          features
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
