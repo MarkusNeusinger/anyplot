@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: cat-box-strip
 created: '2025-12-30T17:33:59Z'
-updated: '2026-05-13T05:48:16Z'
+updated: '2026-05-13T05:56:07Z'
 generated_by: claude-haiku
 workflow_run: 25780715213
 issue: 2695
@@ -12,36 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - Perfect theme adaptation across both light and dark renders
-  - Excellent data quality with outliers and varied distributions showing plot type
-    versatility
-  - All spec requirements met with correct plot type and feature completeness
-  - Clean code with proper reproducibility (seed set) and KISS structure
-  - Proper use of Okabe-Ito palette with brand green and secondary orange
+  - Excellent text legibility with explicitly sized fonts (28px title, 22px labels,
+    18px ticks)
+  - Correct Okabe-Ito palette for data colors with brand teal (#009E73) consistent
+    across both light and dark themes
+  - Well-structured example data demonstrating realistic plant growth with visible
+    variation, outliers, and different distribution shapes
+  - 'Complete spec compliance with all required features: box statistics (median,
+    Q1, Q3, whiskers) and scatter strip overlay'
+  - Clean, reproducible code with deterministic randomization (seed=42) and proper
+    separation of concerns
   weaknesses:
-  - Design excellence lacks visual hierarchy or emphasis beyond basic data display
-  - Visual refinement could be enhanced with more distinctive styling choices beyond
-    style guide defaults
-  - Library-specific features could be leveraged more creatively (e.g., advanced Highcharts
-    interactive capabilities in HTML export)
+  - 'VQ-07 palette compliance: Boxplot fill color in dark render appears bright white
+    instead of theme-adapted; semi-transparent green fills should maintain visual
+    consistency with dark background theme'
+  - Design Excellence is generic with no distinctive aesthetic choices or custom styling;
+    plot uses standard highcharts configuration without visual refinement
+  - No visual hierarchy or storytelling emphasis; plot displays data clearly but doesn't
+    guide viewer attention to key insights or patterns
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required
-      Chrome: Title "cat-box-strip · highcharts · anyplot.ai" is bold and prominent; x-axis label "Light Condition" clearly visible; y-axis label "Plant Growth (cm)" includes units; tick labels all readable in dark text against light surface
-      Data: Box plots render in brand green (#009E73); median lines in secondary orange (#D55E00); scatter points overlay with jitter and transparency; all elements clearly distinguishable with good contrast
-      Legibility verdict: PASS - all text readable, no overlap, proper sizing at 4800×2700 px
+      Background: Warm off-white at #FAF8F1, correct for light theme
+      Chrome: Title "cat-box-strip · highcharts · anyplot.ai" is clearly readable in dark text; axis labels "Light Condition" and "Plant Growth (cm)" are legible; tick labels and category names are all readable
+      Data: Four categories shown (Low Light, Medium Light, High Light, Full Sun) with box plots rendered in brand teal (#009E73) and median lines in vermillion (#D55E00); scatter points overlay in teal with jitter; all elements clearly visible and distinguishable
+      Legibility verdict: PASS - All text is readable against light background, data colors are clear, no text-on-text contrast issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required
-      Chrome: All title, axis labels, and tick labels render in light color and are clearly visible against dark background; legend has light text on elevated background; no dark-on-dark issues
-      Data: Box plots remain brand green (#009E73) - identical to light render; median lines remain orange (#D55E00) - identical to light render; scatter points same green - data colors perfectly preserved across themes; only chrome (background, text, legend box) changed between themes as expected
-      Legibility verdict: PASS - all text readable, proper theme contrast, elements clearly distinguishable
+      Background: Warm near-black at #1A1A17, correct for dark theme
+      Chrome: Title and axis labels are rendered in light text and are readable; legend is visible. However, the boxplot fill color presents an issue: the box interior backgrounds appear bright white instead of dark-theme-appropriate, creating a jarring light-on-dark contrast
+      Data: Data colors are identical to light render (teal #009E73 for boxes and scatter points, vermillion #D55E00 for medians), confirming proper palette handling - GOOD. Scatter points and data shapes are clearly visible
+      Legibility verdict: PARTIAL - Text elements are readable, but the bright white boxplot fill areas violate theme-adaptation principle. The white boxes stand out incorrectly against the dark background as "light-on-dark" failures. This is a VQ-07 palette compliance issue that should be fixed in the repair loop
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,49 +55,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: 'All fonts explicitly sized: 28px title, 22px labels, 18px ticks
+          - perfect readability at 4800x2700'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels spaced appropriately
+        comment: No overlapping text elements; category labels well-spaced at bottom
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements (boxes, whiskers, medians, scatter points) optimally
-          sized and adapted to data density
+        comment: Markers and box plots clearly visible and optimally sized for data
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; good contrast between all elements
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) provides excellent contrast
+          and is CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with 50-80% canvas utilization; balanced margins;
-          legend positioned near plot
+        comment: Plot fills ~60-70% of canvas with balanced margins; excellent whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (cm); x-axis label is descriptive
+        comment: 'Labels are descriptive with units: ''Plant Growth (cm)'', ''Light
+          Condition'''
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Brand green (#009E73) correct; secondary orange (#D55E00) for median
-          lines; backgrounds #FAF8F1 (light) and #1A1A17 (dark); text colors theme-correct'
+        passed: false
+        comment: 'Okabe-Ito palette correct for data colors; backgrounds correct (#FAF8F1
+          light, #1A1A17 dark); BUT boxplot fill appears bright white in dark render
+          instead of theme-adapted'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -99,22 +107,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured with transparent fill (0.15 alpha) and white marker
-          edges; follows style guide thoughtfully but lacks distinctive custom design
+        comment: Well-configured defaults with Okabe-Ito colors; no distinctive design
+          choices or custom styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Shows refinement with custom color management and proper margin settings;
-          could be more polished
+        comment: Minimal customization beyond basic series styling; no special grid
+          adjustments
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Good data choice (light effects on growth) showing meaningful progression;
-          lacks explicit visual hierarchy or emphasis techniques
+        comment: Data displayed clearly but no visual hierarchy or emphasis to guide
+          interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-strip plot type with all required elements
+        comment: Correct box plot type with all subtypes (whiskers, quartiles, median)
+          present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Boxes with quartiles, whiskers with range, median line, scatter overlay
-          with jitter and transparency all present
+        comment: 'Both required features present: box statistics and strip scatter
+          overlay'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis; plant growth values on y-axis; all data visible
+        comment: Categories correctly on x-axis, values on y-axis; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (spec-id · library · anyplot.ai); legend labels
-          match data series
+        comment: Title format correct; legend labels are descriptive
     data_quality:
       score: 15
       max: 15
@@ -154,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: outliers in Full Sun, varied distributions, different
-          sample sizes per category'
+        comment: 'Shows all boxplot aspects: different distributions, varying spreads,
+          outliers'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, plausible plant growth scenario; neutral context; descriptive
-          labels
+        comment: Plant growth under different light conditions - real, neutral, scientifically
+          plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (5-65cm) and progression (more light = more growth) biologically
-          realistic
+        comment: Growth values (5-65 cm) are realistic and factually correct
     code_quality:
       score: 10
       max: 10
@@ -179,56 +186,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → tokens → data → chart → export; no
-          unnecessary functions'
+        comment: 'Linear structure: imports → data → chart → output, no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic output
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; proper resource handling (temp file cleanup)
+        comment: Clean, Pythonic code with no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Correctly outputs plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Proper Highcharts SDK usage: Chart → Options → Series pattern; correct
-          use of BoxPlotSeries and ScatterSeries'
+        comment: Correct use of Chart, BoxPlotSeries, ScatterSeries; theme adaptation
+          issue suggests incomplete mastery
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses BoxPlotSeries and layer composition effectively; could leverage
-          more distinctive Highcharts capabilities
+        passed: true
+        comment: Leverages BoxPlotSeries and scatter overlay composition effectively
+    score_caps:
+      applied: false
+      details: No caps triggered; VQ-07 reduced to 1/2 but does not trigger explicit
+        cap
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - layer-composition
   - html-export
   patterns:
   - data-generation

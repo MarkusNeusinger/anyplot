@@ -1,7 +1,7 @@
 """ anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
 Library: highcharts unknown | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-13
+Quality: 83/100 | Updated: 2026-05-13
 """
 
 import os
