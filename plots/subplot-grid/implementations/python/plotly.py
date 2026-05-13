@@ -1,14 +1,32 @@
-""" pyplots.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotly | Python 3.13
+Quality: pending | Created: 2025-05-13
 """
 
-import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import os
+import sys
 
+
+# Remove current directory from sys.path to avoid shadowing installed packages
+sys.path = [p for p in sys.path if p not in ("", ".")]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+from plotly.subplots import make_subplots  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Financial dashboard example
 np.random.seed(42)
@@ -42,27 +60,21 @@ fig = make_subplots(
     specs=[[{"type": "scatter"}, {"type": "bar"}], [{"type": "histogram"}, {"type": "scatter"}]],
 )
 
-# Colors
-python_blue = "#306998"
-python_yellow = "#FFD43B"
-accent_green = "#2E7D32"
-accent_red = "#C62828"
-
 # Subplot 1: Line chart - Stock price with moving average
 fig.add_trace(
-    go.Scatter(x=dates, y=price, mode="lines", name="Price", line={"color": python_blue, "width": 3}), row=1, col=1
+    go.Scatter(x=dates, y=price, mode="lines", name="Price", line={"color": OKABE_ITO[0], "width": 3}), row=1, col=1
 )
 fig.add_trace(
     go.Scatter(
-        x=dates, y=ma_20, mode="lines", name="20-day MA", line={"color": python_yellow, "width": 2, "dash": "dash"}
+        x=dates, y=ma_20, mode="lines", name="20-day MA", line={"color": OKABE_ITO[1], "width": 2, "dash": "dash"}
     ),
     row=1,
     col=1,
 )
 
 # Subplot 2: Bar chart - Volume
-volume_colors = [accent_green if r >= 0 else accent_red for r in returns]
-fig.add_trace(go.Bar(x=dates, y=volume, name="Volume", marker={"color": volume_colors, "opacity": 0.7}), row=1, col=2)
+volume_colors = [OKABE_ITO[0] if r >= 0 else OKABE_ITO[1] for r in returns]
+fig.add_trace(go.Bar(x=dates, y=volume, name="Volume", marker={"color": volume_colors, "opacity": 0.8}), row=1, col=2)
 
 # Subplot 3: Histogram - Daily returns distribution
 fig.add_trace(
@@ -70,7 +82,7 @@ fig.add_trace(
         x=daily_returns,
         nbinsx=20,
         name="Returns",
-        marker={"color": python_blue, "opacity": 0.7, "line": {"color": "white", "width": 1}},
+        marker={"color": OKABE_ITO[0], "opacity": 0.75, "line": {"color": PAGE_BG, "width": 1}},
     ),
     row=2,
     col=1,
@@ -83,7 +95,7 @@ fig.add_trace(
         y=price,
         mode="markers",
         name="Price-Volume",
-        marker={"color": python_blue, "size": 10, "opacity": 0.6, "line": {"color": "white", "width": 1}},
+        marker={"color": OKABE_ITO[0], "size": 14, "opacity": 0.7, "line": {"color": PAGE_BG, "width": 1}},
     ),
     row=2,
     col=2,
@@ -91,16 +103,48 @@ fig.add_trace(
 
 # Update layout
 fig.update_layout(
-    title={"text": "subplot-grid \u00b7 plotly \u00b7 pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "subplot-grid · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     showlegend=True,
-    legend={"font": {"size": 16}, "x": 1.02, "y": 1, "xanchor": "left", "yanchor": "top"},
-    template="plotly_white",
+    legend={
+        "font": {"size": 16, "color": INK_SOFT},
+        "x": 1.02,
+        "y": 1,
+        "xanchor": "left",
+        "yanchor": "top",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     margin={"l": 80, "r": 150, "t": 120, "b": 80},
 )
 
-# Update all axes fonts
-fig.update_xaxes(tickfont={"size": 14}, title_font={"size": 18})
-fig.update_yaxes(tickfont={"size": 14}, title_font={"size": 18})
+# Update all axes with theme-adaptive colors and gridlines
+fig.update_xaxes(
+    tickfont={"size": 18, "color": INK_SOFT},
+    title_font={"size": 22, "color": INK},
+    gridcolor=GRID,
+    showgrid=True,
+    gridwidth=1,
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
+)
+fig.update_yaxes(
+    tickfont={"size": 18, "color": INK_SOFT},
+    title_font={"size": 22, "color": INK},
+    gridcolor=GRID,
+    showgrid=True,
+    gridwidth=1,
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
+)
 
 # Specific axis labels
 fig.update_xaxes(title_text="Date", row=1, col=1)
@@ -112,12 +156,12 @@ fig.update_yaxes(title_text="Frequency", row=2, col=1)
 fig.update_xaxes(title_text="Volume", row=2, col=2)
 fig.update_yaxes(title_text="Price ($)", row=2, col=2)
 
-# Update subplot titles font size
+# Update subplot titles font size and color
 for annotation in fig["layout"]["annotations"]:
-    annotation["font"] = {"size": 20}
+    annotation["font"] = {"size": 20, "color": INK}
 
-# Save as PNG (4800x2700 via scale=3)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+# Save PNG (4800x2700 via scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs=True)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
