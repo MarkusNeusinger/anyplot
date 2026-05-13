@@ -1754,6 +1754,62 @@ class TestInsightsRouter:
             assert len(data["related"]) == 1
             assert "annotations" in data["related"][0]["shared_tags"]
 
+    def test_visitors_no_api_key(self, client: TestClient) -> None:
+        """Visitors endpoint returns a zero-filled 30-day series when no Plausible key is set."""
+        with (
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.settings") as mock_settings,
+        ):
+            mock_settings.plausible_api_key = None
+            response = client.get("/insights/visitors")
+            assert response.status_code == 200
+            points = response.json()["points"]
+            assert len(points) == 30
+            assert all(p["visitors"] == 0 for p in points)
+            # Dates should be ascending and end on today (UTC).
+            assert points[0]["date"] < points[-1]["date"]
+
+    def test_visitors_parses_plausible_response(self, client: TestClient) -> None:
+        """Visitor counts from Plausible should be merged into the zero-filled 30-day series."""
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
+
+        today_iso = _dt.now(_tz.utc).date().isoformat()
+
+        class _MockResp:
+            status_code = 200
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict:
+                return {"results": [{"dimensions": [today_iso], "metrics": [42]}]}
+
+        class _MockClient:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *_args):
+                return False
+
+            async def post(self, *_args, **_kwargs):
+                return _MockResp()
+
+        with (
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.settings") as mock_settings,
+            patch("api.routers.insights.httpx.AsyncClient", return_value=_MockClient()),
+        ):
+            mock_settings.plausible_api_key = "test-key"
+            mock_settings.plausible_site_id = "anyplot.ai"
+            mock_settings.plausible_api_url = "https://plausible.io/api/v2/query"
+            response = client.get("/insights/visitors")
+            assert response.status_code == 200
+            points = response.json()["points"]
+            assert len(points) == 30
+            today_point = next(p for p in points if p["date"] == today_iso)
+            assert today_point["visitors"] == 42
+
 
 class TestSpecCodeEndpoint:
     """Tests for the /specs/{spec_id}/{library}/code endpoint."""

@@ -62,6 +62,11 @@ const mockDashboard = {
     { month: '2025-01', count: 10 },
     { month: '2025-02', count: 20 },
   ],
+  daily_impls: [
+    { date: '2026-04-14', count: 3 },
+    { date: '2026-04-15', count: 5 },
+    { date: '2026-04-16', count: 0 },
+  ],
 };
 
 function mockFetchSuccess() {
