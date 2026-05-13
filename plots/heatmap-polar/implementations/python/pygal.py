@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 80/100 | Created: 2026-05-13
+Quality: 82/100 | Created: 2026-05-13
 """
 
 import math
