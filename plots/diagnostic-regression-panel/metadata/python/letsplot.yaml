@@ -1,0 +1,261 @@
+library: letsplot
+language: python
+specification_id: diagnostic-regression-panel
+created: '2026-05-13T16:02:03Z'
+updated: '2026-05-13T16:26:16Z'
+generated_by: claude-sonnet
+workflow_run: 25809987937
+issue: 5242
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/letsplot/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Full Okabe-Ito color differentiation across all four diagnostic elements (data=brand
+    green, LOWESS=orange, Q-Q reference=blue, Cook contours=pink)
+  - All font sizes explicitly set to required minimums (title 24pt bold, axis 20pt,
+    ticks 16pt) — both renders fully readable
+  - 'Theme-adaptive chrome fully implemented: background, text, grid, axis lines all
+    use INK/INK_SOFT tokens'
+  - gggrid assembles the 2×2 panel idiomatically in lets-plot with ggsave scale=3
+    for 4800×2700 output
+  - Data engineered to show heteroscedasticity, heavy tails, and high-leverage outliers
+    — all four diagnostic plots tell a coherent story
+  - 'All spec requirements met: LOWESS in plots 1 and 3, Q-Q reference line, Cook''s
+    contours at D=0.5 and D=1.0, labels on top-3 influential observations'
+  weaknesses:
+  - Q-Q plot labels cluster in the top-right corner — despite nudge logic, labels
+    for the three most extreme observations appear crowded near each other
+  - Credit line appears as small muted subtitle rather than a bold prominent main
+    title for the overall panel
+  - Axis lines are kept (axis_line=element_line) — removing them would give a cleaner
+    minimal look matching the refined grid treatment
+  - DE-01 could be elevated with a figure-level annotation or callout explaining what
+    each panel reveals about assumption violations
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, correctly themed.
+      Chrome: Panel titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage") are bold black, clearly readable. Axis labels in dark ink (20pt), tick labels in soft ink (16pt). Credit subtitle "diagnostic-regression-panel · letsplot · anyplot.ai" appears at top-left in small muted text. All text reads cleanly against the light background.
+      Data: All 150 scatter points in #009E73 (brand green). LOWESS smoothers in #D55E00 (orange). Q-Q reference line in #0072B2 (blue). Cook's distance contours in #CC79A7 (pink/magenta dashed). Observation labels (indices of top-3 influential points) in dark ink. Grid lines very subtle.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black, correctly themed.
+      Chrome: All titles and axis labels appear in light/off-white color, clearly readable against the dark background. Tick labels in muted light gray. Subtitle text in muted light color. No dark-on-dark failures observed — all text contrasts properly with the dark surface.
+      Data: All data colors identical to light render — #009E73 green points, orange LOWESS, blue Q-Q reference, pink contours. Color consistency confirmed across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt bold, axis labels 20pt,
+          ticks 16pt, legend 16pt. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Some label crowding in Q-Q top-right cluster. Nudge logic helps but
+          three labels near each other remain somewhat close. Other subplots clean.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points visible with alpha=0.65 and size=3 at scale=3. LOWESS and
+          reference lines clearly visible. Markers appropriate for 150 points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Full Okabe-Ito palette — CVD-safe. No red-green as sole distinguishing
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: '2x2 grid fills canvas well. Minor concern: extreme-x labels (obs
+          2 at fitted~15) near panel edges.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All axes descriptive: ''Fitted log(Salary)'', ''Residuals'', ''Theoretical
+          Quantiles'', ''Leverage (Hat Value)'', ''\u221a|Standardized Residuals|''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data series #009E73. Multi-element colors follow Okabe-Ito
+          positions 1-4. Light bg #FAF8F1, dark bg #1A1A17. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional semantic color coding across plot elements. Custom theme
+          with explicit sizing. Professional multi-panel layout. Above defaults but
+          not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (rgba 10% opacity), minor grid removed, panel borders
+          removed. Axis lines retained. Good whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data engineered to demonstrate multiple assumption violations. Influential
+          observations labeled in all four panels. LOWESS reveals patterns. Visual
+          hierarchy through color differentiation.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'All four required diagnostic plots present: Residuals vs Fitted,
+          Normal Q-Q, Scale-Location, Residuals vs Leverage.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: LOWESS in plots 1 and 3, zero-reference line in plot 1, Q-Q reference
+          line, Cook's contours at D=0.5 and D=1.0, top-3 influential point labels
+          in all panels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All four plots have correct axis mappings per spec.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Credit string 'diagnostic-regression-panel · letsplot · anyplot.ai'
+          present but as muted subtitle, not bold main title. Format matches spec
+          but prominence is low.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Heteroscedasticity, non-linearity, heavy tails, high-leverage outliers
+          — all diagnostic features demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Salary prediction regression with experience and education predictors.
+          Neutral, plausible real-world context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log-salary residuals, leverage 0-0.15, standardized residuals -4
+          to 4 — all appropriate for n=150 regression.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports -> data -> plots -> assemble -> save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, numpy, pandas, lets_plot, scipy.stats, statsmodels.lowess.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, purposeful code. Contour generation loop and Q-Q nudge logic
+          serve real purposes. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html. Correct lets-plot
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic ggplot grammar: geom layering, labs, theme, ggsize, ggsave
+          with scale. gggrid for panel assembly.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: gggrid is a distinctive lets-plot feature for multi-panel composition.
+          Otherwise standard ggplot grammar shared with plotnine.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - statsmodels
+  techniques:
+  - subplots
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
