@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-13
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Created: 2026-05-13
 """
 
 import os
