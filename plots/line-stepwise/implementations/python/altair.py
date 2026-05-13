@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-stepwise: Step Line Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-13
+Quality: 91/100 | Updated: 2026-05-13
 """
 
 import os

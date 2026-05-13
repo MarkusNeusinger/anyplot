@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:39:38Z'
-updated: '2026-05-13T15:27:04Z'
+updated: '2026-05-13T15:33:27Z'
 generated_by: claude-haiku
 workflow_run: 25808540142
 issue: 2600
@@ -12,35 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-step
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Perfect theme-adaptive implementation with all chrome tokens correctly applied
-  - Excellent visual legibility in both light and dark themes with no readability
-    issues
-  - Clean, simple code structure that's easy to understand and maintain
-  - Proper use of Altair's interpolate parameter for step function visualization
-  - Data clearly demonstrates the specification's requirements (discrete changes,
-    persistence, instantaneous transitions)
-  - Correct palette compliance with brand color and proper background colors
+  - Excellent theme-adaptive implementation with proper chrome color mapping in both
+    light and dark themes
+  - Clear step-function visualization showing discrete changes with proper horizontal-then-vertical
+    segments
+  - Clean, reproducible code with deterministic seed and no unnecessary imports
+  - Appropriate font sizes (28px title, 22px axis, 18px ticks) for high-resolution
+    rendering
+  - Thoughtful visual design with subtle dashed grid (15% opacity) and area fill emphasis
   weaknesses:
-  - Design lacks visual sophistication (could enhance with custom styling, hierarchy,
-    or emphasis)
-  - No advanced Altair features leveraged (e.g., selections, conditional encoding,
-    interactive filtering)
-  - Generic styling approach (adequate, but doesn't exceed baseline)
+  - 'Design Excellence could be elevated: consider removing top/right spines or more
+    aggressive grid styling'
+  - 'Data storytelling could be stronger: annotation or color variation to highlight
+    key price movements (e.g., largest jump)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light surface
-      Chrome: Title, axis labels, and tick labels are all dark text (INK, INK_SOFT tokens) and clearly readable
-      Data: Teal step line (#009E73 brand color) at strokeWidth=4, showing discrete price changes with clear horizontal segments (value persistence) and vertical segments (instantaneous changes)
-      Legibility verdict: PASS - All elements readable, no overlaps, excellent visibility
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title "line-stepwise · altair · anyplot.ai" in dark INK color (28px), X/Y axis labels in INK (22px), tick labels in INK_SOFT (18px) — all clearly readable against light background
+      Data: Step line in brand green (#009E73) with 4px stroke; horizontal segments show value persistence, vertical segments show discrete changes; light teal fill beneath emphasizes area; grid dashed at 15% opacity
+      Legibility verdict: PASS — all text and data elements readable; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark surface
-      Chrome: Title and axis labels are light text (INK, INK_SOFT tokens) and clearly legible. No dark-on-dark conflicts.
-      Data: Identical teal color (#009E73) to light render - confirming data colors remain constant while chrome adapts
-      Legibility verdict: PASS - All elements readable, no dark-on-dark failures, excellent visibility in both themes
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title in light INK color (#F0EFE8), axis labels and ticks in INK_SOFT (light gray) — all clearly readable against dark background
+      Data: Step line color identical to light render (#009E73), confirming proper theme-adaptive chrome; fill still visible; grid visible and subtle
+      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failures; brand green visible on both light and dark; Okabe-Ito palette maintained across both renders
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,71 +50,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
-          sized and readable in both themes
+        comment: Title 28px, axis labels 22px, ticks 18px; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no collisions between elements
+        comment: Clean spacing, no label collisions or text overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line at strokeWidth=4 is clearly visible with no density issues
+        comment: Step line with 4px stroke clearly visible; step transitions distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand color #009E73 provides strong contrast and is CVD-safe'
+        comment: 'Brand green #009E73 with good contrast; Okabe-Ito safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900px (4800×2700px @ 3x) with good proportions and nothing cut
-          off
+        comment: 1600×900 → 4800×2700px at 3× scale; well-proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axes have descriptive labels with units
+        comment: Descriptive labels with units (Day, Price $); format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses #009E73 for data, #FAF8F1/#1A1A17 backgrounds, theme tokens
-          correct'
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          both renders theme-correct'
     design_excellence:
-      score: 8
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean approach with brand color, but generic styling without custom
-          palette or intentional hierarchy
+        passed: true
+        comment: Intentional area fill styling; professional polish; raised from default
+          4
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle dashed grid lines and removed spines show minimal refinement
-          beyond defaults
+        passed: true
+        comment: Dashed grid (gridDash=[4,4]), opacity 0.15, refined configuration;
+          raised from default 2
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Step line clearly shows price progression, but straightforward representation
-          without additional emphasis
+        passed: true
+        comment: Clear visual hierarchy with step function as focal point; area fill
+          guides viewer; raised from default 2
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +122,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step line chart using interpolate='step-after'
+        comment: Correct step-after interpolation via mark_line(interpolate='step-after')
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Discrete value changes clearly shown; horizontal segments show persistence;
-          vertical segments show instantaneous changes
+        comment: Step function present, both axes labeled, discrete changes visible
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (Day, 0-24) and Y-axis (Price, 100-147) correctly mapped;
-          zero=False prevents unnecessary baseline
+        comment: 'X: Day (0–24 continuous); Y: Price $ (~95–155); axes span full data'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single series
+        comment: Title format correct; single series requires no legend
     data_quality:
       score: 15
       max: 15
@@ -155,21 +150,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates all aspects of step visualization with both increases
-          and decreases
+        comment: 25 data points; includes increases and decreases; demonstrates cumsum
+          pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible price data simulating stock price behavior; neutral and
-          real-world applicable
+        comment: Stock price scenario plausible; $90–150 range sensible; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $100-$147 and day scale 0-24 are sensible for demonstration
+        comment: Y-axis sensible for price (zero=False); X-axis range appropriate
     code_quality:
       score: 10
       max: 10
@@ -179,7 +173,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward direct code
+        comment: No unnecessary functions/classes; straightforward data + chart
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -191,22 +185,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, sys, altair, numpy, pandas) are used and necessary
+        comment: Only used imports; proper import conflict workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI or simulated interactivity
+        comment: Clean, readable; no fake UI; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current Altair
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -214,23 +207,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Follows Altair conventions with proper encoding syntax, mark configuration,
-          and theme-adaptive setup
+        comment: Proper alt.Chart(), encoding, configure_*() methods; follows altair
+          conventions
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Uses interpolate='step-after' appropriately but lacks advanced Altair
-          features
+        passed: true
+        comment: interpolate='step-after' for plot type; comprehensive theme-adaptive
+          configuration
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
-  styling:
-  - grid-styling
+  styling: []
