@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-13
+Quality: 88/100 | Updated: 2026-05-13
 """
 
 import sys
