@@ -1,7 +1,7 @@
 """ anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 79/100 | Created: 2026-05-13
+Quality: 83/100 | Created: 2026-05-13
 """
 
 import os
