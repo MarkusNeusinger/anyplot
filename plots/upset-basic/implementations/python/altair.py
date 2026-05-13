@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 upset-basic: UpSet Plot for Multi-Set Intersection Analysis
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 82/100 | Created: 2026-05-13
+Quality: 84/100 | Created: 2026-05-13
 """
 
 import os

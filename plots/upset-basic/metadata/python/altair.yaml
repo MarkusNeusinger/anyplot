@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: upset-basic
 created: '2026-05-13T20:51:57Z'
-updated: '2026-05-13T20:56:43Z'
+updated: '2026-05-13T21:10:30Z'
 generated_by: claude-sonnet
 workflow_run: 25825187094
 issue: 5250
@@ -12,117 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: all three UpSet components (intersection bars, dot matrix,
-    set-size bars) present and correctly composed using Altair''s grammar'
-  - Degree-based Okabe-Ito coloring on active dots creates meaningful visual hierarchy
-    beyond just showing membership
-  - Clean, readable code with proper theme-adaptive chrome applied throughout; dark
-    render passes all readability checks
-  - Connector lines via mark_rule + Y2 encoding is an elegant Altair-idiomatic approach
+  - Complete, correct UpSet plot with all three required components properly aligned
+    and composed
+  - Degree-based color coding (Okabe-Ito order) adds analytical value beyond simple
+    set membership display
+  - Both light and dark renders are fully theme-adaptive with correct backgrounds,
+    readable text, and identical data colors
+  - Inactive dots at low opacity (0.18) create excellent visual hierarchy against
+    the active colored dots
+  - Count labels on intersection bars and tooltips on all elements make the chart
+    highly informative
   weaknesses:
-  - Font sizes are explicitly set but systematically below the style-guide minimums
-    for pixel-based libraries (title 24 vs 28, axis labels 17-18 vs 22, ticks 14-15
-    vs 18) — increase all text sizes
-  - Set-size bars use plain gray (INK_SOFT) with no differentiation from the matrix
-    inactive dots — consider using BRAND green or a subdued teal to visually link
-    them to the intersection bars
-  - 'Design Excellence is below the repair threshold — improve visual refinement:
-    the gray set-size bars need more polish, add subtle axis spine treatment, and
-    use stronger visual emphasis to draw the viewer''s eye to the key insight'
-  - Legend overlaps the top-left corner of the intersection bar chart area — consider
-    relocating to avoid visual clutter
+  - 'Dead code: set_label chart (lines 276-280) is defined but never included in the
+    layout — remove it'
+  - Degree legend floats to top-left due to Altair composition overriding orient=bottom-right
+    — consider using orient=top-left intentionally
+  - Panel borders from configure_view(stroke=INK_SOFT) create a boxy look — stroke=None
+    would be cleaner
+  - Connector lines use neutral INK_SOFT color rather than matching the degree color
+    of the intersection — missed opportunity to reinforce degree encoding
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "upset-basic · altair · anyplot.ai" in dark ink, clearly readable. Axis labels "Intersection Size" and "Set Size" in dark ink — readable. Set labels Exp A–E visible. Tick labels on all axes readable. No light-on-light issues.
-      Data: Top bars in BRAND green (#009E73). Dot matrix active dots colored by degree using Okabe-Ito: degree 1=green, 2=orange, 3=blue, 4=pink, 5=yellow-orange. Inactive dots in faint gray (0.18 opacity). Connector lines as thin gray vertical rules. Set-size bars in gray (INK_SOFT, 0.6 opacity).
+      Background: Warm off-white #FAF8F1 - correct
+      Chrome: Title "upset-basic · altair · anyplot.ai" in dark ink (#1A1A17), readable. Axis labels "Intersection Size" and "Set Size" at 22px, readable. Tick labels at 18px, readable. Legend "Degree" with colored dots at 16px, readable.
+      Data: 14 intersection bars in brand green #009E73 with count labels. Dot matrix with active dots colored by degree (green=1, orange=2, blue=3, pink=4, orange-gold=5). Inactive dots at 0.18 opacity. Grey connector lines. Left horizontal bars in #009E73 at 0.75 opacity.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light ink — readable. Set labels Exp A–E in secondary light ink — visible. Tick labels in light ink — no dark-on-dark failures detected. Legend text readable in light ink.
-      Data: Bar colors identical to light render (BRAND green #009E73). Degree dot colors identical (Okabe-Ito positions 1–5 unchanged). Connector lines appear as light-gray rules, clearly visible on dark background. Set-size bars in gray — visible against dark background.
+      Background: Warm near-black #1A1A17 - correct
+      Chrome: Title and all text flipped to light colors (#F0EFE8 / #B8B7B0). All labels clearly readable against dark surface. Legend background is #242420 (elevated dark). No dark-on-dark failures observed.
+      Data: Colors identical to light render - bars remain #009E73, degree dot colors unchanged (Okabe-Ito positions 1-5). Connector lines render as light grey (#B8B7B0) - clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but below pixel-based style guide minimums
-          (title 24 vs 28px, axis labels 17-18 vs 22px, ticks 14-15 vs 18px)
+        comment: All sizes explicitly set (28px title, 22px axis, 18px ticks, 16px
+          legend). Minor deduction for count labels on small bars.
       - id: VQ-02
         name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No collisions. Minor deduction for tightly spaced set name labels
+          in matrix Y-axis area.
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Dots and bars clearly visible; connector lines (strokeWidth=3) slightly
-          thin at canvas scale
+        comment: Active dots (size=200) clearly distinguishable from inactive (size=120,
+          opacity=0.18). Connector lines at strokeWidth=5 are visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette; inactive dots at low opacity carry no
-          data signal
+        comment: Okabe-Ito palette, CVD-safe. Active vs inactive dots distinguishable
+          by color and opacity.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas use; inherent UpSet top-left dead zone is expected but
-          reduces fill to ~60-65%
+        comment: Good multi-panel layout. Deduct 1 for Degree legend floating to top-left
+          due to Altair composition behavior.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Intersection Size and Set Size are descriptive; counts need no units
+        comment: Intersection Size and Set Size are descriptive. Title follows required
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series bars #009E73; degree dots follow Okabe-Ito 1-5; correct
-          background colors; chrome tokens applied in both renders'
+        comment: 'First series #009E73. Degree colors follow Okabe-Ito order. Backgrounds
+          correct for both themes.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Degree-colored dot matrix shows design intent; gray set-size bars
-          feel underdesigned; well-configured default rather than publication-ready
+        passed: true
+        comment: Degree-based color coding adds analytical depth. Inactive dots at
+          low opacity create visual hierarchy. Count labels improve readability. Panel
+          borders add some boxy visual weight.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: stroke=None, 10% opacity grid, theme-adaptive chrome; set-size bar
-          area lacks spine treatment and refinement
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Degree coloring creates hierarchy showing single-set dominance; no
-          emphasis focal point guides the viewer beyond the coloring
+        passed: true
+        comment: Grid at opacity 0.10 is subtle. Bar edges use PAGE_BG for definition.
+          Inactive dot opacity is refined. Panel borders from configure_view(stroke=INK_SOFT)
+          reduce refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sort by descending size surfaces most important intersections. Degree
+          coloring enables visual scanning of intersection complexity. Count labels
+          make values accessible. No specific annotation directing to insight.
     spec_compliance:
       score: 15
       max: 15
@@ -132,53 +137,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct UpSet plot with all three components
+        comment: Correct UpSet plot with all three required components.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: sorted intersections, connected dots, set-size
-          bars, degree coloring'
+        comment: Intersections sorted by size, connected dots, horizontal/vertical
+          bars, degree coloring all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes correctly assigned; panels aligned
+        comment: Columns=intersections, rows=sets. Matrix correctly maps set participation.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; Degree legend with 5 levels present
+        comment: Title is upset-basic · altair · anyplot.ai. Degree legend with correct
+          color mapping.
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows degrees 1-5; varying intersection sizes; 14 intersections;
-          realistic overlap structure
+        comment: Shows single-set intersections (degree 1-5), pairwise, and multi-way
+          up to degree 5. 14 intersections. Minor deduction for degree 5 not prominently
+          positioned.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Genomic experiment gene sets is real and neutral; set names Exp A-E
-          are slightly generic
+        comment: Gene expression from 5 experiments is the canonical UpSet use case.
+          Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Set sizes 120-280 realistic for differential expression; overlap
-          counts proportionally sensible
+        comment: 5 sets, 600 genes, set sizes 120-405, intersection sizes 5-220 —
+          biologically plausible.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -186,31 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure
+        comment: 'Flat script: data generation → chart definition → composition →
+          save. No classes or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, sys, altair, numpy, pandas — all actively used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Pythonic code; strict=True in zip idiomatic
+        passed: false
+        comment: 'Dead code: set_label chart is defined (lines 276-280) but never
+          included in layout composition.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html; current Altair API
+        comment: Saves both plot-{THEME}.png and plot-{THEME}.html. Current Altair
+          6 API used.
     library_mastery:
       score: 7
       max: 10
@@ -220,25 +230,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of vconcat/hconcat/layer, proper encoding types, alt.Title/Axis/Scale;
-          spacer chart workaround is slightly non-idiomatic
+        comment: Proper declarative encoding with correct types. Uses alt.layer, hconcat,
+          vconcat idiomatically. Deduct 1 for Q/O scale mismatch between connector
+          lines and dot matrix.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Altair-specific: layer() for dot matrix, Y2 for connector endpoints,
-          composable vconcat/hconcat for UpSet spatial layout'
-  verdict: REJECTED
+        comment: Multi-view composition (layer + hconcat + vconcat) for complex dashboard
+          layout is distinctively Altair. HTML export with tooltips leverages Altair
+          interactive strengths.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
