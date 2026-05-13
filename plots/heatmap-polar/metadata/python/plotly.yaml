@@ -1,0 +1,248 @@
+library: plotly
+language: python
+specification_id: heatmap-polar
+created: '2026-05-13T19:44:20Z'
+updated: '2026-05-13T20:28:39Z'
+generated_by: claude-sonnet
+workflow_run: 25822030144
+issue: 5244
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotly/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent spec compliance: all required features (polar geometry, sequential
+    colormap, colorbar, cell borders, readable angular labels) implemented correctly'
+  - 'Perfect data quality: realistic website traffic scenario with compelling weekday/weekend
+    contrast; np.random.seed(42) ensures reproducibility'
+  - 'Idiomatic Plotly usage: go.Barpolar with shared coloraxis and customdata+hovertemplate
+    are the canonical Plotly patterns for this chart type'
+  - 'Correct palette: viridis for continuous sequential data; theme-adaptive chrome
+    (INK/INK_SOFT/ELEVATED_BG tokens) applied consistently throughout both renders'
+  - 'Clean code: linear structure, no over-engineering, all imports used, no fake
+    UI elements'
+  weaknesses:
+  - 'DE-03 (storytelling): Peak pattern is visible through color contrast alone but
+    no deliberate emphasis technique guides the viewer — add a subtitle or fig.add_annotation()
+    noting ''Weekday peaks: 9am & 8pm | Weekend: midday plateau'''
+  - 'DE-01 (aesthetic sophistication): Typography is standard throughout with no distinctive
+    type weight or hierarchy beyond size differences; no distinctive design flourishes
+    beyond library configuration'
+  - 'VQ-01 minor: Colorbar tick labels at tickfont size 14px are slightly below the
+    18px spec for pixel-based libraries — raise to 16-18px'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Website Traffic · heatmap-polar · plotly · anyplot.ai" in dark ink (28px), angular tick labels (12am, 3am, 6am, 9am, 12pm, 3pm, 6pm, 9pm) in INK_SOFT (18px), radial day labels (Mon-Sun) in INK_SOFT (16px), colorbar title "Page Views" in INK (18px), colorbar ticks in INK_SOFT (14px) — all clearly readable against light background
+      Data: Viridis colormap from deep purple (low ~0 page views) to bright yellow-green (peak ~5500 page views); weekday rings (Mon-Fri) show sharp yellow spike at 9am position and secondary green peak around 8pm; weekend rings (Sat-Sun) show broader, dimmer midday plateau; 168 cells (7 days × 24 hours) all visible; thin PAGE_BG separator lines between cells improve ring readability
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (F0EFE8), angular labels in INK_SOFT (B8B7B0), radial day labels in INK_SOFT, colorbar title and ticks in light-themed colors — all clearly readable against dark background; no dark-on-dark failures detected
+      Data: Viridis colormap colors are visually identical to light render — the bright yellow 9am spike and the dark purple low-traffic cells are indistinguishable between themes; only chrome elements (background, text, colorbar border/fill) have flipped
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 28px, angular ticks 18px, radial ticks 16px explicitly set
+          and readable; colorbar ticks at 14px slightly below 18px spec
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Inner radial day labels slightly compact in center but all readable;
+          no text collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Viridis creates excellent contrast; all 168 cells visible and distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 format ideal for polar; domain [0,0.82]x[0.02,0.98]
+          + colorbar at x=0.88 well-considered
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive, colorbar titled 'Page Views', hour/day labels
+          present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for sequential continuous data; backgrounds #FAF8F1/#1A1A17;
+          chrome tokens flip correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: theme-adaptive colorbar border, axis
+          line colors, cell separators; standard typography'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 10% opacity grid, 0.5px PAGE_BG cell separators, styled colorbar
+          border; above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Viridis luminance gradient makes weekday/weekend pattern visible;
+          no deliberate emphasis technique or annotation to guide viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap using go.Barpolar
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: cyclic wrapping, outward radial, viridis, angular
+          labels, colorbar, cell borders'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Hours to angular, days to radial, page views to color — all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains required spec-id · library · anyplot.ai; colorbar
+          labelled Page Views
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows weekday dual peaks (9am+8pm) and weekend single midday plateau;
+          full 7x24 coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Website traffic by hour and day: real-world, neutral, comprehensible'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Weekday peak ~5500, weekend ~3500, overnight ~0; Gaussian peaks realistic;
+          clipped at 0
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports -> tokens -> data -> plot -> save; no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, numpy, plotly.graph_objects — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean iteration, shared coloraxis, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: write_image and write_html both present with correct naming
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Barpolar with shared coloraxis, customdata+hovertemplate, write_html
+          — canonical Plotly patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Barpolar + shared coloraxis + hovertemplate are Plotly-distinctive;
+          trace iteration is basic approach
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - polar-projection
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
