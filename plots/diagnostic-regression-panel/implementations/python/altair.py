@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-05-13
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 81/100 | Created: 2026-05-13
 """
 
 import os
