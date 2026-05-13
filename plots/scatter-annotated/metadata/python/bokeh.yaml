@@ -1,173 +1,187 @@
 library: bokeh
+language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:48:20Z'
-updated: '2025-12-30T17:55:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602453064
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - columndatasource
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-13T11:22:56Z'
+generated_by: claude-haiku
+workflow_run: 25795162401
+issue: 2790
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent text sizing throughout - all elements perfectly legible at 4800x2700
-    resolution
-  - Well-chosen realistic business scenario (tech company market performance) with
-    appropriate data ranges
-  - Good use of Bokeh's ColumnDataSource and LabelSet for clean data binding
-  - Proper styling with subtle grid, good color choice, and appropriate marker sizing
-    for the data density
-  - Clean KISS code structure with reproducible seed
+  - Excellent text legibility in both light and dark themes with proper contrast and
+    sizing
+  - Proper theme-adaptive implementation with data colors (#009E73) identical in both
+    renders and chrome colors flipping correctly
+  - Strong spec compliance with all required annotation features implemented correctly
+  - Clean, reproducible code with proper seed management and idiomatic bokeh patterns
+  - Well-designed connecting lines and label offsets that enhance clarity and reduce
+    visual ambiguity
+  - Correct Okabe-Ito color palette (position 1) with CVD-safe design
+  - Proper high-resolution canvas sizing (4800×2700px) with proportional element scaling
   weaknesses:
-  - Missing connecting lines/arrows from labels to points as specified in the notes
-    section of the specification
-  - Some label pairs are close together (ByteWorks/CyberLink, SoftPeak/NetFlow) -
-    could benefit from collision avoidance
-  - Does not leverage Bokeh's distinctive hover tooltip feature which would enhance
-    the visualization
-  image_description: The plot displays a scatter chart with 15 blue circular markers
-    representing tech companies, plotted on a light gray background (#fafafa). The
-    x-axis shows "Revenue (Billions $)" ranging from approximately 4 to 26, and the
-    y-axis shows "Market Cap (Billions $)" ranging from approximately 18 to 100. Each
-    data point has a bold text label positioned to the upper-right of the marker,
-    displaying company names like "WebScale", "CloudNet", "TechCorp", etc. The title
-    "scatter-annotated · bokeh · pyplots.ai" appears centered at the top. A subtle
-    dashed grid (alpha 0.3) provides reference lines. The markers use a Python blue
-    color (#306998) with ~0.7 alpha and darker outlines. The plot shows a clear positive
-    correlation between revenue and market cap.
+  - Explicit spine styling missing - bokeh defaults to all four spines visible; style
+    guide recommends L-shaped frame (left+bottom only)
+  - Limited visual hierarchy to emphasize data patterns - no highlighted outliers,
+    size variation, or focal points beyond label placement
+  - Label clustering in dense plot regions could use tighter algorithmic spacing (e.g.,
+    adjustText-style overlap avoidance)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title (28pt dark ink), axis labels (22pt dark ink), tick labels (18pt medium-dark ink) - all clearly visible against light surface
+      Data: 15 green (#009E73) circles with white edges, alpha 0.7; company name labels (24pt dark ink) with offset positioning and gray connecting lines; subtle grid (10% alpha)
+      Legibility verdict: PASS - all text elements (title, axis labels, tick labels, data labels) are readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title (28pt light ink #F0EFE8), axis labels (22pt light ink), tick labels (18pt medium-light ink #B8B7B0) - all clearly visible against dark surface
+      Data: Identical green (#009E73) markers as light render - confirms data colors are theme-independent; company labels in light text with proper contrast; connecting lines visible and subtle
+      Legibility verdict: PASS - no dark-on-dark failures; all text is legible with excellent contrast against dark background; theme adaptation is correct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29.5
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 42pt, axis labels at 32pt, tick labels at 24pt, annotations
-          at 24pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 8
-        passed: true
-        comment: Minor label proximity issues between "ByteWorks"/"CyberLink" and
-          "SoftPeak"/"NetFlow", but all remain readable
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Markers size=40 with alpha=0.7 is perfect for 15 data points, line_width=3
-          outline adds clarity
+        comment: All font sizes explicitly set (title 28pt, axis labels 22pt, tick
+          labels 18pt, data labels 24pt); clearly readable in both themes with proper
+          contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 5.5
+        max: 6
+        passed: true
+        comment: Labels offset with connecting lines; generally well-spaced though
+          some clustering in dense regions could be tighter
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 15 data points distinct with white edges; connecting lines and
+          text clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color (#306998) with good contrast against light background,
-          no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, data spread across the space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Revenue (Billions
-          $)", "Market Cap (Billions $)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito position 1 (#009E73) used; CVD-safe palette; white edges
+          for definition; no red-green dependencies
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px canvas with good proportions; generous margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend present (not strictly needed for single series), but spec
-          mentions connecting lines from labels to points which are absent
+        comment: Descriptive axis labels with units; clear title with spec ID and
+          source
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); theme-adaptive chrome correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional appearance with clean styling and intentional design;
+          connecting lines and offsets show thought; could enhance with more visual
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and good whitespace; missing explicit spine styling (bokeh
+          defaults to all four, style guide recommends L-shaped)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point showing revenue-market cap correlation; label placement
+          guides viewer; could emphasize patterns and outliers more strongly
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot with text annotations
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X=revenue, Y=market cap, labels=company names - all correctly mapped
-      - id: SC-03
+        comment: Correct scatter plot with text label annotations
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Text annotations present but missing "subtle connecting lines or
-          arrows from labels to points when offset" mentioned in spec
-      - id: SC-04
-        name: Data Range
+        comment: All text labels present and readable; offsets applied; connecting
+          lines from labels to points included
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 15 data points visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly map Revenue and Market Cap; all 15 points visible;
+          axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Single series, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-annotated · bokeh · pyplots.ai"'
+        comment: Title format correct; no legend needed for single series
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows range from low revenue/low cap (DevOps: 4.5B/18.9B) to high
-          revenue/high cap (WebScale: 25.6B/98.2B), good spread demonstrating annotation
-          patterns'
+        comment: All annotation features demonstrated with 15 companies showing diverse
+          characteristics
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Tech company market performance is a neutral, realistic business
-          scenario perfectly suited for this plot type
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Revenue 4.5-25.6B and market cap 18.9-98.2B are realistic for tech
-          companies
+        comment: Tech company names and plausible revenue/market cap values; realistic
+          correlation; neutral data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue 4.5B–25.6B; market cap 18.9B–98.2B; realistic ranges with
+          good spread
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,43 +189,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save, no functions/classes'
+        comment: No unnecessary functions/classes; straightforward array generation
+          and bokeh figure creation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Uses np.random.seed(42) for deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io.export_png, bokeh.models.ColumnDataSource/LabelSet,
-          bokeh.plotting.figure'
+        comment: All imports used; sys.path manipulation justified for module shadowing
+          avoidance
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deprecated 'p.scatter()' - should use 'p.circle()' or 'p.scatter()'
-          is fine actually in current Bokeh
+        comment: No fake interactivity; real bokeh HTML export with proper theme environment
+          handling
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png with correct naming
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of ColumnDataSource, LabelSet, figure(), segment(); good
+          theme-adaptive styling
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource and LabelSet for annotations, but doesn't
-          leverage Bokeh's interactive hover tooltips which would be a distinctive
-          feature
+        comment: Good use of bokeh-specific features (LabelSet, ColumnDataSource offsets,
+          Selenium workflow) but relatively straightforward
+    score_caps: []
+    total_score: 88.5
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
