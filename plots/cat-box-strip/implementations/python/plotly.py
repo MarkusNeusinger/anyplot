@@ -1,7 +1,7 @@
 """ anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-13
+Quality: 83/100 | Updated: 2026-05-13
 """
 
 import os
