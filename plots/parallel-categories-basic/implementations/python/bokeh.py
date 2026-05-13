@@ -1,21 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-13
 """
+
+import os
+import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Label
 from bokeh.plotting import figure
-from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Product purchase journey: Channel -> Category -> Outcome
 np.random.seed(42)
 
-# Create realistic product journey data
 channels = ["Online", "Store", "Mobile"]
 categories = ["Electronics", "Clothing", "Home"]
 outcomes = ["Purchased", "Returned", "Exchanged"]
@@ -24,14 +38,12 @@ outcomes = ["Purchased", "Returned", "Exchanged"]
 data = []
 for _ in range(500):
     channel = np.random.choice(channels, p=[0.45, 0.35, 0.20])
-    # Category probabilities vary by channel
     if channel == "Online":
         category = np.random.choice(categories, p=[0.5, 0.3, 0.2])
     elif channel == "Store":
         category = np.random.choice(categories, p=[0.2, 0.5, 0.3])
     else:
         category = np.random.choice(categories, p=[0.6, 0.25, 0.15])
-    # Outcome probabilities vary by category
     if category == "Electronics":
         outcome = np.random.choice(outcomes, p=[0.7, 0.2, 0.1])
     elif category == "Clothing":
@@ -42,29 +54,23 @@ for _ in range(500):
 
 df = pd.DataFrame(data)
 
-# Aggregate the data to get counts for each path
+# Aggregate data to get counts for each path
 path_counts = df.groupby(["Channel", "Category", "Outcome"]).size().reset_index(name="count")
 
-# Define dimensions and their unique values (ordered)
+# Define dimensions and their unique values
 dimensions = ["Channel", "Category", "Outcome"]
 dim_values = {"Channel": channels, "Category": categories, "Outcome": outcomes}
 
 # Calculate x positions for each dimension
 x_positions = {dim: i * 1.5 for i, dim in enumerate(dimensions)}
 
-# Calculate y positions for each category within each dimension
-# Each dimension gets a vertical axis from 0 to total_count
+# Total count for normalization
 total_count = len(df)
 
 # Build category positions for each dimension
 dim_cat_positions = {}
 for dim in dimensions:
-    # Count occurrences of each category
-    if dim == dimensions[0]:
-        counts = df[dim].value_counts()
-    else:
-        counts = df[dim].value_counts()
-
+    counts = df[dim].value_counts()
     positions = {}
     y_current = 0
     for cat in dim_values[dim]:
@@ -75,16 +81,15 @@ for dim in dimensions:
     dim_cat_positions[dim] = positions
 
 # Create ribbons connecting categories between adjacent dimensions
-# Track current fill position for each category
 ribbon_patches_x = []
 ribbon_patches_y = []
 ribbon_colors = []
 
-# Color by first dimension (Channel)
+# Color by first dimension (Channel) - using Okabe-Ito palette
 channel_colors = {
-    "Online": "#306998",  # Python Blue
-    "Store": "#FFD43B",  # Python Yellow
-    "Mobile": "#4DAF4A",  # Green
+    "Online": OKABE_ITO[0],  # #009E73
+    "Store": OKABE_ITO[1],  # #D55E00
+    "Mobile": OKABE_ITO[2],  # #0072B2
 }
 
 # Track running position within each category box
@@ -119,11 +124,7 @@ for _, row in path_counts.iterrows():
         y2_end = y2_start + ribbon_height
 
         # Create smooth ribbon using bezier-like path
-        # Use intermediate points for smooth curves
         x_mid = (x1 + x2) / 2
-
-        # Create patch coordinates (going clockwise)
-        # Left edge (bottom to top), then curve to right edge (top to bottom)
         num_curve_points = 20
         t = np.linspace(0, 1, num_curve_points)
 
@@ -145,7 +146,7 @@ for _, row in path_counts.iterrows():
         ribbon_patches_y.append(patch_y.tolist())
         ribbon_colors.append(color)
 
-        # Update running positions only after processing the LAST segment for this path
+        # Update running positions after processing
         if i == len(dimensions) - 2:
             for j in range(len(dimensions)):
                 dim = dimensions[j]
@@ -155,7 +156,7 @@ for _, row in path_counts.iterrows():
 # Reset running positions for proper tracking
 running_positions = {dim: dict.fromkeys(dim_values[dim], 0) for dim in dimensions}
 
-# Process each unique path again to correctly update positions
+# Process each path again to correctly update positions
 for _, row in path_counts.iterrows():
     count = row["count"]
     ribbon_height = count / total_count
@@ -167,7 +168,7 @@ for _, row in path_counts.iterrows():
 p = figure(
     width=4800,
     height=2700,
-    title="parallel-categories-basic · bokeh · pyplots.ai",
+    title="parallel-categories-basic · bokeh · anyplot.ai",
     x_range=(-0.7, 4.0),
     y_range=(-0.05, 1.15),
     tools="",
@@ -182,10 +183,10 @@ for i in range(len(ribbon_patches_x)):
         ys="y",
         source=source,
         fill_color=ribbon_colors[i],
-        fill_alpha=0.6,
+        fill_alpha=0.7,
         line_color=ribbon_colors[i],
-        line_alpha=0.8,
-        line_width=0.5,
+        line_alpha=0.9,
+        line_width=1,
     )
 
 # Draw category boxes (rectangles for each category in each dimension)
@@ -194,18 +195,16 @@ for dim in dimensions:
     x = x_positions[dim]
     for cat in dim_values[dim]:
         pos = dim_cat_positions[dim][cat]
-        # Draw rectangle
         source = ColumnDataSource(
             data={
                 "x": [[x - box_width / 2, x + box_width / 2, x + box_width / 2, x - box_width / 2]],
                 "y": [[pos["y_start"], pos["y_start"], pos["y_end"], pos["y_end"]]],
             }
         )
-        p.patches(xs="x", ys="y", source=source, fill_color="#333333", fill_alpha=0.9, line_color="white", line_width=2)
+        p.patches(xs="x", ys="y", source=source, fill_color=INK_SOFT, fill_alpha=0.3, line_color=INK_SOFT, line_width=2)
 
-        # Add category label (to the side of the box for better readability)
+        # Add category label
         y_mid = (pos["y_start"] + pos["y_end"]) / 2
-        # Place labels on left side for first two dimensions, right side for last
         if dim == dimensions[-1]:
             label_x = x + box_width / 2 + 0.05
             align = "left"
@@ -217,7 +216,7 @@ for dim in dimensions:
             y=y_mid,
             text=cat,
             text_font_size="28pt",
-            text_color="#333333",
+            text_color=INK,
             text_align=align,
             text_baseline="middle",
         )
@@ -231,31 +230,32 @@ for dim in dimensions:
         y=1.08,
         text=dim,
         text_font_size="36pt",
-        text_color="#333333",
+        text_color=INK,
         text_font_style="bold",
         text_align="center",
         text_baseline="bottom",
     )
     p.add_layout(label)
 
-# Add legend manually
-legend_items = [("Online", "#306998"), ("Store", "#FFD43B"), ("Mobile", "#4DAF4A")]
-legend_y = 0.92
+# Add legend - centered bottom for better balance
+legend_items = [("Online", OKABE_ITO[0]), ("Store", OKABE_ITO[1]), ("Mobile", OKABE_ITO[2])]
+legend_x_start = 0.8
+legend_y = -0.02
 for i, (name, color) in enumerate(legend_items):
+    lx = legend_x_start + i * 0.5
+    ly = legend_y
     # Legend box
-    lx = 3.35
-    ly = legend_y - i * 0.1
     source = ColumnDataSource(
         data={"x": [[lx - 0.05, lx + 0.05, lx + 0.05, lx - 0.05]], "y": [[ly - 0.03, ly - 0.03, ly + 0.03, ly + 0.03]]}
     )
-    p.patches(xs="x", ys="y", source=source, fill_color=color, fill_alpha=0.8, line_color="#333333", line_width=2)
+    p.patches(xs="x", ys="y", source=source, fill_color=color, fill_alpha=0.85, line_color=INK_SOFT, line_width=2)
     # Legend label
     label = Label(
         x=lx + 0.1,
         y=ly,
         text=name,
         text_font_size="24pt",
-        text_color="#333333",
+        text_color=INK_SOFT,
         text_align="left",
         text_baseline="middle",
     )
@@ -263,22 +263,39 @@ for i, (name, color) in enumerate(legend_items):
 
 # Style the figure
 p.title.text_font_size = "48pt"
-p.title.text_color = "#333333"
+p.title.text_color = INK
 p.title.align = "center"
 
-# Hide axes and grid (parallel categories don't use traditional axes)
+# Hide axes and grid
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
 
-# Background color
-p.background_fill_color = "#FAFAFA"
-p.border_fill_color = "#FAFAFA"
+# Theme-adaptive background
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Save as PNG
-export_png(p, filename="plot.png")
+# Save as HTML
+output_file(f"plot-{THEME}.html")
+save(p)
 
-# Also save as HTML for interactivity
-save(p, filename="plot.html", resources=CDN, title="Parallel Categories Plot")
+# Screenshot with headless Chrome using Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
