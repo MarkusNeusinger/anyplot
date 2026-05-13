@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:47:43Z'
-updated: '2026-05-13T11:22:58Z'
+updated: '2026-05-13T11:29:02Z'
 generated_by: claude-haiku
 workflow_run: 25795358982
 issue: 2790
@@ -12,105 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 72
 review:
   strengths:
-  - Both light and dark renders are visually readable with proper contrast
-  - Okabe-Ito color palette used correctly for data points (#009E73)
-  - 'Theme backgrounds correctly applied (#FAF8F1 light, #1A1A17 dark)'
-  - Company performance data is realistic and well-structured
-  - Code is clean and reproducible with np.random.seed(42)
+  - Correct plot type with all required annotations
+  - Clean, deterministic data generation with realistic business context
+  - Readable layout with no text overlap
+  - Consistent data colors across light and dark renders
   weaknesses:
-  - Output file saved as plot.png instead of plot-{THEME}.png - breaks pipeline
-  - Title says pyplots.ai instead of anyplot.ai
-  - Text annotation color (#333333) hardcoded and doesn't adapt to theme
-  - No label collision avoidance (adjustText) despite spec mention
-  - Generic design with no visual refinement or data storytelling
+  - 'Hardcoded point color (#306998) violates Okabe-Ito standard—should be #009E73'
+  - Hardcoded text color (#333333) fails dark theme with dark-on-dark legibility issue
+  - Code doesn't read ANYPLOT_THEME environment variable for theme adaptation
+  - Output filename hardcoded as plot.png instead of plot-{THEME}.png
+  - Generic styling with no theme-adaptive chrome (background, text, grid)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 area) with subtle frame
-      Chrome: Title, axis labels, tick labels all dark and clearly readable
-      Data: 10 teal points (#009E73) with company name annotations in dark gray
-      Grid: Minimal, subtle gridlines
-      Legibility verdict: PASS - all elements readable
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title, axis labels, and tick labels are dark gray, clearly visible and readable
+      Data: Ten company points in teal/cyan color with dark gray labels positioned above; revenue (x-axis) ranges 20-220M, profit margin (y-axis) ranges 4-26%
+      Legibility verdict: PASS - All text elements are clearly readable with excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17 area) with subtle frame
-      Chrome: Title, axis labels, tick labels all light and clearly readable
-      Data: Same teal color (#009E73) as light render - perfect consistency
-      Grid: Minimal, subtle gridlines
-      Legibility verdict: PASS - all elements readable, no dark-on-dark failures
+      Background: Near-black (#1A1A17), correct for dark theme
+      Chrome: Axis labels and title are light gray/tan, readable but not using recommended light-theme text tokens; company name labels appear in medium gray (#333333 hardcoded)
+      Data: Same teal/cyan data points as light render (colors correctly persist across themes); company labels are medium gray, struggling against dark background
+      Legibility verdict: PARTIAL FAIL - Company name labels have poor contrast on dark background (dark-on-dark issue); axis labels/title are readable but not optimally light-themed
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 4
         max: 8
-        passed: true
-        comment: All text clearly readable in both themes
+        passed: false
+        comment: 'Light render readable; dark render has poor contrast on labels (hardcoded
+          #333333 on dark background)'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor overlap on 1-2 labels but readable
+        comment: Labels positioned above points with adequate spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and annotations clearly visible
+        comment: Points and labels clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Okabe-Ito #009E73 is colorblind-safe'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Good 16:9 proportions, generous margins
-      - id: VQ-06
-        name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Title says pyplots.ai instead of anyplot.ai
-      - id: VQ-07
-        name: Palette Compliance
+        comment: 'Point color hardcoded as #306998 instead of Okabe-Ito #009E73'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito first series correct, backgrounds correct
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Critical: Wrong point color (#306998 not #009E73), hardcoded text
+          colors, no theme adaptation, dark render text unreadable'
     design_excellence:
-      score: 8
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Generic defaults, no custom design
+        comment: Generic styling with hardcoded colors, no design thought
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond theme_minimal
+        comment: Minimal customization beyond library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: No visual hierarchy or focal point
+        comment: Labels identify points but provide no visual hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,19 +123,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Points and text labels present
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, axes show all data
+        comment: X/Y correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title domain error (pyplots.ai vs anyplot.ai)
+        passed: true
+        comment: Title correct, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -146,19 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates annotation patterns clearly
+        comment: Shows full range of values
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Company data is plausible and neutral
+        comment: Real company names with plausible business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges
+        comment: Factually realistic values
     code_quality:
       score: 8
       max: 10
@@ -168,48 +167,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, no unnecessary code
+        comment: Simple linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Text color hardcoded, not theme-adaptive
+        comment: Hardcoded colors instead of theme variables
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Must save as plot-{THEME}.png not plot.png
+        comment: Saves as plot.png instead of plot-{THEME}.png
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Appropriate plotnine patterns
+        comment: Correct plotnine pattern but no theme adaptation
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No adjustText or label collision detection
-  verdict: REJECTED
+        comment: Generic usage of geoms and theme
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -217,5 +216,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
