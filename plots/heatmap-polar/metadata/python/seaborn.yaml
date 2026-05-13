@@ -1,0 +1,273 @@
+library: seaborn
+language: python
+specification_id: heatmap-polar
+created: '2026-05-13T19:51:31Z'
+updated: '2026-05-13T20:17:29Z'
+generated_by: claude-sonnet
+workflow_run: 25822394428
+issue: 5244
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Two-panel design (polar + companion rectangular heatmap) elegantly communicates
+    cyclic data structure and allows easy comparison
+  - viridis colormap used correctly for continuous data — perceptually uniform and
+    colorblind-safe
+  - Realistic website traffic scenario with believable weekday/weekend patterns (morning+afternoon
+    peaks vs. afternoon-only peaks)
+  - Clock-face orientation (midnight at top, clockwise) is an intuitive design choice
+    for hourly data
+  - 'Full feature coverage: 24 angular bins × 7 radial rings, colorbar, gridlines,
+    readable hour labels at cardinal positions'
+  - Both theme renders (light/dark) pass — backgrounds correct, text legible, no dark-on-dark
+    issues
+  - Font sizes explicitly set throughout (24pt title, 20pt colorbar label, 18pt hour
+    ticks, 16pt day ticks)
+  - Seed set for reproducibility (np.random.seed(42))
+  weaknesses:
+  - 'Title deviates from required format: shown as "Website Traffic · heatmap-polar
+    · seaborn · anyplot.ai" but spec requires exactly "{spec-id} · {library} · anyplot.ai"
+    = "heatmap-polar · seaborn · anyplot.ai"'
+  - Day labels in polar chart are slightly cramped/overlapping due to stacking annotations
+    near the center; could improve spacing or use radial tick positioning instead
+  - Layout canvas not fully utilized — polar chart leaves whitespace in corners, reducing
+    effective canvas fill to ~60%
+  - 'Library mastery limited: the main polar heatmap relies on matplotlib pcolormesh
+    rather than any seaborn-native API; seaborn usage is primarily confined to the
+    companion rectangular panel and theme setup'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface.
+      Layout: Two-panel figure. Left: circular polar heatmap labeled "Circular View (Clock-face, 24 h)". Right: rectangular seaborn heatmap labeled "Linear View (Hour × Day)".
+      Chrome: Overall figure title "Website Traffic · heatmap-polar · seaborn · anyplot.ai" in dark text, clearly readable. Left polar panel: hour labels (12am/6am/12pm/6pm) in muted dark text, readable. Day labels (Mon–Sun) appear as text annotations stacked near center of polar chart with colored backgrounds — readable. Right heatmap: Y-axis day labels and X-axis hour labels readable. Colorbar "Hourly Visits" label visible on both panels.
+      Data: viridis colormap (deep purple for low traffic ~100, bright yellow for peaks ~700). Polar heatmap shows clock-face pattern with peak brightness at ~15:00 for weekdays, ~14:00 for weekends. Rectangular companion heatmap confirms same patterns. Both colorbars range 100–700.
+      Legibility verdict: PASS — all text is dark on light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Figure title in light/white text, clearly readable. Hour and day labels in muted light-gray text, readable. Colorbar labels in light text. No dark-on-dark failures observed.
+      Data: viridis colors identical to light render — same deep purple to bright yellow gradient. Cyclic traffic patterns match exactly (only chrome flipped, data colors unchanged). Both colorbars remain consistent 100–700 range.
+      Legibility verdict: PASS — all text is light on dark background, no dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (24pt title, 20pt colorbar, 18pt hour
+          ticks, 16pt day ticks); all readable in both themes. Minor: hour tick labels
+          slightly small relative to canvas.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Day label annotations in polar chart slightly cramped when stacked
+          near center; main content readable throughout.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Polar sectors and rectangular heatmap cells clearly visible; viridis
+          gradient effectively distinguishes value ranges.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: viridis is perceptually uniform and colorblind-safe; good luminance
+          range from dark purple to bright yellow.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Two-panel layout well-balanced; circular shape leaves whitespace
+          in corners of left panel but both panels fill their halves well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Hour of Day'', ''Hourly Visits'' colorbar,
+          day-of-week labels. Context clear without units needed for categorical axes.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'viridis correctly used for continuous traffic data. Backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive chrome passes both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Two-panel complementary design (polar + linear) demonstrates thoughtful
+          design intent above defaults. Consistent viridis, clock-face orientation,
+          clean subtitle hierarchy. Not publication-ready but clearly above generic
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle gridlines, proper colorbar sizing and placement, clean backgrounds.
+          Some minor density around day annotations. Clearly refined above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual-view approach effectively communicates WHY polar matters by
+          contrasting with linear view. Weekday vs. weekend traffic patterns are immediately
+          visible. Good visual hierarchy.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap with angular hours and radial days. Cyclic
+          continuity preserved.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: angular axis (hours 0-23), radial axis
+          (Mon-Sun), color-encoded values, colorbar, cardinal hour labels, gridlines
+          separating cells.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Hours on angular axis, days on radial axis, traffic values as color
+          — all correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title 'Website Traffic · heatmap-polar · seaborn · anyplot.ai' contains
+          all required elements but prepends 'Website Traffic ·' before the spec-id.
+          Required format is exactly 'heatmap-polar · seaborn · anyplot.ai'.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full 24×7 grid. Distinct weekday (bimodal: morning 9am + afternoon
+          3pm peaks) vs. weekend (unimodal: afternoon 2pm peak) patterns. Realistic
+          baseline overnight traffic.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic by hour and day of week is a canonical, neutral,
+          real-world use case for polar heatmaps. No controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 100-700 hourly visits is plausible for a medium-traffic website.
+          Weekday peaks (~650) higher than weekend (~600) at peak, consistent with
+          business/professional site behavior.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports → theme tokens → data generation → plot
+          → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, matplotlib.pyplot, numpy, seaborn — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Gaussian peak simulation is elegant. No fake UI elements. No AR-08
+          violations.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct facecolor. Current API used.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correctly uses sns.set_theme for theme management and sns.heatmap
+          for the companion rectangular panel. The polar chart necessarily falls back
+          to matplotlib pcolormesh (seaborn has no native polar chart API). Appropriate
+          hybrid approach.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.heatmap for the companion rectangular view is a seaborn-distinctive
+          choice that adds real value. The dual-view design uses seaborn where it
+          excels.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  - manual-ticks
+  - subplots
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
