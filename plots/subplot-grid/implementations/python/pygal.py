@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: pygal 3.1.0 | Python 3.13
+Quality: pending | Created: 2026-05-13
 """
 
+import os
 from io import BytesIO
 
 import cairosvg
@@ -12,6 +13,15 @@ import pygal
 from PIL import Image, ImageDraw, ImageFont
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"
+COLOR_2 = "#D55E00"
 
 # Data - Business performance dashboard with multiple metrics
 np.random.seed(42)
@@ -35,86 +45,77 @@ n_bins = 15
 counts, bin_edges = np.histogram(daily_orders, bins=n_bins)
 hist_data = [(int(count), float(bin_edges[i]), float(bin_edges[i + 1])) for i, count in enumerate(counts)]
 
-# Custom styles for each chart
-base_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
+# Chart styles
+line_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BRAND,),
     font_family="sans-serif",
-    title_font_size=42,
-    label_font_size=30,
-    major_label_font_size=26,
-    legend_font_size=28,
-    value_font_size=22,
-    stroke_width=4,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
     opacity=0.85,
     opacity_hover=1.0,
 )
 
-# Style for different charts
-line_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),  # Python Blue
-    font_family="sans-serif",
-    title_font_size=42,
-    label_font_size=30,
-    major_label_font_size=26,
-    legend_font_size=28,
-    value_font_size=22,
-    stroke_width=4,
-    opacity=0.9,
-)
-
 bar_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#FFD43B",),  # Python Yellow
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(COLOR_2,),
     font_family="sans-serif",
-    title_font_size=42,
-    label_font_size=30,
-    major_label_font_size=26,
-    legend_font_size=28,
-    value_font_size=22,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
+    opacity=0.85,
+    opacity_hover=1.0,
 )
 
 scatter_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),  # Python Blue
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BRAND,),
     font_family="sans-serif",
-    title_font_size=42,
-    label_font_size=30,
-    major_label_font_size=26,
-    legend_font_size=28,
-    value_font_size=22,
-    opacity=0.7,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
+    opacity=0.85,
+    opacity_hover=1.0,
 )
 
 hist_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#FFD43B",),  # Python Yellow
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(COLOR_2,),
     font_family="sans-serif",
-    title_font_size=42,
-    label_font_size=30,
-    major_label_font_size=26,
-    legend_font_size=28,
-    value_font_size=22,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
+    opacity=0.85,
+    opacity_hover=1.0,
 )
 
 # Create individual charts for the 2x2 grid
@@ -206,7 +207,7 @@ title_height = 180
 total_width = 4800
 total_height = 2700
 
-combined = Image.new("RGB", (total_width, total_height), "white")
+combined = Image.new("RGB", (total_width, total_height), PAGE_BG)
 
 # Calculate grid positioning
 grid_height = total_height - title_height
@@ -231,41 +232,51 @@ try:
 except OSError:
     title_font = ImageFont.load_default()
 
-title_text = "subplot-grid · pygal · pyplots.ai"
+title_text = "subplot-grid · pygal · anyplot.ai"
 bbox = draw.textbbox((0, 0), title_text, font=title_font)
 title_width = bbox[2] - bbox[0]
 title_x = (total_width - title_width) // 2
-draw.text((title_x, 50), title_text, fill="#333333", font=title_font)
+draw.text((title_x, 50), title_text, fill=INK, font=title_font)
 
 # Save final PNG
-combined.save("plot.png", dpi=(300, 300))
+combined.save(f"plot-{THEME}.png", dpi=(300, 300))
 
 # Create interactive HTML version
-html_content = """<!DOCTYPE html>
+html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>subplot-grid · pygal · pyplots.ai</title>
+    <title>subplot-grid · pygal · anyplot.ai</title>
     <style>
-        body { font-family: sans-serif; background: white; margin: 20px; }
-        h1 { text-align: center; color: #333; font-size: 32px; margin-bottom: 30px; }
-        .grid {
+        body {{
+            font-family: sans-serif;
+            background: {PAGE_BG};
+            color: {INK};
+            margin: 20px;
+        }}
+        h1 {{
+            text-align: center;
+            color: {INK};
+            font-size: 32px;
+            margin-bottom: 30px;
+        }}
+        .grid {{
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             max-width: 1600px;
             margin: 0 auto;
-        }
-        .chart {
+        }}
+        .chart {{
             width: 100%;
-            border: 1px solid #eee;
+            border: 1px solid {INK_MUTED};
             border-radius: 8px;
             overflow: hidden;
-        }
-        .chart svg { width: 100%; height: auto; }
+        }}
+        .chart svg {{ width: 100%; height: auto; }}
     </style>
 </head>
 <body>
-    <h1>subplot-grid · pygal · pyplots.ai</h1>
+    <h1>subplot-grid · pygal · anyplot.ai</h1>
     <div class="grid">
 """
 
@@ -280,5 +291,5 @@ html_content += """    </div>
 </body>
 </html>"""
 
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(html_content)
