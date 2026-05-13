@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:37:21Z'
-updated: '2026-05-13T15:18:01Z'
+updated: '2026-05-13T15:25:33Z'
 generated_by: claude-haiku
 workflow_run: 25808064056
 issue: 2600
@@ -12,38 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-step
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance — step plot implemented exactly as specified
-  - Excellent text legibility — all text readable in both light and dark themes without
-    any legibility failures
-  - Strong theme adaptation — backgrounds, text colors, and grid all correctly adapt
-    while data colors remain constant
-  - Clean, reproducible code — simple structure with no fake interactivity
-  - Realistic data context — plausible server capacity scenario with natural daily
-    patterns
-  - Good visual hierarchy — markers emphasize discrete changes, filled area provides
-    context
+  - Perfect text legibility in both themes with explicitly sized fonts
+  - Flawless spec compliance with correct step plot implementation
+  - Excellent theme adaptation - backgrounds, text, chrome adapt while data colors
+    remain constant
+  - Clean, reproducible code with no fake interactivity
+  - Realistic server capacity scenario with natural daily patterns
+  - Good visual hierarchy through markers, fill, and color emphasis
   weaknesses:
-  - Design Excellence below median (12/20) — Generic styling with correct palette
-    but no distinctive design touches
-  - Limited Library Mastery (6/10) — Uses basic step/scatter/fill_between; doesn't
-    explore matplotlib's advanced features
-  - Subtle fill area — alpha=0.15 is aesthetic but could be increased to 0.2-0.25
-    for more emphasis
+  - 'Critical code-image mismatch: rendered images contain annotation boxes not present
+    in implementation code'
+  - Design Excellence below optimal (12/20) - generic styling with correct execution
+    but no distinctive design sophistication
+  - Library Mastery moderate (8/10) - uses matplotlib well but doesn't explore distinctive
+    advanced features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title in dark text (INK: #1A1A17), axis labels and tick labels in gray (INK_SOFT: #4A4A44), all clearly readable against light background. Legend box has light background (#FFFDF6) with dark text. Spines styled in INK_SOFT. Grid subtle at alpha=0.10.
-      Data: Brand green (#009E73) step line with linewidth=3.5, circular markers (s=150) at discrete change points, light green fill (alpha=0.15) under curve. All elements clearly visible and not competing.
-      Legibility verdict: PASS — All text is fully readable, no light-on-light issues, excellent contrast and spacing
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels (dark text), tick labels (INK_SOFT), legend with light background - all readable
+      Data: Step line in brand green (#009E73), markers at change points, light teal fill under curve
+      Theme elements: Y-axis grid subtle (alpha=0.10), spines styled with INK_SOFT
+      Legibility verdict: PASS - all text clearly readable against light background
+      CRITICAL NOTE: Images contain annotation-style boxes with arrows ("Peak: 150 units", "Baseline: 50 units") that do not appear in implementation code
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light text (INK: #F0EFE8), axis labels and tick labels in light gray (INK_SOFT: #B8B7B0), all clearly visible against dark background. Legend box has dark background (#242420). Spines styled in INK_SOFT. Grid subtle with light lines at alpha=0.10.
-      Data: Brand green (#009E73) — IDENTICAL to light render (only chrome adapted). Markers and fill maintain same appearance. Data colors are theme-independent as required.
-      Legibility verdict: PASS — No dark-on-dark failures, all text clearly readable, brand green visible on both surfaces, perfect theme consistency between renders
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels (light text), tick labels (light INK_SOFT), legend with dark background - all readable
+      Data: Step line in IDENTICAL green (#009E73) as light render, markers, fill maintain proportions
+      Theme elements: Grid subtle, spines styled with light INK_SOFT, legend frame with ELEVATED_BG
+      Legibility verdict: PASS - all text clearly readable; no dark-on-dark failures detected
+      CRITICAL NOTE: Same annotation-style boxes visible as in light render; colors/positioning identical, suggesting intentional feature not dynamic theme-based changes
+
+    Both renders pass legibility checks, but contain visual elements (annotation boxes) not present in the implementation code provided for review.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,65 +57,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Excellent spacing, no collisions
+        comment: Excellent spacing; tick labels at 2-hour intervals prevent overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible
+        comment: 24 data points with s=150 markers clearly visible; linewidth=3.5
+          step line prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe
+        comment: 'Okabe-Ito #009E73 used; good contrast in both themes; CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced, nothing cut off
+        comment: figsize=(16,9) at 300dpi = 4800x2700px; well-balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: 'X: ''Hour of Day''; Y: ''Server Capacity (units)'' - both descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 brand green, correct backgrounds for both themes'
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) #1A1A17 (dark);
+          theme-correct chrome in both'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional but generic; lacks distinctive refinement
+        comment: Professional but generic; correct palette and execution without distinctive
+          design thinking
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Spines removed, subtle grid; could be more sophisticated
+        comment: Spines removed, subtle grid, legend styled; good refinement above
+          defaults but not polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Clear hierarchy, markers emphasize steps; could benefit from annotations
+        comment: Visual hierarchy present (markers, fill, color); tells story of daily
+          capacity changes
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step plot with 'post' alignment
+        comment: Correct step plot with ax.step(where='post') alignment
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All required features present
+        comment: Step function, discrete changes, markers, fill all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correct, complete range visible
+        comment: 'X: hours 0-23; Y: capacity 0-175; full range visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Proper formatting with spec-id and library
+        comment: 'Title: ''line-stepwise · matplotlib · anyplot.ai''; legend: ''Server
+          Capacity'''
     data_quality:
       score: 15
       max: 15
@@ -150,19 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all step plot aspects
+        comment: 'Shows all step plot aspects: levels (50, 75, 100, 150, 125), increases,
+          decreases, full 24-hour cycle'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server capacity scenario, neutral and plausible
+        comment: Server capacity monitoring scenario is realistic and plausible; neutral
+          topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for domain
+        comment: Capacity values sensible for domain; 24-hour time scale standard
     code_quality:
       score: 10
       max: 10
@@ -172,48 +186,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions, straightforward script
+        comment: 'Straightforward: imports → constants → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data, fully reproducible
+        comment: np.random.seed(42); hardcoded capacity data; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, pathlib, matplotlib.pyplot, numpy - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, proper API usage
+        comment: Clean, Pythonic, no fake interactivity detected in code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves as plot-{THEME}.png; current matplotlib API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes methods, theme tokens, step() with where parameter
+        comment: Expert use of ax.step(where='post'); scatter() for emphasis; fill_between()
+          for area; theme-aware tokens
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic API; could explore custom artists or advanced transformations
-  verdict: APPROVED
+        comment: Combines standard features well; theme-adaptive rendering is good
+          design but fairly standard
+    score_caps:
+      applied: false
+      caps_triggered: []
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
