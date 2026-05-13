@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: pending | Updated: 2026-05-13
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-13
 """
 
 import os
