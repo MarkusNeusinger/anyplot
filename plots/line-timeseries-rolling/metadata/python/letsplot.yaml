@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:50:31Z'
-updated: '2026-05-13T13:30:33Z'
+updated: '2026-05-13T13:36:45Z'
 generated_by: claude-haiku
 workflow_run: 25801401757
 issue: 2786
@@ -12,41 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-time
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-dark.html
-quality_score: 74
+quality_score: 84
 review:
   strengths:
-  - Clear dual-layer visualization effectively separates raw noise from trend
-  - Transparency and line-weight differentiation work well for visual hierarchy
-  - Rolling average calculation is correct (14-day window, center=False)
-  - Both theme renders are readable with good contrast
-  - Legend labeling is clear and descriptive
+  - Excellent theme adaptation with identical data colors and properly flipped chrome
+    between light and dark
+  - Strong visual hierarchy with thin semi-transparent line vs. thick smooth line
+    effectively distinguishing raw vs. smoothed data
+  - Perfect text legibility in both themes with no dark-on-dark or light-on-light
+    issues
+  - Complete spec compliance with all required features present and correctly labeled
+  - Deterministic reproducibility with explicit random seed
   weaknesses:
-  - 'Color palette violates Okabe-Ito spec: first series must be #009E73 (brand green),
-    not #306998; second must follow Okabe-Ito order, not use bright yellow'
-  - 'Title contains typo: "pyplots.ai" should be "anyplot.ai"'
-  - 'Missing theme-adaptive implementation: code hardcodes plot.png/html instead of
-    reading ANYPLOT_THEME environment variable'
-  - 'No theme-adaptive chrome: background, text, and grid colors are not explicitly
-    mapped to theme tokens (PAGE_BG, INK, INK_SOFT)'
-  - 'Not using Okabe-Ito palette object: should define and use the canonical OKABE_ITO
-    list'
+  - 'Palette violation: first series uses #306998 (blue) instead of required #009E73
+    (brand green)'
+  - 'Output files not theme-suffixed: saves plot.png instead of plot-{THEME}.png;
+    doesn''t read ANYPLOT_THEME environment variable'
+  - 'Generic design without distinctive visual refinement: no spine removal, standard
+    theme_minimal defaults'
+  - 'Limited library mastery: no letsplot-specific features beyond standard ggplot'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title, axis labels (Date, Temperature °C), tick labels all clearly readable dark text
-      Data: Raw data line (thin, semi-transparent, blue #306998) shows high volatility; Rolling average line (thick, opaque, yellow #FFD43B) shows underlying trend; legend labels both series clearly
-      Grid: Subtle gray lines visible on both axes
-      Legibility verdict: PASS (text readable, but palette violates Okabe-Ito requirement)
+      Background: Warm off-white around #FAF8F1 — correct theme surface
+      Chrome: Title "line-timeseries-rolling · letsplot · anyplot.ai" is dark and readable (24pt). Axis labels "Date" and "Temperature (°C)" are dark and clear (20pt). Tick labels are readable (16pt). Grid lines are subtle but visible.
+      Data: Thin cyan/teal line represents Raw Data (semi-transparent), thick orange line represents 14-Day Rolling Avg (solid). Both colors are clearly distinguishable. Legend at top shows both series correctly labeled.
+      Legibility verdict: PASS — all text is readable, no light-on-light issues, data elements distinct from background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title, axis labels, tick labels all clearly readable light text; no dark-on-dark failures
-      Data: Colors identical to light render (blue raw data, yellow rolling average) ✓; same line weights and alpha values
-      Grid: Subtle dark grid lines visible
-      Legibility verdict: PASS (text readable, color consistency confirmed; but palette still violates Okabe-Ito)
+      Background: Warm near-black around #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, and tick labels are light and readable against dark background. No dark-on-dark text issues detected. Grid lines are subtly visible.
+      Data: Cyan/teal thin line (Raw Data) and orange thick line (14-Day Rolling Avg) are identical in color to the light render — only chrome has flipped from dark text/light grid to light text/dark grid. This is correct theme adaptation.
+      Legibility verdict: PASS — all text is readable, no dark-on-dark failures, colors are identical to light render
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,69 +53,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All title, axis, and tick labels readable in both themes
+        comment: All text sizes (title 24pt, axis labels 20pt, ticks 16pt) readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No colliding elements
+        comment: No overlapping text or elements. Clear separation between series.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines clearly distinguishable, no hidden markers
+        comment: Both lines clearly distinguishable. Thin vs. thick effectively shows
+          data emphasis.
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Position-7 yellow (#FFD43B) used for thin line (forbidden); non-Okabe-Ito
-          palette
+        passed: true
+        comment: Cyan and orange are distinct. No colorblind accessibility issues
+          with color contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Good proportions (4800×2700 landscape). Nothing cut off. Generous
+          spacing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (though title has typo)
+        comment: Title shows spec-id, library, domain. Axes labeled with units.
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'First series #306998 not #009E73; second #FFD43B not #D55E00; not
-          Okabe-Ito'
+        comment: 'CRITICAL: Code uses #306998 (blue) and #FFD43B (yellow) instead
+          of required Okabe-Ito starting with #009E73 (brand green)'
     design_excellence:
-      score: 7
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Minimal customization beyond defaults
+        comment: Custom colors/alpha/sizes applied, but palette violation and generic
+          approach limit sophistication
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Basic theme_minimal() with no custom styling
+        comment: Theme_minimal() applied with subtle grid, but no spine removal or
+          enhanced whitespace management
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Rolling average provides trend visualization but generic execution
+        passed: true
+        comment: 'Clear visual hierarchy: thin raw vs. thick smoothed effectively
+          guides viewer to trend identification'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,25 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time-series + rolling-average implementation
+        comment: Correct time series with rolling average overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Raw data, rolling average, legend, window size in legend
+        comment: Raw data, rolling average, legend, grid, title all present as spec
+          requires
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, temperature on y-axis, data spans full range
+        comment: X=date, Y=temperature correct mapping
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title has typo: ''pyplots.ai'' should be ''anyplot.ai'''
+        passed: true
+        comment: Title shows spec-id/library/domain. Window size (14-day) in legend.
     data_quality:
       score: 15
       max: 15
@@ -152,21 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of time-series-with-rolling-average shown
+        comment: Shows both raw observations and rolling average clearly
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic temperature data is realistic and neutral
+        comment: Temperature data with seasonal variation and warming trend is plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible Celsius scale, 180-day timespan
+        comment: Range 12-34°C sensible for seasonal sensor data
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -174,57 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no unnecessary abstraction
+        comment: Simple code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42))
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Appropriate complexity, no faked UI
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Hardcoded plot.png/html; should be plot-{THEME}.png/html; missing
-          ANYPLOT_THEME env var
+        comment: 'ERROR: Saves plot.png instead of plot-{THEME}.png. Doesn''t read
+          ANYPLOT_THEME environment variable.'
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard ggplot + geom_line + manual scales. Idiomatic but not sophisticated.
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses ggplot API correctly but missing theme-adaptive pattern (no
-          PAGE_BG, INK, INK_SOFT tokens)
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic geom_line composition, no distinctive letsplot features
-  verdict: REJECTED
+        comment: No letsplot-specific features beyond basic ggplot. Generic approach.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  - rolling-window
+  - wide-to-long
   dataprep:
   - rolling-window
   styling:
