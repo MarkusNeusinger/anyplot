@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 upset-basic: UpSet Plot for Multi-Set Intersection Analysis
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 82/100 | Created: 2026-05-13
@@ -146,8 +146,8 @@ bar_top = (
             "size:Q",
             title="Intersection Size",
             axis=alt.Axis(
-                titleFontSize=18,
-                labelFontSize=15,
+                titleFontSize=22,
+                labelFontSize=18,
                 titleColor=INK,
                 labelColor=INK_SOFT,
                 domainColor=INK_SOFT,
@@ -160,6 +160,21 @@ bar_top = (
     )
     .properties(width=main_w, height=bar_top_h)
 )
+
+# Count labels on top of each bar to highlight key intersections
+bar_labels = (
+    alt.Chart(combo_counts)
+    .mark_text(dy=-10, fontSize=16, fontWeight="bold")
+    .encode(
+        x=alt.X("col_idx:O", axis=None, scale=alt.Scale(paddingInner=0.25)),
+        y=alt.Y("size:Q"),
+        text=alt.Text("size:Q", format="d"),
+        color=alt.value(INK_SOFT),
+    )
+    .properties(width=main_w, height=bar_top_h)
+)
+
+bar_top_chart = alt.layer(bar_top, bar_labels)
 
 # 2. Dot matrix — inactive dots
 dot_inactive = (
@@ -192,9 +207,9 @@ dot_active = (
                 labelColor=INK_SOFT,
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
-                labelFontSize=14,
-                titleFontSize=15,
-                orient="top-right",
+                labelFontSize=16,
+                titleFontSize=16,
+                orient="bottom-right",
             ),
         ),
         tooltip=[alt.Tooltip("set:N", title="Set"), alt.Tooltip("degree:Q", title="Degree")],
@@ -202,10 +217,10 @@ dot_active = (
     .properties(width=main_w, height=matrix_h)
 )
 
-# Connector lines
+# Connector lines — thicker for visibility at canvas scale
 conn_chart = (
     alt.Chart(conn_df)
-    .mark_rule(strokeWidth=3)
+    .mark_rule(strokeWidth=5)
     .encode(
         x=alt.X("col_idx:O", axis=None, scale=alt.Scale(paddingInner=0.25)),
         y=alt.Y("y_min:Q", axis=None, scale=alt.Scale(domain=[-0.5, n_sets - 0.5], reverse=False)),
@@ -217,10 +232,10 @@ conn_chart = (
 
 matrix_layer = alt.layer(dot_inactive, conn_chart, dot_active)
 
-# 3. Set size bar (horizontal, left side)
+# 3. Set size bar (horizontal, left side) — BRAND green to visually link to intersection bars
 set_bar = (
     alt.Chart(set_df)
-    .mark_bar(color=INK_SOFT, opacity=0.6)
+    .mark_bar(color=BRAND, opacity=0.75)
     .encode(
         y=alt.Y(
             "row_idx:O",
@@ -228,7 +243,7 @@ set_bar = (
             axis=alt.Axis(
                 labels=True,
                 labelExpr="datum.value == 0 ? 'Exp A' : datum.value == 1 ? 'Exp B' : datum.value == 2 ? 'Exp C' : datum.value == 3 ? 'Exp D' : 'Exp E'",
-                labelFontSize=15,
+                labelFontSize=18,
                 labelColor=INK_SOFT,
                 domainColor=INK_SOFT,
                 tickColor=INK_SOFT,
@@ -241,8 +256,8 @@ set_bar = (
             title="Set Size",
             sort="descending",
             axis=alt.Axis(
-                titleFontSize=17,
-                labelFontSize=14,
+                titleFontSize=22,
+                labelFontSize=18,
                 titleColor=INK,
                 labelColor=INK_SOFT,
                 domainColor=INK_SOFT,
@@ -260,7 +275,7 @@ set_bar = (
 # Set name labels on the right of the set bar (in the matrix row axis)
 set_label = (
     alt.Chart(set_df)
-    .mark_text(align="left", dx=4, fontSize=15)
+    .mark_text(align="left", dx=4, fontSize=18)
     .encode(y=alt.Y("row_idx:O", axis=None), text=alt.Text("set:N"), color=alt.value(INK_SOFT))
     .properties(width=20, height=matrix_h)
 )
@@ -274,15 +289,15 @@ spacer_top = (
 )
 
 # Compose layout: [spacer | bar_top] / [set_bar | matrix]
-top_row = alt.hconcat(spacer_top, bar_top, spacing=4)
+top_row = alt.hconcat(spacer_top, bar_top_chart, spacing=4)
 bottom_row = alt.hconcat(set_bar, matrix_layer, spacing=4)
 
 chart = (
     alt.vconcat(top_row, bottom_row, spacing=8)
     .properties(
-        title=alt.Title("upset-basic · altair · anyplot.ai", fontSize=24, color=INK, anchor="start"), background=PAGE_BG
+        title=alt.Title("upset-basic · altair · anyplot.ai", fontSize=28, color=INK, anchor="start"), background=PAGE_BG
     )
-    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
     .configure_concat(spacing=4)
 )
 
