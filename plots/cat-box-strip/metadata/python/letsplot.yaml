@@ -1,171 +1,176 @@
 library: letsplot
+language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:39:24Z'
-updated: '2025-12-30T16:46:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601061406
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-13T05:56:07Z'
+generated_by: claude-haiku
+workflow_run: 25780786735
+issue: 2695
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent visual clarity with well-chosen color contrast (blue boxes, yellow points)
-  - Proper use of outlier_alpha=0 to hide box plot outliers since strip shows all
-    points
-  - Good jitter width (0.15) that keeps points within their category while reducing
-    overlap
-  - Realistic business scenario with thoughtfully varied distributions per department
-  - Clean ggplot2-style code that is easy to read and modify
+  - 'Perfect theme adaptation: both light and dark renders maintain full readability;
+    data colors remain identical; chrome flips correctly.'
+  - Spec-compliant box+jitter combination correctly visualizes distribution statistics
+    and individual data.
+  - 'Professional, realistic data context: service tier uptime demonstrates the plot
+    type''s value clearly.'
+  - 'Clean, reproducible code: straightforward structure with seed, no unnecessary
+    complexity.'
+  - 'Correct Okabe-Ito palette usage (#009E73 for boxes, #D55E00 for points) with
+    density-appropriate transparency.'
   weaknesses:
-  - Axis label Performance Score lacks units (could be Performance Score (%) or similar)
-  - Output path uses __file__ which may cause issues in some execution contexts
-  - Could leverage lets-plot interactive features for HTML output (tooltips showing
-    exact values)
-  image_description: The plot displays a box plot with strip overlay showing Performance
-    Score (y-axis, range 35-100) across four departments (Engineering, Marketing,
-    Sales, Support) on the x-axis. Each department has a blue (#306998) box showing
-    quartiles with a dark median line, and yellow (#FFD43B) jittered points overlaid
-    on top representing individual data points. The title "cat-box-strip · letsplot
-    · pyplots.ai" is displayed in bold at the top. The background is clean with minimal
-    grid (only horizontal lines), and text is clearly legible. Engineering shows high
-    performers (~95-97) and one low outlier (~42). Marketing has wider spread. Sales
-    has two low outliers (~35-38). Support shows a tighter distribution.
+  - Design excellence is functional but not distinctive; relies on theme_minimal()
+    defaults with standard customization.
+  - No special visual hierarchy or focal points to guide viewer attention or emphasize
+    key insights.
+  - Generic theme implementation; could benefit from explicit spine removal, tighter
+    grid styling, or refined typography.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1 — correct
+      Chrome: Title (24pt dark), axis labels "Service Tier" and "Uptime (%)" (20pt dark), tick labels (16pt dark) all clearly readable. Y-axis grid shows subtle gray lines.
+      Data: Green box plots (#009E73) with 70% opacity; orange jitter points (#D55E00) with 65% opacity. All elements clearly distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels all light text (light gray tones) and clearly readable against dark background. No dark-on-dark failures. Y-axis grid subtle and visible.
+      Data: Green boxes and orange points are identical in color to light render. Only background and text adapted to dark theme.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large (~24pt), axis labels are clearly readable
-          (~20pt), tick labels are appropriately sized (~16pt)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: Title (24pt), axis labels (20pt), tick labels (16pt) all explicitly
+          set and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No colliding text; jitter and transparency manage density well
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (size=4) with good alpha (0.7), jitter prevents
-          most overlap. Minor deduction as some points in dense areas slightly overlap
+        comment: Markers (size=4), boxes (alpha=0.7, width=0.5), points (alpha=0.65)
+          properly adapted
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and yellow color scheme is colorblind-safe with excellent contrast
+        comment: Okabe-Ito palette CVD-safe with good contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space, plot fills appropriate area. Minor whitespace
-          at bottom
+        comment: ggsize(1600, 900) × scale=3 = 4800×2700px landscape; proper proportions
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Department", "Performance Score") but lack
-          units
+        comment: Uptime (%) with units; title format correct
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with only horizontal lines (good), but no legend needed
-          for this plot type
+        comment: 'First series #009E73, second #D55E00, backgrounds and theme-adaptive
+          chrome correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Theme tokens applied, Okabe-Ito followed, but straightforward with
+          no distinctive choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Spines implicit with theme_minimal(), grid subtle; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Box+jitter shows distribution well; data selection reveals variance,
+          but no special hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct chart type: box plot with strip overlay'
+        comment: Correct box plot with strip overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categorical (Department) on X, numeric (Performance Score) on Y -
-          correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: box shows median/Q1/Q3, whiskers show
-          range, strip points overlay with jitter and transparency'
-      - id: SC-04
-        name: Data Range
+        comment: Strip overlay, box stats, jitter + transparency all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from 35 to 100, capturing all data including
-          outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categorical (Service Tier), Y: numeric (Uptime %); axes span
+          full data'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series box+strip, correctly omitted
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "cat-box-strip · letsplot · pyplots.ai"
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions (Engineering high, Marketing wide,
-          Support tight), outliers visible in multiple groups. Could show more dramatic
-          differences between groups
+        comment: Shows box stats, individual points, all tiers, sample sizes 28-38
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Performance scores across departments is a real, neutral business
-          scenario
+        comment: Service uptime context realistic and neutral; tier progression sensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Scores 35-100 are realistic for performance metrics. Minor: some
-          outliers at 35-42 are quite low for "performance scores"'
+        comment: Uptime 85-100% appropriate; distribution differences meaningful
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +178,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save, no functions/classes'
+        comment: No classes/functions; straightforward
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (os, numpy, pandas, lets_plot)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to implementation directory via __file__ rather than current
-          working directory
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/.html; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot2 grammar (ggplot + geom_boxplot + geom_jitter), theme_minimal(),
-          element_text/element_blank for styling. Could leverage more lets-plot specific
-          features like tooltips or interactive elements
+        comment: ggplot2-style grammar, high-level API, proper aes() and theme()
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses geom_boxplot(outlier_alpha=0), geom_jitter, ggsize(). Standard
+          patterns; not exceptional
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
