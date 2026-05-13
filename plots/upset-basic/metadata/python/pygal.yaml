@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: upset-basic
 created: '2026-05-13T20:51:42Z'
-updated: '2026-05-13T20:59:25Z'
+updated: '2026-05-13T21:29:47Z'
 generated_by: claude-sonnet
 workflow_run: 25825187434
 issue: 5250
@@ -12,96 +12,85 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 78
 review:
   strengths:
-  - Correct and complete UpSet plot layout with all three panels (intersection bars,
-    set-size bars, dot matrix)
-  - Excellent spec compliance — all required features implemented including degree-based
-    colouring
-  - Proper theme-adaptive chrome in both light and dark renders (all tokens correctly
-    applied)
-  - Realistic, neutral domain data (bug reports across software modules) with plausible
-    proportions
-  - Degree colour legend is a smart design addition that helps readers interpret intersection
-    complexity
-  - Bars sorted descending creates clear visual hierarchy and storytelling
+  - Complete, accurate UpSet plot with all three required panels correctly laid out
+  - Excellent spec compliance — degree coloring, sorted intersections, connecting
+    lines all implemented
+  - Perfect data quality with realistic software engineering scenario
+  - Theme-adaptive chrome works correctly in both light and dark renders
   weaknesses:
-  - 'Critical: No pygal library usage — import pygal is absent; the implementation
-    builds a hand-rolled SVG renderer instead of using pygal chart classes and Style
-    API'
-  - Five helper functions defined (_r, _c, _t, _hl, _vl), violating KISS structure
-    (no functions/classes)
-  - Bar count labels (20px) and subtitle (24px) are slightly below optimal size for
-    a 4800x2700 canvas
+  - No pygal usage at all — import pygal is missing; raw SVG generated manually via
+    cairosvg directly, leaving Library Mastery at 2/10
+  - Helper functions _r, _c, _t, _hl, _vl violate KISS structure and cost CQ-01 points
+  - Missing Intersection Size y-axis label on the top bar panel (VQ-06 partial)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "upset-basic · pygal · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle in INK_SOFT (#4A4A44), readable. Set labels (Frontend, Backend, Database, API Layer, Auth Module) in INK_SOFT at 22px, readable. Bar count labels in INK_SOFT at 20px, readable. Set size numbers in INK_MUTED at 18px, readable. Degree legend text in INK (dark) on Okabe-Ito coloured boxes — minor contrast issue on blue box (#0072B2 with dark text ~1.8:1) but element is small and decorative.
-      Data: Intersection bars coloured by degree — degree-1 in brand green (#009E73), degree-2 in vermillion (#D55E00); filled matrix dots in #009E73; empty circles in INK_MUTED outline; connecting lines in #009E73. All data clearly distinguishable.
-      Legibility verdict: PASS — all text readable against light background; minor low-contrast issue on degree legend box (not a primary data element)
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "upset-basic · pygal · anyplot.ai" in dark ink (#1A1A17), bold, clearly readable. Subtitle "Bug Report Overlap Across Software Modules" in muted ink, readable. Set names (Frontend, Backend, Database, API Layer, Auth Module) right-aligned in muted ink. Numeric labels (295, 249, 198, 231, 148) in muted ink. Degree legend labels in dark ink on colored boxes.
+      Data: 10 vertical intersection bars colored #009E73 (degree 1–2) and #D55E00 (degree 2–3) following Okabe-Ito. Dot matrix with filled teal circles (#009E73) for set members, hollow dark-stroked rings for non-members. Connecting vertical lines in #009E73 for multi-set intersections. Horizontal set-size bars all in #009E73.
+      Legibility verdict: PASS — all text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title in #F0EFE8 (light cream), clearly readable. Subtitle in #B8B7B0, readable. Set labels in #B8B7B0, readable. Bar count labels in #B8B7B0, readable. Set size numbers in #A8A79F, readable. Row separators as light subtle lines. No dark-on-dark failures observed.
-      Data: Identical data colours to light render — green bars (#009E73), orange bars (#D55E00), green filled dots (#009E73), green connecting lines (#009E73). Empty circles with #A8A79F stroke, visible against dark background. All data elements clearly distinguishable.
-      Legibility verdict: PASS — all text readable against dark background; data colours identical to light render; chrome correctly flips to light tones
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, set names, and all labels switch to light ink (#F0EFE8/#B8B7B0). No dark-on-dark failures observed. Row separators use muted tones visible against dark background.
+      Data: Data colors identical to light render — same greens (#009E73) and oranges (#D55E00). Empty circle strokes use #A8A79F (light muted) visible against dark surface.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; all readable in both themes; bar count
-          labels at 20px and subtitle at 24px slightly below recommended axis-label
-          minimum of 22px
+        comment: All font sizes explicitly set (title 34, subtitle 24, labels 22/20/18);
+          readable in both themes; degree legend numbers slightly small at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or elements; matrix, bar labels, and set labels
-          are all well-spaced
+        comment: Set names and numeric labels on left panel are close; minor crowding
+          but no hard collision
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Filled dots (~79px radius), connecting lines (~47px wide), and horizontal
-          bars are all clearly visible at canvas scale
+        comment: Filled dots and bars clearly visible; empty circle strokes slightly
+          thin in dark theme
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; degree-based colour signal is multi-hue and CVD-safe;
-          filled vs. empty dot distinction uses shape+fill, not colour alone
+        comment: Okabe-Ito palette; filled vs hollow distinction doesn't rely on hue
+          alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Content spans virtually full canvas; empty upper-left quadrant is
-          intentional UpSet plot layout convention
+        comment: Good utilization; top-left quadrant intentionally empty (standard
+          UpSet convention)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title follows spec-id · library · anyplot.ai format; Set Size label
-          descriptive; subtitle names the domain
+        passed: false
+        comment: Set Size labeled; Intersection Size y-axis label missing on top bar
+          panel
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light #FAF8F1 / dark #1A1A17 backgrounds; degree-1 bars use #009E73
-          brand first; multi-series follows Okabe-Ito order; data colours identical
-          between themes'
+        comment: 'First color #009E73; degree coloring follows Okabe-Ito order; backgrounds
+          #FAF8F1/#1A1A17; chrome flips correctly'
     design_excellence:
       score: 13
       max: 20
@@ -111,23 +100,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful degree-based semantic colouring, rounded corners on bars,
-          clean font hierarchy, intentional layout. Above generic default but not
-          publication-level.
+        comment: Degree-based coloring is thoughtful; rounded bars, subtle separators
+          show care; above generic defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle row separators (no full grid), theme-adaptive muted tones,
-          generous whitespace, no unnecessary decoration
+        comment: Subtle row separators, generous matrix whitespace, rounded corners;
+          clean composition
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bars sorted descending highlights most frequent intersection; degree
-          colouring creates visual hierarchy; viewer guided to key insight
+        comment: Sorted intersections and degree gradient guide viewer to dominant
+          single-set vs multi-module bugs
     spec_compliance:
       score: 15
       max: 15
@@ -137,59 +125,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct UpSet plot: vertical intersection bars on top, horizontal
-          set-size bars on left, dot matrix in centre, vertical connecting lines'
+        comment: Full UpSet layout with all three panels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: intersections sorted descending, connected
-          dots for membership, empty circles for non-membership, set sizes on left,
-          degree-based colour shading'
+        comment: Sorted descending, connected dots, set size bars, degree coloring
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows=sets, columns=intersections; set sizes correctly map to bar
-          length; intersection counts correctly map to bar height
+        comment: Sets on rows, intersections on columns, top-10 sorted correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title upset-basic · pygal · anyplot.ai matches required format; degree
-          legend labelled 1-5 with correct Okabe-Ito colours
+        comment: Title format correct; degree legend with correct Okabe-Ito colors
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 sets (within 4-15), ~650 bugs (within 100-10000), top-10 intersections
-          showing degrees 1-5, varied intersection sizes (24-70). Only top-10 of ~31
-          possible intersections shown.
+        comment: Degrees 1-5 all present; clear variation in intersection sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bug report overlap across software modules (Frontend, Backend, Database,
-          API Layer, Auth Module) — real-world, neutral, comprehensible software engineering
-          domain
+        comment: Software bug overlap across Frontend/Backend/Database/API Layer/Auth
+          Module — neutral, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Set membership probabilities (22-40%) and 700 bugs produce realistic
-          set sizes (~146-295) and intersection counts; overlap proportions are plausible
+        comment: 700 bugs, set sizes 148-295, intersection sizes 24-70; realistic
+          proportions
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -197,8 +178,8 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: Five helper functions defined (_r, _c, _t, _hl, _vl); criterion requires
-          no functions/classes
+        comment: Five helper functions (_r, _c, _t, _hl, _vl) violate no-functions
+          rule
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,20 +191,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, Counter, cairosvg, numpy — all imported and used
+        comment: Only os, Counter, cairosvg, numpy imported; all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Manual SVG construction is complex but coherent; helper functions
-          reduce boilerplate; slightly over-engineered given library context
+        comment: No fake interactive elements; verbose but appropriate SVG generation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 2
       max: 10
@@ -233,26 +213,23 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: No pygal API used at all — no import pygal, no pygal chart classes,
-          no Style objects; implementation builds raw SVG via string concatenation
-          and renders via cairosvg directly
+        comment: import pygal absent from file; library bypassed entirely in favor
+          of raw SVG + cairosvg direct call
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No pygal chart classes, Style objects, or distinctive features leveraged;
-          implementation is a hand-rolled SVG renderer
+        comment: No pygal chart classes used; nothing pygal-specific in implementation
   verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - custom-legend
   - html-export
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling: []
