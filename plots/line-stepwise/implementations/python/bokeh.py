@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-stepwise: Step Line Plot
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-13
+Quality: 87/100 | Updated: 2026-05-13
 """
 
 import os

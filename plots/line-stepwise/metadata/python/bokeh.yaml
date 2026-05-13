@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:38:37Z'
-updated: '2026-05-13T15:25:39Z'
+updated: '2026-05-13T15:31:05Z'
 generated_by: claude-haiku
 workflow_run: 25808421085
 issue: 2600
@@ -12,34 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-step
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/bokeh/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - 'Excellent theme implementation: data colors remain constant across light/dark
-    renders, chrome adapts correctly with no legibility failures'
-  - 'Perfect visual quality: explicit font sizing at large canvas resolution (4800x2700),
-    proper contrast, no overlapping text'
-  - Clean, reproducible code with proper data generation and seed management
-  - Correct step line implementation showing discrete state changes with horizontal
-    persistence and vertical transitions
-  - Realistic, domain-appropriate data (CPU usage monitoring) with good feature coverage
+  - Perfect visual quality across all criteria (30/30) — text legibility, element
+    visibility, and theme compliance are flawless in both light and dark renders
+  - Correct step-line implementation with markers at discrete points, clearly showing
+    state changes and CPU usage patterns
+  - Proper theme-adaptive styling with all chrome elements (text, grid, backgrounds)
+    correctly themed; data colors identical in both renders
+  - Clean, reproducible code following bokeh idioms (ColumnDataSource, proper Selenium
+    screenshot pattern)
+  - Full specification compliance with correct title format, axis labels with units,
+    and appropriate data mapping
   weaknesses:
-  - 'Design is functional but generic: no custom palette choices, visual refinement
-    beyond defaults, or design sophistication'
-  - No visual hierarchy or emphasis to guide viewer attention to patterns in the data
-  - Uses standard library features without leveraging bokeh's more advanced capabilities
+  - Design Excellence is minimal (9/20) — uses default bokeh styling with only required
+    theme tokens, no special visual refinement or custom styling beyond requirements
+  - No advanced bokeh features or distinctive design elements — could benefit from
+    custom legend styling, marker size variation, or additional visual hierarchy
+  - Limited Library Mastery distinctive features — uses HoverTool but doesn't explore
+    callbacks, custom extensions, or other bokeh-specific capabilities
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "line-stepwise · bokeh · anyplot.ai" in dark text (#1A1A17), axis labels "Hour of Day" and "CPU Usage (%)" clearly visible, tick labels (0-23 hours, 0-100%) readable. All text is dark-on-light with excellent contrast.
-      Data: Step line in brand green (#009E73) with circular markers at each of 24 data points. Horizontal segments show value persistence, vertical segments show instantaneous changes. Clear, distinguishable from background.
-      Legibility verdict: PASS - All text elements perfectly readable, no light-on-light conflicts
+      Background: Warm off-white surface (#FAF8F1), clean and professional
+      Chrome: Title "line-stepwise · bokeh · anyplot.ai" in dark ink, X-axis "Hour of Day" and Y-axis "CPU Usage (%)" labels clearly visible in dark text, tick labels (0-100+ on axes) dark and readable against light background. All text properly sized for 4800px canvas (28pt title, 22pt axis labels, 18pt ticks).
+      Data: Step line in brand green (#009E73) with markers at each transition point. Line shows realistic CPU usage pattern over 24 hours with clear discrete state changes. Subtle gridlines (10% alpha) provide visual reference without competing with data.
+      Legibility verdict: PASS - All text is readable, no contrast issues, step function pattern is crystal clear.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title in light text (#F0EFE8), axis labels in light color, tick labels in secondary light color (#B8B7B0). All text is light-on-dark with excellent contrast. No dark-on-dark failures.
-      Data: Step line and markers identical to light render in same brand green (#009E73). Confirms data colors remain constant across themes as required.
-      Legibility verdict: PASS - All text elements clearly visible against dark background, proper theme-adaptive coloring throughout
+      Background: Warm near-black surface (#1A1A17), properly themed
+      Chrome: Title and labels rendered in light ink (#F0EFE8). Tick labels in soft ink (#B8B7B0). All text elements are clearly visible against dark background with proper contrast. No dark-on-dark failures detected.
+      Data: Step line and markers maintain identical brand green (#009E73) as light render. The green is vibrant and clearly visible on the dark surface. Gridlines remain subtle at 10% alpha with theme-adapted color. Data visualization is identical to light render (only chrome adapted).
+      Legibility verdict: PASS - All text readable, proper light-text contrast, no theme-readability failures. Data colors perfectly consistent with light render.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,47 +54,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28pt, 22pt, 18pt); perfectly readable
-          in both themes
+        comment: All text explicitly sized (28pt title, 22pt axis labels, 18pt ticks)
+          and clearly readable in both light and dark themes. Theme tokens (INK, INK_SOFT)
+          properly applied throughout.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all elements fully readable
+        comment: Clean plot layout with adequate spacing. No overlapping text elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line and markers optimally sized for 24-point data density
+        comment: Step line and markers are clearly visible. Markers at each discrete
+          point provide good visual clarity of state changes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) provides excellent contrast and CVD safety
+        comment: Uses Okabe-Ito brand green (#009E73) which is colorblind-safe. Adequate
+          contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins, plot fills 50-80% of canvas
+        comment: Good proportions at 4800×2700. Nothing cut off. Canvas well-utilized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: 'Descriptive labels: ''Hour of Day'' and ''CPU Usage (%)'' with units.
+          Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito first series (#009E73), correct backgrounds, perfect theme-adaptive
-          chrome
+        comment: 'First series is #009E73 ✓. Backgrounds correct (#FAF8F1 light, #1A1A17
+          dark). Both renders theme-correct with no dark-on-dark or light-on-light
+          issues. Okabe-Ito compliance verified.'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -98,20 +107,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but no custom design choices or exceptional
-          sophistication
+        comment: Default bokeh styling with theme tokens applied. Markers help show
+          discrete points, but no special design thinking beyond requirements. Generic
+          default aesthetic.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond library defaults
+        comment: Spines remain (bokeh default). Grid present but minimal (10% alpha).
+          Only required theme customization, no additional refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Displays data clearly but lacks visual hierarchy or emphasis
+        comment: Step pattern clearly shows discrete nature of changes. Markers emphasize
+          discrete steps. Some visual hierarchy via markers, but basic—no special
+          focal point or advanced storytelling technique.
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step line with post-step style showing discrete state changes
+        comment: Correct step line plot with horizontal-then-vertical transitions
+          showing discrete state changes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: step behavior, persistence, instantaneous
-          changes'
+        comment: 'All required features present: step function behavior is clear,
+          discrete changes emphasized, data context (CPU usage) fits specification
+          examples.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes properly display all data
+        comment: X-axis correctly maps hours (0-23). Y-axis correctly maps CPU usage
+          percentage (0-105%). All data displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend correctly omitted for single-series
+        comment: 'Title format correct: ''line-stepwise · bokeh · anyplot.ai''. No
+          legend needed for single series—correctly omitted.'
     data_quality:
       score: 15
       max: 15
@@ -150,19 +167,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all step plot aspects with realistic variations
+        comment: Step-wise line plot type fully showcased with 24 data points. Realistic
+          CPU usage patterns with discrete state changes demonstrate all aspects of
+          plot type.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, comprehensible CPU usage monitoring scenario
+        comment: CPU usage data is realistic and plausible. Values (25-95%) within
+          normal CPU range. Data shows realistic patterns (low at night, peaks during
+          day). Neutral, appropriate context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CPU usage percentages (0-105%) factually correct
+        comment: Y-axis range (0-105%) sensible for CPU percentage. X-axis shows 24-hour
+          period appropriate. Scale choices are well-considered.
     code_quality:
       score: 10
       max: 10
@@ -172,48 +194,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure; no unnecessary functions
+        comment: No functions or classes. Simple, direct implementation.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42). Deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: 'Only necessary imports: os, time, pathlib, numpy, bokeh (io, models,
+          plotting), selenium. All used.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake functionality
+        comment: Appropriate complexity. No fake UI. HoverTool is real bokeh interactivity,
+          not simulated.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and API
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png. Correct naming and
+          API.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct idiomatic bokeh patterns but doesn't leverage advanced features
+        comment: Uses ColumnDataSource correctly. Follows bokeh patterns (figure,
+          glyphs, styling). Step-line technique (duplicating points) is the correct
+          bokeh idiom. Selenium screenshot pattern matches library best practices.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses standard HoverTool and Selenium workflow without exceptional
-          innovation
+        comment: Uses HoverTool for interactive tooltips (bokeh-specific). Proper
+          large-canvas handling with Selenium. Doesn't leverage callbacks, custom
+          extensions, or other advanced bokeh features.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -222,7 +250,6 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - columndatasource
   dataprep: []
   styling:
