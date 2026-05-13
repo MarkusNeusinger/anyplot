@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-13
+Quality: 90/100 | Created: 2026-05-13
 """
 
 import os
