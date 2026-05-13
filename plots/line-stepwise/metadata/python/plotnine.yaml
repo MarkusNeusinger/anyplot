@@ -1,159 +1,185 @@
 library: plotnine
+language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:37:30Z'
-updated: '2025-12-30T10:43:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594559603
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - explicit-figure
-  dataprep: []
-  styling: []
+updated: '2026-05-13T15:34:55Z'
+generated_by: claude-haiku
+workflow_run: 25808658546
+issue: 2600
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Excellent use of geom_step with direction="hv" for proper step function visualization
-  - Realistic and relatable CPU utilization scenario that perfectly demonstrates discrete
-    state changes
-  - Clean grammar of graphics implementation following plotnine best practices
-  - Well-balanced layout with appropriate text sizing for 4800x2700 output
-  - Data shows clear daily pattern with morning ramp-up, business hours peak, and
-    evening wind-down
+  - All text legible at high resolution with explicit font sizing
+  - 'Perfect theme-adaptive chrome: both renders readable, data colors identical,
+    backgrounds correct (#FAF8F1 light / #1A1A17 dark)'
+  - 'Spec compliance perfect: correct step line type, all required features present,
+    proper data mapping'
+  - Clean code structure with deterministic seeding, no over-engineering
+  - Realistic, plausible data context (24-hour server CPU utilization pattern)
   weaknesses:
-  - 'Minor: panel_grid_major and panel_grid_minor use element_text() instead of element_line()
-    - this does not cause visible issues but is technically incorrect for grid styling'
-  image_description: The plot displays a step line chart showing CPU utilization (%)
-    over a 24-hour period. The line is rendered in a blue color (#306998) with clear
-    horizontal-then-vertical step transitions. The x-axis shows "Hour of Day" ranging
-    from 0 to approximately 23, and the y-axis shows "CPU Utilization (%)" ranging
-    from about 10% to 90%. The title "line-stepwise · plotnine · pyplots.ai" appears
-    at the top. The plot uses a minimal theme with subtle gray grid lines on a white
-    background. The step pattern clearly shows low utilization during night hours
-    (10-15%), a steep morning ramp-up (6-10 hours), sustained high utilization during
-    business hours (75-90%), and gradual wind-down in the evening.
+  - 'DE-01 LOW: Generic styling following library defaults without intentional design
+    hierarchy — no custom palette choices or sophisticated touches beyond Okabe-Ito'
+  - 'DE-02 LOW: Minimal visual refinement — could remove top/right spines per style
+    guide and add subtle grid-only-on-y-axis for cleaner appearance'
+  - 'DE-03 LOW: No visual storytelling — plot displays data straightforwardly without
+    emphasis, focal point, or insight hierarchy'
+  - 'LM-02 LOW: No distinctive library features — geom_step() is used idiomatically
+    but without any technique that couldn''t be replicated in other libraries'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly applied
+      Chrome: Title "line-stepwise · plotnine · anyplot.ai" in dark text (INK color), axis labels "Hour of Day" and "CPU Utilization (%)" clearly visible, tick labels (0–24 on x-axis, 25–100 on y-axis) all readable in secondary text color (INK_SOFT)
+      Data: Step line in Okabe-Ito brand green (#009E73), line width=2 provides clear visibility of discrete state changes from 10% to 90% utilization
+      Grid: Subtle horizontal grid lines visible but non-dominant, panel border present
+      Legibility verdict: PASS — all text perfectly readable against light background, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17 or very close), correctly applied
+      Chrome: Same title and axis labels now in light text (INK), secondary text in lighter gray (INK_SOFT), all tick labels clearly visible
+      Data: Step line remains identical Okabe-Ito green (#009E73) — confirming data colors are theme-independent as required
+      Grid: Same subtle grid lines visible on dark surface
+      Legibility verdict: PASS — no dark-on-dark issues; text contrast is good; brand green reads well on dark surface; all elements readable
+
+    Comparison: Both renders are theme-correct, data visualization is identical, and chrome colors properly flip between themes. Both meet legibility requirements.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: 'Explicit font sizing: title 24pt, labels 20pt, ticks 16pt; perfectly
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All text elements well-spaced, no overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width (size=2) is appropriate, step transitions clearly visible
+        comment: Step line size=2 appropriate for canvas, all 24 data points represented
+          clearly
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, excellent contrast against white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "CPU Utilization (%)" and "Hour of
-          Day"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito #009E73 provides excellent contrast on both light and
+          dark surfaces'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format with 50-80% chart area utilization, generous balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Hour of Day'' and ''CPU Utilization
+          (%)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1 light/#1A1A17 dark, theme-adaptive
+          chrome correct in both renders'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle, but element_text used incorrectly for panel_grid
-          (should use element_line) - no visual impact but technically incorrect
+        comment: Well-configured library defaults using standard Okabe-Ito palette;
+          no custom design touches or intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization; could benefit from removing
+          top/right spines and refining grid appearance
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Straightforward data display without visual hierarchy, emphasis,
+          or narrative focus
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step line plot using geom_step
+        comment: Correct step line plot with geom_step(direction='hv')
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time (hour), Y=value (CPU %) correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows horizontal-then-vertical transitions (direction="hv"), discrete
-          state changes
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements present: x (hour), y (utilization), step alignment'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 24-hour range shown, y-axis accommodates all values
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y axes correctly mapped, all data visible in 0–24 hour and
+          10–90% utilization ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-stepwise · plotnine · pyplots.ai"'
+        comment: Correct title format 'line-stepwise · plotnine · anyplot.ai'; legend
+          N/A for single series
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows value persistence (flat segments), instantaneous changes (vertical
-          jumps), various step heights, both increasing and decreasing transitions
+        comment: Shows complete 24-hour pattern with low (night), ramp-up (morning),
+          peak (afternoon), wind-down (evening) phases
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Server CPU utilization is a perfect real-world example of discrete
-          state monitoring
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: CPU percentages are realistic (10-90%), hour range is logical (0-23)
+        comment: 'Real-world plausible scenario: server CPU utilization following
+          typical business hours pattern'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Sensible values: 0–24 hour period, 10–90% utilization range realistic
+          for operational systems'
     code_quality:
       score: 10
       max: 10
@@ -163,40 +189,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Straightforward: imports → constants → data generation → plotting
+          → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set (though data is actually deterministic)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports (os, numpy, pandas, plotnine) are utilized
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, no over-engineering, no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format (plot-{THEME}.png at 300 DPI), current plotnine
+          0.15.4 API
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine''s grammar of graphics: ggplot + aes +
-          geom_step with direction parameter, theme_minimal, element_text customization'
+        comment: Standard ggplot2 grammar correctly applied (ggplot + aes + geom_step
+          + labs + theme); doesn't leverage advanced plotnine patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage of geom_step() — the technique could be easily replicated
+          in other libraries with minor syntax changes
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
