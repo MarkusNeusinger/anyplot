@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-13
+Quality: 92/100 | Updated: 2026-05-13
 """
 
 import os
