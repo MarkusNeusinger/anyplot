@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: diagnostic-regression-panel
 created: '2026-05-13T15:59:08Z'
-updated: '2026-05-13T16:05:27Z'
+updated: '2026-05-13T16:16:48Z'
 generated_by: claude-sonnet
 workflow_run: 25809989144
 issue: 5242
@@ -15,124 +15,101 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnosti
 quality_score: 80
 review:
   strengths:
-  - Correct four-panel 2x2 diagnostic layout matching R plot(lm) output exactly
-  - 'Excellent data quality: deliberately injected influential observations that exercise
-    all four diagnostic panels meaningfully'
-  - 'Correct theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) backgrounds
-    with proper INK/INK_SOFT token usage'
-  - 'Precise spec compliance: LOWESS smoothers in subplots 1 and 3, Q-Q reference
-    line, Cook''s D contour, observation labels for top-3 points'
-  - Smart HTML/CSS grid approach for 2x2 panel -- a genuine advantage of Highcharts
-    being web-based
-  - 'Okabe-Ito palette used correctly: brand green #009E73 for scatter, #D55E00 for
-    LOWESS smoother, #CC79A7 for Cook''s contours'
-  - 'Exact title format: diagnostic-regression-panel - highcharts - anyplot.ai'
+  - All four classic R regression diagnostic panels correctly implemented with right
+    reference lines and LOWESS smoothers
+  - Consistent influential point labeling (top 3 Cook's D) across all four panels
+    enables cross-panel visual tracking
+  - Full theme-adaptive chrome with correct Okabe-Ito palette and background tokens
+    for both light and dark renders
+  - Cook's distance contour lines in subplot 4 provide quantitative influence thresholds
   weaknesses:
-  - 'Scatter markers too small: radius 5 used, library guide requires radius 8 for
-    ~120 points -- dots appear visually tiny in the 4800x2700 render'
-  - 'Font sizes below the pixel-based library minimums: subplot titles 24px (need
-    28px), axis titles 20px (need 22px), tick labels 16px (need 18px)'
-  - Missing Cook's D=1.0 contour in subplot 4 -- spec says contours at 0.5 and 1.0,
-    only 0.5 is implemented
-  - 'CQ-01 violation: Python make_pts() helper function defined -- code should be
-    flat with no functions'
-  - 'Library Mastery: the Python highcharts-core API is largely bypassed in favor
-    of raw JS f-strings; using Python Chart/Series objects would be more idiomatic'
+  - Missing Cook's D=1.0 contour line in subplot 4 — spec requires both 0.5 and 1.0
+    thresholds
+  - Font sizes slightly below pixel-based minimums for 4800x2700 (title 24px vs 28px,
+    axis labels 20px vs 22px)
+  - Subplot 4 y-axis range creates excess vertical whitespace above data cluster
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 -- correct, not pure white.
-      Chrome: Shared title "diagnostic-regression-panel · highcharts · anyplot.ai" in dark ink, clearly readable. Subplot titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage") visible in dark text. Axis labels and tick labels in dark/soft-dark tones. All text readable against the light background.
-      Data: Scatter points in brand green #009E73. LOWESS smoothers in orange #D55E00. Q-Q reference line in soft gray (INK_SOFT). Cook's D=0.5 contours in pink-purple #CC79A7. Zero reference lines as dashed soft lines. Observation labels (5, 22, 30) visible near their points.
-      Legibility verdict: PASS -- all text readable, though font sizes are below the recommended minimums (subplot titles 24px vs 28px recommended, axis labels 20px vs 22px recommended, tick labels 16px vs 18px recommended).
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Header title bold and dark, subplot titles dark, axis labels dark, tick labels muted secondary color — all readable
+      Data: First series #009E73 (green) scatter points across all 4 panels; LOWESS smoother in #D55E00 (orange); Q-Q reference line muted gray; Cook's contours in #CC79A7 (pink-purple)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 -- correct, not pure black.
-      Chrome: Shared title visible in light text against dark background. Subplot titles, axis labels, and tick labels all render in light/soft-light colors (INK_SOFT adapts to B8B7B0). All text readable against the dark background. No dark-on-dark failures observed.
-      Data: Scatter points identical green #009E73 as light render. LOWESS smoother identical orange #D55E00. Cook's D contours identical pink-purple #CC79A7. Data colors are identical between both renders -- only chrome flips. Observation labels (5, 22, 30) visible.
-      Legibility verdict: PASS -- all text readable, same font size concerns as light render.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Header title and subplot titles light-colored, axis labels light, tick labels muted light — all readable; no dark-on-dark failures detected
+      Data: Colors identical to light render — #009E73 green scatter, #D55E00 orange LOWESS, #CC79A7 Cook's contours
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set but below minimums: subplot titles 24px
-          (need 28px), axis labels 20px (need 22px), tick labels 16px (need 18px).
-          Text is readable but not optimally sized.'
+        comment: Sizes explicitly set but slightly below pixel-based minimums
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap -- observation labels (5, 22, 30) placed without collision,
-          tick labels clean.
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Scatter markers use radius 5; library guide recommends radius 8 for
-          ~120 points. Dots are visible but appear small in the 4800x2700 render.
+        comment: Markers visible, slightly small at 120 observations
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides CVD-safe colors. Good contrast in both
-          themes.
+        comment: Okabe-Ito, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2x2 grid fills canvas well. Header is 100px of 2700px (thin). Chart
-          margins are explicit and appropriate.
+        comment: Good utilization; subplot 4 has extra vertical whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All axis labels are descriptive: ''Fitted Values'', ''Residuals'',
-          ''Theoretical Quantiles'', ''Std. Residuals'', ''sqrt|Std. Residuals|'',
-          ''Leverage''.'
+        comment: Scientifically accurate labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for scatter (first series). #D55E00 for LOWESS
-          (OI position 2). #CC79A7 for Cook''s contours (OI position 4). Correct backgrounds
-          #FAF8F1 / #1A1A17. All chrome adapts correctly.'
+        comment: Correct Okabe-Ito, correct backgrounds, theme-adaptive chrome
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above defaults: intentional color differentiation (scatter/smoother/reference/Cook''s
-          contours), HTML/CSS grid layout, explicit theme tokens. Not quite FiveThirtyEight-level.'
+        comment: Well-configured defaults, intentional colors, not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Legend, credits, tooltips all disabled. Y-axis-only grid lines. Explicit
-          margins. Dashed reference lines. Clean appearance.
+        comment: Y-axis-only grid, generous margins, clean composition
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Injected outliers and their labels create clear focal points across
-          all 4 panels. LOWESS smoothers and Cook's D contours draw attention to pattern
-          violations.
+        comment: Consistent influential point labeling across all 4 panels, LOWESS
+          emphasis
     spec_compliance:
       score: 14
       max: 15
@@ -142,30 +119,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2x2 regression diagnostic panel with all four required subplots.
+        comment: All four diagnostic panels correct
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'LOWESS smoothers in subplots 1 and 3, zero reference line, Q-Q reference
-          line, Cook''s D=0.5 contour, 3 observation labels in each panel. Missing:
-          Cook''s D=1.0 contour (spec says ''e.g., at 0.5 and 1.0'').'
+        comment: Missing Cook's D=1.0 contour line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All four subplot axes correctly assigned per spec.
+        comment: All axes correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Shared title 'diagnostic-regression-panel · highcharts · anyplot.ai'
-          exactly correct. Per-panel legends appropriately disabled.
+        comment: Correct title format, legends appropriately disabled
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -173,22 +147,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Data with 3 deliberately injected outliers exercises all four diagnostic
-          plots: non-linearity, non-normality, heteroscedasticity, and high leverage/influence.'
+        comment: All four diagnostic features demonstrated with injected influential
+          observations
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: OLS regression with two predictors, realistic coefficient magnitudes.
-          Standard statistical context, neutral and educational.
+        comment: Plausible OLS regression but no real-world domain context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Fitted values -7 to 9, residuals -4 to 7, standardized residuals
-          mostly within +/-2 with outliers at ~+/-3. Realistic leverage values.
+        comment: Correct statistical values throughout
     code_quality:
       score: 9
       max: 10
@@ -198,35 +170,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Python make_pts() function defined -- violates flat imports->data->plot->save
-          structure. JS helpers (mkScatter, mkLine, mkChart) are inside the HTML template
-          so they are acceptable.
+        comment: Python make_pts() helper breaks strict KISS but is justified
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib,
-          numpy, scipy.stats, selenium, statsmodels.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. JavaScript helpers within the HTML template are
-          appropriate for this web-based approach.
+        comment: Clean, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png
     library_mastery:
       score: 6
       max: 10
@@ -236,18 +204,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: The Python highcharts-core API (Chart, HighchartsOptions, series
-          classes) is bypassed in favor of raw JS f-strings. Correct usage but not
-          using the Python library's recommended patterns.
+        comment: Raw JS Highcharts API via HTML template; correct options structure
+          but bypasses highcharts_core Python library
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML/CSS grid layout for multi-panel is a genuine Highcharts-web
-          advantage. dataLabels for point annotation is idiomatic. plotLines for reference
-          lines is idiomatic.
-  verdict: REJECTED
+        comment: Highcharts plotLines, per-point dataLabels, multi-series scatter+line
+          composition
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -257,12 +223,8 @@ impl_tags:
   - subplots
   - annotations
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - regression
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []
