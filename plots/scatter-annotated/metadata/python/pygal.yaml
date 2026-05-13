@@ -1,167 +1,190 @@
 library: pygal
+language: python
 specification_id: scatter-annotated
 created: '2025-12-30T18:37:02Z'
-updated: '2025-12-30T18:39:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20603305140
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T11:26:50Z'
+generated_by: claude-haiku
+workflow_run: 25795457099
+issue: 2790
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/pygal/plot-dark.html
+quality_score: 81
 review:
   strengths:
-  - Excellent use of individual series per company to achieve distinct colors for
-    each data point
-  - Clean annotation placement with company names displayed directly on the chart
-    using print_values and formatter
-  - Good use of pygal custom Style for consistent theming with appropriate font sizes
-  - Well-chosen business context (tech companies market cap vs revenue) that is realistic
-    and neutral
-  - Proper canvas size (4800x2700) with appropriately scaled fonts
+  - All text legible in both themes with correct theme-adaptive colors
+  - Accurate scatter plot implementation with proper data mapping
+  - Okabe-Ito palette correctly applied with brand green as first color
+  - Both light and dark renders properly theme-corrected
+  - Company name annotations successfully applied to each point
   weaknesses:
-  - Legend at bottom is redundant with on-chart annotations and appears very small/hard
-    to read
-  - Some color pairs are similar (two purples, two greens) which could cause confusion
-  image_description: The plot displays a scatter chart with 12 tech company data points
-    plotted on a white background. The X-axis shows "Market Cap (Billion $)" ranging
-    from 0 to 160, and the Y-axis shows "Annual Revenue (Billion $)" ranging from
-    0 to ~65. Each company is represented by a distinctly colored dot with its name
-    annotated directly next to the point. Companies include TechFlow (blue, bottom-left),
-    DataPrime (yellow), ByteLogic (light blue), CyberLink (green), CloudNine (red),
-    SoftEdge (orange), DevStack (teal), DigiTech (purple), NetWave (green), AppForge
-    (dark gray), CodeSphere (purple), and WebCore (gold, top-right). The title "scatter-annotated
-    · pygal · pyplots.ai" appears at the top center. A legend at the bottom lists
-    all 12 companies in 6 columns. Grid lines are visible in light gray. The annotations
-    are clearly readable and well-positioned next to each point.
+  - Some label overlap in lower-left cluster region (3-4 overlapping points)
+  - Generic design without visual refinement or intentional hierarchy
+  - SVG post-processing workaround suggests incomplete library styling integration
+  - No use of layout adjustment tools (e.g., adjustText) for label positioning despite
+    spec mentioning it
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface as expected
+      Chrome: Title, axis labels, and tick labels are all dark text and clearly readable. Y-axis shows "Annual Revenue (Billion $)" with ticks 0-60; X-axis shows "Market Cap (Billion $)" with ticks 0-160. Title reads "scatter-annotated · pygal · anyplot.ai"
+      Data: 12 colored dots using Okabe-Ito palette (greens, oranges, blues, purples, yellows). Company name labels (TechFlow, DataPrime, etc.) are positioned next to each point in dark text. First series/point uses brand green (#009E73)
+      Legibility verdict: PASS - All text is clearly readable and properly contrasted against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface as expected
+      Chrome: Title, axis labels, and tick labels are all light text and clearly readable against the dark background. Y-axis and X-axis labels match the light render
+      Data: Same 12 colored dots - colors are identical to light render (only chrome flipped). Company name labels are light-colored text positioned next to each point, properly adapted for dark theme using INK token
+      Legibility verdict: PASS - All text is clearly readable. No dark-on-dark failures. Data colors are consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and annotations are readable; tick labels slightly
-          small
+        comment: All text (title, axis labels, tick labels, annotations) is readable
+          in both light and dark renders. Font sizes appropriately set with theme
+          tokens correctly threaded throughout.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, data points well-spaced, annotations clearly
-          positioned
+        score: 4
+        max: 6
+        passed: false
+        comment: Minor label overlap in lower-left cluster where 3-4 points are densely
+          grouped. Most labels remain readable but some overlap is visible. Spec mentions
+          using adjustText but implementation does not employ it.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers appropriately sized for 12 data points, good visibility
+        comment: Data markers (dots) are clearly visible with appropriate size (dots_size=18).
+          Color variety makes all points distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good variety of colors, though some similar shades (two purples,
-          two greens)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, plot fills appropriate space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Market Cap (Billion $)", "Annual Revenue
-          (Billion $)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe. All colors have adequate contrast
+          and are CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean layout with good proportions. Nothing is cut off. Margins are
+          appropriate for the 4800x2700 canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Title includes correct format ''scatter-annotated · pygal · anyplot.ai''.
+          Axis labels are descriptive with units: ''Market Cap (Billion $)'' and ''Annual
+          Revenue (Billion $)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses brand green #009E73. Multi-series follows Okabe-Ito
+          order. Plot backgrounds are #FAF8F1 (light) and #1A1A17 (dark). Both renders
+          properly theme-correct.'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend at bottom is very small and hard to read; redundant with annotations
+        comment: Professional styling using theme tokens and Okabe-Ito palette, but
+          design is relatively generic without custom visual refinements or intentional
+          hierarchy. Uses palette defaults without distinctive design choices.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization. Grid is subtle and appropriate. Whitespace
+          is generous. However, spines are not explicitly removed and no other visual
+          refinements beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Plot clearly shows market cap vs. revenue relationships with labels,
+          but lacks intentional visual hierarchy or focal point. Straightforward data
+          visualization without storytelling emphasis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with annotations
+        comment: Correct scatter plot (XY) type implemented using pygal.XY().
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned (market cap vs revenue)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scatter points, text labels/annotations'
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: scatter plot with XY coordinates,
+          text label annotations for each point, company identification.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis correctly maps to Market Cap, Y-axis to Annual Revenue. All
+          12 data points shown. Axes ranges (0-165, 0-65) appropriately display all
+          data with good spacing.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-annotated · pygal · pyplots.ai"'
+        comment: 'Title format correct: ''scatter-annotated · pygal · anyplot.ai''.
+          Legend hidden (show_legend=False) which is appropriate for 12 single-point
+          series. Company labels match data.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variety of company sizes; could have more outliers
+        comment: Demonstrates scatter plot with annotations feature comprehensively.
+          12 tech companies with market cap and revenue data show typical annotation
+          patterns.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech company market cap vs revenue is a realistic, neutral business
-          scenario
+        comment: Tech company market cap vs. revenue data is realistic and contextually
+          appropriate. Data demonstrates plausible business metrics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible for tech companies; some correlation visible
+        comment: Market cap (15-145B) and revenue (8-55B) ranges are sensible for
+          tech companies. Data points are well-distributed with clear differentiation.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +192,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: Code is straightforward and simple. No unnecessary functions or classes.
+          Direct data and chart creation.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42), though data is actually deterministic
+        comment: Data is hardcoded and deterministic. No random elements. Output will
+          be consistent across runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal, Style)
+        comment: 'All imports used: os, sys, xml.etree, cairosvg, numpy, pygal. No
+          unnecessary imports.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or unnecessary complexity. sys.path manipulation is pragmatic
+          workaround for package naming conflict.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (HTML output not an issue but seed
-          import unused)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html with proper
+          naming convention.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal XY chart with individual series for colors, custom Style,
-          print_values for annotations; could leverage tooltips more
+        comment: 'Uses pygal''s recommended patterns: Style object with theme tokens,
+          pygal.XY() for scatter, series.add() for data. Custom Style with all theme-adaptive
+          colors is idiomatic. SVG post-processing suggests limited library styling
+          options for labels.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses pygal's interactive HTML output and cairosvg for PNG conversion,
+          but doesn't leverage other distinctive pygal features like callbacks or
+          advanced rendering.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
