@@ -13,11 +13,10 @@ A combined visualization that overlays individual data points (strip plot) on to
 
 ## Data
 
-The visualization requires:
-- **Categorical variable**: Groups/categories
-- **Numeric variable**: Values to analyze
-
-Example structure:
+- `category` (categorical) - Groups or categories to compare
+- `value` (numeric) - Numeric values to analyze
+- Size: 50-500+ points (larger samples better reveal distribution shape)
+- Example:
 ```
 Category | Value
 ---------|-------
@@ -25,7 +24,6 @@ A        | 45.2
 A        | 52.1
 B        | 38.7
 B        | 41.3
-...
 ```
 
 ## Notes
