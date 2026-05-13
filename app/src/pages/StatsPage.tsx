@@ -186,7 +186,7 @@ export function StatsPage() {
         <Box sx={{ mt: 1, mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.5 }}>
             <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText }}>
-              unique visitors · last 30 days{visitors !== null && visitorPoints.length > 0 ? ` · ${formatNum(totalVisitors)} total` : ''}
+              unique visitors · last 30 days{visitors !== null && visitorPoints.length > 0 ? ` · ${formatNum(totalVisitors)} daily-uniques sum` : ''}
             </Typography>
             <Link href="https://plausible.io/anyplot.ai" target="_blank" rel="noopener noreferrer"
               onClick={() => trackEvent('external_link', { destination: 'plausible' })}

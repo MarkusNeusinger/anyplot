@@ -89,7 +89,12 @@ class TimelinePoint(BaseModel):
 
 
 class DailyImplPoint(BaseModel):
-    """Implementation updates on a single day (last-30-days timeline)."""
+    """Implementation updates on a single day (last-30-days timeline).
+
+    Distinct from `debug.DailyImplPoint` (which uses `impls_updated`) — kept
+    separate because the public dashboard's consumer is the stats page bundle,
+    not the admin debug view, and `count` is consistent with `TimelinePoint`.
+    """
 
     date: str  # ISO "YYYY-MM-DD"
     count: int
@@ -624,18 +629,15 @@ async def get_related_specs(
 async def _fetch_plausible_visitors() -> VisitorsResponse:
     """Query the Plausible Stats API v2 for unique visitors per day (last 30d).
 
-    Returns an empty series when the API key is not configured or the upstream
-    call fails — the stats page treats this as "no data" rather than erroring.
-    The response is zero-filled so the frontend can render a stable 30-bar
-    chart even on days Plausible has not seen any visitors.
+    Returns an empty `points` list when the API key is not configured or the
+    upstream call fails — the stats page treats `points: []` as "no data" and
+    renders a placeholder instead of an all-zero chart, so we can distinguish
+    real zeros (Plausible returned 0 visitors for a day) from missing data.
+    On a successful fetch the response is zero-filled across all 30 days so
+    the chart has a stable 30-bar width even for days Plausible has no row for.
     """
-    today = datetime.now(timezone.utc).date()
-    zero_filled = [
-        VisitorPoint(date=(today - timedelta(days=offset)).isoformat(), visitors=0) for offset in range(29, -1, -1)
-    ]
-
     if not settings.plausible_api_key:
-        return VisitorsResponse(points=zero_filled)
+        return VisitorsResponse(points=[])
 
     payload = {
         "site_id": settings.plausible_site_id,
@@ -653,8 +655,8 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
             resp.raise_for_status()
             data = resp.json()
     except Exception as e:
-        logger.warning("Plausible visitors fetch failed (returning zero-filled): %s", e)
-        return VisitorsResponse(points=zero_filled)
+        logger.warning("Plausible visitors fetch failed (returning empty series): %s", e)
+        return VisitorsResponse(points=[])
 
     # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [N]}, ...]}
     by_date: dict[str, int] = {}
@@ -664,7 +666,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
         if not dims or not metrics:
             continue
         # The time:day dimension can come back as "YYYY-MM-DD" or an ISO datetime —
-        # normalize to a plain ISO date so the frontend join with zero_filled works.
+        # normalize to a plain ISO date so the join with the zero-filled axis works.
         day_str = str(dims[0])[:10]
         try:
             count = int(metrics[0] or 0)
@@ -672,7 +674,14 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
             count = 0
         by_date[day_str] = count
 
-    points = [VisitorPoint(date=p.date, visitors=by_date.get(p.date, 0)) for p in zero_filled]
+    today = datetime.now(timezone.utc).date()
+    points = [
+        VisitorPoint(
+            date=(today - timedelta(days=offset)).isoformat(),
+            visitors=by_date.get((today - timedelta(days=offset)).isoformat(), 0),
+        )
+        for offset in range(29, -1, -1)
+    ]
     return VisitorsResponse(points=points)
 
 

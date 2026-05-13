@@ -198,8 +198,9 @@ class Settings(BaseSettings):
 
     plausible_api_key: str | None = None
     """Plausible Analytics Stats API key (Bearer token) used by /insights/visitors
-    to fetch unique visitors per day for the public stats page. When unset, the
-    endpoint returns an empty result set so the frontend can degrade gracefully."""
+    to fetch unique visitors per day for the public stats page. When unset (or
+    when the upstream Plausible call fails) the endpoint returns `points: []`,
+    which the frontend renders as a "visitor data unavailable" placeholder."""
 
     plausible_site_id: str = "anyplot.ai"
     """Plausible site_id (the tracked domain) used as the query target."""

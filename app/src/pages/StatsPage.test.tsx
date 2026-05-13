@@ -69,22 +69,48 @@ const mockDashboard = {
   ],
 };
 
-function mockFetchSuccess() {
+const mockVisitors = {
+  points: [
+    { date: '2026-04-14', visitors: 12 },
+    { date: '2026-04-15', visitors: 25 },
+    { date: '2026-04-16', visitors: 7 },
+  ],
+};
+
+/**
+ * StatsPage performs two independent fetches: /insights/dashboard and
+ * /insights/visitors. Route by URL so the visitors response isn't silently
+ * replaced by the dashboard payload (and vice versa).
+ */
+function mockFetchSuccess(visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors) {
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockDashboard),
+    vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/insights/visitors')) {
+        return Promise.resolve({
+          ok: visitorsPayload !== null,
+          json: () => Promise.resolve(visitorsPayload ?? { points: [] }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockDashboard),
+      });
     }),
   );
 }
 
 function mockFetchError() {
+  // /insights/dashboard fails; visitors fetch can succeed-with-empty so the
+  // visitors `useEffect` resolves cleanly and the test asserts on the
+  // dashboard error path only.
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
+    vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/insights/visitors')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
+      }
+      return Promise.resolve({ ok: false, status: 500 });
     }),
   );
 }
@@ -187,6 +213,28 @@ describe('StatsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('timeline')).toBeInTheDocument();
+    });
+  });
+
+  it('renders visitors chart header and "more →" link when Plausible returns data', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      // 12 + 25 + 7 = 44 daily-uniques sum
+      expect(screen.getByText(/unique visitors · last 30 days · 44 daily-uniques sum/)).toBeInTheDocument();
+    });
+    expect(screen.getByText('more →')).toBeInTheDocument();
+  });
+
+  it('renders the "visitor data unavailable" placeholder when Plausible returns empty points', async () => {
+    mockFetchSuccess({ points: [] });
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/visitor data unavailable/)).toBeInTheDocument();
     });
   });
 });

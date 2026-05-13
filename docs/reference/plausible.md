@@ -591,10 +591,12 @@ public stats page.
 - **Caching**: 1h stale-while-revalidate via `get_or_set_cache` so
   traffic spikes stay well under Plausible's 600-req/h rate limit.
 - **Graceful degradation**: When `PLAUSIBLE_API_KEY` is unset or the
-  upstream call fails, the endpoint returns a zero-filled 30-day series
-  and the frontend renders a "visitor data unavailable" placeholder
-  instead of erroring. The dashboard endpoint is unaffected because
-  visitors load on a separate fetch.
+  upstream call fails, the endpoint returns `points: []` (empty list).
+  The frontend distinguishes this from "real zeros" — an empty list
+  triggers the "visitor data unavailable" placeholder, while a non-empty
+  list with low/zero values renders the normal 30-bar chart. The
+  dashboard endpoint is unaffected because visitors load on a separate
+  fetch.
 
 ## Code Locations
 

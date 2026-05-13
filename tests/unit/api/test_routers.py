@@ -1755,7 +1755,8 @@ class TestInsightsRouter:
             assert "annotations" in data["related"][0]["shared_tags"]
 
     def test_visitors_no_api_key(self, client: TestClient) -> None:
-        """Visitors endpoint returns a zero-filled 30-day series when no Plausible key is set."""
+        """Visitors endpoint returns an empty points list when no Plausible key is set,
+        so the frontend can show the "visitor data unavailable" placeholder."""
         with (
             patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
             patch("api.routers.insights.settings") as mock_settings,
@@ -1763,11 +1764,32 @@ class TestInsightsRouter:
             mock_settings.plausible_api_key = None
             response = client.get("/insights/visitors")
             assert response.status_code == 200
-            points = response.json()["points"]
-            assert len(points) == 30
-            assert all(p["visitors"] == 0 for p in points)
-            # Dates should be ascending and end on today (UTC).
-            assert points[0]["date"] < points[-1]["date"]
+            assert response.json()["points"] == []
+
+    def test_visitors_upstream_failure_returns_empty(self, client: TestClient) -> None:
+        """An upstream Plausible failure should degrade to empty points, not zeros."""
+
+        class _RaisingClient:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *_args):
+                return False
+
+            async def post(self, *_args, **_kwargs):
+                raise RuntimeError("plausible down")
+
+        with (
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.settings") as mock_settings,
+            patch("api.routers.insights.httpx.AsyncClient", return_value=_RaisingClient()),
+        ):
+            mock_settings.plausible_api_key = "test-key"
+            mock_settings.plausible_site_id = "anyplot.ai"
+            mock_settings.plausible_api_url = "https://plausible.io/api/v2/query"
+            response = client.get("/insights/visitors")
+            assert response.status_code == 200
+            assert response.json()["points"] == []
 
     def test_visitors_parses_plausible_response(self, client: TestClient) -> None:
         """Visitor counts from Plausible should be merged into the zero-filled 30-day series."""
