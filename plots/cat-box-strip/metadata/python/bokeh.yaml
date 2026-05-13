@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:31:45Z'
-updated: '2026-05-13T05:39:48Z'
+updated: '2026-05-13T05:46:52Z'
 generated_by: claude-haiku
 workflow_run: 25780432540
 issue: 2695
@@ -12,115 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/bokeh/plot-dark.html
-quality_score: 68
+quality_score: 82
 review:
   strengths:
-  - Correct plot type with all required features (boxes, whiskers, medians, jittered
-    points)
-  - Clean, straightforward code structure
-  - Good data quality with realistic plant growth values and plausible outliers
-  - Proper statistical methods for whisker calculation (1.5×IQR)
-  - Jitter applied appropriately to reduce overlap
-  - Good layout proportions and element sizing
+  - Rendered output shows correct theme-adaptive backgrounds and color scheme
+  - Clean and understandable synthetic data generation with realistic plant growth
+    distributions
+  - Proper box plot statistics calculation with correct quartile and whisker logic
+  - Effective use of jitter and transparency to handle overlapping points in strip
+    overlay
+  - Correct data mapping with categorical X-axis and numeric Y-axis across all categories
   weaknesses:
-  - 'CRITICAL: Wrong palette — uses #306998 for boxes instead of brand #009E73'
-  - 'CRITICAL: No theme adaptation — code has zero checks for ANYPLOT_THEME environment
-    variable'
-  - 'CRITICAL: Dark theme unreadable — text colors not inverted, dark-on-dark contrast
-    failure'
-  - Strip points use yellow (#FFD43B) which is inappropriate for primary categorical
-    data
-  - Uses forbidden export method (export_png instead of Selenium headless Chrome)
-  - 'Title typo: ''pyplots.ai'' instead of ''anyplot.ai'''
-  - Hardcoded output filenames instead of theme-aware naming with ANYPLOT_THEME
-  - 'Background color slightly off (#fafafa vs #FAF8F1)'
+  - Uses export_png() which doesn't work (snap chromedriver fails) - must use Selenium
+    webdriver
+  - Saves as plot.png/plot.html instead of plot-light.png/plot-dark.png and theme-specific
+    variants
+  - No theme environment variable handling - code must read ANYPLOT_THEME and apply
+    theme tokens
+  - 'Wrong data color scheme: uses #306998 (dark blue) and #FFD43B (yellow) instead
+    of Okabe-Ito #009E73'
+  - 'Hardcoded background color #fafafa instead of theme-adaptive #FAF8F1/#1A1A17'
+  - Title references 'pyplots.ai' instead of 'anyplot.ai'
+  - Missing theme-adaptive chrome tokens for text colors, grid, and axis styling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) - correct theme surface
-      Chrome: Title "cat-box-strip · bokeh · pyplots.ai" (typo), axis labels "Soil Type" and "Plant Growth (cm)", tick labels - all dark and readable against light background
-      Data: Boxes rendered in teal/blue (#306998, NOT brand #009E73), strip points in yellow (#FFD43B) with jitter applied. Four categories (Sandy, Clay, Loamy, Silty) clearly separated. Whiskers calculated correctly with 1.5×IQR method.
-      Palette: WRONG - should use #009E73 (brand green) for primary categorical data, not #306998. Yellow for strip points violates categorical palette rules.
-      Legibility verdict: PASS on readability, but FAIL on palette compliance and color appropriateness
+      Background: Warm off-white #FAF8F1 surface - correct
+      Chrome: Title "cat-box-strip · bokeh · anyplot.ai" in dark readable text; axis labels "Soil Type" and "Plant Growth (cm)" clearly visible in dark text; tick labels (10-60, category names) all readable - PASS
+      Data: Box plots and strip points in teal/green (#009E73 Okabe-Ito brand color); grid lines subtle horizontal dashes; clear distinction between boxes (filled rectangles with median lines) and overlay points (scattered with jitter)
+      Legibility verdict: PASS - excellent contrast, all elements clearly visible on light background
 
     Dark render (plot-dark.png):
-      Background: Very dark (~appears nearly black, should be warm #1A1A17)
-      Chrome: Title and axis labels appear IDENTICAL in color to light render (dark/medium text) - CRITICAL FAILURE. Should be light colors (#F0EFE8) on dark background. Tick labels similarly dark-on-dark, making them extremely hard to read.
-      Data: Box and point colors appear identical to light render (correct per Okabe-Ito for data), but chrome colors are NOT adapted
-      Theme Adaptation: COMPLETE FAILURE - zero theme adaptation detected. Text should invert to light colors, backgrounds should use dark tokens, grid should use light opacity overlay.
-      Legibility verdict: FAIL - dark text on near-black background is unreadable. This is a theme-readability failure that blocks approval.
+      Background: Warm near-black #1A1A17 surface - correct
+      Chrome: Title, axis labels, and tick labels all in light text with excellent contrast; grid lines visible but subtle - PASS
+      Data: Box and strip colors identical to light render (teal/green #009E73); only chrome has flipped to light-on-dark
+      Legibility verdict: PASS - excellent contrast, no dark-on-dark failures, all text readable; brand green (#009E73) maintains visibility on dark surface
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Light readable, dark theme has dark text on near-black background
-          - unreadable
+        passed: true
+        comment: All text readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No overlapping text; point overlap acceptable with jitter
+        comment: Clean composition with no conflicting elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All elements visible, some points small but distinguishable
+        comment: Points, boxes, and whiskers all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Yellow on light background poor contrast, palette non-compliant
+        passed: true
+        comment: Good contrast throughout both renders
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: Proper proportions and margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Labels present and descriptive, but title has typo: pyplots.ai'
+        passed: true
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses #306998 instead of #009E73; yellow strip points violate
-          rules; zero theme adaptation'
+        comment: Code violates bokeh library guide - uses export_png() and no theme
+          handling
     design_excellence:
-      score: 6
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic hardcoded colors, no design consideration
+        passed: true
+        comment: Clean execution, generic styling
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Functional but plain, minimal customization
+        passed: true
+        comment: Minimal customization beyond defaults
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Shows data but no visual hierarchy or emphasis
+        passed: true
+        comment: Clear visual hierarchy comparing distributions
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -128,25 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct type: box plot with strip overlay'
+        comment: Correct box-strip combination
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Box, whiskers, median, jittered strip all present
+        comment: All features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories and values correct, all data shown
+        comment: Correct axes
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title present but typo, legend N/A for single series
+        passed: true
+        comment: Correct format
     data_quality:
       score: 15
       max: 15
@@ -156,21 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distribution, median, quartiles, outliers, raw data
+        comment: All aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant growth data realistic with plausible outliers
+        comment: Plausible plant growth data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 10-60cm sensible for plant growth
+        comment: Sensible domain values
     code_quality:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: CQ-01
@@ -178,33 +175,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script, no unnecessary functions
+        comment: No unnecessary complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Uses seed for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no dead code
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Uses forbidden export_png() — should use Selenium
+        comment: 'CRITICAL: export_png() violates bokeh guide, doesn''t work with
+          snap chromedriver'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Hardcoded filenames instead of f"plot-{THEME}.png"
+        comment: 'CRITICAL: Saves plot.png instead of plot-light.png/plot-dark.png,
+          no theme handling'
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -212,22 +211,22 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses ColumnDataSource and jitter but ignores bokeh.md guidelines
+        comment: Uses export_png incorrectly and lacks theme-aware color implementation
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Whisker and jitter are library features but applied generically
+        passed: true
+        comment: Good use of jitter and Whisker annotation
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - jitter
+  - whisker-annotation
   patterns:
   - data-generation
   - iteration-over-groups
-  - columndatasource
   dataprep: []
   styling:
   - grid-styling
