@@ -1,0 +1,262 @@
+library: altair
+language: python
+specification_id: diagnostic-regression-panel
+created: '2026-05-13T16:09:06Z'
+updated: '2026-05-13T16:26:33Z'
+generated_by: claude-sonnet
+workflow_run: 25810486190
+issue: 5242
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/altair/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Full spec compliance with all four diagnostic subplots implemented correctly (LOWESS
+    smoothers, Q-Q reference line, Cook's contours with labels)
+  - Proper theme-adaptive tokens throughout — both light and dark renders pass readability
+    checks with no dark-on-dark failures
+  - Clean, statistically rigorous data generation using OLS with real studentized
+    residuals, leverage, and Cook's distance
+  - Altair layer composition used idiomatically (+) for each subplot, detail encoding
+    for Cook's contour branches
+  weaknesses:
+  - 'Font sizes below style-guide targets for pixel-based libraries: sub-panel titles
+    20px vs. 28px, axis labels 18px vs. 22px — reduces readability at full canvas
+    size'
+  - All four subplot views have full 4-sided borders (via configure_view stroke);
+    style guide recommends removing top/right spines for cleaner look
+  - DE-03 storytelling is adequate but not strong — viewer must identify the outlier
+    pattern themselves rather than having it visually emphasized
+  - Marker size=70 with opacity=0.6 is below recommended 100-200/0.7-0.9 range for
+    150-point scatter
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Main title "diagnostic-regression-panel · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. Sub-panel titles ("Residuals vs Fitted", "Normal Q–Q", "Scale–Location", "Residuals vs Leverage") in dark text at 20px — readable but slightly small. Axis labels in INK_SOFT (#4A4A44), tick labels in INK_SOFT at 16px — readable. Grid at 10% opacity, very subtle.
+      Data: Data points in #009E73 (brand green) with 0.6 opacity. LOWESS smoothers in #D55E00 (orange/vermillion). Cook's contour lines in dashed INK_SOFT/INK_MUTED. Outlier labels (obs indices) in INK_MUTED, small but legible. Reference lines (zero/Q-Q) in dashed INK_SOFT.
+      Legibility verdict: PASS — all text readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Main title in light ink (#F0EFE8), clearly visible. Sub-panel titles and axis labels in B8B7B0 (INK_SOFT dark token), readable against dark background. Tick labels in INK_SOFT dark token. Grid subtle at 10% opacity. No dark-on-dark failures observed.
+      Data: Data colors identical to light render — green (#009E73) points and orange (#D55E00) LOWESS lines appear at same hue/saturation as light version. Cook's contours and reference lines in lighter dashed style appropriate for dark background.
+      Legibility verdict: PASS — all text readable against near-black background, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set but below pixel-based targets: main title
+          26px (target 28), sub-panel titles 20px, axis labels 18px (target 22), tick
+          labels 16px (target 18). Text is readable in both renders.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor potential crowding in dense regions but no significant overlap.
+          Outlier labels (dx=8, dy=-8) avoid collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: size=70, opacity=0.6 is below recommended 100-200/0.7-0.9 for 150
+          points, but visually adequate in both renders.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1 and 2 used — CVD-safe, distinguishable by luminance
+          and hue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 2x2 panel with 50px spacing. Effective canvas ~4590x2520px with scale_factor=3.0.
+          Good utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All axes have descriptive labels: ''Fitted Values'', ''Residuals'',
+          ''Theoretical Quantiles'', ''Standardized Residuals'', ''sqrt|Standardized
+          Residuals|'', ''Leverage''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, LOWESS #D55E00 (Okabe-Ito position 2). Background
+          #FAF8F1 light / #1A1A17 dark. INK tokens correct in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default 4: custom Okabe-Ito data/accent colors, theme-adaptive
+          tokens, LOWESS in contrasting accent, Cook''s contours. Professional scientific
+          styling, but not publication-exceptional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid at 10% opacity is subtle. But all 4 subplot borders via configure_view(stroke=INK_SOFT)
+          — style guide recommends L-shaped spines. 50px panel spacing is adequate.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Outlier labels, LOWESS trends, and Cook's contours create visual
+          hierarchy and context. Viewer can follow the diagnostic story but no strong
+          focal emphasis guiding insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 regression diagnostic panel with all four required subplots.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: LOWESS smoothers (plots 1 and 3), zero reference line (plot 1), Q-Q
+          reference line (plot 2), Cook's contours D=0.5 and D=1.0 (plot 4), top-3
+          influential point labels in each subplot.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'All four axes correctly mapped: residuals vs fitted, sample vs theoretical
+          quantiles, sqrt|std_resid| vs fitted, std_resid vs leverage.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Main title 'diagnostic-regression-panel · altair · anyplot.ai' matches
+          required format exactly. No legend needed for single-series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all four diagnostic dimensions with real OLS studentized residuals,
+          leverage, and Cook's distance. Outliers deliberately introduced to exercise
+          diagnostic detection.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Housing price prediction model (sqft, bedrooms, age) — realistic,
+          neutral, business domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Housing prices ~100k-500k range, realistic leverage and Cook's distance
+          values for a 4-predictor OLS model on n=150.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Linear flow: Imports → Data/Model → Transforms
+          → Charts → Compose → Save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys, altair, numpy, pandas, scipy.probplot,
+          statsmodels lowess/OLS/OLSInfluence/add_constant.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized sections. No over-engineering. Cook's contour
+          branching logic is appropriately complex for the requirement.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.concat for panel layout, TitleParams, layer composition with
+          +, configure_* global styling, detail encoding for grouping Cook's branches
+          — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: detail encoding for Cook's contour branch grouping is Altair-specific.
+          Layer composition + alt.concat is Vega-Lite grammar. HTML export. Interactive
+          tooltips with custom format.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - statsmodels
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending

@@ -1,0 +1,247 @@
+library: plotly
+language: python
+specification_id: diagnostic-regression-panel
+created: '2026-05-13T16:04:03Z'
+updated: '2026-05-13T16:24:27Z'
+generated_by: claude-sonnet
+workflow_run: 25810454551
+issue: 5242
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Full spec compliance: all four diagnostic subplots with LOWESS smoothers, Q-Q
+    reference, Cook''s contours at 0.5 and 1.0, and top-3 influential observation
+    labels across all panels'
+  - Excellent Okabe-Ito color discipline with deliberate semantic assignment (green=data,
+    orange=smoother, pink=Cook's contours)
+  - 'Perfect theme-adaptive chrome: both light and dark renders pass legibility checks
+    with correct backgrounds and ink tokens'
+  - Realistic apartment rental regression dataset with injected outliers and high-leverage
+    points creating informative diagnostic patterns
+  - Efficient OLS implementation using np.einsum for hat matrix computation
+  weaknesses:
+  - Marker size=9 is slightly small for a 3600x3600 canvas divided among 4 subplots;
+    increase to size=11-13 for better visibility
+  - Helper function cook_contour() breaks KISS flat structure; inline the two contour
+    calls directly
+  - Design sophistication (DE-01) could be pushed further with more open whitespace,
+    finer tick-mark removal, or a subtle subplot panel separator treatment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "diagnostic-regression-panel · plotly · anyplot.ai" at 28px dark ink, centered. Subplot titles at 20px dark ink (Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage). Axis labels at 22px (Fitted Values, Residuals, Theoretical Quantiles, Standardized Residuals, sqrt|Standardized Residuals|, Leverage). Tick labels at 18px in INK_SOFT. All text readable.
+      Data: Scatter points in brand green #009E73 (Okabe-Ito pos 1) with white edges, opacity=0.70. LOWESS smoothers in vermillion #D55E00 (pos 2). Cook's distance contours in reddish-purple #CC79A7 (pos 4). Top-3 outliers (15, 22, 185) labeled in muted gray text.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title and axis labels render in #F0EFE8 (light primary ink), tick labels in #B8B7B0 (soft ink), grid lines in low-opacity rgba. All text clearly readable against dark surface. No dark-on-dark failures.
+      Data: Colors identical to light render — brand green #009E73 scatter, vermillion #D55E00 LOWESS, reddish-purple #CC79A7 Cook's contours. Only chrome flips between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28px, subplot titles=20px,
+          axis labels=22px, ticks=18px, annotation text=16px. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Text labels positioned middle right with adequate spacing; subplot
+          panels well separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers size=9, opacity=0.70 visible but slightly small for 3600x3600
+          canvas across 4 subplots.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette, high luminance contrast, CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced 2x2 grid with generous margins, canvas well utilized.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All axes have descriptive labels appropriate to diagnostic plots.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BRAND=#009E73 for scatter, #D55E00 LOWESS, #CC79A7 Cook''s contours.
+          Backgrounds #FAF8F1/#1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color hierarchy, white marker edges. Above configured-default
+          level but not yet publication-quality.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle 10% opacity grid, mirror=False (no top/right spines), showline=True,
+          generous inter-panel spacing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Influential outlier labels create narrative thread through all four
+          panels; LOWESS smoothers guide interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: All four required diagnostic subplots in correct 2x2 arrangement.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero reference + LOWESS, Q-Q with reference line, scale-location
+          + LOWESS, Cook's contours at 0.5 and 1.0, top-3 labels in all subplots.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All x/y assignments correct for all four diagnostic plots.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'diagnostic-regression-panel · plotly · anyplot.ai' correct.
+          No legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Injected outliers, high-leverage points, Cook's distance highlighting,
+          Q-Q deviations all present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Apartment rental price linear regression — neutral, real-world scenario
+          with plausible predictors.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coefficients and residual noise realistic for apartment pricing;
+          fitted values $400-$2000 plausible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function cook_contour() defined; breaks flat KISS convention.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All six imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; np.einsum for hat matrix is efficient. No fake UI
+          elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (3600x3600) and plot-{THEME}.html. Correct
+          naming.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: make_subplots, update_xaxes/yaxes with row/col selectors, update_annotations
+          — idiomatic Plotly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: mode='text' for annotation labels, multi-panel subplots, HTML export.
+          Could use more Plotly-distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - statsmodels
+  techniques:
+  - subplots
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
