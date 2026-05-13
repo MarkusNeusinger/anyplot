@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:04:32Z'
-updated: '2026-05-13T17:26:02Z'
+updated: '2026-05-13T17:33:30Z'
 generated_by: claude-haiku
 workflow_run: 25814528929
 issue: 2501
@@ -12,88 +12,87 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/highcharts/plot-dark.html
-quality_score: 77
+quality_score: 82
 review:
   strengths:
-  - Correct Sankey/parallel categories visualization of complex multi-dimensional
-    data
-  - Excellent light render with all text perfectly readable and well-positioned
-  - Accurate Okabe-Ito color palette usage with logical semantic mapping
-  - Well-proportioned canvas utilization with thoughtful margin configuration
-  - Real-world, historically accurate Titanic dataset showing meaningful flow patterns
-  - Proper title format including spec-id and library
+  - Realistic, well-chosen Titanic dataset demonstrates the plot type effectively
+  - Excellent light-theme rendering with readable text and clear data visualization
+  - Clean code structure with proper theme tokens defined (PAGE_BG, INK, INK_SOFT)
+  - Proper use of Okabe-Ito color palette for categorical data
+  - Well-proportioned layout with generous margins and good whitespace
+  - Proper Highcharts sankey implementation with correct nodePadding and linkOpacity
   weaknesses:
-  - 'Dark render has dark-on-dark text - title, subtitle, and dimension labels are
-    nearly invisible against #1A1A17 background'
-  - 'Text color not adapting correctly to dark theme - code sets color: INK which
-    should be #F0EFE8 (light) in dark mode, but renders as dark/muted text'
-  - Node labels have poor contrast in dark render despite text-outline attempt
-  - Missing visual hierarchy or emphasis - plot displays data competently but does
-    not guide viewer's attention to key insights
+  - Dark render has prominent dark/black strokes on sankey ribbon links that are not
+    theme-adapted
+  - Sankey link stroke colors default to dark values (likely black) in dark theme,
+    violating theme-adaptive chrome principle
+  - Series config does not explicitly set link stroke colors, leaving them to Highcharts
+    defaults
+  - Dark and light renders look substantially different - only chrome should flip,
+    data rendering must be identical
+  - Unintended strokes make dark render significantly less polished than light render
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "Titanic Survival · parallel-categories-basic · highcharts · anyplot.ai" and subtitle "Passenger flow from Class → Sex → Age Group → Survival Outcome" are rendered in dark text (INK color), clearly readable. Dimension labels at bottom ("Class", "Sex", "Age Group", "Outcome") are clearly visible in dark text. All text fully readable with good contrast.
-      Data: Four vertical columns show passenger flow through Class → Sex → Age Group → Outcome with colored ribbons. Colors: green (Survived), orange (Died), blue (Class), purple (Male), yellow (Female), sky blue (Age). All Okabe-Ito palette colors are vivid and distinguishable.
-      Legibility verdict: PASS
+      Chrome: Title, subtitle, and dimension labels all clearly visible in dark text (#1A1A17)
+      Data: Ribbons use Okabe-Ito colors (blue, purple, yellow-orange, green, orange) with proportional widths showing passenger flows through Class → Sex → Age Group → Outcome
+      Legibility verdict: PASS - all text readable against light background, no dark-on-light issues
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) - correct
-      Chrome: CRITICAL FAILURE - Title and subtitle are nearly invisible with dark/muted text instead of intended light (#F0EFE8) color. Dimension labels at bottom are barely perceptible. Node labels show poor contrast with dark text on dark background. Dark-on-dark failure.
-      Data: Sankey structure is visible with data colors (green, orange, blue, purple, yellow) consistent with light render - this aspect passed theme requirements. However, all text chrome failed to adapt to dark theme.
-      Legibility verdict: FAIL - Title, subtitle, dimension labels unreadable
-
-    MANDATORY FINDING: Implementation violates mandatory theme-readability requirement. Both renders must pass - dark render text legibility failure triggers automatic REJECT regardless of overall score.
+      Chrome: Title, subtitle, dimension labels readable in light text (#F0EFE8)
+      Data: CRITICAL ISSUE - prominent dark/black strokes on sankey ribbons create heavily outlined appearance not present in light render. Data colors appear identical to light render but are obscured by unwanted dark strokes.
+      Legibility verdict: FAIL - mandatory theme-readability check failure. Dark strokes on near-black background create dark-on-dark contrast issues and break theme-adaptive design principle. Only chrome should flip between themes; data rendering must remain visually consistent.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 6
         max: 8
         passed: false
-        comment: Title, subtitle, and labels unreadable in dark render - dark-on-dark
-          text failure
+        comment: Light render excellent, dark render impaired by heavy strokes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no text collisions
+        comment: No collisions or overlapping text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All nodes and links properly sized and visible
+        comment: All ribbons and markers clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe
+        comment: Okabe-Ito palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization and margins
+        comment: Excellent proportions, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with spec-id format
+        comment: Descriptive title, subtitle, and dimension labels
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Dark theme chrome failure - text should be light but appears dark
+        comment: 'CRITICAL: Dark render has unintended dark strokes violating theme-adaptive
+          design'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -101,19 +100,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Competent configuration, standard defaults
+        comment: Clean sankey layout but dark render strokes damage aesthetic
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Good whitespace and margins, mostly default
+        comment: Good spacing but dark strokes break refinement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Clear flow visualization but minimal visual emphasis
+        comment: Clear story disrupted by dark theme issue
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +122,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey/parallel categories
+        comment: Correct sankey/parallel categories
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 4 dimensions with proportional ribbons
+        comment: Multiple dimensions, proportional ribbons
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Flow mapping correct, all data visible
+        comment: Correct flow mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend appropriately disabled
+        comment: Proper title format
     data_quality:
       score: 15
       max: 15
@@ -151,21 +150,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple dimensions with diverse paths
+        comment: Titanic dataset demonstrates all features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Titanic data, historically plausible
+        comment: Real, historically significant
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually accurate passenger counts
+        comment: Realistic values with good variation
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,7 +172,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow
+        comment: Simple, direct implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -188,42 +187,42 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Theme-color application fails in dark mode
+        passed: true
+        comment: No fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG and HTML output
+        comment: Correct file outputs
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correct Sankey API with proper configuration
+        passed: false
+        comment: Good usage but missing theme-aware link styling
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses some sankey-specific features but fairly standard
+        comment: Uses sankey but doesn't fully customize for themes
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
-  - requests
   - pillow
   techniques:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - publication-ready
