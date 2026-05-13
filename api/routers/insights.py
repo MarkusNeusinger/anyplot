@@ -647,10 +647,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
                 settings.plausible_api_url,
-                headers={
-                    "Authorization": f"Bearer {settings.plausible_api_key}",
-                    "Content-Type": "application/json",
-                },
+                headers={"Authorization": f"Bearer {settings.plausible_api_key}", "Content-Type": "application/json"},
                 json=payload,
             )
             resp.raise_for_status()
