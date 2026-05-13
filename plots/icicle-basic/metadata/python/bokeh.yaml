@@ -1,205 +1,240 @@
 library: bokeh
+language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:06:12Z'
-updated: '2025-12-30T00:09:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585400055
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/bokeh/plot.html
+updated: '2026-05-13T22:47:36Z'
+generated_by: claude-haiku
+workflow_run: 25830567230
+issue: 2497
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/bokeh/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent hierarchical visualization with clear parent-child relationships through
-    spatial adjacency
-  - Smart conditional labeling that hides text for small rectangles and includes values
-    for larger ones
-  - Beautiful color gradient by hierarchy level (Python Blue theme)
-  - Level labels on the left margin provide clear context for each row
-  - Proportional sizing accurately represents values across the hierarchy
-  - Clean white borders and light background enhance readability
+  - Perfect visual quality with explicit font sizing readable in both light and dark
+    modes
+  - Flawless spec compliance with all requirements met
+  - Excellent data quality with realistic, comprehensible file system example
+  - Thoughtful color-by-level design that effectively communicates hierarchy
+  - Correct Okabe-Ito palette compliance with perfect theme-adaptive chrome
+  - Clean code structure with appropriate algorithmic helpers
+  - All styling explicitly configured for 4800×2700 canvas
   weaknesses:
-  - Code uses helper functions (calc_value, assign_level, layout_icicle) instead of
-    KISS linear script style
-  - Could leverage Bokeh HoverTool for interactive tooltips showing node details
-  image_description: 'The plot displays a file system hierarchy as an icicle chart
-    with three horizontal layers stacked top-to-bottom. The top layer shows a single
-    dark blue (#306998) "Root" rectangle spanning the full width. The second layer
-    (Categories) contains three medium blue rectangles: Documents (750 MB), Media
-    (1600 MB), and Code (950 MB), with widths proportional to their values. The third
-    layer (Subcategories) shows 9 lighter blue rectangles representing leaf nodes:
-    Reports (350 MB), Contracts (250 MB), Notes (150 MB), Images (500 MB), Videos
-    (800 MB), Audio (300 MB), Python (400 MB), JavaScript (350 MB), and Data (200
-    MB). Level labels appear on the left margin (Root, Categories, Subcategories).
-    White borders separate rectangles, and the background is light gray (#fafafa).
-    The title "File System Structure · icicle-basic · bokeh · pyplots.ai" is centered
-    at the top.'
+  - Design Excellence could be elevated with more distinctive visual refinement or
+    innovative styling choices
+  - Library Mastery could leverage additional Bokeh-specific features beyond basic
+    idiomatic usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) correctly used as page surface
+      Chrome: Title "icicle-basic · bokeh · anyplot.ai" is dark text (INK #1A1A17) at 28pt, clearly readable. Left-side level labels ("Root", "Categories", "Subcategories") in INK_SOFT (#4A4A44) at 20pt. All elements highly legible.
+      Data: Root rectangle in brand green (#009E73). Categories layer shows three sections (Documents, Media, Code) in vermillion/orange (#D55E00) with values. Subcategories layer displays nine leaf nodes in blue (#0072B2) with individual file names and sizes. Rectangle labels dynamically sized (16pt-24pt) based on available width. All text is dark and clearly visible against the colored rectangles.
+      Legibility verdict: PASS - Perfect contrast throughout, all text explicitly sized and readable at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) correctly used as page surface - NOT pure black
+      Chrome: Title is light text (INK #F0EFE8) at 28pt, clearly readable on dark background. Level labels in INK_SOFT (#B8B7B0) at 20pt, visible and appropriate. No "dark-on-dark" failures - all text uses theme-adaptive colors.
+      Data: The data colors are identical to light render - green (#009E73) for root, orange (#D55E00) for categories, blue (#0072B2) for subcategories. Rectangle borders use light-theme-adapted INK_SOFT. The Okabe-Ito colors maintain their visual distinctiveness on the dark surface.
+      Legibility verdict: PASS - All text is light-colored and readable on dark background, data colors identical to light render, proper theme adaptation throughout.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'Title 36pt, labels 20-24pt, all readable. Minor: smallest nodes
-          have smaller text'
+        comment: All font sizes explicitly set (28pt title, 20pt labels, 16-24pt node
+          labels), perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels clearly separated
+        comment: No overlapping text; labels only shown for rectangles with sufficient
+          width
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangles well-sized, proportional to values
+        comment: Rectangles perfectly sized and colored; markers adapted to density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue gradient is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for icicle charts (axes hidden by design)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: 'Appropriate: no grid/legend needed for this chart type'
+        comment: Okabe-Ito palette is colorblind-safe; good contrast between elements
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of 4800x2700 canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title follows required format: icicle-basic · bokeh · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect: Okabe-Ito colors (#009E73, #D55E00, #0072B2) identical
+          in both renders; backgrounds (#FAF8F1 light, #1A1A17 dark) correct; text
+          colors fully theme-adaptive'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Strong design using color-by-level to communicate hierarchy; intentional
+          use of Okabe-Ito palette, but within configured defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good refinement with hidden axes and no grid; borders are subtle;
+          could explore further polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear hierarchy story told through color and layout; data choice
+          (file system) effectively demonstrates plot type
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct icicle chart with horizontal top-to-bottom orientation
+        comment: Correct icicle chart with proper hierarchical layout
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchy as rows, values as widths
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: hierarchical layout, proportional sizing,
-          color by level, conditional labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: hierarchical data, multiple levels, size-proportional
+          rectangles, labels where space allows'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly represent hierarchy structure; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Level labels accurate and well-placed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct: "File System Structure · icicle-basic · bokeh · pyplots.ai"'
+        comment: Title correctly formatted; legend appropriately absent (colors by
+          level, not series)
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3 hierarchy levels, varying sizes, multiple branches
+        comment: 'Shows all aspects: root, three categories, nine leaf nodes, multiple
+          hierarchy levels, varied sizes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: File system with folders/sizes is realistic and neutral
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in MB are realistic (150-800 MB ranges)
+        comment: Real file system scenario with realistic folder/file structure and
+          size values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: File sizes (150-1600 MB) realistic; proportions plausible; hierarchical
+          relationships correct
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses helper functions instead of linear script style
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data, no random elements
+        comment: Clear linear flow with appropriate helper functions for icicle layout
+          calculation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data; will produce identical output every
+          execution
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, time, pathlib, bokeh, selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, readable, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current APIs used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png correctly, also saves HTML
-    library_features:
-      score: 4
-      max: 5
+        comment: Correctly saves plot-{THEME}.html and plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, rect glyph, Label annotations, export_png,
-          HTML output
+        comment: 'Expert Bokeh patterns: ColumnDataSource, figure, rect glyph, Label
+          objects, theme-adaptive styling'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses idiomatic Bokeh correctly but leverages few library-specific
+          features beyond basic plotting
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - minimal-chrome
