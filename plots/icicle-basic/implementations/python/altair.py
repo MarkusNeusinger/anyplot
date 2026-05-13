@@ -1,15 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 icicle-basic: Basic Icicle Chart
 Library: altair 6.0.0 | Python 3.13.11
 Quality: 91/100 | Created: 2025-12-30
 """
 
-import altair as alt
-import pandas as pd
+import os
+import sys
 
+
+# Prioritize site-packages for module resolution to avoid shadowing
+site_packages = [p for p in sys.path if "site-packages" in p]
+for p in site_packages:
+    if p in sys.path:
+        sys.path.remove(p)
+    sys.path.insert(0, p)
+
+import altair as alt  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for levels
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data: File system hierarchy with sizes (in MB)
-# Structure designed with balanced folder sizes for better visibility
 data = [
     # Root
     {"name": "root", "parent": None, "value": 0},
@@ -45,7 +65,7 @@ data = [
 
 df = pd.DataFrame(data)
 
-# Build tree structure using iterative approach (KISS - no helper functions)
+# Build tree structure
 name_to_idx = {row["name"]: i for i, row in enumerate(data)}
 children = {row["name"]: [] for row in data}
 for row in data:
@@ -64,7 +84,7 @@ while queue:
 for row in data:
     row["level"] = levels[row["name"]]
 
-# Calculate cumulative values bottom-up (leaf to root)
+# Calculate cumulative values bottom-up
 max_level = max(levels.values())
 for level in range(max_level, -1, -1):
     for row in data:
@@ -74,7 +94,7 @@ for level in range(max_level, -1, -1):
             else:
                 row["total_value"] = row["value"]
 
-# Calculate x positions iteratively (horizontal placement based on value)
+# Calculate x positions iteratively
 positions = {"root": (0, 1)}
 queue = ["root"]
 while queue:
@@ -114,10 +134,6 @@ for row in data:
 
 rect_df = pd.DataFrame(rect_data)
 
-# Color scale with stronger contrast between adjacent levels
-# Using distinct hues for better visual separation
-level_colors = ["#1a5276", "#f39c12", "#27ae60", "#8e44ad", "#e74c3c"]
-
 # Create icicle chart with mark_rect
 chart = (
     alt.Chart(rect_df)
@@ -139,7 +155,7 @@ chart = (
         y2=alt.Y2("y_end:Q"),
         color=alt.Color(
             "level:O",
-            scale=alt.Scale(domain=list(range(max_level + 1)), range=level_colors),
+            scale=alt.Scale(domain=list(range(max_level + 1)), range=OKABE_ITO),
             legend=alt.Legend(title="Level", labelFontSize=16, titleFontSize=18, orient="right"),
         ),
         tooltip=["name:N", "value:Q", "parent:N", "level:O"],
@@ -149,7 +165,7 @@ chart = (
 # Add text labels for larger rectangles
 text = (
     alt.Chart(rect_df)
-    .mark_text(fontSize=14, color="white", fontWeight="bold", align="center")
+    .mark_text(fontSize=14, color=INK, fontWeight="bold", align="center")
     .encode(
         x=alt.X("x_mid:Q", scale=alt.Scale(domain=[0, 1])),
         y=alt.Y("y_mid:Q", scale=alt.Scale(domain=[0, max_level + 1])),
@@ -163,14 +179,18 @@ text = (
     )
 )
 
-# Combine chart and text
+# Combine chart and text with theme-adaptive configuration
 icicle = (
     (chart + text)
-    .properties(width=1600, height=900, title="icicle-basic · altair · pyplots.ai")
-    .configure_title(fontSize=28, anchor="middle")
-    .configure_view(strokeWidth=0)
+    .properties(width=1600, height=900, background=PAGE_BG, title="icicle-basic · altair · anyplot.ai")
+    .configure_title(fontSize=28, anchor="middle", color=INK)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG and HTML
-icicle.save("plot.png", scale_factor=3.0)
-icicle.save("plot.html")
+# Save as PNG and HTML with theme-suffixed names
+icicle.save(f"plot-{THEME}.png", scale_factor=3.0)
+icicle.save(f"plot-{THEME}.html")
