@@ -1,169 +1,165 @@
 library: altair
+language: python
 specification_id: facet-grid
 created: '2025-12-30T16:30:41Z'
-updated: '2025-12-30T16:38:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601059244
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/facet-grid/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/facet-grid/altair/plot.html
+updated: '2026-05-13T03:36:57Z'
+generated_by: claude-haiku
+workflow_run: 25776543142
+issue: 2696
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent use of Altair's declarative faceting syntax with .facet() for clean
-    2D grid creation
-  - Well-structured agricultural scenario that naturally demonstrates multi-dimensional
-    data exploration
-  - Clean color palette (blue, yellow, green) that is both aesthetically pleasing
-    and colorblind-safe
-  - Proper use of Altair encoding types (:Q for quantitative, :N for nominal)
-  - Good axis labels with units and appropriate scale configuration
+  - 'Perfect visual quality: explicit font sizing, readable in both themes, no overlaps'
+  - Proper Okabe-Ito palette with correct color ordering; theme-adaptive chrome flips
+    correctly
+  - Idiomatic Altair usage with .facet(), .encode(), and configure methods
+  - Clean code structure and reproducible data generation
+  - Faceted layout effectively demonstrates the plot type
   weaknesses:
-  - Legend is positioned at the edge of the canvas rather than integrated closer to
-    the plot area
-  - Could benefit from interactive selections (Altair's distinctive feature) to highlight
-    crop types across all facets
-  image_description: 'The plot displays a 3×3 faceted grid of scatter plots showing
-    crop yield vs water usage. The grid is organized with Season (Spring, Summer,
-    Fall) as columns and Soil Type (Sandy, Clay, Loam) as rows. Each subplot contains
-    scatter points colored by crop type: blue for Wheat, yellow for Corn, and green
-    for Soybean. The title "facet-grid · altair · pyplots.ai" appears at the top left.
-    Axis labels show "Water Usage (mm)" on x-axis (range ~40-95) and "Yield (tons/ha)"
-    on y-axis (range ~5-13). A color legend for Crop appears on the right side. The
-    grid lines are subtle gray, and the overall layout is clean with good spacing
-    between panels.'
+  - 'Design Excellence is modest: well-configured defaults but lacks custom aesthetic
+    sophistication'
+  - 'Library Mastery could be deeper: doesn''t explore Altair-specific features like
+    interactive selection'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) — correct theme surface
+      Chrome: Title "facet-grid · altair · anyplot.ai" is prominent and dark. Row headers (Sandy, Clay, Loam) and column headers (Spring, Summer, Fall) are well-sized and easily readable. Axes labeled "Water Usage (mm)" and "Yield (tons/ha)" with units. Tick labels clear. Legend frame with elevated background.
+      Data: Three colors (teal #009E73, orange #D55E00, blue #0072B2) in Okabe-Ito order. Grid lines subtle (~10% opacity). Scatter markers clearly visible.
+      Legibility verdict: PASS — all text readable against light background, no legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) — correct dark theme surface
+      Chrome: Title, headers, axis labels, and tick labels all rendered in light tones (INK=#F0EFE8, INK_SOFT=#B8B7B0) and fully readable. Legend frame uses dark elevated background (#242420) with light text.
+      Data: Colors identical to light render—teal, orange, blue in identical positions. Only chrome differs (background and text colors adapt; data stays the same).
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures. Brand green #009E73 visible and clear.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is readable; title, axis labels, and tick marks are appropriately
-          sized, though axis title font could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text anywhere in the visualization
+        comment: All font sizes explicitly set and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized with good opacity (0.7); slightly crowded
-          in some cells but still distinguishable
+        comment: Markers well-adapted to 540-point data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and green palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; the faceted grid fills the area well, though
-          legend is positioned slightly away from the main plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: "Yield (tons/ha)", "Water Usage (mm)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: CVD-safe Okabe-Ito colors with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, balanced margins, legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle; legend is clear but positioned at the edge
+        comment: Both axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme chrome, data colors identical
+          across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, lacks custom design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, explicit sizing, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Faceting creates hierarchy but no explicit visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct faceted grid with scatter plots in each cell
+        comment: Correct faceted grid with scatter plots
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (Water Usage) and Y (Yield) correctly assigned with two categorical
-          faceting variables
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: faceting by row (Soil Type) and column
-          (Season), shared axes, scatter as base plot'
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes and encodings correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Crop legend correctly shows all three categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "facet-grid · altair · pyplots.ai"
+        comment: Title format correct, legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across soil types (Loam yields higher), seasons (Summer
-          slightly higher), and crops; demonstrates the multi-dimensional exploration
-          purpose well
+        comment: Shows variation across all dimensions
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Crop yield vs water usage across soil types and seasons is a realistic
-          agricultural scenario
+        comment: Realistic agricultural scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Yield values (5-13 tons/ha) and water usage (40-95 mm) are plausible,
-          though water usage range is on the lower end for seasonal measurements
+        comment: Plausible values for domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +167,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Linear structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (altair, numpy, pandas)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current Altair API used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as both plot.png and plot.html, which is fine, but minor deduction
-          for not following the exact single-output convention
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file output format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of Altair's declarative faceting with .facet(), Column/Row
-          headers, encoding types (:Q, :N), and tooltips. Could leverage more Altair-specific
-          features like interactive selections or conditional encoding
+        comment: Uses .facet(), .encode(), configure methods appropriately
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses faceting but could explore selections or cross-filtering
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
