@@ -1,7 +1,7 @@
 """ anyplot.ai
 icicle-basic: Basic Icicle Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 39/100 | Updated: 2026-05-13
+Quality: 80/100 | Updated: 2026-05-13
 """
 
 import matplotlib.patches as patches
