@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 errorbar-asymmetric: Asymmetric Error Bars Plot
-Library: letsplot | Python 3.13
-Quality: 93/100 | Updated: 2025-05-13
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-13
 """
 # ruff: noqa: F405
 
