@@ -1,7 +1,7 @@
-"""anyplot.ai
-Website Traffic · heatmap-polar · letsplot · anyplot.ai
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-05-13
+""" anyplot.ai
+heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 84/100 | Created: 2026-05-13
 """
 
 import os
