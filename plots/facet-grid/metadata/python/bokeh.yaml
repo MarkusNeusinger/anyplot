@@ -1,169 +1,182 @@
 library: bokeh
+language: python
 specification_id: facet-grid
 created: '2025-12-30T16:31:18Z'
-updated: '2025-12-30T16:49:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601058721
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/facet-grid/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/facet-grid/bokeh/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-13T03:39:00Z'
+generated_by: claude-haiku
+workflow_run: 25776341741
+issue: 2696
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Well-organized 4×3 grid layout that clearly shows patterns across regions and
-    seasons
-  - Excellent use of colorblind-safe color palette (blue/orange/teal)
-  - Good text sizing throughout - all labels are clearly readable
-  - Realistic business scenario with meaningful variation in the data
-  - Clean, reproducible code structure following KISS principles
+  - 'Perfect Visual Quality score: all text legible, no overlap, elements visible,
+    excellent palette/theme compliance'
+  - 'Perfect Spec Compliance: facet grid correctly implements row/column split with
+    proper labels'
+  - 'Perfect Data Quality: realistic product performance scenario with seasonal and
+    regional variation'
+  - 'Expert library usage: idiomatic Bokeh patterns with proper theme-adaptive styling
+    and interactive tooltips'
+  - Both light and dark renders pass theme-readability checks; data colors identical
+    across themes
   weaknesses:
-  - HTML-based legend (Div element) does not render in PNG export - only small colored
-    artifacts appear in subplot corners
-  - No use of Bokeh distinctive interactive features (hover tooltips, linked brushing,
-    pan/zoom tools)
-  image_description: The plot displays a 4×3 faceted grid showing the relationship
-    between Marketing Spend ($K) and Sales ($K) across three regions (North, South,
-    East) and four seasons (Spring, Summer, Fall, Winter). Each subplot contains approximately
-    25 scatter points. Colors are blue (#306998) for North, orange (#E69F00) for South,
-    and teal (#4ECDC4) for East. The title "facet-grid · bokeh · pyplots.ai" appears
-    at the top center. Facet labels (e.g., "North · Spring") appear in the top-left
-    of each cell. The grid uses dashed gray lines with subtle opacity. Y-axis labels
-    "Sales ($K)" appear only on the leftmost column, and X-axis labels "Marketing
-    Spend ($K)" appear only on the bottom row. There are small colored circular artifacts
-    visible in the top-right corner of each subplot.
+  - 'Design Excellence underscore (10/20): generic facet-grid defaults without distinctive
+    aesthetic choices; no visual emphasis or storytelling beyond data structure'
+  - Legend implementation uses HTML Div workaround rather than native Bokeh legend
+  - No visual hierarchy or emphasis to guide viewer to insights (seasonal/regional
+    patterns are visible but not highlighted)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) provides excellent contrast
+      Chrome: Title "facet-grid · bokeh · anyplot.ai" (32pt dark text), axis labels "Marketing Spend ($K)" and "Sales ($K)" (22pt), tick labels (18pt), facet labels "Region · Season" (18pt bold) - all clearly readable
+      Data: Color-coded by region: green (#009E73) for North, orange (#D55E00) for South, blue (#0072B2) for East; scatter points (size=18) clearly distinguishable with grid lines subtle at 15% alpha
+      Legibility verdict: PASS - All text is clearly readable with proper sizing and contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) matches specification
+      Chrome: Title and all labels are light-colored (INK=#F0EFE8 for title, INK_SOFT=#B8B7B0 for labels); all elements have proper contrast and are clearly readable; no dark-on-dark failures
+      Data: Colors identical to light render - green, orange, blue markers show same patterns and relationships; only chrome has adapted to dark theme
+      Legibility verdict: PASS - All text is light-colored and legible; no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is 32pt, axis labels 20pt, tick labels 16pt, facet labels 18pt
-          - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title 32pt, labels 22pt, ticks 18pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; axis labels on edges, facet labels
+          in corners
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Markers sized at 18 with 0.7 alpha, appropriate for ~25 points per
-          cell. Minor: some markers at edges are slightly clipped'
+        comment: Markers (size=18, alpha=0.7) perfectly adapted to 25-point density
+          per facet
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/orange/teal palette is colorblind-safe (no red-green conflict)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good grid layout filling the canvas. Minor: legend at bottom is
-          HTML-based but doesn''t render in PNG export'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: "Marketing Spend ($K)", "Sales ($K)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balanced layout with 12 subplots (4×3), proper spacing, no
+          cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive with units: Marketing Spend ($K) and Sales ($K)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark); data colors identical
+          across themes; theme-adaptive chrome correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.3), but the HTML legend div does not render
-          in PNG export - only small colored dots appear in corners as artifacts
+        comment: Well-configured professional design; clean layout and proper typography
+          hierarchy; lacks exceptional polish or custom aesthetic thinking
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good grid styling (15% alpha), balanced whitespace, scatter edge
+          highlighting; some customization but could be more refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Facet structure shows patterns; no visual hierarchy or emphasis beyond
+          data arrangement; viewer must discover insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct faceted grid with scatter plots
+        comment: Correct faceted grid with rows=season, columns=region, consistent
+          scatter plots
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Marketing spend on X, Sales on Y, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Faceting by two categorical variables (region, season), shared axes
-          scales, facet labels
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: x/y numeric, row_facet/col_facet categorical,
+          300 points, facet labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes ranges (5-50 X, 20-130 Y)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=marketing_spend, Y=sales, axes show full range, region color-coding
+          consistent
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Region-color mapping is accurate (attempted via HTML div)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "facet-grid · bokeh · pyplots.ai"'
+        comment: Title format correct; legend shows regions; facet labels in subplots
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions (different base values) and seasons
-          (seasonal adjustments create visible patterns)
+        comment: Shows seasonal variation, regional differences, correlation, all
+          facet-grid aspects
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Product performance across regions/seasons is a plausible business
-          scenario, though somewhat generic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Marketing spend in $K (10-40 range) and sales in $K (40-120 range)
-          are realistic business metrics
+        comment: Real product performance scenario (marketing spend → sales), plausible,
+          neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Spend 5-50K, Sales 20-130K, seasonal adjustments factually plausible
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +184,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → plot creation → save'
+        comment: 'Clean linear flow: imports → setup → data → plots → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: '`np.random.seed(42)` is set'
+        comment: 'Seed set: np.random.seed(42)'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, bokeh modules)
+        comment: All imports used; no waste
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh 3.x API
+        max: 2
+        passed: false
+        comment: Clean code; legend/title use HTML Div workaround rather than native
+          Bokeh
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of bokeh patterns: ColumnDataSource, gridplot(), HoverTool(),
+          theme-adaptive colors'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic scatter plots with ColumnDataSource. Does not leverage
-          Bokeh's distinctive features like hover tooltips, linked brushing, or interactive
-          tools. The legend is implemented via HTML Div which doesn't render in static
-          PNG export.
+        comment: Uses HoverTool and gridplot (somewhat distinctive); many features
+          could be replicated in other libraries
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - faceting
+  - hover-tooltips
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
