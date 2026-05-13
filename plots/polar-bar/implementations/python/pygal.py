@@ -1,43 +1,52 @@
-""" pyplots.ai
+"""pyplots.ai
 polar-bar: Polar Bar Chart (Wind Rose)
 Library: pygal 3.1.0 | Python 3.13.11
-Quality: 88/100 | Created: 2025-12-30
+Quality: 88 | Created: 2025-12-30
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
 
-# Data - Wind direction frequency (%) per category per direction
-# Showing dominant westerly/northwesterly winds pattern (realistic meteorological data)
+# Theme-adaptive colors (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
+
+# Wind direction and frequency data
 directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
-# Wind speed categories with frequency percentages
+# Wind speed categories (realistic meteorological data showing westerly dominance)
 calm_winds = [8, 5, 4, 3, 5, 7, 12, 11]  # 0-5 km/h
 light_winds = [6, 4, 3, 2, 4, 7, 10, 9]  # 5-15 km/h
 moderate_winds = [3, 2, 2, 1, 2, 4, 7, 6]  # 15-25 km/h
 strong_winds = [2, 1, 1, 1, 1, 2, 4, 3]  # 25+ km/h
 
-# Custom style for landscape canvas (4800x2700)
+# Create custom style with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#999999",
-    colors=("#A6CEE3", "#5B9BD5", "#306998", "#2E5A88"),  # Light to dark blue gradient
-    title_font_size=72,
-    label_font_size=52,
-    major_label_font_size=48,
-    legend_font_size=44,
-    value_font_size=40,
-    stroke_width=2,
-    opacity=0.9,
-    opacity_hover=0.95,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
+    opacity=0.85,
 )
 
-# Create radar chart - pygal's polar visualization for wind rose
-# Using stroke_fill mode for more discrete bar-like appearance
+# Create radar chart (pygal's polar visualization for wind rose)
 chart = pygal.Radar(
     width=4800,
     height=2700,
@@ -48,12 +57,11 @@ chart = pygal.Radar(
     legend_at_bottom_columns=4,
     fill=True,
     stroke=True,
-    show_dots=True,
-    dots_size=8,
+    show_dots=False,
     range=(0, 15),
-    inner_radius=0.1,
-    margin=120,
-    spacing=60,
+    inner_radius=0.12,
+    margin=100,
+    spacing=50,
 )
 
 # X-axis labels (compass directions)
@@ -65,6 +73,7 @@ chart.add("Light (5-15 km/h)", light_winds)
 chart.add("Moderate (15-25 km/h)", moderate_winds)
 chart.add("Strong (25+ km/h)", strong_winds)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save outputs
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
