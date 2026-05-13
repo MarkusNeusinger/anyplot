@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:50Z'
-updated: '2026-05-13T09:19:30Z'
+updated: '2026-05-13T09:25:47Z'
 generated_by: claude-haiku
 workflow_run: 25789799931
 issue: 2782
@@ -12,51 +12,234 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 67
 review:
   strengths:
-  - Excellent data design with four complementary financial views that tell a cohesive
-    story
-  - All text readable in both light and dark renders
-  - Well-constructed 2×2 grid layout with clear subplot organization
-  - Reproducible data generation with proper seeding
-  - Realistic and neutral financial example domain
+  - 'Excellent layout balance: 2x2 grid with perfect spacing, subplot titles clear,
+    no wasted canvas'
+  - 'Diverse, realistic data story: financial dashboard combining price, volume, distribution,
+    and relationships'
+  - 'Strong legibility: all text sizes explicit and readable in both light and dark
+    themes'
+  - 'Comprehensive feature coverage: demonstrates line, bar, histogram, and scatter
+    in single visualization'
+  - 'Clean code structure: KISS principle, good data generation, proper seeding'
   weaknesses:
-  - 'Uses legacy Python blue (#306998) and custom red (#D94A4A) instead of Okabe-Ito
-    palette (should be #009E73 and #D55E00)'
-  - 'Missing theme adaptation: does not read ANYPLOT_THEME environment variable for
-    background, text, and grid colors'
-  - Does not save as plot-{THEME}.png format (saves as plot.png instead)
-  - Scatter plot uses RdYlGn colormap instead of recommended BrBG for diverging data
-  - All four spines visible; best practice is to remove top and right spines
-  - 'Grid styling: dashed lines at 30% opacity are too bold; should be solid at 10-15%
-    opacity'
-  - Title font size 18pt is below guide recommendation of 24pt
+  - 'Wrong palette throughout: uses Python Blue (#306998) + Python Yellow (#FFD43B)
+    + custom Red (#D94A4A) instead of Okabe-Ito — first series must be #009E73'
+  - 'Missing theme-adaptive code: implementation should read os.getenv(''ANYPLOT_THEME'')
+    and apply theme tokens to all chrome elements (backgrounds, text, grid, spines,
+    legends)'
+  - 'Output file naming wrong: saves ''plot.png'' instead of ''plot-{THEME}.png'',
+    breaking pipeline''s light/dark variant generation'
+  - 'Font sizing below guideline: uses 18/16/14pt instead of recommended 24/20/16pt'
+  - 'Minimal design refinement: no spine removal, no custom palette sophistication,
+    generic grid styling'
+  - 'Title text mismatch: code shows ''pyplots.ai'' but should be ''anyplot.ai'''
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface approximately #FAF8F1, consistent with style guide
-      Chrome: Title "subplot-grid · matplotlib · anyplot.ai" and all axis labels (Trading Day, Price ($), Volume (thousands), Daily Return (%)) rendered in dark text with good contrast. Tick labels clearly visible. All text is explicitly sized (title=18pt, labels=16pt, ticks=14pt).
-      Data: Four subplots show cyan/teal price line with yellow dashed MA line, blue/orange bar chart for volume by return direction, green histogram for return distribution with yellow and red reference lines, and multicolor scatter (using RdYlGn) for volume vs return magnitude. All data colors clearly distinguishable.
-      Legibility verdict: PASS - all text and data elements are readable at full resolution
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "subplot-grid · matplotlib · anyplot.ai" in dark text, axis labels "Trading Day" and "Price ($)" clearly visible and readable, tick labels (0-100 on x-axis, 80-110 on y-axis price) all legible, grid lines subtle and appropriate
+      Data: Four subplots arranged in 2x2: (1) Line chart showing price in Python Blue (#306998) with 20-day MA in Python Yellow (#FFD43B) - WRONG COLORS, should be Okabe-Ito. (2) Volume bars colored blue (positive returns) and red (negative returns). (3) Histogram of returns in Python Blue with reference lines. (4) Scatter plot with colorbar in RdYlGn colormap.
+      Legibility verdict: PASS - All text is clearly readable in light theme. However, color palette is incorrect regardless of readability.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface approximately #1A1A17, consistent with style guide
-      Chrome: Title and axis labels rendered in light color with good visibility against dark background. Tick labels clearly visible. No dark-on-dark failures detected.
-      Data: All data colors are identical to light render - cyan price line, yellow MA line, orange/blue bars, green histogram, multicolor scatter. The color consistency between renders confirms data elements maintain identity across themes.
-      Legibility verdict: PASS - all text is readable in dark theme, no legibility failures detected
-
-    Both renders demonstrate proper theme adaptation visually (background and text colors flip appropriately), though the implementation code does not explicitly handle ANYPLOT_THEME environment variable, relying instead on matplotlib defaults.
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, and tick labels all properly converted to light colors and clearly readable. Legend boxes show dark background (#242420) with light text - proper theme adaptation visible.
+      Data: Identical data colors to light render (Python Blue and Yellow remain the same), confirming theme-adaptive chrome (only chrome flips, data stays constant). Scatter colorbar properly adapted to dark theme.
+      Legibility verdict: PASS - All text is clearly readable in dark theme with proper contrast. Theme adaptation is present in renders though missing from submitted code. Data colors are identical between themes as required.
   verdict: REJECTED
+  criteria_checklist:
+    visual_quality:
+      score: 20
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (18pt, 16pt, 14pt), all readable but slightly
+          below guideline (24/20/16)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers, lines, bars optimally sized for data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Contrast adequate but palette violation makes CVD assessment invalid
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions, well-balanced 2x2 grid with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (Trading Day, Price ($), Volume (thousands),
+          Absolute Return (%))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL FAILURE: Uses Python Blue (#306998) and Python Yellow (#FFD43B)
+          instead of Okabe-Ito (#009E73). First series must be brand green. Custom
+          red (#D94A4A) not in palette order.'
+    design_excellence:
+      score: 6
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic default styling with hardcoded Python colors instead of intentional
+          palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; grid present but not refined, no spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis to guide insight
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 subplot grid with 4 distinct plot types
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements: configurable grid, different plot types,
+          shared axes, clear spacing'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Code shows 'pyplots.ai' but should be 'anyplot.ai'. Legends otherwise
+          correct.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: price trends, volume distribution, returns histogram
+          with statistics, correlation relationship'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic financial data, plausible and neutral (stock market analysis)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually sensible trading data (100-110 price range, percentage
+          returns, lognormal volumes)
+    code_quality:
+      score: 5
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only matplotlib and numpy, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Saves 'plot.png' instead of 'plot-{THEME}.png'. Missing os.getenv('ANYPLOT_THEME')
+          and theme-adaptive code entirely.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Axes-based API usage. Missing theme-adaptive pattern from matplotlib.md
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses colorbar and grid. Fairly standard; no distinctive matplotlib-specific
+          techniques beyond basic API
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - colorbar
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - cumulative-sum
-  - rolling-window
   styling:
   - grid-styling
+  - alpha-blending
