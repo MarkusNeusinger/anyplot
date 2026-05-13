@@ -1,0 +1,239 @@
+library: pygal
+language: python
+specification_id: heatmap-polar
+created: '2026-05-13T19:48:57Z'
+updated: '2026-05-13T20:12:11Z'
+generated_by: claude-sonnet
+workflow_run: 25822030342
+issue: 5244
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/pygal/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - Correct viridis colormap for continuous data in both themes with per-cell color
+    injection
+  - Theme-adaptive chrome (background, text, colorbar labels) correctly switches via
+    ANYPLOT_THEME tokens
+  - Custom SVG post-processing cleanly adds month labels and colorbar that pygal cannot
+    natively produce
+  - Realistic, neutral energy consumption data with clear seasonal and year-over-year
+    patterns
+  - Correct title format and output file naming
+  weaknesses:
+  - No explicit thin borders/gridlines between the radial (year) rings — spec recommends
+    them for readability
+  - Dec/Jan labels at 12 o'clock are slightly crowded; a small outward offset or font-size
+    reduction on those two labels would help
+  - Data storytelling could be strengthened — e.g., a brief text annotation or subtle
+    emphasis on the peak month
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "heatmap-polar · pygal · anyplot.ai" dark on light — clearly readable. Subtitle in INK_SOFT readable. Month labels around perimeter (42px, dark) all readable. Colorbar labels (kWh, 57/79/101) in INK_SOFT readable. Year legend at bottom readable.
+      Data: Viridis colormap applied per-cell. 5 concentric rings (years 2019-2023 inner to outer), 12 angular sectors (months). Winter months (Jan, Feb, Nov, Dec) show yellow-green (high kWh ~90-101), summer months (May-Jul) show dark purple/teal (low kWh ~57-65). First series color is determined by viridis mapping, not Okabe-Ito (correct for continuous data).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct theme surface, not pure black
+      Chrome: Title and subtitle rendered in light (#F0EFE8 / INK) text — clearly readable against dark background. Month labels are light-colored and readable. Colorbar labels light and readable. Year legend text light and readable. No dark-on-dark failures found.
+      Data: Viridis colormap colors are identical to the light render — only background and text chrome has flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding between Dec/Jan labels at 12 o'clock position
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cells clearly visible; inner rings slightly smaller but legible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout; circular chart leaves corner whitespace on landscape
+          canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format, subtitle and colorbar include units (kWh)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; backgrounds #FAF8F1/#1A1A17; theme-adaptive
+          chrome correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above defaults; deliberate viridis per-cell, clean colorbar design,
+          polar structure suits cyclic data
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Custom SVG post-processing adds polish; clean typography; more than
+          minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Seasonal energy pattern visible via color variation; cyclic layout
+          reinforces cyclic narrative
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap with angular months and radial years
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Missing explicit thin gridlines/borders between radial year rings
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angular=months, radial=years, color=kWh value
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend shows year labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows seasonal variation, year-over-year trend, and inter-annual
+          variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly household energy consumption (kWh) — real, neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 57-92 kWh/month with plausible seasonal pattern; credible household
+          electricity figures
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: _plot() wrapper deviates from flat KISS but is justified by filename
+          collision (pygal.py)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; SVG post-processing necessary; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Style object, render() bytes, per-cell color dict syntax; Pie
+          chart used as workaround not native heatmap
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-cell color dict with label metadata, HTML export, Style theming
+          — pygal-specific features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - matplotlib
+  - cairosvg
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
