@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:03:13Z'
-updated: '2026-05-13T22:42:33Z'
+updated: '2026-05-13T22:48:28Z'
 generated_by: claude-haiku
 workflow_run: 25830410893
 issue: 2497
@@ -12,120 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 65
+quality_score: 74
 review:
   strengths:
-  - Correct icicle chart implementation with proper hierarchical visualization
-  - Realistic and plausible file system data with appropriate scale
-  - Smart label truncation logic handles varying node sizes gracefully
-  - Viridis colormap is perceptually uniform and colorblind-safe
-  - Theme-adaptive colors properly implemented in code (PAGE_BG, INK, INK_SOFT, ELEVATED_BG)
-  - Clean procedural structure with no unnecessary abstraction
-  - All hierarchy levels clearly distinguishable through color progression
-  - Data values and labels present for all significant nodes
+  - Correct icicle chart implementation with clear hierarchical visualization
+  - Excellent light render with perfect text readability across all elements
+  - Smart label truncation for small rectangles
+  - Realistic and relatable file system data example
+  - Clean, deterministic code structure
+  - Proper title and legend formatting
+  - Good data quality with realistic scales and values
   weaknesses:
-  - 'CRITICAL: Title is unreadable in light render - dark text (#1A1A17) placed over
-    dark purple Root rectangle. Must be moved to margin space or have background protection.'
-  - Title placement creates asymmetric legibility between light and dark renders (unreadable
-    light, barely adequate dark)
-  - Generic viridis styling lacks design sophistication and custom refinement
-  - No distinctive seaborn API usage - implementation is primarily matplotlib/pandas-focused
-  - Label truncation logic is somewhat complex and could be simplified
-  - No visual hierarchy or emphasis techniques applied to guide viewer through data
-  - Legend styling is functional but generic; could benefit from custom refinement
-  - Design lacks polish and intentional aesthetic choices beyond functional requirements
+  - Text color contrast in dark render for yellow (Level 3) rectangles - light text
+    on bright yellow creates unreadable light-on-light situation
+  - Text color logic uses theme-dependent INK_SOFT instead of choosing text color
+    based on actual data color luminance
+  - Generic viridis colormap usage - no design sophistication beyond defaults
   image_description: |-
     Light render (plot-light.png):
-      Background: Appears to be light/off-white, approximately #FAF8F1, visible in margins and gaps between rectangles
-      Chrome: Title "icicle-basic · seaborn · anyplot.ai" is placed over the purple Root rectangle in dark text (#1A1A17), resulting in POOR CONTRAST and reduced readability. Axis labels and tick positions are not used (minimal chrome by design). Legend in bottom-right with dark text labels on light background (readable).
-      Data: Viridis colormap applied per hierarchy level (purple/Level 0, teal/Level 1, green/Level 2, yellow/Level 3). Rectangle edges in INK_SOFT (#4A4A44) are subtle and appropriate. Data values and node names displayed within rectangles with adaptive text color for contrast.
-      Legibility verdict: FAIL - Title is unreadable due to dark-text-on-dark-rectangle placement. This violates VQ-01 (Text Legibility).
+      Background: Warm off-white (#FAF8F1) - correct and matches spec
+      Chrome: Title "icicle-basic · seaborn · anyplot.ai" is dark and readable; all axis-adjacent text (rectangle labels) are appropriately colored with dark/bold text
+      Data: Viridis color progression (purple->teal->green->yellow) clearly shows 4 hierarchy levels; rectangle sizes proportionally represent file values; text in all boxes is dark and highly readable against all background colors
+      Legibility verdict: PASS - All text is clearly readable in both small and large rectangles
 
     Dark render (plot-dark.png):
-      Background: Dark surface, approximately #1A1A17, visible in margins and gaps
-      Chrome: Title is placed over the same purple Root rectangle but in light text (#F0EFE8), making it MORE READABLE than the light render. However, it still violates the design principle of placing titles in margin space. Legend in bottom-right with light text on dark legend-box background (readable, appropriate styling).
-      Data: Identical viridis colors to light render (correct - only chrome should flip between themes). Rectangle edges visible in light color. Data labels are readable with adaptive coloring.
-      Legibility verdict: PARTIAL - Title is readable in dark render due to light-on-dark contrast, but the same placement issue exists. Data elements are clearly visible. The asymmetry in title legibility between light and dark renders represents a design failure.
+      Background: Warm near-black (#1A1A17) - correct and matches spec
+      Chrome: Title text is light and readable on dark background - PASS; rectangle edge colors match light render - PASS
+      Data: Viridis colors are identical to light render (only chrome flipped to light theme) - CORRECT; HOWEVER, text in yellow Level 3 rectangles appears to use light-colored text (INK_SOFT light theme value #B8B7B0) on bright yellow background - creates light-on-light contrast
+      Legibility verdict: FAIL - Yellow rectangle text is NOT readable due to light-on-light contrast problem. Text color selection failed to account for bright data colors; should use dark text for bright viridis colors regardless of theme
   criteria_checklist:
     visual_quality:
-      score: 18
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 0
         max: 8
         passed: false
-        comment: Title unreadable in light render (dark text on dark purple Root rectangle).
-          Readable in dark render due to light-on-dark contrast. Critical readability
-          failure.
+        comment: Text in yellow rectangles of dark render is unreadable (light on
+          bright yellow)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Smart label truncation prevents most overlaps; minimal text collision
-          issues.
+        comment: No overlapping text, all fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All hierarchy rectangles clearly visible; smallest nodes truncated
-          appropriately.
+        comment: All rectangles visible, sizes adapted to hierarchy
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and CVD-safe.
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions overall; title placement over data element is problematic.
+        comment: Excellent balance and canvas utilization (50-80% used)
       - id: VQ-06
         name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format, labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Title present but placed over data element with poor contrast in
-          light render; should be in margin space.
-      - id: VQ-07
-        name: Palette Compliance
-        score: 1
-        max: 2
-        passed: false
-        comment: Viridis appropriate for hierarchy levels; backgrounds appear correct
-          but title placement undermines theming system.
+        comment: Dark render chrome is wrong-theme (light text on light background)
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Functional design but generic viridis usage without custom refinement
-          or distinctive styling.
+        comment: Well-configured defaults but no exceptional design
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Minimal refinement; lacks polished styling touches. No custom color
-          palette or visual hierarchy.
+        comment: 'Good: axes off, clean spacing, room for improvement'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Hierarchy is visually clear through color levels and spatial layout;
-          title placement disrupts narrative flow.
+        passed: false
+        comment: Good visual hierarchy through color and sizing
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,52 +119,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle chart implementation with proper hierarchy visualization.
+        comment: Correct icicle chart with proper hierarchical structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: hierarchical structure, proportional
-          sizing, labels, values.'
+        comment: 'All features present: hierarchy, proportional sizing, labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hierarchy mapping correct; rectangle widths proportional to values;
-          layout properly ordered.
+        comment: Hierarchy correctly represented, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title present but fails legibility test in light render; legend present
-          and readable.
+        passed: true
+        comment: Title format correct, legend clearly labeled
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all icicle chart aspects; realistic file system hierarchy with
-          reasonable nesting depth.
+        comment: Shows all hierarchy levels and various data sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: File system data is plausible and politically neutral; good use case
-          for icicle visualization.
+        comment: Realistic file system example, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: File sizes (50-1000 MB) are sensible and realistic for the domain.
+        comment: File sizes plausible and well-proportioned
     code_quality:
       score: 9
       max: 10
@@ -188,32 +169,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward procedural implementation.
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is hardcoded (deterministic); no randomness.
+        comment: Deterministic synthetic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib, pandas. No unused dependencies.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Functional but label truncation logic is somewhat complex; no fake
-          interactivity (good).
+        comment: Good structure but lacks seaborn usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png with high DPI and proper facecolor.
+        comment: Correct output format
     library_mastery:
       score: 3
       max: 10
@@ -223,28 +203,22 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses matplotlib for low-level Rectangle drawing rather than seaborn's
-          high-level API. Appropriate for custom icicle layout but not idiomatic seaborn
-          usage.
+        comment: Uses matplotlib correctly, seaborn not applicable for icicle charts
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic matplotlib/pandas approach; no distinctive seaborn features
-          leveraged (e.g., palette, themes, color_palette context).
+        comment: Generic matplotlib patches usage
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - annotations
   - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
-  - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome
