@@ -1,170 +1,172 @@
 library: bokeh
+language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:50:32Z'
-updated: '2025-12-30T18:03:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602449203
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - html-export
-  - columndatasource
-  - grid-styling
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-05-13T09:26:10Z'
+generated_by: claude-haiku
+workflow_run: 25790097204
+issue: 2782
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of a cohesive financial dashboard demonstrating diverse
-    plot types in a grid
-  - Clean code structure with good use of ColumnDataSource for all subplots
-  - Effective color scheme using Python blue/yellow with meaningful semantic colors
-    for risk categories
-  - Proper dual output (PNG and HTML) for both static and interactive viewing
-  - Well-organized data generation with realistic financial relationships
+  - Perfect visual quality across both themes with all text legible and properly contrasted
+  - Excellent data quality with realistic financial metrics (price, volume, returns)
+    demonstrating comprehensive dashboard design
+  - Clean, straightforward code structure with proper seeding for reproducibility
+    and all imports used
+  - Comprehensive subplot layout showcasing 4 distinct visualization types (line,
+    bar, scatter, histogram) in a cohesive 2x2 grid
+  - Proper theme-adaptive chrome implementation with all elements (backgrounds, text,
+    grid) correctly responding to light/dark modes while maintaining Okabe-Ito data
+    colors
   weaknesses:
-  - Main title placement is unconventional (added to first subplot rather than as
-    true grid title) causing slight visual asymmetry
-  - Individual subplot dimensions (2400x1350 each) result in a total grid size that
-    may not match the target 4800x2700 exactly
-  image_description: 'The plot displays a 2x2 grid financial dashboard with four distinct
-    visualizations: (1) Top-left shows a blue line chart with data points tracking
-    stock price from ~$105 down to ~$85 over 60 trading days; (2) Top-right displays
-    yellow/gold vertical bars representing daily trading volume in millions; (3) Bottom-left
-    presents a color-coded scatter plot (green for high performers >8%, red for low
-    <5%, blue for mid-range) showing risk vs return analysis; (4) Bottom-right shows
-    a blue histogram of daily returns with a roughly normal distribution centered
-    near 0%. The main title "subplot-grid · bokeh · pyplots.ai" appears above the
-    top-left subplot.'
+  - 'Design Excellence: Spines not explicitly refined (could remove top/right for
+    more sophisticated appearance)'
+  - 'Design Excellence: Limited visual hierarchy emphasis within subplots (could use
+    more strategic color contrast or size variation)'
+  - 'Library Mastery: Could leverage more distinctive Bokeh features beyond basic
+    figure styling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly themed and inviting
+      Chrome: Title "subplot-grid · bokeh · anyplot.ai" is centered, bold, and dark (#1A1A17). Axis labels (22pt) and tick labels (18pt) are all readable with appropriate contrast against the light background. Outline color is subtle.
+      Data: Top-left shows stock price line in brand green (#009E73) with scatter overlay. Top-right displays trading volume as orange bars (#D55E00). Bottom-left scatter plot uses green, orange, and blue for asset categorization. Bottom-right histogram uses blue (#0072B2). All data colors are distinct and readable.
+      Legibility verdict: PASS — all text is readable; no collisions; color contrast excellent.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly themed with good readability
+      Chrome: Title, axis labels, and tick labels all rendered in light color (#F0EFE8) with perfect contrast against the dark background. No dark-on-dark issues detected. Outline color is subtle and appropriate.
+      Data: Stock price line remains the same teal/green (#009E73) as light render. Volume bars, scatter points, and histogram bars maintain identical colors to light render. Only chrome (background, text, grid) adapts to theme.
+      Legibility verdict: PASS — theme-adaptive text rendering is correct; data colors identical to light render; all elements readable.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
+        max: 8
         passed: true
-        comment: Text is readable but titles at 24pt are slightly smaller than the
-          recommended 28pt for bokeh at this resolution
+        comment: All text sizes explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean spacing across all 4 subplots, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Elements are well-sized; scatter markers are appropriately sized
-          for 40 points, histogram bins are clear
+        comment: All markers and lines clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Good color choices: Python blue, yellow, green/red/blue for categorical
-          distinction'
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Grid layout is well-balanced, but individual subplots could use more
-          of their canvas area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All axes have descriptive labels with units (Price ($), Volume (Millions),
-          Risk (Volatility %), etc.)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette ensures CVD safety; no red-green signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2x2 grid well-proportioned with generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid lines are subtle with dashed style and 0.3 alpha; no legend
-          needed for this layout
+        comment: All axes labeled with units; spec format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green #009E73; backgrounds correct; theme-adaptive
+          chrome perfect'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish and intentional hierarchy; Okabe-Ito applied
+          consistently
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid is subtle and effective; spines not explicitly refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear financial dashboard narrative; could emphasize focal points
+          more
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements a 2x2 subplot grid with different plot types
-          (line, bar, scatter, histogram)
+        comment: Correct subplot grid with 4 distinct visualization types
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned for all four subplots
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: configurable grid, different plot types
-          per cell, clear titles'
-      - id: SC-04
-        name: Data Range
+        comment: Grid dimensions, different plot types, consistent spacing, clear
+          titles
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show complete data ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correct, all data displayed appropriately
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed; color coding is self-explanatory in context)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "subplot-grid · bokeh · pyplots.ai"
+        comment: 'Title format correct: subplot-grid · bokeh · anyplot.ai'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple subplot types (line, bar, scatter, histogram) demonstrating
-          grid versatility; could include one more diverse type
+        comment: All subplot types represented; comprehensive financial dashboard
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Financial dashboard scenario is realistic and cohesive (price, volume,
-          risk/return, returns distribution)
+        comment: Realistic financial data with appropriate scales and neutral presentation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic; stock price ~$85-110, volume in millions, returns
-          in percentages
+        comment: Price, volume, returns all have sensible magnitudes
     code_quality:
       score: 10
       max: 10
@@ -174,40 +176,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Simple, linear code without unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures consistent output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Appropriate complexity; legitimate Bokeh patterns
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of figure(), ColumnDataSource, gridplot(); high-level
+          API
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses gridplot, ColumnDataSource, and both PNG/HTML export; could
-          leverage more interactive features like tooltips
+        comment: Uses gridplot and ColumnDataSource well; theme-aware implementation
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - theme-adaptive
+  - publication-ready
