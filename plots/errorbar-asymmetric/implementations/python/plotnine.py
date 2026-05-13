@@ -1,55 +1,86 @@
-""" pyplots.ai
+"""anyplot.ai
 errorbar-asymmetric: Asymmetric Error Bars Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-13
 """
 
-import numpy as np
-import pandas as pd
-from plotnine import aes, element_line, element_text, geom_errorbar, geom_point, ggplot, labs, theme, theme_minimal
+import os
+import sys
+from pathlib import Path
 
 
-# Data - Quarterly revenue projections with asymmetric confidence intervals
+_script_dir = str(Path(__file__).parent)
+sys.path = [p for p in sys.path if p != _script_dir and p != ""]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_errorbar,
+    geom_point,
+    ggplot,
+    labs,
+    theme,
+    theme_minimal,
+)
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
+# Data - Clinical trial outcomes with asymmetric confidence intervals
 np.random.seed(42)
-quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025"]
-central_values = [120, 135, 128, 155, 142, 160]
-# Asymmetric intervals: downside risk tends to be larger (conservative projections)
-error_lower = [15, 18, 12, 22, 16, 20]
-error_upper = [10, 12, 8, 15, 11, 14]
+treatments = ["Placebo", "Treatment A", "Treatment B", "Treatment C", "Treatment D"]
+# Measured reduction in symptoms (%)
+effect_sizes = [5, 28, 42, 35, 18]
+# Different asymmetry patterns: some treatments show larger upside, some larger downside
+error_lower = [8, 6, 5, 12, 9]  # Asymmetric confidence bounds
+error_upper = [7, 10, 8, 6, 14]
 
 df = pd.DataFrame(
     {
-        "quarter": pd.Categorical(quarters, categories=quarters, ordered=True),
-        "revenue": central_values,
-        "ymin": [c - lo for c, lo in zip(central_values, error_lower, strict=True)],
-        "ymax": [c + up for c, up in zip(central_values, error_upper, strict=True)],
+        "treatment": pd.Categorical(treatments, categories=treatments, ordered=True),
+        "effect": effect_sizes,
+        "ymin": [e - lo for e, lo in zip(effect_sizes, error_lower, strict=True)],
+        "ymax": [e + up for e, up in zip(effect_sizes, error_upper, strict=True)],
     }
 )
 
 # Create plot with asymmetric error bars
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(alpha=0.0),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=24, color=INK, ha="center"),
+    plot_caption=element_text(size=14, color=INK_SOFT, ha="right"),
+    figure_size=(16, 9),
+)
+
 plot = (
-    ggplot(df, aes(x="quarter", y="revenue"))
-    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.3, size=1.5, color="#306998")
-    + geom_point(size=6, color="#306998")
+    ggplot(df, aes(x="treatment", y="effect"))
+    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.25, size=1.5, color=BRAND)
+    + geom_point(size=6, color=BRAND)
     + labs(
-        x="Quarter",
-        y="Revenue (Million USD)",
-        title="errorbar-asymmetric · plotnine · pyplots.ai",
-        caption="Error bars show 10th-90th percentile forecast range",
+        x="Treatment Group",
+        y="Symptom Reduction (%)",
+        title="errorbar-asymmetric · plotnine · anyplot.ai",
+        caption="Error bars show 95% confidence interval bounds (asymmetric)",
     )
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_x=element_text(angle=0),
-        plot_title=element_text(size=24, ha="center"),
-        plot_caption=element_text(size=14, ha="right"),
-        panel_grid_major=element_line(alpha=0.3),
-        panel_grid_minor=element_line(alpha=0.15),
-    )
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
