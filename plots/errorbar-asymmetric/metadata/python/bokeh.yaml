@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:49:00Z'
-updated: '2026-05-13T07:29:01Z'
+updated: '2026-05-13T07:34:56Z'
 generated_by: claude-haiku
 workflow_run: 25784606098
 issue: 2781
@@ -12,44 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 74
 review:
   strengths:
-  - Excellent text legibility with all elements readable at full 4800×2700 px size
-    in both themes
-  - Clean, reproducible code structure with proper random seed and KISS principle
-  - 'All specification requirements met: asymmetric error bars, caps, legend with
-    percentile explanation'
-  - Realistic, plausible data context (revenue forecasts with asymmetric risk modeling)
-  - 'Correct theme rendering: warm backgrounds and adapted text colors in both light/dark
-    renders'
+  - Correct plot type with asymmetric error bars properly rendered with visible caps
+  - All required specification features present and working correctly
+  - Readable text at all font sizes with explicit size declarations
+  - Realistic quarterly revenue forecasts with proper asymmetric uncertainty bounds
+  - Clean, deterministic code structure with seed set
   weaknesses:
-  - Uses Python Blue (#306998) and Yellow (#FFD43B) instead of brand green (#009E73)
-    - violates hard rule for first categorical series
-  - 'Output format: bare plot.png instead of theme-aware plot-{THEME}.png; code does
-    not read ANYPLOT_THEME environment variable'
-  - Code does not implement theme-adaptive color tokens (PAGE_BG, INK, INK_SOFT) per
-    bokeh.md guidance
-  - Uses deprecated export_png() instead of Selenium screenshot per bokeh.md; should
-    use theme-aware output export
-  - 'Limited aesthetic sophistication: generic color scheme with minimal design intent
-    beyond defaults'
-  - Manual cap drawing with loop is functional but not idiomatic Bokeh pattern
+  - 'Palette non-compliance: data uses #FFD43B (yellow) instead of #009E73 (brand
+    green); error bars use #306998 (legacy Python Blue) instead of Okabe-Ito colors'
+  - 'Title format error: says ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'Not theme-adaptive: hardcodes white background instead of reading ANYPLOT_THEME
+    environment variable and using #FAF8F1 (light) / #1A1A17 (dark)'
+  - 'Wrong output format: saves as ''plot.png'' instead of ''plot-light.png'' and
+    ''plot-dark.png'''
+  - Uses discouraged export_png() instead of Selenium with headless Chrome as specified
+    in bokeh.md
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) - correct for light theme
-      Chrome: Title "errorbar-asymmetric · bokeh · anyplot.ai" in bold dark text (readable); x-axis label "Quarter" and y-axis label "Revenue Forecast ($ millions)" both clearly visible in dark text; tick labels are dark and legible; legend "Median forecast (10th-90th percentile)" positioned top-left with white background and visible border
-      Data: Six quarters (Q1 2024 - Q2 2025) with asymmetric error bars; error bars rendered in orange/tan color (#306998); central markers are yellow circles (#FFD43B) with dark blue edges; error magnitudes correctly show asymmetry (larger downside, smaller upside)
-      Legibility verdict: PASS - all text is clearly readable with excellent contrast against light background
+      Background: Warm off-white around #FAF8F1 - CORRECT
+      Chrome: Title "errorbar-asymmetric · bokeh · anyplot.ai", axis labels "Quarter" and "Revenue Forecast ($ millions)", tick labels all readable in dark text
+      Data: Central forecast points in yellow/gold (#FFD43B), asymmetric error bars with caps in blue (#306998), legend explains "(10th-90th percentile)"
+      Legibility verdict: PASS - all text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) - correct for dark theme
-      Chrome: Title rendered in light text (readable on dark); axis labels and tick labels all rendered in light colors for dark-on-light contrast; legend maintains readability with light text on darker background; no dark-on-dark failures detected
-      Data: Identical error bar colors (orange/tan) and marker colors (yellow with blue edges) as light render - confirming data colors are theme-independent as required; error magnitudes and asymmetry clearly visible
-      Legibility verdict: PASS - all text is readable; no dark-on-dark failures; data colors correctly remain constant across themes (only chrome flips)
+      Background: Appears to be warm near-black around #1A1A17 - CORRECT (though code hardcodes white, rendering appears correct)
+      Chrome: Title, axis labels, tick labels all readable in light text, properly adapted
+      Data: Confirms data colors are identical to light render (yellow points, blue error bars) - CORRECT color consistency
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,74 +52,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (42pt title, 32pt labels, 26pt ticks);
-          all text readable in both themes
+        comment: All font sizes explicitly set, perfectly readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Six categories with no overlapping labels; all elements well-spaced
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars and markers clearly visible; sizing appropriate for 6-point
-          dataset
+        comment: All markers and error bars optimally visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between data elements and backgrounds; CVD-safe design
+        comment: Good contrast and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced layout with generous margins; good canvas utilization
+        comment: Perfect layout with good proportions and balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Descriptive with units: ''Revenue Forecast ($ millions)'''
+        passed: false
+        comment: Title has 'pyplots.ai' instead of 'anyplot.ai'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses #306998 (Python Blue) and #FFD43B (Yellow) instead
-          of #009E73 (brand green). Violates hard rule: ''First series ALWAYS #009E73''.
-          Rubric explicitly lists #306998 as legacy non-compliant.'
+        comment: 'Data uses #FFD43B (yellow) not #009E73; error bars use #306998 not
+          Okabe-Ito; background hardcoded white not theme-adaptive'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic color scheme, standard library configuration with minimal
-          design intent
+        comment: Well-configured defaults but generic styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Some grid customization visible (dashed, alpha 0.3) and decent legend
-          styling, but minimal overall refinement
+        comment: Minimal customization, relies on library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Asymmetric error bars effectively communicate the plot concept; realistic
-          revenue forecast data tells clear narrative
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -132,28 +121,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar plot with all required subtypes
+        comment: Correct asymmetric error bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error caps present, asymmetric magnitudes shown correctly, legend
-          explains percentile bounds
+        comment: Error bars with caps, central points, legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: categorical quarters; Y-axis: numeric revenue; error bounds
-          correctly mapped'
+        comment: X/Y correctly assigned, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format 'errorbar-asymmetric · bokeh · anyplot.ai' correct;
-          legend labels percentile bounds
+        passed: false
+        comment: Title format wrong (pyplots.ai); legend is correct
     data_quality:
       score: 15
       max: 15
@@ -163,23 +149,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of asymmetric error bars; downside risk > upside
-          potential demonstrates the feature
+        comment: Shows all aspects of asymmetric error bars
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly financial forecasts with credible uncertainty modeling;
-          real-world plausible and neutral
+        comment: Realistic quarterly revenue forecasts scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values proportional and factually sound for revenue forecasting domain
+        comment: Plausible values and proportions
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -187,60 +171,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save; no functions/classes'
+        comment: Simple linear structure, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Only used imports: numpy, bokeh modules'
+        passed: false
+        comment: Uses discouraged export_png per bokeh.md
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean and Pythonic; manual cap drawing is functional if slightly
-          verbose
+        passed: false
+        comment: Clean but doesn't follow bokeh.md best practices
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Uses bare 'export_png(p, filename="plot.png")' instead of theme-aware
-          'plot-{THEME}.png'. Code does not read ANYPLOT_THEME environment variable.
-          Should use Selenium per bokeh.md.
+        comment: Wrong filename (plot.png); doesn't support theme rendering or read
+          ANYPLOT_THEME
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct use of figure(), scatter(), Whisker(), ColumnDataSource;
-          follows Bokeh patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses Bokeh's Whisker component (library-specific), but manual cap
-          drawing is workaround rather than advanced feature usage
+        passed: false
+        comment: Whisker used correctly but ignores bokeh.md Selenium export guidelines
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic Whisker usage without distinctive bokeh features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
