@@ -1,171 +1,168 @@
 library: bokeh
+language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:48:24Z'
-updated: '2025-12-30T17:56:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602451770
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - columndatasource
-  dataprep:
-    - rolling-window
-  styling:
-    - grid-styling
-    - alpha-blending
+updated: '2026-05-13T13:09:47Z'
+generated_by: claude-haiku
+workflow_run: 25800869968
+issue: 2786
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual distinction between raw data (blue, semi-transparent) and rolling
-    average (yellow, prominent)
-  - Realistic temperature scenario with clear seasonal pattern that demonstrates the
-    value of rolling averages
-  - Proper handling of NaN values at rolling window boundaries by creating separate
-    data sources
-  - Interactive tools included (pan, wheel_zoom, box_zoom, reset, save) and HTML output
-    generated
-  - Clean KISS code structure following Bokeh best practices with ColumnDataSource
+  - Flawless visual quality with explicit font sizing and perfect theme adaptation
+  - Complete spec compliance with all required features and polish
+  - Excellent data storytelling through visual hierarchy - line weight and opacity
+    make trend unmistakable
+  - 'Perfect code structure: reproducible, clean, idiomatic Bokeh'
+  - Dual-theme design executed flawlessly with identical data colors and theme-correct
+    chrome
   weaknesses:
-  - Legend text appears small at the top left corner when viewing the full-resolution
-    image
-  - Could add HoverTool to display exact date and temperature values on hover for
-    better interactivity
-  image_description: The plot displays a time series visualization of daily temperature
-    data spanning January 2024 to January 2025. A semi-transparent blue line shows
-    raw daily temperature readings with visible day-to-day noise/volatility. A prominent
-    smooth yellow/gold line overlays the raw data showing the 30-day rolling average.
-    The visualization clearly demonstrates a seasonal temperature pattern, with values
-    starting around 5-10°C in January, rising to peak around 35°C in July (summer),
-    then declining back toward 0-5°C by December. The title "line-timeseries-rolling
-    · bokeh · pyplots.ai" appears in the top left. A legend distinguishes "Raw Data"
-    (blue) from "30-Day Rolling Average" (yellow). The x-axis shows month labels (Jan
-    2024 through Jan 2025), and the y-axis displays "Temperature (°C)" ranging from
-    0 to ~45. A subtle grid with dashed lines aids readability. The rolling average
-    line is shorter at both ends due to the centered window calculation.
+  - Design Excellence is solid but not exceptional - uses library defaults for most
+    styling without custom visual refinement
+  - Could leverage more distinctive Bokeh features beyond standard patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and not pure white
+      Chrome: Title "line-timeseries-rolling · bokeh · anyplot.ai" (28pt dark text), axis labels "Date" and "Stock Price ($)" (22pt), tick labels (18pt gray) - all clearly readable
+      Data: Green raw data line (#009E73, alpha=0.4) shows volatility; orange rolling average (#D55E00, thick) shows trend
+      Legibility verdict: PASS - all text is fully readable, grid is subtle, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and not pure black
+      Chrome: Title, axis labels in light text (#F0EFE8), tick labels in lighter gray (#B8B7B0) - all clearly readable; legend has elevated background (#242420) for definition
+      Data: Green raw data (#009E73) and orange rolling average (#D55E00) - identical to light render, proving theme-independent data encoding
+      Legibility verdict: PASS - all text is fully readable against dark background; no dark-on-dark failures; grid is subtle
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are readable; legend text could
-          be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt;
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Perfect positioning; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines well-sized; raw data alpha=0.5 appropriate for density; rolling
-          avg line prominent
+        comment: Raw data (thin, transparent) and rolling average (thick) optimally
+          sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe (not red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" and "Date" with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito colors have strong contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but legend labels appear quite small
-          relative to canvas size
+        comment: Labels include units; format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette correct; backgrounds theme-correct; chrome properly
+          adapted
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; not exceptional - could be more refined
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and whitespace; legend frame adds polish; spines not
+          removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Effective hierarchy through visual weight; clear trend; good but
+          minimal emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line plot with rolling average overlay
+        comment: Correct time series with dual overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on X-axis, temperature values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Raw data line, rolling average line, legend with window size, grid
-          lines
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: raw data, rolling average, legend with window
+          size, grid'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, price on Y; all 250 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels "Raw Data" and "30-Day Rolling Average"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-timeseries-rolling · bokeh · pyplots.ai"'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal trend, noise reduction, rolling avg shorter than raw
-          data
+        comment: Shows trend, volatility, smoothing, edge effects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Daily temperature readings over a year is a perfect, neutral real-world
-          scenario
+        comment: Stock price scenario is standard and real-world plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature range 0-45°C is realistic; some values slightly exceed
-          typical range
+        comment: Price range, volatility, and trend all factually sound
     code_quality:
       score: 10
       max: 10
@@ -175,13 +172,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: Linear flow; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -189,26 +186,45 @@ review:
         passed: true
         comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean, Pythonic, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource properly, interactive tools, HTML output; could
-          leverage HoverTool for showing exact values
+        comment: Expert use of figure(), ColumnDataSource, line() API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses Bokeh patterns but fairly standard approach; no callbacks or
+          advanced interactions
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
+  - grid-styling
