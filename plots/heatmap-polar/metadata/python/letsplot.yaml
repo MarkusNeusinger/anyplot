@@ -1,0 +1,271 @@
+library: letsplot
+language: python
+specification_id: heatmap-polar
+created: '2026-05-13T20:01:43Z'
+updated: '2026-05-13T20:20:35Z'
+generated_by: claude-sonnet
+workflow_run: 25822880693
+issue: 5244
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/letsplot/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Correct polar heatmap implementation using coord_polar(theta='x') + geom_tile()
+    — properly wraps cyclic data
+  - 'Full spec compliance: correct angular/radial axes, viridis colormap for continuous
+    data, colorbar legend, all 168 cells rendered'
+  - 'Excellent data quality: realistic website traffic scenario with plausible business-hour
+    and weekend patterns'
+  - 'Perfect code quality: KISS structure, seed set, clean imports, idiomatic lets-plot
+    grammar'
+  - Theme-adaptive chrome fully implemented with all INK/INK_SOFT/PAGE_BG tokens correctly
+    wired to every text and background element
+  - Square canvas (3600×3600 via ggsize(900,900) × scale=4) is the right choice for
+    a symmetric polar layout
+  - 'Cell borders use PAGE_BG color making them theme-adaptive (light: warm off-white
+    borders, dark: near-black borders)'
+  weaknesses:
+  - Axis text and legend text sized at 14pt — below the 16pt minimum; explicit sizes
+    are set but should be bumped to 16pt for both axis_text and legend_text
+  - Subtitle text (visible in rendered images) is truncated at the right canvas edge
+    — either remove the subtitle or shorten it to fit within the 3600px canvas width
+  - 'Design Excellence is mid-range: no distinctive typographic hierarchy, no subtle
+    annotation or callout to highlight the business-hour peak, visual storytelling
+    relies entirely on the viridis gradient rather than any deliberate emphasis layer'
+  - 'LM-02: coord_polar + geom_tile is the correct lets-plot primitive but the implementation
+    doesn''t exploit any features unique to lets-plot vs other ggplot2 dialects (e.g.,
+    interactive tooltips, HTML export, lets-plot-specific theme tokens)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct theme surface.
+      Chrome: Bold title "Website Traffic · heatmap-polar · letsplot · anyplot.ai" is clearly readable in dark ink. A subtitle line ("Weekday business hours (9am–5pm) drive peak traffic; weekend mid-day surge visible in out...") is visible but truncated at the right edge — layout defect. Radial axis labels (Sun, Sat, Fri, Thu, Wed, Tue, Mon) are visible on the left. Angular tick labels (12am, 6am, 12pm, 6pm) are placed at cardinal positions around the circle. Axis titles "Hour of Day" and "Day of Week" are readable. Legend "Hourly Visits" with viridis color ramp is on the right.
+      Data: Viridis colormap ranges from deep purple (low traffic, ~10-100 visits at night) to yellow-green (peak traffic, ~750-900 visits during weekday business hours 9am-5pm). Weekend rings (Sat, Sun) show a midday surge (teal/green band at 11am-8pm). All cells have warm off-white borders, clearly separating individual tiles.
+      Legibility verdict: PASS — all text is readable against the warm off-white background. Minor issue: subtitle is cut off.
+
+    Dark render (plot-dark.png):
+      Background: Near-black consistent with #1A1A17 — correct dark surface.
+      Chrome: Title and all labels flip to light text (white/light grey) — clearly readable against dark background. No dark-on-dark failures observed. Radial and angular labels (Mon-Sun, 12am/6am/12pm/6pm) are light-coloured and legible. Axis titles are light-coloured. Legend box has elevated dark background (#242420) with light legend text.
+      Data: Viridis data colors are identical to the light render — deep purple for low traffic, teal for moderate, yellow-green for business-hour peaks. Cell borders are now near-black (PAGE_BG token), subtly separating cells. The viridis peak pattern (yellow-green cells during weekday 9am-5pm) stands out clearly against the dark chart background.
+      Legibility verdict: PASS — all text is readable against the dark background; data colors are unchanged; chrome correctly flips to light.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=22pt, axis_title=20pt, axis_text=14pt,
+          legend=14pt) but axis_text and legend_text are 14pt — below the 16pt minimum.
+          Readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Angular labels at 4 cardinal positions,
+          radial labels spaced clearly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 168 heatmap cells clearly visible with viridis fill range from
+          deep purple to yellow-green. Cell borders enhance individual tile readability.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe. Good luminance
+          contrast across the full range.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Square 3600x3600 canvas appropriate for polar layout. Polar chart
+          is well-centered and fills the canvas well. Minor issue: subtitle text is
+          truncated at the right canvas edge.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title includes spec-id, library, anyplot.ai. X-axis: ''Hour of Day'',
+          Y-axis: ''Day of Week''. Categorical axes don''t require units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data (visit count) uses viridis — correct per style guide.
+          Light background #FAF8F1, dark background #1A1A17. All theme-adaptive chrome
+          tokens correctly applied in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional polar heatmap above library defaults. Theme-adaptive
+          chrome and viridis palette show design intent. Not publication-ready (no
+          distinctive typographic hierarchy or focal emphasis), but clearly above
+          generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, axis ticks removed, axis lines removed, panel_background
+          matches page background. Good refinement. Not 'every detail polished' level
+          but clearly refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Viridis palette creates natural visual hierarchy — bright yellow-green
+          during weekday 9am-5pm immediately draws the eye vs dark purple at night.
+          Business-hour and weekend patterns are self-evident through color intensity.
+          Good visual hierarchy through the palette range alone.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap using coord_polar(theta='x') + geom_tile().
+          Cyclic continuity preserved — hour 0 and 23 are angularly adjacent.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: cyclic angular axis (hour 0-24), radial
+          axis (day of week), sequential colormap for single-sign data (viridis),
+          angular labels at readable intervals, colorbar legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=hour_mid (angular), y=day_num (radial), fill=visits (color). All
+          168 cells rendered. Correct cyclic mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Website Traffic · heatmap-polar · letsplot · anyplot.ai''
+          contains spec-id, library, anyplot.ai. Legend: ''Hourly Visits'' with viridis
+          scale — correct.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: weekday business-hour peaks, evening shoulder
+          traffic, overnight minimums, and distinct weekend midday pattern. Full variation
+          across the 168-cell grid.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic by hour and day of week — real-world, comprehensible,
+          neutral scenario with plausible patterns (business hours, weekday vs weekend).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Visit counts range ~10-900 per hour — realistic for a moderately
+          popular website. Business-hour peaks (~750), evening (~380), overnight (~60-80),
+          weekend midday (~550) are factually plausible ratios.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Clean linear structure: imports → theme
+          tokens → data → theme → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used. Specific lets-plot symbols imported explicitly.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Appropriate complexity for a polar heatmap with
+          theme-adaptive chrome.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=4 → 3600x3600) and plot-{THEME}.html.
+          Correct output naming.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ggplot grammar used correctly with coord_polar, geom_tile, scale_fill_viridis,
+          labs, theme. Proper ggsave with scale parameter. High-level API throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_polar + geom_tile polar heatmap is a distinctive grammar-of-graphics
+          technique. PAGE_BG as cell border color in geom_tile is a lets-plot-idiomatic
+          approach to theme-adaptive borders. However, lets-plot-specific features
+          (interactive tooltips, HTML export as an interactive feature) are not exploited.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
