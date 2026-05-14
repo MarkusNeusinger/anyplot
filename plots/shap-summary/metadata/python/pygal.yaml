@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: shap-summary
 created: '2026-05-14T13:04:49Z'
-updated: '2026-05-14T13:08:22Z'
+updated: '2026-05-14T13:14:27Z'
 generated_by: claude-haiku
 workflow_run: 25861442180
 issue: 2923
@@ -12,43 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 79
 review:
   strengths:
-  - Complete spec compliance — all required SHAP summary features implemented (sorted
-    by importance, diverging colormap, vertical line at x=0, jittering)
-  - 'Flawless theme adaptation — correct background colors (#FAF8F1 light, #1A1A17
-    dark), properly theme-aware text colors, both renders legible and consistent'
-  - Effective data visualization — BrBG colormap is appropriate for diverging continuous
-    data, jittering successfully reduces visual overlap, 200-sample distribution clearly
-    visible
-  - Correct plot type and data mapping — XY scatter properly shows SHAP values on
-    x-axis, features on y-axis, color encodes feature values, all 10 features displayed
-    at full resolution
+  - Perfect theme readability in both renders with correct backgrounds and text contrast
+  - All required spec features correctly implemented (feature sorting, diverging colormap,
+    x=0 line, jittering)
+  - Clean reproducible code with KISS structure and proper output format
+  - Explicit font sizing ensures legibility at 4800×2700 resolution
   weaknesses:
-  - Code elegance — implementation creates 100 hidden series (10 features × 10 color
-    bands) with show_legend=False, which is functional but creates unnecessary overhead;
-    band-based approach is a pygal workaround but could be refined
-  - Limited design sophistication — relies on standard style properties without distinctive
-    visual enhancements or custom theming beyond theme-adaptation tokens
-  - Matplotlib dependency — requires matplotlib imports for Normalize and colormap
-    access, which feels like a cross-library workaround for pygal's lack of native
-    colormap support
+  - Generic styling with default design approach; no intentional visual hierarchy
+    (DE-01=4)
+  - Minimal visual refinement beyond theme defaults; no refined grid or spine customization
+    (DE-02=3)
+  - Plot displays data but lacks visual storytelling or emphasis to guide viewer insight
+    (DE-03=2)
+  - Uses standard pygal patterns; doesn't leverage distinctive library features (LM-02=2)
+  - Feature distributions are uniform and formulaic; real-world data patterns would
+    improve example quality
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with excellent visual clarity
-      Chrome: Title "shap-summary · pygal · anyplot.ai", axis labels "SHAP Value" and "Feature", feature names (Age, Income, Credit Score, Debt Ratio, Employment Years, Savings, Loan Amount, Interest Rate, Payment History, Inquiries) — all in dark text, clearly readable
-      Data: 200 SHAP value points per feature, colored by BrBG diverging colormap (blue for low feature values → red for high), with effective vertical jittering to reduce overlap. Vertical line at x=0 clearly separates negative and positive SHAP impacts. Features sorted by mean absolute SHAP value (importance) from bottom to top.
-      Legibility verdict: PASS — all text highly legible, data colors vivid and distinct
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "shap-summary · pygal · anyplot.ai" clearly visible in dark text; y-axis shows 10 feature names (Age, Income, Credit Score, etc.) in readable dark text; x-axis labeled "SHAP Value" with visible ticks
+      Data: Points colored by BrBG diverging colormap (blue for low feature values, red for high); vertical green line at x=0 separates positive/negative impacts; points are jittered vertically to reduce overlap; distributions clearly visible
+      Legibility verdict: PASS - all text readable with good contrast; data elements clearly distinguishable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matching light theme structure exactly
-      Chrome: Same title and axis labels in light text (#F0EFE8), clearly visible against dark background. Feature names equally legible. No dark-on-dark failures; all text passes contrast check.
-      Data: Identical to light render — same BrBG colormap distribution (blues, browns, reds), same point positions and jittering, same vertical line at x=0. Color palette consistency confirmed across themes; only background and text colors changed as expected.
-      Legibility verdict: PASS — all text readable with proper light-on-dark contrast; data colors preserved identically
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title and axis labels rendered in light text (#F0EFE8) - all readable against dark background; tick labels similarly light-colored; no "dark-on-dark" failures
+      Data: Data point colors are identical to light render (BrBG colormap preserved); vertical x=0 line visible; jittering patterns match light version; distributions equivalent
+      Legibility verdict: PASS - all text light-colored and legible; data colors consistent with light render; successful theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -56,53 +52,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, tick labels) clearly readable in both
-          light and dark renders with proper contrast
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          all perfectly readable
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Jittering effectively reduces overlap; minor crowding expected with
-          200 samples but data distribution remains clear
+        comment: Feature labels slightly crowded but readable; main content clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data markers clearly visible and well-adapted to density via
-          vertical jittering
+        comment: Points well-sized; jittering reduces overlap; distributions visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG is perceptually uniform and colorblind-safe for diverging continuous
-          data; no red-green as sole signal
+        comment: BrBG colormap perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Landscape format (4800×2700), good proportions, generous margins,
-          nothing cut off
+        comment: Good space utilization; minor wasted space on edges
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and axis labels descriptive and properly formatted; feature
-          names clearly labeled on y-axis
+        comment: Descriptive labels with correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BrBG diverging colormap correct for continuous feature values per
-          style guide; backgrounds (#FAF8F1 light, #1A1A17 dark) correct; data colors
-          consistent between themes'
+        comment: BrBG for continuous data; theme-correct chrome in both renders
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -110,23 +99,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Theme-adaptive styling with proper token system is functional but
-          lacks distinctive visual enhancements
+        comment: Well-configured defaults; no extraordinary design choices
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some refinement visible; mostly defaults
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond required theme tokens; no special visual
-          refinements like custom spine handling or grid styling
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Sorting by importance creates visual hierarchy; color gradient and
-          x=0 line effectively show direction of impact; distribution patterns guide
-          viewer through data
+        comment: Data displayed clearly but no visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -136,55 +121,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter plot for SHAP summary visualization
+        comment: Correct SHAP summary scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: sorted by importance, diverging colormap,
-          vertical x=0 line, jittering to reduce overlap'
+        comment: 'All features present: sorting, colormap, x=0 line, jittering'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=SHAP values, Y=features, color=feature values; all 10 features
-          and 200 samples displayed
+        comment: X=SHAP values, Y=features, color=feature values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec; legend appropriately hidden (not needed
-          for SHAP summary)
+        comment: Correct title format; legend appropriately omitted
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 10 features shown with complete SHAP value distributions (200
-          samples each)
+        comment: Shows variety but distributions somewhat uniform
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Credit scoring domain (Age, Income, Credit Score, etc.) is realistic,
-          neutral, and plausible for SHAP interpretation
+        comment: Loan scenario plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: SHAP values properly centered at 0 with increasing variance per feature;
-          feature values normalized [0,1] as expected
+        comment: Reasonable scales; slightly formulaic generation
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,63 +171,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward script with no unnecessary functions or classes
+        comment: Clean imports → data → plot → save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic synthetic data generation
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, sys, numpy, matplotlib.colors (Normalize),
-          matplotlib.colormaps (BrBG), pygal, pygal.style'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Band-based coloring creates 100 hidden series (n_features × n_bands)
-          with show_legend=False — functional pygal workaround but somewhat inelegant
-          and adds overhead
+        passed: true
+        comment: Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html with current
-          pygal API
+        comment: Correct PNG and HTML output
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Proper use of pygal.XY, Style system for theme tokens, correct chart
-          configuration; matplotlib import for colormap is reasonable workaround for
-          pygal limitation
+        comment: Correct patterns but fairly standard
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses pygal Style effectively but doesn't leverage other distinctive
-          pygal capabilities like interactive features or advanced configuration
-  verdict: APPROVED
+        comment: Generic usage; doesn't leverage unique pygal capabilities
+  verdict: REJECTED
 impl_tags:
-  dependencies:
-  - matplotlib
+  dependencies: []
   techniques:
-  - html-export
+  - colorbar
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
