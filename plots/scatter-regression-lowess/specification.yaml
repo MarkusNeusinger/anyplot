@@ -6,7 +6,7 @@ title: Scatter Plot with LOWESS Regression
 
 # Specification tracking
 created: 2025-12-30T23:43:06Z
-updated: 2025-12-30T23:43:06Z
+updated: 2026-05-14T14:30:45Z
 issue: 2855
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - regression
   data_type:
     - numeric
     - continuous
