@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 72/100 | Created: 2026-05-14
+Quality: 74/100 | Created: 2026-05-14
 """
 
 import os
