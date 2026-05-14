@@ -6,7 +6,7 @@ title: SHAP Summary Plot
 
 # Specification tracking
 created: 2025-12-31T05:23:41Z
-updated: null
+updated: 2026-05-14T12:47:05Z
 issue: 2923
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - shap
     - strip
     - swarm
   data_type:
