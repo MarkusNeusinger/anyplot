@@ -1,34 +1,230 @@
 library: plotly
+language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:10:14Z'
-updated: '2025-12-31T00:30:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608632439
+updated: '2026-05-14T07:31:01Z'
+generated_by: claude-haiku
+workflow_run: 25847344108
 issue: 2861
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/plotly/plot.html
-quality_score: 85
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/plotly/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Perfect technical execution across visual quality—all text properly sized and
+    readable, no overlap, excellent palette compliance with correct theme adaptation
+  - Sophisticated mathematical implementation using ODE integration via scipy for
+    authentic streamline generation
+  - Excellent theme-adaptive color tokens throughout—both light and dark renders equally
+    professional with proper contrast
+  - 'Complete spec compliance: correct streamline plot type, all required features
+    present, proper data mapping, correct title format'
+  - Clean, deterministic code with idiomatic Plotly usage and environment-aware rendering
+    pattern
+  weaknesses:
+  - Design sophistication is functional but not particularly distinctive—follows standard
+    defaults without extra aesthetic design thought
+  - Could leverage more Plotly-specific interactive features like hover tooltips showing
+    field values or computed magnitudes
+  - No visual direction indicators on streamlines (e.g., arrowheads) to enhance flow
+    understanding and storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, perfectly matches style guide
+      Chrome: Title "streamline-basic · plotly · anyplot.ai" centered at top in dark #1A1A17; X/Y axis labels "Position (dimensionless)" in dark text; tick labels (numbers -8 to 8 on X, -4 to 4 on Y) in soft dark #4A4A44; gridlines subtle and visible
+      Data: 18 streamlines in brand green #009E73 forming perfect circle pattern; each streamline marked with small integration points; clean, professional appearance
+      Legibility verdict: PASS - All text clearly readable at large canvas size; excellent contrast; no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, perfectly matches style guide (not pure black)
+      Chrome: Title in light #F0EFE8 clearly visible; axis labels in light text readable; tick labels in soft light #B8B7B0 clearly visible; gridlines subtle but present
+      Data: Identical brand green #009E73 streamlines from light render; same 18-point circle pattern; integration points clearly visible
+      Legibility verdict: PASS - No dark-on-dark failures; all text light-colored and readable; excellent contrast; brand green reads well on dark surface; both renders equally professional
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized (28/22/18px), perfectly readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements properly spaced, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Streamlines and integration points clearly visible, well-balanced
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single green series is CVD-safe with excellent contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px with balanced margins, excellent canvas utilization (50-70%)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73, backgrounds #FAF8F1/#1A1A17, all chrome theme-adaptive'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional and clean but functional—follows defaults without distinctive
+          design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, clean appearance, generous whitespace; could remove
+          top/right spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; vortex pattern evident; could add directional
+          indicators
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct streamline visualization via ODE integration
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vortex field with forward/backward streamlines, 18 starting points
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly labeled and ranged, aspect ratio preserved
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend appropriately omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete vortex field with bidirectional streamlines
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic mathematical example from physics/fluid dynamics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible values and proportions for domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple linear flow with single velocity_field function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports present
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output files and API usage
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Plotly patterns with theme-adaptive rendering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Sophisticated ODE integration; could explore more interactive features
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Clean vortex flow pattern clearly demonstrates streamline visualization
-  - Good use of plotly figure_factory for streamline generation
-  - Appropriate density parameter (1.5) creates balanced streamline distribution
-  - Correct title format and good font sizing throughout
-  - Interactive HTML output leverages plotly strength
-  - Equal aspect ratio (scaleanchor) preserves circular pattern correctly
-  weaknesses:
-  - Colorbar appears in rendered output despite multiple attempts to hide it in code
-    - creates visual clutter and misleading Velocity Magnitude label for uniform-colored
-    streamlines
-  - Layout asymmetry due to unwanted colorbar taking space on right side
