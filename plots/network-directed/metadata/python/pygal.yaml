@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: network-directed
 created: '2026-05-14T03:39:02Z'
-updated: '2026-05-14T03:42:08Z'
+updated: '2026-05-14T03:47:06Z'
 generated_by: claude-haiku
 workflow_run: 25840121104
 issue: 2858
@@ -12,85 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 70
 review:
   strengths:
-  - Excellent theme adaptation with perfect light/dark palette compliance
-  - Full spec compliance with all network features correctly implemented
-  - Clean, readable code with deterministic reproducibility
-  - Realistic software dependency data example
-  - Professional layout with no text overlap or cut-off
+  - Force-directed layout algorithm properly implemented with numpy
+  - Excellent theme handling with adaptive colors for both light and dark renders
+  - Clean, reproducible code with seed-based deterministic layout
+  - Okabe-Ito palette correctly applied to nodes
+  - High-resolution 4800x2700 rendering with proper scaling
+  - Proper use of pygal's Style API for comprehensive theme customization
   weaknesses:
-  - Design Excellence is functional but generic (4/8) - lacks visual sophistication
-    or memorable aesthetic touches
-  - Library Mastery moderate (7/10) - manual force-directed layout is algorithmic
-    rather than distinctively library-leveraged
-  - Visual storytelling is descriptive rather than insight-focused - could emphasize
-    critical paths or hub analysis
-  image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and professional
-      Chrome: Title "network-directed · pygal · anyplot.ai" in dark 28px text; X/Y axes with tick labels in dark 16-18px text; all fully readable with excellent contrast
-      Data: 11 nodes colored with Okabe-Ito palette (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442); directed edges as thin muted lines with opacity; force-directed layout clearly shows software module dependencies
-      Legibility verdict: PASS - All text perfectly readable, no overlap, excellent contrast
-
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), clean and professional
-      Chrome: Title in light 28px text; axes and ticks in light 16-18px text; all fully readable with excellent contrast against dark background; no dark-on-dark failures
-      Data: Node colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442 preserved); edges remain visible with appropriate opacity; layout and structure identical to light render
-      Legibility verdict: PASS - All text perfectly readable, no dark-on-dark failures, excellent theme adaptation
+  - 'Critical: No directional arrows on edges — plot shows undirected graph instead
+    of directed graph'
+  - 'Critical: Node labels completely hidden (legend=False, points_values_show=False)'
+  - 'SC-01 failure: Missing arrow indicators required by spec'
+  - 'SC-02 failure: Nodes are unlabeled and unidentifiable'
+  - Edges lack visual weight differentiation despite spec mention of optional weights
+  - 'Design: Generic styling with minimal visual refinement beyond defaults'
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ at #FAF8F1 (correct). Title \"network-directed · pygal · anyplot.ai\" is dark\
+    \ and readable at the top.\n  Chrome: Axis tick labels visible on both axes. Title\
+    \ is bold and clear. X/Y axis labels are intentionally empty (appropriate for\
+    \ network graphs).\n  Data: Nine nodes (circles) positioned via force-directed\
+    \ layout. Node colors use Okabe-Ito palette positions 1-7 for color differentiation.\
+    \ Eleven edges connecting nodes as gray semi-transparent lines (INK_MUTED, opacity\
+    \ 0.4). \n  Critical issue: Nodes are UNLABELED — cannot identify which node is\
+    \ \"api\", \"auth\", \"database\", etc. Edges have NO ARROWS/directional indicators,\
+    \ making it impossible to determine edge direction (source→target).\n  Legibility\
+    \ verdict: PARTIAL FAIL — while individual elements are visually clear, the plot\
+    \ is functionally incomplete due to missing node labels and missing directional\
+    \ arrows required for a directed network graph.\n\nDark render (plot-dark.png):\n\
+    \  Background: Warm near-black at #1A1A17 (correct). Title and labels are light\
+    \ text, all clearly readable.\n  Chrome: Axis labels and tick labels match the\
+    \ light theme contrast (appropriate adaptation). Title stands out clearly against\
+    \ dark background.\n  Data: Identical network structure and positions as light\
+    \ render. Node colors are identical to light render (Okabe-Ito colors stay constant).\
+    \ Edge colors and opacity identical. \n  Critical issues: Same as light render\
+    \ — UNLABELED NODES and NO DIRECTIONAL ARROWS.\n  Legibility verdict: PARTIAL\
+    \ FAIL — same functional gaps as light render. Dark-on-dark contrast is fine,\
+    \ but the plot lacks the essential features (labels, arrows) of a directed network\
+    \ graph.\n\nBoth renders are readable from a contrast perspective, but both are\
+    \ incomplete as directed network visualizations."
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (28px title, 18/16px labels); perfectly
-          readable in both themes
+        passed: false
+        comment: Title and axis labels readable, but node labels completely missing
+          — cannot identify nodes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Perfect spacing, no overlapping elements
+        comment: Nodes well-spaced, no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node sizing (20px) optimal for 11-node density; edges clearly visible
-          with opacity
+        comment: Nodes and edges clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; excellent contrast; CVD-safe
+        comment: Okabe-Ito palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 65-70% of canvas; balanced margins; nothing cut-off
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; axes appropriately unlabeled for network type
+        comment: Title present and correct; empty axis labels appropriate for networks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito correct; light #FAF8F1/dark #1A1A17 backgrounds perfect;
-          theme-adaptive chrome flips correctly'
+        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark), Okabe-Ito
+          palette applied'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -98,75 +111,75 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-tuned defaults; professional but generic; lacks custom design
-          touches or visual sophistication
+        comment: Generic styling with default colors and minimal customization
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid removed appropriately; edges use opacity; clean presentation
-          with good refinement
+        passed: false
+        comment: Minimal customization — force-directed layout is functional but not
+          refined
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Realistic software dependency data; clear use case; visual hierarchy
-          through color; descriptive rather than insight-focused
+        passed: false
+        comment: No visual hierarchy or focal point — unlabeled nodes prevent narrative
+          understanding
     spec_compliance:
-      score: 15
+      score: 7
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Correct directed network with nodes and directed edges
+        passed: false
+        comment: Plot is a network graph but NOT directed — missing arrow indicators
+          on edges. Spec explicitly requires 'arrows clearly visible'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: 'All features present: nodes, edges, force-directed layout, dependency
-          visualization'
+        passed: false
+        comment: 'Critical: Nodes are present but unlabeled. Spec requires ''nodes
+          with unique IDs and optional attributes like label'''
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Nodes mapped to (x,y) correctly; edges as lines; all data visible
+        passed: false
+        comment: Edges connect correctly (source→target) but directionality is not
+          visually communicated (no arrows)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format exact; legend appropriately omitted
+        passed: false
+        comment: Title correct; legend hidden, which hides node names needed for understanding
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: 'Shows varied patterns: simple chains, hub nodes, different degree
-          distributions'
+        passed: false
+        comment: Shows basic network structure but missing labels and directional
+          indicators
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real software architecture scenario; realistic module names; neutral
-          technical context
+        comment: Software module dependency network is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 11 nodes, 11 edges ideal for static visualization
+        comment: 9 nodes appropriate for clear visualization
     code_quality:
       score: 10
       max: 10
@@ -176,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → layout → plot → save'
+        comment: Clean, straightforward code with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -188,43 +201,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; necessary for path and visualization
+        comment: Only numpy, pygal, os imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; appropriate complexity; no over-engineering
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output files: plot-light.png, plot-dark.png, HTML'
+        comment: Correctly renders to plot-{THEME}.png and .html
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct pygal.XY usage; custom Style; proper chart.add() and render
-          methods
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Manual force-directed layout is algorithmic sophistication, not distinctively
-          library-leveraged
-  verdict: APPROVED
+        comment: Proper use of pygal's XY chart and Style API; theme handling is idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Force-directed layout shows algorithmic understanding but pygal's
+          static nature limits network visualization capabilities
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  dataprep:
-  - normalization
-  styling: []
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - dark-theme
