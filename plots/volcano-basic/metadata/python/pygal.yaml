@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:31:07Z'
-updated: '2026-05-14T11:16:10Z'
+updated: '2026-05-14T11:21:29Z'
 generated_by: claude-haiku
 workflow_run: 25856793931
 issue: 2924
@@ -15,34 +15,34 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 quality_score: 85
 review:
   strengths:
-  - 'Excellent theme adaptation: both light and dark renders are readable with proper
-    theme-aware color tokens'
-  - 'Strong specification compliance: all required elements present including threshold
-    lines, color-coding, proper axes'
-  - Clean, reproducible code with np.random.seed(42) for deterministic output
-  - Effective volcano plot visualization with clear visual separation of significance
-    regions
+  - 'Correct specification compliance: all required features (threshold lines, color
+    coding, axes labels) present and correctly rendered'
+  - 'Excellent theme adaptation: both light and dark renders properly themed with
+    no legibility failures or dark-on-dark contrast issues'
+  - Proper Okabe-Ito palette usage with semantic color mapping (green for non-significant,
+    orange for up-regulated, blue for down-regulated)
+  - Deterministic, reproducible code with clean structure and appropriate complexity
+  - Realistic and domain-plausible simulated differential gene expression data suitable
+    for omics analysis
   weaknesses:
-  - 'Design is functional but generic: could benefit from visual refinement such as
-    spine styling or grid customization'
-  - Library usage is solid but doesn't showcase distinctive pygal features beyond
-    standard charting
-  - No text annotations on top significant features (optional in spec but suggested)
+  - 'VQ-02 MINOR: Dense cluster of non-significant genes shows overlap; specification
+    suggests alpha transparency to handle overlapping points, but is not applied in
+    current implementation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec precisely, not pure white
-      Chrome: Title "volcano-basic · pygal · anyplot.ai" clearly visible in dark text; axis labels "Log₂ Fold Change" and "-Log₁₀(p-value)" are descriptive with proper subscripts; tick labels and grid lines are subtle but visible
-      Data: Three color-coded series - gray for non-significant (dense center cluster), orange (#D55E00) for up-regulated (upper right), blue (#0072B2) for down-regulated (upper left); horizontal threshold line at y≈1.3 and vertical threshold lines at x=±1 visible as dashed gray lines
-      Legibility verdict: PASS - All text is completely readable with strong contrast against light background
+      Background: Warm off-white surface at #FAF8F1, correctly matching theme specification
+      Chrome: Title "volcano-basic · pygal · anyplot.ai", X-axis label "Log₂ Fold Change", Y-axis label "-Log₁₀(p-value)", and all tick labels are clearly visible in dark text
+      Data: 500 genes displayed as colored scatter points - green (#009E73) for non-significant center cluster, orange (#D55E00) for up-regulated right cluster, blue (#0072B2) for down-regulated left cluster. Horizontal dashed line at p=0.05 threshold, vertical dashed lines at ±1 fold-change thresholds
+      Legibility verdict: PASS - All text elements are readable; colors distinguish categories effectively
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec precisely, not pure black
-      Chrome: Title clearly visible in light text; axis labels and tick marks all readable in light gray/muted tones; grid lines subtle but visible as light dotted lines
-      Data: Colors are identical to light render - same gray, orange, and blue points in same positions confirming proper theme adaptation; threshold lines visible in light muted gray
-      Legibility verdict: PASS - All text is clearly readable in light tones with appropriate contrast against dark surface; no dark-on-dark failures detected; brand green #009E73 (used as non-sig color) remains visible
+      Background: Warm near-black surface at #1A1A17, correctly matching theme specification
+      Chrome: Same title and axis labels rendered in light text, clearly visible against dark background. All tick labels and legend text readable
+      Data: Identical data colors to light render (green, orange, blue) confirm proper theme-independent palette assignment. Dashed threshold lines clearly visible in light stroke color
+      Legibility verdict: PASS - No dark-on-dark failures; all text well-contrasted; brand green (#009E73) maintains visibility. Data colors are identical between renders, only chrome is theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,66 +50,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both themes with proper font sizing
+        comment: All text (title, axis labels, ticks) explicitly sized and readable
+          at full resolution in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Dense center has expected overlap from low-significance genes, but
-          markers remain distinguishable
+        passed: false
+        comment: Dense central cluster shows point overlap; colors remain distinguishable
+          but spec suggests alpha transparency
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and threshold lines clearly visible
+        comment: All markers (dots_size=12) and threshold lines clearly visible and
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Gray, orange, blue provide good contrast; no red-green confusion
+        comment: Okabe-Ito palette is colorblind-safe; green, orange, blue provide
+          adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, appropriate margins
+        comment: 4800×2700 landscape format with proper margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; proper format
+        comment: Title format correct; axes descriptively labeled with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct backgrounds; Okabe-Ito colors for series; both renders theme-correct
+        comment: 'First series #009E73 (brand); up-regulated #D55E00; down-regulated
+          #0072B2; backgrounds theme-correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Functional but generic design; lacks distinctive polish
+        passed: true
+        comment: Custom Style object with intentional fonts and semantic color mapping
+          shows design thought
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Dashed threshold lines provide some distinction; minimal customization
+        comment: Grid subtle but minimal spine customization in pygal
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy; color guides attention to significant findings
+        comment: Volcano plot clearly shows gene significance; threshold lines create
+          interpretive frame
     spec_compliance:
       score: 15
       max: 15
@@ -119,25 +125,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter volcano plot
+        comment: Correct XY scatter chart for volcano plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Threshold lines, color-coding, significance classification all present
+        comment: 'All required features present: thresholds, color coding, title,
+          legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis log₂ fold change, Y-axis -log₁₀(p-value), full range displayed
+        comment: X-axis log₂ fold change, Y-axis -log₁₀(p-value) with appropriate
+          ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Proper format with attribution; accurate legend
+        comment: Title format correct; legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -147,19 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all volcano plot aspects
+        comment: 'All volcano plot aspects shown: significance, effect size, category
+          distinction'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic differential gene expression data
+        comment: Simulated differential gene expression data is domain-plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges for genomics
+        comment: Y-axis and X-axis scales appropriate for omics data
     code_quality:
       score: 10
       max: 10
@@ -169,52 +178,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean, straightforward implementation
+        comment: Simple, straightforward chart setup without unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'Only used imports: os, numpy, pygal'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves to plot-{THEME}.png and .html with environment variable
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY and Style appropriately
+        comment: Uses pygal.XY and custom Style; solid but not advanced
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Solid usage but fairly standard
+        comment: Style system and HTML output are pygal-distinctive but basic usage
+          overall
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - manual-ticks
   - html-export
   patterns:
   - data-generation
