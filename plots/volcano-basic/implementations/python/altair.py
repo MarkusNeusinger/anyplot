@@ -1,13 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 volcano-basic: Volcano Plot for Statistical Significance
 Library: altair 6.0.0 | Python 3.13.11
 Quality: 92/100 | Created: 2025-12-31
 """
 
+import os
+
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Simulated differential expression results
 np.random.seed(42)
@@ -43,10 +52,10 @@ df = pd.DataFrame({"log2_fold_change": log2_fc, "neg_log10_pvalue": neg_log10_pv
 vline_data = pd.DataFrame({"x": [-fc_threshold, fc_threshold]})
 hline_data = pd.DataFrame({"y": [pval_threshold]})
 
-# Color mapping
+# Color mapping using Okabe-Ito palette
 color_scale = alt.Scale(
     domain=["Up-regulated", "Down-regulated", "Not Significant"],
-    range=["#E74C3C", "#306998", "#999999"],  # Red, Python Blue, Gray
+    range=["#009E73", "#D55E00", INK_SOFT],  # Green, orange, adaptive gray
 )
 
 # Main scatter plot
@@ -62,22 +71,43 @@ scatter = (
 )
 
 # Vertical threshold lines
-vlines = alt.Chart(vline_data).mark_rule(strokeDash=[8, 4], color="#666666", strokeWidth=2).encode(x="x:Q")
+vlines = alt.Chart(vline_data).mark_rule(strokeDash=[8, 4], color=INK_SOFT, strokeWidth=2).encode(x="x:Q")
 
 # Horizontal threshold line
-hline = alt.Chart(hline_data).mark_rule(strokeDash=[8, 4], color="#666666", strokeWidth=2).encode(y="y:Q")
+hline = alt.Chart(hline_data).mark_rule(strokeDash=[8, 4], color=INK_SOFT, strokeWidth=2).encode(y="y:Q")
 
 # Combine all layers
 chart = (
     (scatter + vlines + hline)
     .properties(
-        width=1600, height=900, title=alt.Title("volcano-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        title=alt.Title("volcano-basic · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_legend(titleFontSize=18, labelFontSize=16, symbolSize=200)
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        gridOpacity=0.10,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_legend(
+        titleFontSize=18,
+        labelFontSize=16,
+        symbolSize=200,
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_title(color=INK, fontSize=28)
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
