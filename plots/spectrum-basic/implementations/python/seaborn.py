@@ -1,13 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-14
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # First series - machinery signal
+ACCENT = "#D55E00"  # Peak markers
 
 # Data - Create a synthetic signal with multiple frequency components
 np.random.seed(42)
@@ -42,28 +54,53 @@ amplitude_db = 20 * np.log10(amplitude + 1e-10)  # Add small value to avoid log(
 
 # Plot
 sns.set_context("talk", font_scale=1.2)
-fig, ax = plt.subplots(figsize=(16, 9))
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
+)
 
-# Use seaborn lineplot for the spectrum
-sns.lineplot(x=frequencies, y=amplitude_db, ax=ax, color="#306998", linewidth=2.5)
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+# Use seaborn lineplot for the spectrum with Okabe-Ito brand color
+sns.lineplot(x=frequencies, y=amplitude_db, ax=ax, color=BRAND, linewidth=2.5)
 
 # Fill under the curve for better visualization
-ax.fill_between(frequencies, amplitude_db, alpha=0.3, color="#306998")
+ax.fill_between(frequencies, amplitude_db, alpha=0.3, color=BRAND)
 
-# Mark peak frequencies
+# Mark peak frequencies with Okabe-Ito accent color
 peak_indices = np.where((amplitude_db > -20) & (frequencies > 10))[0]
 for idx in peak_indices:
     if amplitude_db[idx] > amplitude_db[max(0, idx - 5) : min(len(amplitude_db), idx + 6)].mean() + 5:
-        ax.axvline(x=frequencies[idx], color="#FFD43B", alpha=0.5, linestyle="--", linewidth=1.5)
+        ax.axvline(x=frequencies[idx], color=ACCENT, alpha=0.5, linestyle="--", linewidth=1.5)
 
 # Styling
-ax.set_xlabel("Frequency (Hz)", fontsize=20)
-ax.set_ylabel("Amplitude (dB)", fontsize=20)
-ax.set_title("spectrum-basic · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Frequency (Hz)", fontsize=20, color=INK)
+ax.set_ylabel("Amplitude (dB)", fontsize=20, color=INK)
+ax.set_title("spectrum-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax.set_xlim(0, 300)  # Focus on the frequency range of interest
 ax.set_ylim(-60, 10)
-ax.grid(True, alpha=0.3, linestyle="--")
+
+# Subtle grid on y-axis only
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.xaxis.grid(False)
+
+# Spine styling
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
