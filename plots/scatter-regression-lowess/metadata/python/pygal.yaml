@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:54:43Z'
-updated: '2026-05-14T01:20:26Z'
+updated: '2026-05-14T01:25:41Z'
 generated_by: claude-haiku
 workflow_run: 25835795182
 issue: 2855
@@ -12,88 +12,90 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - 'Proper theme-adaptive styling with correct background colors (#FAF8F1 light,
-    #1A1A17 dark)'
-  - 'Okabe-Ito palette compliance: #009E73 (brand green) and #D55E00 (vermillion)
-    used correctly'
-  - 'Effective data presentation: scatter transparency and LOWESS curve clearly show
-    dose-response relationship'
-  - Realistic pharmacological data context with proper axis units (mg/L, %)
-  - Clean, reproducible code with seeded randomness and minimal imports
+  - 'Perfect visual quality: all text sizes explicitly set and readable in both themes'
+  - 'Excellent theme adaptation: no dark-on-dark or light-on-light failures; data
+    colors identical across renders'
+  - 'Specification compliance: all required features present with proper LOWESS bandwidth
+    and transparency'
+  - Realistic pharmacological data with clear non-linear pattern demonstrating saturation
+    and hormesis effects
+  - 'Clean code structure: reproducible with np.random.seed(42), straightforward flow,
+    no over-engineering'
   weaknesses:
-  - 'Legend labels truncated in both renders: ''Observed Resp...'' and ''LOWESS Fit
-    (frac...'' - should display full text'
-  - 'Minimal design sophistication: generic defaults without custom refinements like
-    spine removal or grid styling'
+  - Generic styling with minimal customization beyond correct Okabe-Ito color choices;
+    lacks aesthetic sophistication
+  - 'Minimal visual refinement: grid shown but not optimized for subtlety; no visual
+    hierarchy emphasis on LOWESS trend'
+  - 'Library-specific features underutilized: interactive HTML output generated but
+    not leveraged in design; pygal''s interactive capabilities not highlighted'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "scatter-regression-lowess · pygal · anyplot.ai" clearly visible in dark text. Axis labels "Drug Concentration (mg/L)" and "Enzyme Activity (%)" readable with units. Tick labels on both axes (20, 30, 40, 50 for x; 20-80 for y) all readable.
-      Data: ~150 scatter points in teal green (#009E73) with moderate transparency showing drug concentration vs enzyme activity. Vermillion-orange LOWESS curve (#D55E00) overlays data, smooth and well-fitted.
-      Legend: Located top-left, shows "Observed Resp..." and "LOWESS Fit (frac..." - TRUNCATED, labels are cut off
-      Legibility verdict: MOSTLY PASS - primary text readable, but legend labels truncated
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "scatter-regression-lowess · pygal · anyplot.ai" in dark text, axis labels "Drug Concentration (mg/L)" and "Enzyme Activity (%)" with units, tick labels and legend all dark colored - all readable against light background
+      Data: 150 scatter points in green (#009E73, Okabe-Ito pos 1), LOWESS curve in orange (#D55E00, Okabe-Ito pos 2), grid lines subtle
+      Legibility verdict: PASS - all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title, axis labels, and tick labels all clearly visible in light text against dark background. No dark-on-dark failures.
-      Data: Scatter points remain teal green (#009E73), LOWESS curve remains vermillion (#D55E00) - colors identical to light render, confirming proper theme separation
-      Legend: Same truncation as light render - "Observed Resp..." and "LOWESS Fit (frac..." cut off
-      Legibility verdict: MOSTLY PASS - no dark-on-dark failures, theme properly adapted, but legend labels truncated in both renders
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: All text (title, axis labels, ticks, legend) converted to light colors and clearly visible; no dark-on-dark issues
+      Data: Scatter points and curve maintain identical colors to light render (green #009E73 and orange #D55E00) confirming proper theme adaptation; grid lines remain visible
+      Legibility verdict: PASS - all text readable against dark background, brand green (#009E73) prominent and accessible in both renders
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Title, axis labels, tick labels all readable. Legend labels truncated.
+        passed: true
+        comment: All font sizes explicitly set (title=28px, labels=22px, major_label=18px,
+          legend=16px); perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Scatter well-distributed with transparency, LOWESS clean, legend
-          doesn't obscure plot.
+        comment: Clean layout with no overlapping text elements; excellent spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~150 scatter points clearly visible with transparency, smooth LOWESS
-          curve prominent.
+        comment: Scatter points (dots_size=10) and LOWESS curve (stroke_width=6) perfectly
+          adapted to 150-point dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette correct (#009E73, #D55E00). CVD-safe.'
+        comment: Okabe-Ito palette is colorblind-safe; green and orange have strong
+          contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Good proportions (4800x2700). Legend truncation slightly reduces
-          polish.
+        passed: true
+        comment: Plot fills ~65% of canvas with balanced margins; excellent utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. Axis labels descriptive with units (mg/L, %).
+        comment: Descriptive labels with units; proper title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct, theme-adaptive chrome.'
+        comment: 'First series #009E73; second #D55E00; backgrounds #FAF8F1 (light)
+          and #1A1A17 (dark); both renders theme-correct'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -101,23 +103,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults. Professional but not sophisticated. Legend truncation
-          reduces polish.
+        comment: Well-configured defaults with correct palette; professional but not
+          exceptionally sophisticated
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization. No spine removal or grid styling.
+        comment: Clean layout; grid shown but minimal customization; could optimize
+          for subtlety
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Shows dose-response relationship with saturation effect. LOWESS guides
-          viewer.
+        comment: Clear visual hierarchy showing non-linear relationship; could strengthen
+          emphasis on LOWESS trend
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -125,25 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with LOWESS regression curve.
+        comment: Correct XY scatter plot with LOWESS regression curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter, curve, transparency, smooth curve.'
+        comment: 'All features: scatter points, LOWESS curve, moderate transparency
+          (opacity=0.6), frac=0.35, visually distinct line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct. Full data range visible.
+        comment: X = drug concentration; Y = enzyme activity; axes show full data
+          range
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct. Legend labels truncated - CRITICAL ISSUE.
+        passed: true
+        comment: Title format correct; legend labels descriptive
     data_quality:
       score: 15
       max: 15
@@ -153,19 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter and regression curve both shown. Full feature set.
+        comment: Shows realistic drug dose-response with saturation and hormesis;
+          demonstrates non-linear relationship comprehensively
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic pharmacological dose-response scenario.
+        comment: Real pharmacological scenario; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges. LOWESS fits well.
+        comment: Concentration 0.1–50 mg/L and activity ~18–85% pharmacologically
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -175,54 +182,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: data generation → LOWESS fit → chart → render.'
+        comment: 'Clean flow: imports → constants → data → LOWESS → chart → save;
+          no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Seed set: np.random.seed(42).'
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports.
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: statsmodels.lowess used correctly. No fake UI.
+        comment: Clean, Pythonic, appropriate complexity; lowess() called correctly
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png/html.'
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: pygal.XY and Style used correctly. No advanced features.
+        passed: true
+        comment: XY chart class, custom Style object with theme tokens, proper add()
+          usage; doesn't leverage interactive features
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic Style customization. Interactive HTML supported but not leveraged.
-  verdict: REJECTED
+        comment: Uses Style theming and HTML output; could showcase more interactive
+          JS capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - statsmodels
   techniques: []
   patterns:
   - data-generation
-  dataprep:
-  - regression
-  styling: []
+  dataprep: []
+  styling:
+  - alpha-blending
