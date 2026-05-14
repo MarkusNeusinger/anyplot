@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 volcano-basic: Volcano Plot for Statistical Significance
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-05-14
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,21 +12,32 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data: Simulated differential expression results
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette for volcano plot
+# Non-significant: adaptive neutral
+# Down-regulated: #0072B2 (Okabe-Ito blue)
+# Up-regulated: #E69F00 (Okabe-Ito orange)
+NOT_SIG_COLOR = INK_MUTED
+DOWN_COLOR = "#0072B2"
+UP_COLOR = "#E69F00"
+
+# Data generation
 np.random.seed(42)
 n_genes = 500
 
-# Generate log2 fold changes (centered around 0, some extreme values)
-log2_fold_change = np.concatenate(
-    [
-        np.random.normal(0, 0.5, n_genes - 60),  # Most genes: no change
-        np.random.normal(-2.5, 0.5, 30),  # Down-regulated
-        np.random.normal(2.5, 0.5, 30),  # Up-regulated
-    ]
-)
+# Single normal distribution for log2 fold changes
+log2_fold_change = np.random.normal(0, 0.8, n_genes)
 
-# Generate p-values (correlated with fold change magnitude for realism)
-base_pvalues = 10 ** (-np.abs(log2_fold_change) * np.random.uniform(0.5, 2, n_genes))
+# Generate p-values: correlation with fold change magnitude for realistic volcano shape
+# Genes with larger fold changes tend to have lower p-values
+base_pvalues = 10 ** (-(np.abs(log2_fold_change) ** 1.5) * np.random.uniform(0.8, 1.5, n_genes))
 base_pvalues = np.clip(base_pvalues, 1e-10, 1.0)
 neg_log10_pvalue = -np.log10(base_pvalues)
 
@@ -32,7 +45,7 @@ neg_log10_pvalue = -np.log10(base_pvalues)
 pval_threshold = 1.3  # -log10(0.05)
 fc_threshold = 1.0  # log2(2) = 1
 
-# Categorize genes using numpy vectorized conditions
+# Categorize genes
 categories = np.where(
     neg_log10_pvalue < pval_threshold,
     "Not Significant",
@@ -46,22 +59,37 @@ categories = np.where(
 # Create DataFrame
 df = pd.DataFrame({"log2_fold_change": log2_fold_change, "neg_log10_pvalue": neg_log10_pvalue, "category": categories})
 
-# Sort so significant points are plotted on top
+# Sort by category to plot significant genes on top
 category_order = {"Not Significant": 0, "Down-regulated": 1, "Up-regulated": 2}
 df["order"] = df["category"].map(category_order)
 df = df.sort_values("order")
 
-# Color palette matching specification
-palette = {
-    "Not Significant": "#888888",
-    "Down-regulated": "#306998",  # Python Blue
-    "Up-regulated": "#E63946",  # Red for up-regulated
-}
+# Color palette with Okabe-Ito colors
+palette = {"Not Significant": NOT_SIG_COLOR, "Down-regulated": DOWN_COLOR, "Up-regulated": UP_COLOR}
+
+# Set seaborn theme with adaptive colors
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Scatter plot using seaborn
+# Scatter plot
 sns.scatterplot(
     data=df,
     x="log2_fold_change",
@@ -69,32 +97,37 @@ sns.scatterplot(
     hue="category",
     hue_order=["Not Significant", "Down-regulated", "Up-regulated"],
     palette=palette,
-    s=100,
-    alpha=0.7,
+    s=120,
+    alpha=0.6,
     edgecolor="none",
     ax=ax,
-    legend=True,
 )
 
-# Threshold lines
-ax.axhline(y=pval_threshold, color="#333333", linestyle="--", linewidth=2, alpha=0.7)
-ax.axvline(x=fc_threshold, color="#333333", linestyle="--", linewidth=2, alpha=0.7)
-ax.axvline(x=-fc_threshold, color="#333333", linestyle="--", linewidth=2, alpha=0.7)
-
-# Add threshold annotations
-ax.text(ax.get_xlim()[1] - 0.3, pval_threshold + 0.3, "p = 0.05", fontsize=14, ha="right", color="#333333")
-ax.text(fc_threshold + 0.1, ax.get_ylim()[1] - 0.5, "FC = 2", fontsize=14, ha="left", color="#333333")
-ax.text(-fc_threshold - 0.1, ax.get_ylim()[1] - 0.5, "FC = 0.5", fontsize=14, ha="right", color="#333333")
+# Threshold lines with adaptive colors
+ax.axhline(y=pval_threshold, color=INK_SOFT, linestyle="--", linewidth=2, alpha=0.5)
+ax.axvline(x=fc_threshold, color=INK_SOFT, linestyle="--", linewidth=2, alpha=0.5)
+ax.axvline(x=-fc_threshold, color=INK_SOFT, linestyle="--", linewidth=2, alpha=0.5)
 
 # Labels and styling
-ax.set_xlabel("Log2 Fold Change", fontsize=20)
-ax.set_ylabel("-Log10(p-value)", fontsize=20)
-ax.set_title("volcano-basic · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.set_xlabel("Log2 Fold Change", fontsize=20, color=INK, fontweight="medium")
+ax.set_ylabel("-Log10(p-value)", fontsize=20, color=INK, fontweight="medium")
+ax.set_title("volcano-basic · seaborn · anyplot.ai", fontsize=24, color=INK, fontweight="medium")
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
 # Legend styling
-ax.legend(title="Significance", fontsize=14, title_fontsize=16, loc="upper right", framealpha=0.9)
+legend = ax.legend(
+    title="Significance Status", fontsize=14, title_fontsize=16, loc="upper right", framealpha=0.95, edgecolor=INK_SOFT
+)
+legend.get_frame().set_facecolor(ELEVATED_BG)
+for text in legend.get_texts():
+    text.set_color(INK)
+legend.get_title().set_color(INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
