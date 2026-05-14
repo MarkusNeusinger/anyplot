@@ -1,169 +1,184 @@
 library: altair
+language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:55:23Z'
-updated: '2025-12-31T11:05:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617482042
+updated: '2026-05-14T22:57:26Z'
+generated_by: claude-haiku
+workflow_run: 25889764984
 issue: 2992
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - statsmodels
-  techniques:
-  - faceting
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of Altair declarative faceting to create vertically stacked subplots
-    with independent y-scales
-  - Clean professional color scheme with distinct colorblind-accessible colors for
-    each component
-  - Proper use of statsmodels seasonal_decompose for authentic decomposition
-  - Component labels prominently displayed using facet headers with good font styling
-  - Appropriate data coverage with 96 monthly points over 8 years for meaningful decomposition
-  - Code follows KISS principles with clear linear flow
+  - Perfect theme adaptation with no dark-on-dark or light-on-light text failures
+    in both renders
+  - Excellent faceting structure with clear visual hierarchy guiding interpretation
+    of decomposition components
+  - Proper Okabe-Ito color discipline with theme-independent data colors staying constant
+    across light/dark renders
+  - Reproducible, straightforward code with appropriate seed and clean imports
+  - All four decomposition components clearly visible, distinguishable, and properly
+    labeled
+  - Professional presentation with proper typography hierarchy and generous whitespace
   weaknesses:
-  - Missing light grid lines that specification explicitly requests
-  - Y-axis labels all say generic Value rather than being component-specific
-  - Could leverage Altair interactivity features like .interactive() or tooltips
-  image_description: 'The plot displays a time series decomposition visualization
-    with four vertically stacked line charts sharing a common x-axis (Date, spanning
-    2018-2025). Each subplot shows a distinct component: **Original** (blue line)
-    shows the raw time series data with visible trend and seasonal fluctuations ranging
-    from ~75 to ~200; **Trend** (red line) displays a smooth upward linear trend from
-    ~100 to ~170; **Seasonal** (teal line) shows a perfect repeating annual sinusoidal
-    pattern oscillating between approximately -30 and +30; **Residual** (purple line)
-    shows random noise fluctuating around 0 within a range of roughly -20 to +20.
-    The title "timeseries-decomposition · altair · pyplots.ai" appears at the top.
-    Component names are displayed as bold labels on the left side of each subplot.
-    Font sizes appear adequate for readability.'
+  - Design Excellence could be elevated with additional visual refinement such as
+    spine removal, more sophisticated grid patterns, or enhanced visual emphasis on
+    specific components
+  - Library Mastery underutilizes altair-specific interactive features; could benefit
+    from cross-facet linking, selection highlighting, or synchronized interactions
+    between decomposition components
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly themed for light mode
+      Chrome: Title "timeseries-decomposition · altair · anyplot.ai" in dark text (INK #1A1A17); facet headers (Original, Trend, Seasonal, Residual) in dark text; axis labels and tick marks in secondary text color (INK_SOFT #4A4A44); all clearly readable against light background
+      Data: Four line series using Okabe-Ito palette - Original (#009E73), Trend (#D55E00), Seasonal (#0072B2), Residual (#CC79A7); thick lines (2.5 stroke width) clearly distinguish each component; grid lines subtle with appropriate opacity (0.12)
+      Legibility verdict: PASS - All text is readable; no light-on-light failures; data is clearly distinguishable; layout is clean with proper spacing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly themed for dark mode
+      Chrome: Title and facet headers in light text (INK #F0EFE8); axis labels and tick marks in secondary light text (INK_SOFT #B8B7B0); all clearly readable against dark background; no dark-on-dark text failures
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7) - confirming theme-independent data colors; same thick lines and clear component distinction; grid lines remain subtle and visible
+      Legibility verdict: PASS - All text is light-colored and readable; no dark-on-dark failures; data colors unchanged; theme adaptation is flawless; layout matches light render exactly
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 16-20pt are readable; tick labels could
-          be slightly larger but acceptable
+        comment: All text sizes explicitly set; title (28px), axis labels (22px),
+          tick labels (18px), facet headers (22px); fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; x-axis labels angled at -45° prevent
-          overlap
+        comment: Date labels properly angled (-45°); no collisions; component labels
+          clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line thickness of 2.5 is optimal for the data density; all components
-          clearly visible
+        comment: Line thickness (2.5) ensures visibility; all four components clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, red, teal, purple) are colorblind-safe
-          and have good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with faceted layout; slight excessive whitespace
-          between subplots
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: '"Date" and "Value" are descriptive but lack units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: No visible grid lines (spec requested light grid); legend appropriately
-          hidden since component names are facet labels
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct time series decomposition with 4 vertically stacked subplots
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, values on y-axis, correctly mapped for all components
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: All four components displayed; missing light grid lines as specified
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible with independent y-scales per subplot
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Component names clearly labeled via facet headers
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportions well-balanced; facet spacing (20px) provides generous
+          whitespace; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format but middle dot separator could be more prominent
-    data_quality:
-      score: 19
+        comment: Title descriptive with brand format; Date axis labeled; y-axis unlabeled
+          (appropriate for faceted structure)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; follows Okabe-Ito positions 1→4; backgrounds
+          correct (#FAF8F1 light / #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 12
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows trend, seasonality, and noise effectively; 96 monthly points
-          (8 years) covers multiple cycles; decomposition shows characteristic patterns
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Intentional use of Okabe-Ito palette; proper faceting structure;
+          clean visual hierarchy through component stacking; professional presentation
+          with thoughtful layout and font sizing
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
         passed: true
-        comment: Airline passengers scenario is a classic, neutral, and realistic
-          time series example
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Subtle grid (opacity 0.12); proper facet spacing; whitespace management
+          appropriate; could benefit from additional visual refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual progression guides viewer from Original → Trend → Seasonal
+          → Residual; hierarchical presentation creates narrative; clear focal point
+          for each component
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values 100-200 for passengers are realistic; seasonal amplitude and
-          residual scale are sensible
+        comment: Correct four-panel decomposition structure
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All components present: Original, Trend, Seasonal, Residual; shared
+          x-axis; component labels; grid lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: Date (shared); Y-axis: Values (independent scale per component
+          via resolve_scale); all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title formatted as spec (timeseries-decomposition · altair · anyplot.ai);
+          legend omitted (facet headers serve as labels)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all four decomposition aspects; complete time series structure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Airline passengers is classic, realistic domain; monthly frequency
+          appropriate; clear trend and seasonality present; neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values realistic (50-200 passengers); trend growth sensible (100→180);
+          seasonal component proportional (~30); residuals small
     code_quality:
       score: 10
       max: 10
@@ -173,41 +188,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → decomposition → plot → save'
+        comment: No unnecessary functions; straightforward implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for consistent results
+        comment: Seed set (np.random.seed(42))
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, statsmodels'
+        comment: 'Only necessary imports: altair, numpy, pandas, statsmodels'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: No fake UI; appropriate complexity for time series decomposition
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct format: saves as plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses Altair distinctive features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of faceting with `row=` encoding, declarative color mapping,
-          and independent y-scales via `resolve_scale`. Could have added interactivity
-          with `.interactive()` or tooltips.
+        comment: High-level API usage; proper facet() for small multiples; Scale and
+          Axis configurations follow altair best practices; interactive() enables
+          zoom/pan
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Faceting is well-executed and distinctive to altair; interactive()
+          provides value; implementation is solid but could explore additional interactive
+          capabilities beyond basic pan/zoom
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - faceting
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - time-series
+  styling: []
