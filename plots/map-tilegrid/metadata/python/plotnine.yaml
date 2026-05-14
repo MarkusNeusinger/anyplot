@@ -1,0 +1,241 @@
+library: plotnine
+language: python
+specification_id: map-tilegrid
+created: '2026-05-14T14:22:15Z'
+updated: '2026-05-14T14:40:22Z'
+generated_by: claude-sonnet
+workflow_run: 25865011339
+issue: 5246
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct tile grid map with all required features (equal-area squares, viridis
+    color encoding, state abbreviation labels, colorbar)
+  - 'Intelligent label contrast logic: white text on dark tiles, dark text on bright
+    tiles — works correctly in both light and dark themes'
+  - Viridis colormap is appropriate for sequential renewable energy data and is CVD-safe
+  - Both light and dark themes adapt correctly with proper token usage throughout
+    (PAGE_BG, ELEVATED_BG, INK, INK_SOFT)
+  - Realistic and neutral US renewable energy dataset covering all 50 states plus
+    DC with plausible percentage values
+  - Clean idiomatic plotnine implementation using coord_fixed() for equal-area preservation
+    and scale_color_identity() for custom tile labels
+  weaknesses:
+  - 'Font sizes slightly below style guide recommendations: title at 22pt (recommended
+    24pt), legend text at 14pt (recommended 16pt), tile state labels at size=11 —
+    all readable but not fully spec-compliant'
+  - Design Excellence stays at a slightly elevated default level; the label contrast
+    logic is the most distinctive design choice but overall visual polish does not
+    reach publication-ready level
+  - LM-02 could showcase more grammar-of-graphics capability — the implementation
+    is correct but mostly follows standard patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "US Renewable Energy Share · map-tilegrid · plotnine · anyplot.ai" visible in dark ink. Subtitle "Pacific Northwest leads (WA 74%, OR 72%); Southeast & fossil-fuel states trail below 15%" visible below title. All axis text/ticks hidden (correct for a map). Legend titled "Renewable Energy (%)" with colorbar — readable.
+      Data: Viridis colormap from deep purple (~2%) to yellow-green (~74%). State abbreviations bold, white on dark tiles and dark (#1A1A17) on bright tiles — all readable. 50 states + DC displayed in geographic tile grid approximation.
+      Legibility verdict: PASS — all text elements readable against the off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle render in light INK (#F0EFE8) — clearly visible against dark background. Legend box uses elevated dark background (#242420) with light-colored legend text and title — readable.
+      Data: Viridis colormap colors are identical to the light render — no shift in data colors. Tile label contrast (white/dark based on tile value) continues to work correctly in dark theme. State abbreviations clearly readable.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text adapts correctly to the dark theme
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title 22pt (rec. 24pt), legend text 14pt (rec. 16pt), tile labels
+          size=11 — readable but slightly underspecified
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlaps; tiles well-spaced with PAGE_BG borders
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All tiles and state labels clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is CVD-safe; label contrast logic ensures tile label legibility
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 layout with balanced whitespace; legend positioned right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id; legend labeled 'Renewable Energy
+          (%)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for sequential data; backgrounds #FAF8F1 light /
+          #1A1A17 dark; both themes correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: label contrast logic is thoughtful, subtitle adds
+          context. Not quite publication-ready but clearly above vanilla defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All axes/spines/ticks removed for clean map aesthetic; PAGE_BG tile
+          borders create subtle separation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle provides clear geographic insight; viridis gradient immediately
+          reveals west-vs-east pattern
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct tile grid map with equal-area square tiles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Equal-area tiles, color encoding, region labels, colorbar — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: col/row grid positions for x/y; renewable_pct for fill color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id (map-tilegrid), library (plotnine), anyplot.ai;
+          legend labeled correctly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Covers all tile grid map aspects: geographic positioning, equal
+          area, color encoding, region labels, colorbar, comprehensive state coverage'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US renewable energy percentages — realistic, neutral, non-controversial
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 2–74% reflect realistic renewable energy distribution across
+          US states
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports → theme tokens → data → theme →
+          plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data — no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no unused dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic; lambda for label contrast is appropriate
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good grammar-of-graphics pattern: ggplot+aes+geom_tile+geom_text+scale_fill_cmap+coord_fixed+theme'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_fixed() for equal-area, scale_color_identity() for per-row
+          label colors, scale_fill_cmap — these are distinctively plotnine
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns: []
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
