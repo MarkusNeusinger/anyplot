@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:10:30Z'
-updated: '2026-05-14T21:18:11Z'
+updated: '2026-05-14T21:28:26Z'
 generated_by: claude-sonnet
 workflow_run: 25885513056
 issue: 5247
@@ -12,126 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance — two-column layout, degree-based node sizing, weight-based
-    edge width, and color-coded sets all implemented
-  - 'Clean flat-script code with correct Okabe-Ito colors (#009E73 students, #D55E00
-    courses) and proper theme-adaptive chrome in both renders'
-  - Realistic, neutral data context (student-course enrollment) with good feature
-    coverage including hub nodes and degree variation
-  - Elegant weight-grouped edge traces and min-max node-size normalization show thoughtful
-    code design
+  - Full spec compliance — all required bipartite features implemented (two node sets,
+    degree-based sizing, weight-encoded edge widths, set-colored nodes)
+  - Clean dual-theme adaptation with correct background colors and all chrome tokens
+    properly applied in both renders
+  - Effective data storytelling via node size and edge width dual encoding
+  - Perfect code quality — seed, clean imports, flat script, correct output files
   weaknesses:
-  - Node labels set at 16px — should be 18px for tick-equivalent text at 4800×2700
-    resolution
-  - 'DE-01 (5/8): Design is above defaults (separator line, column headers, degree-sized
-    nodes) but falls short of publication-ready — column headers lack distinctive
-    styling and no visual device reinforces the two-group structure'
-  - 'DE-03 (4/6): Node size creates a focal point (Alice as hub) but the storytelling
-    could be stronger — no annotation or callout guides the viewer to the key insight'
-  - 'LM-02 (3/5): Hover tooltips and HTML export are good Plotly features, but more
-    distinctive capabilities (add_vrect for group zones, richer hovertemplate, custom
-    legend symbols) are left unused'
+  - Node labels at 16px are below the 18px minimum for pixel-based libraries at the
+    4800x2700px canvas; increase textfont size to 18px for student and course labels
+  - The edge weight encoding is visually present but not self-documenting; consider
+    adding a small reference key showing thin/medium/thick edge = weight 2/3/4
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Student-Course Enrollment · network-bipartite · plotly · anyplot.ai" in dark ink, clearly readable. Bold "Students" and "Courses" column headers at 22px. All text is readable against the light background.
-      Data: 12 student nodes in #009E73 (brand green) on the left column; 8 course nodes in #D55E00 (orange) on the right column. Node sizes vary by degree — Alice is visibly larger (5 connections), Jack and Karen are smaller (2 connections). Edges are light gray with alpha transparency and vary in width by edge weight (2-4). A dotted vertical separator bisects the canvas.
-      Legend: Horizontal legend at bottom with "Students" (green) and "Courses" (orange) — readable, bordered frame with ELEVATED_BG fill.
-      Legibility verdict: PASS — all text readable; no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Student-Course Enrollment · network-bipartite · plotly · anyplot.ai" in dark #1A1A17 at 28px — clearly readable. Column headers "Students" and "Courses" at 22px in respective data colors (green/orange) — readable. Node labels (student/course names) at 16px in #1A1A17 — readable but slightly small for 4800x2700px canvas. Legend text at 16px — readable.
+      Data: Students = #009E73 (Okabe-Ito position 1), Courses = #D55E00 (position 2). Node sizes vary by degree (Alice largest at 5 courses). Edge widths vary by weight (2-4), semi-transparent grey edges.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title visible in light text (#F0EFE8); column headers and node labels rendered in light ink. All text is clearly readable against the dark background. No dark-on-dark failures detected.
-      Data: Node colors identical to light render — #009E73 for students, #D55E00 for courses. Edges appear slightly lighter gray (rgba with adjusted alpha for dark surface) but remain subtle and non-dominant.
-      Legend: Same layout as light render; border and fill use ELEVATED_BG (#242420) — clearly visible.
-      Legibility verdict: PASS — all text readable; brand green #009E73 is fully legible on dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light #F0EFE8 — clearly readable against dark background. Column headers in data colors (green/orange) — readable. Node labels in light text — readable, no dark-on-dark failures. Legend text in light color — readable.
+      Data: Student green (#009E73) and course orange (#D55E00) are identical to light render — only chrome tokens flipped. Node sizes and edge widths unchanged.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 28px, headers 22px, legend 16px)
-          but node labels at 16px are below the 18px recommendation for tick-equivalent
-          text at 4800x2700
+        comment: Title (28px) and headers (22px) well-sized; node labels at 16px slightly
+          below 18px minimum for pixel-based libraries
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Labels on outer sides of nodes; no text collisions; edge crossings
-          are expected for bipartite layouts
+        comment: Bipartite layout prevents overlap; edge crossings are expected and
+          handled well
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes clearly visible; minor nodes (Jack, Karen) on the smaller end
-          but still legible; edge widths encode weight effectively
+        comment: Nodes and variable-width edges clearly visible; degree-based sizing
+          effective
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2 — CVD-safe green/orange pair with strong
-          contrast
+        comment: Okabe-Ito positions 1 and 2; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good bipartite layout with adequate label margins; minor underutilization
-          of vertical canvas height
+        comment: Good proportions and margins; vertical separator adds structure
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title plus column headers ('Students', 'Courses') serve
-          as clear group labels
+        comment: Title format correct; column headers serve as effective axis labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Students=#009E73 (Okabe-Ito 1), Courses=#D55E00 (Okabe-Ito 2); backgrounds
-          #FAF8F1/#1A1A17; data colors identical across themes; chrome fully adaptive'
+        comment: 'Students=#009E73, Courses=#D55E00; backgrounds #FAF8F1/#1A1A17;
+          both themes correct'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above 'well-configured default' (4) due to dotted separator, bold
-          column headers, degree-sized nodes, and edge weight encoding — but not at
-          'strong design' (6) level; column header styling lacks distinctive visual
-          treatment
+        comment: Node sizing by degree, variable edge widths by weight, colored column
+          headers, vertical separator — intentional design above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes fully hidden (appropriate for network), transparent edges, PAGE_BG
-          node outlines for definition, bordered legend frame — good refinement
+        comment: Axes completely suppressed, no grid, clean whitespace, separator
+          adds structure
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Node size creates visual hierarchy and immediately reveals Alice
-          as the hub; color differentiates the two sets; edge width encodes weight
-          — above default but no annotation or callout guides the viewer to the key
-          insight
+        comment: Node size encodes degree (hubs visible), edge width encodes weight;
+          bipartite layout makes cross-category relationships clear
     spec_compliance:
       score: 15
       max: 15
@@ -141,53 +123,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network with two-column layout
+        comment: Correct bipartite network layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two-column layout, color by set, degree-based node size, weight-based
-          edge width, non-overlapping labels — all present
+        comment: Two node sets in columns, color by set, degree-based node size, weight-encoded
+          edge widths
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Students (x=0) left, courses (x=1) right; all 12 students and 8 courses
-          shown; all 37 edges rendered
+        comment: Students on left (x=0), Courses on right (x=1); all edges correctly
+          mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, and anyplot.ai in correct order;
-          legend correctly labels 'Students' and 'Courses'
+        comment: Title format correct; legend identifies both node sets
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows bipartite structure, hub nodes (Alice), low-degree nodes (Jack/Karen),
-          degree variation, and edge weight variation
+        comment: Bipartite structure, hub nodes, degree variation, edge weight all
+          demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Student-course enrollment is a canonical, neutral, real-world bipartite
-          network application; 12 students and 8 CS courses is plausible
+        comment: Student-course enrollment is realistic, neutral, and domain-appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 37 edges for 12 students (~3 per student average); weights 2-4 are
-          plausible for credit-hour encoding
+        comment: 12 students, 8 courses, 37 edges — appropriate size
     code_quality:
       score: 10
       max: 10
@@ -197,34 +176,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → theme tokens → data → compute degrees → traces
-          → layout → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is hardcoded so deterministic
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, defaultdict, numpy, plotly.graph_objects — all actively used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Weight-grouped edge traces and min-max node-size normalization are
-          elegant; code is readable and non-repetitive
+        comment: defaultdict for edge grouping is clean; linear sizing is readable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image(f'plot-{THEME}.png', width=1600, height=900, scale=3)
-          and write_html — both correct
+        comment: plot-{THEME}.png and plot-{THEME}.html both generated
     library_mastery:
       score: 7
       max: 10
@@ -234,18 +210,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with mode='markers+text', customdata, hovertemplate,
-          add_annotation, add_shape — mostly idiomatic; could use more advanced layout
-          APIs
+        comment: Proper go.Figure with multiple go.Scatter traces; add_annotation
+          and add_shape for extras; customdata for hover
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Interactive hover tooltips with customdata and formatted hovertemplate,
-          plus HTML export, are distinctly Plotly; misses opportunities like add_vrect
-          for group zones or richer interactive features
-  verdict: REJECTED
+        passed: false
+        comment: Uses hovertemplate with customdata, write_html, grouped traces for
+          edge weights; solid but not exceptional use of plotly-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -258,6 +232,5 @@ impl_tags:
   dataprep:
   - normalization
   styling:
-  - alpha-blending
-  - minimal-chrome
   - edge-highlighting
+  - alpha-blending
