@@ -1,0 +1,246 @@
+library: altair
+language: python
+specification_id: dendrogram-radial
+created: '2026-05-14T09:51:02Z'
+updated: '2026-05-14T10:11:47Z'
+generated_by: claude-sonnet
+workflow_run: 25852599885
+issue: 5245
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/altair/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - From-scratch radial dendrogram with correct scipy linkage geometry (arc arcs +
+    radial segments)
+  - INK_SOFT for mixed-cluster branches creates clear visual hierarchy
+  - detail:N channel elegantly handles multi-segment line rendering
+  - Both themes render correctly with proper background tokens and matching data colors
+  - 'Full spec compliance: root-at-center, leaf-at-circumference, distance-proportional
+    branch lengths, cluster coloring'
+  weaknesses:
+  - Gene leaf labels lack explicit fontSize — rendered via tooltip encoding at default
+    size rather than a dedicated mark_text layer
+  - branch_color() helper function violates KISS structure; should be inlined as vectorized
+    pandas operation
+  - Title fontSize=22px is below the 28px recommendation for pixel-based libraries
+  - Generic gene names (G01-G30) reduce realism — named genes would improve DQ-02
+  - Design polish could be elevated with more refined treatment of mixed-branch arcs
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "dendrogram-radial · altair · anyplot.ai" in dark ink (#1A1A17) at 22px, clearly readable; legend text in INK_SOFT (#4A4A44) at 16px; no axis labels (correct for plot type); gene labels around circumference at default size (via tooltip), readable
+      Data: 5 clusters in Okabe-Ito order — Cluster 1 #009E73 (brand green), Cluster 2 #D55E00 (orange), Cluster 3 #0072B2 (blue), Cluster 4 #CC79A7 (reddish-purple), Cluster 5 #E69F00 (golden-yellow); mixed branches in INK_SOFT dark gray; leaf circles at size=100
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8, clearly readable; gene labels and legend text in #B8B7B0 (INK_SOFT dark), readable against dark background; no dark-on-dark failures detected
+      Data: All 5 cluster colors identical to light render (Okabe-Ito positions 1-5 unchanged); mixed branches now in #B8B7B0 lighter gray for contrast against dark surface
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title 22px and legend 16px explicitly set; leaf labels use default
+          sizing via tooltip rendering without explicit fontSize
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Gene labels generally well-spaced at 30 nodes; dense orange cluster
+          region slightly crowded but readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Leaf circles and branch lines clearly visible at scale_factor=3.0
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe; INK_SOFT for mixed branches
+          provides neutral contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3600x3600px square appropriate; circle fills ~75% of canvas; minor
+          empty corners inherent to circular form
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Cluster 1 = #009E73; subsequent clusters follow Okabe-Ito order;
+          correct light/dark backgrounds'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured with correct palette and INK_SOFT mixed-branch treatment;
+          above defaults but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/spines/grid, custom legend, theme-adaptive chrome; clean
+          layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded clusters create immediate grouping story; branch lengths
+          convey merge distances
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radial dendrogram with root at center and leaves at circumference
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Linkage matrix, leaf labels, cluster colors, proportional branch
+          lengths all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 30 gene nodes visible; spatial layout correctly encodes hierarchy
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; 5-cluster legend with correct Okabe-Ito colors
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Hierarchical merging, 5 clusters, mixed branches, leaf coloring all
+          present
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Gene expression bioinformatics is realistic; gene names G01-G30 slightly
+          abstract
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30 genes x 10 conditions, 5 clusters of 6 genes — appropriate scale
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: branch_color() helper function deviates from KISS; small but technically
+          violates no-functions rule
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; importlib workaround necessary for file naming
+          conflict
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: importlib workaround is correct solution; no fake interactivity;
+          complexity appropriate
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and .html; scale_factor=3.0 yields 3600x3600px
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.layer(), detail channel, alt.value(), correct encoding shorthand
+          — idiomatic Altair patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: detail:N for line segment grouping and Scale domain/range pairing
+          are distinctively Altair features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - minimal-chrome
