@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-14
@@ -130,29 +130,41 @@ chart.options.chart = {
 # Title
 chart.options.title = {
     "text": "shap-summary · highcharts · anyplot.ai",
-    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
+    "style": {"fontSize": "32px", "fontWeight": "bold", "color": INK},
 }
 
 # X-axis (SHAP value)
 chart.options.x_axis = {
-    "title": {"text": "SHAP Value (Impact on Prediction)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
-    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "title": {
+        "text": "SHAP Value (Impact on Prediction)",
+        "style": {"fontSize": "26px", "fontWeight": "600", "color": INK},
+        "margin": 20,
+    },
+    "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}},
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
     "lineColor": INK_SOFT,
+    "lineWidth": 2,
     "tickColor": INK_SOFT,
-    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 3, "zIndex": 5}],
+    "tickLength": 8,
+    "crosshair": {"color": INK_SOFT, "width": 2, "zIndex": 10},
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 4, "zIndex": 5, "dashStyle": "Solid"}],
 }
 
 # Y-axis (features)
 y_categories = [feature_names[i] for i in sorted_indices][::-1]  # Reverse for top-to-bottom
 chart.options.y_axis = {
-    "title": {"text": "", "style": {"fontSize": "22px", "color": INK}},
+    "title": {"text": "", "style": {"fontSize": "26px", "color": INK}},
     "categories": y_categories,
-    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
-    "gridLineWidth": 0,
+    "labels": {"style": {"fontSize": "24px", "color": INK_SOFT, "fontWeight": "500"}},
+    "gridLineWidth": 1,
+    "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
     "lineColor": INK_SOFT,
+    "lineWidth": 2,
     "tickColor": INK_SOFT,
+    "tickLength": 8,
     "reversed": False,
 }
 
@@ -162,31 +174,45 @@ chart.options.legend = {
     "align": "right",
     "verticalAlign": "middle",
     "layout": "vertical",
-    "title": {"text": "Feature Value", "style": {"fontSize": "22px", "fontWeight": "bold", "color": INK}},
-    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "title": {"text": "Feature Value", "style": {"fontSize": "26px", "fontWeight": "bold", "color": INK}},
+    "itemStyle": {"fontSize": "22px", "color": INK_SOFT},
     "backgroundColor": ELEVATED_BG,
     "borderColor": INK_SOFT,
-    "borderWidth": 1,
-    "symbolRadius": 8,
-    "symbolHeight": 20,
-    "symbolWidth": 20,
-    "itemMarginBottom": 10,
+    "borderWidth": 2,
+    "borderRadius": 4,
+    "symbolRadius": 10,
+    "symbolHeight": 24,
+    "symbolWidth": 24,
+    "itemMarginBottom": 12,
+    "padding": 16,
 }
 
-# Plot options
+# Plot options with enhanced Highcharts features
 chart.options.plot_options = {
     "scatter": {
-        "marker": {"radius": 8, "states": {"hover": {"enabled": True, "lineColor": INK}}},
+        "marker": {
+            "radius": 8,
+            "states": {
+                "hover": {"enabled": True, "lineColor": INK, "lineWidth": 2, "radiusPlus": 3},
+                "select": {"fillColor": INK_SOFT, "borderColor": INK},
+            },
+        },
         "jitter": {"x": 0, "y": 0},
+        "cursor": "pointer",
     },
     "series": {"animation": False},
 }
 
-# Tooltip
+# Tooltip with enhanced styling
 chart.options.tooltip = {
     "headerFormat": "<b>{series.name}</b><br>",
     "pointFormat": "SHAP Value: {point.x:.3f}",
-    "style": {"fontSize": "18px"},
+    "style": {"fontSize": "20px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 2,
+    "borderRadius": 4,
+    "padding": 12,
 }
 
 # Add all series
