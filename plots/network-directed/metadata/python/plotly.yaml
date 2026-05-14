@@ -1,173 +1,176 @@
 library: plotly
+language: python
 specification_id: network-directed
 created: '2025-12-30T23:56:01Z'
-updated: '2025-12-31T00:02:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608483175
+updated: '2026-05-14T03:28:20Z'
+generated_by: claude-haiku
+workflow_run: 25839733137
 issue: 2858
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-directed/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-directed/plotly/plot.html
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/plotly/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent circular layout algorithm that positions nodes evenly and prevents overlap
-  - Clear arrow direction implementation using Plotly annotations with appropriate
-    sizing
-  - Well-chosen color scheme that distinguishes module groups effectively and is colorblind-accessible
-  - Good use of Plotly hover template for interactive exploration
-  - Title follows the exact spec-id format required
-  - Realistic software dependency scenario that matches the spec example perfectly
+  - Perfect spec compliance with all required features including bidirectional edge
+    handling via curved Bezier paths
+  - Excellent theme-adaptive rendering with correct Okabe-Ito colors and theme-aware
+    chrome (backgrounds, text, edges)
+  - Clean circular layout with appropriate spacing and well-positioned legend
+  - Realistic software dependency graph that effectively demonstrates directed network
+    relationships
+  - Strong code quality with proper reproducibility and idiomatic plotly usage
+  - Proper theme adaptation with no dark-on-dark or light-on-light readability issues
+    in either render
   weaknesses:
-  - Some longer node labels (middleware, validators, schemas) appear slightly cramped
-    within their circular markers
-  - The graph does not include bidirectional edges to demonstrate curved edge handling
-    mentioned in spec notes
-  image_description: 'The plot displays a directed network graph showing software
-    module dependencies. 13 nodes are arranged in a circular layout, each containing
-    a module name (main, api, auth, database, models, utils, config, logging, cache,
-    router, middleware, validators, schemas). Nodes are color-coded by group: Python
-    Blue (#306998) for Entry (main), Python Yellow (#FFD43B) for Core modules (api,
-    auth, database, cache, router, middleware), Teal (#4ECDC4) for Data modules (models,
-    validators, schemas), and Gray (#95A5A6) for Helpers (utils, config, logging).
-    Directed edges connect nodes with gray lines and visible arrowheads pointing toward
-    the target node. The title reads "Software Module Dependencies · network-directed
-    · plotly · pyplots.ai" at the top. A legend titled "Module Groups" appears on
-    the right side listing Entry, Core, Data, and Helpers with their respective colors.'
+  - 'Minor label-edge proximity: some node labels have edges passing near them in
+    the circular layout, creating slight visual clutter but not impairing readability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "network-directed · plotly · anyplot.ai" in dark text (#1A1A17), clearly readable. Axis labels and ticks not needed for network graph. Legend with "Module Groups" title and color indicators in dark text (#1A1A17) and secondary text (#4A4A44), readable and well-positioned.
+      Data: 13 nodes in four color-coded groups using Okabe-Ito palette (green #009E73, orange #D55E00, blue #0072B2, reddish purple #CC79A7). Node labels in monospace font, clearly readable. 19 directed edges with dark gray arrows showing module dependencies. One bidirectional edge rendered as curved Bezier path.
+      Legibility verdict: PASS - all text, node labels, and directional indicators are clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title in light gray (#F0EFE8), clearly readable against dark background. Legend with light text (#B8B7B0 for secondary) and elevated background (#242420), all readable with good contrast. No dark-on-dark text issues.
+      Data: Node colors are IDENTICAL to light render (green, orange, blue, reddish purple) - only chrome has changed. Light gray edges with light arrows instead of dark. Bezier curve for bidirectional edge rendered in light gray.
+      Legibility verdict: PASS - all text is readable in dark theme, proper contrast, no dark-on-dark failures, theme adaptation is thorough and correct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and legend text are clear and readable; node labels are legible
-          but some ("middleware", "validators", "schemas") are slightly cramped within
-          nodes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; nodes well-spaced in circular layout
+        comment: Title, node labels, and legend all clearly readable in both themes
+          with properly sized fonts
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: Minor label-edge proximity in circular layout creates slight visual
+          clutter but does not impair readability
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes and edges are clearly visible; arrows are appropriately sized;
-          some edges cross through center making paths harder to trace
+        comment: Nodes, edges, arrows, and text all clearly visible; circular layout
+          provides natural spacing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, teal, gray) are colorblind-safe
-          with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Circular layout is centered, good use of canvas space, legend positioned
-          appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Not applicable for network graphs (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate), legend is well-styled with title and clear
-          entries
+        comment: Uses Okabe-Ito palette which is colorblind-safe; no red-green sole
+          signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with symmetric circular layout; margins properly
+          balanced; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is descriptive and properly formatted; no axes needed for network
+          graph
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series follows Okabe-Ito; correct backgrounds;
+          both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional palette use; thoughtful color-coding; monospace font
+          appropriate for technical context; intentional layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean composition; curved paths for bidirectional edges; node borders
+          provide definition; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded groups create visual hierarchy; circular layout guides
+          viewer; entry point clear; arrows communicate dependency direction
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct directed network graph with visible arrow direction
+        comment: Correct directed network graph with arrows
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes and edges correctly mapped; arrows point from source to target
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has nodes with IDs/labels, directed edges with arrows, group coloring
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: nodes, edges, bidirectional handling, grouping'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 nodes visible, all 19 edges displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All nodes and edges rendered correctly with proper layout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all four module groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "Software Module Dependencies · network-directed
-          · plotly · pyplots.ai"
+        comment: Title format correct; legend present with matching labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows directed edges, node grouping, and asymmetric relationships;
-          could benefit from bidirectional edges to demonstrate the curved edge handling
-          mentioned in spec
+        comment: Comprehensive network showing multiple dependency types
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software module dependency is a perfect real-world scenario matching
-          spec example
+        comment: Realistic software dependency structure with authentic patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 13 nodes is within recommended 10-50 range; dependency relationships
-          are realistic
+        comment: Well-balanced node count and edge density for static visualization
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,41 +178,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → layout → figure → traces
-          → save'
+        comment: Direct imperative code with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Proper seed and deterministic layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also creates plot.html (which is fine for plotly)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter and annotations for arrows; could leverage hover
-          interactivity more; HTML export demonstrates interactive capability
+        comment: Proper use of go.Figure, add_trace, and update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses annotations for arrows, Bezier curves for bidirectional edges,
+          hover tooltips
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
