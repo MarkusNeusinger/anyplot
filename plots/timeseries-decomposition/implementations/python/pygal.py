@@ -1,27 +1,43 @@
-""" pyplots.ai
+"""anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: pygal | Python 3.13
+Quality: pending | Created: 2025-12-31
 """
 
+import os
+import sys
 from io import BytesIO
+from pathlib import Path
 
-import cairosvg
-import numpy as np
-import pandas as pd
-import pygal
-from PIL import Image, ImageDraw, ImageFont
-from pygal.style import Style
-from statsmodels.tsa.seasonal import seasonal_decompose
 
+# Remove current directory from sys.path to avoid collision with this file
+script_dir = str(Path(__file__).parent)
+sys.path = [p for p in sys.path if p != script_dir and p != ""]
+
+import cairosvg  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import pygal  # noqa: E402
+from PIL import Image, ImageDraw, ImageFont  # noqa: E402
+from pygal.style import Style  # noqa: E402
+from statsmodels.tsa.seasonal import seasonal_decompose  # noqa: E402
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette for components
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
 
 # Data - Monthly CO2 measurements with clear trend and seasonality
 np.random.seed(42)
-dates = pd.date_range("2020-01-01", periods=72, freq="ME")  # 6 years monthly
+dates = pd.date_range("2020-01-01", periods=72, freq="ME")
 
 # Create realistic CO2-like data with trend, seasonality, and noise
-trend = np.linspace(410, 430, 72)  # Rising trend (ppm)
-seasonal_pattern = 3 * np.sin(2 * np.pi * np.arange(72) / 12)  # Annual cycle
+trend = np.linspace(410, 430, 72)
+seasonal_pattern = 3 * np.sin(2 * np.pi * np.arange(72) / 12)
 noise = np.random.normal(0, 0.5, 72)
 values = trend + seasonal_pattern + noise
 
@@ -35,21 +51,20 @@ trend_component = decomposition.trend.values
 seasonal_component = decomposition.seasonal.values
 residual_component = decomposition.resid.values
 
-# Create x-axis labels (show every 6 months for readability)
+# Create x-axis labels
 x_labels = [d.strftime("%Y-%m") if i % 6 == 0 else "" for i, d in enumerate(dates)]
 
 # Define components with their data, titles, colors, y-ranges, and y-axis labels
 components = [
-    ("Original Series (CO2 ppm)", observed, "#306998", (405, 437), "CO₂ (ppm)"),
-    ("Trend Component", trend_component, "#FFD43B", (405, 435), "Trend (ppm)"),
-    ("Seasonal Component", seasonal_component, "#44AA44", (-5, 5), "Seasonal (ppm)"),
-    ("Residual Component", residual_component, "#E74C3C", (-3, 3), "Residual (ppm)"),
+    ("Original Series (CO2 ppm)", observed, OKABE_ITO[0], (405, 437), "CO₂ (ppm)"),
+    ("Trend Component", trend_component, OKABE_ITO[1], (405, 435), "Trend (ppm)"),
+    ("Seasonal Component", seasonal_component, OKABE_ITO[2], (-5, 5), "Seasonal (ppm)"),
+    ("Residual Component", residual_component, OKABE_ITO[3], (-3, 3), "Residual (ppm)"),
 ]
 
 # Target: 4800 x 2700 px total (4 vertically stacked charts)
-# Reserve left margin for y-axis labels drawn manually
 title_height = 160
-y_label_width = 220
+y_label_width = 180
 chart_width = 4800 - y_label_width
 chart_height = (2700 - title_height) // 4
 
@@ -60,21 +75,21 @@ for idx, (label, data, color, y_range, y_label) in enumerate(components):
     clean_data = [None if np.isnan(v) else float(v) for v in data]
     y_labels_list.append(y_label)
 
-    # Create custom style with component color and larger fonts for 4800x2700
+    # Create custom style with component color and larger fonts
     component_style = Style(
-        background="white",
-        plot_background="#fafafa",
-        foreground="#333333",
-        foreground_strong="#333333",
-        foreground_subtle="#666666",
+        background=PAGE_BG,
+        plot_background=PAGE_BG,
+        foreground=INK,
+        foreground_strong=INK,
+        foreground_subtle=INK_MUTED,
         colors=(color,),
         font_family="sans-serif",
-        title_font_size=60,
-        label_font_size=48,
-        major_label_font_size=44,
-        legend_font_size=44,
-        value_font_size=36,
-        stroke_width=5,
+        title_font_size=28,
+        label_font_size=22,
+        major_label_font_size=18,
+        legend_font_size=16,
+        value_font_size=14,
+        stroke_width=3,
     )
 
     chart = pygal.Line(
@@ -87,13 +102,14 @@ for idx, (label, data, color, y_range, y_label) in enumerate(components):
         show_y_guides=True,
         show_x_guides=True,
         show_dots=False,
-        stroke_style={"width": 5},
+        stroke_style={"width": 3},
         range=y_range,
         truncate_label=-1,
         x_label_rotation=35 if idx == 3 else 0,
         margin_left=20,
         y_labels_major_count=6,
         show_minor_y_labels=False,
+        dots_size=2,
     )
 
     # Only show x-labels on the bottom chart
@@ -113,27 +129,27 @@ for chart in charts:
     img = Image.open(BytesIO(png_bytes))
     images.append(img)
 
-# Create combined image (4800 x 2700)
+# Create combined image
 total_width = 4800
 total_height = 2700
 
-combined = Image.new("RGB", (total_width, total_height), "white")
+combined = Image.new("RGB", (total_width, total_height), PAGE_BG)
 
-# Load fonts with increased sizes for better readability
+# Load fonts with increased sizes
 try:
     title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 88)
-    y_label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
+    y_label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
 except OSError:
     title_font = ImageFont.load_default()
     y_label_font = ImageFont.load_default()
 
 # Add main title
 draw = ImageDraw.Draw(combined)
-title_text = "timeseries-decomposition · pygal · pyplots.ai"
+title_text = "timeseries-decomposition · pygal · anyplot.ai"
 bbox = draw.textbbox((0, 0), title_text, font=title_font)
 title_width = bbox[2] - bbox[0]
 title_x = (total_width - title_width) // 2
-draw.text((title_x, 40), title_text, fill="#333333", font=title_font)
+draw.text((title_x, 40), title_text, fill=INK, font=title_font)
 
 # Paste charts vertically with space for y-axis labels
 for idx, img in enumerate(images):
@@ -144,7 +160,7 @@ for idx, img in enumerate(images):
     y_label_text = y_labels_list[idx]
     label_img = Image.new("RGBA", (500, 120), (255, 255, 255, 0))
     label_draw = ImageDraw.Draw(label_img)
-    label_draw.text((0, 0), y_label_text, fill="#333333", font=y_label_font)
+    label_draw.text((0, 0), y_label_text, fill=INK, font=y_label_font)
 
     # Crop to text bounds and rotate
     label_bbox = label_img.getbbox()
@@ -158,25 +174,54 @@ for idx, img in enumerate(images):
     combined.paste(label_img, (label_x, label_y), label_img)
 
 # Save final image
-combined.save("plot.png", dpi=(300, 300))
+combined.save(f"plot-{THEME}.png", dpi=(300, 300))
 
 # Also save as HTML (interactive SVG)
-html_content = """<!DOCTYPE html>
+html_content = (
+    """<!DOCTYPE html>
 <html>
 <head>
-    <title>timeseries-decomposition · pygal · pyplots.ai</title>
+    <title>timeseries-decomposition · pygal · anyplot.ai</title>
     <style>
-        body { font-family: sans-serif; background: white; margin: 20px; }
-        h1 { text-align: center; color: #333; font-size: 28px; margin-bottom: 20px; }
-        .charts { display: flex; flex-direction: column; max-width: 1200px; margin: 0 auto; }
-        .chart { width: 100%; margin-bottom: 10px; }
-        .chart svg { width: 100%; height: auto; }
+        body {
+            font-family: sans-serif;
+            background: """
+    + PAGE_BG
+    + """;
+            margin: 20px;
+            color: """
+    + INK
+    + """;
+        }
+        h1 {
+            text-align: center;
+            color: """
+    + INK
+    + """;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        .charts {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chart {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .chart svg {
+            width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
-    <h1>timeseries-decomposition · pygal · pyplots.ai</h1>
+    <h1>timeseries-decomposition · pygal · anyplot.ai</h1>
     <div class="charts">
 """
+)
 
 for chart in charts:
     svg_data = chart.render(is_unicode=True)
@@ -187,5 +232,5 @@ html_content += """    </div>
 </body>
 </html>"""
 
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(html_content)
