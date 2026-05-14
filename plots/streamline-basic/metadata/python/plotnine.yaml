@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:15:01Z'
-updated: '2026-05-14T07:33:13Z'
+updated: '2026-05-14T07:39:37Z'
 generated_by: claude-haiku
 workflow_run: 25847733193
 issue: 2861
@@ -12,37 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamlin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Mathematically rigorous ODE-based streamline generation with proper interpolation
-  - Perfect theme adaptation—both renders fully readable with no contrast failures
-  - Effective viridis colormap encoding showing flow speed variation clearly
-  - Clean KISS implementation with proper reproducibility via seed
-  - Complete specification compliance with all required features
+  - Excellent theme-adaptive implementation with proper token usage for both light
+    and dark renders
+  - Professional visual hierarchy created naturally by vortex field topology
+  - 'Strong technical execution: proper ODE integration for realistic streamlines,
+    scipy interpolation'
+  - Clean, idiomatic plotnine code with good separation of concerns
+  - Appropriate choice of viridis colormap for continuous flow speed data
+  - Arrow markers effectively communicate flow direction
   weaknesses:
-  - Design is functional but not particularly sophisticated—relies on inherent streamline
-    aesthetics rather than distinctive choices
-  - Limited visual refinement—uses theme_minimal() without additional custom styling
-    (spine treatment, arrow emphasis)
-  - Directional flow markers (arrows) are small and may not be immediately obvious
-    to all viewers
-  - No annotation or explicit label explaining vortex nature or flow direction
+  - Plot title displays 'seaborn' instead of 'plotnine' — images do not match specification
+    for this library
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color
-      Chrome: Title, axis labels, and tick labels in dark text (INK #1A1A17 and INK_SOFT #4A4A44) — all fully readable
-      Data: Streamlines colored by viridis (purple center → blue/cyan mid → green/yellow outer); directional markers (triangles) visible along paths
-      Legibility verdict: PASS — no dark-on-light issues; all elements readable
+      Background: Warm off-white #FAF8F1 ✓
+      Chrome: Title (dark text, readable), axis labels (X/Y Position), tick labels (all dark text - readable) ✓
+      Data: Concentric circular streamlines with viridis colormap (purple center = slow, yellow outer = fast). Arrow markers indicate flow direction. Colorbar legend on right labeled "Flow Speed".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color
-      Chrome: Title, axis labels, tick labels in light text (F0EFE8 and B8B7B0) — all fully readable; no dark-on-dark failures
-      Data: Streamlines identical to light render (viridis colors unchanged); directional markers match
-      Legibility verdict: PASS — no contrast failures; both renders equally readable; theme adaptation correct
+      Background: Warm near-black #1A1A17 ✓
+      Chrome: Title (light text, readable), axis labels (light text, readable), tick labels (light text, readable) - no dark-on-dark text issues ✓
+      Data: Identical viridis colors to light render (only chrome theme flipped). Streamlines and arrows clearly distinguishable against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,70 +48,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all explicitly sized and themed;
-          readable in both renders
+        comment: All font sizes explicitly set; readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend positioned clearly to right
+        comment: No text collisions; colorbar positioned with clear spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All streamlines and markers visible; good density balance
+        comment: Streamlines and arrow markers clearly visible at appropriate sizes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis colormap is CVD-safe and perceptually uniform
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio well-balanced; nothing cut off
+        comment: Balanced 16:9 proportions; nothing cut off; good margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Descriptive labels with units; title includes spec-id, library, domain
+        passed: false
+        comment: 'CRITICAL: Title says ''seaborn'' not ''plotnine''; axis labels are
+          correct with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous data uses viridis; backgrounds correct; both renders theme-correct
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark); viridis appropriate
+          for continuous data; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Clean functional design; relies on inherent streamline beauty rather
-          than custom choices
+        passed: true
+        comment: Professional theme-adaptive styling; intentional viridis palette
+          choice; clear visual hierarchy from vortex topology
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Good theme adaptation; minimal customization beyond theme_minimal()
+        passed: true
+        comment: Spines removed via theme_minimal(); subtle grid at 10% and 5% alpha;
+          arrow markers enhance directional refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Clear visual hierarchy with colors; straightforward presentation
-          without unique emphasis
+        passed: true
+        comment: Natural visual hierarchy with concentric circles; color gradient
+          tells speed story; streamlines guide viewer through field
     spec_compliance:
-      score: 15
+      score: 9
       max: 15
       items:
       - id: SC-01
@@ -121,26 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamline plot with ODE integration
+        comment: Correct streamline plot showing vector field flow patterns
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: streamlines, directional markers, color encoding,
-          field visualization'
+        comment: 'All features present: multiple streamlines, velocity magnitude encoding,
+          directional indicators'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; axes show full range [-3, 3]; speed properly encoded
+        comment: X/Y coordinates correct; axes properly cover [-3, 3] field range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Title format correct; legend clear and well-positioned
+        passed: false
+        comment: 'FAILED: Title attribution error - says ''seaborn'' instead of ''plotnine'''
     data_quality:
       score: 15
       max: 15
@@ -150,19 +150,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All streamline aspects shown: field lines, direction, curves, topology'
+        comment: 'Shows all aspects: streamlines, velocity magnitude, direction indicators,
+          realistic vortex pattern'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Vortex field mathematically authentic; represents real physics phenomenon
+        comment: Vortex field is classic fluid dynamics example; neutral and educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid and starting points well-balanced; speed range sensible
+        comment: Range [-3, 3] sensible; 40x40 grid balances detail and clarity; velocity
+          magnitudes realistic
     code_quality:
       score: 10
       max: 10
@@ -172,33 +174,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Linear flow with no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output
+        comment: Seed set (np.random.seed(42)); ODE solver deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'All imports used: numpy, pandas, plotnine, scipy'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Appropriate complexity; proper ODE integration; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dynamic theming
+        comment: Saves as plot-{THEME}.png using ANYPLOT_THEME variable
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -206,16 +208,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper plotnine pipes; ggplot data flow; geom_path/geom_point choices
-          correct; scale_color_cmap appropriate
+        comment: Proper ggplot() + geom_path() + scale_color_cmap() pattern; high-level
+          grammar of graphics
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: false
-        comment: Advanced scipy.integrate.solve_ivp and RegularGridInterpolator; beyond-basic
-          data manipulation
-  verdict: APPROVED
+        passed: true
+        comment: Good use of element_line/element_rect/element_text; coord_fixed()
+          for aspect ratio
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
@@ -224,7 +226,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - interpolation
   styling:
-  - grid-styling
+  - custom-colormap
