@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T11:20:28Z'
-updated: '2026-05-14T17:08:33Z'
+updated: '2026-05-14T17:14:57Z'
 generated_by: claude-haiku
 workflow_run: 25873527210
 issue: 3002
@@ -12,40 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 73
+quality_score: 72
 review:
   strengths:
-  - Excellent theme-adaptive styling with correct color tokens in both light and dark
-    modes
-  - Clean, maintainable code following KISS principle with deterministic seeding
-  - Proper Okabe-Ito palette and viridis colormap application
-  - Realistic product dashboard example with plausible business metrics
-  - Perfect palette compliance (VQ-07) with readable text in both renders
-  - Correct title format and legend labeling
+  - Correct implementation of mosaic concept with varying subplot sizes
+  - Proper theme adaptation in both light and dark renders with correct color preservation
+  - Good data variety demonstrating multiple visualization types
+  - 'Excellent palette compliance: Okabe-Ito for categorical, viridis for continuous'
   weaknesses:
-  - Plotnine composition limited to row/column grids; cannot achieve true arbitrary
-    mosaic patterning (GridSpec-like patterns)
-  - Text crowding in composite title area and some axis label proximity - layout spacing
-    needs optimization
-  - 'Design Excellence below publication-ready: lacks custom aesthetic sophistication
-    beyond library defaults'
-  - No distinctive library-specific features utilized beyond standard composition
-    operators
+  - Significant text overlapping - subplot titles overlap with axis labels and main
+    title overlaps with content
+  - Layout crowding from composition operator approach - lacks fine spatial control
+  - Generic design with no visual hierarchy or emphasis; minimal aesthetic refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "subplot-mosaic · plotnine · anyplot.ai" clearly visible at top; axis titles (Day, Sales Units, Quarter, Units Sold, Margin %, Region, Month) in dark text; tick labels readable; legends properly formatted with product names and quarter labels
-      Data: Five subplots with: (1) line plot with three series in Okabe-Ito colors - Alpha (#009E73 green), Beta (#D55E00 orange), Gamma (#0072B2 blue); (2) bar chart with four bars in distinct colors; (3) scatter plot in green; (4) heatmap with viridis colormap (purple to yellow gradient); (5) bar chart in green. All colors match expected Okabe-Ito and viridis standards.
-      Legibility verdict: PASS - All text is clearly readable in dark color against light background; no critical legibility failures
+      Background: Warm off-white #FAF8F1 - correct theme color
+      Chrome: Dark text (#1A1A17) on light surface. Title "subplot-mosaic · plotnine · anyplot.ai" visible but overlaps with top subplots. Axis labels (Day, Quarter, Units Sold, Region, Month) and tick labels are readable but overlap with subplot titles.
+      Data: Line plot shows Sales Trend with three products in green (#009E73), orange (#D55E00), blue (#0072B2). Bar charts use Okabe-Ito colors. Scatter plot in green. Heatmap uses viridis colormap correctly. Legend present.
+      Legibility verdict: PARTIAL - text is readable but significant overlapping reduces clarity
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, and tick labels all rendered in light text (#F0EFE8 or #B8B7B0 shades) - clearly visible against dark background; no dark-on-dark failures detected; legend text light-colored and legible; grid lines visible but subtle
-      Data: All data colors IDENTICAL to light render - green sales line, orange/blue/purple bars, green scatter points, viridis heatmap gradient all preserved. This confirms only chrome adapted between themes.
-      Legibility verdict: PASS - All text readable in both light and dark tones; theme adaptation successful; data colors maintain identity across both renders
+      Background: Warm near-black #1A1A17 - correct theme color
+      Chrome: Light text (#F0EFE8) on dark surface. Title visible and readable. All axis labels and tick labels are light-colored and readable against dark background. No dark-on-dark failures detected.
+      Data: Data colors identical to light render (green #009E73, orange #D55E00, blue #0072B2, viridis for heatmap) - proper theme-independent color preservation. All markers and lines clearly visible.
+      Legibility verdict: PASS - all text clearly visible; same overlapping issues as light but no readability failures from contrast
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 21
       max: 30
       items:
       - id: VQ-01
@@ -53,105 +46,96 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set; mostly readable though compositional spacing
-          could be optimized
+        comment: Font sizes explicitly set but overlap reduces legibility
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Text crowding in composite title area and some axis label proximity
+        comment: Significant overlapping of titles with axis labels
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All data elements properly sized for density; markers, lines, bars
-          clear and distinguishable
+        comment: Data elements visible and well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast; Okabe-Ito palette CVD-safe; elements fully distinguishable
+        comment: CVD-safe Okabe-Ito palette with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Good canvas utilization (50-70%); panels well-distributed with adequate
-          spacing
+        comment: Adequate space but cramped due to composition approach
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Day, Sales (Units), Units Sold, Margin
-          (%)'
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: first series #009E73; Okabe-Ito multi-series; viridis heatmap;
-          correct backgrounds and theme-adaptive chrome'
+        comment: Correct backgrounds, Okabe-Ito order, viridis for continuous, theme-adaptive
+          chrome
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults, clean and professional but not custom/publication-ready
+        passed: true
+        comment: Well-configured defaults, no custom design thought
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and whitespace; some refinement visible but opportunity
-          for polish
+        comment: Minimal customization, library defaults with subtle grid
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Dashboard narrative exists; visual hierarchy through positioning;
-          could emphasize insights more
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct multi-panel dashboard; true mosaic patterning limited by
-          plotnine composition
+        comment: Correct mosaic layout with varying sizes
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Multi-panel with different sizes shown; limited arbitrary mosaic
-          pattern support
+        passed: true
+        comment: 'All features present: multiple types, asymmetric sizing'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible and appropriately scaled
+        comment: X/Y correctly mapped, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Perfect format: subplot-mosaic · plotnine · anyplot.ai; legend labels
-          match data'
+        comment: Correct title format and legend labels
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -159,23 +143,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Multiple visualization techniques; comprehensive product dashboard
-          with varied metrics
+        comment: Variety of plot types demonstrates coverage
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Realistic business dashboard; plausible and neutral scenario
+        comment: Business dashboard scenario is realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually plausible values; logical relationships and domain-appropriate
-          scales
+        comment: Plausible values throughout
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -183,31 +165,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plots → composition → output'
+        comment: Simple linear structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all generation deterministic
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports from plotnine, numpy, pandas
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity; idiomatic composition usage; no over-engineering
+        comment: Clean code but has sys.path workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct DPI
+        comment: Correct plot-{THEME}.png format
     library_mastery:
       score: 5
       max: 10
@@ -217,26 +199,20 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses composition operators (|, /) correctly; applies theme() API;
-          follows conventions
+        comment: Correct ggplot() pattern but layout control limited
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Standard plotnine composition; no distinctive library-specific features
-          unique to plotnine
-  verdict: APPROVED
+        comment: Basic usage, no distinctive plotnine features leveraged
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - subplots
   patterns:
   - data-generation
-  - explicit-figure
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
-  - alpha-blending
