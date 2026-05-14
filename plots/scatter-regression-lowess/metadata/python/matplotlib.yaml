@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:53:29Z'
-updated: '2026-05-14T01:06:03Z'
+updated: '2026-05-14T01:12:31Z'
 generated_by: claude-haiku
 workflow_run: 25835324351
 issue: 2855
@@ -12,33 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Excellent theme adaptation with consistent color handling (data colors identical
-    across light/dark themes, chrome adapts properly)
-  - Perfect specification compliance—all required features from spec implemented correctly
-  - Clean, idiomatic matplotlib code with proper fig/ax pattern and current API usage
-  - Realistic, scientifically plausible example data (tree growth following power-law
-    model)
-  - 'Professional visual polish: proper typography hierarchy, readable at full resolution,
-    refined styling with theme-aware tokens'
+  - 'Perfect visual quality: text, elements, and colors optimized for 4800×2700px
+    display'
+  - 'Excellent theme compliance: both light and dark renders properly styled with
+    theme-adaptive chrome'
+  - 'Spec-compliant with bonus confidence band: all required features present plus
+    professional polish'
+  - 'High-quality realistic data: tree growth scenario with appropriate scale'
+  - Clean, reproducible code with proper theme-adaptive token usage
   weaknesses:
-  - Design Excellence uses standard Okabe-Ito colors without custom palette refinement—could
-    benefit from intentional color strategies or custom styling for higher visual
-    sophistication
+  - 'Design Excellence moderate (5/8): visually solid defaults but lacks distinctive
+    visual hierarchy or emphasis beyond the core curve'
+  - 'Library Mastery moderate (3/5): LOWESS integration is good but confidence band
+    requires custom styling; could leverage matplotlib.patches or scipy.stats for
+    more native approaches'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "scatter-regression-lowess · matplotlib · anyplot.ai" clearly visible in dark ink. Axis labels "Tree Age (years)" and "Height (meters)" prominent in primary ink. Tick labels readable in secondary ink (#4A4A44). Grid subtle at alpha=0.15, visible but non-competing. Legend has elevated background (#FFFDF6) with properly styled text.
-      Data: Scatter points in Okabe-Ito brand green (#009E73, alpha=0.6) with white edges, clearly visible. LOWESS curve in Okabe-Ito position 2 vermillion (#D55E00, linewidth=4.5), visually distinct and smooth.
-      Legibility verdict: PASS — All text readable, high contrast, no legibility issues.
+      Background: Warm off-white (#FAF8F1), not pure white ✓
+      Chrome: Title, axis labels, ticks all readable in dark ink against light background ✓
+      Data: Green scatter points (#009E73) clearly visible with moderate alpha (~0.6); orange LOWESS curve (#D55E00) smooth and distinct; light peach confidence band adds visual context
+      Legend: Three items (Confidence band, Observed heights, LOWESS trend) fully readable in lower right
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title visible in light ink (#F0EFE8) with excellent contrast. Axis labels and tick labels in light secondary ink (#B8B7B0), all fully readable. NO dark-on-dark failures. Legend frame uses dark elevated background (#242420) with light text, proper contrast.
-      Data: Scatter points identical green (#009E73) as light render, clearly visible. LOWESS curve identical vermillion (#D55E00), properly visible. Grid maintains subtle appearance at alpha=0.15.
-      Legibility verdict: PASS — Both renders equally readable. Data colors identical to light render, only chrome flipped as expected. No theme-adaptation issues.
+      Background: Warm near-black (#1A1A17), not pure black ✓
+      Chrome: Title, axis labels, ticks all readable in light colors; no "dark-on-dark" failures ✓
+      Data: Green scatter points identical to light render (#009E73); orange LOWESS curve identical (#D55E00); confidence band styling adapted for dark background
+      Legend: Same three items, styled appropriately for dark theme, fully readable
+      Legibility verdict: PASS
+
+    Both renders pass theme-readability checklist. Data colors (Okabe-Ito positions 1–2) are identical between themes; only chrome (backgrounds, text, grid, legend frames) adapts per theme. All text is accessible and contrasts well with backgrounds.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,51 +55,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          Both renders fully readable.
+        comment: All fonts explicitly sized (Title 24pt, Labels 20pt, Ticks 16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no collisions or overlapping elements.
+        comment: Zero overlapping text; all elements fully separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter markers (s=180, alpha=0.6) prominent; LOWESS curve (linewidth=4.5)
-          clearly visible.
+        comment: Markers (s=180, alpha=0.6) perfectly adapted to 150-point density;
+          LOWESS line prominent; confidence band adds context
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (positions 1 & 2). Colorblind-safe, adequate contrast
-          throughout.
+        comment: 'Okabe-Ito palette (#009E73 + #D55E00) colorblind-safe with excellent
+          contrast'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper 16:9 aspect ratio (4800×2700px). Nothing cut off, generous
-          margins with tight_layout.
+        comment: Plot fills ~65% of canvas with balanced margins; legend well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title mentioning LOWESS. Axis labels include units (years,
-          meters).
+        comment: 'Descriptive with units: ''Tree Age (years)'' and ''Height (meters)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green (#009E73). Backgrounds #FAF8F1 (light)
-          / #1A1A17 (dark). Both renders theme-correct.'
+        comment: 'Okabe-Ito correct; first series #009E73, second #D55E00; backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark); theme chrome correct'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -101,22 +105,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Theme-aware styling with token logic and spine removal. Okabe-Ito
-          colors are standard, not custom. Solid but conservative.
+        comment: Well-configured with thoughtful colors and typography; above defaults
+          but not publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Appropriately removes top/right spines (L-shaped frame). Subtle grid
-          (alpha=0.15, y-axis only). Good spacing. Modest refinement.
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, theme-adaptive
+          legend frame
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear focal point with LOWESS curve. Visual hierarchy established
-          through line vs. transparent markers. Adequate storytelling.
+        passed: true
+        comment: 'Clear hierarchy: data → trend → uncertainty; intuitive tree growth
+          narrative'
     spec_compliance:
       score: 15
       max: 15
@@ -126,28 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with overlaid LOWESS regression curve.
+        comment: Correct scatter plot with LOWESS regression
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter points, smooth LOWESS curve (frac=0.4),
-          moderate transparency (alpha=0.6), descriptive title, axis labels.'
+        comment: All spec features present (points, curve, transparency, bandwidth);
+          bonus confidence band
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (age) and Y (height) correctly mapped. Axes show full data range
-          without clipping.
+        comment: X/Y correctly assigned; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''scatter-regression-lowess · matplotlib ·
-          anyplot.ai''. Legend labels match.'
+        comment: Title format correct; legend labels clear and descriptive
     data_quality:
       score: 15
       max: 15
@@ -157,20 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates scatter points and LOWESS fitting technique effectively.
+        comment: 'Shows all LOWESS aspects: asymptotic behavior, variability, uncertainty'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tree height vs. age is realistic and neutral. Power-law growth model
-          is scientifically sound.
+        comment: Real, comprehensible tree growth scenario; neutral, educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Tree age (1–30 years), height (2.5–20 m) are realistic and sensible.
+        comment: Age (1-30 yrs), height (3-21 m), growth pattern all biologically
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -180,58 +182,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script-based implementation, no unnecessary abstractions.
+        comment: Simple linear flow; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib, numpy, statsmodels.'
+        comment: All imports used (os, matplotlib, numpy, statsmodels)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, idiomatic matplotlib.
+        comment: Clean Pythonic code; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png using current matplotlib API.
+        comment: Saves as plot-{THEME}.png using current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Proper fig/ax pattern, theme-token approach, correct styling API
-          usage.
+        comment: Uses Axes methods correctly; theme handling via environment variables;
+          nearly expert usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Integrates statsmodels.lowess (external, non-trivial). Could showcase
-          more matplotlib-specific capabilities.
+        passed: true
+        comment: Statsmodels.lowess integration and theme-adaptive styling are distinctive;
+          core plotting is straightforward
   verdict: APPROVED
 impl_tags:
   dependencies:
   - statsmodels
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - regression
   styling:
   - alpha-blending
+  - grid-styling
   - publication-ready

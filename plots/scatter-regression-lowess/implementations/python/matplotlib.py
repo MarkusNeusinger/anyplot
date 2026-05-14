@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-regression-lowess: Scatter Plot with LOWESS Regression
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-14
+Quality: 91/100 | Updated: 2026-05-14
 """
 
 import os
