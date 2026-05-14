@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""anyplot.ai
 network-directed: Directed Network Graph
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: letsplot | Python 3.13
 """
 
 import os
@@ -13,6 +12,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     arrow,
+    element_rect,
     element_text,
     geom_point,
     geom_segment,
@@ -33,18 +33,28 @@ LetsPlot.setup_html()
 
 np.random.seed(42)
 
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1-4 for node groups)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Define software package dependency network
 nodes = [
-    {"id": "app", "label": "App", "group": "application"},
-    {"id": "api", "label": "API", "group": "core"},
-    {"id": "auth", "label": "Auth", "group": "core"},
-    {"id": "db", "label": "Database", "group": "core"},
-    {"id": "cache", "label": "Cache", "group": "infrastructure"},
-    {"id": "config", "label": "Config", "group": "utility"},
-    {"id": "logger", "label": "Logger", "group": "utility"},
-    {"id": "utils", "label": "Utils", "group": "utility"},
-    {"id": "http", "label": "HTTP Client", "group": "infrastructure"},
-    {"id": "queue", "label": "Queue", "group": "infrastructure"},
+    {"id": "app", "label": "App", "group": "Application"},
+    {"id": "api", "label": "API", "group": "Core"},
+    {"id": "auth", "label": "Auth", "group": "Core"},
+    {"id": "db", "label": "Database", "group": "Core"},
+    {"id": "cache", "label": "Cache", "group": "Infrastructure"},
+    {"id": "config", "label": "Config", "group": "Utility"},
+    {"id": "logger", "label": "Logger", "group": "Utility"},
+    {"id": "utils", "label": "Utils", "group": "Utility"},
+    {"id": "http", "label": "HTTP Client", "group": "Infrastructure"},
+    {"id": "queue", "label": "Queue", "group": "Infrastructure"},
 ]
 
 # Directed edges (source depends on target, arrow from source to target)
@@ -71,8 +81,7 @@ edges = [
     ("utils", "logger"),
 ]
 
-# Create node positions using a hierarchical-like layout
-# Manually place nodes in layers for clear dependency visualization
+# Create node positions using hierarchical layout
 node_positions = {
     "app": (0.5, 1.0),
     "api": (0.5, 0.75),
@@ -91,13 +100,9 @@ node_df = pd.DataFrame(nodes)
 node_df["x"] = node_df["id"].map(lambda n: node_positions[n][0])
 node_df["y"] = node_df["id"].map(lambda n: node_positions[n][1])
 
-# Color mapping for groups
-group_colors = {
-    "application": "#306998",  # Python Blue
-    "core": "#FFD43B",  # Python Yellow
-    "infrastructure": "#22C55E",  # Green
-    "utility": "#A855F7",  # Purple
-}
+# Map groups to Okabe-Ito colors
+group_order = ["Application", "Core", "Infrastructure", "Utility"]
+group_colors = {group: OKABE_ITO[i] for i, group in enumerate(group_order)}
 node_df["color"] = node_df["group"].map(group_colors)
 
 # Build edge dataframe with arrow endpoints
@@ -114,7 +119,7 @@ for source, target in edges:
         shrink = 0.05
         x0_adj = x0 + (dx / length) * shrink
         y0_adj = y0 + (dy / length) * shrink
-        x1_adj = x1 - (dx / length) * shrink * 1.8  # More shrink for arrow head
+        x1_adj = x1 - (dx / length) * shrink * 1.8
         y1_adj = y1 - (dy / length) * shrink * 1.8
     else:
         x0_adj, y0_adj, x1_adj, y1_adj = x0, y0, x1, y1
@@ -130,42 +135,43 @@ plot = (
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"),
         data=edge_df,
-        color="#64748B",
+        color=INK_SOFT,
         size=1.2,
         arrow=arrow(length=12, type="closed"),
-        alpha=0.7,
+        alpha=0.5,
     )
     # Draw nodes
     + geom_point(aes(x="x", y="y", fill="group"), data=node_df, size=22, shape=21, stroke=2.5, color="white")
-    # Add node labels below nodes
-    + geom_text(
-        aes(x="x", y="y", label="label"), data=node_df, size=12, color="#1E293B", fontface="bold", nudge_y=-0.06
-    )
+    # Add node labels
+    + geom_text(aes(x="x", y="y", label="label"), data=node_df, size=12, color=INK, fontface="bold", nudge_y=-0.06)
     # Color scale
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#22C55E", "#A855F7"], name="Module Type")
+    + scale_fill_manual(values=OKABE_ITO, name="Module Type")
     # Theme and styling
     + theme_void()
     + theme(
-        plot_title=element_text(size=28, face="bold", hjust=0.5),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=28, face="bold", hjust=0.5, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
         legend_position="right",
         plot_margin=[60, 80, 80, 60],
     )
-    + labs(title="network-directed · letsplot · pyplots.ai")
+    + labs(title="network-directed · letsplot · anyplot.ai")
     + ggsize(1600, 900)
     + xlim(-0.05, 1.15)
     + ylim(0.1, 1.1)
 )
 
 # Save as PNG and HTML
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images subdirectory to current directory
-if os.path.exists("lets-plot-images/plot.png"):
-    shutil.move("lets-plot-images/plot.png", "plot.png")
-if os.path.exists("lets-plot-images/plot.html"):
-    shutil.move("lets-plot-images/plot.html", "plot.html")
+if os.path.exists(f"lets-plot-images/plot-{THEME}.png"):
+    shutil.move(f"lets-plot-images/plot-{THEME}.png", f"plot-{THEME}.png")
+if os.path.exists(f"lets-plot-images/plot-{THEME}.html"):
+    shutil.move(f"lets-plot-images/plot-{THEME}.html", f"plot-{THEME}.html")
 if os.path.exists("lets-plot-images") and not os.listdir("lets-plot-images"):
     os.rmdir("lets-plot-images")
