@@ -1,15 +1,37 @@
-""" pyplots.ai
+"""anyplot.ai
 streamline-basic: Basic Streamline Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2025-05-14
 """
 
-import numpy as np
-from bokeh.io import export_png, save
-from bokeh.plotting import figure
-from bokeh.resources import CDN
-from scipy.interpolate import RegularGridInterpolator
+import os
+import time
+from importlib import import_module
+from pathlib import Path
 
+import numpy as np
+from scipy.interpolate import RegularGridInterpolator
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+bokeh_io = import_module("bokeh.io")
+bokeh_models = import_module("bokeh.models")
+bokeh_palettes = import_module("bokeh.palettes")
+bokeh_plotting = import_module("bokeh.plotting")
+
+output_file = bokeh_io.output_file
+save = bokeh_io.save
+HoverTool = bokeh_models.HoverTool
+Viridis256 = bokeh_palettes.Viridis256
+figure = bokeh_plotting.figure
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Seed for reproducibility
 np.random.seed(42)
@@ -36,9 +58,7 @@ seed_x = np.linspace(-2.5, 2.5, 8)
 seed_y = np.linspace(-2.5, 2.5, 8)
 
 # Storage for streamline data
-all_xs = []
-all_ys = []
-all_colors = []
+streamlines_data = []
 
 # Compute streamlines from seed points
 for sx in seed_x:
@@ -82,40 +102,68 @@ for sx in seed_x:
 
         # Store if streamline is long enough
         if len(xs) >= 5:
-            all_xs.append(np.array(xs))
-            all_ys.append(np.array(ys))
-            # Color based on average magnitude (blue to yellow gradient)
             avg_mag = np.mean(mags)
-            t = np.clip(avg_mag / 3.0, 0, 1)
-            r = int(48 + t * (255 - 48))
-            g = int(105 + t * (212 - 105))
-            b = int(152 + t * (59 - 152))
-            all_colors.append(f"#{r:02x}{g:02x}{b:02x}")
+            streamlines_data.append(
+                {"xs": np.array(xs), "ys": np.array(ys), "mags": np.array(mags), "avg_mag": avg_mag}
+            )
 
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="streamline-basic · bokeh · pyplots.ai",
-    x_axis_label="X Position",
-    y_axis_label="Y Position",
+    title="streamline-basic · bokeh · anyplot.ai",
+    x_axis_label="X Position (arbitrary units)",
+    y_axis_label="Y Position (arbitrary units)",
     x_range=(-3.5, 3.5),
     y_range=(-3.5, 3.5),
 )
 
 # Style title and axes for large canvas
-p.title.text_font_size = "32pt"
-p.xaxis.axis_label_text_font_size = "26pt"
-p.yaxis.axis_label_text_font_size = "26pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
 # Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
+# Spine colors
+p.outline_line_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+# Background
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+
+# Normalize magnitude for color mapping (0-1 scale for Viridis256)
+max_mag = max(s["avg_mag"] for s in streamlines_data)
+if max_mag > 0:
+    norm_mags = [s["avg_mag"] / max_mag for s in streamlines_data]
+else:
+    norm_mags = [0.5 for _ in streamlines_data]
 
 # Draw streamlines with direction arrows
-for xs, ys, color in zip(all_xs, all_ys, all_colors, strict=True):
+for sl_data, norm_mag in zip(streamlines_data, norm_mags, strict=False):
+    xs = sl_data["xs"]
+    ys = sl_data["ys"]
+
+    # Map normalized magnitude to Viridis256 color
+    color_idx = min(int(norm_mag * 255), 255)
+    color = Viridis256[color_idx]
+
+    # Draw streamline
     p.line(xs, ys, line_width=4, line_color=color, line_alpha=0.85)
 
     # Add arrowhead at the end to show flow direction
@@ -136,9 +184,29 @@ for xs, ys, color in zip(all_xs, all_ys, all_colors, strict=True):
                 [tip_x, wing1_x, wing2_x], [tip_y, wing1_y, wing2_y], fill_color=color, line_color=color, fill_alpha=0.9
             )
 
-# Background
-p.background_fill_color = "#fafafa"
+# Add hover tool for interactivity
+hover = HoverTool(tooltips=[("Position", "($x, $y)")])
+p.add_tools(hover)
 
-# Save outputs
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="Streamline Plot")
+# Save HTML (required artifact)
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome for PNG
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
