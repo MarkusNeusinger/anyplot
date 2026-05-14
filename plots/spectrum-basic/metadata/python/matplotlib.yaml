@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:33:30Z'
-updated: '2026-05-14T09:13:02Z'
+updated: '2026-05-14T09:17:49Z'
 generated_by: claude-haiku
 workflow_run: 25851701772
 issue: 2926
@@ -12,44 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 93
 review:
   strengths:
-  - Correct FFT implementation with realistic multi-frequency signal (50 Hz fundamental
-    + harmonics)
-  - Perfect theme adaptation — all text, backgrounds, and chrome flip correctly between
-    light/dark
-  - Proper use of Okabe-Ito palette with accurate color mapping
-  - Clean, deterministic code with seed for reproducibility
-  - Effective annotation of peak frequencies to guide viewer
-  - Both renders fully legible; no dark-on-dark or light-on-light failures
-  - Axis limits and scales appropriate for frequency spectrum (0–300 Hz, dB scale)
+  - Perfect theme adaptation with identical data colors across light and dark renders
+    and correct chrome flipping
+  - Excellent visual hierarchy with intentional use of brand green for main signal
+    and orange accents for peak highlighting
+  - All text explicitly sized and perfectly legible in both themes with no contrast
+    issues
+  - Clean, idiomatic matplotlib code following style guide precisely with proper theme
+    tokens throughout
+  - Realistic signal processing example (FFT of multi-component synthetic signal)
+    with educational value
+  - Intentional annotation design with rounded boxes, proper offset positioning, and
+    theme-aware colors
+  - Full spec compliance across all features with correct plot type and complete data
+    mapping
   weaknesses:
-  - Design excellence is minimal — follows defaults without visual sophistication
-    or intentional hierarchy
-  - Grid styling uses direct color parameter instead of rgba() convention from style
-    guide
-  - Limited visual refinement (minimal annotation styling, no spine thickness variation,
-    no subtle emphasis)
-  - Could improve data storytelling by emphasizing dominant frequency peaks through
-    color contrast, size variation, or focal point techniques
-  - No distinctive matplotlib features beyond basic annotation (could explore twin
-    axes, custom artists, or advanced styling)
+  - Design Excellence could be elevated with more sophisticated annotation techniques
+    or gradient styling
+  - Data storytelling could deepen with subtle visual cues about signal-to-noise ratio
+    or harmonic relationships
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title in dark text (24pt), axis labels dark (20pt), tick labels dark gray (16pt) — all clearly readable
-      Data: Green spectrum line (#009E73) with semi-transparent fill; orange peak markers (#D55E00) with dashed lines; grid subtle but visible
-      Annotations: Peak frequency labels (50 Hz, 120 Hz, 200 Hz) in boxes with light fill and dark borders
-      Legibility verdict: PASS — all text and elements fully readable against light background
+      Background: Warm off-white (#FAF8F1) with correct tone and temperature
+      Chrome: Title "spectrum-basic · matplotlib · anyplot.ai" in dark text (#1A1A17), axis labels "Frequency (Hz)" and "Amplitude (dB)" clearly visible, tick labels readable
+      Data: Green spectrum line (#009E73) and orange peak markers (#D55E00) clearly distinguishable from light background, fill under curve visible, grid subtle
+      Legibility verdict: PASS - All text readable, no contrast issues, all elements clearly visible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title in light text, axis labels light (#F0EFE8), tick labels light gray (#B8B7B0) — all clearly readable
-      Data: Green spectrum line (#009E73) and orange markers (#D55E00) IDENTICAL to light render; only chrome changes
-      Annotations: Peak labels with darker fill boxes (#242420) and light text, no dark-on-dark issues
-      Grid: Subtle and visible
-      Legibility verdict: PASS — all text and elements fully readable against dark background; brand green clearly visible
+      Background: Warm near-black (#1A1A17) with correct tone and temperature
+      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in soft light (#B8B7B0), all clearly readable. Annotation boxes use darker background (#242420) with light text. No dark-on-dark text issues detected.
+      Data: Green spectrum line (#009E73) identical to light render, orange peak markers (#D55E00) identical, confirming data color consistency across themes
+      Legibility verdict: PASS - All text readable, perfect theme adaptation, no contrast failures, brand green remains visible and vibrant
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,69 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all properly sized and colored with
-          theme tokens; readable in both themes
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; peak annotations positioned with offset points
+        comment: Annotation boxes offset with xytext, all elements clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Spectrum line, fill area, peak markers all clearly distinguishable
+        comment: Spectrum line (linewidth=3), scatter markers (s=200), fill (alpha=0.25)
+          all optimally visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with strong contrast and CVD-safe colors
+        comment: 'Okabe-Ito palette (#009E73, #D55E00), good contrast, CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; nothing cut off; generous margins
+        comment: 16:9 landscape (4800×2700px), plot fills 60-70%, balanced margins,
+          tight_layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; title includes spec-id · library · anyplot.ai
+        comment: Labels include units (Hz, dB); title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct for both themes; both
-          renders theme-correct'
+        comment: 'First series #009E73, accent #D55E00, backgrounds #FAF8F1/#1A1A17,
+          all chrome correctly theme-adaptive'
     design_excellence:
-      score: 8
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Professional baseline styling but lacks custom choices or exceptional
-          design intent
+        passed: true
+        comment: Intentional color choices, clear visual hierarchy emphasizing peaks,
+          clean typography
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed; grid subtle; minimal refinement beyond defaults
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, rounded annotation
+          boxes
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Plot shows frequency content; lacks visual hierarchy or emphasis
-          techniques
+        passed: true
+        comment: Peak frequencies highlighted and annotated; visual hierarchy emphasizes
+          signal components
     spec_compliance:
       score: 15
       max: 15
@@ -132,25 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency spectrum plot
+        comment: Correct frequency spectrum plot; FFT-based amplitude vs frequency
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: FFT output, dB scale, multiple components, peaks highlighted
+        comment: 'All features present: frequency X-axis, amplitude Y-axis, peak highlighting,
+          fill under curve'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis frequency (Hz), Y-axis amplitude (dB), appropriate ranges
+        comment: 'Correct mapping: X 0-300 Hz, Y -60 to +10 dB; all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend needed (single-series)
+        comment: Title format correct; legend appropriately omitted
     data_quality:
       score: 15
       max: 15
@@ -160,19 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows FFT with fundamental and harmonics; includes noise
+        comment: Shows fundamental, harmonics, noise floor, multiple components
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible signal parameters; neutral domain
+        comment: Realistic sampling rate, standard FFT, plausible frequencies, neutral
+          educational scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency and amplitude ranges sensible
+        comment: All proportions factually correct and realistic for signal processing
     code_quality:
       score: 10
       max: 10
@@ -182,59 +183,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward linear code
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); fully deterministic
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Pythonic, clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current API
+        comment: Saves as plot-{THEME}.png, current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses fig, ax pattern correctly; theme tokens integrated; could use
-          more advanced patterns
+        comment: Expert use of Axes methods, proper theme token application throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses ax.annotate() and fill_between() effectively; lacks deeper matplotlib
-          features
+        passed: true
+        comment: Custom annotation styling, scatter edge colors from tokens, FFT computation
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - fill-between
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
