@@ -1,13 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 network-directed: Directed Network Graph
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: altair | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
+from pathlib import Path
 
+
+# Avoid name collision with script file named altair.py
+script_dir = str(Path(__file__).parent)
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 np.random.seed(42)
 
@@ -28,7 +45,6 @@ nodes = [
 ]
 
 # Directed edges: (source, target) - arrows point from source to target
-# Includes some bidirectional pairs to demonstrate curved edge handling
 edges = [
     ("app", "api"),
     ("app", "auth"),
@@ -52,13 +68,21 @@ edges = [
     ("schemas", "utils"),
     ("logger", "config"),
     ("utils", "config"),
-    # Bidirectional edges (mutual dependencies)
-    ("api", "auth"),  # API also depends on Auth
-    ("cache", "database"),  # Cache also depends on Database
+    ("api", "auth"),
+    ("cache", "database"),
 ]
 
+# Okabe-Ito palette for groups
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+group_colors = {
+    "main": OKABE_ITO[0],  # Brand green
+    "core": OKABE_ITO[1],  # Vermillion
+    "service": OKABE_ITO[2],  # Blue
+    "util": OKABE_ITO[3],  # Reddish purple
+    "data": OKABE_ITO[4],  # Orange
+}
+
 # Node positions using hierarchical layout based on dependency depth
-# Calculate depth for each node (topological sort-like approach)
 depths = {"app": 0}
 for _ in range(len(nodes)):
     for source, target in edges:
@@ -66,26 +90,23 @@ for _ in range(len(nodes)):
             current_depth = depths.get(target, -1)
             depths[target] = max(current_depth, depths[source] + 1)
 
-# Assign default depth for any disconnected nodes
 for node in nodes:
     if node["id"] not in depths:
         depths[node["id"]] = 0
 
-# Group nodes by depth for horizontal positioning
 depth_groups = {}
 for node_id, depth in depths.items():
     if depth not in depth_groups:
         depth_groups[depth] = []
     depth_groups[depth].append(node_id)
 
-# Calculate positions
 positions = {}
 max_depth = max(depths.values()) if depths else 0
 for depth, node_ids in depth_groups.items():
     n_nodes = len(node_ids)
     for i, node_id in enumerate(node_ids):
-        x = depth / max(max_depth, 1)  # Normalize x to [0, 1]
-        y = (i + 0.5) / n_nodes  # Distribute vertically
+        x = depth / max(max_depth, 1)
+        y = (i + 0.5) / n_nodes
         positions[node_id] = (x, y)
 
 # Create node DataFrame
@@ -102,7 +123,7 @@ node_df = pd.DataFrame(
     ]
 )
 
-# Identify bidirectional edge pairs for curved edge handling
+# Identify bidirectional edge pairs
 edge_set = set(edges)
 bidirectional_pairs = set()
 for source, target in edges:
@@ -110,21 +131,17 @@ for source, target in edges:
         bidirectional_pairs.add(tuple(sorted([source, target])))
 
 # Create edge DataFrame with arrow coordinates
-# Use curves for bidirectional edges to avoid overlap
 edge_data = []
 curved_edge_data = []
 for source, target in edges:
     sx, sy = positions[source]
     tx, ty = positions[target]
 
-    # Check if this edge is part of a bidirectional pair
     is_bidirectional = tuple(sorted([source, target])) in bidirectional_pairs
 
-    # Shorten edge slightly so arrows don't overlap nodes
     dx, dy = tx - sx, ty - sy
     length = np.sqrt(dx**2 + dy**2)
     if length > 0:
-        # Move endpoints slightly inward
         offset = 0.03
         sx_adj = sx + dx / length * offset
         sy_adj = sy + dy / length * offset
@@ -135,15 +152,11 @@ for source, target in edges:
         tx_adj, ty_adj = tx, ty
 
     if is_bidirectional:
-        # Create curved path using control points
-        # Offset perpendicular to the edge direction
         perp_x, perp_y = -dy / length * 0.05, dx / length * 0.05
         mid_x, mid_y = (sx + tx) / 2 + perp_x, (sy + ty) / 2 + perp_y
 
-        # Generate points along a quadratic bezier curve
         for t in np.linspace(0, 1, 10):
             t_next = min(t + 0.1, 1)
-            # Quadratic bezier formula
             bx1 = (1 - t) ** 2 * sx_adj + 2 * (1 - t) * t * mid_x + t**2 * tx_adj
             by1 = (1 - t) ** 2 * sy_adj + 2 * (1 - t) * t * mid_y + t**2 * ty_adj
             bx2 = (1 - t_next) ** 2 * sx_adj + 2 * (1 - t_next) * t_next * mid_x + t_next**2 * tx_adj
@@ -155,7 +168,7 @@ for source, target in edges:
 edge_df = pd.DataFrame(edge_data)
 curved_edge_df = pd.DataFrame(curved_edge_data) if curved_edge_data else pd.DataFrame(columns=["x", "y", "x2", "y2"])
 
-# Create arrow head data (triangular markers at edge endpoints)
+# Create arrow head data
 arrow_data = []
 for source, target in edges:
     sx, sy = positions[source]
@@ -167,11 +180,9 @@ for source, target in edges:
         is_bidirectional = tuple(sorted([source, target])) in bidirectional_pairs
 
         if is_bidirectional:
-            # For curved edges, adjust arrow position and angle
             perp_x, perp_y = -dy / length * 0.05, dx / length * 0.05
             mid_x, mid_y = (sx + tx) / 2 + perp_x, (sy + ty) / 2 + perp_y
 
-            # Arrow tip position at end of curve (t=0.95)
             t = 0.95
             offset = 0.03
             sx_adj = sx + dx / length * offset
@@ -182,13 +193,11 @@ for source, target in edges:
             ax = (1 - t) ** 2 * sx_adj + 2 * (1 - t) * t * mid_x + t**2 * tx_adj
             ay = (1 - t) ** 2 * sy_adj + 2 * (1 - t) * t * mid_y + t**2 * ty_adj
 
-            # Tangent direction at arrow tip
             t_prev = 0.9
             ax_prev = (1 - t_prev) ** 2 * sx_adj + 2 * (1 - t_prev) * t_prev * mid_x + t_prev**2 * tx_adj
             ay_prev = (1 - t_prev) ** 2 * sy_adj + 2 * (1 - t_prev) * t_prev * mid_y + t_prev**2 * ty_adj
             angle = np.degrees(np.arctan2(ay - ay_prev, ax - ax_prev))
         else:
-            # Arrow tip position (slightly before target node)
             offset = 0.04
             ax = tx - dx / length * offset
             ay = ty - dy / length * offset
@@ -198,23 +207,13 @@ for source, target in edges:
 
 arrow_df = pd.DataFrame(arrow_data)
 
-# Color palette for groups
-group_colors = {
-    "main": "#306998",  # Python Blue
-    "core": "#FFD43B",  # Python Yellow
-    "service": "#4ECDC4",
-    "util": "#95A5A6",
-    "data": "#E74C3C",
-}
-
 # Add colors to node dataframe
 node_df["color"] = node_df["group"].map(group_colors)
 
 # Create the visualization
-# Straight edges as rules (lines)
 edges_chart = (
     alt.Chart(edge_df)
-    .mark_rule(strokeWidth=2, opacity=0.6, color="#666666")
+    .mark_rule(strokeWidth=2, opacity=0.6, color=INK_SOFT)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.1, 1.1]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
@@ -223,10 +222,9 @@ edges_chart = (
     )
 )
 
-# Curved edges (for bidirectional connections)
 curved_edges_chart = (
     alt.Chart(curved_edge_df)
-    .mark_rule(strokeWidth=2, opacity=0.6, color="#666666")
+    .mark_rule(strokeWidth=2, opacity=0.6, color=INK_SOFT)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.1, 1.1]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
@@ -238,7 +236,7 @@ curved_edges_chart = (
 # Arrow heads as triangular points
 arrows_chart = (
     alt.Chart(arrow_df)
-    .mark_point(shape="triangle", size=150, filled=True, color="#666666", opacity=0.8)
+    .mark_point(shape="triangle", size=150, filled=True, color=INK_SOFT, opacity=0.8)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.1, 1.1])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05])),
@@ -249,7 +247,7 @@ arrows_chart = (
 # Nodes as circles
 nodes_chart = (
     alt.Chart(node_df)
-    .mark_circle(size=800, stroke="#ffffff", strokeWidth=2)
+    .mark_circle(size=800, stroke=PAGE_BG, strokeWidth=2)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.1, 1.1])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05])),
@@ -262,10 +260,10 @@ nodes_chart = (
     )
 )
 
-# Node labels (fontSize 18 for better legibility at full resolution)
+# Node labels
 labels_chart = (
     alt.Chart(node_df)
-    .mark_text(fontSize=18, fontWeight="bold", dy=-28)
+    .mark_text(fontSize=18, fontWeight="bold", dy=-28, color=INK)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.1, 1.1])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05])),
@@ -273,23 +271,22 @@ labels_chart = (
     )
 )
 
-# Combine all layers (include curved edges for bidirectional connections)
+# Combine all layers
 chart = (
     (edges_chart + curved_edges_chart + arrows_chart + nodes_chart + labels_chart)
     .properties(
         width=1600,
         height=900,
-        title=alt.Title(
-            text="network-directed · altair · pyplots.ai",
-            subtitle="Software Package Dependencies (curved edges show bidirectional dependencies)",
-            fontSize=28,
-            subtitleFontSize=18,
-            anchor="middle",
-        ),
+        background=PAGE_BG,
+        title=alt.Title(text="network-directed · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+script_dir = Path(__file__).parent
+output_png = script_dir / f"plot-{THEME}.png"
+output_html = script_dir / f"plot-{THEME}.html"
+chart.save(str(output_png), scale_factor=3.0)
+chart.save(str(output_html))
