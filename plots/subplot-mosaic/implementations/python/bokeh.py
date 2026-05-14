@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2025-12-31
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-14
 """
 
 import os
