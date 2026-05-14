@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-lowess: Scatter Plot with LOWESS Regression
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-12-30
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-14
 """
 
 import os
