@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-14
@@ -74,15 +74,21 @@ for feat_idx in feature_order:
 
 df = pd.DataFrame(rows)
 
-# Create the SHAP summary plot with interactive tooltip
-scatter = (
+# Calculate feature importance for each row
+importance_map = dict(zip(feature_order_names, range(len(feature_order_names), 0, -1), strict=True))
+df["importance_score"] = df["Feature"].map(importance_map)
+df["abs_shap"] = df["SHAP Value"].abs()
+
+# Create the SHAP summary plot with interactive layers
+# Layer 1: Background scatter (lower importance, subtle)
+background_scatter = (
     alt.Chart(df)
-    .mark_circle(opacity=0.6, stroke=INK_SOFT, strokeWidth=0.5)
+    .mark_circle(stroke=INK_SOFT, strokeWidth=0.5)
     .encode(
         x=alt.X(
             "SHAP Value:Q",
             title="SHAP Value (Impact on Model Output)",
-            axis=alt.Axis(titleFontSize=22, labelFontSize=18, gridOpacity=0.10),
+            axis=alt.Axis(titleFontSize=22, labelFontSize=18, gridOpacity=0.05),
         ),
         y=alt.Y("Feature:N", title=None, sort=feature_order_names, axis=alt.Axis(labelFontSize=18, ticks=False)),
         color=alt.Color(
@@ -92,13 +98,17 @@ scatter = (
                 title="Feature Value", titleFontSize=18, labelFontSize=16, orient="right", gradientLength=250
             ),
         ),
-        size=alt.value(100),
+        opacity=alt.Opacity(
+            "importance_score:Q", scale=alt.Scale(domain=[1, len(feature_order_names)], range=[0.3, 0.7])
+        ),
+        size=alt.Size("abs_shap:Q", scale=alt.Scale(domain=[0, df["abs_shap"].max()], range=[30, 150])),
         yOffset=alt.YOffset("jitter:Q", scale=alt.Scale(domain=[-1, 1], range=[-18, 18])),
         tooltip=["Feature", "SHAP Value:Q", "Feature Value:Q"],
     )
     .transform_calculate(jitter="random() * 2 - 1")
-    .interactive()
 )
+
+scatter = background_scatter.interactive()
 
 # Add vertical line at x=0
 zero_line = (
