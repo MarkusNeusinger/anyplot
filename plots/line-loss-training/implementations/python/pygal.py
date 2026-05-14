@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-loss-training: Training Loss Curve
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Updated: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-14
 """
 
 import os
