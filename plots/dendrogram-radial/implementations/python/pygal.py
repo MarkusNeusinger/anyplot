@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 79/100 | Created: 2026-05-14
+Quality: 81/100 | Created: 2026-05-14
 """
 
 import importlib
