@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: altair 5.4.0 | Python 3.13
-Quality: pending | Created: 2025-05-14
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 79/100 | Updated: 2026-05-14
 """
 
 import os
