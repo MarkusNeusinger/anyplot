@@ -1,0 +1,238 @@
+library: bokeh
+language: python
+specification_id: network-bipartite
+created: '2026-05-14T21:11:07Z'
+updated: '2026-05-14T21:30:44Z'
+generated_by: claude-sonnet
+workflow_run: 25885513042
+issue: 5247
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/bokeh/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Perfect spec compliance: bipartite layout, degree-encoded node sizes, color-by-set,
+    correct labeling'
+  - 'Excellent code quality: seed, clean imports, KISS structure, correct output filenames'
+  - Polished Okabe-Ito palette with color-coded column headers matching node colors
+  - Both themes pass legibility checks with no dark-on-dark or light-on-light failures
+  - Realistic and neutral student-course enrollment context with diverse names and
+    real course codes
+  weaknesses:
+  - 'LM-02: Bokeh interactive HTML is generated but no HoverTool or TapTool configured
+    — add tooltips showing node name and degree to leverage Bokeh strength'
+  - 'DE-03: No annotation callout highlights top hub student or most popular course
+    — add p.text() callout on highest-degree node in each column'
+  - 'DE-01: No edge curvature or visual separator between node columns — minor polish
+    gap'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Student-Course Enrollment · network-bipartite · bokeh · anyplot.ai" in dark ink at top-left (28pt). Column headers "Students" (green) and "Courses" (orange) in bold 24pt above each column. Student name labels right-aligned in INK_SOFT; course code labels left-aligned in INK_SOFT (18pt). All text readable against light background.
+      Data: 15 green (#009E73) student nodes on left, 12 orange (#D55E00) course nodes on right. Node sizes vary by degree. Semi-transparent gray edges (alpha 0.30) connect cross-set pairs. First series correctly uses brand green #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark surface
+      Chrome: Title and labels rendered in light ink (#F0EFE8 / #B8B7B0), clearly readable against dark background. No dark-on-dark text failures observed. Column headers retain their green and orange data colors, both visible on dark surface.
+      Data: Green and orange node colors are identical to the light render — only chrome (background, text) flips. Edge lines visible as subtle lighter strokes. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 28pt, headers 24pt bold, labels 18pt — all readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes evenly spaced; labels clear of nodes; edge crossing is structural,
+          not a failure
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes clearly visible; degree sizing works; edge alpha 0.30 slightly
+          low
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/orange CVD-safe Okabe-Ito pair
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape; clean layout; middle channel slightly tight
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct; axes appropriately hidden; column headers as semantic
+          labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Students #009E73 pos-1, Courses #D55E00 pos-2; backgrounds correct
+          for both themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Color-coded headers, floating node borders, minimal chrome — thoughtful
+          but no edge curvature or advanced styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid hidden, edge alpha calibrated, background-color node borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Degree-encoded sizes allow hub identification but no annotation highlights
+          top node in each set
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bipartite network with two separated columns
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color by set, size by degree, labels, cross-set-only edges
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 15 students left, 12 courses right; all nodes and edges present
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Full title with spec-id and anyplot.ai; color-coded headers as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bipartite structure, degree variation, set membership, edge density
+          patterns all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Student-course enrollment: neutral, real-world, diverse names, realistic
+          course codes'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 students, 12 courses within spec bounds; 2-5 courses per student
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct figure/scatter/segment/text; Selenium screenshot; no ColumnDataSource
+          used
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML generated but no HoverTool or TapTool — Bokeh interactivity
+          not leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome
