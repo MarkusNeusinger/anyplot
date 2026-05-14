@@ -1,11 +1,12 @@
-""" pyplots.ai
+"""anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts | Python 3.13
+Quality: pending | Updated: 2026-05-14
 """
 
 import base64
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,13 +14,22 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from highcharts_core.chart import Chart
-from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from statsmodels.tsa.seasonal import seasonal_decompose
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for decomposition components
+COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+COMPONENT_NAMES = ["Original", "Trend", "Seasonal", "Residual"]
 
 # Data - Monthly airline passengers (classic time series dataset)
 np.random.seed(42)
@@ -48,163 +58,94 @@ trend_data = [[t, float(v) if not np.isnan(v) else None] for t, v in zip(timesta
 seasonal_data = [[t, float(v)] for t, v in zip(timestamps, seasonal_comp, strict=True)]
 residual_data = [[t, float(v) if not np.isnan(v) else None] for t, v in zip(timestamps, residual, strict=True)]
 
-# Colors - colorblind-safe palette
-primary_blue = "#306998"
-secondary_yellow = "#FFD43B"
-purple = "#9467BD"
-teal = "#17BECF"
-
-# Chart dimensions - single output image
+# Chart dimensions
 chart_width = 4800
 total_height = 2700
-subplot_height = total_height // 4  # 675px each
+subplot_height = total_height // 4
 
 # Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
+# Build chart configurations for each component
+component_data = [
+    (observed_data, "Passengers (thousands)"),
+    (trend_data, "Trend (thousands)"),
+    (seasonal_data, "Seasonal Effect (thousands)"),
+    (residual_data, "Residual (thousands)"),
+]
 
-def create_chart_config(
-    container_id, title_text, subtitle_text, y_title, data, color, series_name, is_first=False, is_last=False
-):
-    """Create a Highcharts chart configuration using highcharts-core."""
-    chart = Chart(container=container_id)
-    chart.options = HighchartsOptions()
+chart_configs = []
+for i, (data, y_label) in enumerate(component_data):
+    is_first = i == 0
+    is_last = i == 3
 
-    # Set options via highcharts-core
-    chart.options.chart = {
-        "type": "line",
-        "width": chart_width,
-        "height": subplot_height,
-        "backgroundColor": "#ffffff",
-        "marginLeft": 150,
-        "marginRight": 100,
-        "marginTop": 100 if is_first else 60,
-        "marginBottom": 100 if is_last else 50,
-    }
-
-    if is_first:
-        chart.options.title = {"text": title_text, "style": {"fontSize": "40px", "fontWeight": "bold"}}
-        chart.options.subtitle = {"text": subtitle_text, "style": {"fontSize": "34px"}}
-    else:
-        chart.options.title = {"text": subtitle_text, "style": {"fontSize": "34px", "fontWeight": "bold"}}
-
-    chart.options.x_axis = {
-        "type": "datetime",
-        "labels": {"style": {"fontSize": "20px"}, "format": "{value:%Y-%m}"},
-        "title": {"text": "Date", "style": {"fontSize": "24px", "fontWeight": "bold"}} if is_last else {"text": None},
-        "gridLineWidth": 1,
-        "gridLineColor": "rgba(0,0,0,0.1)",
-        "lineWidth": 2,
-    }
-
-    chart.options.y_axis = {
-        "title": {"text": y_title, "style": {"fontSize": "24px", "fontWeight": "bold"}},
-        "labels": {"style": {"fontSize": "20px"}},
-        "gridLineWidth": 1,
-        "gridLineColor": "rgba(0,0,0,0.15)",
-        "lineWidth": 2,
-    }
-
-    # Enable minimal legend showing component name
-    chart.options.legend = {
-        "enabled": True,
-        "align": "right",
-        "verticalAlign": "top",
-        "layout": "horizontal",
-        "floating": True,
-        "x": -50,
-        "y": 15 if is_first else 5,
-        "itemStyle": {"fontSize": "22px", "fontWeight": "normal"},
-    }
-
-    chart.options.credits = {"enabled": False}
-
-    # Add series using highcharts-core LineSeries
-    series = LineSeries()
-    series.data = data
-    series.name = series_name
-    series.color = color
-    series.line_width = 4
-    series.marker = {"enabled": False}
-    chart.add_series(series)
-
-    # Return config dict for manual JS generation (more reliable for multi-chart)
-    return {
-        "container": container_id,
+    config = {
+        "container": f"container{i + 1}",
         "options": {
             "chart": {
                 "type": "line",
                 "width": chart_width,
                 "height": subplot_height,
-                "backgroundColor": "#ffffff",
-                "marginLeft": 150,
-                "marginRight": 100,
-                "marginTop": 100 if is_first else 60,
-                "marginBottom": 100 if is_last else 50,
+                "backgroundColor": PAGE_BG,
+                "marginLeft": 160,
+                "marginRight": 120,
+                "marginTop": 120 if is_first else 80,
+                "marginBottom": 120 if is_last else 80,
             },
-            "title": {"text": title_text, "style": {"fontSize": "40px", "fontWeight": "bold"}}
+            "title": {
+                "text": "timeseries-decomposition · highcharts · anyplot.ai" if is_first else COMPONENT_NAMES[i],
+                "style": {"fontSize": "28px", "color": INK, "fontWeight": "normal"},
+            },
+            "subtitle": {"text": COMPONENT_NAMES[i], "style": {"fontSize": "24px", "color": INK_SOFT}}
             if is_first
-            else {"text": subtitle_text, "style": {"fontSize": "34px", "fontWeight": "bold"}},
-            "subtitle": {"text": subtitle_text, "style": {"fontSize": "34px"}} if is_first else None,
+            else {"text": None},
             "xAxis": {
                 "type": "datetime",
-                "labels": {"style": {"fontSize": "20px"}, "format": "{value:%Y-%m}"},
-                "title": {"text": "Date", "style": {"fontSize": "24px", "fontWeight": "bold"}}
-                if is_last
-                else {"text": None},
+                "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value:%Y-%m}"},
+                "title": {"text": "Date" if is_last else None, "style": {"fontSize": "22px", "color": INK}},
                 "gridLineWidth": 1,
-                "gridLineColor": "rgba(0,0,0,0.1)",
-                "lineWidth": 2,
+                "gridLineColor": GRID,
+                "lineColor": INK_SOFT,
+                "tickColor": INK_SOFT,
             },
             "yAxis": {
-                "title": {"text": y_title, "style": {"fontSize": "24px", "fontWeight": "bold"}},
-                "labels": {"style": {"fontSize": "20px"}},
+                "title": {"text": y_label, "style": {"fontSize": "22px", "color": INK}},
+                "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
                 "gridLineWidth": 1,
-                "gridLineColor": "rgba(0,0,0,0.15)",
-                "lineWidth": 2,
+                "gridLineColor": GRID,
+                "lineColor": INK_SOFT,
+                "tickColor": INK_SOFT,
             },
             "legend": {
                 "enabled": True,
                 "align": "right",
                 "verticalAlign": "top",
-                "layout": "horizontal",
+                "layout": "vertical",
                 "floating": True,
-                "x": -50,
-                "y": 15 if is_first else 5,
-                "itemStyle": {"fontSize": "22px", "fontWeight": "normal"},
+                "x": -30,
+                "y": 20,
+                "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+                "backgroundColor": ELEVATED_BG,
+                "borderColor": INK_SOFT,
+                "borderWidth": 1,
+                "borderRadius": 4,
+                "padding": 12,
             },
             "credits": {"enabled": False},
             "series": [
-                {"name": series_name, "data": data, "color": color, "lineWidth": 4, "marker": {"enabled": False}}
+                {
+                    "name": COMPONENT_NAMES[i],
+                    "data": data,
+                    "color": COLORS[i],
+                    "lineWidth": 5,
+                    "marker": {"enabled": False},
+                }
             ],
         },
     }
-
-
-# Create all four chart configurations using highcharts-core
-chart_configs = [
-    create_chart_config(
-        "container1",
-        "timeseries-decomposition · highcharts · pyplots.ai",
-        "Original Series",
-        "Passengers (thousands)",
-        observed_data,
-        primary_blue,
-        "Original",
-        is_first=True,
-    ),
-    create_chart_config(
-        "container2", "", "Trend Component", "Trend (thousands)", trend_data, secondary_yellow, "Trend"
-    ),
-    create_chart_config(
-        "container3", "", "Seasonal Component", "Seasonal Effect (thousands)", seasonal_data, purple, "Seasonal"
-    ),
-    create_chart_config(
-        "container4", "", "Residual Component", "Residual (thousands)", residual_data, teal, "Residual", is_last=True
-    ),
-]
+    chart_configs.append(config)
 
 # Build HTML with all 4 charts stacked vertically
 containers_html = "\n".join(
@@ -214,7 +155,7 @@ containers_html = "\n".join(
     ]
 )
 
-# Build direct JavaScript calls (no DOMContentLoaded wrapper for headless)
+# Build JavaScript calls
 scripts_js = "\n".join(
     [f"Highcharts.chart('{cfg['container']}', {json.dumps(cfg['options'])});" for cfg in chart_configs]
 )
@@ -226,7 +167,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: {chart_width}px; height: {total_height}px; background-color: #ffffff; overflow: hidden; }}
+        html, body {{ width: {chart_width}px; height: {total_height}px; background-color: {PAGE_BG}; overflow: hidden; }}
     </style>
 </head>
 <body>
@@ -237,7 +178,7 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save and screenshot using CDP for full page capture
+# Save and screenshot using Selenium
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -251,9 +192,9 @@ chrome_options.add_argument("--hide-scrollbars")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(6)  # Wait for all charts to render
+time.sleep(6)
 
-# Use CDP to capture full page screenshot at exact dimensions
+# Capture screenshot at exact dimensions
 screenshot_config = {
     "captureBeyondViewport": True,
     "clip": {"x": 0, "y": 0, "width": chart_width, "height": total_height, "scale": 1},
@@ -261,22 +202,21 @@ screenshot_config = {
 result = driver.execute_cdp_cmd("Page.captureScreenshot", screenshot_config)
 screenshot_data = base64.b64decode(result["data"])
 
-with open("plot.png", "wb") as f:
+with open(f"plot-{THEME}.png", "wb") as f:
     f.write(screenshot_data)
 
 driver.quit()
 Path(temp_path).unlink()
 
-# Also save interactive HTML
-with open("plot.html", "w", encoding="utf-8") as f:
-    html_portable = f"""<!DOCTYPE html>
+# Save interactive HTML with CDN script (for web viewing)
+html_portable = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ background-color: #ffffff; }}
+        body {{ background-color: {PAGE_BG}; }}
     </style>
 </head>
 <body>
@@ -286,4 +226,6 @@ with open("plot.html", "w", encoding="utf-8") as f:
     </script>
 </body>
 </html>"""
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_portable)
