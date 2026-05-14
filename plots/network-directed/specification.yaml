@@ -6,7 +6,7 @@ title: Directed Network Graph
 
 # Specification tracking
 created: 2025-12-30T23:43:28Z
-updated: 2025-12-30T23:43:28Z
+updated: 2026-05-14T03:15:39Z
 issue: 2858
 suggested: MarkusNeusinger
 
@@ -15,17 +15,15 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - network
-    - graph
-    - directed
   data_type:
     - network
     - relational
     - categorical
+    - directional
   domain:
     - general
     - technology
     - research
   features:
-    - directed
+    - basic
     - arrows
-    - flow-visualization
