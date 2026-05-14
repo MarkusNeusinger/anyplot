@@ -1,158 +1,175 @@
 library: seaborn
+language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:04:00Z'
-updated: '2025-12-31T00:06:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608580506
+updated: '2026-05-14T05:47:14Z'
+generated_by: claude-haiku
+workflow_run: 25843780049
 issue: 2860
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/seaborn/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent data simulation with realistic exponential decay and subtle overfitting
-    behavior
-  - Perfect title format following pyplots.ai convention
-  - Good use of seaborn lineplot with hue for automatic legend generation
-  - Clear annotation of optimal stopping point with arrow and vertical line
-  - Appropriate color choice that is both aesthetically pleasing and colorblind-safe
+  - 'Excellent visual quality: perfect legibility in both light and dark themes'
+  - 'Perfect specification compliance: all required features present and working'
+  - 'Realistic and insightful data: training/validation curves reveal overfitting
+    pattern'
+  - 'Professional annotation: optimal epoch marker clearly communicates the key insight
+    for early stopping'
+  - Clean, reproducible, idiomatic seaborn code
+  - 'Flawless theme-adaptive chrome: backgrounds, text, and legends correctly adapt;
+    data colors constant across themes'
   weaknesses:
-  - Legend could be positioned better to avoid visual competition with the annotation
-    area
-  image_description: 'The plot displays two line curves over 100 epochs showing neural
-    network training loss. A blue line (#306998) represents "Training Loss" and a
-    yellow/gold line (#FFD43B) represents "Validation Loss". Both curves start around
-    2.5-2.6 and decay exponentially. The training loss (blue) decreases smoothly to
-    around 0.2, while validation loss (yellow) plateaus higher around 0.35-0.4 and
-    shows slight upward trend after epoch 70 (overfitting). A red dashed vertical
-    line marks the optimal stopping point at epoch 90, with a red dot and arrow annotation
-    pointing to "Optimal: Epoch 90". The title follows the format "line-loss-training
-    · seaborn · pyplots.ai". X-axis labeled "Epoch", Y-axis labeled "Cross-Entropy
-    Loss". Legend in upper right corner. Subtle grid with alpha transparency.'
+  - 'Design Excellence could be raised: plot is clean and professional but relies
+    somewhat on defaults rather than custom visual refinement'
+  - 'Library Mastery: could leverage more distinctive seaborn-specific features beyond
+    basic lineplot'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "line-loss-training · seaborn · anyplot.ai" in dark INK (#1A1A17); axis labels "Epoch" and "Cross-Entropy Loss" clearly readable; tick labels in INK_SOFT (#4A4A44) visible; legend in upper right with light background (#FFFDF6); all text elements perfectly readable against light background
+      Data: Training Loss in teal (#009E73, Okabe-Ito position 1); Validation Loss in orange (#D55E00, position 2); line thickness (3pt) optimal; scatter marker for epoch 90 visible with annotation arrow; y-axis grid subtle (alpha=0.10) and non-competing
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title in light INK (#F0EFE8); axis labels in light color clearly readable against dark background; tick labels in INK_SOFT (#B8B7B0) visible; legend in upper right with dark background (#242420); no dark-on-dark failures; all text is light-colored and readable
+      Data: Training Loss and Validation Loss colors IDENTICAL to light render (#009E73 and #D55E00) - confirms proper theme-adaptive implementation; annotation arrow and marker are clearly visible
+      Legibility verdict: PASS ✓
+
+    Both renders demonstrate perfect theme adaptation: data colors constant, chrome adapted, all text readable in both light and dark contexts.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all clearly readable
+        comment: 'All font sizes explicitly set: Title 24pt, Labels 20pt, Ticks 16pt;
+          perfectly readable in both renders'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text fully readable; legend positioned cleanly; annotation does
+          not overlap
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines with linewidth=3 and distinct colors are perfectly visible
+        comment: Line thickness (3pt) optimal; markers clearly visible; both series
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe, high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight gap at right edge with annotation
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis includes units: "Cross-Entropy Loss", X-axis "Epoch" is contextually
-          clear'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito colors with good contrast; CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect; plot fills 50-80% of canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid alpha 0.3 is good but legend shows "Training Loss" and "Validation
-          Loss" instead of matching the code's "Type" column values
+        passed: true
+        comment: 'Descriptive with units: Cross-Entropy Loss'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito compliant: first series #009E73, second #D55E00; backgrounds
+          theme-correct; text colors theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful color choices; professional polish; annotation clearly
+          communicates insight
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed; subtle y-axis grid; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Excellent story: training/validation decay reveals overfitting;
+          optimal epoch annotation guides viewer to key insight'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot showing training curves
+        comment: Correct line plot with dual curves
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Epoch on X, Loss on Y, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Both curves, legend, distinct colors (blue/orange-ish), optimal stopping
-          point marked
-      - id: SC-04
-        name: Data Range
+        comment: Training loss, validation loss, legend, optimal epoch marker all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 0-105, Y-axis 0-2.8 shows all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels clear and accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "line-loss-training · seaborn · pyplots.ai"
+        comment: Title and legend both correct format
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows decay, noise, overfitting after epoch 70, optimal point; could
-          show more dramatic overfitting
+        comment: 'Shows all aspects: training decay, validation plateau, divergence'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Neural network training with cross-entropy loss is a realistic ML
-          scenario
+        comment: Realistic neural network training scenario; classic exponential decay
+          pattern
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Loss values 0-2.8 are realistic for cross-entropy, 100 epochs typical
+        comment: Loss values and epoch range realistic for neural network training
     code_quality:
       score: 10
       max: 10
@@ -162,11 +179,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save'
+        comment: Simple linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -174,28 +191,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern seaborn API used
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn lineplot with hue parameter
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of sns.lineplot with hue; sns.set_theme with rc dict
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of seaborn's data-driven approach with DataFrame and hue,
-          but could leverage more seaborn styling features
+        comment: Uses sns.set_theme effectively; integrates matplotlib overlays cleanly
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
