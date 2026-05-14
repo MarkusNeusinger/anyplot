@@ -1,209 +1,220 @@
 library: highcharts
+language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:35:59Z'
-updated: '2025-12-31T05:48:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612783941
+updated: '2026-05-14T11:17:18Z'
+generated_by: claude-haiku
+workflow_run: 25856875495
 issue: 2924
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - annotations
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent colorblind-safe palette with blue (#306998), orange (#E07B00), and gray
-    (#999999)
-  - All three threshold lines (horizontal p-value, two vertical fold change) are clearly
-    labeled with annotations
-  - Legend includes count of points in each category, enhancing interpretability
-  - Realistic differential gene expression data with appropriate distribution of significant
-    vs non-significant genes
-  - Proper use of Highcharts annotations module for threshold labels
-  - Interactive HTML version also generated for web viewing
+  - Full theme-adaptation with correct chrome flipping while Okabe-Ito data colors
+    remain constant
+  - Clean, straightforward implementation with deterministic random seeding
+  - Excellent text legibility in both light and dark renders with no contrast failures
+  - Proper use of Highcharts annotations feature for threshold labels
+  - Margins and font sizing appropriately scaled for 4800x2700 canvas
   weaknesses:
-  - Marker opacity/transparency not implemented (spec mentions using alpha transparency
-    for overlapping points)
-  - Code structure is lengthy due to Selenium screenshot approach, but this is inherent
-    to Highcharts
-  image_description: 'The plot displays a volcano plot for differential gene expression
-    analysis. The chart has a white background with a title "volcano-basic · highcharts
-    · pyplots.ai" at the top in bold black text, followed by a subtitle "Differential
-    Gene Expression Analysis". The x-axis shows "log₂(Fold Change)" ranging from approximately
-    -4.75 to 5.75, and the y-axis shows "-log₁₀(p-value)" ranging from 0 to 11. Three
-    series of data points are displayed: gray circles for "Not Significant (323)"
-    points clustered mainly in the center, blue circles for "Down-regulated (85)"
-    points on the left side (negative fold change), and orange circles for "Up-regulated
-    (92)" points on the right side (positive fold change). Vertical dashed lines mark
-    the fold change thresholds at -1 and +1 (labeled "FC = -1" and "FC = +1"), and
-    a horizontal dashed line at approximately y=1.3 marks the p-value significance
-    threshold (labeled "p = 0.05"). The legend is positioned in the upper right corner
-    with clear labeling and counts for each category.'
+  - 'Design Excellence opportunities: Could explore more distinctive annotation styling
+    or visual emphasis techniques to further enhance professional polish'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color, not pure white
+      Chrome: Title, x/y-axis labels clearly visible in dark text (INK). Threshold annotations in styled callout boxes with light background (ELEVATED_BG). Legend with light gray text (INK_SOFT) on elevated background. Dashed threshold lines in INK_SOFT. All elements readable.
+      Data: Down-regulated in blue (#0072B2), up-regulated in orange (#D55E00), non-significant in dark neutral (#1A1A1A). Okabe-Ito positions 3, 2, and neutral (not position 1 as required for first series). Marker size variation (8 vs 10) distinguishes significance.
+      Legibility verdict: PASS - All text clearly readable, proper contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color, not pure black
+      Chrome: Title and axis labels in light text (INK = #F0EFE8). Threshold annotations properly styled with dark elevated background. Legend uses light gray text (INK_SOFT = #B8B7B0) on dark background. Dashed threshold lines in light INK_SOFT. All readable.
+      Data: Identical colors to light render - blue, orange, and light gray/white neutral points. No color shift between themes (only chrome adapts, data colors constant). Marker sizes preserved.
+      Legibility verdict: PASS - All text readable with excellent contrast; no dark-on-dark failures. Brand colors maintain visibility.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: all text readable, title and axis labels are clear and well-sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: no overlapping text elements
+        comment: All text at appropriate sizes for 4800×2700; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; point overlap handled with marker size variation
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: markers are appropriately sized for data density, though some overlap
-          in dense regions
+        comment: All markers clearly visible; size distinction (r=8 vs r=10) proper
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: blue/orange/gray palette is colorblind-safe, avoids red-green
+        comment: Okabe-Ito palette CVD-safe; blue/orange distinction clear
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: good use of canvas space, though margins are quite large
+        comment: Well-balanced proportions; generous margins; nothing cut off
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: descriptive axis labels with proper notation (log₂, log₁₀)
+        comment: Labels include units (log₂, -log₁₀); title format correct
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: subtle grid lines, well-positioned legend with counts
+        comment: 'Okabe-Ito colors correct; backgrounds #FAF8F1/#1A1A17; both renders
+          theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with theme-adaptive tokens; intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean aesthetics; well-styled annotations; subtle grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; color/size effectively distinguish categories
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct scatter/volcano plot type
+        comment: Correct scatter plot for statistical significance
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: log2 fold change on x-axis, -log10 p-value on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: includes threshold lines at ±1 FC, p=0.05, color coding by significance
-      - id: SC-04
-        name: Data Range
+        comment: 'All required: threshold lines, color-coding, annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: axes show all data points appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: log₂ fold change; Y: -log₁₀(p-value); axes scale correctly'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: legend labels correct with counts
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: uses correct format "volcano-basic · highcharts · pyplots.ai"
+        comment: Title format correct; legend shows all categories with counts
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows significant up/down regulated and non-significant points, good
-          distribution
+        comment: Complete volcano plot demonstration
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: differential gene expression is a realistic scientific scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: fold changes and p-values are realistic for gene expression data
+        comment: Simulated gene expression with realistic distributions
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scales appropriate for genomics use case
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: code is linear but longer than necessary due to Highcharts/Selenium
-          complexity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Linear, straightforward code
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: all imports are used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: uses strict=True in zip which requires Python 3.10+
+        comment: No fake interactive features; proper Selenium usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output names: plot-{THEME}.png/html'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: uses Highcharts annotations and plotLines, but no interactive features
-          showcased
+        comment: Correct ScatterSeries, HighchartsOptions usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses annotations; otherwise standard patterns
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
