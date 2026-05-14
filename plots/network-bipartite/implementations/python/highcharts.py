@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-bipartite: Bipartite Network Graph
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-14
+Library: highcharts unknown | Python 3.13.13
+Quality: 87/100 | Created: 2026-05-14
 """
 
 import json
