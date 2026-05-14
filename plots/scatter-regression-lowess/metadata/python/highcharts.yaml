@@ -1,218 +1,239 @@
 library: highcharts
+language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:55:52Z'
-updated: '2025-12-31T00:02:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608465113
+updated: '2026-05-14T01:20:25Z'
+generated_by: claude-haiku
+workflow_run: 25835772658
 issue: 2855
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - regression
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent color contrast with colorblind-safe blue/yellow combination
-  - LOWESS curve is smooth and clearly distinguishable from scatter points
-  - Proper title format and informative subtitle mentioning the smoothing parameter
-  - Good marker sizing and transparency for data density
-  - Generates both PNG and HTML outputs for static and interactive viewing
-  - Custom LOWESS implementation works correctly with tricube weighting
+  - 'Perfect visual quality: all text legible in both light and dark themes with no
+    overlap or sizing issues'
+  - 'Full spec compliance: scatter plot with LOWESS curve, all required features present,
+    proper title and legend format'
+  - 'Excellent data quality: realistic synthetic data demonstrates non-linear patterns
+    and LOWESS adaptation across the entire range'
+  - 'Clean code: KISS structure, reproducible with seed, all imports used, proper
+    theme-adaptive chrome configuration'
+  - 'Strong Highcharts expertise: idiomatic API usage with Chart container, HighchartsOptions,
+    and proper series management'
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) rather than context-specific
-  - Custom function definition in code deviates from KISS principle (though necessary)
-  - Data could be tied to a more realistic scenario with meaningful labels
-  image_description: 'The plot displays a scatter plot with LOWESS regression on a
-    white background. Blue circular markers (with transparency and blue outline) represent
-    200 data points spread across X values 0-10 and Y values approximately -6 to 25.
-    A smooth yellow/gold LOWESS curve runs through the data, showing a non-linear
-    pattern: starting around y=1, dipping slightly around x=3.5 (to ~-0.5), then rising
-    continuously to about y=21 at x=10. The title "scatter-regression-lowess · highcharts
-    · pyplots.ai" appears at the top in bold, with a subtitle "Non-linear Trend with
-    LOWESS Smoothing (frac=0.3)". Axis labels show "X Value" and "Y Value". A legend
-    in the upper right shows "Data Points" (blue circle) and "LOWESS Curve" (yellow
-    line). Subtle grid lines are visible.'
+  - 'Design Excellence is moderate: relies on well-configured library defaults (DE-01=4)
+    rather than custom design vision or exceptional aesthetics'
+  - 'Library Mastery could leverage more Highcharts-specific features: generic API
+    usage (LM-02=3) rather than distinctive features unique to this library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "scatter-regression-lowess · highcharts · anyplot.ai", subtitle "Non-linear Relationship with LOWESS Smoothing", axis labels "Input Variable" and "Output Variable" with range 0-10 and -5-25. All dark text perfectly readable on light surface.
+      Data: 200 green scatter points (#009E73, Okabe-Ito position 1), orange LOWESS curve (#D55E00, Okabe-Ito position 2) showing U-shaped dip then linear increase. Points show clear non-linear trend with noise. Curve is visually distinct.
+      Grid: Subtle gridlines visible, legend positioned top-right with "Data Points" and "LOWESS Curve" labels
+      Legibility verdict: PASS - all text clearly readable, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Same title, subtitle, axis labels rendered in light beige/off-white text. All text perfectly readable on dark surface.
+      Data: Green scatter points (#009E73) identical to light render, orange LOWESS curve (#D55E00) identical to light render. Data colors preserved exactly, only chrome adapted.
+      Grid: Theme-adapted grid visible, legend styled with dark background and light text borders
+      Legibility verdict: PASS - all text clearly readable, no dark-on-dark failures (no black text on near-black background)
+
+    Both renders pass legibility. Data colors (#009E73, #D55E00) are identical across themes. Only chrome (background, text colors, grid colors, legend styling) flips between themes as required.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable
-          at full size. Text sizes are appropriately scaled for the large canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. All labels, tick marks, and legend
-          are cleanly separated.
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px.
+          Perfectly readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, legend positioned without collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Markers are well-sized (radius 10) with good alpha transparency
-          (0.6). The LOWESS curve stands out clearly at lineWidth 6. Minor: Some points
-          in dense areas slightly overlap each other.'
+        comment: 200 markers (radius 8) optimally sized. LOWESS curve (lineWidth 5)
+          clearly distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) for points and yellow (#FFD43B) for the curve provide
-          excellent contrast and are colorblind-safe (blue-yellow is the safest combination).
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good canvas utilization with proper margins. Plot area is well-proportioned.
-          Minor: Legend could be positioned slightly closer to the plot area.'
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: '"X Value" and "Y Value" are descriptive but lack units or context
-          (e.g., could be more meaningful like "Measurement Index" or include units).'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha 0.1. Legend is well-placed in upper right
-          with clear labels.
+        comment: Okabe-Ito palette, good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-80% of canvas with balanced margins. No cut-off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Input Variable, Output Variable'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), second #D55E00 (Okabe-Ito pos 2).
+          Backgrounds correct. Data colors identical across themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with intentional colors and typography.
+          Professional but not exceptional—relies on library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid styling applied, legend styled with background/border, spacing
+          configured. Some refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtitle provides context. Orange curve contrasts with green points,
+          creating visual hierarchy. Viewer sees trend.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with LOWESS regression overlay.
+        comment: Scatter with LOWESS regression curve
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned, LOWESS curve properly overlaid.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scatter points with transparency, distinct
-          LOWESS curve (solid yellow line), moderate smoothing bandwidth (frac=0.3),
-          descriptive title.'
-      - id: SC-04
-        name: Data Range
+        comment: Scatter points, LOWESS curve, non-linear relationship, moderate smoothing
+          (frac=0.3)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible, axes appropriately scaled.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels "Data Points" and "LOWESS Curve".
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title correctly uses format "scatter-regression-lowess · highcharts
-          · pyplots.ai".
+        comment: Title format correct. Legend labels match data.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Data shows complex non-linear relationship (sine + quadratic) that
-          varies across x-axis range. LOWESS effectively captures local trends. Minor:
-          Could show more dramatic non-linearity.'
+        comment: 'Shows all aspects: non-linear trend, LOWESS adaptation, noise, density
+          variation'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Data is mathematically generated showing a plausible complex pattern.
-          Generic "X Value"/"Y Value" labels reduce context. Could be more anchored
-          to a real-world scenario.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values are sensible and demonstrate the intended pattern well.
+        comment: Plausible exploratory scenario, neutral topic, realistic noise
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mathematical relationship sound, value ranges plausible
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code includes a custom `lowess()` function definition. While necessary
-          (Highcharts lacks built-in LOWESS), this deviates from the KISS principle
-          of no functions/classes.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)` for reproducibility.
+        comment: Linear flow, lowess function justified, no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: 'All imports used: os, tempfile, time, urllib, pathlib, numpy, highcharts_core,
+          selenium'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API.
+        comment: LOWESS implementation clean, constants well-organized, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` (and `plot.html` for interactive version).
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Good use of Highcharts features: SplineSeries for smooth curve rendering,
-          interactive legend, Chart/HighchartsOptions pattern, Selenium export pattern
-          as documented.'
+        comment: 'Expertly uses Highcharts: Chart container, HighchartsOptions, series
+          management, Selenium export'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses SplineSeries and marker customization. Generic API usage—could
+          showcase more Highcharts-specific features.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling: []
