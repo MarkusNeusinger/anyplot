@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:24:37Z'
-updated: '2026-05-14T21:28:53Z'
+updated: '2026-05-14T21:37:33Z'
 generated_by: claude-sonnet
 workflow_run: 25886128651
 issue: 5247
@@ -12,45 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Correct bipartite layout with two clearly separated columns at x=0.22/0.78, nodes
-    color-coded by set using Okabe-Ito positions 1 and 2
-  - Node size encodes degree, immediately highlighting hubs — satisfies spec requirement
-    and improves storytelling
-  - Color-coded 'Authors' / 'Papers' column headers (matching node colors) add a polished,
-    intentional visual hierarchy
-  - 'Both themes rendered correctly: warm off-white background in light, near-black
-    in dark, with all chrome tokens properly threaded'
-  - 'Full Altair idiomatic usage: mark_rule for edges via x/y → x2/y2, alt.layer()
-    composition, configure_* method chaining, HTML export'
+  - Perfect Okabe-Ito palette with correct color ordering; full theme-adaptive chrome
+    in both renders
+  - 'Complete spec compliance: bipartite columns, degree-encoded node sizes, color
+    by set, readable labels'
+  - 'Excellent code quality: KISS structure, seed set, no functions, clean imports'
+  - Idiomatic Altair layer grammar using mark_rule (x/y/x2/y2) for edges — distinctively
+    Altair
+  - Column headers colored in their respective set colors — elegant visual reinforcement
+    of bipartite structure
   weaknesses:
-  - Node label fontSize=15 is below the recommended 18px minimum for tick/data labels
-    on a 4800×2700 canvas — labels are readable but slightly cramped, especially for
-    longer author names
-  - Edge lines (opacity=0.28) are very subtle; slightly higher opacity or a marginally
-    thicker strokeWidth (e.g., 1.5) would improve traceability without adding clutter
-  - Outer horizontal margins are generous to the point of some wasted canvas space
-    — nodes span only ~56% of the width (0.22–0.78); could use more horizontal spread
-  - No visual differentiation between high-degree and low-degree edges (all edges
-    uniform); edge opacity encoding weight would be a small but meaningful enhancement
-    for hubs
+  - Node label font size (15px) is below the recommended minimum of 18px for label
+    text at this canvas resolution
+  - Paper IDs are abstract (P01-P15); more realistic short titles would improve data
+    context
+  - 'DE-03 lacks data storytelling: no hub is highlighted or emphasized; consider
+    color-intensifying the highest-degree node in each set to create a clear focal
+    point'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "network-bipartite · altair · anyplot.ai" in dark ink at top-left, clearly readable. No axis tick labels (network plot uses no traditional axes). Legend "Node Set" with Author/Paper symbols visible in bottom-right corner with elevated background fill.
-      Data: Left column shows 12 author nodes in #009E73 (Okabe-Ito pos 1, brand green); right column shows 15 paper nodes in #D55E00 (Okabe-Ito pos 2, vermillion-orange). Gray edges (INK_SOFT, opacity=0.28) connect authors to papers. Node sizes vary clearly by degree. Author names are right-aligned next to nodes; paper IDs (P01–P15) are left-aligned. Column headers "Authors" (green) and "Papers" (orange) appear at top of each column.
-      Legibility verdict: PASS — all visible text (title, headers, labels, legend) is dark and readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "network-bipartite · altair · anyplot.ai" in dark INK (#1A1A17) at top-left; "Authors" header in #009E73, "Papers" header in #D55E00; node labels in INK_SOFT (#4A4A44) — all readable
+      Data: Author nodes in #009E73 (Okabe-Ito pos 1), Paper nodes in #D55E00 (Okabe-Ito pos 2); node sizes vary by degree; gray edges (opacity 0.28) connect sets
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8) clearly visible. Node labels rendered in INK_SOFT (#B8B7B0) — light gray, readable against the dark background. Legend has elevated dark fill (#242420) with light text. No dark-on-dark failures detected.
-      Data: Node colors are identical to the light render — #009E73 for authors, #D55E00 for papers — as required (only chrome flips). Edge lines appear slightly lighter (INK_SOFT in dark mode = #B8B7B0) with the same 0.28 opacity, remaining subtle. Column headers retain their data colors.
-      Legibility verdict: PASS — all text is light-on-dark and readable; no dark-on-dark failures observed.
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light INK (#F0EFE8), node labels in INK_SOFT (#B8B7B0) — all readable against dark background; no dark-on-dark failures observed; legend box uses elevated dark fill (#242420)
+      Data: Author nodes still #009E73, Paper nodes still #D55E00 — colors identical to light render as required
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,49 +54,47 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title at 28px and headers at 22px are correct; node data labels at
-          fontSize=15 are below the 18px recommended minimum for pixel-based libs
-          at this canvas size — readable but slightly small
+        comment: Title (28px), headers (22px), legend (18/20px) explicit. Node labels
+          (15px) below recommended 18px minimum.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels well-spaced vertically; minor edge-line crossings through
-          label areas but no actual text collision
+        comment: No overlapping text in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes clearly visible; edges at opacity=0.28 are functional but quite
-          subtle — marginally harder to trace individual connections
+        comment: Node size range [200-1200] appropriate; edges visible at opacity
+          0.28
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2 used; CVD-safe palette
+        comment: Okabe-Ito green/orange CVD-safe and high-contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off; outer horizontal margins leave
-          some unused canvas space
+        comment: Bipartite columns fill 1600x900 canvas well; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Column headers serve as axis labels; title matches required format
+        comment: Column headers serve as descriptive labels; no traditional axes needed
+          for network graph
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series = #009E73; second = #D55E00 (Okabe-Ito
-          order); light bg = #FAF8F1, dark bg = #1A1A17; both renders theme-correct'
+        comment: Author=#009E73, Paper=#D55E00; bg light=#FAF8F1, dark=#1A1A17; full
+          theme chrome correct
     design_excellence:
       score: 13
       max: 20
@@ -110,23 +104,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default polish: color-coded column headers match node colors,
-          size-encoded hubs, clean two-column layout; not exceptional but genuinely
-          designed'
+        comment: Color-coded columns with matching headers, degree-encoded sizes,
+          node stroke on background — above defaults but not publication-quality
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No unnecessary axes or spines, subtle edges, good whitespace; appropriate
-          for network visualization
+        comment: Axes fully hidden, view border removed, subtle edges, node stroke,
+          clean legend box
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Hub nodes (larger circles) create a clear focal point; bipartite
-          structure is immediately obvious; color distinction reinforces group identity
+        passed: false
+        comment: Degree encoding provides mild visual hierarchy but no hub is highlighted;
+          no focal point or narrative emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -136,54 +129,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network with two separated node sets
+        comment: Correct bipartite network with two node sets in separate columns
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two node sets separated into columns, color by set, node size encodes
-          degree, labels positioned to avoid overlap, edges connecting cross-set nodes
-          only
+        comment: Columns, color by set, degree-encoded size, readable labels, clean
+          edges — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct layout, all 12 authors and 15 papers displayed, edges span
-          full range of connections
+        comment: Source=authors left, target=papers right, edges correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title = 'network-bipartite · altair · anyplot.ai'; legend shows 'Node
-          Set' with Author/Paper labels
+        comment: Title format correct; legend with Node Set, Author, Paper labels
+          correct
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows bipartite structure, two node sets, cross-set edges, degree-encoded
-          node size; no edge weight encoding (optional per spec)
+        comment: Hub vs. peripheral nodes visible; varied connectivity patterns shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Researcher-paper affiliation network is a canonical bibliometrics
-          use case, realistic and politically neutral
+        comment: Realistic diverse author names. Paper IDs (P01-P15) are abstract
+          — real titles would improve context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 authors, 15 papers, 2-4 connections per author — within spec range
-          and visually balanced
+        comment: 12 authors, 15 papers, 2-4 connections each; within spec range; realistic
+          density
     code_quality:
       score: 10
       max: 10
@@ -193,7 +183,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural code, no unnecessary abstraction
+        comment: Linear imports->data->positions->charts->save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,13 +195,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, altair, numpy, pandas — all used
+        comment: All imports used; sys.path manipulation justified to avoid local
+          name conflict
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, no fake interactive UI
+        comment: Clean, idiomatic, appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -219,24 +210,24 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper encoding type annotations (:Q, :N), alt.Scale/alt.Legend,
-          configure_* chaining, alt.layer() composition — idiomatic Altair throughout
+        comment: 'Exemplary: declarative encoding, alt.layer, alt.Scale with domain/range,
+          configure_* for theme'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: mark_rule with x/y to x2/y2 for edges is a clever Altair-specific
-          technique; layer composition for multi-mark plots is Altair's core paradigm;
-          HTML export is built-in
+        comment: 'mark_rule with x/y/x2/y2 for edges is distinctively Altair; six-layer
+          composition showcases Altair grammar. Minor deduction: no selection/highlight
+          bindings used.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -249,5 +240,5 @@ impl_tags:
   - groupby-aggregation
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
