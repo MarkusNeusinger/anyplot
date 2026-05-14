@@ -6,7 +6,7 @@ title: Frequency Spectrum Plot
 
 # Specification tracking
 created: 2025-12-31T05:17:32Z
-updated: null
+updated: 2026-05-14T09:04:46Z
 issue: 2926
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - spectrum
     - line
   data_type:
     - numeric
@@ -24,6 +23,7 @@ tags:
     - general
     - engineering
     - science
+    - signal-processing
   features:
     - basic
     - signal-analysis
