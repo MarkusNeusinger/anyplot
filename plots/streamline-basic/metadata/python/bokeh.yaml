@@ -1,174 +1,165 @@
 library: bokeh
+language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:17:11Z'
-updated: '2025-12-31T00:21:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608706242
+updated: '2026-05-14T07:27:33Z'
+generated_by: claude-haiku
+workflow_run: 25847419911
 issue: 2861
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - patches
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/bokeh/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of streamline tracing using Euler integration with proper
-    handling of bounds and speed thresholds
-  - Beautiful color gradient from teal to yellow representing velocity magnitude -
-    visually appealing and informative
-  - Arrowheads at streamline ends clearly indicate flow direction
-  - Proper canvas sizing (4800x2700) with appropriately scaled text elements
-  - Clean, well-structured code that is easy to understand
-  - Outputs both PNG and HTML for static and interactive viewing
+  - Excellent mathematical implementation with RegularGridInterpolator and Euler integration
+  - Proper theme-adaptive styling with correct colors for both light and dark renders
+  - Professional visual design with compelling vortex pattern and effective color
+    gradient
+  - Flow direction arrows enhance understanding
+  - Robust error handling and deterministic reproducibility
   weaknesses:
-  - Axis labels lack units (could use "X Position (arbitrary units)" or similar)
-  - Could demonstrate more varied flow patterns to showcase streamline capabilities
-    beyond simple vortex
-  - Does not leverage Bokeh's ColumnDataSource for data organization
-  - No interactive features (hover tooltips showing velocity magnitude would enhance
-    the Bokeh implementation)
-  image_description: The plot displays a vortex flow field visualized as streamlines
-    arranged in concentric circular patterns around the origin. The streamlines use
-    a gradient color scheme that transitions from teal/gray-green colors in the center
-    (representing lower velocity magnitude) to golden-yellow colors at the outer edges
-    (representing higher velocity magnitude). Each streamline terminates with an arrowhead
-    indicating the flow direction (counterclockwise rotation). The background is a
-    light off-white (#fafafa). The title "streamline-basic · bokeh · pyplots.ai" appears
-    in the upper-left corner, with "X Position" and "Y Position" axis labels. Axis
-    tick marks range from approximately -3 to 3. A subtle dashed grid is visible in
-    the background.
+  - Innermost dark streamlines have marginal contrast in dark theme
+  - Could use ColumnDataSource for better scalability with complex fields
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title (28pt dark text), axis labels (22pt dark text), tick labels (18pt dark text) all clearly visible
+      Data: Streamline vortex pattern with bright green outer edges (high velocity) transitioning through cyan/blue to dark purple center (low velocity) using Viridis256 colormap. Small directional arrows at streamline ends. All elements clearly distinguishable from light background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, and tick labels properly adapted to light text colors (#F0EFE8 for primary, #B8B7B0 for secondary) and clearly visible
+      Data: Identical Viridis256 gradient to light render—green outer, cyan/blue middle, dark purple inner. Arrows remain visible. Innermost streamlines have minimal but acceptable contrast against dark background and remain visually distinguishable. Grid lines subtle but visible.
+      Legibility verdict: PASS (minor contrast on innermost lines, but adequate)
+
+    Both renders pass legibility checks. Data colors are correctly identical between themes (only chrome adapts). No "dark-on-dark" failures observed.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'Title and axis labels are readable at 32pt and 26pt respectively;
-          tick labels at 20pt are clear. Minor: title could be slightly more prominent'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated
+        comment: All text sizes and colors correct for both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements or collisions
       - id: VQ-03
         name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Outer streamlines highly visible; inner dark lines have marginal
+          contrast in dark theme but acceptable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis256 is colorblind-safe and perceptually uniform
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 4800x2700 dimensions, 16:9 aspect ratio, proper field range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title and axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis256 for continuous data, correct theme backgrounds
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 7
         max: 8
         passed: true
-        comment: 'Streamlines are well-sized (line_width=4) with good alpha (0.85);
-          arrowheads clearly show direction. Minor density issue: some inner streamlines
-          overlap slightly'
-      - id: VQ-04
-        name: Color Accessibility
+        comment: Polished with intentional design choices and visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Blue-green to yellow gradient is colorblind-safe (viridis-like progression)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        comment: Subtle grid, clean axes, directional arrows enhance design
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
         passed: true
-        comment: Plot fills canvas well with balanced margins; streamlines extend
-          nicely to edges
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("X Position", "Y Position") but no units specified
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Grid is subtle with alpha=0.3 and dashed styling; no legend needed
-          for this plot type
+        comment: Vortex pattern is clear focal point with color gradient guidance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct streamline plot type showing vector field with continuous
-          curves
+        comment: Correct streamline visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y grid and U/V velocity components correctly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vortex flow field (u=-y, v=x), color encoding magnitude, arrowheads
-          for direction
-      - id: SC-04
-        name: Data Range
+        comment: Color encodes magnitude, arrows show direction, grid-based seeding
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full range (-3.5 to 3.5) with good padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes properly labeled and range captures full field
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; color meaning is intuitive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "streamline-basic · bokeh · pyplots.ai"'
+        comment: Title format correct, no legend needed
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows circular streamlines well with velocity magnitude coloring.
-          Could show more varied flow patterns (saddle points, sources/sinks)
+        comment: All streamline aspects covered
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Vortex flow is a classic fluid dynamics scenario; appropriate for
-          demonstrating streamlines
+        comment: Vortex flow is canonical and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Grid size (-3 to 3) and 40x40 resolution are reasonable; magnitude
-          scaling could be slightly adjusted
+        comment: Grid range and distribution are sensible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,41 +167,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure with imports → data → plot → save; no functions/classes
+        comment: No unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) at the start
+        comment: Deterministic seed applied
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh, scipy)
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses bokeh's figure, line, patch methods and export_png/save. Could
-          leverage ColumnDataSource more explicitly or add interactivity features
-          like hover tools
+        comment: High-level API used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool, Viridis256, arrows enhance visualization
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - interpolation
+  styling:
+  - custom-colormap
