@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 volcano-basic: Volcano Plot for Statistical Significance
-Library: plotly 6.5.0 | Python 3.13
-Quality: pending | Created: 2026-05-14
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-14
 """
 
 import os
