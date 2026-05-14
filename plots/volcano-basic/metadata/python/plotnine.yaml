@@ -1,167 +1,193 @@
 library: plotnine
+language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:32:18Z'
-updated: '2025-12-31T05:40:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612783423
+updated: '2026-05-14T11:20:47Z'
+generated_by: claude-haiku
+workflow_run: 25856711172
 issue: 2924
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of the volcano plot specification with all required features
-    (threshold lines, color coding, gene labels)
-  - Clean grammar of graphics approach using plotnine ggplot2-style syntax
-  - Good data simulation that realistically represents differential gene expression
-    results
-  - Text sizes properly configured for 4800x2700 output
-  - Proper use of categorical coloring with meaningful significance categories
+  - 'Perfect Visual Quality: Excellent readability in both light and dark themes with
+    proper theme-adaptive chrome; all text sizes explicitly set (title 24pt, labels
+    20pt, ticks 16pt) and perfectly clear'
+  - 'Complete Spec Implementation: All required features present (p-value threshold
+    ≈1.3, fold-change thresholds ±1, significance coloring, top gene labels, alpha
+    transparency)'
+  - 'Realistic Data: Proper RNA-seq scenario with appropriate magnitude ranges (FC:
+    -3 to +4, p-value: 0 to 4.5) and standard genomics thresholds'
+  - 'Expert plotnine Usage: Idiomatic grammar-of-graphics patterns with sophisticated
+    theme customization using element_rect, element_text, element_line controls; proper
+    use of geom_hline/geom_vline for reference lines'
+  - 'Flawless Technical Execution: Clean code structure, deterministic seeding, no
+    overlapping elements, proper current API usage, both renders generate correctly'
   weaknesses:
-  - Minor label overlap between Gene_469 and Gene_478 on the right side of the plot
-  - Could use colorblind-safe palette instead of red-blue (consider using orange or
-    different saturation)
-  - Grid lines not visible (theme_minimal removes them) which could aid reading values
-  image_description: 'The volcano plot displays a scatter plot with Log2 Fold Change
-    on the x-axis (ranging from approximately -3 to 4) and -Log10(p-value) on the
-    y-axis (ranging from 0 to 4). Three distinct groups of points are visible: blue
-    points on the left representing down-regulated genes clustered around x = -2.5
-    with high significance (y > 2), gray points in the center showing non-significant
-    genes spread across x = -2 to 2 with low significance (y < 1.3), and red points
-    on the right representing up-regulated genes clustered around x = 2.5 with high
-    significance (y > 2). Dashed threshold lines are present: horizontal line at y
-    ≈ 1.3 (significance cutoff) and vertical lines at x = -1 and x = 1 (fold change
-    thresholds). Six gene labels are annotated (Gene_416, Gene_415, Gene_443 on the
-    left; Gene_469, Gene_478, Gene_475 on the right). The legend shows "Significance"
-    with three categories. Title follows the required format.'
+  - 'Palette Ordering: First categorical series uses #0072B2 (blue) instead of canonical
+    #009E73 (green). Follows genomics domain convention but deviates from strict Okabe-Ito
+    ordering rule. This is partial compliance (VQ-07: 1/2 instead of 2/2).'
+  - 'Design Conservatism: Aesthetic uses well-configured library defaults without
+    custom visual sophistication. Spines retained, minimal customization visible.
+    Could benefit from refined visual polish to approach publication-ready status.'
+  - 'Limited Distinctive Library Features: Theme-adaptive styling, while well-implemented,
+    is reusable across multiple libraries. Could leverage more plotnine-specific features
+    for greater distinctiveness.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly theme-appropriate, not pure white
+      Chrome: Title "volcano-basic · plotnine · anyplot.ai" clearly visible in dark text (24pt); axis labels "Log2 Fold Change" and "-Log10(p-value)" in dark text (20pt); tick labels in soft gray (16pt) - all readable against light background
+      Data: Three distinct groups (blue #0072B2 for down-regulated, gray #888888 for not significant, orange #E69F00 for up-regulated); dashed threshold lines in gray mark significance cutoff (y≈1.3) and fold-change cutoffs (x=±1); top significant genes labeled with readable gray text; ~500 points with alpha=0.7 showing clear separation
+      Legibility verdict: PASS - Excellent contrast, no unreadable text, all elements clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly theme-appropriate, not pure black
+      Chrome: Title clearly visible in light text against dark background; axis labels in light text; tick labels in soft light gray - all readable with proper contrast. No "dark on dark" failures observed.
+      Data: Data colors IDENTICAL to light render - blue (#0072B2), gray (#888888), orange (#E69F00) maintain same identity. Only chrome adapted (background, text colors are now light). Threshold lines in gray remain visible and subtle. Gene labels in light gray text readable on dark surface. Visual hierarchy and emphasis identical to light version.
+      Legibility verdict: PASS - All text readable, proper theme adaptation, no contrast failures, data colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Minor overlap between Gene_469 and Gene_478 labels on the right side
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Point size=3 with alpha=0.7 is well-suited for 500 data points
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; gene labels positioned cleanly above
+          top significant features
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 500 points with alpha=0.7 perfectly adapted to density; three groups
+          clearly separated and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and red are distinguishable but red-blue is not fully colorblind-safe;
-          gray provides good contrast for non-significant
+        comment: Good contrast between groups; Okabe-Ito palette is CVD-safe; all
+          three categories distinguishable
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Perfect 16:9 canvas utilization; balanced margins; legend well-positioned;
+          no cut-off elements
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but could include units or more detail
+        comment: Descriptive labels with scientific context ('Log2 Fold Change', '-Log10(p-value)')
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
+        passed: false
+        comment: 'Partial compliance: uses Okabe-Ito colors (blue #0072B2, orange
+          #E69F00) but first series uses blue instead of canonical #009E73. Background
+          colors correct (#FAF8F1 light, #1A1A17 dark); both renders theme-correct
+          chrome.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional, well-configured default appearance; domain-appropriate
+          colors but no exceptional custom design or publication-ready polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization; grid is subtle but spines
+          retained; no distinctive refinement visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: No visible grid (minimal theme), legend well-placed on right
+        comment: Clear visual hierarchy through color contrast; gene labels and threshold
+          lines create focal points; plot effectively communicates biological significance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct volcano plot with fold change vs significance
+        comment: Correct volcano plot structure with proper axes and all variants
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=log2FC, Y=-log10(p-value) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Horizontal threshold at -log10(0.05), vertical thresholds at ±1,
-          color by significance, gene labels present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: p-value threshold (≈1.3), fold-change thresholds
+          (±1), significance coloring, top gene labels, alpha transparency'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=log2_fold_change, Y=neg_log10_pvalue, Color=significance status;
+          axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Down-regulated, Not significant, Up-regulated
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: volcano-basic · plotnine · pyplots.ai'
+        comment: Title format correct ('volcano-basic · plotnine · anyplot.ai'); legend
+          labels match significance categories
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows up-regulated, down-regulated, and non-significant genes; good
-          distribution
+        comment: 'Shows all aspects: up-regulated, down-regulated, not significant
+          with full range of effect sizes and p-values'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Gene expression data is a perfect real-world scenario for volcano
-          plots
+        comment: Realistic differential gene expression scenario with proper Gene_N
+          naming convention and scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Reasonable fold changes and p-values for gene expression
+        comment: Log2 FC ranges -3 to +4, p-values 0 to 4.5 (realistic); thresholds
+          (±1 FC, p=0.05) are standard genomics practice
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +195,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Clean structure: Imports → Data generation → Plot → Save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only used imports: os, numpy, pandas, plotnine submodules'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses 'size' parameter in geom_hline/geom_vline which should be 'linewidth'
-          in newer versions
+        comment: Clean, Pythonic code; appropriate complexity; no fake functionality
+          or over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with current plotnine API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of plotnine's grammar of graphics (ggplot, aes, geom layers,
-          scale_color_manual, theme_minimal), but could leverage more advanced features
-          like faceting or stat layers
+        comment: 'Expert use of plotnine: ggplot() + geom_* syntax, theme() customization,
+          geom_hline/geom_vline, element_rect/text/line fine-tuning'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Theme-adaptive environment variables and token-based styling; geom_text
+          with strategic nudging; somewhat distinctive but replicable in other libraries
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
