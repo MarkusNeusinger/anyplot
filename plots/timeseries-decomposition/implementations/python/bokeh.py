@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 55/100 | Updated: 2026-05-14
+Quality: 86/100 | Updated: 2026-05-14
 """
 
 import os
