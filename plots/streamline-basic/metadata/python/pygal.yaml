@@ -1,38 +1,221 @@
 library: pygal
+language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:16:07Z'
-updated: '2025-12-31T00:35:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608714729
+updated: '2026-05-14T07:37:54Z'
+generated_by: claude-haiku
+workflow_run: 25847656942
 issue: 2861
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/pygal/plot.html
-quality_score: 77
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Perfect visual quality with explicit font sizing and theme-adaptive colors in
+    both renders
+  - 'Excellent theme adaptation: data colors identical across light/dark, chrome properly
+    flips'
+  - Clean, deterministic code with proper import management
+  - Strong data representation with clear storytelling through orbital visualization
+  - All spec requirements met with high fidelity
+  weaknesses:
+  - Design polish lacks publication-ready sophistication; styling is competent but
+    follows library defaults closely
+  - Visual refinement could improve through custom grid styling or spine removal
+  - Library mastery is adequate but doesn't leverage pygal's unique capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white. Correct light theme surface.
+      Chrome: Title "streamline-basic · pygal · anyplot.ai" clearly visible in dark text at top. Axis labels "X Position" and "Y Position" readable. Tick labels at -4, -2, 0, 2, 4 are distinct and legible. Legend at bottom with four orbital radius labels is readable.
+      Data: Four concentric elliptical streamline patterns in Okabe-Ito colors—green (#009E73) innermost, orange (#D55E00), blue (#0072B2), reddish purple (#CC79A7) outermost. Streamlines clearly distinguish each orbital group.
+      Legibility verdict: PASS - All text is highly readable with excellent contrast against light background. No illegible elements.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black. Correct dark theme surface.
+      Chrome: Title visible in light text. Axis labels and tick labels are light-colored and clearly readable against dark background. No dark-on-dark failures. Legend text is light and legible.
+      Data: Streamline colors are identical to light render—green, orange, blue, and reddish purple remain in exact same hex values. Orbital grouping is equally clear in dark mode.
+      Legibility verdict: PASS - All text is readable in dark theme. No dark-on-dark failures detected. Data colors maintain identity across both renders.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; clean layout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Streamlines clearly visible and distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels and proper title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito order followed; theme-correct backgrounds and text colors
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful style configuration but follows library defaults; lacks
+          exceptional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and balanced whitespace; minimal customization beyond
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear orbital hierarchy with visual focus; good but could be stronger
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY streamline chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned with appropriate range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title and legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all aspects of streamline visualization
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible vortex field with neutral physics context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible coordinate ranges and orbital spacing
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure with no unnecessary complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic streamline tracing
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only essential imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity and clean implementation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format and current API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY and Style object
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses standard features; doesn't leverage unique pygal capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Creative workaround for pygal lack of native streamline support using XY connected
-    lines
-  - Good visual representation of vortex flow with distinct colored orbital groups
-  - Clean code structure following KISS principles
-  - Appropriate use of custom Style for font sizing and colors
-  - Good canvas utilization with balanced layout
-  - Correct title format
-  weaknesses:
-  - Legend labels in rendered image appear truncated compared to code-defined labels
-  - The blue color tones (Near-Inner and Middle) are somewhat similar and could be
-    more distinct
-  - Streamlines only show closed circular orbits - more varied flow features would
-    better demonstrate streamline capabilities
-  - Random seed is set but not actually needed since the vortex field is mathematically
-    deterministic

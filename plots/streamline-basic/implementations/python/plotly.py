@@ -1,74 +1,116 @@
-""" pyplots.ai
+""" anyplot.ai
 streamline-basic: Basic Streamline Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 85/100 | Created: 2025-12-31
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-14
 """
 
+import os
+
 import numpy as np
-import plotly.figure_factory as ff
+import plotly.graph_objects as go
+from scipy.integrate import solve_ivp
 
 
-# Data - Create a grid for the vector field
-x = np.linspace(-3, 3, 30)
-y = np.linspace(-3, 3, 30)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
 
-# Create vortex flow field: u = -y, v = x (circular streamlines)
-X, Y = np.meshgrid(x, y)
+# Data - Vortex flow field: u = -y, v = x (circular streamlines)
+fig = go.Figure()
 
-# Simple vortex flow (no normalization - preserves velocity magnitude)
-u = -Y
-v = X
 
-# Create streamline plot with uniform color
-fig = ff.create_streamline(x, y, u, v, density=1.5, arrow_scale=0.08, line={"width": 2.5, "color": "#306998"})
+# Function to compute velocity at any point
+def velocity_field(t, state):
+    x, y = state
+    dx = -y
+    dy = x
+    return [dx, dy]
 
-# Explicitly hide any colorbar that might be added
-for trace in fig.data:
-    if hasattr(trace, "showscale"):
-        trace.showscale = False
-    if hasattr(trace, "marker") and trace.marker is not None:
-        trace.marker.showscale = False
 
-# Update layout for large canvas with proper axis ranges matching data
+# Create streamlines from starting points on a circle
+num_streamlines = 18
+for angle in np.linspace(0, 2 * np.pi, num_streamlines, endpoint=False):
+    start_x = 2.5 * np.cos(angle)
+    start_y = 2.5 * np.sin(angle)
+
+    # Integrate forward
+    sol_forward = solve_ivp(
+        velocity_field, (0, 5), [start_x, start_y], t_eval=np.linspace(0, 5, 150), dense_output=True
+    )
+
+    # Integrate backward
+    sol_backward = solve_ivp(
+        velocity_field, (0, -5), [start_x, start_y], t_eval=np.linspace(0, -5, 150), dense_output=True
+    )
+
+    # Plot forward streamline
+    if sol_forward.t.size > 0:
+        fig.add_trace(
+            go.Scatter(
+                x=sol_forward.y[0],
+                y=sol_forward.y[1],
+                mode="lines",
+                line={"color": BRAND, "width": 3},
+                hoverinfo="none",
+                showlegend=False,
+            )
+        )
+
+    # Plot backward streamline
+    if sol_backward.t.size > 0:
+        fig.add_trace(
+            go.Scatter(
+                x=sol_backward.y[0],
+                y=sol_backward.y[1],
+                mode="lines",
+                line={"color": BRAND, "width": 3},
+                hoverinfo="none",
+                showlegend=False,
+            )
+        )
+
+# Update layout for large canvas with theme support
 fig.update_layout(
-    title={"text": "streamline-basic · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={"text": "streamline-basic · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "X Position (dimensionless)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "X Position (dimensionless)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "gridcolor": GRID,
         "zeroline": True,
         "zerolinewidth": 2,
-        "zerolinecolor": "rgba(0,0,0,0.3)",
-        "range": [-3.5, 3.5],
+        "zerolinecolor": INK_SOFT,
+        "range": [-4, 4],
         "autorange": False,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Y Position (dimensionless)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Y Position (dimensionless)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "gridcolor": GRID,
         "zeroline": True,
         "zerolinewidth": 2,
-        "zerolinecolor": "rgba(0,0,0,0.3)",
-        "range": [-3.5, 3.5],
+        "zerolinecolor": INK_SOFT,
+        "range": [-4, 4],
         "autorange": False,
         "scaleanchor": "x",
         "scaleratio": 1,
+        "linecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     margin={"l": 120, "r": 50, "t": 100, "b": 100},
-    plot_bgcolor="white",
     showlegend=False,
 )
 
-# Hide any colorbar annotations or colorbars
-fig.update_coloraxes(showscale=False)
-
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML version
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG and HTML
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
