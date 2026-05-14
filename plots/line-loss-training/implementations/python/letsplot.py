@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-loss-training: Training Loss Curve
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-12-31
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-14
 """
 
 import os
