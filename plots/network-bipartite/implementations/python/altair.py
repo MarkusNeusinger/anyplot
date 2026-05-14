@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-bipartite: Bipartite Network Graph
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-05-14
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 85/100 | Created: 2026-05-14
 """
 
 import os
