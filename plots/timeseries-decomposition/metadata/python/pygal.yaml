@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:56:21Z'
-updated: '2026-05-14T22:52:41Z'
+updated: '2026-05-14T22:59:26Z'
 generated_by: claude-haiku
 workflow_run: 25889923925
 issue: 2992
@@ -12,46 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/pygal/plot-dark.html
-quality_score: 72
+quality_score: 91
 review:
   strengths:
-  - Clean four-panel decomposition layout with proper vertical alignment and shared
-    x-axis
-  - Correct Okabe-Ito palette applied to components (green, orange, blue, purple in
-    order)
-  - Theme-adaptive rendering works correctly - light/dark backgrounds and text colors
-    properly toggled
-  - Data legibility excellent in both light and dark - no text-on-text or low-contrast
-    issues for any readable elements
-  - Proper use of PIL post-processing for composite image assembly with rotated y-axis
-    labels
-  - Y-axis ranges appropriately scaled for each component; grid lines subtle and effective
+  - 'Perfect spec compliance: all four components correctly displayed and decomposed'
+  - 'Excellent theme adaptation: both light and dark renders are legible with correct
+    color choices'
+  - Strong data quality with realistic CO₂ domain context and appropriate decomposition
+  - Clean, maintainable code with deterministic data generation
+  - Proper use of Okabe-Ito palette with intentional component color assignment
+  - Correct layout and sizing for 4800×2700 canvas
   weaknesses:
-  - 'SC-04 CRITICAL: Title shows ''timeseries-decomposition · matplotlib · anyplot.ai''
-    instead of ''timeseries-decomposition · pygal · anyplot.ai'' - spec-mandated format
-    violated in both renders'
-  - Title library name error is hardcoded in implementation (line 148) but was apparently
-    not caught in testing - suggests incomplete validation
-  - Design could be more sophisticated - uses default styling within each component
-    rather than custom refinements
-  - Limited visual hierarchy within components - all four plots have identical styling/prominence
+  - Minor x-axis label crowding on bottom chart due to rotation (readability is still
+    adequate)
+  - Design excellence could be elevated with more visual refinement (e.g., spine styling,
+    grid opacity tuning)
+  - Library mastery score reflects workaround-heavy approach (PIL image assembly)
+    rather than leveraging pygal's native capabilities more elegantly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels, tick labels, y-axis component labels all clearly readable with dark text. Title incorrectly shows "matplotlib" instead of "pygal" - CRITICAL ERROR. Axis labels and date ticks are legible.
-      Data: Four subplots stacked vertically (Original/green, Trend/orange, Seasonal/blue, Residual/purple) with correct Okabe-Ito color assignments. All lines clearly visible with proper contrast against background.
-      Legibility verdict: FAIL - Title library name is wrong (shows matplotlib, should show pygal). SC-04 compliance violation.
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Main title "timeseries-decomposition · pygal · anyplot.ai" centered at top; component titles (Original Series, Trend, Seasonal, Residual); rotated y-axis labels with units; x-axis with dates at bottom. All text dark and clearly readable.
+      Data: Original Series (green #009E73), Trend Component (orange #D55E00), Seasonal Component (blue #0072B2), Residual Component (reddish-purple #CC79A7). Okabe-Ito palette correctly applied.
+      Grid: Subtle grid lines visible, not dominant
+      Legibility verdict: PASS - All text readable, proper contrast, clear hierarchy
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, tick labels all clearly readable with light text on dark background. Title has the SAME library name error - shows "matplotlib" instead of "pygal". No dark-on-dark readability issues for other elements.
-      Data: All four component colors are identical to light render (green, orange, blue, purple) - correct theme-invariant palette adherence. Lines and markers clearly distinguishable from dark background.
-      Legibility verdict: FAIL - Title has wrong library name (matplotlib not pygal). Critical spec violation in both renders prevents approval.
-
-    Both renders have identical library name error in title, making this a systematic implementation issue rather than a rendering artifact. The plot itself is well-constructed and readable, but the spec-mandated title format is broken.
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Same layout as light; all text rendered in light colors (#F0EFE8). Main title, component titles, axis labels, tick labels clearly visible.
+      Data: Colors identical to light render (original=green, trend=orange, seasonal=blue, residual=reddish-purple). Only chrome has adapted to dark theme as expected.
+      Grid: Subtle grid lines visible, not dominant
+      Legibility verdict: PASS - No dark-on-dark issues; brand green #009E73 visible and readable; all text clear
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,67 +53,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark themes
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          all text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping or colliding text elements
+        comment: Vertical stacking prevents overlap; minor x-axis label crowding at
+          bottom due to 35° rotation, but still readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All lines and elements clearly visible
+        comment: All four components clearly visible and separated; stroke_width=3
+          provides definition; dots disabled for clarity
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette ensures colorblind safety; good contrast; no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: 4800×2700 landscape format appropriate; good proportions for 4 stacked
+          charts; no cut-offs; reasonable margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Title shows 'matplotlib' instead of 'pygal' - spec violation
+        passed: true
+        comment: Descriptive titles for all components; units included (ppm); x-axis
+          label shows Date; format correct
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Title format violates SC-04 requirement
+        passed: true
+        comment: 'First series is #009E73; multi-series follows Okabe-Ito order; backgrounds
+          #FAF8F1 (light)/#1A1A17 (dark); both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Professional but generic styling without custom refinements
+        passed: true
+        comment: Custom Okabe-Ito palette; intentional component color hierarchy;
+          professional polish; good Style object usage; solid but conventional
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: false
-        comment: Good composition but could benefit from more intentional design
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Clear progression but all panels have equal visual weight
+        passed: true
+        comment: Grid uses foreground_subtle for subtlety; reasonable whitespace;
+          minimal chrome visible in pygal; could refine further with spine control
+          and grid opacity tuning
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides viewer through decomposition; clear focal
+          points with color separation; good component ordering; strong narrative
+          flow
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,25 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct four-component decomposition
+        comment: 'Correct chart type: four vertically stacked line charts for time
+          series decomposition'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All components present with proper ranges
+        comment: Four subplots with shared x-axis; statsmodels seasonal_decompose
+          used; all components labeled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shared correctly, ranges appropriate
+        comment: 'X-axis: dates; Y-axis: component values; sensible ranges per component
+          (410-437 for original, 405-435 for trend, -5 to 5 for seasonal, -3 to 3
+          for residual)'
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Title shows 'matplotlib' instead of 'pygal' - direct spec violation
+        passed: true
+        comment: 'Title format: "timeseries-decomposition · pygal · anyplot.ai"; component
+          titles clear; legend omitted (appropriate, components are labeled)'
     data_quality:
       score: 15
       max: 15
@@ -155,19 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All decomposition aspects clearly shown
+        comment: 'All four aspects shown: original series, trend, seasonal, residual;
+          additive decomposition appropriate'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CO2 data is plausible and neutral
+        comment: CO₂ measurements (410-430 ppm) realistic; 72-month timeframe realistic;
+          trend and seasonality plausible; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges sensible for domain
+        comment: 410-430 ppm realistic for CO₂; ±3 ppm seasonality realistic; residual
+          ±2 ppm realistic; all scales sensible
     code_quality:
       score: 10
       max: 10
@@ -177,31 +191,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward, linear code
+        comment: No unnecessary functions/classes; straightforward data generation
+          and decomposition; clear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42); pd.date_range deterministic; always produces
+          same output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies; proper sys.path safety
+          handling
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No simulated interactivity
+        comment: Appropriate complexity; no fake interactivity; clean implementation;
+          no unnecessary abstractions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output file names
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; ANYPLOT_THEME environment
+          variable; current pygal 3.1.0 API
     library_mastery:
       score: 7
       max: 10
@@ -211,25 +230,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Appropriate pygal.Line usage with Style theming
+        comment: Uses pygal.Line() appropriately; Style object for theme adaptation;
+          cairosvg integration for PNG; solid idiomatic usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: PIL-based approach is sophisticated but library-agnostic
-    summary:
-      total_score: 72
-      max_score: 100
-      verdict: REJECTED
-      reason: SC-04 spec compliance failure - title must show correct library name
-        'pygal' instead of 'matplotlib'
-  verdict: REJECTED
+        passed: true
+        comment: PNG rendering with cairosvg; PIL-based image assembly and text overlay;
+          creative workaround for pygal SVG limitations; but approach is heavy-handed
+          rather than elegant
+  verdict: APPROVED
 impl_tags:
   dependencies:
-  - statsmodels
   - pillow
   - cairosvg
+  - statsmodels
   techniques:
   - subplots
   - annotations
@@ -238,4 +254,5 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - theme-adaptive

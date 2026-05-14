@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 72/100 | Updated: 2026-05-14
+Quality: 91/100 | Updated: 2026-05-14
 """
 
 import os
