@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: shap-summary
 created: '2025-12-31T05:53:37Z'
-updated: '2026-05-14T13:05:39Z'
+updated: '2026-05-14T13:11:31Z'
 generated_by: claude-haiku
 workflow_run: 25861255852
 issue: 2923
@@ -12,43 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 95
 review:
   strengths:
-  - Perfect specification compliance - all required SHAP summary features correctly
-    implemented
-  - Flawless theme handling - light and dark renders display correctly with proper
-    contrast and readable text throughout
-  - Appropriate diverging colormap (BrBG) for continuous feature value encoding
-  - Realistic and neutral domain context (financial/credit scoring ML scenario)
-  - Clean, idiomatic altair code with proper encoding patterns and transform usage
-  - Good data density presentation with jittering to reduce overlap while maintaining
-    visibility
-  - Proper output format with both PNG and HTML exports
-  weaknesses:
-  - Design lacks visual sophistication - relies on default styling without custom
-    refinement or unique aesthetic choices
-  - Minimal visual hierarchy or data storytelling beyond specification requirements
-    - plot is technically correct but not artistically distinctive
-  - Limited use of distinctive altair features - while YOffset jitter is nice, overall
-    approach could work in many plotting libraries
-  - No visual emphasis or focal point to guide viewer beyond ordered importance ranking
+  - Perfect visual quality with explicit font sizing and proper theme adaptation across
+    both light and dark renders
+  - Sophisticated multi-dimensional encoding (position, color, size, opacity) creates
+    clear visual hierarchy and data storytelling
+  - Idiomatic Altair usage demonstrating expert command of the library's high-level
+    API and distinctive features
+  - Complete specification compliance with correctly formatted title, legend, and
+    all required SHAP summary features
+  - Realistic, neutral financial ML scenario data showing full range of feature importances
+    and effects
+  - Clean, reproducible code with no external dependencies beyond core plotting libraries
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and professional
-      Chrome: Title "shap-summary · altair · anyplot.ai" is clear and readable in dark text (28px). X-axis label "SHAP Value (Impact on Model Output)" (22px) and Y-axis feature names (18px) are all clearly visible. Vertical dashed line at x=0 clearly separates positive and negative SHAP values.
-      Data: Points colored with BrBG diverging scale - brown tones for low feature values transitioning to cyan/teal for high values. All markers visible with opacity=0.6. Feature names ordered top-to-bottom by importance. Jittering effectively reduces point overlap.
-      Legend: "Feature Value" gradient scale on the right side - colors and labels readable
-      Legibility verdict: PASS - All text is highly readable against the light background. Good contrast and sizing throughout.
+      Background: Warm off-white (#FAF8F1) with subtle gradient
+      Chrome: Title "shap-summary · altair · anyplot.ai" in dark text (28px), X-axis labeled "SHAP Value (Impact on Model Output)" (22px), Y-axis shows 10 financial features ordered by importance (18px). All text is dark and clearly readable against light background. Dashed vertical reference line at x=0 in soft gray (INK_SOFT).
+      Data: Scatter points colored by brownbluegreen diverging gradient (blue for low feature values, green for high). Circles sized 30-150px by absolute SHAP magnitude. Points jittered vertically to reduce overlap. Legend on right showing "Feature Value" continuous color scale.
+      Legibility verdict: PASS - All text sizes explicitly set; no overlap; excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), maintains visual consistency
-      Chrome: Title is rendered in light off-white (#F0EFE8), clearly readable on dark background. X-axis and Y-axis labels are visible in secondary text color (#B8B7B0). Vertical dashed line at x=0 is visible and functional.
-      Data: BrBG colors are IDENTICAL to light render - brown and cyan points in the same positions with the same color intensity. Confirms proper theme-adaptive handling with only chrome (chrome) changing, not data colors. Jittering pattern identical to light render.
-      Legend: "Feature Value" gradient bar readable on dark background
-      Legibility verdict: PASS - All text is readable on the dark surface. No dark-on-dark failures. Secondary text is subtle but legible. Brand principle (Okabe-Ito positions 1-7 unchanged across themes) is correctly implemented.
-
-    Both renders display identical data with only theme-appropriate chrome variations. All legibility requirements met.
+      Background: Warm near-black (#1A1A17) with subtle warmth
+      Chrome: Title "shap-summary · altair · anyplot.ai" in light text (28px, #F0EFE8), X-axis labeled "SHAP Value" (22px, #F0EFE8), Y-axis feature labels (18px, #B8B7B0). All text is light and clearly readable against dark background. Dashed reference line at x=0 in soft gray (INK_SOFT).
+      Data: Scatter points show identical brownbluegreen colors to light render (blue to green gradient unchanged). Circles sized identically. Legend background elevated-dark (#242420) with light text.
+      Legibility verdict: PASS - No dark-on-dark failures; data colors identical to light render; proper theme-adaptive chrome flipping; all elements readable
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,75 +49,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
-          All text perfectly readable in both light and dark renders
+        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px); perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Feature names have proper spacing; no text collisions; jittering
-          prevents point overlap
+        comment: Feature names, axis labels, and points all clearly spaced; jittering
+          prevents overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 300 samples optimally visible with opacity=0.6 and stroke. Markers
-          clearly distinguishable with jitter.
+        comment: Point size (30-150) and opacity (0.3-0.7) well-adapted to 300 samples
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG diverging colormap is perceptually uniform and CVD-safe
+        comment: brownbluegreen is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 @ 3.0x = 4800x2700. Plot fills 60% of canvas with balanced
-          margins. Legend properly positioned.
+        comment: 4800×2700px with 60-70% data utilization and balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. X-axis descriptive with context. Y-axis shows
-          feature names appropriately.
+        comment: X-axis descriptive, features on Y-axis, title correct format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BrBG diverging colormap correct. Backgrounds #FAF8F1 (light) and
-          #1A1A17 (dark). Theme-adaptive chrome perfect.'
+        comment: brownbluegreen correct for diverging data; backgrounds and chrome
+          properly themed; data colors identical between renders
     design_excellence:
-      score: 8
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library defaults with no custom design refinement.
-          Lacks the intentional hierarchy or polish of higher-scoring designs.
+        passed: true
+        comment: Intentional layer composition and thoughtful brownbluegreen choice;
+          zero line adds insight
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal customization beyond requirements. Grid reduced to x=0 reference
-          line only. Default styling throughout.
+        passed: true
+        comment: Grid at 0.10 opacity, careful stroke widths, generous whitespace,
+          legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Plot correctly displays SHAP data but without visual narrative beyond
-          specification compliance. Features ordered by importance but no emphasis
-          creates focal point.
+        passed: true
+        comment: Feature ordering tells importance story; color gradient shows direction;
+          size/opacity create hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -137,26 +123,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SHAP summary scatter plot with all required subtypes
+        comment: Correct SHAP summary scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: importance ordering, diverging colormap, x=0
-          reference line, jittering'
+        comment: 'All features present: ordering, colors, zero line, labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=SHAP Value, Y=Feature names, Color=Feature Value. All data visible.
+        comment: Correct SHAP values on X, features on Y, color by feature value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend title and gradient scale correct.
+        comment: Title and legend both correct format
     data_quality:
       score: 15
       max: 15
@@ -166,22 +151,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of SHAP plots: importance ranking, effect direction,
-          feature value distribution, sample variation'
+        comment: 10 features with realistic importances, full distributions shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring/financial ML domain. Realistic feature names (Account
-          Age, Credit Score, Income). Neutral, non-controversial.
+        comment: Financial ML scenario with neutral, comprehensible feature names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 samples ideal for distribution visibility. SHAP range ~-1 to
-          +1 realistic. Feature values normalized 0-1.
+        comment: 300 samples, plausible SHAP magnitudes, normalized feature values
     code_quality:
       score: 10
       max: 10
@@ -191,34 +173,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Direct imports → data → plot → save flow.
+        comment: 'Linear structure: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, numpy, pandas, altair'
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactions. Real interactive() zoom/pan.
-          Clean, readable code.
+        comment: Pythonic, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current altair API.
+        comment: Correct output format (plot-{THEME}.png + .html)
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -226,19 +207,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of altair high-level API. Proper encoding patterns (x:Q,
-          y:N, color:Q). Idiomatic transform_calculate for jitter.
+        comment: 'Expert Altair patterns: layer composition, transform_calculate,
+          .interactive()'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses YOffset jitter and interactive() features competently, but these
-          are not particularly distinctive to altair. Code structure generalizable.
-  verdict: REJECTED
+        passed: true
+        comment: Uses Altair-specific yOffset jittering and multi-dimensional encoding
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
@@ -246,5 +227,6 @@ impl_tags:
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
+  - grid-styling
