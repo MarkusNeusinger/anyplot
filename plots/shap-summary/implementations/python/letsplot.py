@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-14
 """
 
+import os
 import numpy as np
 import pandas as pd
 from lets_plot import *
@@ -11,86 +12,100 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Data: Simulate SHAP values for a regression model
+# Theme setup
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data: Simulate SHAP values for a healthcare outcome prediction model
 np.random.seed(42)
-n_samples = 200
+n_samples = 250
 n_features = 12
 
 feature_names = [
+    "BMI",
+    "Blood Pressure",
+    "Glucose Level",
+    "Cholesterol",
+    "Heart Rate",
+    "Sleep Hours",
+    "Exercise Days",
+    "Stress Score",
     "Age",
-    "Income",
-    "Credit Score",
-    "Loan Amount",
-    "Employment Years",
-    "Debt Ratio",
-    "Num Accounts",
-    "Payment History",
-    "Education Level",
-    "Property Value",
-    "Monthly Balance",
-    "Inquiry Count",
+    "Triglycerides",
+    "HDL Cholesterol",
+    "LDL Cholesterol",
 ]
 
-# Generate feature values with realistic ranges
+# Generate realistic medical feature values
 feature_values = np.column_stack(
     [
-        np.random.uniform(22, 65, n_samples),  # Age
-        np.random.lognormal(10.5, 0.5, n_samples),  # Income
-        np.random.uniform(550, 850, n_samples),  # Credit Score
-        np.random.lognormal(11, 0.8, n_samples),  # Loan Amount
-        np.random.uniform(0, 30, n_samples),  # Employment Years
-        np.random.uniform(0.1, 0.6, n_samples),  # Debt Ratio
-        np.random.randint(1, 15, n_samples),  # Num Accounts
-        np.random.uniform(0.5, 1.0, n_samples),  # Payment History
-        np.random.randint(1, 5, n_samples),  # Education Level
-        np.random.lognormal(12, 0.6, n_samples),  # Property Value
-        np.random.normal(5000, 2000, n_samples),  # Monthly Balance
-        np.random.randint(0, 8, n_samples),  # Inquiry Count
+        np.random.normal(26, 5, n_samples),  # BMI
+        np.random.normal(130, 15, n_samples),  # Blood Pressure (systolic)
+        np.random.normal(110, 25, n_samples),  # Glucose Level
+        np.random.normal(200, 40, n_samples),  # Cholesterol
+        np.random.normal(75, 12, n_samples),  # Heart Rate
+        np.random.normal(7, 1.5, n_samples),  # Sleep Hours
+        np.random.normal(4, 2, n_samples),  # Exercise Days/week
+        np.random.normal(50, 20, n_samples),  # Stress Score (0-100)
+        np.random.normal(55, 15, n_samples),  # Age
+        np.random.normal(150, 50, n_samples),  # Triglycerides
+        np.random.normal(50, 12, n_samples),  # HDL Cholesterol
+        np.random.normal(130, 30, n_samples),  # LDL Cholesterol
     ]
 )
 
-# Generate SHAP values with feature-dependent effects
+# Generate SHAP values with realistic medical relationships
 shap_values = np.zeros((n_samples, n_features))
 
-# Age: moderate positive effect
-shap_values[:, 0] = (feature_values[:, 0] - 45) * 0.02 + np.random.normal(0, 0.15, n_samples)
+# BMI: positive effect on risk (higher BMI = worse outcome)
+bmi_norm = (feature_values[:, 0] - 25) / 5
+shap_values[:, 0] = bmi_norm * 0.8 + np.random.normal(0, 0.15, n_samples)
 
-# Income: strong positive effect (higher income = higher prediction)
-income_normalized = (np.log(feature_values[:, 1]) - 10.5) / 0.5
-shap_values[:, 1] = income_normalized * 0.8 + np.random.normal(0, 0.2, n_samples)
+# Blood Pressure: positive effect
+bp_norm = (feature_values[:, 1] - 120) / 20
+shap_values[:, 1] = bp_norm * 0.9 + np.random.normal(0, 0.14, n_samples)
 
-# Credit Score: very strong positive effect
-score_normalized = (feature_values[:, 2] - 700) / 100
-shap_values[:, 2] = score_normalized * 1.0 + np.random.normal(0, 0.15, n_samples)
+# Glucose Level: strong positive effect
+glucose_norm = (feature_values[:, 2] - 100) / 30
+shap_values[:, 2] = glucose_norm * 1.2 + np.random.normal(0, 0.18, n_samples)
 
-# Loan Amount: negative effect (higher loan = lower prediction)
-loan_normalized = (np.log(feature_values[:, 3]) - 11) / 0.8
-shap_values[:, 3] = -loan_normalized * 0.6 + np.random.normal(0, 0.2, n_samples)
+# Cholesterol: positive effect
+chol_norm = (feature_values[:, 3] - 200) / 50
+shap_values[:, 3] = chol_norm * 0.7 + np.random.normal(0, 0.16, n_samples)
 
-# Employment Years: positive effect
-shap_values[:, 4] = (feature_values[:, 4] - 15) * 0.03 + np.random.normal(0, 0.12, n_samples)
+# Heart Rate: U-shaped effect (too low or too high is bad)
+hr_centered = np.abs(feature_values[:, 4] - 72)
+shap_values[:, 4] = (hr_centered / 15) * 0.5 + np.random.normal(0, 0.12, n_samples)
 
-# Debt Ratio: strong negative effect
-shap_values[:, 5] = -(feature_values[:, 5] - 0.35) * 3.0 + np.random.normal(0, 0.25, n_samples)
+# Sleep Hours: negative effect (more sleep = better)
+shap_values[:, 5] = -(feature_values[:, 5] - 7) * 0.15 + np.random.normal(0, 0.1, n_samples)
 
-# Num Accounts: weak positive effect
-shap_values[:, 6] = (feature_values[:, 6] - 7) * 0.03 + np.random.normal(0, 0.1, n_samples)
+# Exercise Days: strong negative effect (protective)
+shap_values[:, 6] = -(feature_values[:, 6] - 3.5) * 0.2 + np.random.normal(0, 0.12, n_samples)
 
-# Payment History: positive effect
-shap_values[:, 7] = (feature_values[:, 7] - 0.75) * 2.0 + np.random.normal(0, 0.15, n_samples)
+# Stress Score: positive effect
+stress_norm = (feature_values[:, 7] - 40) / 25
+shap_values[:, 7] = stress_norm * 0.6 + np.random.normal(0, 0.13, n_samples)
 
-# Education Level: weak positive
-shap_values[:, 8] = (feature_values[:, 8] - 2.5) * 0.08 + np.random.normal(0, 0.08, n_samples)
+# Age: positive effect
+age_norm = (feature_values[:, 8] - 50) / 20
+shap_values[:, 8] = age_norm * 0.7 + np.random.normal(0, 0.14, n_samples)
 
-# Property Value: moderate positive
-prop_normalized = (np.log(feature_values[:, 9]) - 12) / 0.6
-shap_values[:, 9] = prop_normalized * 0.35 + np.random.normal(0, 0.12, n_samples)
+# Triglycerides: moderate positive effect
+trig_norm = (feature_values[:, 9] - 150) / 60
+shap_values[:, 9] = trig_norm * 0.45 + np.random.normal(0, 0.11, n_samples)
 
-# Monthly Balance: weak effect
-shap_values[:, 10] = (feature_values[:, 10] - 5000) / 10000 + np.random.normal(0, 0.08, n_samples)
+# HDL Cholesterol: negative effect (protective)
+hdl_norm = (feature_values[:, 10] - 50) / 15
+shap_values[:, 10] = -hdl_norm * 0.35 + np.random.normal(0, 0.09, n_samples)
 
-# Inquiry Count: negative effect
-shap_values[:, 11] = -feature_values[:, 11] * 0.04 + np.random.normal(0, 0.06, n_samples)
+# LDL Cholesterol: positive effect
+ldl_norm = (feature_values[:, 11] - 130) / 40
+shap_values[:, 11] = ldl_norm * 0.55 + np.random.normal(0, 0.13, n_samples)
 
 # Calculate mean absolute SHAP value for feature importance
 mean_abs_shap = np.abs(shap_values).mean(axis=0)
@@ -127,31 +142,34 @@ df = pd.DataFrame(data_records)
 # Create ordered feature list (most important at top)
 ordered_features = [feature_names[i] for i in top_indices]
 
+# Theme configuration
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major_x=element_line(color=INK_MUTED, size=0.3),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    plot_title=element_text(color=INK, size=24),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_title=element_text(color=INK, size=16),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    panel_grid_major_y=element_blank(),
+)
+
 # Plot
 plot = (
     ggplot(df, aes(x="SHAP Value", y="y_position", color="Feature Value"))
     + geom_point(size=3, alpha=0.7)
-    + geom_vline(xintercept=0, color="#666666", size=0.8, linetype="dashed")
-    + scale_color_gradient(low="#306998", high="#DC2626", name="Feature\nValue")
+    + geom_vline(xintercept=0, color=INK_MUTED, size=0.8, linetype="dashed")
+    + scale_color_gradient(low="#0072B2", high="#D55E00", name="Feature\nValue")
     + scale_y_continuous(breaks=list(range(top_k)), labels=ordered_features[::-1])
-    + labs(x="SHAP Value (impact on model output)", y="", title="shap-summary · letsplot · pyplots.ai")
-    + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24),
-        axis_title_x=element_text(size=20),
-        axis_title_y=element_text(size=20),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=18),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
-        panel_grid_major_y=element_blank(),
-        panel_grid_minor=element_blank(),
-    )
+    + labs(x="SHAP Value (impact on model output)", y="", title="shap-summary · letsplot · anyplot.ai")
     + ggsize(1600, 900)
+    + anyplot_theme
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", scale=3)
-
-# Save as HTML for interactive viewing
-ggsave(plot, "plot.html")
+# Save as PNG and HTML
+_plot_dir = os.path.dirname(os.path.abspath(__file__))
+ggsave(plot, f"{_plot_dir}/plot-{THEME}.png", scale=3)
+ggsave(plot, f"{_plot_dir}/plot-{THEME}.html")
