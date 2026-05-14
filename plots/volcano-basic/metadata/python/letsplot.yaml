@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:34:59Z'
-updated: '2026-05-14T11:26:52Z'
+updated: '2026-05-14T11:31:59Z'
 generated_by: claude-haiku
 workflow_run: 25856959226
 issue: 2924
@@ -12,114 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/letsplot/plot-dark.html
-quality_score: 70
+quality_score: 80
 review:
   strengths:
-  - Excellent data representation with clear separation of significance categories
-  - Threshold lines correctly positioned and styled
-  - Alpha transparency effectively handles overlapping points in dense central region
-  - Both theme renders show appropriate contrast and readability
-  - Appropriate text sizing for high-resolution canvas
-  - Realistic synthetic data with correct statistical distributions
+  - Theme-adaptive chrome properly implemented for title, axes, grid, and legend
+  - Correct Okabe-Ito colors for up-regulated (#D55E00) and down-regulated (#0072B2)
+  - Clear volcanic structure with obvious significance grouping
+  - Proper typography sizing (24pt title, 20pt labels, 16pt ticks) for large canvas
+  - Reproducible data generation with seed, appropriate sample size (500 genes)
+  - Both PNG and HTML exports generated correctly
   weaknesses:
-  - Output files saved as 'plot.png' instead of 'plot-{THEME}.png' - violates API
-    specification
-  - 'Color palette uses custom values (#306998, #888888, #DC2626) instead of Okabe-Ito
-    (#0072B2 for down-regulated, #D55E00 for up-regulated, and appropriate neutral
-    for not-significant)'
-  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'''
-  - Theme-adaptive chrome not implemented - code does not read ANYPLOT_THEME environment
-    variable or apply theme-adaptive tokens for text colors, grid colors, or backgrounds
-  - No distinctive letsplot features utilized - could leverage interactive capabilities
-    or advanced theming
+  - 'Neutral/gray color (#888888) is fixed, not theme-adaptive — should use #1A1A1A
+    (light) / #E8E8E0 (dark) per style guide'
+  - Generic design with minimal visual refinement beyond required elements
+  - No visual emphasis or hierarchy to create focal points
+  - Standard legend placement without distinctive design touches
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) provides excellent contrast for all elements
-      Chrome: Title "volcano-basic · letsplot · pyplots.ai", axis labels "Log2 Fold Change" and "-Log10(p-value)", tick labels all clearly visible in dark text against light background
-      Data: Three categories color-coded as down-regulated (blue #306998, left side), not significant (gray #888888, center cluster), up-regulated (red #DC2626, right side). Horizontal and vertical threshold lines in dashed gray. Alpha transparency (0.7) effectively handles overlapping points in dense center region. Legend shows all categories clearly.
-      Legibility verdict: PASS - all text readable
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title bold and dark, axis labels and tick labels dark and clearly readable
+      Data: Blue points (down-regulated, left), orange points (up-regulated, right), gray points (not significant, center). Threshold lines (dashed) at ±1 fold change and 1.3 p-value cutoff are visible. Grid subtle but present.
+      Legibility verdict: PASS — all text readable, colors distinct, no contrast issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) provides appropriate dark theme contrast
-      Chrome: Title, axis labels, and tick labels clearly visible in light text. Grid lines subtle but distinguishable. Legend readable on right side.
-      Data: Data colors identical to light render (down-regulated blue, not significant gray, up-regulated red). Threshold lines visible. Point density and alpha handling consistent with light render.
-      Legibility verdict: PASS - all text readable, no dark-on-dark failures observed
-
-    Both renders render correctly with appropriate theme backgrounds. The implementation demonstrates proper contrast in both light and dark contexts, though the color palette does not follow Okabe-Ito standards and theme-adaptive text colors are not explicitly implemented in the code.
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title light and clear, axis labels and tick labels light-colored and readable
+      Data: Blue, orange, and gray points identical to light render (only background/text colors adapted). Threshold lines visible.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors maintain identity across themes
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: Text readable but not using theme-adaptive colors from library rules
+        passed: true
+        comment: All text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, alpha transparency handles point density
+        comment: Well-distributed points, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and threshold lines clearly visible
+        comment: All markers, lines, and text clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors distinguishable but not Okabe-Ito compliant
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with proper units and correct title format
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Descriptive axis labels, but title contains typo 'pyplots.ai' instead
-          of 'anyplot.ai'
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: FAIL - Uses custom colors instead of Okabe-Ito, no theme-adaptive
-          chrome implementation
+        comment: 'Okabe-Ito colors correct for up/down, but neutral gray is fixed
+          #888888 instead of theme-adaptive'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Generic defaults with theme_minimal(), no custom design
+        comment: Generic styling, uses theme_minimal() defaults with no custom palette
+          refinements
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond theme_minimal()
+        comment: Minimal customization beyond theme_minimal, standard grid and legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clear focal point with significance clustering, threshold lines guide
-          understanding
+        passed: false
+        comment: Clear volcanic structure visible but no emphasis or focal point techniques
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,26 +119,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct volcano plot with proper axes
+        comment: Correct scatter plot with proper volcano structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal threshold, vertical thresholds, color-coding, alpha transparency
-          all present
+        comment: 'All features present: x/y axes, color by significance, threshold
+          lines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped, axes show all data
+        comment: 'Correct mapping: log2 fold change to x, -log10 p-value to y'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has typo 'pyplots.ai' instead of 'anyplot.ai'
+        passed: true
+        comment: Correct title format and legend labels
     data_quality:
       score: 15
       max: 15
@@ -156,21 +148,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates differential expression context well
+        comment: Demonstrates all aspects of volcano plot (up-regulated, down-regulated,
+          not significant)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic synthetic gene expression data
+        comment: Simulated gene expression data is realistic and domain-appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for volcano plot domain
+        comment: 'Sensible ranges: fold changes -4 to 4, p-values 0 to 3.5'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,7 +171,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct code without unnecessary abstractions
+        comment: Straightforward code, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -190,43 +183,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'Only imports used: numpy, pandas, lets_plot'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: FAIL - Saves as 'plot.png' instead of 'plot-{THEME}.png', does not
-          generate theme-specific outputs
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses ggplot syntax appropriately but doesn't leverage theme-adaptive
-          features
+        passed: true
+        comment: Good use of ggplot composition, geoms, and theme API; fairly standard
+          approach
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No distinctive letsplot features used, could leverage interactive
-          capabilities or advanced themes
-  verdict: REJECTED
+        comment: HTML export present but not leveraged; no distinctive lets_plot features
+          beyond basic API
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep: []
