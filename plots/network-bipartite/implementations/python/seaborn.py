@@ -1,7 +1,7 @@
 """ anyplot.ai
 network-bipartite: Bipartite Network Graph
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-14
+Quality: 85/100 | Created: 2026-05-14
 """
 
 import os

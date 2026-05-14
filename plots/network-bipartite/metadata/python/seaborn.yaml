@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:09:29Z'
-updated: '2026-05-14T21:14:28Z'
+updated: '2026-05-14T21:23:20Z'
 generated_by: claude-sonnet
 workflow_run: 25885513033
 issue: 5247
@@ -12,35 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Excellent spec compliance: all required bipartite features present (two columns,
-    color-coded nodes, degree-encoded size, semi-transparent edges, non-overlapping
-    labels)'
-  - Full theme-adaptive chrome with correct Okabe-Ito palette across both renders
-    — no legibility failures in either theme
-  - Realistic well-labeled academic data with natural degree variation showing hub
-    structure
-  - Clean axes-off layout with node edge highlights adds professional polish
+  - Perfect spec compliance — all bipartite requirements met (node coloring, degree-encoded
+    sizes, cross-set edges, column layout)
+  - Excellent data quality — realistic academic authorship scenario with proper scale
+    and full feature coverage
+  - Flawless code quality — clean KISS structure, seed set, correct output format
+  - Strong theme adaptation — all chrome tokens correctly applied; both renders pass
+    legibility checks
+  - Color-matched column headers (Researchers in green, Papers in vermillion) is a
+    polished design detail
   weaknesses:
-  - 'Library Mastery very low (3/10): seaborn only used for sns.set_theme(); all plotting
-    is matplotlib — replace ax.scatter() with sns.scatterplot() for nodes'
-  - Title fontsize is 23pt, one point below the 24pt minimum — change to fontsize=24
-  - 'Design could be elevated: edges are uniformly styled gray lines; varying edge
-    thickness or adding slight curvature would improve visual sophistication'
+  - Seaborn is used only as a theme manager via sns.set_theme(); the entire visualization
+    uses matplotlib primitives, yielding a low Library Mastery score
+  - Title fontsize=23 is one point below the required >=24pt guideline
+  - 'Design Excellence could be improved: no focal-point annotation or opacity emphasis
+    on hub nodes limits storytelling score'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Researcher–Paper Authorship · network-bipartite · seaborn · anyplot.ai" at fontsize=23 in dark INK (#1A1A17) — readable. Column headers "Researchers" (green) and "Papers" (orange) at fontsize=20, bold — readable. Node labels at fontsize=16 in INK_SOFT (#4A4A44) — readable. Legend with Researchers/Papers/Authorship labels in INK — readable.
-      Data: Researcher nodes in #009E73 (Okabe-Ito position 1), paper nodes in #D55E00 (Okabe-Ito position 2). Node sizes scale 400–1600 by degree. Edges in INK_SOFT at alpha=0.22.
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Researcher–Paper Authorship · network-bipartite · seaborn · anyplot.ai" in dark ink, fully readable. Column headers "Researchers" (green #009E73) and "Papers" (vermillion #D55E00) in bold at top of each column. Node labels (researcher names and paper IDs) in INK_SOFT (#4A4A44), all clearly legible. Legend at bottom with readable text.
+      Data: 10 researcher nodes in #009E73 (Okabe-Ito position 1), 12 paper nodes in #D55E00 (Okabe-Ito position 2). Node sizes vary by degree (400–1600 s range). Gray semi-transparent edges (alpha=0.22) connect cross-set nodes. Node outlines in PAGE_BG for definition.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light INK (#F0EFE8) — readable. Column headers in same green/orange data colors — readable. Node labels in INK_SOFT (#B8B7B0) — clearly readable against dark background. Legend in INK (#F0EFE8) over ELEVATED_BG (#242420) — readable. No dark-on-dark failures detected.
-      Data: Colors identical to light render — researchers #009E73, papers #D55E00, node sizes identical.
-      Legibility verdict: PASS — all text readable, chrome correctly adapted to dark theme
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title and node labels rendered in light tones (#F0EFE8 / #B8B7B0) against dark background — all readable. Column headers maintain same green/vermillion data colors. Legend text is light-colored. No dark-on-dark failures detected.
+      Data: Node colors identical to light render — #009E73 (researchers) and #D55E00 (papers) unchanged across themes. Only chrome elements (background, text, legend frame) flip.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; brand green #009E73 remains visible
   criteria_checklist:
     visual_quality:
       score: 29
@@ -51,46 +52,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All elements explicitly sized; title at 23pt is 1pt below 24pt minimum
+        comment: All font sizes explicitly set and readable in both themes; title
+          at 23pt falls just below the >=24pt threshold
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 10+12 nodes well-spaced, no label collisions
+        comment: Labels, nodes, and edges all clearly separated; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node sizes 400-1600 communicate degree; edges visible at alpha=0.22
+        comment: Node sizes scale correctly with degree (400-1600), providing clear
+          visual differentiation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs orange Okabe-Ito — CVD-safe high contrast
+        comment: Okabe-Ito positions 1 and 2 used; CVD-safe, strong contrast against
+          both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9, bipartite structure fills canvas well, balanced margins
+        comment: Bipartite structure fills the 16x9 canvas well; margins are balanced;
+          legend well-placed at bottom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Column headers serve as axis labels; descriptive title
+        comment: Descriptive title, color-matched column headers serve as labels;
+          domain is clearly communicated
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2, correct backgrounds, full theme-chrome
-          adaptation
+        comment: 'First group uses #009E73, second uses #D55E00; backgrounds are #FAF8F1
+          / #1A1A17; all chrome is theme-adaptive'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -98,23 +104,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic default: intentional Okabe-Ito, size-encoded nodes,
-          color-matched headers. Not publication level — plain edges, no typographic
-          hierarchy.'
+        comment: 'Above defaults: color-matched column headers, degree-encoded node
+          sizes, and clean no-axis layout show intentional design; not yet at publication-ready
+          level'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Axes fully off, no grid, generous whitespace, node edge highlights.
-          One level below perfect.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Degree encoding communicates hubs; two-color structure conveys bipartite
-          nature
+        comment: Axes fully hidden, edge alpha carefully tuned (0.22), node outlines
+          use PAGE_BG for definition; clean and polished though not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Degree-encoded node sizes create visual hierarchy highlighting hub
+          researchers and high-citation papers; no specific insight is annotated or
+          emphasized
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network with two node columns and cross-only edges
+        comment: Correct bipartite network graph; two node sets in clearly separated
+          columns; edges only cross-set
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two columns, color-by-set, degree-encoded size, edge opacity, non-overlapping
-          labels, straight edges
+        comment: Nodes colored by set membership, sizes encode degree, edge opacity
+          used, labels positioned flanking each column, clean straight edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Researchers left, Papers right, edges correctly cross-connect
+        comment: Researchers left, Papers right; all 10+12 nodes visible; all edges
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, anyplot.ai; legend correct
+        comment: Title follows {spec-id} · {library} · anyplot.ai format; legend correctly
+          identifies Researchers, Papers, and Authorship
     data_quality:
       score: 15
       max: 15
@@ -153,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hub nodes, sparse nodes, variable edge density — all bipartite network
-          aspects covered
+        comment: Shows both node sets, degree variation, hub nodes, multiple connections
+          per entity, and cross-set-only edges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Researcher-paper authorship: academically realistic, neutral, well-named'
+        comment: Real-world academic authorship scenario; named researchers and coded
+          paper titles (ML/AI domain) are entirely plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 researchers, 12 papers, 2-4 papers per researcher — realistic
-          proportions
+        comment: 10 researchers, 12 papers, 2-4 papers per researcher; realistic scale
+          for an authorship network
     code_quality:
       score: 10
       max: 10
@@ -177,61 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens -> data -> positions -> plot -> labels -> legend
-          -> title -> save'
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used (os, mpatches, plt, np, sns, Line2D)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic loops, no fake functionality
+        comment: Clean, Pythonic; loops over node sets are appropriate complexity
+          for a network graph
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with facecolor
-    library_features:
-      score: 3
+        comment: Saves as plot-{THEME}.png with explicit facecolor=PAGE_BG
+    library_mastery:
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: sns.set_theme() only; all plotting via matplotlib primitives (ax.scatter,
-          ax.plot, ax.text). Should use sns.scatterplot() for nodes.
+        passed: true
+        comment: Seaborn used correctly via sns.set_theme() for theme management;
+          however, all actual plotting uses matplotlib primitives since seaborn has
+          no native network graph API
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No seaborn-specific plotting features; implementation is essentially
-          matplotlib with seaborn theming
-  verdict: REJECTED
+        comment: Seaborn's contribution is limited to theme/rc management; the visualization
+          itself is pure matplotlib — no seaborn-specific plot functions or distinctive
+          features are leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   - patches
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
