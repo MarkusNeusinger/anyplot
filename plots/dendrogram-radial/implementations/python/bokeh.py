@@ -1,7 +1,7 @@
 """ anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-14
+Quality: 84/100 | Created: 2026-05-14
 """
 
 import math

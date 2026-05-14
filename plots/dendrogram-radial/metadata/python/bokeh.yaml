@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: dendrogram-radial
 created: '2026-05-14T09:09:16Z'
-updated: '2026-05-14T09:14:53Z'
+updated: '2026-05-14T09:23:51Z'
 generated_by: claude-sonnet
 workflow_run: 25851246616
 issue: 5245
@@ -12,42 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 84
 review:
   strengths:
-  - Full Okabe-Ito palette compliance across both themes with correct backgrounds
-    and chrome tokens
-  - 'Branch lines carry cluster color throughout the tree (dual encoding: branch color
-    + leaf dot)'
-  - Spec-perfect title, data scenario, and all required features present including
-    scipy linkage and leaf ordering
-  - 'Idiomatic Bokeh usage: ColumnDataSource, LabelSet, custom Legend with LegendItem,
-    Selenium export'
+  - Correct radial dendrogram with root at center and leaves at equal angular spacing
+    around circumference
+  - Branch coloring propagated from leaves up through merge nodes using cluster assignment
+    — creates strong visual cluster identity
+  - Metadata ring (colored dots at leaf tips) implements the optional spec feature
+    cleanly
+  - Arc segments between child branches correctly rendered at parent radius, producing
+    smooth dendrogram joins
+  - 'Full theme-adaptive chrome: background, title, legend, and label colors all correctly
+    switch between light and dark'
+  - Interactive HTML output alongside PNG — appropriate for Bokeh as an interactive
+    library
+  - Realistic gene expression clustering scenario with ward linkage and well-separated
+    cluster centers
   weaknesses:
-  - Leaf label font size (11pt) is below the recommended 18pt for pixel-based libraries
-    on a 2700x2700 canvas — increase LabelSet text_font_size to at least 16pt
-  - Two helper functions (polar_to_xy, get_leaf_cluster) violate KISS structure —
-    inline the simple trig or pre-compute into dicts
-  - 'Typography polish: add bold styling to title, consider 28pt title size to lift
-    DE-01 score'
-  - 'Missed opportunity: HoverTool for leaf labels would demonstrate a distinctive
-    Bokeh feature (spec recommends interactive tooltips for many leaves) and lift
-    LM-02'
+  - Canvas is 2700×2700 px instead of the required 3600×3600 px square format — reduces
+    effective resolution and proportionally shrinks all text and elements
+  - Leaf label font size 11pt is small for the canvas size; recommended minimum is
+    18pt for pixel-based libraries at full resolution
+  - Helper functions (polar_to_xy, get_leaf_cluster) violate the KISS no-functions-or-classes
+    structure rule
+  - Legend may be rendered very small or difficult to see at full resolution due to
+    the undersized canvas
+  - DE-01/DE-02 scores limited by lack of additional polish (e.g., subtle radial guide
+    rings, refined typography hierarchy, or a subtle center marker)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "dendrogram-radial · bokeh · anyplot.ai" at top-center in dark ink, clearly readable. No axis labels (appropriate). Leaf labels in dark ink (INK_SOFT #4A4A44), readable but small at 11pt. Legend in bottom-right with elevated background.
-      Data: Four clusters in Okabe-Ito order — Cluster 1 #009E73 (green), Cluster 2 #D55E00 (orange), Cluster 3 #0072B2 (blue), Cluster 4 #CC79A7 (pink). Branch lines colored by cluster throughout the tree. Small colored dots at each leaf tip. Center trunk segments in INK_SOFT.
-      Legibility verdict: PASS — all text readable; leaf labels (11pt) are small but legible.
+      Background: Warm off-white matching #FAF8F1 — correct light theme surface, not pure white
+      Chrome: Title "dendrogram-radial · bokeh · anyplot.ai" visible as dark text at top-center. No axis labels (correct for radial layout). Gene labels placed at radius 1.08 from center in INK_SOFT (#4A4A44) — readable though somewhat small. Legend present at bottom-right.
+      Data: Four distinct clusters color-coded with Okabe-Ito positions 1–4: teal-green (#009E73) for Cluster 1, orange (#D55E00) for Cluster 2, blue (#0072B2) for Cluster 3, reddish-purple (#CC79A7) for Cluster 4. Branch lines colored by cluster assignment from leaves through internal merge nodes. Colored dots at leaf tips serve as the metadata ring. Central merge area uses INK_SOFT gray.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title visible in light text (#F0EFE8) at top, clearly readable. Leaf labels render in light gray (INK_SOFT #B8B7B0), legible against the dark background. No dark-on-dark failures detected. Legend visible with dark elevated background (#242420).
-      Data: All four cluster colors are identical to the light render — #009E73, #D55E00, #0072B2, #CC79A7. Only chrome (background, text, legend box) flipped to dark theme. Center trunk segments now show in light gray INK_SOFT, clearly visible on dark background.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues.
+      Background: Warm near-black matching #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title visible as light (#F0EFE8) text. Gene labels visible as light gray (#B8B7B0 INK_SOFT). Legend present with elevated dark background (#242420) and light label text.
+      Data: All four cluster colors are identical to the light render — teal-green, orange, blue, reddish-purple. Branch lines and leaf dots maintain the same Okabe-Ito colors. Only chrome elements (background, text, legend fill) have flipped to dark theme.
+      Legibility verdict: PASS — no dark-on-dark issues; all labels use theme-correct light tokens; #009E73 brand green clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -55,50 +62,52 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title 24pt and legend 14pt explicitly set. Leaf LabelSet at 11pt
-          is below recommended 18pt for 2700x2700 canvas.
+        comment: Font sizes explicitly set (title 24pt, labels 11pt, legend 14pt)
+          but 11pt labels are below recommended 18pt for pixel-based libraries; canvas
+          undersized at 2700px vs required 3600px further reduces effective size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Equal-angular radial layout keeps all 40 labels well-separated; no
-          collision detected in either render.
+        comment: 40 gene labels placed at radius 1.08 with equal angular spacing;
+          no significant overlap visible in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Branch lines at 2.5 line_width and leaf dots at size 10 clearly visible.
-          Tree structure legible.
+        comment: Branch lines (width 2.5) clearly visible; cluster dots (size 10)
+          visible but slightly small for the canvas; arcs and radial segments well-rendered
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; four clusters have adequate
-          luminance separation.
+        comment: Okabe-Ito palette is CVD-safe; four clusters clearly distinguishable
+          by hue and luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2700x2700 square canvas used well. Tree fills ~75% with balanced
-          margins for label ring.
+        comment: Circular dendrogram fills ~70% of canvas with balanced margins; layout
+          well-proportioned; note canvas is 2700x2700 not the required 3600x3600
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format. No axis labels needed for radial coordinate
-          system.
+        comment: Title follows required format; no axis labels appropriate for radial
+          layout with hidden axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First cluster is #009E73, subsequent follow Okabe-Ito order. Backgrounds
-          theme-correct. All chrome tokens adaptive.'
+        comment: 'First cluster uses #009E73; subsequent clusters follow Okabe-Ito
+          order; backgrounds #FAF8F1/#1A1A17; theme chrome correctly adaptive in both
+          renders'
     design_excellence:
       score: 13
       max: 20
@@ -108,23 +117,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: branch color propagates through tree, dual encoding
-          (line+dot), no-axis clean layout. Not yet publication-ready; typography
-          is functional not refined.'
+        comment: Sophisticated polar geometry with arc joins and branch color propagation;
+          clean circular layout clearly above library defaults but lacks additional
+          polish layer (radial guides, typography refinement)
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid and axes fully removed, no outline, clean background. Good refinement
-          but legend styling and whitespace could be more polished.
+        comment: No axes, no grid, correct background theming; clean canvas; good
+          refinement but no subtle decorative enhancements
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Four distinct color blocks tell the clustering story; hierarchical
-          distances encoded in radial depth. Good baseline storytelling.
+        comment: Color propagation from leaves through merge nodes creates strong
+          visual cluster identity; viewer immediately identifies 4 groups; cluster
+          structure is the story and it is clearly communicated
     spec_compliance:
       score: 15
       max: 15
@@ -134,31 +144,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct radial dendrogram: root at center, leaves at circumference,
-          branches radiating outward.'
+        comment: Correct radial dendrogram; root at center; leaves at equal angular
+          spacing around circumference; branch lengths proportional to merge distance
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: scipy linkage matrix, all 40 labels, branch lengths proportional
-          to merge distance, branches colored by cluster, colored dots as outer ring.
+        comment: 'All spec features present: equal angular spacing, proportional branch
+          lengths, cluster color coding, metadata ring (dots at leaf tips), scipy
+          linkage computation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radial coordinate mapping correct; all 40 leaves visible; distances
-          encode merge similarity.
+        comment: Hierarchical clustering via scipy linkage; leaves_list for ordering;
+          node_radius correctly computed from merge distances
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'dendrogram-radial · bokeh · anyplot.ai'. Legend labels
-          Cluster 1-4 correct.
+        comment: Title exactly 'dendrogram-radial · bokeh · anyplot.ai'; legend shows
+          Cluster 1–4 with correct Okabe-Ito colors
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -166,22 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 4 distinct clusters with varying internal branch distances;
-          tight subclusters and loose merges visible.
+        comment: 'Shows all dendrogram features: hierarchical merge structure, variable
+          branch depths, 4 distinct clusters, leaf labels, metadata ring'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Gene expression clustering is real, neutral, scientifically grounded.
-          40 genes is realistic.
+        comment: Gene expression clustering is a canonical real-world use case for
+          radial dendrograms; cluster centers are realistic; gene names (Gene-00..Gene-39)
+          are slightly generic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Expression values plausible (centered around ±2), cluster separation
-          meaningful, 40 genes in recommended range.
+        comment: 40 genes in 4 clusters is an appropriate size for a radial dendrogram;
+          ward linkage and cluster separation are realistic
     code_quality:
       score: 9
       max: 10
@@ -191,64 +203,63 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions (polar_to_xy, get_leaf_cluster) violate KISS
-          no-functions rule; logic is justified but KISS prefers inline.
+        comment: Helper functions polar_to_xy and get_leaf_cluster violate the no-functions
+          rule; though they improve readability, the KISS criterion requires flat
+          structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation is documented self-shadowing
-          workaround.
+        comment: All imports are used; noqa comments justified by sys.path manipulation
+          necessity
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. strict=False zip, logical data flow. No over-engineering
-          or fake UI.
+        comment: Clean, Pythonic code; well-organized polar geometry; no over-engineering
+          or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Bokeh
-          API with Selenium screenshot.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly via Selenium
+          pattern
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, LabelSet, Legend+LegendItem for manual legend,
-          figure with explicit range settings. Selenium screenshot follows documented
-          Bokeh-on-CI pattern.
+        comment: Uses figure(), p.line(), p.scatter(), ColumnDataSource, LabelSet,
+          Legend, output_file/save — correct Bokeh patterns throughout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LabelSet, manual Legend construction, HTML export. Good Bokeh usage
-          but missed HoverTool for interactive leaf labels (spec recommends for many
-          leaves).
-  verdict: REJECTED
+        comment: LabelSet with ColumnDataSource for positioned text labels is Bokeh-distinctive;
+          interactive HTML output; Legend with LegendItem construction — uses several
+          Bokeh-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
-  - html-export
   - custom-legend
-  - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
