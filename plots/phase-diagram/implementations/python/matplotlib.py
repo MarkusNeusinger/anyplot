@@ -1,12 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 phase-diagram: Phase Diagram (State Space Plot)
 Library: matplotlib 3.10.8 | Python 3.13.11
 Quality: 93/100 | Created: 2025-12-31
 """
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BRAND = "#009E73"
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Damped harmonic oscillator: m*x'' + c*x' + k*x = 0
 # Using underdamped solution: x(t) = A*exp(-gamma*t)*cos(omega_d*t + phi)
@@ -19,12 +31,7 @@ t = np.linspace(0, 50, 2000)
 
 # Multiple trajectories from different initial conditions
 # Format: (A, phi) - amplitude and phase for analytical solution
-initial_params = [
-    (3.0, 0.0),  # Starting from rest, displaced right
-    (3.0, 0.5),  # Different phase
-    (2.5, 2.5),  # Another trajectory
-    (2.0, 4.0),  # Fourth trajectory
-]
+initial_params = [(3.0, 0.0), (3.0, 0.5), (2.5, 2.5), (2.0, 4.0)]
 
 # Compute trajectories using analytical solution
 # x(t) = A * exp(-gamma*t) * cos(omega_d*t + phi)
@@ -36,19 +43,17 @@ for A, phi in initial_params:
     v = exp_decay * (-gamma * np.cos(omega_d * t + phi) - omega_d * np.sin(omega_d * t + phi))
     trajectories.append((x, v, A, phi))
 
-# Colors for trajectories (Python Blue first, then accessible palette)
-colors = ["#306998", "#FFD43B", "#E55934", "#43AA8B"]
-
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Plot each trajectory
 for i, (x, v, A, _phi) in enumerate(trajectories):
     # Plot trajectory line
-    ax.plot(x, v, color=colors[i], linewidth=2.5, alpha=0.8, label=f"Trajectory {i + 1} (A={A:.1f})")
+    ax.plot(x, v, color=OKABE_ITO[i], linewidth=2.5, alpha=0.8, label=f"Trajectory {i + 1} (A={A:.1f})")
 
     # Mark start point with larger marker
-    ax.scatter(x[0], v[0], s=250, color=colors[i], edgecolor="white", linewidth=2, zorder=5, marker="o")
+    ax.scatter(x[0], v[0], s=250, color=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=2, zorder=5, marker="o")
 
     # Add arrows to show direction along trajectory
     n_points = len(x)
@@ -63,23 +68,27 @@ for i, (x, v, A, _phi) in enumerate(trajectories):
                 "",
                 xy=(x[idx + 10], v[idx + 10]),
                 xytext=(x[idx], v[idx]),
-                arrowprops={"arrowstyle": "->", "color": colors[i], "lw": 2.5, "mutation_scale": 20},
+                arrowprops={"arrowstyle": "->", "color": OKABE_ITO[i], "lw": 2.5, "mutation_scale": 20},
             )
 
 # Mark the equilibrium point (stable fixed point at origin)
-ax.scatter(0, 0, s=400, color="black", marker="x", linewidth=4, zorder=10, label="Equilibrium (stable)")
+ax.scatter(0, 0, s=400, color=INK_SOFT, marker="x", linewidth=4, zorder=10, label="Equilibrium (stable)")
 
 # Add reference lines for axes
-ax.axhline(y=0, color="gray", linewidth=1.5, linestyle="--", alpha=0.5)
-ax.axvline(x=0, color="gray", linewidth=1.5, linestyle="--", alpha=0.5)
+ax.axhline(y=0, color=INK_SOFT, linewidth=1.5, linestyle="--", alpha=0.4)
+ax.axvline(x=0, color=INK_SOFT, linewidth=1.5, linestyle="--", alpha=0.4)
 
 # Labels and styling
-ax.set_xlabel("Position x", fontsize=20)
-ax.set_ylabel("Velocity dx/dt", fontsize=20)
-ax.set_title("Damped Oscillator · phase-diagram · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=14, loc="upper right", framealpha=0.9)
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.set_xlabel("Position x (arbitrary units)", fontsize=20, color=INK)
+ax.set_ylabel("Velocity dx/dt (arbitrary units)", fontsize=20, color=INK)
+ax.set_title("Damped Oscillator · phase-diagram · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.legend(fontsize=16, loc="upper right", framealpha=0.9)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.grid(True, alpha=0.15, linestyle="-", color=INK_SOFT, linewidth=0.8)
 
 # Set equal aspect ratio for proper visualization
 ax.set_aspect("equal", adjustable="box")
@@ -89,4 +98,4 @@ ax.set_xlim(-4, 4)
 ax.set_ylim(-3.5, 3.5)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
