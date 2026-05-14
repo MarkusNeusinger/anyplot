@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 streamline-basic: Basic Streamline Plot
 Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Quality: pending | Created: 2025-12-31
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,20 +13,23 @@ import seaborn as sns
 from matplotlib.patches import FancyArrowPatch
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Set seed for reproducibility
 np.random.seed(42)
 
 # Vortex flow field: u = -y, v = x (creates circular streamlines)
-# Velocity magnitude = distance from center
-
-# Generate streamlines using Euler integration
 streamlines_data = []
-arrow_data = []  # Store arrow positions for flow direction indicators
+arrow_data = []
 streamline_id = 0
 
-# Starting points at different radii - removed innermost radius to eliminate overlap artifacts
+# Starting points at different radii
 radii = [0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
-# Use fewer streamlines at inner radii to prevent crowding
 n_per_radius_map = {0.8: 3, 1.2: 4, 1.6: 5, 2.0: 5, 2.4: 6, 2.8: 6}
 dt = 0.03
 max_steps = 250
@@ -39,11 +44,10 @@ for r in radii:
 
         # Trace streamline using Euler integration
         for step in range(max_steps):
-            # Check bounds first
             if abs(x) > 3.2 or abs(y) > 3.2:
                 break
 
-            # Vector field: circular vortex (u = -y, v = x)
+            # Vector field: circular vortex
             u = -y
             v = x
             speed = np.sqrt(u**2 + v**2)
@@ -51,7 +55,6 @@ for r in radii:
             if speed < 1e-6:
                 break
 
-            # Store point with velocity magnitude (= radius in vortex)
             vel_mag = np.sqrt(x**2 + y**2)
             streamlines_data.append(
                 {
@@ -64,19 +67,18 @@ for r in radii:
             )
             streamline_points.append((x, y, u, v, vel_mag))
 
-            # Normalize and step
             x = x + dt * u / speed
             y = y + dt * v / speed
 
-        # Store arrow position at midpoint of each streamline
+        # Store arrow position at midpoint
         if len(streamline_points) > 20:
             mid_idx = len(streamline_points) // 2
             px, py, pu, pv, pvel = streamline_points[mid_idx]
-            arrow_data.append({"x": px, "y": py, "u": pu, "v": pv, "velocity": pvel, "radius": r})
+            arrow_data.append({"x": px, "y": py, "u": pu, "v": pv, "velocity": pvel})
 
         streamline_id += 1
 
-# Create DataFrame
+# Create DataFrames
 df = pd.DataFrame(streamlines_data)
 arrows_df = pd.DataFrame(arrow_data)
 
@@ -85,25 +87,31 @@ avg_velocity = df.groupby("streamline_id")["velocity"].mean().reset_index()
 avg_velocity.columns = ["streamline_id", "avg_velocity"]
 df = df.merge(avg_velocity, on="streamline_id")
 
-# Create velocity bins for categorical legend - seaborn-centric approach
-velocity_bins = pd.qcut(df["avg_velocity"], q=6, duplicates="drop")
-df["Speed Range"] = velocity_bins.apply(lambda x: f"{x.left:.1f}-{x.right:.1f} m/s")
-
-# Set seaborn style with custom aesthetics
+# Configure seaborn with theme-adaptive colors
 sns.set_theme(
-    style="whitegrid", rc={"axes.labelsize": 20, "axes.titlesize": 24, "xtick.labelsize": 16, "ytick.labelsize": 16}
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
 )
-sns.set_context("talk", font_scale=1.2)
 
-# Create square figure to better utilize canvas for equal aspect ratio plot
-fig, ax = plt.subplots(figsize=(12, 12))
+# Create square figure for equal aspect ratio
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Use seaborn color_palette to create viridis colors for continuous mapping
+# Use viridis colormap for continuous velocity data
 palette = sns.color_palette("viridis", as_cmap=True)
 norm = plt.Normalize(df["avg_velocity"].min(), df["avg_velocity"].max())
 
-# Plot streamlines using seaborn's lineplot with hue for velocity
-# Each streamline is a separate unit, colored by average velocity
+# Plot streamlines with continuous color encoding
 sns.lineplot(
     data=df,
     x="x",
@@ -125,7 +133,6 @@ for _, arrow in arrows_df.iterrows():
     px, py = arrow["x"], arrow["y"]
     pu, pv = arrow["u"], arrow["v"]
     speed = np.sqrt(pu**2 + pv**2)
-    # Normalize direction
     dx = 0.15 * pu / speed
     dy = 0.15 * pv / speed
     color = cmap(norm(arrow["velocity"]))
@@ -140,24 +147,30 @@ for _, arrow in arrows_df.iterrows():
     )
     ax.add_patch(arrow_patch)
 
-# Add colorbar manually (seaborn lineplot doesn't auto-create one for continuous hue)
+# Add colorbar
 sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
 sm.set_array([])
 cbar = fig.colorbar(sm, ax=ax, shrink=0.8, aspect=20)
-cbar.set_label("Flow Speed (m/s)", fontsize=20)
-cbar.ax.tick_params(labelsize=16)
+cbar.set_label("Flow Speed (m/s)", fontsize=20, color=INK)
+cbar.ax.tick_params(labelsize=16, colors=INK_SOFT)
 
-# Use seaborn despine for cleaner appearance
-sns.despine(ax=ax, left=False, bottom=False)
-
-# Styling with units explicitly in axis labels
-ax.set(xlabel="X Position (m)", ylabel="Y Position (m)")
-ax.set_title("streamline-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.tick_params(axis="both", labelsize=16)
+# Style axes
+ax.set_xlabel("X Position (m)", fontsize=20, color=INK)
+ax.set_ylabel("Y Position (m)", fontsize=20, color=INK)
+ax.set_title("streamline-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax.set_aspect("equal")
 ax.set_xlim(-3.5, 3.5)
 ax.set_ylim(-3.5, 3.5)
-ax.grid(True, alpha=0.3, linestyle="--")
+
+# Remove spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+
+# Subtle grid
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
