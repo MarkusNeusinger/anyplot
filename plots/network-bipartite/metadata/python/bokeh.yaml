@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:11:07Z'
-updated: '2026-05-14T21:17:59Z'
+updated: '2026-05-14T21:30:44Z'
 generated_by: claude-sonnet
 workflow_run: 25885513042
 issue: 5247
@@ -12,46 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - Correct bipartite two-column layout with students on left and courses on right
-  - Node sizes elegantly encode degree (connectivity) — hubs are immediately visible
-  - 'Okabe-Ito palette correctly applied: #009E73 for students (set A), #D55E00 for
-    courses (set B)'
-  - Full theme adaptation — backgrounds, title, and label colors all use correct theme
-    tokens for both light and dark renders
-  - Colored column headers matching node colors provide clear, integrated group identification
-  - Reproducible with np.random.seed(42) and realistic weighted enrollment distribution
-  - 'Correct Bokeh-specific export pattern: Selenium-based PNG screenshot as prescribed
-    by library guide'
-  - Edge semi-transparency (alpha=0.30) handles the dense connection set cleanly
+  - 'Perfect spec compliance: bipartite layout, degree-encoded node sizes, color-by-set,
+    correct labeling'
+  - 'Excellent code quality: seed, clean imports, KISS structure, correct output filenames'
+  - Polished Okabe-Ito palette with color-coded column headers matching node colors
+  - Both themes pass legibility checks with no dark-on-dark or light-on-light failures
+  - Realistic and neutral student-course enrollment context with diverse names and
+    real course codes
   weaknesses:
-  - Title format deviates from required pattern — should be exactly 'network-bipartite
-    · bokeh · anyplot.ai', not prefixed with 'Student-Course Enrollment ·'
-  - No formal legend box — colored column headers substitute but a legend would satisfy
-    the criterion cleanly
-  - 'Design Excellence ceiling: node sizes and colors are intentional but the plot
-    lacks a clear visual focal point or emphasis beyond the raw bipartite structure
-    (e.g., no annotation for the most-connected student or most-popular course)'
-  - Large unused horizontal space between the two node columns reduces canvas utilization
-  - Bokeh distinctive features underused — HoverTool or ColumnDataSource could leverage
-    Bokeh's interactive HTML output more effectively
+  - 'LM-02: Bokeh interactive HTML is generated but no HoverTool or TapTool configured
+    — add tooltips showing node name and degree to leverage Bokeh strength'
+  - 'DE-03: No annotation callout highlights top hub student or most popular course
+    — add p.text() callout on highest-degree node in each column'
+  - 'DE-01: No edge curvature or visual separator between node columns — minor polish
+    gap'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white
-      Chrome: Title "Student-Course Enrollment · network-bipartite · bokeh · anyplot.ai" renders in dark ink (#1A1A17) at 28pt in Bokeh's toolbar area (top-left). Column headers "Students" (green #009E73) and "Courses" (orange #D55E00) are bold 24pt and clearly visible. Student name labels (18pt, INK_SOFT #4A4A44) are right-aligned left of nodes; course code labels (18pt, INK_SOFT) are left-aligned right of nodes. All text clearly readable against the warm background.
-      Data: Green (#009E73) circles for 15 student nodes on the left column, orange (#D55E00) circles for 12 course nodes on the right column. Node sizes visibly vary by degree — Emma, James, Noah have notably larger green circles; CS101 has the largest orange circle. Gray semi-transparent edge lines (alpha=0.30) connect students to enrolled courses. White node outlines (line_color=PAGE_BG) provide clean separation.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Student-Course Enrollment · network-bipartite · bokeh · anyplot.ai" in dark ink at top-left (28pt). Column headers "Students" (green) and "Courses" (orange) in bold 24pt above each column. Student name labels right-aligned in INK_SOFT; course code labels left-aligned in INK_SOFT (18pt). All text readable against light background.
+      Data: 15 green (#009E73) student nodes on left, 12 orange (#D55E00) course nodes on right. Node sizes vary by degree. Semi-transparent gray edges (alpha 0.30) connect cross-set pairs. First series correctly uses brand green #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black
-      Chrome: Title text renders in light #F0EFE8 (INK token) and is visible against the dark background. Column headers maintain their Okabe-Ito data colors (green #009E73, orange #D55E00) — unchanged from light render as expected. Student name and course code labels render in lighter #B8B7B0 (INK_SOFT dark token) and are clearly readable against the near-black background. No dark-on-dark failures observed.
-      Data: Green (#009E73) and orange (#D55E00) node colors are identical to the light render — only chrome flips. Edge lines appear lighter gray against the dark surface (INK_MUTED #A8A79F with alpha=0.30) providing good contrast. Node outlines use dark PAGE_BG for separation.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: Near-black #1A1A17 — correct dark surface
+      Chrome: Title and labels rendered in light ink (#F0EFE8 / #B8B7B0), clearly readable against dark background. No dark-on-dark text failures observed. Column headers retain their green and orange data colors, both visible on dark surface.
+      Data: Green and orange node colors are identical to the light render — only chrome (background, text) flips. Edge lines visible as subtle lighter strokes. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -59,53 +51,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, column headers 24pt bold,
-          node labels 18pt. Readable in both themes. Node labels at 18pt are at minimum
-          for data labels.'
+        comment: Title 28pt, headers 24pt bold, labels 18pt — all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements in either render. Student and course
-          labels are well-spaced.
+        comment: Nodes evenly spaced; labels clear of nodes; edge crossing is structural,
+          not a failure
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Nodes clearly visible with good size variation by degree. Edge alpha=0.30
-          appropriate for connection density.
+        comment: Nodes clearly visible; degree sizing works; edge alpha 0.30 slightly
+          low
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe. Green and orange have sufficient luminance
-          contrast.
+        comment: Green/orange CVD-safe Okabe-Ito pair
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good bipartite two-column layout. Some unused horizontal space between
-          columns reduces canvas utilization slightly.
+        comment: 4800x2700 landscape; clean layout; middle channel slightly tight
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for network graph. Column headers serve
-          as descriptive group labels. Title present.
+        comment: Title correct; axes appropriately hidden; column headers as semantic
+          labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First set #009E73 (Okabe-Ito pos 1), second set #D55E00 (pos 2).
-          Light background #FAF8F1, dark #1A1A17. Both renders theme-correct.'
+        comment: 'Students #009E73 pos-1, Courses #D55E00 pos-2; backgrounds correct
+          for both themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -113,26 +102,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: node size encoding by degree, colored column
-          headers matching node palette, clean bipartite structure. Not publication-ready
-          — no emphasis on hub nodes, no annotation of insight.'
+        comment: Color-coded headers, floating node borders, minimal chrome — thoughtful
+          but no edge curvature or advanced styling
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes/grid/spines, white-edge node outlines for definition, appropriate
-          edge alpha. Clean and refined above defaults but not perfected.
+        comment: Axes/grid hidden, edge alpha calibrated, background-color node borders
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Node size variation by degree creates visual hierarchy — most-connected
-          students and courses stand out. Bipartite structure tells the enrollment
-          story. Missing: emphasis on specific insights (e.g., annotating top hubs).'
+        passed: false
+        comment: Degree-encoded sizes allow hub identification but no annotation highlights
+          top node in each set
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,29 +126,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network with two-column layout, nodes only connecting
-          across sets.
+        comment: Correct bipartite network with two separated columns
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color by set membership, node size by degree, labels, edges between
-          sets only, separated columns all present.
+        comment: Color by set, size by degree, labels, cross-set-only edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Students left, courses right, all edges correctly mapped.
+        comment: 15 students left, 12 courses right; all nodes and edges present
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title 'Student-Course Enrollment · network-bipartite · bokeh · anyplot.ai'
-          has extra prefix before spec-id — should be exactly 'network-bipartite ·
-          bokeh · anyplot.ai'. No formal legend box (column headers partially substitute).
+        passed: true
+        comment: Full title with spec-id and anyplot.ai; color-coded headers as legend
     data_quality:
       score: 15
       max: 15
@@ -172,22 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates hub nodes (high-degree), peripheral nodes (low-degree),
-          bipartite cross-connections, degree variation in both sets.
+        comment: Bipartite structure, degree variation, set membership, edge density
+          patterns all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Student-course enrollment is a canonical, highly realistic, neutral
-          bipartite example.
+        comment: 'Student-course enrollment: neutral, real-world, diverse names, realistic
+          course codes'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 students, 12 courses, 2-5 enrollments per student with weighted
-          popular courses — realistic academic enrollment pattern.
+        comment: 15 students, 12 courses within spec bounds; 2-5 courses per student
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -197,64 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (sys, os, time, Path, numpy, bokeh.io, bokeh.plotting,
-          selenium) are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity for a bipartite network.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly.
+        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses figure(), segment(), scatter(), text() correctly. Selenium-based
-          PNG export per library guide. Correct output_file + save pattern.
+        comment: Correct figure/scatter/segment/text; Selenium screenshot; no ColumnDataSource
+          used
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: HTML export (interactive output), segment primitive for edges, vector
-          text glyph with per-element alignment. Does not leverage HoverTool or ColumnDataSource
-          which would be more distinctively Bokeh.
-  verdict: REJECTED
+        passed: false
+        comment: HTML generated but no HoverTool or TapTool — Bokeh interactivity
+          not leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
