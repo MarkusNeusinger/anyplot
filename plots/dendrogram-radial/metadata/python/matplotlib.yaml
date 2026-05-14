@@ -1,0 +1,271 @@
+library: matplotlib
+language: python
+specification_id: dendrogram-radial
+created: '2026-05-14T09:13:08Z'
+updated: '2026-05-14T09:30:06Z'
+generated_by: claude-sonnet
+workflow_run: 25851246244
+issue: 5245
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
+review:
+  strengths:
+  - Custom radial coordinate transformation (to_xy) correctly maps dendrogram icoord/dcoord
+    to polar space with inner_r padding
+  - 'Correct Okabe-Ito palette applied in canonical order; first series (Asteraceae)
+    = #009E73'
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens applied to background,
+    title, legend frame, leaf labels — both renders are readable'
+  - link_color_func idiom correctly integrates scipy dendrogram branch coloring with
+    per-family colors
+  - Arc segments drawn at constant merge radius cleanly show horizontal branch spans
+    in polar space
+  - Legend uses Line2D marker handles with proper frame theming (ELEVATED_BG, INK_SOFT
+    edge, INK_SOFT text)
+  - np.random.seed(42) ensures full reproducibility; 12×12in square canvas is appropriate
+    for a radial symmetric plot
+  weaknesses:
+  - Leaf labels at fontsize=6 are very small for a 3600×3600px canvas (≈25px glyph
+    height); increase to 7-8pt or reduce to 40 species to improve legibility
+  - Some label crowding in dense cluster regions (top arc, bottom arc) — angular gap
+    of 7.2° between 50 leaves is tight; consider skipping every other label or using
+    radial offset stagger
+  - Branch linewidth=1.2 is thin at high resolution; 1.5-2.0pt would read more clearly
+    without losing detail
+  - DE-03 data storytelling is minimal — the grey inner branches are informative but
+    a brief annotation calling out the most-distinct family grouping would elevate
+    narrative clarity
+  - 'CQ-01: two helper functions (to_xy, link_color_func) depart slightly from pure
+    KISS; link_color_func is API-required but to_xy could be inlined'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "dendrogram-radial · matplotlib · anyplot.ai" in dark ink (#1A1A17) at 24pt — clearly readable. Leaf species labels in INK_SOFT (#4A4A44) at 6pt — visible but small. Legend text in INK_SOFT, legend frame with #FFFDF6 fill and INK_SOFT border.
+      Data: 5 Okabe-Ito colors for families — Asteraceae (#009E73 green), Rosaceae (#D55E00 vermillion), Fabaceae (#0072B2 blue), Poaceae (#CC79A7 reddish-purple), Lamiaceae (#E69F00 orange). Inner/cross-family branches in INK_SOFT grey. 50 colored leaf scatter markers (s=110) at circumference. Arc segments at merge heights clearly show cluster structure.
+      Legibility verdict: PASS — all chrome is readable; leaf labels are small but visible in light theme.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title text is light (#F0EFE8) and clearly visible against dark background. Leaf labels in INK_SOFT (#B8B7B0) — readable on dark background with no dark-on-dark failure. Legend frame uses #242420 fill with B8B7B0 border; legend text in B8B7B0.
+      Data: All 5 Okabe-Ito data colors are identical to light render — green Asteraceae, orange Rosaceae, blue Fabaceae, pink Poaceae, yellow-orange Lamiaceae. Inner branches in B8B7B0 (lighter grey) contrast well against dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is readable; data colors unchanged between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Title 24pt and legend 16pt explicitly set and readable. Leaf labels
+          at 6pt are the necessary tradeoff for 50 nodes but are small for a 3600px
+          canvas (~25px glyph height).
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Most label positions are clean; some crowding in dense cluster arcs
+          (top and bottom) where family members are tightly grouped at 7.2deg spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter markers (s=110) are clearly visible. Branch lines at 1.2pt
+          are functional but slightly thin for high-resolution output; 1.5-2pt would
+          improve clarity.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; 5 families are distinguishable without
+          relying on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12in square canvas appropriate for radial plot; dendrogram fills
+          ~65% of canvas; legend well-placed at bottom with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format. No axis labels — appropriate since
+          axes are off for radial layout.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73 (Asteraceae). Multi-series follows canonical
+          Okabe-Ito order. Backgrounds #FAF8F1 / #1A1A17 correct. Chrome is theme-correct
+          in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above a well-configured default — custom radial coordinate system,
+          per-branch color coding, and warm theme backgrounds show intentional design.
+          Not exceptional (no outer metadata ring, inner branches are plain grey).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes fully removed, no grid, clean background, leaf markers without
+          edge (linewidths=0), legend frame properly styled. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Color-coded branches create visual family groupings and the grey
+          inner branches convey cross-family merges. Some visual hierarchy present
+          but no clear focal point or guided insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct radial dendrogram: root at center, leaves at circumference,
+          branch lengths proportional to merge distance.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: scipy.cluster.hierarchy used, polar radial layout, cluster-colored
+          branches, leaf labels around circumference — all implemented.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angular coordinate = leaf order, radial coordinate = 1 - (merge_distance
+          / max_distance). All 50 species visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''dendrogram-radial · matplotlib · anyplot.ai''. Legend shows
+          all 5 family names with correct Okabe-Ito colors.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows hierarchical structure, family clusters, branch coloring, and
+          mixed-family grey branches. Optional outer metadata ring not added (spec
+          notes it as optional).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 50 plant species across 5 families (Asteraceae, Rosaceae, Fabaceae,
+          Poaceae, Lamiaceae) with morphological trait measurements — a realistic
+          botanical taxonomy scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 50 species within spec's recommended 20-500 range. Ward linkage distances
+          are realistic. 5 families with 10 species each is plausible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (to_xy, link_color_func) depart slightly from
+          pure KISS. link_color_func is required by scipy's dendrogram API; to_xy
+          is a necessary coordinate converter used in multiple loops.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, Line2D, scipy.cluster.hierarchy,
+          scipy.spatial.distance.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code. No fake UI elements. Appropriate complexity
+          for a custom radial layout.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ax-method usage throughout. scipy dendrogram link_color_func
+          callback is idiomatic. Custom polar rendering demonstrates solid matplotlib
+          knowledge.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom polar coordinate transformation, manual arc drawing via linspace,
+          label rotation for radial readability (flipping labels in left half) — these
+          are matplotlib-specific techniques not easily replicated in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - minimal-chrome
