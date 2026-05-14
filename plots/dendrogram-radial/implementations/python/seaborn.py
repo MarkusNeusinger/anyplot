@@ -1,7 +1,7 @@
 """ anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-14
+Quality: 81/100 | Created: 2026-05-14
 """
 
 import os

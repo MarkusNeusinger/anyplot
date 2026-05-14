@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: dendrogram-radial
 created: '2026-05-14T09:30:58Z'
-updated: '2026-05-14T09:36:13Z'
+updated: '2026-05-14T09:48:59Z'
 generated_by: claude-sonnet
 workflow_run: 25851972774
 issue: 5245
@@ -12,92 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - 'Excellent cluster-purity branch coloring: pure subtrees inherit Okabe-Ito color,
-    mixed merges fade to neutral — sophisticated multi-level hierarchy visualization'
-  - Realistic biologically plausible dataset with real cancer pathway gene names (BRCA1,
-    EGFR, TP53, CDK4, BCL2, VEGFA etc.)
-  - 'Perfect spec compliance: all required features including outer pathway label
-    ring implemented'
-  - 'Clean theme adaptation: backgrounds, text, and neutral branch colors flip correctly
-    between light and dark without any dark-on-dark failures'
-  - Polished radially-rotated labels and color-matched pathway annotations create
-    a publication-ready appearance
+  - 'Perfect spec compliance: all required features (radial layout, proportional branch
+    lengths, cluster coloring, circumferential labels) implemented correctly'
+  - Scientifically authentic dataset with real gene names and biological pathways,
+    creating a genuinely meaningful dendrogram
+  - 'Excellent Okabe-Ito palette usage: first cluster uses brand green #009E73, all
+    5 clusters follow canonical order, identical data colors across both theme renders'
+  - 'Clean polar axis design: spines removed, grid off, ticks cleared, producing a
+    minimal radial aesthetic'
+  - 'Correct theme-adaptive chrome: backgrounds (#FAF8F1 / #1A1A17), title/footer
+    text colors all adapt correctly between light and dark themes'
   weaknesses:
-  - Gene labels at 9.5pt are slightly small for 3600x3600 canvas; style guide recommends
-    sizing for ~13MP render — raise to 11-12pt
-  - Title at 22pt is slightly below the 24pt recommendation for seaborn/matplotlib
-    at this resolution
-  - Seaborn distinctive features underused — implementation is essentially matplotlib
-    polar + scipy with seaborn theming only; no seaborn-specific plot functions (clustermap,
-    etc.) used beyond set_theme
+  - Gene labels (9.5pt) and pathway labels (13pt) are below the minimum font size
+    guidelines (>=16pt for tick-equivalent, >=20pt for axis-equivalent); title at
+    22pt is slightly under the >=24pt minimum
+  - Helper functions (x_to_angle, y_to_radius, get_subtree_leaves, get_node_color)
+    violate the KISS no-functions rule
+  - 'Library Mastery is limited: seaborn is used only for sns.set_theme() — the rendering
+    is entirely matplotlib/scipy; sns.set_theme() rc dict also missing several INK_SOFT
+    chrome keys (axes.edgecolor, xtick.color, ytick.color) though these do not cause
+    visible issues since ticks are disabled'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "dendrogram-radial · seaborn · anyplot.ai" at 22pt in dark ink (#1A1A17) clearly readable; subtitle "Ward linkage · 30 genes × 5 biological pathways · Euclidean distance" at 13pt in muted ink visible at bottom
-      Data: 5 clusters rendered in Okabe-Ito order — DNA Repair (#009E73 green), MAPK Pathway (#D55E00 orange), Cell Cycle (#0072B2 blue), Apoptosis (#CC79A7 reddish-purple), Angiogenesis (#E69F00 gold); mixed-cluster branches in neutral gray; leaf dots and radially-rotated gene labels (9.5pt) in cluster colors; bold pathway labels at outer ring centroids
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "dendrogram-radial · seaborn · anyplot.ai" at 22pt clearly readable in dark ink; footer subtitle in muted ink (INK_MUTED); no axis labels/ticks (polar plot with hidden axes)
+      Data: Five Okabe-Ito cluster colors: DNA Repair (#009E73 brand green), MAPK (#D55E00 vermillion), Cell Cycle (#0072B2 blue), Apoptosis (#CC79A7 reddish purple), Angiogenesis (#E69F00 orange); branches colored by cluster assignment; neutral gray (INK_SOFT #4A4A44) for mixed-cluster merges; leaf dots and gene labels in cluster colors; bold pathway name labels at outer ring
+      Legibility verdict: PASS — all text readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title and subtitle rendered in light ink (#F0EFE8 / #A8A79F) clearly visible against dark background; no dark-on-dark failures detected
-      Data: All five Okabe-Ito data colors identical to light render (green, orange, blue, purple, gold); mixed-cluster branches switch to lighter neutral (#B8B7B0) readable on dark surface; gene labels in cluster colors visible; pathway labels vibrant and readable
-      Legibility verdict: PASS — all text readable, brand green #009E73 remains visible on dark surface
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and footer text appear in light color (INK #F0EFE8 applied via text.color token); no axis labels/ticks to check
+      Data: Data colors are identical to light render — all five Okabe-Ito colors unchanged; neutral mixed-cluster arcs appear as light gray (#B8B7B0, INK_SOFT for dark theme) which is correctly adapted; gene labels and pathway names in same cluster colors as light render
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable against near-black background
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Title 22pt (below 24pt recommendation), gene labels 9.5pt slightly
-          small for canvas but readable in both themes
+        comment: 'Font sizes explicitly set but below minimums: gene labels 9.5pt
+          (needs >=16pt), pathway labels 13pt (needs >=20pt), title 22pt (needs >=24pt)'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels radially rotated and well-spaced; minor tightness possible
-          in dense Apoptosis cluster area
+        comment: Labels rotated radially with rotation_mode=anchor, mostly non-overlapping;
+          slight crowding possible in MAPK cluster arc
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All branches, leaf dots, and labels clearly visible in both themes
+        comment: Branch lines (lw=2.2) clearly visible; leaf dots (s=55) visible but
+          slightly undersized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; no red-green-only signal
+        comment: Okabe-Ito palette is CVD-safe; five cluster colors well-differentiated
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 12x12 figsize at 300dpi = 3600x3600 square format; good proportions,
-          nothing cut off
+        comment: Square 3600x3600 canvas appropriate for circular layout; slight unavoidable
+          corner whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; subtitle describes method and data context
+        comment: Title in correct format; subtitle provides Ward linkage, dataset
+          size, and distance metric context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First cluster uses #009E73; Okabe-Ito order followed; backgrounds
-          #FAF8F1/#1A1A17; both renders theme-correct'
+        comment: 'First cluster (DNA Repair) uses #009E73; all 5 clusters follow Okabe-Ito
+          canonical order; backgrounds #FAF8F1/#1A1A17 correct; data colors identical
+          across themes'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -105,22 +110,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Cluster-purity branch coloring is sophisticated; color-matched radially-rotated
-          pathway labels; polished overall composition
+        comment: Strong design with polar spine/grid removed, cluster-colored branches
+          and labels, bold pathway anchors at outer ring — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Polar spine removed, grid off, ticks off, clean backgrounds; well-tuned
-          radii and arc rendering
+        comment: Polar axis cleaned up (spines off, grid off, ticks off); tight_layout
+          applied; clean layout; could be further polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Branch purity coloring creates natural focal hierarchy; pathway labels
-          at angular centroids immediately identify biological groups
+        comment: Color-coded branches guide viewer to pathway clusters; bold pathway
+          labels serve as navigation anchors; subtitle reinforces scientific method
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial dendrogram with root at center, leaves at circumference
+        comment: 'Correct radial dendrogram: root at center, branches extend outward,
+          leaves at circumference with equal angular spacing'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Branch lengths proportional to merge distance; cluster coloring;
-          scipy.cluster.hierarchy used; outer pathway label ring included
+        comment: linkage_matrix via Ward ✓; labels around circumference ✓; cluster_colors
+          coloring branches and dots ✓; branch length proportional to merge distance
+          ✓; optional metadata ring omitted (spec says optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Leaf labels at circumference; radial distance encodes merge distance;
-          cluster colors correctly assigned
+        comment: Radial distance correctly mapped to merge distance; angular position
+          mapped to leaf order; all 30 leaves visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: dendrogram-radial · seaborn · anyplot.ai format correct; cluster
-          identity conveyed through color-matched pathway labels
+        comment: Title 'dendrogram-radial · seaborn · anyplot.ai' matches required
+          format; pathway name labels at outer ring serve as cluster legend
     data_quality:
       score: 15
       max: 15
@@ -161,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hierarchical clustering, radial layout, cluster coloring, leaf dots,
-          gene labels, pathway labels, mixed-merge neutral coloring all shown
+        comment: 'Shows all aspects: clear cluster separation, mixed-cluster merges
+          in neutral color, proportional branch lengths, leaf labels, cluster color-coding'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real cancer biology gene names (BRCA1, EGFR, TP53, CDK4, BCL2, VEGFA
-          etc.) across legitimate biological pathways
+        comment: Genuine biological gene names (BRCA1, BRCA2, ATM, EGFR, TP53) across
+          5 real biological pathways — scientifically meaningful and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 genes across 5 pathways; ideal size for radial dendrogram showcase
+        comment: 30 genes × 5 pathways within spec range; Euclidean distance with
+          Ward linkage is standard for gene expression clustering
     code_quality:
       score: 9
       max: 10
@@ -185,8 +193,9 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Four helper functions defined; necessary for radial coordinate math
-          but slightly beyond KISS ideal
+        comment: Four helper functions defined (x_to_angle, y_to_radius, get_subtree_leaves,
+          get_node_color) violate no-functions rule; practically necessary for recursive
+          subtree coloring
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,21 +207,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All 6 imports used: os, matplotlib.pyplot, numpy, seaborn, scipy.cluster.hierarchy,
+          scipy.spatial.distance'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity for custom radial dendrogram
+        comment: Clean, well-organized Pythonic code; no fake UI elements; helper
+          functions genuinely needed for algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct facecolor
+        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor=PAGE_BG
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -220,15 +231,17 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Seaborn set_theme used correctly; matplotlib polar projection is
-          appropriate fallback since seaborn lacks native radial dendrogram
+        comment: sns.set_theme() for global styling is correct seaborn usage; all
+          rendering via matplotlib polar projection and scipy — unavoidable given
+          seaborn has no native radial dendrogram API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Seaborn used mainly for theming; core visualization is matplotlib
-          polar + scipy; few seaborn-distinctive features showcased
+        comment: Seaborn contribution limited to sns.set_theme(); no seaborn-specific
+          plotting functions used; this is essentially a matplotlib/scipy visualization
+          with seaborn theming
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -237,6 +250,7 @@ impl_tags:
   - polar-projection
   - annotations
   - custom-legend
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
@@ -245,3 +259,4 @@ impl_tags:
   - hierarchical-clustering
   styling:
   - minimal-chrome
+  - alpha-blending
