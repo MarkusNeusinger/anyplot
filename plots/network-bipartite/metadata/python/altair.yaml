@@ -1,0 +1,244 @@
+library: altair
+language: python
+specification_id: network-bipartite
+created: '2026-05-14T21:24:37Z'
+updated: '2026-05-14T21:37:33Z'
+generated_by: claude-sonnet
+workflow_run: 25886128651
+issue: 5247
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/altair/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Perfect Okabe-Ito palette with correct color ordering; full theme-adaptive chrome
+    in both renders
+  - 'Complete spec compliance: bipartite columns, degree-encoded node sizes, color
+    by set, readable labels'
+  - 'Excellent code quality: KISS structure, seed set, no functions, clean imports'
+  - Idiomatic Altair layer grammar using mark_rule (x/y/x2/y2) for edges — distinctively
+    Altair
+  - Column headers colored in their respective set colors — elegant visual reinforcement
+    of bipartite structure
+  weaknesses:
+  - Node label font size (15px) is below the recommended minimum of 18px for label
+    text at this canvas resolution
+  - Paper IDs are abstract (P01-P15); more realistic short titles would improve data
+    context
+  - 'DE-03 lacks data storytelling: no hub is highlighted or emphasized; consider
+    color-intensifying the highest-degree node in each set to create a clear focal
+    point'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "network-bipartite · altair · anyplot.ai" in dark INK (#1A1A17) at top-left; "Authors" header in #009E73, "Papers" header in #D55E00; node labels in INK_SOFT (#4A4A44) — all readable
+      Data: Author nodes in #009E73 (Okabe-Ito pos 1), Paper nodes in #D55E00 (Okabe-Ito pos 2); node sizes vary by degree; gray edges (opacity 0.28) connect sets
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light INK (#F0EFE8), node labels in INK_SOFT (#B8B7B0) — all readable against dark background; no dark-on-dark failures observed; legend box uses elevated dark fill (#242420)
+      Data: Author nodes still #009E73, Paper nodes still #D55E00 — colors identical to light render as required
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title (28px), headers (22px), legend (18/20px) explicit. Node labels
+          (15px) below recommended 18px minimum.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node size range [200-1200] appropriate; edges visible at opacity
+          0.28
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito green/orange CVD-safe and high-contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Bipartite columns fill 1600x900 canvas well; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Column headers serve as descriptive labels; no traditional axes needed
+          for network graph
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Author=#009E73, Paper=#D55E00; bg light=#FAF8F1, dark=#1A1A17; full
+          theme chrome correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Color-coded columns with matching headers, degree-encoded sizes,
+          node stroke on background — above defaults but not publication-quality
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes fully hidden, view border removed, subtle edges, node stroke,
+          clean legend box
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Degree encoding provides mild visual hierarchy but no hub is highlighted;
+          no focal point or narrative emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bipartite network with two node sets in separate columns
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Columns, color by set, degree-encoded size, readable labels, clean
+          edges — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source=authors left, target=papers right, edges correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend with Node Set, Author, Paper labels
+          correct
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Hub vs. peripheral nodes visible; varied connectivity patterns shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Realistic diverse author names. Paper IDs (P01-P15) are abstract
+          — real titles would improve context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 authors, 15 papers, 2-4 connections each; within spec range; realistic
+          density
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports->data->positions->charts->save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; sys.path manipulation justified to avoid local
+          name conflict
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic, appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary: declarative encoding, alt.layer, alt.Scale with domain/range,
+          configure_* for theme'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'mark_rule with x/y/x2/y2 for edges is distinctively Altair; six-layer
+          composition showcases Altair grammar. Minor deduction: no selection/highlight
+          bindings used.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
