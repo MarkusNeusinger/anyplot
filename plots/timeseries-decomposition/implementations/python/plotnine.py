@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-14
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -16,12 +18,21 @@ from plotnine import (
     geom_line,
     ggplot,
     labs,
+    scale_size_manual,
     scale_x_datetime,
     theme,
     theme_minimal,
 )
 from statsmodels.tsa.seasonal import seasonal_decompose
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data - Monthly airline passengers with trend and seasonality
 np.random.seed(42)
@@ -66,27 +77,32 @@ df_plot["component"] = pd.Categorical(
 )
 
 # Create faceted plot with four components
+# Emphasize original series with thicker line
 plot = (
-    ggplot(df_plot, aes(x="date", y="value"))
-    + geom_line(color="#306998", size=1.2)
+    ggplot(df_plot, aes(x="date", y="value", size="component"))
+    + geom_line(color=BRAND)
     + facet_wrap("~component", ncol=1, scales="free_y", dir="v")
     + scale_x_datetime(date_labels="%Y", date_breaks="2 years")
-    + labs(title="timeseries-decomposition · plotnine · pyplots.ai", x="Date", y="Value")
+    + scale_size_manual(values={"Original": 1.8, "Trend": 1.2, "Seasonal": 1.2, "Residual": 1.2}, guide=None)
+    + labs(title="timeseries-decomposition · plotnine · anyplot.ai", x="Date", y="Passengers")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
-        axis_title_x=element_text(size=20, margin={"t": 15}),
-        axis_title_y=element_text(size=20, margin={"r": 15}),
-        axis_text_x=element_text(size=14),
-        axis_text_y=element_text(size=12),
-        strip_text=element_text(size=16, weight="bold"),
-        strip_background=element_rect(fill="#e8e8e8", color=None),
-        panel_spacing_y=0.08,
-        panel_grid_major=element_line(color="#dddddd", size=0.5, alpha=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
+        axis_title_x=element_text(size=20, margin={"t": 15}, color=INK),
+        axis_title_y=element_text(size=20, margin={"r": 15}, color=INK),
+        axis_text_x=element_text(size=14, color=INK_SOFT),
+        axis_text_y=element_text(size=12, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        strip_text=element_text(size=16, weight="bold", color=INK),
+        strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        panel_spacing_y=0.06,
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_blank(),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
