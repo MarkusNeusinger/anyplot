@@ -1,227 +1,231 @@
 library: bokeh
+language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:58:44Z'
-updated: '2025-12-31T11:24:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617510121
+updated: '2026-05-14T17:03:20Z'
+generated_by: claude-haiku
+workflow_run: 25873319692
 issue: 3002
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/bokeh/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent demonstration of mosaic layout concept with 6 diverse subplots of varying
-    sizes
-  - Cohesive visual design with Python brand colors (blue/yellow) and consistent styling
-  - Realistic business dashboard scenario with meaningful metrics (revenue, profitability,
-    sales, satisfaction)
-  - Good use of Bokeh row/column layout system to create asymmetric grid
-  - Legends are consistently styled with appropriate font sizes and background alpha
-  - All subplots have clear, descriptive titles and axis labels with units
+  - Perfect visual compliance with both light and dark renders passing legibility
+    checks and no theme-adaptation failures
+  - 'Flawless color usage with Okabe-Ito palette correctly applied and first series
+    always #009E73'
+  - Excellent Bokeh idioms with proper ColumnDataSource, layout composition, and theme-adaptive
+    styling throughout
+  - Strong spec adherence with all required features implemented including complex
+    asymmetric mosaic layout
+  - Clean, maintainable code with deterministic data generation and consistent helper
+    function pattern
   weaknesses:
-  - Code defines unused data sources (source_e1, source_e2 for conversion rate) that
-    clutter the implementation
-  - The Theme object is imported and defined but never applied via curdoc; apply_theme()
-    duplicates this functionality
-  - Helper function apply_theme() breaks KISS principle; grid styling could be inlined
-  - Font sizes on smaller subplots (conversion rate, satisfaction) could be slightly
-    larger for better readability
-  - Could demonstrate Bokeh interactive features (hover tools, linked brushing) for
-    richer dashboard experience
-  image_description: 'The plot displays a business dashboard mosaic layout with 6
-    subplots of varying sizes:
+  - 'Minor design polish: While styling is professional and consistent, could explore
+    more custom color schemes or visual treatments beyond theme-adaptive defaults'
+  - 'Limited interactive features: Bokeh supports hover tooltips and selection callbacks,
+    implementation uses static HTML + PNG export (valid but underutilizes library
+    capabilities)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with five subplots in mosaic arrangement
+      Chrome: All titles, axis labels, and tick labels rendered in dark text (INK #1A1A17 for primary, INK_SOFT #4A4A44 for secondary) with excellent legibility against light background. Legend backgrounds styled with ELEVATED_BG (#FFFDF6) and subtle borders.
+      Data: Green (#009E73) line for revenue trend with scatter overlay; orange (#D55E00) and green scatter for product profitability; green bars for category sales; orange bars for satisfaction scores; green and orange lines for order trends. All data clearly distinguishable from background.
+      Legibility verdict: PASS - All text is crisp and readable. No light-on-light failures. Grid lines subtle at 10% alpha but visible.
 
-    1. **Top-left (large, ~2/3 width)**: "Quarterly Revenue Overview" - Blue line
-    chart with markers showing daily revenue ($50k-$62k) over 90 days
-
-    2. **Top-right (~1/3 width)**: "Product Profitability" - Scatter plot with blue
-    (Premium Line) and yellow (Standard Line) dots showing profit margin vs units
-    sold
-
-    3. **Middle-left (~half width)**: "Sales by Category" - Blue vertical bar chart
-    for Electronics, Clothing, Food, Books
-
-    4. **Middle-right top (small)**: "Conversion Rate (%)" - Line chart with blue
-    and yellow lines tracking weekly conversion rates
-
-    5. **Middle-right bottom (small)**: "Customer Satisfaction" - Yellow bar chart
-    showing quarterly scores (Q1-Q4: 78-88)
-
-    6. **Bottom (full width)**: Main title "subplot-mosaic · bokeh · pyplots.ai" -
-    Dual line chart comparing 2023 (blue) vs 2024 (green) monthly orders
-
-
-    Colors: Python Blue (#306998), Python Yellow (#FFD43B), Accent Green (#4CAF50).
-    Legends present on most subplots. Dashed subtle grids. Clean professional appearance.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) maintaining the same mosaic layout
+      Chrome: All titles, axis labels, and tick labels rendered in light text (INK #F0EFE8 for primary, INK_SOFT #B8B7B0 for secondary) with excellent legibility against dark background. Legend backgrounds use dark theme variant (#242420). No dark-on-dark failures—tick labels properly use INK_SOFT token for adequate contrast.
+      Data: Colors identical to light render—green (#009E73) and orange (#D55E00) maintain full visibility and saturation on dark surface. Grid lines subtle at 10% alpha with theme-adaptive styling.
+      Legibility verdict: PASS - All text is crisp and readable against dark surface. Data colors are identical to light render, only chrome (background, text, borders) has flipped appropriately. No theme-adaptation failures detected.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
-        max: 10
-        passed: true
-        comment: Titles and major labels readable; some smaller subplot labels could
-          be larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text anywhere
+        comment: 'All text readable in both themes. Font sizes explicitly set: 28pt
+          title, 22pt axis labels, 18pt ticks'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions. Mosaic layout provides adequate spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Good marker/line sizing for data density
+        comment: All markers and lines clearly visible. Scatter size=18, line width=4-5
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette (blue/yellow/green)
+        comment: Okabe-Ito palette, colorblind-safe, high contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Excellent mosaic demonstration; good use of space
+        comment: 4800×2700 landscape optimal for mosaic. Well-proportioned
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: Revenue ($), Profit Margin (%), Sales ($),
-          Score'
+        comment: Descriptive labels with units. Title matches spec format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed grids (alpha 0.3), well-placed legends
+        comment: 'First series #009E73. Okabe-Ito order respected. Correct theme backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with theme-adaptive tokens. Intentional hierarchy
+          via sizing
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, refined legends, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Visual hierarchy clear through mosaic. Guides viewer overview→details
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct mosaic layout with varying subplot sizes
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y correctly assigned across all subplots
-      - id: SC-03
+        comment: Correct mosaic subplot layout
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Multiple plot types (line, scatter, bar), different sizes, cell spanning.
-          Empty cell gap feature partially implemented.
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: line, scatter, bar, varying sizes, asymmetric layout'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show complete data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, axes encompass full data ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Accurate legends with meaningful labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "subplot-mosaic · bokeh · pyplots.ai"
+        comment: Title format correct, legends with proper labels
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: time series, scatter, bars, comparisons, trends'
+        comment: Multiple chart types and mosaic patterns demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Business dashboard scenario is realistic and neutral
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Realistic values (revenue $50-60k, margins 5-45%, satisfaction 78-88%)
+        comment: Real-world plausible dashboard scenario with business metrics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue, profit, sales, satisfaction scales all realistic
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Has apply_theme() helper function; defines unused data sources (source_e1,
-          source_e2)
+        comment: No unnecessary functions. style_figure() justified
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Theme is imported but only used to define an unused theme variable;
-          apply_theme uses direct attribute assignment instead
+        comment: np.random.seed(42) set, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no unused code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean code, no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of row/column layouts, ColumnDataSource, Legend/LegendItem,
-          Spacer; could add linked axes or hover tools
+        comment: 'Excellent Bokeh idioms: figure, ColumnDataSource, row/column layout'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Good use of Bokeh layout system and legend styling. Could leverage
+          more interactive features like HoverTool
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
