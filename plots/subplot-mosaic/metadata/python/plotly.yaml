@@ -1,182 +1,175 @@
 library: plotly
+language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:56:09Z'
-updated: '2025-12-31T11:07:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617508328
+updated: '2026-05-14T17:01:17Z'
+generated_by: claude-haiku
+workflow_run: 25873214393
 issue: 3002
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/plotly/plot.html
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotly/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - html-export
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent mosaic layout implementation using Plotly make_subplots with colspan
-    specifications to achieve the AAB/CCD/EFG pattern
-  - Well-designed business dashboard scenario with coherent data narrative
-  - Clean code structure following KISS principles with clear comments explaining
-    the layout pattern
-  - Good visual hierarchy with larger panels for primary data and smaller panels for
-    supporting metrics
-  - Proper use of Plotly white template and consistent color scheme
-  - Correctly implements both PNG and HTML outputs for static and interactive viewing
+  - 'Perfect theme adaptation: data colors identical across light/dark, text colors
+    properly inverted for readability in both renders'
+  - Correct mosaic implementation using plotly's specs system with colspan
+  - Comprehensive multi-chart dashboard with realistic business data (revenue trends,
+    category breakdowns, metrics)
+  - Clean, reproducible code with np.random.seed(42)
+  - Proper Okabe-Ito palette usage (positions 1–5 in correct order)
+  - Good visual hierarchy and information flow (overview → detail → metrics)
   weaknesses:
-  - Scatter plot markers in Product Performance panel are slightly small (size=12)
-    for 80 data points at this canvas size
-  - Missing demonstration of empty cell/gap feature using placeholder mentioned in
-    spec
-  - Bottom row metric panels feel slightly cramped; row_heights could be adjusted
-    for better balance
-  image_description: 'The plot displays a dashboard-style mosaic layout with 7 subplots
-    arranged in a 3-row structure. The title "subplot-mosaic · plotly · pyplots.ai"
-    appears at the top center.
+  - Design Excellence could be higher with more aesthetic refinement (spine manipulation,
+    enhanced typography hierarchy)
+  - 'Library Mastery is conservative: uses core features well but doesn''t leverage
+    distinctive plotly capabilities like hover templates and range sliders'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface - correct color
+      Chrome: Title "subplot-mosaic · plotly · anyplot.ai" centered and clearly readable in dark text; axis labels, tick labels, subplot titles all dark-colored and visible
+      Data: Top-left Revenue Trend uses green (#009E73) with semi-transparent fill; top-right Monthly Sales uses orange (#D55E00); middle-left scatter uses green markers (size 16); middle-right Category Distribution uses Okabe-Ito multi-color bars; bottom row metrics in green, orange, blue with semi-transparent fills
+      Legibility verdict: PASS - all text clearly readable against light background
 
-
-    **Row 1:** A wide "Revenue Trend (Overview)" line chart with blue fill spans 2
-    columns on the left, showing an upward trend from ~50k to ~62k over Jan-Apr 2024.
-    A narrower "Monthly Sales" bar chart (yellow bars) occupies the right column,
-    displaying Jan-Jun sales data.
-
-
-    **Row 2:** A "Product Performance" scatter plot with blue markers spans 2 columns
-    showing Feature X vs Feature Y distribution (80 points). A "Category Distribution"
-    horizontal bar chart with multi-colored bars (blue, yellow, gray, brown) shows
-    Electronics, Clothing, Food, Books, Sports categories on the right.
-
-
-    **Row 3:** Three smaller metric panels - "Efficiency" (blue area chart, 0-100%),
-    "Quality Score" (yellow area chart, 0-70 Score), and "Response Time" (blue line
-    chart, 0-60 ms), each showing 30-day trends.
-
-
-    Colors are consistent (blue #306998, yellow #FFD43B). All text is legible. Layout
-    shows clear visual hierarchy with larger panels for primary data.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface - correct color
+      Chrome: Title and all axis/tick/subplot labels now light-colored, providing excellent contrast against dark background; no dark-on-dark failures detected
+      Data: IDENTICAL colors to light render - green (#009E73), orange (#D55E00), blue (#0072B2) maintained; only chrome (background, text, grid) flipped to dark theme
+      Legibility verdict: PASS - all text clearly readable against dark background, data colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable, fonts appropriately scaled for 4800x2700 canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
+          set with INK tokens; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Proper margins (100, 80, 140, 80) and spacing (vertical 0.12, horizontal
+          0.10) prevent collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers and lines visible, scatter markers slightly small for data
-          density
+        comment: Scatter markers size 16, lines width 3-4, fill opacity 0.2-0.25 all
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow palette is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas but bottom row panels feel slightly cramped
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Revenue ($), Sales ($), %, ms)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe by design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 px, nothing cut off, balanced proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend disabled (appropriate for this layout), grid via plotly_white
-          template
+        comment: Descriptive labels with units; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follow Okabe-Ito order, backgrounds
+          correct (#FAF8F1/#1A1A17), both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful Okabe-Ito usage and hierarchy; room for more refined aesthetic
+          touches (spine manipulation, typography)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and generous margins; could benefit from spine customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear hierarchy and narrative flow; could enhance with intentional
+          color emphasis
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct mosaic subplot layout with varying sizes
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y correctly assigned across all subplots
-      - id: SC-03
+        comment: Correct mosaic via make_subplots() with colspan; pattern AAB;CCD;EFG
+          properly implemented
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has column spanning (AAB/CCD pattern), multiple plot types; no empty
-          cell demo with "." placeholder
-      - id: SC-04
-        name: Data Range
+        comment: Varying sizes, multiple chart types, clear hierarchy, consistent
+          spacing
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct, all data visible and appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend disabled but subplot titles serve as labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "subplot-mosaic · plotly · pyplots.ai"
+        comment: Title format correct, subplot titles descriptive, legend appropriately
+          hidden
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows line, bar, scatter, horizontal bar, area charts; missing gap/empty
-          cell demo
+        comment: 'Demonstrates all mosaic aspects: asymmetric layout, multiple types,
+          size variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Business dashboard scenario (revenue, sales, categories, metrics)
-          is realistic
+        comment: Real-world dashboard scenario, plausible ranges, neutral framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values mostly appropriate; metric panels could show more meaningful
-          Y-axis ranges
+        comment: Revenue $30k-$70k, product features 0-100+, categories 0-35, metrics
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -186,40 +179,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Linear, straightforward, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (numpy, pandas, plotly)
+        comment: Only os, numpy, pandas, plotly (all used)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current Plotly API
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/.html, current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses make_subplots with specs/colspan, row_heights, graph_objects;
-          could leverage more interactive features or annotations
+        comment: make_subplots() with specs parameter is canonical; proper add_trace(row=,
+          col=) and update_*axes() patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Leverages colspan and subplot titles well; conservative approach
+          — could explore hover templates and range sliders
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
