@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:11:50Z'
-updated: '2026-05-14T05:41:04Z'
+updated: '2026-05-14T05:46:27Z'
 generated_by: claude-haiku
 workflow_run: 25843773690
 issue: 2860
@@ -12,37 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 65
 review:
   strengths:
-  - Realistic training data with proper overfitting behavior
-  - Effective annotation highlighting optimal stopping point
-  - Clear and readable in both light and dark renders
-  - Good font sizing for visibility at large resolution
-  - Proper legend structure and axis labeling
+  - Clear annotation of optimal stopping point with visual marker
+  - Realistic training data showing overfitting behavior with diverging curves
+  - Good use of layer composition with both lines and points for visibility
+  - Data correctly mapped and scaled to show training dynamics
+  - Reproducible synthetic data with fixed seed
   weaknesses:
-  - Color palette uses Python colors instead of Okabe-Ito palette
-  - Code does not implement theme-adaptive styling per library specification
-  - Output files saved as plot.png instead of plot-{THEME}.png
-  - Missing ANYPLOT_THEME environment variable reading
-  - Annotation text color is hardcoded and not theme-adaptive
-  - No theme-adaptive chrome configuration for backgrounds and text colors
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ around #FAF8F1 - correct\n  Chrome: Title, axis labels, tick labels all in dark\
-    \ text, clearly readable against light surface\n  Data: Training curve is blue\
-    \ (#306998, should be #009E73), validation is yellow (#FFD43B, should be #D55E00)\n\
-    \  Legibility verdict: PASS - all elements readable, but palette non-compliant\n\
-    \nDark render (plot-dark.png):\n  Background: Warm near-black around #1A1A17 -\
-    \ correct\n  Chrome: Title, axis labels, tick labels all in light text, clearly\
-    \ readable; no dark-on-dark failures\n  Data: Colors identical to light render\
-    \ (blue training, yellow validation) - correct behavior\n  Legibility verdict:\
-    \ PASS - all elements readable, colors consistent with light render\n  \nCritical\
-    \ Issues:\n- Annotation text color (#E63946) is hardcoded red in both renders\
-    \ - does not use theme-adaptive tokens\n- Code does not read ANYPLOT_THEME environment\
-    \ variable\n- Colors are not Okabe-Ito compliant (should be #009E73 and #D55E00)"
+  - 'Palette non-compliance: Uses custom colors (#306998, #FFD43B) instead of Okabe-Ito;
+    violates hard rule that first series must be #009E73'
+  - 'Dark-theme readability failure: Yellow validation loss line (#FFD43B) nearly
+    invisible on dark background due to poor luminance contrast'
+  - 'API violation: Saves to hardcoded plot.png instead of plot-{THEME}.png; does
+    not read ANYPLOT_THEME environment variable'
+  - 'Missing theme-adaptive colors: No use of PAGE_BG, INK, INK_SOFT tokens from style
+    guide'
+  - 'Title inconsistency: Code contains pyplots.ai but should be anyplot.ai'
+  - Generic styling with no visual customization or refinement beyond defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "line-loss-training · altair · anyplot.ai" clearly readable in dark text; axis labels "Epoch" and "Cross-Entropy Loss" legible; all tick labels visible; grid lines subtle but present
+      Data: Training loss (teal/blue #306998), Validation loss (yellow #FFD43B); both curves clearly visible with points marked; red diamond marks minimum validation loss at epoch 26 with annotation
+      Legibility verdict: PASS — all elements readable on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and axis labels clearly visible in light text; grid lines subtle but visible
+      Data: Training loss (teal) readable; Validation loss (yellow #FFD43B) has VERY POOR CONTRAST and is barely visible on dark background — nearly indistinguishable. Data colors are identical to light render (only background changed), but yellow luminance insufficient for readability.
+      Legibility verdict: FAIL — Validation loss line violates dark-theme readability requirement due to insufficient contrast of position-7 yellow on dark surface
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 21
       max: 30
       items:
       - id: VQ-01
@@ -50,68 +53,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes
+        comment: All title, axis labels, tick labels readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Lines, points, annotation all visible
+        passed: false
+        comment: Validation loss line barely visible on dark render due to yellow-on-dark
+          poor contrast
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Non-Okabe-Ito colors reduce CVD safety
+        comment: Position 7 yellow has poor contrast on dark background; violates
+          luminance guidance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Good proportions, nothing cut off, adequate whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: Descriptive labels with units (Cross-Entropy Loss)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Critical: Uses #306998 and #FFD43B instead of #009E73 and #D55E00;
-          annotation color not theme-adaptive'
+        comment: 'Non-Okabe-Ito palette: custom #306998 (training) and #FFD43B (validation)
+          instead of #009E73 and #D55E00; violates hard rule that first series must
+          be #009E73'
     design_excellence:
-      score: 10
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Generic styling with Python defaults
+        comment: Generic blue/yellow colors, no intentional design or visual hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization
+        comment: Default grid appearance, no removal of spines, no customization
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear overfitting pattern with annotation
+        passed: false
+        comment: Annotation highlights minimum, but weak visual hierarchy; overfitting
+          behavior not emphasized
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -119,25 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart
+        comment: Correct line chart showing training and validation curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Both training and validation loss curves; optional optimal stopping
+          point marker included
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y mapping
+        comment: 'X-axis: Epoch (numeric), Y-axis: Cross-Entropy Loss (numeric); axes
+          correct'
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Correct format
+        passed: false
+        comment: 'Title format correct but domain inconsistent: code has ''pyplots.ai''
+          but render shows ''anyplot.ai''; legend labels match spec'
     data_quality:
       score: 15
       max: 15
@@ -147,21 +157,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects shown
+        comment: Shows full training/validation lifecycle with 50 epochs; demonstrates
+          overfitting
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic training data
+        comment: Realistic neural network training scenario; plausible loss curves
+          with appropriate noise
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values
+        comment: Sensible loss values (0.1-2.8 range) for typical cross-entropy loss
     code_quality:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: CQ-01
@@ -169,54 +181,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple and clear
+        comment: No unnecessary functions or classes; straightforward implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses seed
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'Only necessary imports: altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Clear logic, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'Critical: Saves as plot.png not plot-{THEME}.png; no theme-adaptive
-          implementation'
+        comment: 'CRITICAL: Saves to hardcoded plot.png (line 99) instead of f''plot-{THEME}.png'';
+          does not read ANYPLOT_THEME environment variable; should follow altair.md
+          template'
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Good layer composition
+        comment: Basic Altair API; chart construction, encoding, properties are standard
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Standard patterns
+        comment: Generic usage; no advanced Altair features like layer composition
+          beyond basic lines+points+text
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
