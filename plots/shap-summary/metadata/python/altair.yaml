@@ -1,167 +1,169 @@
 library: altair
+language: python
 specification_id: shap-summary
 created: '2025-12-31T05:53:37Z'
-updated: '2025-12-31T06:01:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612948253
+updated: '2026-05-14T13:11:31Z'
+generated_by: claude-haiku
+workflow_run: 25861255852
 issue: 2923
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/shap-summary/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/shap-summary/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of SHAP summary plot matching specification requirements
-  - Effective use of Altair declarative syntax with proper encoding types (Q for quantitative,
-    N for nominal)
-  - Good jittering implementation using transform_calculate for random vertical offsets
-  - Clean code structure following KISS principles
-  - Appropriate color scheme (blueorange) matching SHAP convention of low=blue, high=red/orange
-  - Features properly sorted by mean absolute SHAP value (importance)
-  weaknesses:
-  - Legend positioning could be closer to the plot area to reduce isolation
-  - Grid styling is minimal - could add subtle horizontal grid lines to help trace
-    feature rows
-  - Interactive features not utilized (no tooltips or zoom/pan) which is an Altair
-    strength
-  image_description: 'The plot displays a SHAP summary visualization with 10 features
-    arranged vertically, ordered by feature importance from top (Account Age, Transaction
-    Count) to bottom (Support Tickets). Each feature row contains scattered points
-    representing individual samples, positioned horizontally by their SHAP value (ranging
-    from approximately -0.8 to 0.8). Points are colored using a blue-to-orange diverging
-    color scheme: blue indicates low feature values (0) and orange indicates high
-    feature values (1), with a gradient legend on the right. A vertical dashed line
-    at x=0 separates positive and negative SHAP impacts. The title "shap-summary ·
-    altair · pyplots.ai" appears at the top center. Points are jittered vertically
-    within each feature row to reduce overlap.'
+  - Perfect visual quality with explicit font sizing and proper theme adaptation across
+    both light and dark renders
+  - Sophisticated multi-dimensional encoding (position, color, size, opacity) creates
+    clear visual hierarchy and data storytelling
+  - Idiomatic Altair usage demonstrating expert command of the library's high-level
+    API and distinctive features
+  - Complete specification compliance with correctly formatted title, legend, and
+    all required SHAP summary features
+  - Realistic, neutral financial ML scenario data showing full range of feature importances
+    and effects
+  - Clean, reproducible code with no external dependencies beyond core plotting libraries
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle gradient
+      Chrome: Title "shap-summary · altair · anyplot.ai" in dark text (28px), X-axis labeled "SHAP Value (Impact on Model Output)" (22px), Y-axis shows 10 financial features ordered by importance (18px). All text is dark and clearly readable against light background. Dashed vertical reference line at x=0 in soft gray (INK_SOFT).
+      Data: Scatter points colored by brownbluegreen diverging gradient (blue for low feature values, green for high). Circles sized 30-150px by absolute SHAP magnitude. Points jittered vertically to reduce overlap. Legend on right showing "Feature Value" continuous color scale.
+      Legibility verdict: PASS - All text sizes explicitly set; no overlap; excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with subtle warmth
+      Chrome: Title "shap-summary · altair · anyplot.ai" in light text (28px, #F0EFE8), X-axis labeled "SHAP Value" (22px, #F0EFE8), Y-axis feature labels (18px, #B8B7B0). All text is light and clearly readable against dark background. Dashed reference line at x=0 in soft gray (INK_SOFT).
+      Data: Scatter points show identical brownbluegreen colors to light render (blue to green gradient unchanged). Circles sized identically. Legend background elevated-dark (#242420) with light text.
+      Legibility verdict: PASS - No dark-on-dark failures; data colors identical to light render; proper theme-adaptive chrome flipping; all elements readable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text clearly readable at full size, appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Jittering effectively prevents point overlap within rows
+        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px); perfectly
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Feature names, axis labels, and points all clearly spaced; jittering
+          prevents overlap
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points well-sized for 300 samples, good alpha, though some clustering
-          at zero for less important features
+        comment: Point size (30-150) and opacity (0.3-0.7) well-adapted to 300 samples
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue-orange diverging scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, though slight empty space on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has descriptive label with context "SHAP Value (Impact on
-          Model Output)"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: brownbluegreen is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px with 60-70% data utilization and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle but legend could be better positioned; the legend
-          is somewhat isolated on the right
+        comment: X-axis descriptive, features on Y-axis, title correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: brownbluegreen correct for diverging data; backgrounds and chrome
+          properly themed; data colors identical between renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional layer composition and thoughtful brownbluegreen choice;
+          zero line adds insight
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid at 0.10 opacity, careful stroke widths, generous whitespace,
+          legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Feature ordering tells importance story; color gradient shows direction;
+          size/opacity create hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct SHAP summary plot with beeswarm-style visualization
+        comment: Correct SHAP summary scatter plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: SHAP values on X, features on Y, color mapped to feature values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: sorted by importance, diverging colors,
-          zero line, jittering'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: ordering, colors, zero line, labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct SHAP values on X, features on Y, color by feature value
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows feature value mapping
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "shap-summary · altair · pyplots.ai"'
+        comment: Title and legend both correct format
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying importances and feature effects well, though the pattern
-          is somewhat uniform across features
+        comment: 10 features with realistic importances, full distributions shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Credit/financial model context with plausible features (Account Age,
-          Credit Score, Debt Ratio)
+        comment: Financial ML scenario with neutral, comprehensible feature names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: SHAP values in reasonable range, though all features normalized to
-          0-1 is slightly artificial
+        comment: 300 samples, plausible SHAP magnitudes, normalized feature values
     code_quality:
       score: 10
       max: 10
@@ -171,40 +173,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: 'Linear structure: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Pythonic, appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format (plot-{THEME}.png + .html)
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of transform_calculate for jittering, layered chart composition,
-          but could leverage more Altair-specific features like interactive selection
+        comment: 'Expert Altair patterns: layer composition, transform_calculate,
+          .interactive()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Altair-specific yOffset jittering and multi-dimensional encoding
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - grid-styling
