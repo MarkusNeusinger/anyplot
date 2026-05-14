@@ -1,0 +1,241 @@
+library: plotly
+language: python
+specification_id: map-tilegrid
+created: '2026-05-14T14:11:39Z'
+updated: '2026-05-14T14:28:31Z'
+generated_by: claude-sonnet
+workflow_run: 25864455393
+issue: 5246
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/plotly/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Brightness-adaptive tile labels prevent legibility failures across the full viridis
+    range
+  - Both themes correctly implemented with all INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens
+    applied throughout
+  - Informative subtitle communicates the key geographic pattern directly
+  - Viridis colorscale is the correct choice for neutral sequential renewable energy
+    data
+  - Clean tile gaps (xgap=3, ygap=3) provide visual separation without losing geographic
+    grouping
+  weaknesses:
+  - 'DE-01 MINOR: Colorbar title uses HTML <br> break creating 2-line label; a rotated
+    single-line label would be more polished'
+  - 'VQ-01 MINOR: Tile annotation font at 18px is sufficient but 20px would improve
+    readability at full 4800px resolution for densely packed NE Atlantic states'
+  - 'DE-02 MINOR: Framed colorbar with ELEVATED_BG slightly mismatches the flat overall
+    design'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - CORRECT
+      Chrome: Title "US Renewable Energy Share · map-tilegrid · plotly · anyplot.ai" in dark ink at 28px - clearly readable. Subtitle in INK_SOFT at 18px - readable. Colorbar title "Renewable Energy (%)" and tick labels in dark ink - readable.
+      Data: 51 state tiles in viridis gradient (dark purple ~0% to bright yellow ~85%). White tile labels on dark tiles, INK_SOFT (#4A4A44) on bright tiles above 62% threshold. First tile series is continuous viridis - correct for sequential data.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - CORRECT
+      Chrome: Title and subtitle in light #F0EFE8 - clearly readable. Colorbar labels in INK_SOFT (#B8B7B0) - readable. No dark-on-dark issues detected.
+      Data: Tile colors are identical to light render - viridis gradient unchanged, confirming only chrome flips between themes. Tile labels on bright tiles use #B8B7B0 which remains readable against bright viridis yellows.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title 28px, subtitle 18px, colorbar title 20px, tile labels 18px
+          all render clearly; minor: tile labels on bright viridis tiles in dark mode
+          at #B8B7B0 slightly lower contrast but readable'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tile gap of 3px prevents any bleed; no label collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 51 tiles visible; viridis gradient creates excellent differentiation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 scale=3 landscape, generous margins, colorbar well-placed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled Renewable Energy (%) with units; descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Sequential viridis correct for continuous unipolar data; backgrounds
+          #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional appearance with brightness-adaptive tile labels, clean
+          colorbar styling; above default but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes fully hidden, tile gaps create separation, yaxis autorange reversed
+          for north-up layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle states key insight about Pacific Northwest vs Southeast;
+          geographic arrangement enables spatial pattern recognition
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct tile grid map with equal-area tiles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Equal-sized tiles, sequential colormap, region labels, colorbar all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Grid positions correctly approximate US geography; values mapped
+          to viridis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains map-tilegrid · plotly · anyplot.ai; colorbar present
+          and labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 50 states + DC (51 regions), full value range 5-82%
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US renewable electricity share - real-world neutral dataset with
+          regionally realistic values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 5-82% with seeded jitter; calibrated to real-world ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, numpy, plotly.graph_objects - all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean dict-based data structure, single list comprehension for annotations
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Heatmap with xgap/ygap for tile separation, hovertemplate for
+          custom tooltips, colorbar dict configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive hover tooltips with state name and value, HTML export
+          preserves full interactivity, hoverlabel styled with theme tokens
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
