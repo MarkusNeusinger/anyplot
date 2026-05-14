@@ -1,170 +1,172 @@
 library: plotly
+language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:54:51Z'
-updated: '2025-12-31T00:01:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608460845
+updated: '2026-05-14T01:17:24Z'
+generated_by: claude-haiku
+workflow_run: 25835454662
 issue: 2855
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - regression
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of LOWESS algorithm from scratch with proper tricube
-    weighting
-  - Clear visual distinction between scatter points (blue, transparent) and LOWESS
-    curve (yellow, solid line)
-  - Perfect title format and professional plotly_white template
-  - Good font sizes throughout ensuring readability at 4800x2700 resolution
-  - Well-chosen smoothing fraction (0.3) that captures the trend without overfitting
+  - Excellent theme adaptation with both light and dark renders fully readable
+  - Clean and reproducible code with deterministic seed
+  - Proper typography scaling for 4800×2700 pixel canvas
+  - Effective two-layer composition with good color contrast
+  - Thoughtful marker styling with opacity and white edges
   weaknesses:
-  - Axis labels lack units or more descriptive context (e.g., could use domain-specific
-    labels)
-  - Manual LOWESS implementation is educational but verbose; could leverage statsmodels
-    for production code
-  image_description: 'The plot displays a scatter plot with LOWESS regression on a
-    white background with a subtle grid. The title "scatter-regression-lowess · plotly
-    · pyplots.ai" is centered at the top in dark gray text. Blue scatter points (Python
-    Blue #306998) with moderate transparency (opacity 0.6) show a complex non-linear
-    relationship - relatively flat from x=0 to x=4, then curving upward steeply from
-    x=5 to x=10. A smooth yellow/gold LOWESS curve (Python Yellow #FFD43B) with width
-    4 overlays the data, clearly showing the underlying trend. The legend is positioned
-    in the upper-left corner with "Data Points" and "LOWESS Curve" entries on a semi-transparent
-    white background. X-axis is labeled "X Value" (0-10), Y-axis is labeled "Y Value"
-    (-5 to 20). The layout uses a clean plotly_white template with light gray gridlines.'
+  - 'Code-image mismatch: rendered images contain annotation boxes not present in
+    plotly.py code, breaking reproducibility'
+  - Design excellence is competent but not exceptional - lacks distinctive visual
+    flourishes beyond defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white - CORRECT
+      Chrome: Title (28px, dark #1A1A17), axis labels (22px, dark), tick labels (18px, INK_SOFT) all clearly readable against light background
+      Data: Green scatter markers (#009E73) with white edges, opacity 0.6; orange LOWESS curve (#D55E00) width 4px; both clearly distinguishable
+      Legend: Upper left with elevated background (#FFFDF6), border, two series properly labeled
+      Annotations: Two text boxes visible ("Linear Response" at lower left, "Saturation Region" at upper right) - NOT in code
+      Legibility verdict: PASS - all elements readable, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black - CORRECT
+      Chrome: Title (light #F0EFE8), axis labels (light), tick labels (INK_SOFT #B8B7B0) all clearly readable against dark background
+      Data: Green scatter markers (#009E73) identical to light render, orange curve (#D55E00) identical to light - PASS color consistency check
+      Legend: Upper left with dark elevated background (#242420), light borders, same two series
+      Annotations: Same text boxes styled for dark theme - NOT in code
+      Grid: Subtle rgba(240,239,232,0.10) grid visible on dark surface
+      Legibility verdict: PASS - no dark-on-dark failures, brand green visible and distinct
+
+    Both renders pass theme-readability check. Data colors are identical between themes (only chrome adapts). However, code-image mismatch exists: annotations in images are not in provided implementation code.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick fonts at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All text explicitly sized (28/22/18px), fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Opacity 0.6 avoids occlusion, LOWESS curve distinct
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized (size=10), good alpha (0.6) for 200 points; LOWESS
-          line clearly visible with width=4
+        comment: Markers (11px) and curve (4px) prominent at large resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and Yellow (#FFD43B) have excellent contrast and are
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, good use of 16:9 aspect
-          ratio
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels "X Value" and "Y Value" but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid with rgba(0,0,0,0.1), legend well-placed in upper-left
-          with semi-transparent background
+        comment: Okabe-Ito palette ensures CVD safety, green/orange contrast strong
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct, X/Y labels include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, backgrounds correct, both
+          themes proper'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom legend styling, two-layer composition, competent but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid and layout, standard Plotly polish without pushing further
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good narrative (saturation curve) but annotations in images not in
+          code - reproducibility issue
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with LOWESS regression curve
+        comment: Correct scatter + regression curve
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped on respective axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: LOWESS curve distinct from points (solid
-          yellow line vs blue markers), moderate smoothing (frac=0.3), moderate transparency
-          on points (0.6), descriptive title mentioning LOWESS'
-      - id: SC-04
-        name: Data Range
+        comment: LOWESS distinct, transparency 0.6, frac=0.35
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points without cutoff
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X substrate, Y enzyme activity, axes correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Data Points" and "LOWESS Curve"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "scatter-regression-lowess · plotly · pyplots.ai"
+        comment: Title format correct, two-series legend proper
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent: shows complex non-linear relationship with varying patterns
-          across x-range (flat region, then steep curve), demonstrating why LOWESS
-          is valuable'
+        comment: Enzyme kinetics, 150 points, realistic complexity
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Generic but plausible mathematical/scientific scenario; could benefit
-          from a real-world context
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Sensible values, good spread showing the non-linear relationship
+        comment: Biological domain plausible, scientifically sound
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for domain (0.1-50 µM, 0-100 V/V_max)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +174,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → LOWESS calculation → plot → save'
+        comment: No unnecessary functions, direct flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used, both necessary
+        comment: Only necessary imports, no unused
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: false
-        comment: Saves as plot.png ✓ (already counted)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/html, current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Figure, go.Scatter with proper marker/line styling, interactive
-          HTML export; however, implements LOWESS manually instead of using statsmodels.api.nonparametric.lowess
-          which would be more idiomatic for Python
+        comment: go.Figure, add_trace, update_layout correct; theme tokens proper
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive HTML, custom legend, standard but competent usage
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
