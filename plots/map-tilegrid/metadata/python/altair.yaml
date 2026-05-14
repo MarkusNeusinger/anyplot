@@ -1,0 +1,229 @@
+library: altair
+language: python
+specification_id: map-tilegrid
+created: '2026-05-14T14:13:09Z'
+updated: '2026-05-14T14:19:22Z'
+generated_by: claude-sonnet
+workflow_run: 25864454457
+issue: 5246
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Data-driven tile label contrast (alt.condition) works correctly across both themes
+  - Theme-adaptive chrome correctly implemented with all five token variables (PAGE_BG,
+    ELEVATED_BG, INK, INK_SOFT)
+  - Viridis colormap and canvas dimensions (4800x2700) comply with style guide
+  - 'Full spec coverage: all 51 regions, colorbar, tooltips, HTML output'
+  - alt.layer(tiles, labels) composition is clean, idiomatic, and readable
+  weaknesses:
+  - 'Design Excellence could improve: no storytelling element or annotation to guide
+    viewer toward key geographic insight (Northeast/Northwest high, Southeast low)'
+  - No focal point annotation for standout states (VT 82%, ME 79%, SD 81%) to create
+    visual emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "US Renewable Energy Share · map-tilegrid · altair · anyplot.ai" in dark #1A1A17 ink at 28px, clearly readable; no axis labels (axis=None, correct for tile map); colorbar labeled "Renewables %" with title at 18px and tick labels at 16px in #4A4A44 — all readable
+      Data: Viridis colormap from dark purple (low ~3%) to bright yellow (high ~82%); state abbreviations in bold 22px with data-driven contrast (#1A1A17 on bright tiles >50%, #F0EFE8 on dark tiles); 51 regions all visible; colorbar gradient clearly shows value range 0-80%
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in #F0EFE8 near-white text, clearly readable against dark background; legend box uses #242420 elevated background with #B8B7B0 soft labels and #F0EFE8 title — all readable; no dark-on-dark failures observed
+      Data: Viridis tile colors identical to light render — dark purple through teal/blue to bright yellow-green; data-driven tile label contrast continues to work correctly (light text on dark tiles, dark text on bright yellow tiles) since contrast is relative to tile color not page background
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 28px, tile labels 22px bold, legend title 18px, labels 16px
+          — all explicitly set, readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 2-3 char state abbreviations fit cleanly in tiles; no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles are large and clearly visible; full viridis range used
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is CVD-safe; data-driven text contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout; inherent empty areas in US tile grid topology are unavoidable
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed (tile map); colorbar labeled; descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis for sequential continuous data; correct backgrounds; all
+          chrome theme-adaptive
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above well-configured defaults; intentional viridis choice; data-driven
+          label contrast; professional layout; not yet FiveThirtyEight level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden (correct), paddingInner=0.04 tile gaps, legend well-positioned;
+          limited further refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Geographic pattern visible through color; no annotation or focal
+          point guiding viewer to key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct tile grid map with equal-sized square tiles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Tiles colored by value, state abbreviations, colorbar, row/col grid
+          positions
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: col->X, row->Y, value->color; all 51 regions rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar labeled Renewables %
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 50 states + DC; full value range 3%-82%
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US renewable energy share — real, neutral, non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Directionally correct: VT/ME/SD high, DC/MS/AL low'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports->data->chart->save; no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, altair, pandas — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: alt.layer(), alt.condition(), ordinal paddingInner — idiomatic Altair
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of layer composition, condition encoding, ordinal scale
+          padding
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.layer(), alt.condition(), ordinal paddingInner, interactive HTML
+          tooltips — distinctively Altair
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
