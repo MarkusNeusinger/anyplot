@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:55:23Z'
-updated: '2026-05-14T22:48:21Z'
+updated: '2026-05-14T22:57:26Z'
 generated_by: claude-haiku
 workflow_run: 25889764984
 issue: 2992
@@ -12,102 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/altair/plot-dark.html
-quality_score: 79
+quality_score: 89
 review:
   strengths:
-  - Correct four-component time series decomposition with clear visual separation
-  - Proper use of Okabe-Ito palette with semantically meaningful colors for each component
-  - Clean, well-organized faceted design with balanced spacing and good light-mode
-    readability
-  - Idiomatic Altair code using faceting correctly for multi-series visualization
-  - Realistic, neutral example data with clear trend and seasonal patterns
+  - Perfect theme adaptation with no dark-on-dark or light-on-light text failures
+    in both renders
+  - Excellent faceting structure with clear visual hierarchy guiding interpretation
+    of decomposition components
+  - Proper Okabe-Ito color discipline with theme-independent data colors staying constant
+    across light/dark renders
+  - Reproducible, straightforward code with appropriate seed and clean imports
+  - All four decomposition components clearly visible, distinguishable, and properly
+    labeled
+  - Professional presentation with proper typography hierarchy and generous whitespace
   weaknesses:
-  - 'Critical: Title is unreadable in dark render — theme token INK not producing
-    sufficient contrast. Title appears as faint gray instead of bright #F0EFE8.'
-  - 'No Y-axis labels (minor: acceptable for faceted plots but could improve clarity)'
-  - Design lacks visual hierarchy or emphasis to guide viewer to key insights
+  - Design Excellence could be elevated with additional visual refinement such as
+    spine removal, more sophisticated grid patterns, or enhanced visual emphasis on
+    specific components
+  - Library Mastery underutilizes altair-specific interactive features; could benefit
+    from cross-facet linking, selection highlighting, or synchronized interactions
+    between decomposition components
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and matches spec
-      Chrome: Title, axis labels, facet headers all clearly visible in dark text
-      Data: Four colors from Okabe-Ito palette (green Original, orange Trend, blue Seasonal, reddish-purple Residual)
-      Grid: Subtle at opacity 0.12, aids reading without competing with data
-      Legibility verdict: PASS — all text easily readable
+      Background: Warm off-white (#FAF8F1) - correctly themed for light mode
+      Chrome: Title "timeseries-decomposition · altair · anyplot.ai" in dark text (INK #1A1A17); facet headers (Original, Trend, Seasonal, Residual) in dark text; axis labels and tick marks in secondary text color (INK_SOFT #4A4A44); all clearly readable against light background
+      Data: Four line series using Okabe-Ito palette - Original (#009E73), Trend (#D55E00), Seasonal (#0072B2), Residual (#CC79A7); thick lines (2.5 stroke width) clearly distinguish each component; grid lines subtle with appropriate opacity (0.12)
+      Legibility verdict: PASS - All text is readable; no light-on-light failures; data is clearly distinguishable; layout is clean with proper spacing
 
     Dark render (plot-dark.png):
-      Background: Very dark, intended to be #1A1A17 but appears nearly pure black
-      Chrome: CRITICAL FAILURE — Title "timeseries-decomposition · altair · anyplot.ai" is barely visible, appears as extremely faint gray text with severe contrast failure. Axis labels and facet headers are readable with light colors.
-      Data: Colors appear identical to light render (green, orange, blue, reddish-purple) — correct color preservation across themes
-      Legibility verdict: FAIL — Title is unreadable due to insufficient contrast in dark mode. This is a theme-adaptation failure for the primary attribution element.
+      Background: Warm near-black (#1A1A17) - correctly themed for dark mode
+      Chrome: Title and facet headers in light text (INK #F0EFE8); axis labels and tick marks in secondary light text (INK_SOFT #B8B7B0); all clearly readable against dark background; no dark-on-dark text failures
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7) - confirming theme-independent data colors; same thick lines and clear component distinction; grid lines remain subtle and visible
+      Legibility verdict: PASS - All text is light-colored and readable; no dark-on-dark failures; data colors unchanged; theme adaptation is flawless; layout matches light render exactly
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Title unreadable in dark render — critical failure
+        passed: true
+        comment: All text sizes explicitly set; title (28px), axis labels (22px),
+          tick labels (18px), facet headers (22px); fully readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Date labels properly angled (-45°); no collisions; component labels
+          clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line thickness optimal for data density
+        comment: Line thickness (2.5) ensures visibility; all four components clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette is colorblind-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced facet layout with generous spacing
+        comment: Proportions well-balanced; facet spacing (20px) provides generous
+          whitespace; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct
+        comment: Title descriptive with brand format; Date axis labeled; y-axis unlabeled
+          (appropriate for faceted structure)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors correct but theme-chrome fails with unreadable title
+        passed: true
+        comment: 'First series is #009E73; follows Okabe-Ito positions 1→4; backgrounds
+          correct (#FAF8F1 light / #1A1A17 dark); both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults, not exceptional
+        passed: true
+        comment: Intentional use of Okabe-Ito palette; proper faceting structure;
+          clean visual hierarchy through component stacking; professional presentation
+          with thoughtful layout and font sizing
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Some refinement (grid opacity) but minimal customization
+        passed: true
+        comment: Subtle grid (opacity 0.12); proper facet spacing; whitespace management
+          appropriate; could benefit from additional visual refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        passed: true
+        comment: Visual progression guides viewer from Original → Trend → Seasonal
+          → Residual; hierarchical presentation creates narrative; clear focal point
+          for each component
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct four-panel decomposition
+        comment: Correct four-panel decomposition structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All components present
+        comment: 'All components present: Original, Trend, Seasonal, Residual; shared
+          x-axis; component labels; grid lines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned
+        comment: 'X-axis: Date (shared); Y-axis: Values (independent scale per component
+          via resolve_scale); all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format and labels correct
+        comment: Title formatted as spec (timeseries-decomposition · altair · anyplot.ai);
+          legend omitted (facet headers serve as labels)
     data_quality:
       score: 15
       max: 15
@@ -145,19 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All decomposition aspects shown
+        comment: Shows all four decomposition aspects; complete time series structure
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic airline passengers scenario
+        comment: Airline passengers is classic, realistic domain; monthly frequency
+          appropriate; clear trend and seasonality present; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually sound values and proportions
+        comment: Values realistic (50-200 passengers); trend growth sensible (100→180);
+          seasonal component proportional (~30); residuals small
     code_quality:
       score: 10
       max: 10
@@ -167,33 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure
+        comment: No unnecessary functions; straightforward implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: Seed set (np.random.seed(42))
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'Only necessary imports: altair, numpy, pandas, statsmodels'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code
+        comment: No fake UI; appropriate complexity for time series decomposition
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: 'Correct format: saves as plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -201,20 +222,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper Altair idioms with faceting
+        comment: High-level API usage; proper facet() for small multiples; Scale and
+          Axis configurations follow altair best practices; interactive() enables
+          zoom/pan
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: Uses faceting and interactive, but basic usage
-  verdict: REJECTED
+        passed: true
+        comment: Faceting is well-executed and distinctive to altair; interactive()
+          provides value; implementation is solid but could explore additional interactive
+          capabilities beyond basic pan/zoom
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - statsmodels
   techniques:
   - faceting
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
+  - wide-to-long
+  dataprep:
+  - time-series
   styling: []
