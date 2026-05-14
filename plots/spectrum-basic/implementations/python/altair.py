@@ -1,7 +1,7 @@
 """ anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 65/100 | Updated: 2026-05-14
+Quality: 70/100 | Updated: 2026-05-14
 """
 
 import altair as alt

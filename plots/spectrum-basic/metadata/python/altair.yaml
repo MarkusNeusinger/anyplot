@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:35:59Z'
-updated: '2026-05-14T09:24:41Z'
+updated: '2026-05-14T09:30:33Z'
 generated_by: claude-haiku
 workflow_run: 25852192839
 issue: 2926
@@ -12,48 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/altair/plot-dark.html
-quality_score: 65
+quality_score: 70
 review:
   strengths:
-  - Clear frequency domain visualization showing dominant peaks at 50 Hz, 120 Hz,
-    and 200 Hz
-  - Good data quality with realistic signal processing example (sampling rate, duration,
-    multiple frequency components)
-  - Readable text at all scales with explicitly set font sizes (title 28px, labels
-    22px, ticks 18px)
-  - 'Correct spec compliance: proper axis labels with units, correct title format'
+  - Clear, readable visualization in both light and dark themes
+  - Correct FFT computation with realistic signal components (50 Hz dominant, 120
+    Hz harmonic, 200 Hz weak)
+  - Appropriate frequency/amplitude scale for signal analysis
+  - Descriptive axis labels with units (Hz and dB)
+  - Clean, reproducible code structure with seed for determinism
   weaknesses:
-  - 'VQ-07 CRITICAL: Color is #306998 (Python blue) instead of brand #009E73 (Okabe-Ito
-    green) - must fix color mapping'
-  - 'VQ-07 CRITICAL: No theme-adaptive chrome implementation - missing ANYPLOT_THEME
-    environment variable handling'
-  - 'VQ-07 CRITICAL: Grid color hardcoded (#cccccc) not theme-aware - dark render
-    has wrong grid contrast'
-  - 'VQ-07 CRITICAL: Background color not explicitly set (no #FAF8F1 light / #1A1A17
-    dark) - violates style guide'
-  - 'DE-01 LOW: Generic styling with default colors and hardcoded hex values instead
-    of design intent'
-  - 'DE-02 LOW: Minimal visual refinement - no spine removal, grid styling appears
-    default'
-  - 'CQ-05: Output files don''t include theme suffix - should save plot-light.png
-    and plot-dark.png, not plot.png'
-  - 'LM-02 LOW: Uses only basic altair features (tooltips, basic encoding) - no distinctive
-    library capabilities'
+  - 'Output filename API violation (CQ-05): saves as plot.png instead of plot-{THEME}.png'
+  - 'Color hardcoded as #306998 (Python Blue) instead of Okabe-Ito brand #009E73 (VQ-07)'
+  - 'No theme-adaptive chrome: missing ANYPLOT_THEME env var handling and theme tokens
+    (VQ-07)'
+  - 'Title contains typo: ''pyplots.ai'' instead of ''anyplot.ai'' (SC-04)'
+  - Generic design with no aesthetic sophistication or visual hierarchy (DE-01, DE-03)
   image_description: |-
     Light render (plot-light.png):
-      Background: Off-white/light gray (appears close to #FAF8F1 specification)
-      Chrome: Title "spectrum-basic · altair · pyplots.ai" clearly visible in dark text; X-axis "Frequency (Hz)" and Y-axis "Amplitude (dB)" labels with tick marks in dark text; grid lines visible in light gray
-      Data: Single line plot rendered in teal/cyan color showing frequency spectrum with three clear peaks around 50 Hz, 120 Hz, and 200 Hz; lower amplitude regions show noise floor around -40 to -50 dB
-      Legibility verdict: PASS - All elements are readable with good contrast
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels (Frequency (Hz), Amplitude (dB)), tick labels all in dark text, clearly readable
+      Data: Line chart in teal/cyan color showing clear peaks at ~50 Hz (dominant), ~120 Hz (secondary), ~200 Hz (weak), noise floor ~-40 dB
+      Grid: Subtle gray grid lines visible and appropriately styled
+      Legibility verdict: PASS - all elements readable, no dark-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Dark gray/near-black (appears close to #1A1A17 specification)
-      Chrome: Title visible in light text; axis labels and tick labels appear in light text; grid lines visible with appropriate opacity for dark background
-      Data: Same teal/cyan color as light render (correctly identical) showing the same frequency spectrum peaks and noise characteristics
-      Legibility verdict: PASS - Despite missing explicit theme-color implementation in code, Altair's default dark styling makes both renders readable. However, the implementation does NOT explicitly set theme-aware colors as required by style guide
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels now in light text against dark background, properly adapted for dark theme
+      Data: Line color remains same teal/cyan as light render (correct - data colors theme-independent)
+      Grid: Grid lines adapted for dark theme with appropriate opacity
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, proper theme adaptation visible
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -61,8 +52,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis titles 22px, tick
-          labels 18px - all readable in both themes'
+        comment: All text explicitly sized (labelFontSize=18, titleFontSize=22/28)
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -74,35 +65,36 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Line clearly visible throughout both renders with appropriate strokeWidth=2
+        comment: Data line clearly visible with optimal sizing for frequency spectrum
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between line and both light and dark backgrounds
+        comment: Teal line is CVD-safe and has good contrast against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins, nothing cut off
+        comment: Perfect layout with balanced margins, plot fills appropriate canvas
+          area
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Hz for frequency, dB for amplitude)
+        comment: 'Descriptive labels with units: ''Frequency (Hz)'' and ''Amplitude
+          (dB)'''
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'FAILED: Color #306998 (Python blue) instead of #009E73 (Okabe-Ito
-          brand). No theme-adaptive chrome. Grid color hardcoded. Background not theme-aware.
-          Both renders lack proper theme color implementation.'
+        comment: 'FAIL: Color hardcoded as #306998 instead of brand #009E73; no theme-adaptive
+          chrome via environment variables; hardcoded gridColor #cccccc'
     design_excellence:
-      score: 7
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -110,24 +102,23 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic styling with hardcoded Python blue - no design thought or
-          custom palette
+        comment: Generic defaults with hardcoded color, no design intent or custom
+          palette
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization - grid styling appears default, no spine removal
-          or special refinement
+        comment: Minimal customization beyond library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Data tells a clear story with visible frequency components, good
-          data choice showing realistic signal processing scenario
+        passed: false
+        comment: Displays data but doesn't emphasize dominant peak or create visual
+          hierarchy
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -135,31 +126,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency spectrum plot (line chart showing frequency vs
-          amplitude in dB)
+        comment: Correct frequency spectrum line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: frequency axis (0-300 Hz), amplitude axis
-          (dB scale), frequency components visible'
+        comment: Shows FFT output with multiple frequency components
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps frequency, Y-axis correctly maps amplitude
-          in dB, all data visible
+        comment: Frequency on X-axis, Amplitude on Y-axis, axes display full data
+          range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: 'Title format correct: ''spectrum-basic · altair · pyplots.ai'' (note:
-          should be anyplot.ai not pyplots.ai but this is minor)'
+        passed: false
+        comment: 'FAIL: Title has typo ''pyplots.ai'' instead of ''anyplot.ai''; no
+          legend needed for single series'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -167,24 +156,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple frequency components, noise floor, realistic
-          FFT output'
+        comment: 'Shows all aspects of frequency spectrum: dominant peaks, harmonics,
+          weak components, noise floor'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real signal processing scenario with realistic parameters (1000 Hz
-          sampling, 1 second duration, multiple frequency components)
+        comment: Realistic audio signal with multiple frequency components and noise
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'Values are factually correct for FFT: frequency 0-300 Hz appropriate
-          for 1000 Hz sampling rate, dB scale appropriate for signal processing'
+        comment: Sensible ranges (0-300 Hz, -80 to 10 dB) though could show broader
+          frequency range
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -192,35 +180,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data generation → FFT processing → chart
-          creation → save, no unnecessary functions'
+        comment: 'Direct code: imports → data → FFT → chart → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation
+        comment: Has np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports altair, numpy, pandas - all used
+        comment: 'Only used imports: altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, Pythonic code with no over-engineering or fake functionality
+        comment: Clean code but hardcoded colors reduce reusability
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as PNG and HTML with current API, but doesn't handle theme
-          suffix (should be plot-light.png/plot-dark.png)
+        passed: false
+        comment: 'FAIL: Saves as ''plot.png'' and ''plot.html'' instead of ''plot-{THEME}.png''
+          format'
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -228,19 +215,19 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct altair API usage (Chart, mark_line, encode, properties, configure_*)
-          but missing theme adaptation patterns
+        comment: Correct Altair syntax but doesn't use proper color/theme system
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Uses only basic features (tooltips, basic encoding) - no distinctive
-          altair capabilities or advanced patterns
+        comment: Generic usage - could be any library; no Altair-specific features
+          like selection, filtering, interactivity
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
   dataprep: []
