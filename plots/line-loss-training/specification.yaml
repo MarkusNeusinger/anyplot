@@ -6,7 +6,7 @@ title: Training Loss Curve
 
 # Specification tracking
 created: 2025-12-30T23:43:50Z
-updated: 2025-12-30T23:43:50Z
+updated: 2026-05-14T05:24:17Z
 issue: 2860
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - curve
   data_type:
     - numeric
     - timeseries
