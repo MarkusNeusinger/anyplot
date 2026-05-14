@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-14
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,14 +18,23 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
 # Data - Generate a synthetic audio signal with multiple frequency components
 np.random.seed(42)
-sample_rate = 8192  # Hz
-duration = 1.0  # seconds
+sample_rate = 8192
+duration = 1.0
 n_samples = int(sample_rate * duration)
 t = np.linspace(0, duration, n_samples, endpoint=False)
 
-# Create composite signal: 440 Hz (A4 note), 880 Hz (A5 harmonic), 1320 Hz (E6), plus noise
+# Create composite signal: 440 Hz (A4), 880 Hz (A5), 1320 Hz (E6), plus noise
 signal = (
     1.0 * np.sin(2 * np.pi * 440 * t)
     + 0.5 * np.sin(2 * np.pi * 880 * t)
@@ -37,20 +47,20 @@ fft_result = np.fft.rfft(signal)
 frequencies = np.fft.rfftfreq(n_samples, 1 / sample_rate)
 amplitude = np.abs(fft_result) / n_samples
 
-# Convert to dB scale (with floor to avoid log(0))
+# Convert to dB scale
 amplitude_db = 20 * np.log10(np.maximum(amplitude, 1e-10))
 
-# Normalize to reasonable range and take subset for display (0-2000 Hz)
+# Take subset for display (0-2000 Hz)
 freq_mask = frequencies <= 2000
 frequencies = frequencies[freq_mask]
 amplitude_db = amplitude_db[freq_mask]
 
-# Downsample for smoother rendering (every 4th point)
+# Downsample for smoother rendering
 step = 4
 frequencies = frequencies[::step]
 amplitude_db = amplitude_db[::step]
 
-# Prepare data for Highcharts (list of [x, y] pairs)
+# Prepare data for Highcharts
 data_points = [[float(f), float(a)] for f, a in zip(frequencies, amplitude_db, strict=True)]
 
 # Create Chart
@@ -62,7 +72,7 @@ chart.options.chart = {
     "type": "areaspline",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "marginLeft": 220,
     "marginRight": 120,
@@ -71,52 +81,41 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "spectrum-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
-}
-
-# Subtitle
-chart.options.subtitle = {
-    "text": "Audio Signal Analysis: 440 Hz Fundamental + Harmonics",
-    "style": {"fontSize": "32px"},
+    "text": "spectrum-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
 
 # X-axis (Frequency)
 chart.options.x_axis = {
-    "title": {"text": "Frequency (Hz)", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Frequency (Hz)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "max": 2000,
-    "tickInterval": 200,
+    "tickInterval": 400,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
-    "lineWidth": 2,
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Y-axis (Amplitude in dB)
 chart.options.y_axis = {
-    "title": {"text": "Amplitude (dB)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Amplitude (dB)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "tickInterval": 20,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
-    "lineWidth": 2,
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Plot options
 chart.options.plot_options = {
-    "areaspline": {"fillOpacity": 0.3, "lineWidth": 4, "marker": {"enabled": False}, "threshold": None}
+    "areaspline": {"fillOpacity": 0.3, "lineWidth": 3, "marker": {"enabled": False}, "threshold": None}
 }
 
 # Legend
-chart.options.legend = {
-    "enabled": True,
-    "itemStyle": {"fontSize": "28px"},
-    "align": "right",
-    "verticalAlign": "top",
-    "layout": "vertical",
-    "x": -40,
-    "y": 80,
-}
+chart.options.legend = {"enabled": False}
 
 # Credits
 chart.options.credits = {"enabled": False}
@@ -125,18 +124,27 @@ chart.options.credits = {"enabled": False}
 series = AreaSplineSeries()
 series.data = data_points
 series.name = "Power Spectrum"
-series.color = "#306998"
+series.color = BRAND
 series.fill_color = {
     "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-    "stops": [[0, "rgba(48, 105, 152, 0.4)"], [1, "rgba(48, 105, 152, 0.05)"]],
+    "stops": [[0, "rgba(0, 158, 115, 0.4)"], [1, "rgba(0, 158, 115, 0.05)"]],
 }
 
 chart.add_series(series)
 
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+urls = ["https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js", "https://code.highcharts.com/highcharts.js"]
+highcharts_js = None
+for url in urls:
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            highcharts_js = response.read().decode("utf-8")
+            break
+    except Exception:
+        continue
+
+if not highcharts_js:
+    highcharts_js = "/* Highcharts JS not available */"
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -146,13 +154,17 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -167,11 +179,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
