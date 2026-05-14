@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:57:24Z'
-updated: '2026-05-14T22:01:40Z'
+updated: '2026-05-14T22:10:01Z'
 generated_by: claude-sonnet
 workflow_run: 25885868581
 issue: 5247
@@ -12,98 +12,87 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Correct bipartite two-column layout with researchers left and papers right, cleanly
-    separated
-  - 'Proper Okabe-Ito palette: #009E73 circles for researchers, #D55E00 squares for
-    papers — reinforced by column headers in matching colors'
-  - Node size encodes degree, creating visual hierarchy and highlighting hubs at a
-    glance
-  - 'Full theme-adaptive chrome: backgrounds, text, legend frame, edge colors all
-    flip correctly between light and dark'
-  - Correct title format and informative legend with distinct marker shapes per set
-  - Clean flat script with seed, all imports used, no fake UI elements
+  - 'Perfect spec compliance: bipartite layout with color-by-membership, degree-encoded
+    node sizing, clean straight edges, and labels positioned outside nodes'
+  - 'Fully theme-adaptive chrome — correct backgrounds (#FAF8F1 / #1A1A17), INK/INK_SOFT
+    text tokens, and legend frame colors both pass visual inspection'
+  - 'Excellent data quality: realistic and diverse ML/AI bibliometrics dataset with
+    plausible hub structure'
+  - Clean flat code structure with all required outputs and correct title format (network-bipartite
+    · matplotlib · anyplot.ai)
   weaknesses:
-  - Node label fontsize=14 and legend fontsize=14 are below the recommended 16pt minimum
-    for secondary text at 4800×2700px — increase to 16pt
-  - Edge alpha=0.18 is very faint; slightly higher alpha (0.25–0.30) would improve
-    readability without adding clutter
-  - Column headers use fontsize=18 but axis-label-equivalent text should be 20pt per
-    style guide
-  - Design excellence is functional but lacks a focal point — could highlight top-degree
-    nodes (hubs) with a stronger size or color accent to guide the viewer
-  - No visual hierarchy emphasis beyond uniform size encoding — consider slightly
-    larger base node size and stronger degree scaling
+  - Node labels (14pt) and legend font (14pt) are below the 16pt minimum guideline
+    — raise all ax.text node label fontsize and ax.legend fontsize to 16
+  - 'No storytelling focal point: most-connected hubs are only implicitly signaled
+    via node size; no additional visual emphasis distinguishes them from average nodes'
+  - Library mastery is mostly generic — core approach (scatter + plot on normalized
+    coordinates) is replicable in any library; no use of matplotlib-specific advanced
+    capability such as FancyArrowPatch for curved edges or patheffects
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "network-bipartite · matplotlib · anyplot.ai" in dark ink, fully readable. Column headers "Researchers" (#009E73) and "Papers" (#D55E00) clear and bold. Node labels in INK_SOFT (#4A4A44) at fontsize=14 — readable but slightly small for the canvas. Legend text in INK_SOFT, readable.
-      Data: Researchers = green (#009E73) circles (left column), Papers = orange (#D55E00) squares (right column). Edges are thin gray lines at alpha=0.18 — visible but quite faint. Node sizes vary by degree, creating subtle hub highlighting.
-      Legibility verdict: PASS — all text readable, no light-on-light failures. Minor note: font sizes (14pt labels, 14pt legend) are slightly below recommended 16pt minimum.
+      Chrome: Title "network-bipartite · matplotlib · anyplot.ai" in dark INK (#1A1A17) at top — readable. Column headers "Researchers" (#009E73) and "Papers" (#D55E00) in color, bold, 18pt — readable. Node labels (researcher names and paper titles) in INK_SOFT (#4A4A44) at 14pt — readable. Legend text in INK_SOFT with FFFDF6 frame — readable.
+      Data: Researcher nodes as green (#009E73) circles; paper nodes as orange (#D55E00) squares. Edges in INK_SOFT at alpha=0.18. Node sizes vary by degree.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8), clearly readable. Column headers retain their Okabe-Ito colors (#009E73 and #D55E00), both highly visible against the dark background. Node labels rendered in INK_SOFT (#B8B7B0, the dark-theme value) — light gray text clearly readable against near-black. Legend frame uses ELEVATED_BG (#242420), legend text in INK_SOFT, fully readable. No dark-on-dark failures detected.
-      Data: Data colors (#009E73 circles, #D55E00 squares) are identical to the light render — only chrome flips. Edge alpha=0.18 results in very faint gray lines on the dark background, slightly less visible than in light mode.
-      Legibility verdict: PASS — all text readable. The dark render correctly adapts all chrome tokens with no dark-on-dark failures. Edges are even fainter in dark mode due to the low alpha.
+      Chrome: Title in light INK (#F0EFE8) — readable. Column headers in brand green and vermillion (identical to light) — readable. Node labels in INK_SOFT (#B8B7B0) — readable against dark surface. Legend text in #B8B7B0 with #242420 elevated frame — readable. No dark-on-dark failures detected.
+      Data: Node fill colors (#009E73 green circles, #D55E00 orange squares) are identical to light render — only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Title 24pt OK; column headers 18pt (should be 20pt); node labels
-          14pt and legend 14pt are below the recommended 16pt minimum for this canvas
-          size. Both themes readable.
+        comment: Sizes explicitly set; title 24pt and headers 18pt are good, but node
+          labels (14pt) and legend (14pt) below 16pt minimum
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Labels well-spaced on both sides; edges are thin and don''t obscure
-          text. Minor concern: dense label area on the right (18 papers) is tight
-          but readable.'
+        comment: All labels cleanly separated; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes clearly visible with appropriate sizes. Edges at alpha=0.18
-          are very faint — slightly too low, especially in the dark render.
+        comment: Nodes clearly visible with degree-encoded size variation; edges subtle
+          but legible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2 used. CVD-safe. Adequate contrast in
-          both themes.
+        comment: Okabe-Ito positions 1 and 2 are CVD-safe; good luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas used effectively. Labels have adequate margin on both
-          sides. Nothing cut off. Good proportions.
+        comment: Bipartite layout fills 16:9 canvas well; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows 'spec-id · library · anyplot.ai' format exactly. Column
-          headers serve as clear set labels.
+        comment: Descriptive column headers; correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Researchers = #009E73 (brand green, first series). Papers = #D55E00
-          (Okabe-Ito pos 2). Light bg = #FAF8F1, Dark bg = #1A1A17. Both renders theme-correct.'
+        comment: 'First series #009E73, second #D55E00; correct backgrounds; full
+          theme-adaptive chrome'
     design_excellence:
       score: 12
       max: 20
@@ -113,25 +102,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: different marker shapes (circle vs square) reinforce
-          bipartite structure; column headers use node colors; degree encoding adds
-          information. Lacks stronger hub emphasis or focal point.'
+        comment: 'Above default: degree-encoded node sizing, colored column headers,
+          clean intentional two-tone palette'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: ax.axis('off') for clean network look; page-bg edgecolors on markers
-          for definition; no unnecessary elements. Edge alpha could be slightly higher
-          for better visibility.
+        comment: Axes fully hidden, edges alpha=0.18, node edge highlighting with
+          PAGE_BG
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Node size encoding creates mild visual hierarchy. No strong focal
-          point or emphasis technique to highlight key hubs. The viewer must discover
-          patterns without guidance.
+        passed: false
+        comment: Node sizing communicates hub structure but no focal point or emphasis
+          on most-connected nodes
     spec_compliance:
       score: 15
       max: 15
@@ -141,55 +127,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network with two-column layout, nodes from separate
-          sets, edges only between sets.
+        comment: Correct bipartite network with two separated node sets in columns
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Separate columns, color by set membership, node size encodes degree,
-          legible labels, straight edges — all present.
+        comment: Columns separated, nodes colored by membership, size encodes degree,
+          labels outside nodes, straight edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Researchers left, papers right, edges correctly map each researcher
-          to their papers. Degree computed correctly.
+        comment: Researchers left, papers right, edges correctly connect authors to
+          publications
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact. Legend explains circle=researcher (size=no. of papers),
-          square=paper (size=no. of authors), line=authorship link.
+        comment: Correct title format; descriptive legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows both node sets, degree-scaled sizes, two distinct marker shapes,
-          edge structure. Missing: no weight encoding (spec says optional), and hub/peripheral
-          contrast could be stronger.'
+        comment: Hub researchers, peripheral nodes, varied degree distribution — fully
+          representative
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: AI/ML researcher-paper affiliation network. Diverse international
-          author names, legitimate research topics. Neutral and realistic.
+        comment: Real ML/AI bibliometrics scenario with diverse researcher names and
+          plausible paper titles
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 researchers, 18 papers, 43 edges — within spec range (10-50 per
-          set, 20-200 edges). Degrees range plausibly from 1-5.
+        comment: 12 researchers, 18 papers, 43 edges — within spec range with realistic
+          degree distribution
     code_quality:
       score: 10
       max: 10
@@ -199,36 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, sequential top-to-bottom.
+        comment: Flat script with clear sections; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present (though data is hardcoded, seed is good
-          practice).
+        comment: np.random.seed(42) set; data is hardcoded so fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, matplotlib.lines.Line2D — all used.
+        comment: os, matplotlib.pyplot, numpy, matplotlib.lines.Line2D — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI, appropriate use of scatter with marker='s' for
-          squares. Degree computation is clear.
+        comment: Clean, Pythonic; no over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
-          No bare plot.png.
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -236,15 +216,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Axes methods throughout (ax.scatter, ax.plot, ax.text). Line2D
-          for custom legend handles is idiomatic matplotlib.
+        comment: Uses ax.scatter with differing markers, Line2D for custom legend
+          handles, plt.setp for batch styling
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: marker='s' for square nodes, custom Line2D legend handles, ax.axis('off')
-          for network layout — shows good matplotlib knowledge beyond basics.
+        passed: false
+        comment: Line2D for mixed-type legend is distinctive; core scatter+plot on
+          normalized coordinates is generic and replicable in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -252,7 +232,9 @@ impl_tags:
   - custom-legend
   - annotations
   patterns:
+  - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
