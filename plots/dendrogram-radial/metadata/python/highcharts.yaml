@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: dendrogram-radial
 created: '2026-05-14T09:19:06Z'
-updated: '2026-05-14T09:24:25Z'
+updated: '2026-05-14T09:39:20Z'
 generated_by: claude-sonnet
 workflow_run: 25851246559
 issue: 5245
@@ -12,117 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/highcharts/plot-dark.html
-quality_score: 77
+quality_score: 82
 review:
   strengths:
-  - Correct radial dendrogram topology with root-centered layout and distance-proportional
-    branch lengths
-  - 'Perfect Okabe-Ito palette with #009E73 as Cluster A; theme-adaptive chrome works
-    correctly in both light and dark renders'
-  - Neutral cross-cluster branches using INK_SOFT create clear visual hierarchy between
-    intra-cluster and inter-cluster merges
-  - Geometrically correct arc generation at constant radius for horizontal dendrogram
-    connectors
-  - Clean reproducible code with seed set and correct output artifacts (PNG + HTML
-    for both themes)
+  - Sophisticated radial dendrogram constructed from scratch using polar-to-Cartesian
+    math — no native dendrogram chart type required
+  - Correct Okabe-Ito palette in canonical order with full theme-adaptive chrome (background,
+    text, legend all flip correctly between light/dark)
+  - Arc interpolation between dendrogram branches produces authentic curved dendrogram
+    appearance
+  - Spec compliance is perfect — all required features present (hierarchical clustering,
+    color-coded clusters, leaf nodes at circumference, proportional branch lengths)
+  - Neutral cross-cluster color (INK_SOFT) correctly adapts per theme
   weaknesses:
-  - 'Missing leaf labels: gene_labels array (Gene01-Gene40) is defined but never rendered
-    around the circumference; spec explicitly requires leaf node names - add dataLabels
-    to the leaf scatter series with rotation set per leaf angle'
-  - Title font size 26px is below the 28px recommendation for pixel-based libraries;
-    increase to 28px
-  - Without leaf labels the plot cannot communicate which gene belongs to which cluster,
-    significantly weakening data storytelling
+  - Title font size is 26px — slightly below the 28px recommendation for pixel-based
+    libraries at 3600x3600
+  - Leaf labels around circumference are small and could be slightly larger for better
+    readability
+  - Right margin (340px) for legend creates minor canvas asymmetry
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - PASS
-      Chrome: Title "Gene Expression Clustering · dendrogram-radial · highcharts · anyplot.ai" in dark #1A1A17 at 26px; legend items in #4A4A44 at 22px; all readable against light background
-      Data: Five cluster branches in Okabe-Ito order - Cluster A #009E73 (top-right), Cluster B #D55E00 (right), Cluster C #0072B2 (bottom), Cluster D #CC79A7 (left), Cluster E #E69F00 (top-left); cross-cluster branches in neutral #4A4A44; 40 colored dot markers at leaf positions; NO leaf text labels rendered
-      Legibility verdict: PASS (all chrome text readable; leaf labels missing but not a legibility failure)
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Gene Expression Clustering · dendrogram-radial · highcharts · anyplot.ai" visible at 26px (slightly below 28px spec); legend text in INK_SOFT (#4A4A44) — readable; gene labels in small grey text around circumference — readable
+      Data: Five Okabe-Ito clusters — green (#009E73 Cluster A), orange-red (#D55E00 Cluster B), blue (#0072B2 Cluster C), pink (#CC79A7 Cluster D), gold (#E69F00 Cluster E); cross-cluster branches in neutral grey; leaf dots color-coded at outer ring
+      Legibility verdict: PASS — all text readable; leaf labels small but visible
 
     Dark render (plot-dark.png):
-      Background: Near-black warm #1A1A17 - PASS
-      Chrome: Title in light #F0EFE8, readable against dark background; legend items in #B8B7B0; cross-cluster branches in #B8B7B0 (light on dark - correct); legend box uses #242420 elevated background; no dark-on-dark failures observed
-      Data: Cluster colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00); cross-cluster branches now light gray instead of dark gray; leaf dot markers identical colors; NO leaf text labels
-      Legibility verdict: PASS (theme adaptation correct; no dark-on-dark issues; leaf labels absent in both renders)
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and legend text appear in light #F0EFE8 tone; gene labels appear in light grey (#B8B7B0 INK_SOFT dark); cross-cluster branches appear light grey/white on dark background — all readable; no dark-on-dark failures
+      Data: Identical cluster colors to light render — all five Okabe-Ito positions unchanged; leaf dots same colors
+      Legibility verdict: PASS — all text readable on dark background; no dark-on-dark issues detected
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Font sizes explicitly set; title 26px below 28px recommendation;
-          legend 22px is good
+        comment: Title at 26px (below 28px spec); leaf labels small but readable;
+          legend at 22px is good
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Labels well-distributed radially; some tightness at bottom cluster
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; clean branch rendering
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Leaf dots (radius 14) and branches (lineWidth 3) clearly visible;
-          minor: center branches slightly thin'
+        comment: 'Branch lines (lineWidth: 3) and leaf dots (radius: 14) clearly visible
+          at 3600x3600'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, adequate contrast
+        comment: Okabe-Ito palette; CVD-safe; adequate luminance contrast between
+          clusters
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Radial plot fills most of square canvas; right margin well-used for
-          legend
+        comment: Good canvas use; right margin 340px for legend creates slight asymmetry
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes appropriate for radial dendrogram; title is descriptive
+        comment: Title follows spec-id · library · anyplot.ai pattern; axes hidden
+          appropriately
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First cluster #009E73; Okabe-Ito order maintained; backgrounds correct;
-          chrome theme-adaptive in both renders'
+        comment: 'First cluster #009E73; Okabe-Ito sequence; backgrounds #FAF8F1/#1A1A17;
+          both themes chrome-correct'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Competent with clean theme chrome; missing leaf labels creates visual
-          gap preventing publication-ready status
+        passed: true
+        comment: Sophisticated custom radial construction; intentional cluster color
+          hierarchy; above-defaults design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes or grid (appropriate); legend has border and padding; clean
-          margins
+        comment: Axes fully hidden; no grid; legend well-styled with border, padding,
+          and themed colors
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color-coded clusters create groupings; neutral cross-cluster branches
-          establish hierarchy; absent leaf labels prevent identifying individual genes
+        passed: true
+        comment: Five-cluster color scheme communicates groupings immediately; radial
+          layout shows hierarchical distance
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,54 +128,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial dendrogram with root at center, distance-proportional
-          branches, circular leaf layout
+        comment: Correct radial dendrogram with root at center, leaves at circumference
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Branch coloring and distance-proportional lengths correct; leaf labels
-          around circumference missing - gene names defined but never rendered
+        passed: true
+        comment: Hierarchical clustering, circular layout, proportional branch lengths,
+          color-coded clusters, leaf nodes at outer ring
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Linkage distances correctly mapped to radial distances; cluster assignments
-          correct
+        comment: Radial distance encodes merge distance correctly; leaves equally
+          spaced angularly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains dendrogram-radial · highcharts · anyplot.ai; legend
-          shows all 5 clusters with correct colors
+        comment: Title contains spec-id · highcharts · anyplot.ai; legend labels Clusters
+          A-E with matching colors
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows hierarchical structure, cluster separation, distance proportionality;
-          missing leaf labels reduce labeled-node coverage
+        comment: Shows hierarchical structure at multiple levels; varying branch lengths;
+          cross-cluster connections; colored leaves
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Gene expression clustering is real scientific use case; Gene01-Gene40
-          naming is generic but domain-appropriate
+        comment: Gene expression clustering is realistic biological application; Gene01-Gene40
+          labels are somewhat abstract
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40 leaves in 5 clusters ideal for radial dendrogram; clustering structure
-          looks realistic
+        comment: 40 genes, 5 clusters, Ward linkage — realistic scale for radial dendrogram
     code_quality:
       score: 9
       max: 10
@@ -187,8 +183,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (to_angle_rad, to_radius, p2c, arc_cartesian,
-          etc.); justified by polar-to-Cartesian complexity
+        comment: Helper functions for polar-to-Cartesian transformation are necessary;
+          structure is clear
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,20 +196,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; json, math, os, tempfile, time, urllib.request,
+          pathlib, numpy, scipy, selenium all needed
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; helper functions appropriate for coordinate
-          math
+        comment: Clean and well-structured given inherent complexity of polar coordinate
+          mapping; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; Highcharts
+          11.2.0
     library_mastery:
       score: 6
       max: 10
@@ -223,16 +221,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts JS options directly via JSON dict instead of highcharts_core
-          Python SDK; valid for custom layout
+        comment: Uses raw Highcharts JSON API directly; correct but bypasses highcharts_core
+          Python SDK
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative use of scatter+line series with manual Cartesian polar projection;
-          arc generation for connectors is library-specific
-  verdict: REJECTED
+        comment: Custom polar-to-Cartesian with arc interpolation; null-separated
+          multi-segment line series for branches is Highcharts-specific
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -244,4 +242,5 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - hierarchical-clustering
-  styling: []
+  styling:
+  - minimal-chrome

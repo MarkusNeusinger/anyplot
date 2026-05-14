@@ -1,7 +1,7 @@
 """ anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: highcharts unknown | Python 3.13.13
-Quality: 77/100 | Created: 2026-05-14
+Quality: 82/100 | Created: 2026-05-14
 """
 
 import json
