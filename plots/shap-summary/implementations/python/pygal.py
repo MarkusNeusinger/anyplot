@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 35/100 | Created: 2026-05-14
 """
 
 import os
+import re
 import sys
 
 
@@ -23,7 +24,9 @@ os.chdir(script_dir)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 np.random.seed(42)
 n_samples = 200
@@ -79,6 +82,7 @@ chart = pygal.XY(
     height=2700,
     show_legend=False,
     y_labels=feature_names,
+    show_x_guides=True,
 )
 
 cmap = mpl.colormaps.get_cmap("BrBG")
@@ -103,6 +107,41 @@ for j in range(n_features):
         if points:
             chart.add(f"{feature_names[j]}_band_{band}", points, show_legend=False, color=hex_color)
 
-chart.render_to_png(f"plot-{THEME}.png")
+# Add reference line at x=0 (neutral SHAP value)
+x_min, x_max = shap_values.min(), shap_values.max()
+margin = (x_max - x_min) * 0.05
+chart.add(
+    "Zero Reference",
+    [(0, -0.7), (0, n_features - 0.3)],
+    show_legend=False,
+    stroke_style={"width": 2, "dasharray": "5,5"},
+    color=INK_SOFT,
+)
+
+# Render to SVG string and save HTML
+svg_content = chart.render()
+
+# Post-process SVG for dark theme to fix text colors
+if THEME == "dark":
+    svg_str = svg_content.decode("utf-8") if isinstance(svg_content, bytes) else svg_content
+
+    # Replace/add fill attributes in all text elements with light color
+    # First, replace any existing fill="#..." in text elements
+    svg_str = re.sub(r'(<text\s+[^>]*?)fill="[^"]*"', rf'\1fill="{INK}"', svg_str)
+
+    # For text elements without fill attribute, add one
+    def add_fill_to_text(match):
+        text_tag = match.group(0)
+        if "fill=" not in text_tag:
+            return text_tag[:-1] + f' fill="{INK}">'
+        return text_tag
+
+    svg_str = re.sub(r"<text[^>]*>", add_fill_to_text, svg_str)
+    svg_content = svg_str.encode("utf-8")
+
+# Save HTML
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(svg_content)
+
+# Render to PNG (using pygal's native renderer)
+chart.render_to_png(f"plot-{THEME}.png")
