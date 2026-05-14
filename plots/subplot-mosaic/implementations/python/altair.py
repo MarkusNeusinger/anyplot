@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Updated: 2025-12-31
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-14
 """
 
 import os
