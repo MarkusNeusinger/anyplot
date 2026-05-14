@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:31:28Z'
-updated: '2026-05-14T11:03:13Z'
+updated: '2026-05-14T11:10:07Z'
 generated_by: claude-haiku
 workflow_run: 25856286981
 issue: 2924
@@ -12,43 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and full readability in both
-    light and dark themes
-  - Complete spec compliance with all required features (thresholds, three-category
-    coloring, annotated genes, correct title format)
-  - 'Excellent data quality: realistic differential expression scenario with biologically
-    plausible p-value/fold-change relationships'
-  - Reproducible code with deterministic seed and clean theme-adaptive approach (environment
-    variables for ANYPLOT_THEME)
-  - Both renders pass strict theme-readability checks with no dark-on-dark or light-on-light
-    text failures
+  - Biologically accurate color scheme (blue=down, orange=up, gray=nonsig) following
+    scientific convention
+  - Perfect theme-adaptive chrome with all text colors correctly adjusting between
+    light and dark modes
+  - Professional explicit font sizing (title 24pt, labels 20pt, ticks 16pt) optimized
+    for large canvas
+  - Smart gene annotation with offset placement avoiding text overlap and highlighting
+    key results
+  - Flawless spec compliance - all required features present and correctly implemented
+  - Realistic differential expression data with proper biological relationships
+  - Clean, reproducible code with clear KISS structure
   weaknesses:
-  - 'Palette compliance: Uses domain-specific colors (gray #888888, blue #0072B2,
-    orange #D55E00) instead of enforcing strict Okabe-Ito first-series rule (#009E73).
-    Justified by biological domain context but technically violates VQ-07.'
-  - 'Design excellence: While professional and well-crafted, plot relies on library
-    defaults without distinctive visual refinement or novel aesthetic choices (DE-01:
-    5/8, could add custom palette or visual hierarchy)'
-  - 'Library mastery: Correct matplotlib usage but no distinctive features unique
-    to the library; implementation could translate to other libraries with minor syntax
-    changes (LM-02: 1/5)'
+  - 'VQ-07: Non-significant category uses #888888 instead of canonical #009E73 (though
+    biologically appropriate for volcano plot, violates hard palette rule)'
+  - 'DE-01: Design appears as well-configured default rather than custom sophisticated
+    aesthetic'
+  - 'DE-02/DE-03: Good but not exceptional visual refinement and storytelling - could
+    add more visual hierarchy or emphasis techniques'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "volcano-basic · matplotlib · anyplot.ai" in dark ink (#1A1A17) at 24pt. X-axis "Log₂ Fold Change" and Y-axis "-Log₁₀ (p-value)" in dark ink at 20pt. Tick labels in INK_SOFT (#4A4A44) at 16pt. All text is clearly readable and well-positioned. Legend shows three categories with light background (ELEVATED_BG #FFFDF6) and dark frame (INK_SOFT edges).
-      Data: Gray non-significant points (#888888) dominate center. Blue down-regulated points (#0072B2) cluster left of vertical threshold at x=-1. Orange up-regulated points (#D55E00) cluster right of threshold at x=+1. Horizontal threshold at y=1.3 (-log10(0.05)). Top 5 genes per significant category labeled with dark text at 13pt, positioned with xytext offsets to avoid overlap.
-      Grid: Y-axis grid with alpha=0.12, subtle but visible against light background.
-      Legibility verdict: PASS — All text readable, no overlaps, data markers clear and distinguishable.
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title, axis labels, tick labels are dark (INK color #1A1A17) - all clearly visible against light background
+      Data: Blue down-regulated (#0072B2), orange up-regulated (#D55E00), gray non-significant (#888888) - all colors from Okabe-Ito; top 5 genes labeled with dark text; threshold lines in subtle gray
+      Legibility verdict: PASS - all text is perfectly readable in light theme
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light ink (#F0EFE8) at 24pt, readable. X/Y labels in light ink (#F0EFE8) at 20pt, readable. Tick labels in secondary-text color (#B8B7B0) at 16pt, clearly visible. CRITICAL: No dark-on-dark text failures — all labels contrast properly against near-black background. Legend has dark background (#242420) with light frame edges (INK_SOFT #B8B7B0).
-      Data: Data point colors IDENTICAL to light render — blue (#0072B2), orange (#D55E00), gray (#888888) unchanged. This confirms correct theme-adaptive implementation (only chrome flipped, data colors constant).
-      Grid: Y-axis grid remains subtle (alpha=0.12) and visible on dark surface.
-      Legibility verdict: PASS — All text readable against dark background, no dark-on-dark failures, data colors identical to light render, grid visible.
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Title, axis labels, tick labels are light (INK color #F0EFE8) - all clearly visible against dark background; no dark-on-dark failures
+      Data: Same colors as light render (blue, orange, gray) - data colors are theme-independent as required; threshold lines visible
+      Legibility verdict: PASS - all text is perfectly readable in dark theme; theme adaptation is correct
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,67 +55,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt, annotations 13pt — all explicitly
-          set and readable in both themes
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, axis labels, gene annotations all positioned without conflicts
+        comment: Gene annotations positioned with offsets; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2000 points with adaptive alpha (0.5 gray, 0.8 significant) — density
-          well-handled, markers well-differentiated
+        comment: 2000 points handled with adaptive sizing (120-150px) and alpha; no
+          overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue and orange provide CVD-safe contrast; gray neutral distinct
-          from both
+        comment: Okabe-Ito + gray are colorblind-safe; high contrast between categories
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 @ 4800×2700; plot fills 60-70% with balanced margins, generous
-          whitespace
+        comment: Perfect 16:9 landscape; plot fills 65% with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with notation; standard title format
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Uses domain-specific gray/blue/orange instead of Okabe-Ito-first
-          rule. Justified by spec and biology domain but violates VQ-07 strict requirement.
+        comment: 'Okabe-Ito colors used but first series is #888888 (gray), not #009E73;
+          theme chrome perfect'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Well-configured with domain expertise; professional but uses library
-          defaults without distinctive visual innovation
+        passed: true
+        comment: Professional well-configured default, not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed, y-axis grid only, legend styled properly, generous
-          whitespace — good polish
+        passed: true
+        comment: 'Good refinement visible: custom grid, spine colors, legend styling'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: 'Clear visual hierarchy: gray=noise, blue/orange=significant effects.
-          Thresholds and annotations guide interpretation.'
+        passed: true
+        comment: Good visual hierarchy with color, size, and annotations guiding reader
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct volcano plot with log2-FC vs -log10 p-value
+        comment: Correct volcano plot with all subtypes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: horizontal threshold (1.3), vertical thresholds (±1),
-          three categories, top genes labeled'
+        comment: 'All features present: thresholds, coloring, labeling, transparency'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible with padding
+        comment: X/Y correctly assigned; axes show full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Format correct: ''volcano-basic · matplotlib · anyplot.ai''; legend
-          labels match spec'
+        comment: Correct title format; legend labels match
     data_quality:
       score: 15
       max: 15
@@ -159,22 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 2000 genes; shows all aspects (non-sig, down-reg, up-reg with varying
-          magnitudes)
+        comment: Shows all volcano plot aspects with realistic proportions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Differential expression scenario (real genomics); p-value boosting
-          based on fold-change is biologically plausible
+        comment: Synthetic RNA-seq data; biologically plausible relationships
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Log2-FC: mean 0, range ±6 (realistic); thresholds match standard
-          cutoffs'
+        comment: Fold changes ±6, p-values realistic, standard thresholds
     code_quality:
       score: 10
       max: 10
@@ -184,55 +175,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme → data → plot → save; no functions/classes'
+        comment: Linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all generation deterministic
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: Only three imports, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean annotation loop; no over-engineering or fake UI
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with DPI=300; no deprecated calls
+        comment: Correct plot-{THEME}.png format and API
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct Axes methods and theme-aware approach but uses standard patterns
+        passed: true
+        comment: Expert use of scatter layering, annotate offsets, threshold lines
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No distinctive matplotlib features; implementation uses generic techniques
-    summary:
-      total_score: 86
-      max_score: 100
-      review_stage: 1
-      attempt: 1
-      threshold: 80
-      verdict: APPROVED
-      caps_applied: false
+        passed: true
+        comment: Some distinctive features but mostly standard patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
