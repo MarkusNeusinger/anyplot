@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 55/100 | Updated: 2026-05-14
@@ -25,7 +25,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Okabe-Ito palette for visual distinction of components
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]  # Positions 1-4
 
 # Data - Monthly airline passengers (classic time series dataset)
 np.random.seed(42)
@@ -74,17 +76,18 @@ def create_themed_figure(width, height, title_text, y_label, show_x_axis=False, 
     p.outline_line_color = INK_SOFT
 
     p.title.text_color = INK
-    p.title.text_font_size = "28pt"
+    p.title.text_font_size = "26pt"
+    p.title.text_font_style = "bold"
 
     p.xaxis.axis_label_text_color = INK
     p.yaxis.axis_label_text_color = INK
-    p.xaxis.axis_label_text_font_size = "22pt"
-    p.yaxis.axis_label_text_font_size = "22pt"
+    p.xaxis.axis_label_text_font_size = "20pt"
+    p.yaxis.axis_label_text_font_size = "20pt"
 
     p.xaxis.major_label_text_color = INK_SOFT
     p.yaxis.major_label_text_color = INK_SOFT
-    p.xaxis.major_label_text_font_size = "18pt"
-    p.yaxis.major_label_text_font_size = "18pt"
+    p.xaxis.major_label_text_font_size = "16pt"
+    p.yaxis.major_label_text_font_size = "16pt"
 
     p.xaxis.axis_line_color = INK_SOFT
     p.yaxis.axis_line_color = INK_SOFT
@@ -92,9 +95,9 @@ def create_themed_figure(width, height, title_text, y_label, show_x_axis=False, 
     p.yaxis.major_tick_line_color = INK_SOFT
 
     p.ygrid.grid_line_color = INK
-    p.ygrid.grid_line_alpha = 0.10
+    p.ygrid.grid_line_alpha = 0.12
     p.xgrid.grid_line_color = INK
-    p.xgrid.grid_line_alpha = 0.10
+    p.xgrid.grid_line_alpha = 0.08
 
     p.yaxis.axis_label = y_label
     if not show_x_axis:
@@ -102,29 +105,32 @@ def create_themed_figure(width, height, title_text, y_label, show_x_axis=False, 
     else:
         p.xaxis.axis_label = "Date"
 
-    p.min_border_left = 120
+    p.min_border_left = 100
+    p.min_border_right = 40
+    p.min_border_top = 60
+    p.min_border_bottom = 60
 
     return p
 
 
-# Create subplots with theme-aware styling
+# Create subplots with theme-aware styling and distinct colors
 p1 = create_themed_figure(total_width, panel_height, "Original Series", "Passengers (thousands)")
 source1 = ColumnDataSource(data={"date": dates, "value": original})
-p1.line("date", "value", source=source1, line_width=3, color=BRAND)
+p1.line("date", "value", source=source1, line_width=3, color=OKABE_ITO[0])
 
 p2 = create_themed_figure(total_width, panel_height, "Trend Component", "Trend", x_range=p1.x_range)
 source2 = ColumnDataSource(data={"date": dates, "value": trend_component})
-p2.line("date", "value", source=source2, line_width=3, color=BRAND)
+p2.line("date", "value", source=source2, line_width=3, color=OKABE_ITO[1])
 
 p3 = create_themed_figure(total_width, panel_height, "Seasonal Component", "Seasonal", x_range=p1.x_range)
 source3 = ColumnDataSource(data={"date": dates, "value": seasonal_component})
-p3.line("date", "value", source=source3, line_width=3, color=BRAND)
+p3.line("date", "value", source=source3, line_width=3, color=OKABE_ITO[2])
 
 p4 = create_themed_figure(
     total_width, panel_height, "Residual Component", "Residual", show_x_axis=True, x_range=p1.x_range
 )
 source4 = ColumnDataSource(data={"date": dates, "value": residual_component})
-p4.line("date", "value", source=source4, line_width=3, color=BRAND)
+p4.line("date", "value", source=source4, line_width=3, color=OKABE_ITO[3])
 
 # Combine all panels into vertical layout
 layout = column(p1, p2, p3, p4)
