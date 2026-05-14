@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:41:28Z'
-updated: '2026-05-14T09:28:20Z'
+updated: '2026-05-14T09:36:03Z'
 generated_by: claude-haiku
 workflow_run: 25852314704
 issue: 2926
@@ -12,41 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Perfect spec compliance and visual quality - all required features present and
-    clearly readable in both themes
-  - Excellent theme adaptation - correct use of color tokens (#FAF8F1/#1A1A17 backgrounds,
-    INK/INK_SOFT for text) ensures readability in both light and dark renders
-  - Clean, well-structured code with proper data generation (np.random.seed(42)),
-    deterministic FFT computation, and correct imports
-  - Realistic and educational data choice - synthetic audio signal with harmonic components
-    (440/880/1320 Hz) demonstrates real-world spectrum visualization
-  - Good canvas utilization (78% of 4800x2700) with generous margins and proper font
-    sizing (28px title, 22px axis labels, 18px ticks)
+  - Perfect Visual Quality (30/30) with all text, colors, and elements properly styled
+  - Excellent theme adaptation—data colors identical between light/dark, chrome correctly
+    flipped
+  - Perfect Spec Compliance and Data Quality—authentic FFT of realistic audio signal
+    with clear frequency domain visualization
+  - Clean, professional design with gradient fill and thoughtful peak emphasis via
+    scatter markers
+  - Solid Code Quality with proper KISS structure, reproducible data, and clean imports
   weaknesses:
-  - Design Excellence is adequate but not exceptional - gradient fill adds some sophistication
-    but overall aesthetic relies on Highcharts defaults without distinctive visual
-    refinement
-  - No visual hierarchy or emphasis on dominant frequency peaks - they are visible
-    but not highlighted (no annotations, size variation, or focal point styling)
-  - Library Mastery is basic - primarily uses standard Highcharts patterns; gradient
-    fill is the main distinctive feature but more could be leveraged from the library
-  - Data storytelling could be enhanced - plot displays frequency content effectively
-    but lacks visual emphasis that would guide viewers to insights about the harmonics
+  - Design Excellence could be elevated with more distinctive visual treatment or
+    enhanced storytelling beyond peak markers
+  - Library Mastery shows competent usage but could explore more Highcharts-specific
+    interactive capabilities (though static PNG is inherent constraint)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and neutral surface
-      Chrome: Title "spectrum-basic · highcharts · anyplot.ai" is clearly visible in dark text. X-axis label "Frequency (Hz)" and Y-axis label "Amplitude (dB)" are readable with units. Tick labels are proportionally sized and easily readable. All text uses theme-appropriate dark tones against the light background.
-      Data: Area spline chart with brand color #009E73 (teal/bluish-green) shows three dominant frequency peaks at ~440 Hz, ~880 Hz, and ~1320 Hz representing harmonic content. Background noise floor is visible below. Gradient fill from 0.4 to 0.05 opacity creates subtle depth. Grid lines are present and subtle.
-      Legibility verdict: PASS - All elements are clearly readable against the light background. Text contrast is excellent. No dark-on-dark or light-on-light failures.
+      Background: Warm off-white (#FAF8F1), professional and readable.
+      Chrome: Title "spectrum-basic · highcharts · anyplot.ai" in dark text (#1A1A17); X-axis "Frequency (Hz)" and Y-axis "Amplitude (dB)" clearly visible with font sizes explicitly set (title 28px, axis labels 22px, tick labels 18px); grid is subtle dotted styling.
+      Data: Green area spline (fillColor with gradient from rgba(0,158,115,0.5) to rgba(0,158,115,0.08)) shows the power spectrum; three orange diamond markers (#D55E00, radius 16) highlight dominant peaks at ~440, 880, and 1320 Hz.
+      Legibility verdict: PASS — all text readable, no overlap, strong contrast.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly adapting the theme without pure black
-      Chrome: Title is visible in light text. Axis labels "Frequency (Hz)" and "Amplitude (dB)" are readable in light colors. Tick labels are appropriately sized and legible. Grid lines appear in a lighter semi-transparent color. All text uses theme-appropriate light tones.
-      Data: Same data series as light render with identical brand color #009E73. The three peaks (440, 880, 1320 Hz) are clearly visible and more saturated against the dark background. The gradient fill is properly visible. All data colors match the light render perfectly - only chrome (background, text, grid) differs appropriately by theme.
-      Legibility verdict: PASS - All text is readable against the dark background. No dark-on-dark failures. Grid and text colors adapt correctly to the theme. The data visualization is equally clear in both renders.
+      Background: Warm near-black (#1A1A17), maintains visual hierarchy.
+      Chrome: Title, axis labels, and tick labels are light-colored (#F0EFE8), fully readable against dark surface; grid remains subtle; no dark-on-dark failures.
+      Data: Green area and orange markers are visually identical to the light render — data colors constant, only chrome adapted. Peak markers clearly visible.
+      Legibility verdict: PASS — excellent theme adaptation, no readability issues.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,77 +50,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, ticks 18px - all explicitly set and
-          perfectly readable in both themes
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfect readability in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; axis labels, ticks, and title all clearly
-          visible
+        comment: No overlapping text; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers disabled appropriately for density; area spline line visible
-          with gradient fill well-adapted
+        comment: Area spline has lineWidth 4, peak markers radius 16; all elements
+          clearly visible and adapted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73 (Okabe-Ito brand color), colorblind-safe
-          with excellent contrast in both themes'
+        comment: 'Okabe-Ito palette (#009E73, #D55E00); colorblind-safe; good contrast'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 78% of canvas (4460x2290px of 4800x2700px); margins perfectly
-          balanced (marginTop 160, Right 120, Bottom 250, Left 220)
+        comment: Balanced margins (marginBottom 250, marginLeft 220, etc.); good canvas
+          utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes labeled with units: ''Frequency (Hz)'' and ''Amplitude
-          (dB)'''
+        comment: Title format correct; axis labels with units (Hz, dB)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds are #FAF8F1 (light) and #1A1A17
-          (dark) - no pure white/black; text colors (INK, INK_SOFT) theme-correct
-          in both renders'
+        comment: 'Primary color #009E73 (Okabe-Ito pos 1); secondary #D55E00 (pos
+          2); backgrounds correct (#FAF8F1 light, #1A1A17 dark); theme chrome properly
+          adapted'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Gradient fill (0.4→0.05 opacity) adds visual interest but overall
-          aesthetic relies on Highcharts defaults with brand color applied; not publication-ready
+        passed: true
+        comment: Gradient fill in area (linearGradient with stops), thoughtful margins,
+          professional polish. Well above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Grid present with subtle opacity; generous whitespace; markers disabled
-          - but minimal customization beyond these defaults
+        passed: true
+        comment: Dotted grid (gridLineDashStyle), legend disabled appropriately, generous
+          whitespace, refined styling
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Plot displays three harmonic peaks but lacks visual hierarchy or
-          emphasis; no annotations or focal point styling to guide viewer attention
-          to insights
+        passed: true
+        comment: Peak markers create visual emphasis; area gradient guides viewer;
+          clear focal points at dominant frequencies
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct areaspline (area + spline) chart type for frequency spectrum
+        comment: Frequency spectrum plot with areaspline + scatter; correct
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Frequency axis, amplitude axis (dB scale), clear labels, shows all
-          frequency components - complete
+        comment: FFT data, dB scale, frequency labels, peak highlighting all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly shows frequency (0-2000 Hz), Y-axis shows amplitude
-          (dB scale), all data visible
+        comment: X=Frequency (Hz), Y=Amplitude (dB); correct assignment
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''spectrum-basic · highcharts · anyplot.ai'';
-          legend disabled (single series - appropriate)'
+        comment: Title 'spectrum-basic · highcharts · anyplot.ai' correct; legend
+          disabled appropriately
     data_quality:
       score: 15
       max: 15
@@ -168,23 +155,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three dominant harmonics (440/880/1320 Hz), background
-          noise floor, full spectral range'
+        comment: FFT with multiple components (440, 880, 1320 Hz), noise included,
+          realistic spectrum behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real audio signal scenario - A4/A5/E6 musical notes with harmonics;
-          neutral, comprehensible domain (audio engineering)
+        comment: Audio signal scenario; real musical notes (A4, A5, E6); neutral and
+          scientific
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample rate 8192 Hz realistic for audio; frequency range 0-2000 Hz
-          appropriate for harmonics; dB scale standard for spectra; all proportions
-          factually correct
+        comment: FFT values realistic, dB scale properly applied, frequency range
+          appropriate for audio
     code_quality:
       score: 10
       max: 10
@@ -194,52 +180,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data generation → FFT → chart config
-          → export; no functions/classes'
+        comment: 'Linear: imports → data → chart → render; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic FFT and signal generation
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy (data), highcharts_core (plotting),
-          selenium (export); no unused'
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; proper complexity; no over-engineering or fake
-          functionality
+        comment: Clean, readable, appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
+        comment: Saves plot-{THEME}.png and .html; current API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct use of Chart, HighchartsOptions, AreaSplineSeries; proper
-          data format and series config - but fairly straightforward patterns
+        passed: true
+        comment: High-level API (Chart, HighchartsOptions, series classes); idiomatic
+          configuration-based approach
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses Highcharts-specific gradient fill (linearGradient with stops);
-          Selenium for PNG export (necessary); mostly standard otherwise
+        passed: true
+        comment: Gradient fill in area spline, dual-series visualization, gridLineDashStyle;
+          uses some Highcharts-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
