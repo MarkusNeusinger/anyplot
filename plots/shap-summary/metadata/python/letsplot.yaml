@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: shap-summary
 created: '2025-12-31T05:55:04Z'
-updated: '2026-05-14T13:12:57Z'
+updated: '2026-05-14T13:19:55Z'
 generated_by: claude-haiku
 workflow_run: 25861625882
 issue: 2923
@@ -12,38 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Strong SHAP summary implementation with clear feature importance ordering
-  - Proper theme-adaptive coloring applied consistently across both light and dark
-    renders
-  - 'Excellent data storytelling: vertical line at x=0 clearly separates positive/negative
-    effects'
-  - Realistic medical data generation with realistic SHAP value relationships
-  - Correct output format (PNG + HTML) with proper resolution
+  - Perfect text legibility in both light and dark renders with explicit font sizing
+  - Excellent data storytelling through feature ranking and clear visual hierarchy
+  - Strong specification compliance with all required features correctly implemented
+  - Theme-adaptive color tokens and backgrounds properly applied across both renders
+  - Clean, reproducible code with proper seeding and idiomatic letsplot usage
   weaknesses:
-  - 'Color gradient uses blue-orange (#0072B2 to #D55E00) instead of spec-recommended
-    blue-red diverging scale (e.g., BrBG)'
-  - 'Design Excellence is moderate: spines remain at default, grid is not distinctively
-    styled'
-  - Library Mastery is adequate but doesn't showcase letsplot-specific features beyond
-    standard ggplot2 API
+  - 'DE-02: Spines not explicitly removed (using library defaults instead of custom
+    removal)'
+  - 'DE-01: Design is functional but lacks extraordinary aesthetic sophistication
+    or custom refinements'
+  - 'LM-02: Uses some distinctive features but not at the level of exceptional library
+    mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly themed
-      Chrome: Title "shap-summary · letsplot · anyplot.ai" is clearly readable in dark text. X-axis label "SHAP Value (impact on model output)" is descriptive and visible. Y-axis shows 10 feature names (Glucose Level, Blood Pressure, BMI, etc.), ordered by importance. All text is dark-colored on light background and legible.
-      Data: Scatter points colored with gradient from blue (#0072B2, low feature values) to orange (#D55E00, high feature values). Dashed vertical line at x=0 clearly divides positive and negative SHAP impacts. Points are jittered vertically to reduce overlap. Legend shows "Feature Value" gradient scale.
-      Legibility verdict: PASS - All text elements are clearly readable against the light background. The data visualization is clean and the color gradient is distinct.
+      Background: Warm off-white (#FAF8F1) - correct and professional
+      Chrome: Title "shap-summary · letsplot · anyplot.ai" clearly visible in size-24 dark text; axis labels and tick labels all readable in INK (#1A1A17) and INK_SOFT colors; legend title and scale labels legible
+      Data: 10 features ranked by importance (top to bottom). Points colored in blue-to-red gradient representing feature values. Vertical dashed line at x=0 clearly visible. Point jitter applied to reduce overlap. SHAP value range -2.5 to 3.5 clearly shown.
+      Legibility verdict: PASS - All text and data elements fully readable with good contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly themed
-      Chrome: Title and axis labels are rendered in light text colors (INK tokens), clearly visible against the dark background. X-axis and y-axis labels maintain good contrast. No dark-on-dark failures observed - tick labels use INK_SOFT token appropriate for dark theme.
-      Data: Data colors are identical to light render (blue to orange gradient), confirming consistent data encoding. Dashed line at x=0 remains visible and distinct. Grid lines are subtle but visible. All markers are clearly distinguishable.
-      Legibility verdict: PASS - All text elements are readable with proper theme-adaptive coloring. The dark render is equally effective as the light render. Both renders demonstrate proper theme-independent data color handling and theme-dependent chrome adaptation.
+      Background: Warm near-black (#1A1A17) - correct and matches light render theme
+      Chrome: Title and axis labels rendered in light text (INK #F0EFE8 and INK_SOFT #B8B7B0) - fully readable against dark background. No dark-on-dark failures detected. Grid lines in INK_MUTED color are subtle but visible.
+      Data: Feature colors (blue-to-red gradient) are identical to light render - only theme chrome has flipped. Vertical line at x=0 visible. All 250 points and jitter clearly distinguishable. Color scale legend readable.
+      Legibility verdict: PASS - All text and data elements fully readable with correct theme adaptation and no legibility failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,45 +49,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set and readable in both themes
+        comment: 'All font sizes explicitly set: title 24pt, axis_title 20pt, axis_text
+          16pt. Perfectly readable in both light and dark renders.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor: Y-axis labels could be slightly larger, but no significant
-          overlap'
+        comment: No overlapping text. Feature names spaced vertically. Points have
+          jitter applied for visibility.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and grid visible, jittering reduces overlap effectively
+        comment: Points clearly visible with size=3, alpha=0.7. Vertical line at x=0
+          visible. Adapted well to 250 samples.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue-orange gradient is colorblind-safe and distinct
+        comment: Blue-red diverging colormap from Okabe-Ito positions 3 and 2. Good
+          contrast, CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 4800x2700px resolution, margins appropriate
+        comment: Correct 4800×2700px landscape format. Nothing cut off. Generous margins
+          and balanced layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and axes properly labeled with units and context
+        comment: 'Title format correct. X-axis descriptive with context: ''SHAP Value
+          (impact on model output)''.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Backgrounds correct (#FAF8F1/#1A1A17), but color gradient is blue-orange
-          instead of blue-red per spec
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Text colors theme-adaptive
+          (INK/INK_SOFT). Blue-red diverging scale matches spec requirement for continuous
+          feature values.'
     design_excellence:
       score: 13
       max: 20
@@ -99,19 +103,26 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Professional but uses mostly defaults; could add custom styling
+        comment: Uses theme-adaptive color tokens and professional formatting. Clean
+          design with intentional choices. However, lacks extraordinary polish or
+          unique sophistication beyond spec requirements. Functional rather than exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Spines at default, grid not distinctively styled
+        comment: Vertical grid lines only (good). Grid subtle with INK_MUTED. Point
+          jitter applied. However, spines not explicitly removed - using library defaults
+          rather than custom removal. Moderate refinement.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Clear hierarchy: importance order, x=0 separator, color shows direction'
+        comment: Strong storytelling through feature ranking and positioning. Clear
+          visual hierarchy with importance on y-axis. X-axis at 0 creates reference
+          point. Color gradient conveys feature value distribution. Viewers immediately
+          see which features matter most.
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: SHAP summary plot correctly implemented
+        comment: Correct SHAP summary plot with features on y-axis, SHAP values on
+          x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Importance ordering, diverging color, x=0 line, jitter all present
+        comment: 'All spec requirements met: sorted by importance, blue-red diverging
+          scale, vertical line at x=0, jitter applied.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=SHAP, Y=features, color=feature values - all correct
+        comment: X/Y correctly mapped. Color by normalized feature value. All data
+          visible within axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend properly formatted
+        comment: 'Title follows correct format: ''shap-summary · letsplot · anyplot.ai''.
+          Legend descriptive with colorbar.'
     data_quality:
       score: 15
       max: 15
@@ -149,19 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 features with realistic medical context, top 10 selected
+        comment: 'Shows all aspects: positive effects (Glucose, Blood Pressure), negative
+          effects (Sleep, Exercise), varied magnitudes. Realistic medical feature
+          distributions.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Healthcare outcome prediction with realistic feature distributions
+        comment: 'Healthcare outcome prediction model. Realistic features: BMI, Blood
+          Pressure, Glucose, Cholesterol, etc. Neutral, educational domain.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SHAP ranges appropriate, 250 samples show clear distributions
+        comment: 250 samples appropriate for visualization clarity. SHAP value ranges
+          sensible. Feature normalization to 0-1 for coloring appropriate.
     code_quality:
       score: 10
       max: 10
@@ -171,53 +190,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: 'Direct structure: imports → data generation → plot → save. No unnecessary
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) properly set for deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: 'Only necessary imports: os, numpy, pandas, lets_plot. No unused
+          imports.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, no fake UI
+        comment: Clean, readable, Pythonic code. Appropriate complexity. No fake UI
+          or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html correctly
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html. Current
+          API (LetsPlot 4.9.0).
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Standard ggplot2 style usage, proper aes and scale functions
+        comment: 'Expert use of grammar of graphics: ggplot() + aes() mapping, geom_point(),
+          geom_vline(), scale_color_gradient(). Theme customization with element_rect/element_text/element_line.
+          High-level API used idiomatically.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic letsplot API; doesn't showcase library-specific features
+        comment: 'Uses letsplot-specific features: ggsave() with scale parameter,
+          HTML export, ggsize() for sizing, theme element customization. Some distinctive
+          usage but not exceptional.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -226,3 +252,4 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
+  - custom-colormap
