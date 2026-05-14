@@ -1,15 +1,241 @@
 library: seaborn
+language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:56:16Z'
-updated: '2025-12-31T11:06:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617508029
+updated: '2026-05-14T17:15:20Z'
+generated_by: claude-haiku
+workflow_run: 25873110285
 issue: 3002
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 73
+review:
+  strengths:
+  - Correct plot type and mosaic layout pattern (AAB;CCD;EFG implemented correctly)
+  - Multiple chart types demonstrate spec versatility (line, scatter, bar, histogram,
+    boxplot)
+  - Visual hierarchy through panel sizing (height_ratios) guides viewer attention
+  - Both theme renders are readable with good contrast
+  - Data is realistic and spans multiple business domains (revenue, marketing, sales,
+    performance)
+  - Deterministic random seed ensures reproducibility
+  - Adequate spacing and layout proportions for clarity
+  weaknesses:
+  - 'Palette colors in code use Python defaults (#306998, #FFD43B, #4B8BBE, #FFE873)
+    instead of Okabe-Ito (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442).
+    First series MUST be #009E73 brand green.'
+  - Output filename is plot.png but should be plot-{THEME}.png to support theme-aware
+    rendering pipeline
+  - 'Code missing theme-aware rendering: no os.getenv(ANYPLOT_THEME) check or sns.set_theme()
+    for adaptive chrome (INK, INK_SOFT, PAGE_BG tokens)'
+  - No global palette applied via sns.set_palette(OKABE_ITO). Colors hardcoded per
+    panel instead of using consistent brand palette.
+  - Grid lines somewhat prominent (alpha=0.3, dashed linestyle). Should be 10-15%
+    alpha, solid lines. Top/right spines not removed.
+  - Does not leverage seaborn figure-level API (relplot, catplot). Uses matplotlib
+    subplot_mosaic directly.
+  - 'Code-render discrepancy: rendered output shows correct colors and theming, but
+    code does not implement these features. Code file may be outdated or stale.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "subplot-mosaic · seaborn · anyplot.ai" (large, bold, dark text), all axis labels and tick labels dark and clearly readable
+      Data: Panel A shows teal revenue line, Panel B green scatter points, Panel C bars in green/orange/blue/purple, Panel D histogram in green, Panels E-G small metrics in teal/orange/blue
+      Panel arrangement: 2x3 grid with varying sizes per spec (A spans 2 cols, C spans 2 cols, E/F/G each 1 col)
+      Legibility verdict: PASS - all text readable, no contrast issues, data colors clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Same title visible in light color, all axis labels and tick labels light and clearly readable against dark background - NO dark-on-dark text issues
+      Data: ALL data colors identical to light render - revenue line is teal, scatter points green, bars green/orange/blue/purple, confirms theme-adaptive chrome only
+      Panel arrangement: Same as light render
+      Grid lines: Subtle but visible at ~10% opacity
+      Legibility verdict: PASS - all text readable in light color, no dark-on-dark failures, brand green visible in both renders
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Panel spacing adequate, no overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers, lines, bars clearly visible with appropriate sizing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Code uses custom Python colors #306998, #FFD43B, #4B8BBE, #FFE873
+          instead of Okabe-Ito palette. Not CVD-safe per spec.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure size 4800×2700px correct, proportions good, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive titles with units, main title follows format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'First series is #306998 (Python blue) not #009E73 (brand green).
+          Palette not Okabe-Ito order.'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 3
+        max: 8
+        passed: false
+        comment: Generic styling with hardcoded Python colors, minimal design intent.
+          Height ratios provide some hierarchy but lack polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid prominent (α=0.3, dashed). Spines not removed. Whitespace acceptable
+          but not generous.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy via panel sizes. Multiple chart types tell
+          stories. Layout guides viewer through dashboard.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct subplot_mosaic with AAB;CCD;EFG pattern
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: ASCII-art layout, varying sizes, multiple plot types, complex arrangement
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All subplots map x/y correctly, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct: subplot-mosaic · seaborn · anyplot.ai'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 plot types demonstrated (line, scatter, bar, histogram, line, line,
+          boxplot)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Dashboard context with revenue, marketing, sales, performance metrics
+          is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ranges (revenue 50K+, conversions 100-1000, response times
+          ms)
+    code_quality:
+      score: 6
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions, straightforward panel-by-panel approach
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42), deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports, no unused dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Hardcoded color hex values instead of palette constants. Violates
+          project color standards.
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Saves as plot.png not plot-{THEME}.png. Breaks theme-aware pipeline.
+    library_mastery:
+      score: 2
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses sns functions but missing sns.set_palette(), sns.set_theme(),
+          sns.set_context(). Not idiomatic seaborn.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Only basic seaborn functions. No FacetGrid, relplot, or advanced
+          styling.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,220 +245,4 @@ impl_tags:
   - data-generation
   - explicit-figure
   dataprep: []
-  styling:
-  - grid-styling
-review:
-  strengths:
-  - Excellent implementation of complex mosaic layout demonstrating the ASCII-art
-    style pattern AAB;CCD;EFG
-  - Clear visual hierarchy with larger overview panel at top and smaller metric panels
-    at bottom
-  - Professional color scheme using consistent Python-themed blue/yellow palette
-  - Good use of height_ratios to create visual emphasis on different panels
-  - Clean, readable code following KISS principles
-  - Realistic business dashboard scenario with appropriate data ranges
-  - All seaborn plotting functions used correctly with modern API (hue parameter)
-  weaknesses:
-  - Main title font size (22pt) is slightly below the recommended 24pt for optimal
-    legibility at 4800x2700
-  - Could leverage more seaborn-distinctive features like regression lines, KDE overlays,
-    or statistical annotations
-  - Feature coverage could include additional plot types to better demonstrate mosaic
-    flexibility
-  image_description: 'The plot displays a 7-panel mosaic dashboard layout with the
-    title "subplot-mosaic · seaborn · pyplots.ai" at the top. The layout follows an
-    "AAB;CCD;EFG" pattern:
-
-    - **Panel A (top-left, spanning 2 columns)**: A blue line chart showing "Revenue
-    Trend Overview" from late December 2023 to early April 2024, with revenue ranging
-    from ~50,000 to ~65,000 dollars.
-
-    - **Panel B (top-right)**: A yellow scatter plot titled "Marketing ROI" showing
-    Marketing Spend ($K) vs Conversions with blue-edged circular markers.
-
-    - **Panel C (middle-left, spanning 2 columns)**: A bar chart "Sales by Channel"
-    showing four bars (Online, Retail, Partner, Direct) in blue and yellow colors.
-
-    - **Panel D (middle-right)**: A histogram "Response Times" showing a bimodal distribution
-    of response times in milliseconds.
-
-    - **Panel E (bottom-left)**: A small blue line chart "CPU Usage" showing hourly
-    CPU percentage.
-
-    - **Panel F (bottom-center)**: A small yellow line chart "Memory Usage" showing
-    hourly memory percentage.
-
-    - **Panel G (bottom-right)**: A box plot "Latency" showing latency distribution
-    across four regions (North, South, East, West) with different colored boxes.
-
-    All panels have subtle gray grid lines, clear axis labels with units, and appropriate
-    font sizes.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is readable; title is 22pt (slightly below 24pt ideal),
-          panel titles 14-18pt are good, tick labels appropriately sized
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text anywhere, clean separation between all elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Markers and lines are well-sized for their data density; scatter
-          markers (s=100) appropriate for 50 points; box plots visible
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) palette is colorblind-friendly;
-          some panels could benefit from more color distinction
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent mosaic layout with proper height ratios (1.2, 1, 0.8),
-          panels fill space well
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: All axes have descriptive labels with units (Revenue ($), Sales ($K),
-          Response Time (ms), CPU (%), etc.)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Grids are subtle (alpha=0.3, dashed), no unnecessary legends cluttering
-          the view
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements mosaic subplot layout with varying sizes using
-          matplotlib's subplot_mosaic
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned in all 7 panels
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Multiple plot types (line, scatter, bar, histogram, box), asymmetric
-          layout, clear visual hierarchy
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All axes show complete data ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legends appropriately hidden where not needed (hue used for coloring
-          only)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "subplot-mosaic · seaborn · pyplots.ai" format
-    data_quality:
-      score: 17
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows 6 different plot types demonstrating mosaic flexibility; could
-          include one more type like a heatmap or pie
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Business dashboard scenario is realistic and neutral (revenue, marketing,
-          sales channels, system metrics)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Most values are realistic; revenue ~50-65K, CPU 0-50%, response times
-          25-175ms are plausible
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used (matplotlib.pyplot, numpy, pandas, seaborn)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses modern seaborn API with hue parameter for coloring
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as 'plot.png' but no explicit dpi=300 at 16x9 figsize produces
-          4800x2700px only if matplotlib defaults work
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses seaborn's lineplot, scatterplot, barplot, histplot, and boxplot
-          effectively; however, doesn't leverage seaborn-specific features like regplot,
-          kdeplot, or FacetGrid that would distinguish from pure matplotlib
-  verdict: APPROVED
+  styling: []
