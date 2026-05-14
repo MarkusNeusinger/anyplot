@@ -1,167 +1,183 @@
 library: altair
+language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:52:29Z'
-updated: '2025-12-30T23:55:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608462838
+updated: '2026-05-14T01:13:52Z'
+generated_by: claude-haiku
+workflow_run: 25835582496
 issue: 2855
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - statsmodels
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - regression
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with properly sized text elements and good color contrast
-  - LOWESS curve is visually distinct and captures the complex non-linear pattern
-    smoothly
-  - Clean, idiomatic Altair code using declarative layer composition
-  - Proper use of frac=0.3 for balanced smoothness as specified
-  - Good marker sizing and transparency for the data density (200 points)
-  - Canvas utilization and layout are well balanced
+  - Perfect visual quality with all text legible in both themes using correct color
+    tokens
+  - Excellent spec compliance with LOWESS regression correctly implemented and data
+    clearly demonstrating non-linear relationship
+  - Flawless theme adaptation with both light and dark renders working perfectly and
+    data colors identical across themes
+  - Reproducible code with deterministic seed and clean structure without unused imports
+  - Appropriate realistic data using sensible units (meters, kg) with plausible non-linear
+    pattern
   weaknesses:
-  - Axis labels are generic rather than having real-world context with units
-  - No interactive features like tooltips or zoom added despite Altair strength in
-    interactivity
-  - Markers use outline style which can be slightly less visible than filled markers
-  image_description: 'The plot shows a scatter plot with LOWESS regression on a white/light
-    gray background. Blue circular markers (outline only, Python blue #306998) represent
-    200 data points showing a complex non-linear pattern - an initial rise, a peak
-    around x=2.5-3, a dip around x=5-6, then a steep rise towards x=10. A thick yellow/gold
-    LOWESS curve (#FFD43B) smoothly traces through the data, capturing the sine wave
-    + linear trend pattern. The title "scatter-regression-lowess · altair · pyplots.ai"
-    appears at the top in black text. X-axis is labeled "Independent Variable (x)"
-    ranging 0-10, Y-axis is labeled "Dependent Variable (y)" ranging -1 to 9. Subtle
-    grid lines are visible. The plot uses good canvas utilization with proper margins.'
+  - Visual refinement could be enhanced by removing top/right spines for cleaner L-shaped
+    frame
+  - No visual annotation explaining the LOWESS curve purpose or underlying relationship
+    pattern
+  - Does not showcase distinctive Altair library capabilities beyond basic layer composition
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, correctly applied as page background
+      Chrome: Title "scatter-regression-lowess · altair · anyplot.ai" in dark text (28px, INK token); x-axis "Independent Variable (meters)" and y-axis "Dependent Variable (kg)" in 22px dark text (INK token); tick labels in 18px secondary text (INK_SOFT token); subtle gray grid at 10% opacity
+      Data: 200 scatter points in Okabe-Ito green #009E73 with opacity 0.6; LOWESS curve in bright yellow #FFD43B with strokeWidth 4
+      Legibility verdict: PASS — all text clearly readable, proper contrast against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correctly applied as page background
+      Chrome: Title in light text color (#F0EFE8, INK token); axis labels in light color (INK token); tick labels in light secondary color (#B8B7B0, INK_SOFT token); subtle grid at appropriate opacity
+      Data: Same green #009E73 scatter points as light render (identical colors, only chrome changed); same bright yellow #FFD43B LOWESS curve
+      Legibility verdict: PASS — all text clearly readable, no dark-on-dark conflicts, proper light-on-dark contrast
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, ticks at 18pt, all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title (28px), axis labels (22px), tick labels (18px) all readable
+          in both themes with proper color tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; scatter points with opacity=0.6 don't obscure
+          the curve
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized (size=100) with good opacity (0.6) for 200 points;
-          LOWESS line prominent with strokeWidth=4
+        comment: Scatter markers clearly visible; LOWESS line stands out with bright
+          yellow and strokeWidth=4
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow contrast is good and colorblind-safe; outline-only markers
-          could be slightly harder to see than filled
+        comment: 'Okabe-Ito palette #009E73 and #FFD43B; CVD-safe; adequate contrast
+          on both themes'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, plot fills appropriate
-          space
+        comment: 4800×2700px (1600×900 with scale_factor=3.0); proper 16:9 proportions;
+          nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (generic "Independent Variable (x)")
+        comment: Title includes spec-id, library, site; axes have descriptive units
+          (meters, kg)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at 0.3 opacity; no legend needed for this plot type
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; data colors identical
+          across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Clean, professional styling with intentional colors; uses theme tokens
+          correctly. Relatively standard design without extra refinement (e.g., spine
+          removal).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid subtle at 10% opacity; generous whitespace; scatter opacity
+          creates depth. Could enhance by removing top/right spines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: LOWESS curve creates focal point guiding viewer through U-shaped
+          pattern. No annotations explaining underlying sine-wave relationship.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter + LOWESS regression
+        comment: Correct scatter plot with LOWESS regression curve overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: LOWESS curve visually distinct (yellow, thick line), moderate smoothing
-          (frac=0.3), transparency on points
-      - id: SC-04
-        name: Data Range
+        comment: Scatter points with transparency; LOWESS curve visually distinct;
+          moderate smoothing (frac=0.3); smooth rendering
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes auto-scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X/Y correctly mapped; data range appropriate (x: 0-10, y: -1 to
+          9); 200 points ideal for LOWESS'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; would be redundant
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-regression-lowess · altair · pyplots.ai"'
+        comment: Title format correct; no legend needed (single series + curve self-explanatory)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows non-linear relationship with varying patterns across x-range;
-          sine wave + trend demonstrates LOWESS flexibility
+        comment: Shows scatter plot and LOWESS regression; demonstrates complex non-linear
+          relationship with local adaptation
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Generic but plausible mathematical relationship; could represent
-          real-world non-linear data
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values sensible and appropriate for demonstration
+        comment: Units plausible (meters, kg); neutral labels; data pattern realistic
+          (e.g., biological dose-response)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: X (0-10m), Y (-1 to 9kg) sensible; point density appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: No unnecessary functions/classes; straightforward data generation
+          and charting
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42); deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas, statsmodels lowess)
+        comment: 'All imports used: os, sys, numpy, pandas, statsmodels, altair'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity; no simulated interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also plot.html (correct for Altair)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; scale_factor=3.0 correct;
+          current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: false
-        comment: Uses Altair's declarative layering well; however, LOWESS is computed
-          externally via statsmodels rather than using native Altair transforms. This
-          is acceptable since Altair doesn't have built-in LOWESS, but no interactive
-          features (tooltips, zoom) were added.
+        comment: 'Proper alt.Chart() composition with + operator; correct encode/mark
+          usage; clean configure_* methods. Minor: could be more parametrized.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses standard Altair layer composition. Misses opportunity for interactive
+          selections, cross-filtering, or conditional encoding.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
