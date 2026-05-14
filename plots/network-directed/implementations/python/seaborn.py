@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 network-directed: Directed Network Graph
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-14
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -11,13 +13,35 @@ import pandas as pd
 import seaborn as sns
 
 
-# Set seaborn style
-sns.set_theme(style="white")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for node groups
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 np.random.seed(42)
 
-# Software module dependencies data with improved circular-hierarchical layout
-# Positions organized in concentric layers for better visual balance
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Software module dependencies with hierarchical layout
 modules = {
     "app": {"group": "core", "pos": (0.5, 0.88)},
     "config": {"group": "core", "pos": (0.18, 0.70)},
@@ -32,8 +56,7 @@ modules = {
     "mware": {"group": "services", "pos": (0.68, 0.05)},
 }
 
-# Directed edges with weights (source → target, weight)
-# Weight represents dependency strength/frequency
+# Directed edges with weights
 edges = [
     ("app", "config", 3),
     ("app", "db", 5),
@@ -56,54 +79,52 @@ edges = [
     ("mware", "log", 1),
 ]
 
-# Color palette using seaborn
+# Map groups to Okabe-Ito palette
 groups = ["core", "data", "services", "utils"]
-palette = sns.color_palette(["#306998", "#FFD43B", "#4CAF50", "#E57373"], n_colors=4)
-group_colors = dict(zip(groups, palette, strict=True))
+group_colors = {"core": OKABE_ITO[0], "data": OKABE_ITO[1], "services": OKABE_ITO[2], "utils": OKABE_ITO[3]}
 
-# Prepare node data as DataFrame for seaborn
+# Prepare node data
 node_data = []
 for name, data in modules.items():
     node_data.append({"name": name, "x": data["pos"][0], "y": data["pos"][1], "group": data["group"]})
 nodes_df = pd.DataFrame(node_data)
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Draw all edges with directed arrows - thickness based on weight
+# Draw edges with directed arrows
 for source, target, weight in edges:
     start = modules[source]["pos"]
     end = modules[target]["pos"]
 
-    # Calculate direction for shortening arrows
     dx = end[0] - start[0]
     dy = end[1] - start[1]
     length = np.sqrt(dx**2 + dy**2)
     dx_norm = dx / length if length > 0 else 0
-    dy_norm = dy / length if length > 0 else 0
+    dy_norm = dy / length if length > 0 else 1
 
-    # Shorten to avoid overlapping nodes
+    # Shorten arrows to avoid overlapping nodes
     shrink = 0.055
     start_adj = (start[0] + dx_norm * shrink, start[1] + dy_norm * shrink)
     end_adj = (end[0] - dx_norm * shrink, end[1] - dy_norm * shrink)
 
-    # Line width based on edge weight (1-5 scale to 1.5-4.0 linewidth)
     line_width = 1.0 + weight * 0.6
 
-    # Draw arrow using FancyArrowPatch with weight-based thickness
     arrow = mpatches.FancyArrowPatch(
         start_adj,
         end_adj,
         connectionstyle="arc3,rad=0.1",
         arrowstyle="->,head_length=8,head_width=5",
-        color="#555555",
+        color=INK_SOFT,
         alpha=0.5 + weight * 0.08,
         linewidth=line_width,
         zorder=1,
     )
     ax.add_patch(arrow)
 
-# Draw nodes using seaborn's scatterplot
+# Draw nodes
+palette_list = [group_colors[g] for g in nodes_df["group"]]
 sns.scatterplot(
     data=nodes_df,
     x="x",
@@ -111,35 +132,35 @@ sns.scatterplot(
     hue="group",
     palette=group_colors,
     s=3000,
-    edgecolor="white",
+    edgecolor=PAGE_BG,
     linewidth=3,
     legend=False,
     ax=ax,
     zorder=2,
 )
 
-# Add node labels with larger font size (14-16pt per feedback)
+# Add node labels
 for name, data in modules.items():
+    label_color = PAGE_BG if data["group"] != "data" else INK
     ax.text(
         data["pos"][0],
         data["pos"][1],
         name,
         ha="center",
         va="center",
-        fontsize=14,
+        fontsize=16,
         fontweight="bold",
-        color="white" if data["group"] != "data" else "#333333",
+        color=label_color,
         zorder=3,
     )
 
-# Create legend with edge weight indicator
+# Create legend
 legend_handles = [
-    plt.scatter([], [], c=[group_colors[g]], s=400, label=g.capitalize(), edgecolors="white", linewidths=2)
+    plt.scatter([], [], c=[group_colors[g]], s=400, label=g.capitalize(), edgecolors=PAGE_BG, linewidths=2)
     for g in groups
 ]
-# Add edge weight legend entries
-legend_handles.append(plt.Line2D([0], [0], color="#555555", linewidth=1.6, label="Weak (1)", alpha=0.6))
-legend_handles.append(plt.Line2D([0], [0], color="#555555", linewidth=4.0, label="Strong (5)", alpha=0.9))
+legend_handles.append(plt.Line2D([0], [0], color=INK_SOFT, linewidth=1.6, label="Weak (1)", alpha=0.6))
+legend_handles.append(plt.Line2D([0], [0], color=INK_SOFT, linewidth=4.0, label="Strong (5)", alpha=0.9))
 
 ax.legend(
     handles=legend_handles,
@@ -150,14 +171,15 @@ ax.legend(
     framealpha=0.95,
     markerscale=1.0,
     borderpad=1,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
 
 # Styling
-ax.set_title("network-directed · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+ax.set_title("network-directed · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 ax.set_xlim(-0.02, 1.02)
 ax.set_ylim(-0.08, 1.02)
 ax.axis("off")
-ax.set_facecolor("#fafafa")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
