@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:57:50Z'
-updated: '2026-05-14T17:12:10Z'
+updated: '2026-05-14T17:19:15Z'
 generated_by: claude-haiku
 workflow_run: 25873739130
 issue: 3002
@@ -12,98 +12,86 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/highcharts/plot-dark.html
-quality_score: 62
+quality_score: 75
 review:
   strengths:
-  - Clear mosaic layout with proper panel sizing (2x2 large + 1x2 small + 3x1 wide)
-    demonstrating subplot capability
-  - Data is realistic and appropriately scaled with good variety (time series, categorical,
-    scatter)
-  - Rendered images show correct Okabe-Ito color usage (#009E73 primary, plus positions
-    2-4 for bar chart)
-  - Theme renders show proper chrome adaptation (text colors, grid colors flip between
-    themes while data colors stay consistent)
-  - No text overlaps; excellent readability in both light and dark themes
+  - Correct chart types and mosaic layout properly demonstrated
+  - Okabe-Ito categorical palette correctly applied to data colors
+  - Data is well-chosen and realistic for a business dashboard scenario
+  - No text overlap or visibility issues in light render
+  - Layout makes good use of canvas space with clear panel hierarchy
   weaknesses:
-  - 'CRITICAL: Implementation code hardcodes colors (#306998, #FFD43B, #9467BD, #17BECF
-    for Panel B; #306998 for Panel A) instead of using Okabe-Ito palette dynamically'
-  - 'CRITICAL: Code does not read ANYPLOT_THEME environment variable; no theme-adaptive
-    color logic despite library guide requirement'
-  - 'CRITICAL: Code saves to hardcoded filenames ''plot.png'' and ''plot.html'' instead
-    of ''plot-{THEME}.png'' and ''plot-{THEME}.html'''
-  - 'Code hardcodes text colors (#333333, #555555, #666666) and backgrounds (#ffffff
-    for body, #fafafa for panels) instead of using theme-adaptive tokens (PAGE_BG,
-    INK, INK_SOFT from style guide)'
-  - Code does not follow highcharts library guide pattern (page 79-82) for theme-adaptive
-    rendering with os.getenv('ANYPLOT_THEME') and theme token dictionaries
-  - 'Visual discrepancy: rendered images show correct theme adaptation and Okabe-Ito
-    colors, but code as submitted would not produce this output in isolation'
-  - No distinctive use of Highcharts interactive features beyond basic chart configuration
+  - 'Dark render text legibility failure: axis labels and tick labels are dark-on-dark
+    and hard to read - requires theme-adaptive text color implementation'
+  - 'Missing theme adaptation: code doesn''t read ANYPLOT_THEME environment variable
+    or apply theme-specific colors to chrome elements'
+  - 'Wrong file naming: outputs plot.png instead of plot-{THEME}.png and plot.html
+    instead of plot-{THEME}.html'
+  - 'Non-idiomatic API usage: manually constructs HTML/JavaScript instead of using
+    recommended highcharts_core Python library'
+  - 'Generic design: no visual refinement with default styling lacking custom color
+    palettes, grid customization, or whitespace optimization'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (approximately #FAF8F1) with three subplots in mosaic layout
-      Chrome: Title "subplot-mosaic · highcharts · anyplot.ai" in dark text at top; panel titles "Monthly Sales Trend", "Regional Performance", "Product Price vs Revenue Analysis" in dark text; axis labels and tick labels all in readable dark gray/black on light background
-      Data: Panel A (line chart) shows a teal/green line (#009E73-like color) with circular markers tracking monthly sales; Panel B shows 4 horizontal bars in Okabe-Ito sequence (green, orange, blue, pink) with data labels; Panel C shows scatter points in teal/green. All text is clearly readable against the light background.
-      Legibility verdict: PASS - All text elements readable, no contrast issues
+      Background: Warm off-white (#FAF8F1), correct theme color
+      Chrome: Title "subplot-mosaic · highcharts · anyplot.ai" clearly visible in dark text; panel titles, axis labels with units, and tick labels all readable with dark text on light background
+      Data: Panel A shows teal/cyan line (#009E73) with monthly sales trend; Panel B shows bars in Okabe-Ito colors (teal, orange, blue, magenta) for regional performance; Panel C shows scatter plot with teal markers for price-revenue relationship
+      Legibility verdict: PASS - All text is clearly readable with good contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (approximately #1A1A17) with identical layout to light render
-      Chrome: Title in light-colored text against dark background; panel titles and axis labels in light text; tick labels in light gray, all readable against dark background
-      Data: Same teal/green line color in Panel A, same Okabe-Ito bar colors in Panel B, same teal/green scatter points in Panel C - colors are IDENTICAL to light render, confirming only chrome adapts to theme. Grid lines are light and visible on dark background.
-      Legibility verdict: PASS - All text elements readable, proper theme adaptation of chrome while maintaining data color consistency
+      Background: Warm near-black (#1A1A17), correct theme color
+      Chrome: Title is visible; panel titles visible; BUT axis labels and tick labels appear to be dark gray or near-black colors, creating insufficient contrast on the dark background - "dark-on-dark" failure. Text is difficult to read.
+      Data: All data colors identical to light render - teal line, teal/orange/blue/magenta bars, teal scatter markers are all clearly visible (chrome is dark but data is correctly preserved)
+      Legibility verdict: FAIL - Text legibility issue on axis labels and tick labels due to improper theme adaptation of text colors
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: All text (titles, axis labels, tick labels) clearly readable in both
-          light and dark renders
+        passed: false
+        comment: Readable in light render, but dark render has dark-on-dark failures
+          on axis labels/tick labels. Code doesn't implement theme-adaptive text colors.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements; clean spacing throughout
+        comment: All text elements fully readable with no overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data points, lines, and bars clearly visible and distinguishable
-          from backgrounds
+        comment: Markers, lines, bars appropriately sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses colorblind-safe Okabe-Ito palette; no red-green as sole signal
+        comment: Data colors distinguishable with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; mosaic layout properly demonstrates varying subplot
-          sizes; nothing cut off
+        comment: Three-panel mosaic layout fills canvas well with balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Month, Sales Units, Product Price
-          $, Revenue $); clear panel titles
+        comment: Labels descriptive with units (Sales, Price, Revenue)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Rendered images show first series in #009E73 (Okabe-Ito green);
-          bar chart follows Okabe-Ito sequence (positions 1-4); backgrounds appear
-          theme-correct in renders (though code hardcodes non-compliant values)'
+        passed: false
+        comment: Okabe-Ito colors correct and backgrounds correct, but text colors
+          not properly theme-adapted in dark render
     design_excellence:
       score: 8
       max: 20
@@ -113,21 +101,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults; no custom design touches or intentional aesthetic
-          hierarchy
+        comment: Generic Highcharts defaults without custom styling or intentional
+          design hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; spines not removed; standard Highcharts styling
+        comment: No custom grid styling, no spine removal, minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Three separate plots show different aspects but lack visual hierarchy
-          or focal point
+        comment: Data displayed without visual hierarchy or emphasis to guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +124,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic subplot layout with varying sizes (AAB/AAB/CCC pattern)
+        comment: Correct mosaic layout with line, bar, scatter charts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Mosaic layout with asymmetric sizing, multiple chart types, consistent
-          spacing
+        comment: All panel types and varying sizes demonstrated
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped for each chart type; all data displayed
-          appropriately
+        comment: X/Y correctly assigned, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title includes spec-id, library, and site; each panel titled;
-          legends present
+        comment: Title format correct, legends present
     data_quality:
       score: 15
       max: 15
@@ -168,24 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all aspects of mosaic layout: large dominant panel,
-          smaller secondary panels, full-width bottom panel'
+        comment: 'Shows multiple data types: time series, categorical, scatter'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales trend is realistic; regional performance neutral and
-          business-appropriate; product price/revenue correlation plausible
+        comment: Plausible business dashboard scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All axis ranges sensible; sales 40-85, regions 200-300, prices 10-100,
-          revenue 0-16000
+        comment: Realistic values and proportions
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -193,61 +174,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward code; no unnecessary functions; direct HTML generation
-          pattern
+        comment: Clean imports → data → HTML → screenshot flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); data generation deterministic
+        comment: Seed set for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'Hardcodes colors (#306998, #FFD43B, etc.) instead of Okabe-Ito;
-          hardcodes text colors and backgrounds instead of using theme tokens; violates
-          library guide (page 79-82) pattern for theme-adaptive chrome'
+        comment: Manual HTML construction instead of highcharts_core API
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to 'plot.png' and 'plot.html' instead of 'plot-{THEME}.png'
-          and 'plot-{THEME}.html'; does not use ANYPLOT_THEME environment variable
+        comment: Saves to plot.png instead of plot-{THEME}.png; no ANYPLOT_THEME handling
     library_mastery:
-      score: 4
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses Highcharts configuration correctly but does not follow library
-          guide's theme-adaptive pattern; missing os.getenv('ANYPLOT_THEME') and theme
-          token usage
+        comment: Bypasses highcharts_core library, uses manual HTML/JS instead
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses standard Highcharts features; Selenium screenshot approach is
-          generic; no distinctive use of Highcharts capabilities
+        comment: Generic chart usage without library-specific features
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - html-export
   - subplots
+  - html-export
   patterns:
   - data-generation
   dataprep: []
