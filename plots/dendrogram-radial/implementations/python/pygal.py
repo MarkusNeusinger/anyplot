@@ -1,16 +1,27 @@
-""" anyplot.ai
+"""anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 79/100 | Created: 2026-05-14
 """
 
+import importlib
 import math
 import os
+import sys
 
 import cairosvg
 import numpy as np
 from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.spatial.distance import pdist
+
+
+# Remove current directory from sys.path so loading 'pygal' finds the installed
+# package rather than this script (which is also named pygal.py), then use
+# importlib to avoid E402 import-not-at-top violations for the two pygal lines.
+_thisdir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p not in ("", _thisdir)]
+pygal = importlib.import_module("pygal")
+Style = importlib.import_module("pygal.style").Style
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -19,7 +30,19 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=42,
+    legend_font_size=26,
+    label_font_size=28,
+)
 
 # Data: 24 animal species clustered by ecological traits
 np.random.seed(42)
@@ -199,14 +222,14 @@ for i in range(n):
 lx0, ly0 = 110, 230
 elems.append(
     f'<text x="{lx0}" y="{ly0}" font-family="sans-serif" font-size="30" '
-    f'fill="{INK_SOFT}" font-weight="600">Taxonomic Groups</text>'
+    f'fill="{INK}" font-weight="600">Taxonomic Groups</text>'
 )
 for g in range(6):
     gy = ly0 + 55 + g * 68
     elems.append(f'<circle cx="{lx0 + 16}" cy="{gy}" r="15" fill="{OKABE_ITO[g]}"/>')
     elems.append(
         f'<text x="{lx0 + 44}" y="{gy}" font-family="sans-serif" font-size="26" '
-        f'fill="{INK_SOFT}" dominant-baseline="middle">{group_names[g]}</text>'
+        f'fill="{INK}" dominant-baseline="middle">{group_names[g]}</text>'
     )
 
 # Title
@@ -222,16 +245,30 @@ svg = (
     f'  <rect width="{W}" height="{H}" fill="{PAGE_BG}"/>\n' + "\n".join(f"  {e}" for e in elems) + "\n</svg>\n"
 )
 
-# Save PNG via cairosvg (pygal's PNG backend)
+# PNG via cairosvg (pygal's PNG rendering backend)
 cairosvg.svg2png(bytestring=svg.encode(), write_to=f"plot-{THEME}.png")
 
-# Save HTML with embedded SVG (pygal-style interactive output)
-html = (
-    "<!DOCTYPE html><html>"
-    '<head><meta charset="utf-8">'
-    f"<title>dendrogram-radial · pygal · anyplot.ai</title></head>"
-    f'<body style="margin:0;background:{PAGE_BG}">'
-    f"{svg}</body></html>"
+# Interactive HTML via pygal's XY chart — leaf nodes plotted as interactive scatter
+# with hover tooltips (species name + group); uses pygal's JS rendering pipeline
+xy_chart = pygal.XY(
+    style=custom_style,
+    width=W,
+    height=H,
+    title="dendrogram-radial · pygal · anyplot.ai",
+    show_x_labels=False,
+    show_y_labels=False,
+    dots_size=6,
 )
-with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-    f.write(html)
+
+for g in range(6):
+    group_pts = []
+    for i in range(n):
+        if cluster_ids[i] == g:
+            theta = leaf_angles[i]
+            group_pts.append(
+                {"value": (R * math.cos(theta - math.pi / 2), R * math.sin(theta - math.pi / 2)), "label": species[i]}
+            )
+    xy_chart.add(group_names[g], group_pts)
+
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(xy_chart.render())
