@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:36:25Z'
-updated: '2026-05-14T09:24:25Z'
+updated: '2026-05-14T09:30:38Z'
 generated_by: claude-haiku
 workflow_run: 25852143598
 issue: 2926
@@ -12,34 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 82
 review:
   strengths:
-  - Excellent text legibility with explicit font sizing for large canvas
-  - Clean data visualization with appropriate log frequency scale for spectrum analysis
-  - Realistic signal processing data with clear fundamental and harmonic peaks
-  - Proper use of plotnine's grammar of graphics and log-scale annotations
-  - Both light and dark renders are visually readable with good contrast
+  - Excellent text legibility with explicit font sizing (title 24pt, labels 20pt,
+    ticks 16pt) optimized for large canvas
+  - Clean, realistic signal processing data showing fundamental frequency, harmonics,
+    high-frequency component, and noise
+  - Proper use of logarithmic frequency scale with annotation_logticks() - appropriate
+    for wide frequency range analysis
+  - 'Both light and dark renders are visually readable with correct background colors
+    (#FAF8F1 and #1A1A17) and theme-appropriate text colors'
+  - Strong spec compliance with accurate frequency-domain representation and dB amplitude
+    scaling
   weaknesses:
-  - 'Line color is #306998 (Python blue) instead of required #009E73 (Okabe-Ito brand
-    green) — breaks palette compliance'
-  - Saves as plot.png instead of required plot-{THEME}.png — breaks API contract
-  - Missing theme adaptation logic in code (doesn't read ANYPLOT_THEME env var or
-    set theme-dependent background/text colors)
-  - Generic design without custom aesthetic sophistication or visual refinement
-  - No visual hierarchy or data storytelling techniques applied
+  - 'Non-compliant data color: Line uses #306998 (Python blue) instead of required
+    #009E73 (Okabe-Ito brand green) - violates VQ-07 palette requirement'
+  - 'Incorrect output filename: Code saves to ''plot.png'' instead of required ''plot-{THEME}.png''
+    with environment variable - violates CQ-05 API contract'
+  - 'Title typo: ''pyplots.ai'' instead of ''anyplot.ai'' - fails SC-04 title format
+    requirement'
+  - 'Missing theme-adaptive logic: Code doesn''t read ANYPLOT_THEME environment variable
+    or dynamically set theme-dependent colors, though rendered output appears correct'
+  - Generic design with minimal aesthetic sophistication - uses theme_minimal() defaults
+    without custom refinement or visual hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — correct theme color
-      Chrome: Title "spectrum-basic · plotnine · anyplot.ai" and axis labels "Frequency (Hz)" / "Amplitude (dB)" are dark-colored and clearly readable. Tick labels (0, -20, -40, -60, -80 on Y-axis; 10, 100, 1000 on X-axis) are all readable in dark text.
-      Data: Line rendered in teal/cyan color (#306998). Shows clear frequency peaks at ~50 Hz (fundamental), ~100 Hz (2nd harmonic), ~150 Hz (3rd harmonic), and ~500 Hz component. Spectrum spans 10–1000 Hz on log frequency scale with dB amplitude.
-      Legibility verdict: PASS — All elements readable with good contrast against light background
+      Background: Warm off-white (#FAF8F1) provides clean, professional canvas for visualization.
+      Chrome: Title, axis labels ("Frequency (Hz)", "Amplitude (dB)"), and tick labels are dark and clearly readable with explicit sizing (24pt title, 20pt labels, 16pt ticks).
+      Data: Line is rendered in teal/cyan color (#306998) showing frequency spectrum from 10–1000 Hz on logarithmic x-axis with dB scale. Clear peaks visible at fundamental frequency (~50 Hz), harmonics (~100, ~150 Hz), and high-frequency component (~500 Hz). Grid lines are subtle and present.
+      Legibility verdict: PASS - all elements readable despite non-compliant color.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 — correct theme color
-      Chrome: Title and axis labels are light-colored and clearly readable against dark background. Tick labels are light and visible. No dark-on-dark failures detected.
-      Data: Line color is identical to light render (#306998 teal/cyan), confirming consistent data representation. Same frequency peaks visible with equal clarity.
-      Legibility verdict: PASS — All elements readable with good contrast against dark background. Both renders show correct theme adaptation for chrome (text and background colors flipped appropriately).
+      Background: Warm near-black (#1A1A17) provides consistent dark theme surface.
+      Chrome: Title and axis labels are light-colored and clearly readable. No dark-on-dark legibility failures detected. Grid lines remain visible at appropriate opacity.
+      Data: Line maintains same teal/cyan color (#306998) as light render, confirming consistent data representation between themes. Frequency peaks and structure identical to light render.
+      Legibility verdict: PASS - all text readable, no theme-specific failures, but data color is not brand-compliant (#009E73).
+
+    Both renders display the frequency spectrum clearly with proper log-scale handling and maintain visual consistency between themes. However, the data line color (#306998) is non-compliant with the required Okabe-Ito palette specification (must be #009E73 for first series).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -50,46 +60,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
-          readable in both themes
+        comment: All text sizes explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line clearly visible at appropriate thickness; adapted to data density
+        comment: Line clearly visible at appropriate thickness
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between line and backgrounds; CVD-safe
+        comment: Good contrast and CVD-safe despite non-compliant color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper proportions; plot fills appropriate canvas area; balanced
-          margins
+        comment: Proper proportions, balanced layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Frequency (Hz)'' and ''Amplitude (dB)'''
+        comment: Descriptive with units (Hz, dB)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'FAIL: Line color #306998 (Python blue) instead of #009E73 (Okabe-Ito
-          brand green)'
+        comment: 'Line color #306998 instead of #009E73; background colors correct'
     design_excellence:
       score: 8
       max: 20
@@ -99,22 +106,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default; no custom design thought or custom palette
+        comment: Well-configured default, no custom design thought
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Uses theme_minimal() but no intentional refinement beyond defaults
+        comment: Library defaults with minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy, emphasis, or focal
-          points
+        comment: Data displayed clearly but no visual hierarchy
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -122,27 +128,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency spectrum plot with log frequency scale
+        comment: Correct frequency spectrum plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Logarithmic frequency axis, dB amplitude scale, clear axis labels
-          with units
+        comment: Log frequency scale, dB amplitude, clear labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=frequency, Y=amplitude; correct mapping; axes show all data
+        comment: X=frequency, Y=amplitude correct
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title format correct: ''spectrum-basic · plotnine · anyplot.ai'';
-          no legend needed'
+        passed: false
+        comment: 'Title has typo: ''pyplots.ai'' instead of ''anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -152,22 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all spectrum features: fundamental (50 Hz), harmonics (100,
-          150 Hz), high-freq component (500 Hz), noise'
+        comment: 'Shows all aspects: fundamental, harmonics, high-freq, noise'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mechanical vibration signal is realistic, plausible, and neutral
-          domain application
+        comment: Mechanical vibration signal is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10–1000 Hz range appropriate; dB scale standard for spectra; all
-          values plausible
+        comment: 10-1000 Hz range appropriate; dB scale standard
     code_quality:
       score: 9
       max: 10
@@ -177,7 +178,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → signal generation → FFT → DataFrame → plot'
+        comment: 'Linear flow: imports → data → FFT → plot'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -189,19 +190,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, plotnine modules)
+        comment: All imports used (numpy, pandas, plotnine)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; appropriate complexity; no fake functionality
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'FAIL: Saves as plot.png instead of required plot-{THEME}.png'
+        comment: Saves as 'plot.png' instead of 'plot-{THEME}.png'
     library_mastery:
       score: 8
       max: 10
@@ -211,19 +212,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct grammar of graphics pattern: ggplot() + geom_line() + scale_x_log10()
-          + annotation_logticks()'
+        comment: Uses plotnine grammar of graphics correctly
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses annotation_logticks() and scale_x_log10() but not exceptionally
-          sophisticated
-  verdict: REJECTED
+        comment: annotation_logticks() and scale_x_log10() are appropriate but relatively
+          standard
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
