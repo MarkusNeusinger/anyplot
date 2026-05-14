@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:48:49Z'
-updated: '2026-05-14T07:21:18Z'
+updated: '2026-05-14T07:26:07Z'
 generated_by: claude-haiku
 workflow_run: 25847266637
 issue: 2861
@@ -12,35 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamlin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Perfect visual legibility in both light and dark themes with no text rendering
-    issues
-  - Correct streamline representation of vector field (not discrete quiver arrows)
-  - Excellent spec compliance across all four criteria
-  - Clean, reproducible code with proper theme adaptation
-  - Proper use of perceptually-uniform viridis colormap for continuous velocity data
-  - Well-distributed streamline density across field showing complete circulation
-    pattern
-  - Clear flow direction indication via arrowheads
+  - 'Perfect theme adaptation: both light and dark renders have correct backgrounds,
+    text colors, and chrome, with no legibility failures'
+  - 'Clean mathematical visualization: Euler-integrated streamlines accurately represent
+    the vortex field; arrowheads clearly indicate direction'
+  - 'Professional polish: minimal spine design, subtle grid, generous whitespace,
+    proper colorbar integration'
+  - 'Reproducible and robust: deterministic seed, clean code structure, no edge cases
+    or failures'
+  - 'Perceptually uniform colormap: viridis is CVD-safe and correctly applied to continuous
+    velocity data'
   weaknesses:
-  - Design Excellence only marginally above default — uses standard viridis colormap
-    with minimal custom styling choices
-  - Library Mastery could explore more seaborn-specific features beyond basic lineplot()
-    and set_theme()
+  - 'Design is competent but standard: lacks custom visual refinement beyond defaults;
+    could benefit from intentional color palette choices or annotations'
+  - 'Limited seaborn-specific usage: core visualization logic relies on custom Euler
+    integration and matplotlib patches rather than seaborn features'
+  - 'No visual hierarchy emphasis: focal point emerges from data structure, not intentional
+    design decisions (e.g., color contrast, size variation, annotated insights)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per style guide
-      Chrome: Title "streamline-basic · seaborn · anyplot.ai" visible in dark text, axis labels "X Position (m)" and "Y Position (m)" readable, tick labels visible in soft gray, colorbar label "Flow Speed (m/s)" clear
-      Data: Concentric circular streamlines colored by viridis gradient from purple (slow, ~1.0 m/s) to yellow (fast, ~2.75 m/s); arrowheads show counterclockwise flow direction; no overlap or collision
-      Legibility verdict: PASS — All text readable against light background with appropriate contrast
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "streamline-basic · seaborn · anyplot.ai" in dark text (INK) at 24pt, clearly readable. Axis labels "X Position (m)" and "Y Position (m)" in dark text at 20pt, legible. Tick labels in medium gray (INK_SOFT) at 16pt, clearly visible. Colorbar label "Flow Speed (m/s)" in dark text. Grid lines subtle (alpha=0.10), barely visible but present.
+      Data: Concentric circular streamlines colored with viridis (purple to yellow), representing flow speed 0-2.75 m/s. Small arrowheads at streamline midpoints show counterclockwise flow direction. All elements clearly distinguishable from background.
+      Legibility verdict: PASS - All text fully readable, no light-on-light failures, data visualization clear.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct per style guide
-      Chrome: Same title, axis labels, tick labels rendered in light gray/off-white with high contrast against dark background; colorbar fully readable; no dark-on-dark failures
-      Data: Viridis colormap colors IDENTICAL to light render (purple to yellow); arrowheads match; only background and text colors adapted to theme
-      Legibility verdict: PASS — All elements clearly readable against dark background; theme adaptation successful with no unreadable elements
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, colorbar label all rendered in light text (INK adjusted to #F0EFE8), providing excellent contrast against dark background. Tick labels in lighter gray (INK_SOFT adjusted for dark theme). Grid lines remain subtle and visible (alpha=0.10 but with light color). NO dark-on-dark failures detected - text colors have properly inverted from light theme.
+      Data: Viridis colormap streamlines are identical to light render (purple to yellow), confirming only chrome has flipped per specification. Arrowheads visible and consistent. Flow direction clear.
+      Legibility verdict: PASS - All text readable on dark background, color contrast appropriate, data colors consistent with light render.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,71 +54,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable at full size in both themes with proper contrast
+        comment: All text explicitly sized (24pt title, 20pt labels, 16pt ticks) and
+          readable in both light and dark renders. Theme tokens correctly adapt colors.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axes, legend, colorbar
+        comment: Concentric streamlines non-overlapping, arrowheads distributed without
+          collisions, colorbar does not obscure plot.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All streamlines distinguishable, arrowheads visible, colorbar scale
-          readable
+        comment: All streamlines distinct and visible, arrowheads small but clear,
+          colorbar well-proportioned.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Viridis is CVD-safe perceptually uniform. Colorbar labels magnitude.
+          No red-green signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square aspect ratio appropriate, equal aspect maintained, generous
-          margins
+        comment: Square 12x12 figsize with equal aspect ratio appropriate for vortex.
+          Xlim/ylim ±3.5, no cut-off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title properly formatted, axes descriptive with units
+        comment: Title format correct. X/Y axes labeled with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses viridis, backgrounds correct (#FAF8F1 light,
-          #1A1A17 dark), data colors identical between themes'
+        comment: Viridis correct for continuous data. Backgrounds match spec. Data
+          colors identical between renders.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Professional, clean styling with standard viridis; arrowheads add
-          function but not high-end sophistication
+        comment: Clean minimalist design, viridis well-chosen, arrowheads thoughtfully
+          integrated, but lacks custom visual distinction.
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine frame, subtle grid (alpha=0.15), generous whitespace.
+          Professional but standard refinement.
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Spines removed, grid subtle, whitespace generous; standard refinement
-          applied well
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Viridis gradient creates visual hierarchy, concentric pattern shows
-          circulation, arrowheads guide understanding
+        comment: Concentric circles and color gradient guide viewer; focal point natural
+          from data structure, not intentional design.
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamline plot showing vortex field circulation
+        comment: Correct streamline plot type with smooth field-tangent curves.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Continuous streamlines, vector field, flow direction arrows, color-encoded
-          velocity
+        comment: 'All features present: streamlines, direction arrows, velocity encoding,
+          field topology.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct, velocity magnitude properly mapped, grid bounds
-          appropriate
+        comment: X/Y coordinates and velocity magnitude correctly mapped. Domain fully
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar with label and scale
+        comment: Title format matches spec. Colorbar serves as legend.
     data_quality:
       score: 15
       max: 15
@@ -155,21 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple streamlines, gradient colors, directional arrows, complete
-          field structure
+        comment: 'Demonstrates all aspects: multiple starting positions, continuous
+          paths, velocity encoding, arrows, appropriate density.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Vortex field is canonical physics example, neutral, domain-agnostic
+        comment: Vortex field (u=-y, v=x) is canonical physics example, mathematically
+          correct and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible units (meters, m/s), appropriate grid bounds and colorbar
-          range
+        comment: Domain [-3.2, 3.2] well-chosen. Velocity 0-2.75 m/s reasonable. Integration
+          parameters produce smooth streamlines.
     code_quality:
       score: 10
       max: 10
@@ -179,48 +186,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions, direct numpy/pandas/matplotlib operations
+        comment: No functions/classes. Straightforward data generation and visualization
+          pipeline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42, fixed starting points ensure deterministic output
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn, patches'
+        comment: Minimal imports, all used. No bloat.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, clean data structures
+        comment: Euler integration appropriate and well-implemented. FancyArrowPatch
+          idiomatic. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, current seaborn API
+        comment: Saves as plot-{THEME}.png. Current seaborn API.
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Proper sns.set_theme(), sns.lineplot() with units parameter, colormap
-          handling
+        comment: Uses sns.lineplot with units parameter and sns.set_theme correctly.
+          Core streamline logic is matplotlib/numpy, not seaborn-specific.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: true
-        comment: Uses seaborn units parameter for grouping, standard set_theme() application
+        comment: Does not showcase seaborn-specific capabilities. Streamlines and
+          arrows are matplotlib/numpy. Acceptable for this plot type.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -230,7 +240,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
-  - alpha-blending
+  - grid-styling
