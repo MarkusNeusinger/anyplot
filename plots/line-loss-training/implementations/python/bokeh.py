@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-loss-training: Training Loss Curve
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 82/100 | Created: 2026-05-14
+Quality: 95/100 | Created: 2026-05-14
 """
 
 import os
