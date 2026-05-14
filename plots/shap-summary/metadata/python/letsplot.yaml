@@ -1,170 +1,188 @@
 library: letsplot
+language: python
 specification_id: shap-summary
 created: '2025-12-31T05:55:04Z'
-updated: '2025-12-31T06:01:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612964604
+updated: '2026-05-14T13:19:55Z'
+generated_by: claude-haiku
+workflow_run: 25861625882
 issue: 2923
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/shap-summary/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/shap-summary/letsplot/plot.html
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/letsplot/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent implementation of SHAP summary plot with proper feature importance ordering
-  - Good use of ggplot2 grammar with scale_color_gradient for diverging color scale
-  - Appropriate jittering implementation to reduce point overlap
-  - Realistic loan/credit model context with 12 meaningful features
-  - Correct title format and professional appearance
-  - Clean code structure following KISS principles
+  - Perfect text legibility in both light and dark renders with explicit font sizing
+  - Excellent data storytelling through feature ranking and clear visual hierarchy
+  - Strong specification compliance with all required features correctly implemented
+  - Theme-adaptive color tokens and backgrounds properly applied across both renders
+  - Clean, reproducible code with proper seeding and idiomatic letsplot usage
   weaknesses:
-  - X-axis label could include units or clearer description of what SHAP values represent
-    in the model context
-  - Vertical grid lines are slightly prominent and could be more subtle
-  - Some extreme outlier SHAP values (±3) that may distract from the main distribution
-  image_description: The plot displays a SHAP summary visualization for a loan/credit
-    approval model with 10 features. Features are arranged vertically in order of
-    importance with Credit Score at the top and Inquiry Count at the bottom. Each
-    row shows scattered points representing individual samples, with horizontal position
-    indicating SHAP value (impact on model output). Points are colored using a blue-to-red
-    gradient representing normalized feature values (0=blue, 1=red). A dashed vertical
-    line at x=0 separates positive and negative impacts. The title "shap-summary ·
-    letsplot · pyplots.ai" appears at the top. The x-axis is labeled "SHAP Value (impact
-    on model output)" and extends from approximately -3 to 3. The legend on the right
-    shows "Feature Value" with a continuous color scale.
+  - 'DE-02: Spines not explicitly removed (using library defaults instead of custom
+    removal)'
+  - 'DE-01: Design is functional but lacks extraordinary aesthetic sophistication
+    or custom refinements'
+  - 'LM-02: Uses some distinctive features but not at the level of exceptional library
+    mastery'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and professional
+      Chrome: Title "shap-summary · letsplot · anyplot.ai" clearly visible in size-24 dark text; axis labels and tick labels all readable in INK (#1A1A17) and INK_SOFT colors; legend title and scale labels legible
+      Data: 10 features ranked by importance (top to bottom). Points colored in blue-to-red gradient representing feature values. Vertical dashed line at x=0 clearly visible. Point jitter applied to reduce overlap. SHAP value range -2.5 to 3.5 clearly shown.
+      Legibility verdict: PASS - All text and data elements fully readable with good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and matches light render theme
+      Chrome: Title and axis labels rendered in light text (INK #F0EFE8 and INK_SOFT #B8B7B0) - fully readable against dark background. No dark-on-dark failures detected. Grid lines in INK_MUTED color are subtle but visible.
+      Data: Feature colors (blue-to-red gradient) are identical to light render - only theme chrome has flipped. Vertical line at x=0 visible. All 250 points and jitter clearly distinguishable. Color scale legend readable.
+      Legibility verdict: PASS - All text and data elements fully readable with correct theme adaptation and no legibility failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick text are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Feature names are well-spaced with no overlapping text
+        comment: 'All font sizes explicitly set: title 24pt, axis_title 20pt, axis_text
+          16pt. Perfectly readable in both light and dark renders.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Feature names spaced vertically. Points have
+          jitter applied for visibility.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are visible with good alpha (0.7), though some overlap in
-          dense areas like Inquiry Count row
+        comment: Points clearly visible with size=3, alpha=0.7. Vertical line at x=0
+          visible. Adapted well to 250 samples.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-red gradient is colorblind-friendly (diverging scale with
-          distinct endpoints)
+        comment: Blue-red diverging colormap from Okabe-Ito positions 3 and 2. Good
+          contrast, CVD-safe.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, legend positioned well
+        comment: Correct 4800×2700px landscape format. Nothing cut off. Generous margins
+          and balanced layout.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis is descriptive but no units; Y-axis is intentionally blank
-          (feature names as labels)
+        comment: 'Title format correct. X-axis descriptive with context: ''SHAP Value
+          (impact on model output)''.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (disabled on Y-axis as appropriate), legend clear
-          but minor vertical gridlines could be more subtle
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Text colors theme-adaptive
+          (INK/INK_SOFT). Blue-red diverging scale matches spec requirement for continuous
+          feature values.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Uses theme-adaptive color tokens and professional formatting. Clean
+          design with intentional choices. However, lacks extraordinary polish or
+          unique sophistication beyond spec requirements. Functional rather than exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Vertical grid lines only (good). Grid subtle with INK_MUTED. Point
+          jitter applied. However, spines not explicitly removed - using library defaults
+          rather than custom removal. Moderate refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong storytelling through feature ranking and positioning. Clear
+          visual hierarchy with importance on y-axis. X-axis at 0 creates reference
+          point. Color gradient conveys feature value distribution. Viewers immediately
+          see which features matter most.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct SHAP summary beeswarm/strip plot
+        comment: Correct SHAP summary plot with features on y-axis, SHAP values on
+          x-axis.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: SHAP values on x-axis, features on y-axis, feature values encoded
-          as color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has vertical line at x=0, diverging color scale, jittering for visibility,
-          features sorted by importance, top 10 shown
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements met: sorted by importance, blue-red diverging
+          scale, vertical line at x=0, jitter applied.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full range of SHAP values
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped. Color by normalized feature value. All data
+          visible within axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Feature Value" with 0-1 scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct "{spec-id} · {library} · pyplots.ai" format
+        comment: 'Title follows correct format: ''shap-summary · letsplot · anyplot.ai''.
+          Legend descriptive with colorbar.'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows positive and negative effects, different feature importances,
-          some features show clear color-value relationships (Credit Score, Debt Ratio)
-          but color patterns less visible for middle-importance features
+        comment: 'Shows all aspects: positive effects (Glucose, Blood Pressure), negative
+          effects (Sleep, Exercise), varied magnitudes. Realistic medical feature
+          distributions.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Credit/loan approval model is an excellent real-world ML interpretability
-          use case
+        comment: 'Healthcare outcome prediction model. Realistic features: BMI, Blood
+          Pressure, Glucose, Cholesterol, etc. Neutral, educational domain.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: SHAP values are in reasonable range; some features like Income have
-          extreme outliers (±3) that may be slightly unrealistic
+        comment: 250 samples appropriate for visualization clarity. SHAP value ranges
+          sensible. Feature normalization to 0-1 for coloring appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +190,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Direct structure: imports → data generation → plot → save. No unnecessary
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) properly set for deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: 'Only necessary imports: os, numpy, pandas, lets_plot. No unused
+          imports.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, Pythonic code. Appropriate complexity. No fake UI
+          or over-engineering.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html as expected
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html. Current
+          API (LetsPlot 4.9.0).
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar appropriately with scale_color_gradient, theme
-          customization, ggsize, but doesn't use any lets-plot specific advanced features
-          like tooltips
+        comment: 'Expert use of grammar of graphics: ggplot() + aes() mapping, geom_point(),
+          geom_vline(), scale_color_gradient(). Theme customization with element_rect/element_text/element_line.
+          High-level API used idiomatically.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: 'Uses letsplot-specific features: ggsave() with scale parameter,
+          HTML export, ggsize() for sizing, theme element customization. Some distinctive
+          usage but not exceptional.'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling
+  - custom-colormap
