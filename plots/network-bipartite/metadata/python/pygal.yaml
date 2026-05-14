@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:19:25Z'
-updated: '2026-05-14T21:39:58Z'
+updated: '2026-05-14T21:55:22Z'
 generated_by: claude-sonnet
 workflow_run: 25885929546
 issue: 5247
@@ -12,43 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/pygal/plot-dark.html
-quality_score: 72
+quality_score: 67
 review:
   strengths:
-  - 'Clean bipartite layout: two clearly separated columns (authors left x=0, papers
-    right x=10) makes the two-mode structure immediately apparent'
-  - Correct Okabe-Ito palette and full theme-adaptive tokens (PAGE_BG, INK, INK_MUTED)
-    — both light and dark renders use correct background colors
-  - Interactive HTML output with labeled data points (author/paper labels as tooltips)
-    is idiomatic pygal usage
-  - Clean, deterministic code — no functions or classes, hardcoded academic dataset
-    is realistic and neutral
+  - 'Correct theme-adaptive Style configuration: background, INK, INK_MUTED, Okabe-Ito
+    palette all properly derived from ANYPLOT_THEME'
+  - Creative and technically sound use of XY chart with None-separator segments to
+    approximate bipartite network layout in a charting library without native network
+    support
+  - Realistic and neutral author-paper scenario with plausible connection counts (8
+    authors, 10 papers, 24 edges)
+  - 'Clean backgrounds (#FAF8F1 / #1A1A17), no grid clutter, both HTML and PNG output
+    produced correctly'
   weaknesses:
-  - Node size does not encode degree — spec explicitly requires node size to reflect
-    connection count to highlight hubs; all nodes use uniform dots_size=8
-  - Color encodes series (author) rather than set membership — spec requires nodes
-    colored by which set they belong to (authors vs papers); paper nodes inherit the
-    color of the last author series that drew them, creating visual ambiguity
-  - No direct node labels visible in PNG render — labels are tooltip-only in the interactive
-    HTML; the spec requires legible labels positioned to avoid overlap with edges;
-    paper node identifiers (P01–P10) and author names are not readable in the static
-    image
-  - Legend text at bottom is very small and barely readable at full canvas resolution;
-    author names in the 4-column legend are rendered at a size that strains readability
-  - Title uses extra descriptive prefix 'Author–Paper Network · ' before the required
-    format 'network-bipartite · pygal · anyplot.ai'
+  - 'Color scheme does not reflect set membership: each author has its own Okabe-Ito
+    color and papers inherit edge colors. Spec requires all authors = one color (#009E73),
+    all papers = another color (#D55E00) to reinforce two-mode structure.'
+  - 'Node size does not encode degree: dots_size=8 is fixed for all nodes. Hub nodes
+    (Patel with 4 papers, P01 with 3 authors) should be visually larger.'
+  - 'No node labels visible in the PNG: the label field on each XY point is HTML tooltip
+    metadata only. Adjacent text labels for author names and paper IDs must be rendered
+    in the static PNG.'
+  - 'Title format incorrect: should be exactly ''network-bipartite · pygal · anyplot.ai''
+    without the extra ''Author-Paper Network · '' prefix.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Author–Paper Network · network-bipartite · pygal · anyplot.ai" visible at top center in dark ink; small but legible. No axis labels (hidden by design). Legend at bottom (4 columns) shows author names in very small text — marginally readable.
-      Data: 8 left-column nodes colored in Okabe-Ito order starting with #009E73 (green) for Smith. 10 right-column nodes appear as overlapping colored dots (multiple series draw paper nodes at same positions). Numerous gray crossing edge lines connect left to right. All dots_size=8 uniform.
-      Legibility verdict: PASS — title and legend text readable; no light-on-light failures. Legend text is small but discernible.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Author–Paper Network · network-bipartite · pygal · anyplot.ai" in dark ink at top, readable. Legend at bottom with 8 author names in 4 columns, readable at explicit legend_font_size=16. No axis tick labels (intentionally hidden).
+      Data: Left column has 8 author nodes as small colored dots (one Okabe-Ito color per author series). Right column has 10 paper nodes colored by whichever author series connects to them (papers connected to multiple authors show overlapping dots in different colors). Gray lines connect nodes across columns with characteristic crossing pattern. All nodes uniform size (dots_size=8), no degree encoding. No text labels adjacent to nodes — labels exist only as HTML tooltip metadata.
+      Legibility verdict: PASS — all visible chrome text is readable against the light background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark surface
-      Chrome: Title visible in light ink on dark background. Legend text at bottom renders as light text — readable. No axis ticks or axis labels visible (hidden by design).
-      Data: Data node colors are identical to the light render — same Okabe-Ito sequence, same crossing edge pattern. Edge lines appear slightly lighter against dark background. No dark-on-dark text failure detected.
-      Legibility verdict: PASS — both title and legend text are readable against the dark background; no chrome failures.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and legend labels rendered in light color (#F0EFE8 INK token) — clearly readable against dark background. No dark-on-dark failures observed.
+      Data: Okabe-Ito data colors (node dots and edge lines) are visually identical to the light render — only chrome flips. Lines appear slightly brighter against the dark background. Nodes remain distinguishable.
+      Legibility verdict: PASS — all visible text is readable in both themes. Theme adaptation is correct.
   criteria_checklist:
     visual_quality:
       score: 22
@@ -59,47 +57,50 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title visible in both themes; legend text at bottom is very small
-          at 4800x2700 resolution — marginally readable
+        comment: Font sizes explicitly set (title=28, labels=18, legend=16). Title
+          and legend readable in both themes. No node labels in PNG (only HTML tooltip
+          metadata).
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Paper nodes drawn multiple times by overlapping series at same xy
-          positions; edges cross extensively by design
+        comment: No significant overlap. Legend 4-column layout clean. Minor risk
+          of stacked dots at paper nodes with multiple authors.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Colored dots visible; thin gray edges readable; uniform node sizes
-          reduce differentiation
+        comment: Nodes and edges visible. dots_size=8 functional but not prominent.
+          Uniform size regardless of degree.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette — colorblind safe
+        comment: Okabe-Ito palette is CVD-safe. Adequate contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good bipartite layout using full canvas width; legend area slightly
-          cramped
+        comment: Landscape 4800x2700. Nodes at left/right extremes use canvas width
+          well. Reasonable utilization.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Title present; no axis labels appropriate for network graph
+        comment: Title is descriptive. No x/y axis labels (intentionally hidden for
+          network viz).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; correct background colors; both themes correct'
+        comment: 'First series #009E73 correct. Background #FAF8F1/#1A1A17 correct.
+          Theme-adaptive INK/INK_MUTED tokens applied. Both renders theme-correct.'
     design_excellence:
       score: 9
       max: 20
@@ -108,25 +109,25 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Default XY chart rendering; no additional design polish beyond color
-          palette
+        passed: true
+        comment: Well-configured Style with Okabe-Ito, clean backgrounds, no grid.
+          Looks like carefully configured default rather than designed network visualization.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Hides axis labels and grid (appropriate); default chart frame still
-          present
+        passed: true
+        comment: Grid hidden, axis ticks/labels hidden, backgrounds correct. Dense
+          crossing lines create inherent clutter with no edge opacity/width refinement.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Crossing edges convey multi-connection bipartite pattern but no visual
-          hierarchy or hub emphasis
+        comment: Data displayed in bipartite form but no visual hierarchy. All nodes
+          identical in size with no degree emphasis. No focal point communicated.
     spec_compliance:
-      score: 11
+      score: 10
       max: 15
       items:
       - id: SC-01
@@ -134,109 +135,120 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct bipartite network using XY scatter with line segments — appropriate
-          pygal approach
+        comment: Achieves bipartite network layout using XY scatter workaround. Not
+          a native network chart but produces correct two-column node-edge structure.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 1
         max: 4
         passed: false
-        comment: Missing degree-based node sizing; colors by series not set membership;
-          no visible static labels on nodes
+        comment: 'Three key features missing: (1) nodes colored by author not set
+          membership, (2) node size does not encode degree, (3) no node labels adjacent
+          to nodes in PNG.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions correctly map to two node sets; Y positions evenly spaced
+        comment: Authors at x=0, papers at x=10. Y-positions correctly spread. All
+          nodes visible.
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: true
-        comment: Contains spec-id, library, anyplot.ai but with extra descriptive
-          prefix; legend present
+        comment: Title contains required spec-id·library·anyplot.ai but prefixed with
+          'Author-Paper Network · ' (non-standard). Legend correctly identifies all
+          8 authors.
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Shows bipartite structure and multiple connections; missing degree-based
-          sizing and set-membership coloring
+        comment: Shows bipartite structure and cross-set connections. Missing degree
+          variation through node size and per-node labels limits expressiveness.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Author-paper collaboration network is realistic, plausible, and neutral
+        comment: Author-paper collaboration network is realistic, neutral, well-chosen.
+          Named authors and paper IDs credible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8 authors, 10 papers, 24 edges — appropriate bipartite network scale
+        comment: 8 authors, 10 papers, 24 connections — within spec 10-50 nodes per
+          set, 20-200 edges. Distribution plausible.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions or classes; clean procedural code
+        comment: Imports -> Data -> Plot -> Save pattern. 5-line sys.path manipulation
+          (legitimate but adds complexity due to file named pygal.py).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, pygal, Style'
+        comment: os, sys, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; clean None-separated segment pattern
+        comment: Clean, Pythonic. None-separator pattern for line segments is correct
+          pygal idiom.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct pygal.XY usage; Style object for theming; None-separator
-          pattern for line segments
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML output; labeled data points for hover tooltips;
-          legend_at_bottom_columns
-  verdict: APPROVED
+        comment: Style object used correctly for full theme configuration. XY chart
+          with None-separator segments is correct pygal pattern for disconnected polylines.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export (pygal's native interactive output) present. None-separator
+          multi-line pattern is pygal-idiomatic. Not leveraging pygal's strengths
+          beyond basic export.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - custom-legend
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
