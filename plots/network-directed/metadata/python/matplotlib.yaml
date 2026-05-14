@@ -1,156 +1,176 @@
 library: matplotlib
+language: python
 specification_id: network-directed
 created: '2025-12-30T23:57:08Z'
-updated: '2025-12-31T00:04:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608483162
+updated: '2026-05-14T03:23:47Z'
+generated_by: claude-haiku
+workflow_run: 25839613474
 issue: 2858
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-directed/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent directed graph visualization with clear arrow directions showing import
-    dependencies
-  - Colorblind-safe palette with good distinction between Core (blue), Api (yellow),
-    Utils (green), and Tests (purple) groups
-  - Well-positioned nodes using manual layout that minimizes edge crossings
-  - Curved arrows effectively handle overlapping paths and clearly show direction
-  - Proper title format following spec-id · library · pyplots.ai convention
-  - Clean KISS code structure with no functions or classes
+  - Perfect visual quality in both light and dark themes with flawless theme-adaptive
+    chrome
+  - Excellent data quality with realistic software dependency context and good feature
+    coverage
+  - Clean, reproducible code with proper structure and all explicit font sizing
+  - Effective use of Okabe-Ito palette with color-coded module grouping that creates
+    visual hierarchy
+  - Well-refined design with minimal chrome and generous whitespace
+  - Curved arrows and manual node positioning demonstrate thoughtful implementation
   weaknesses:
-  - Some node labels are slightly cramped within circles (e.g., validators, test_routes)
-  - Node radius could be slightly larger to better accommodate longer labels
-  image_description: 'The plot displays a directed network graph representing software
-    module dependencies. It shows 13 nodes (modules) connected by curved arrows indicating
-    import direction. The nodes are colored by group: Core modules (main, config,
-    database) in Python blue (#306998), Api modules (auth, routes, handlers) in Python
-    yellow (#FFD43B), Utils modules (validators, helpers, logger, cache) in green
-    (#4DAF4A), and Tests modules (test_auth, test_routes, test_db) in purple (#984EA3).
-    The main module sits at the top with arrows flowing downward to its dependencies.
-    Arrows are gray with appropriate arrowheads showing direction clearly. A legend
-    in the upper-left explains the color coding by Module Type. The title "network-directed
-    · matplotlib · pyplots.ai" appears at the top in bold.'
+  - Design Excellence could be elevated with additional refinement or more sophisticated
+    visual techniques
+  - Data storytelling could emphasize critical dependencies or key modules more prominently
+  - 'Edge color in dark theme uses #999999 instead of INK_SOFT (#B8B7B0) for minor
+    consistency deviation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct theme surface
+      Chrome: Title "network-directed · matplotlib · anyplot.ai" at 24pt in dark ink (#1A1A17), legend box with title at 18pt and labels at 16pt in INK_SOFT (#4A4A44), all clearly readable on light background
+      Data: 13 nodes in Okabe-Ito colors (Core=#009E73, Api=#D55E00, Utils=#0072B2, Tests=#CC79A7), node labels at 13pt bold in dark text, 21 directed edges with gray arrows (#4A4A44), curved paths avoid overlap
+      Legibility verdict: PASS - All text perfectly readable, excellent contrast, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct dark theme surface
+      Chrome: Title in light text (#F0EFE8), legend with dark background (#242420) and light text (#B8B7B0), all clearly readable on dark background with no dark-on-dark failures
+      Data: Node colors identical to light render - first series remains #009E73, other groups maintain exact Okabe-Ito positions; edges appear as light gray arrows distinct from background
+      Legibility verdict: PASS - All text perfectly readable, excellent contrast, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 24pt is excellent, node labels at 13pt are readable but
-          could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements, nodes well-spaced
+        comment: All font sizes explicitly set (title=24pt, legend=16-18pt, labels=13pt),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; nodes, labels, edges, and legend all clearly
+          separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes and arrows clearly visible, arrows well-sized with appropriate
-          alpha
+        comment: Nodes and arrows optimally sized; alpha values appropriate for visibility
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette (blue, yellow, green, purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, nodes distributed across the plot
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed upper-left, no grid needed for network graph
+        comment: Okabe-Ito palette is CVD-safe; good contrast; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas perfectly utilized; balanced margins; no cut-off; tight_layout
+          applied
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; appropriate for network graph with no X/Y axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito order correct; backgrounds correct; theme-adaptive chrome
+          perfect in both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-designed with curved arrows and subtle node edges; professional
+          polish; could refine edge styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome with ax.axis('off'); no grid; subtle edges on nodes;
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color grouping creates visual hierarchy; node positioning guides
+          exploration; could emphasize critical modules more
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct directed network graph with arrows
+        comment: Correct directed network graph with clear arrow direction
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes represent modules, edges show import direction
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Arrows clearly visible, curved edges for visual clarity, node groups
-          colored
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: nodes, directed edges, grouping, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 nodes and 22 edges fully visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Positions and edges correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps colors to module types
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: network-directed · matplotlib · pyplots.ai'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows directed dependencies, multiple node groups, varying connectivity
-          levels
+        comment: 'Shows all aspects: different node types, single/multiple edges,
+          bidirectional relationships'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software package dependencies is an excellent real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 13 nodes is ideal for static visualization per spec (10-50 range)
+        comment: Real software module dependency scenario; realistic names; neutral
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13 nodes (within spec range), logical dependency patterns, factually
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -160,40 +180,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flat structure: imports → data → plot → save'
+        comment: 'Clean linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though not strictly needed here)
+        comment: np.random.seed(42) set; deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.pyplot, numpy, patches)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib APIs
+        comment: Clean, Pythonic, appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: 'Correct format: plot-{THEME}.png'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of FancyArrowPatch with connectionstyle for curved arrows,
-          Circle patches for nodes
+        comment: Correct fig, ax pattern; proper ax methods; theme-adaptive tokens
+          well-implemented
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses FancyArrowPatch for directed arrows, curved connectionstyle,
+          custom Circle patches
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
