@@ -1,21 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 streamline-basic: Basic Streamline Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-14
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     coord_fixed,
+    element_line,
     element_rect,
     element_text,
     geom_path,
     geom_point,
     ggplot,
     labs,
-    scale_color_gradient,
+    scale_color_cmap,
     theme,
     theme_minimal,
 )
@@ -23,45 +26,40 @@ from scipy.integrate import solve_ivp
 from scipy.interpolate import RegularGridInterpolator
 
 
-# Set seed for reproducibility
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
 np.random.seed(42)
 
-# Create grid for vector field
 nx, ny = 40, 40
 x = np.linspace(-3, 3, nx)
 y = np.linspace(-3, 3, ny)
 X, Y = np.meshgrid(x, y)
 
-# Define vector field: vortex flow with a dipole effect
-# u = -y, v = x creates circular streamlines (vortex)
 U = -Y
 V = X
 
-# Create interpolators for the velocity field
 u_interp = RegularGridInterpolator((y, x), U, bounds_error=False, fill_value=0)
 v_interp = RegularGridInterpolator((y, x), V, bounds_error=False, fill_value=0)
 
-# Compute streamlines from various starting points
 streamlines_data = []
 arrow_data = []
 streamline_id = 0
 
-# Create varied starting points - grid on one side and scattered points
-# This shows field topology better than just radial starting points
 start_points = []
 
-# Grid of starting points on left side
 for sx in np.linspace(-2.8, -1.5, 4):
     for sy in np.linspace(-2.5, 2.5, 6):
         start_points.append((sx, sy))
 
-# Some radial starting points to show circular nature
 for r in [0.6, 1.3, 2.2]:
     for angle in np.linspace(0, 2 * np.pi, 6, endpoint=False):
         start_points.append((r * np.cos(angle), r * np.sin(angle)))
 
 for x0, y0 in start_points:
-    # Integrate forward - inline velocity calculation (no function definition)
     try:
         result = solve_ivp(
             lambda t, pos: [u_interp([pos[1], pos[0]])[0], v_interp([pos[1], pos[0]])[0]],
@@ -74,15 +72,12 @@ for x0, y0 in start_points:
             t_eval = np.linspace(0, result.t[-1], 100)
             trajectory = result.sol(t_eval)
 
-            # Calculate velocity magnitude at each point
             for j in range(len(t_eval)):
                 px, py = trajectory[0, j], trajectory[1, j]
-                # Keep points within bounds
                 if -3 <= px <= 3 and -3 <= py <= 3:
-                    speed = np.sqrt(px**2 + py**2)  # For vortex: speed = r
+                    speed = np.sqrt(px**2 + py**2)
                     streamlines_data.append({"x": px, "y": py, "streamline": streamline_id, "order": j, "speed": speed})
 
-            # Add arrow marker at ~60% along the streamline to show direction
             arrow_idx = int(len(t_eval) * 0.6)
             if arrow_idx < len(t_eval):
                 ax, ay = trajectory[0, arrow_idx], trajectory[1, arrow_idx]
@@ -94,12 +89,22 @@ for x0, y0 in start_points:
     except Exception:
         pass
 
-# Convert to DataFrames
 df = pd.DataFrame(streamlines_data)
 df_arrows = pd.DataFrame(arrow_data)
 
-# Create the plot using plotnine's native geom_path
-# Use 1:1 canvas (12x12) for circular pattern - avoids empty horizontal space
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    plot_title=element_text(size=24, color=INK),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+    figure_size=(16, 9),
+)
+
 plot = (
     ggplot(df, aes(x="x", y="y", group="streamline", color="speed"))
     + geom_path(size=1.2, alpha=0.8)
@@ -111,21 +116,11 @@ plot = (
         inherit_aes=False,
         show_legend=False,
     )
-    + scale_color_gradient(low="#306998", high="#FFD43B", name="Flow Speed")
-    + labs(x="X Position", y="Y Position", title="streamline-basic · plotnine · pyplots.ai")
+    + scale_color_cmap(cmap_name="viridis", name="Flow Speed")
+    + labs(x="X Position", y="Y Position", title="streamline-basic · plotnine · anyplot.ai")
     + coord_fixed(ratio=1)
     + theme_minimal()
-    + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-        panel_background=element_rect(fill="white"),
-        plot_background=element_rect(fill="white"),
-    )
+    + anyplot_theme
 )
 
-# Save the plot
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
