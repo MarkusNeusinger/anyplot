@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-regression-lowess: Scatter Plot with LOWESS Regression
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-14
+Quality: 90/100 | Updated: 2026-05-14
 """
 
 import os
