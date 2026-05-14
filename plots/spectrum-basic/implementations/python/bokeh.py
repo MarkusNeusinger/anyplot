@@ -1,14 +1,28 @@
-""" pyplots.ai
+"""anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
 
-import numpy as np
-from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource
-from bokeh.plotting import figure
+import os
+import time
+from pathlib import Path
 
+import numpy as np
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data: Generate synthetic signal with multiple frequency components
 np.random.seed(42)
@@ -28,7 +42,7 @@ signal = (
 # Compute FFT
 fft_result = np.fft.rfft(signal)
 frequencies = np.fft.rfftfreq(n_samples, 1 / sample_rate)
-amplitude = np.abs(fft_result) / n_samples  # Normalize amplitude
+amplitude = np.abs(fft_result) / n_samples
 
 # Convert to dB scale (with floor to avoid log(0))
 amplitude_db = 20 * np.log10(np.maximum(amplitude, 1e-10))
@@ -38,71 +52,105 @@ mask = frequencies <= 500
 frequencies = frequencies[mask]
 amplitude_db = amplitude_db[mask]
 
-# Create data source
-source = ColumnDataSource(data={"frequency": frequencies, "amplitude": amplitude_db})
+# Create data source with formatted strings for hover
+source = ColumnDataSource(
+    data={
+        "frequency": frequencies,
+        "amplitude": amplitude_db,
+        "freq_str": [f"{f:.1f} Hz" for f in frequencies],
+        "amp_str": [f"{a:.1f} dB" for a in amplitude_db],
+    }
+)
 
 # Create figure (4800 x 2700 px for 16:9)
 p = figure(
     width=4800,
     height=2700,
-    title="spectrum-basic · bokeh · pyplots.ai",
+    title="spectrum-basic · bokeh · anyplot.ai",
     x_axis_label="Frequency (Hz)",
     y_axis_label="Amplitude (dB)",
     tools="pan,wheel_zoom,box_zoom,reset,save",
 )
 
-# Plot spectrum as line with area fill
-p.line(x="frequency", y="amplitude", source=source, line_width=4, line_color="#306998", legend_label="Signal Spectrum")
+# Plot spectrum as line
+p.line(x="frequency", y="amplitude", source=source, line_width=4, line_color=BRAND, legend_label="Signal Spectrum")
 
 # Add subtle fill under the curve
-p.varea(x="frequency", y1="amplitude", y2=-80, source=source, fill_color="#306998", fill_alpha=0.2)
+p.varea(x="frequency", y1="amplitude", y2=-80, source=source, fill_color=BRAND, fill_alpha=0.15)
 
-# Mark peak frequencies with vertical lines and circles
+# Add HoverTool for interactivity
+hover = HoverTool(tooltips=[("Frequency", "@freq_str"), ("Amplitude", "@amp_str")])
+p.add_tools(hover)
+
+# Mark peak frequencies with circles
 peak_freqs = [50, 150, 400]
-peak_labels = ["50 Hz", "150 Hz", "400 Hz"]
-for freq, label in zip(peak_freqs, peak_labels, strict=True):
-    idx = np.argmin(np.abs(frequencies - freq))
-    peak_amp = amplitude_db[idx]
+peak_colors = ["#D55E00", "#0072B2", "#CC79A7"]  # Okabe-Ito positions 2, 3, 4
+for freq, color in zip(peak_freqs, peak_colors, strict=True):
+    freq_idx = np.argmin(np.abs(frequencies - freq))
+    peak_amp = amplitude_db[freq_idx]
 
-    # Vertical line at peak
-    p.line(x=[freq, freq], y=[-80, peak_amp], line_width=3, line_dash="dashed", line_color="#FFD43B", line_alpha=0.8)
-
-    # Circle marker at peak
     p.scatter(
-        x=[freq],
-        y=[peak_amp],
-        size=25,
-        color="#FFD43B",
-        line_color="#306998",
-        line_width=3,
-        legend_label=f"Peak: {label}",
+        x=[freq], y=[peak_amp], size=25, color=color, line_color=INK_SOFT, line_width=2, legend_label=f"Peak: {freq} Hz"
     )
 
 # Styling - text sizes for large canvas (4800x2700)
-p.title.text_font_size = "36pt"
-p.title.text_color = "#333333"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_dash = "dashed"
+# Axis lines and ticks
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Legend styling
-p.legend.label_text_font_size = "20pt"
-p.legend.location = "top_right"
-p.legend.background_fill_alpha = 0.8
-p.legend.border_line_color = "#cccccc"
-p.legend.padding = 10
-p.legend.spacing = 5
+# Grid styling - subtle
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
-# Background
-p.background_fill_color = "#fafafa"
+# Legend styling with larger text
+if p.legend:
+    p.legend.label_text_font_size = "18pt"
+    p.legend.label_text_color = INK_SOFT
+    p.legend.location = "top_right"
+    p.legend.background_fill_color = ELEVATED_BG
+    p.legend.border_line_color = INK_SOFT
+    p.legend.padding = 15
+    p.legend.spacing = 8
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="spectrum-basic · bokeh · pyplots.ai")
+# Background and border
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+# Save the interactive HTML
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome — Selenium 4 / Selenium Manager
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
