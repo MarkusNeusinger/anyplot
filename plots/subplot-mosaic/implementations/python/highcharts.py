@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 62/100 | Updated: 2026-05-14
 """
 
 import json
