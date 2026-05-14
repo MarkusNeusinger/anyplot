@@ -1,7 +1,7 @@
 """ anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-14
+Quality: 91/100 | Updated: 2026-05-14
 """
 
 import os
