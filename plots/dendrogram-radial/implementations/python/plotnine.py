@@ -1,7 +1,7 @@
 """ anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-14
+Quality: 80/100 | Created: 2026-05-14
 """
 
 import os

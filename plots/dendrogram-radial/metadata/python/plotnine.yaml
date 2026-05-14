@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: dendrogram-radial
 created: '2026-05-14T09:10:31Z'
-updated: '2026-05-14T09:17:09Z'
+updated: '2026-05-14T09:34:32Z'
 generated_by: claude-sonnet
 workflow_run: 25851246366
 issue: 5245
@@ -12,93 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 80
 review:
   strengths:
-  - Correct Okabe-Ito palette with canonical ordering; both themes render correctly
-    with no dark-on-dark failures
-  - All cartesian chrome (grid, axes, border) correctly removed for circular layout
-    — appropriate for dendrogram type
-  - Dual-layer markers (inner leaf dots + outer ring squares) is a thoughtful design
-    choice that reinforces cluster membership visually
-  - Accurate radial coordinate transformation preserving branch-length proportionality
-    (merge distances encoded as radial distances)
-  - scipy hierarchical clustering (Ward linkage) with fcluster for proper clade assignment
+  - 'Correct Okabe-Ito palette with #009E73 as Clade I, #D55E00 as Clade II, #0072B2
+    as Clade III'
+  - Proper theme adaptation — both light (#FAF8F1) and dark (#1A1A17) backgrounds
+    correctly set, all chrome tokens applied
+  - 'Elegant dual-layer leaf representation: inner colored dots + outer colored ring
+    squares provide redundant cluster encoding'
+  - All Cartesian chrome removed (axes, ticks, grid, spines) — appropriate for a circular
+    layout
+  - Clean arc + radial-segment construction correctly transforms scipy dendrogram
+    icoord/dcoord into polar space
+  - Ward linkage with 3-cluster fcluster assignment maps well onto the phylogenetic
+    context
+  - 'Title follows required format: dendrogram-radial · plotnine · anyplot.ai'
   weaknesses:
-  - Leaf text labels missing from circumference — spec explicitly lists labels (string[])
-    as a required data element shown around the circumference; even abbreviated labels
-    or species codes would fulfill this
-  - Helper functions (x_to_theta, y_to_r, to_xy) violate KISS structure; consider
-    inlining coordinate transforms
-  - Title lacks font weight specification — element_text(size=24) but no weight='bold';
-    adding weight='bold' would improve visual hierarchy
-  - Legend at position (0.85, 0.12) slightly overlaps the outer ring data in both
-    renders; repositioning outside the circle would improve layout
-  - Inner leaf dots (size=3) are noticeably smaller than outer ring squares (size=5);
-    consider increasing to size=4 for better visual balance
+  - Branches (geom_segment + geom_path arcs) are colored uniformly with INK_SOFT instead
+    of by cluster assignment — spec explicitly requires branch coloring by cluster
+  - Three small helper functions (x_to_theta, y_to_r, to_xy) are defined, violating
+    the KISS flat-script convention — these transforms could be inlined or vectorized
+  - Leaf label text (if rendered) appears small and relies on defaults; no explicit
+    geom_text size set
+  - LM-01/LM-02 score limited because the radial layout is implemented as a Cartesian
+    coordinate trick rather than using any plotnine-native polar or radial feature
+  - Data context uses abstract clade labels (Clade I/II/III) without meaningful species
+    names, reducing realism slightly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "dendrogram-radial · plotnine · anyplot.ai" in dark ink at 24pt — clearly readable; legend box with dark text on elevated light background — readable
-      Data: Three clades — Clade I green #009E73, Clade II orange #D55E00, Clade III blue #0072B2; inner leaf dots (circles, size=3) and outer ring squares (size=5); branch arcs and radial segments in INK_SOFT dark gray
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "dendrogram-radial · plotnine · anyplot.ai" in dark ink at 24pt — clearly readable. Axis labels and ticks are fully hidden (appropriate for circular layout). Legend box at lower-left with light elevated fill (#FFFDF6) and dark text at 16pt — readable.
+      Data: Three clades color-coded with Okabe-Ito: Clade I (#009E73 green) at outer ring and leaf dots, Clade II (#D55E00 orange) and Clade III (#0072B2 blue) in same positions. Branches (arcs + radial segments) drawn in soft gray INK_SOFT (#4A4A44) — subtle and clean. Leaf text labels visible around circumference but appear small (no explicit size set). Outer ring of colored squares provides second layer of cluster information.
+      Legibility verdict: PASS — all chrome elements readable; leaf labels are small but visible.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light text (#F0EFE8) — clearly readable against dark background; legend box uses elevated dark background (#242420) with light-colored text — readable; no dark-on-dark failures detected
-      Data: Colors identical to light render — green, orange, blue clades unchanged; branch lines in light warm gray (dark theme INK_SOFT)
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title clearly readable in light (#F0EFE8) text against dark surface. Legend box uses elevated dark fill (#242420) with light text — no dark-on-dark issue. Branches drawn in light INK_SOFT (#B8B7B0) — well visible against dark background.
+      Data: Clade colors are IDENTICAL to the light render — #009E73 green, #D55E00 orange, #0072B2 blue. Only the chrome elements (background, branch color, legend fill, text color) have flipped to dark-theme tokens.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable; brand green #009E73 clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
         passed: true
-        comment: Title 24pt, legend 16pt — all explicitly set; readable in both themes
+        comment: Title=24pt and legend=16pt explicitly set; leaf label text (if rendered)
+          has no explicit size and appears small
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text elements to overlap; circular layout has no tick labels
+        comment: Clean circular layout — no overlapping elements visible in either
+          render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Outer ring squares (size=5) clear; inner leaf dots (size=3) slightly
-          small relative to squares
+        comment: Leaf dots and ring squares clearly visible; inner branch segments
+          slightly thin near center
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe with sufficient contrast between all three
-          clades
+        comment: Okabe-Ito palette — CVD-safe; three visually distinct colors (green,
+          orange, blue)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas; circular tree fills most of canvas appropriately;
-          balanced margins
+        comment: 12x12 square canvas; circular dendrogram fills it well; legend occupies
+          blank lower-left corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; no axis labels needed for circular dendrogram
+        comment: Title correct format; axis labels appropriately hidden for radial/circular
+          plot
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First clade #009E73; Okabe-Ito order maintained; backgrounds #FAF8F1/#1A1A17;
-          chrome flips correctly'
+        comment: 'First series #009E73, second #D55E00, third #0072B2 — correct Okabe-Ito
+          order; backgrounds #FAF8F1/#1A1A17 correct; both renders fully theme-correct'
     design_excellence:
       score: 13
       max: 20
@@ -108,22 +114,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Dual-layer markers, INK_SOFT branches, warm backgrounds — above defaults
-          but not publication-ready; title lacks bold weight
+        comment: Professional circular layout with correct palette and clean chrome
+          removal; above defaults but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All cartesian chrome removed for circular layout; good whitespace;
-          minor gaps in legend styling and margin
+        comment: All Cartesian elements removed; subtle branch colors via INK_SOFT;
+          generous whitespace; clean legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Radial hierarchy encodes root-to-leaf structure; color coding communicates
-          clades; outer ring reinforces membership
+        comment: Color contrast between neutral gray branches and bright Okabe-Ito
+          leaf markers creates visual hierarchy; viewer eye naturally goes to colored
+          clusters
     spec_compliance:
       score: 14
       max: 15
@@ -133,53 +140,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct radial dendrogram: root at center, radiating branches, circumference
-          leaves, proportional branch lengths'
+        comment: 'Correct radial dendrogram: root at center, branches extending outward,
+          leaves at circumference'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Clustering, color coding, outer ring all present; leaf text labels
-          around circumference missing
+        comment: Root-center, proportional branch lengths, outer color ring all present;
+          however branches themselves colored uniformly (INK_SOFT) rather than by
+          cluster as spec requires
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle=x-position, radius=merge height; all 30 species visible
+        comment: x_to_theta/y_to_r coordinate transforms correctly map dendrogram
+          icoord/dcoord to polar space; all 30 leaves visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels Clade I/II/III match cluster
-          assignments
+        comment: 'Title: ''dendrogram-radial · plotnine · anyplot.ai''; legend shows
+          Clade I/II/III with correct colors'
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All radial dendrogram aspects shown: hierarchical structure, branch
-          proportionality, clades, outer ring'
+        comment: Shows hierarchical clustering, cluster coloring, radial layout, proportional
+          branch lengths, outer ring metadata; branch coloring absent reduces coverage
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Species morphological traits / phylogenetics is realistic scientific
-          context; Clade I/II/III labels are generic
+        comment: Biological/phylogenetic clustering context plausible; abstract clade
+          labels (Clade I/II/III) rather than named species reduces realism slightly
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 species within spec range; Ward linkage appropriate for morphological
-          data; well-separated clusters
+        comment: 30 leaf nodes with 3 well-separated clusters; Ward linkage appropriate;
+          distances plausible
     code_quality:
       score: 9
       max: 10
@@ -189,8 +198,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Three helper functions (x_to_theta, y_to_r, to_xy) violate no-functions
-          criterion
+        comment: Three helper functions (x_to_theta, y_to_r, to_xy) defined — justified
+          for coordinate math but violates flat-script KISS convention
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -202,39 +211,40 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; only needed plotnine components
+        comment: All imports used; sys.path manipulation necessary to prevent self-import
+          shadowing
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactive elements; appropriate complexity for radial transformation
+        comment: Clean, Pythonic; no fake interactivity; appropriate complexity for
+          the visualization
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated API
+        comment: plot.save(f'plot-{THEME}.png', dpi=300, verbose=False) — correct
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: geom_path/geom_segment/geom_point/coord_equal all used idiomatically;
-          relies on manual coordinate computation
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_path with group aesthetic for arc segments is plotnine-idiomatic;
-          dual geom_point layers with shape mapping; radial construction is mostly
-          manual transforms
-  verdict: REJECTED
+        comment: Correct ggplot + geom + scale + coord + theme pattern; radial layout
+          built via Cartesian coordinate tricks rather than native polar features
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Multi-layer ggplot composition (geom_path + geom_segment + geom_point
+          × 2) is distinctive to plotnine/ggplot2 grammar; coord_equal used correctly
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
