@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dendrogram-radial: Radial Dendrogram
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-05-14
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 82/100 | Created: 2026-05-14
 """
 
 import importlib
