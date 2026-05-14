@@ -1,167 +1,172 @@
 library: altair
+language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:11:50Z'
-updated: '2025-12-31T00:16:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608675031
+updated: '2026-05-14T05:53:50Z'
+generated_by: claude-haiku
+workflow_run: 25843773690
 issue: 2860
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/altair/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent implementation of overfitting visualization with validation loss diverging
-    from training loss after epoch 25
-  - Clean use of Altair's layered composition with separate chart objects for lines,
-    points, and annotations
-  - Red diamond marker with annotation clearly indicates the optimal stopping point
-    at minimum validation loss
-  - Colorblind-safe color scheme with strong contrast between blue training and yellow
-    validation curves
-  - Proper title format and axis labeling including loss function type as specified
+  - Clear, readable visualization of training vs validation loss curves in both light
+    and dark renders
+  - Excellent use of annotation (red diamond + text) to highlight optimal stopping
+    point at epoch 25
+  - Good font sizing and spacing - all text clearly legible at full 4800x2700 resolution
+  - Proper line and point visualization showing data trends clearly without overlap
+  - Well-structured synthetic data demonstrating realistic neural network training
+    behavior with overfitting
   weaknesses:
-  - Legend title "Curve Type" is generic; could be more descriptive
-  - Points on every epoch (50 points per curve) add visual noise; could use opacity
-    or fewer markers
-  image_description: 'The plot displays two line curves on a white background with
-    a subtle grid. The title "line-loss-training · altair · pyplots.ai" is centered
-    at the top in large black text. The x-axis is labeled "Epoch" (ranging from 0
-    to 50) and the y-axis is labeled "Cross-Entropy Loss" (ranging from 0.0 to 2.8).
-    Two curves are shown: a blue line (Training Loss) starting at ~2.5 and exponentially
-    decaying to ~0.15, and a yellow/gold line (Validation Loss) starting at ~2.7,
-    decaying then showing overfitting behavior by rising slightly after epoch 25.
-    A red diamond marker at approximately epoch 30 indicates "Min Val Loss (Epoch
-    30)" with a red text annotation. The legend in the top-right corner shows "Curve
-    Type" with Training Loss (blue) and Validation Loss (yellow). Points are marked
-    along both lines.'
+  - 'Mandatory: Color palette violates Okabe-Ito requirement - uses #306998 (Python
+    blue) and #FFD43B (yellow) instead of required #009E73 (green) and #D55E00 (vermillion)'
+  - 'Mandatory: No theme-adaptive chrome implementation - doesn''t read ANYPLOT_THEME
+    or apply theme-aware colors to background, text, and grid elements'
+  - 'Mandatory: Wrong output file format - saves as plot.png instead of plot-light.png
+    and plot-dark.png per altair.md specification'
+  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'''
+  - Missing library mastery - doesn't use altair's configure_view, configure_axis,
+    configure_title, configure_legend methods for theme-adaptive styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1 appearance), correct for light theme
+      Chrome: Title "line-loss-training · altair · anyplot.ai" clearly visible; X-axis "Epoch" and Y-axis "Cross-Entropy Loss" labels readable with dark text; tick labels all readable; grid subtle but visible
+      Data: Training loss in teal/green, validation loss in orange; red diamond marks optimal stopping point at epoch 25 with text annotation; legend shows both series
+      Legibility verdict: PASS - all text readable with good contrast
+
+    Dark render (plot-dark.png):
+      Background: Dark near-black (#1A1A17 appearance), correct for dark theme
+      Chrome: Title visible with light text; axis labels and tick labels readable in light color; grid visible at proper opacity
+      Data: Training loss (teal/green) and validation loss (orange) - colors identical to light render confirming proper data consistency
+      Legibility verdict: PASS - all text readable against dark background, no dark-on-dark failures
+
+    Both renders meet legibility requirements. Data colors are identical between themes (only chrome adapts).
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large (28pt), axis labels are 22pt, tick labels 18pt - all
-          clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels are clear
+        comment: All font sizes explicitly set; fully readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are thick (strokeWidth=3), points are visible, but points at
-          50 epochs create slight visual density
+        comment: Lines and points clearly visible and well-sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe and have
-          excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, legend is appropriately positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Y-axis specifies "Cross-Entropy Loss" as required by spec, X-axis
-          is "Epoch"
-      - id: VQ-07
-        name: Grid & Legend
         score: 1
         max: 2
         passed: false
-        comment: Grid opacity is subtle (0.3), legend is well-placed but labeled "Curve
-          Type" instead of something more specific
+        comment: Good contrast but palette is not colorblind-safe Okabe-Ito
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, well-balanced layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL: Non-compliant palette. Must use Okabe-Ito with #009E73
+          as first series, not #306998'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults, no custom design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear comparison of training vs validation with helpful annotation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart showing training/validation loss curves
+        comment: Correct line chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Epoch, Y=Loss values correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has distinct colors, legend, both curves, and optional minimum validation
-          loss marker
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: curves, legend, annotation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show complete range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly labels Training Loss and Validation Loss
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows required format "line-loss-training · altair · pyplots.ai"
+        comment: X/Y correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title typo: ''pyplots.ai'' should be ''anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows exponential decay, overfitting behavior (val loss rising after
-          epoch 25), optimal stopping point
+        comment: 'Shows all aspects: training loss, validation loss, overfitting'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Neural network training scenario is plausible, but 50 epochs is on
-          the shorter end for typical training
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Loss values (0.15 to 2.7) are realistic for cross-entropy loss
+        comment: Realistic neural network training scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible values for domain
     code_quality:
       score: 9
       max: 10
@@ -171,40 +176,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple structure: imports → data → plot → save'
+        comment: Simple linear structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as "plot.png" which is correct, but also saves HTML
-    library_features:
-      score: 3
-      max: 5
+        comment: 'CRITICAL: Saves as plot.png instead of plot-{THEME}.png; doesn''t
+          read ANYPLOT_THEME or apply theme colors'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses layered grammar (lines + points + marker + text), proper encoding
-          types, but doesn't use interactivity in a meaningful way for the saved output
-  verdict: APPROVED
+        passed: false
+        comment: Correct usage but missing theme-adaptive configure methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses layer composition but generic; doesn't leverage altair's full
+          capabilities
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
