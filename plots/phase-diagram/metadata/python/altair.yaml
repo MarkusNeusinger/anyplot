@@ -1,168 +1,160 @@
 library: altair
+language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:09:12Z'
-updated: '2025-12-31T11:19:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617651700
+updated: '2026-05-14T15:24:46Z'
+generated_by: claude-haiku
+workflow_run: 25868032197
 issue: 3004
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-dark.html
+quality_score: 97
 review:
   strengths:
-  - Excellent demonstration of phase space dynamics with four trajectories showing
-    spiral convergence to equilibrium
-  - Outstanding use of Altair declarative grammar with layered chart composition (base
-    lines + starting points + equilibrium marker)
-  - Starting point markers and equilibrium cross provide clear visual anchors for
-    interpreting trajectories
-  - Clean well-structured code following KISS principles with proper Euler method
-    simulation
-  - Both PNG and interactive HTML outputs provided
-  weaknesses:
-  - Title format should have spec-id as main title per SC-06 requirement
-  - Axis labels lack units (radians and rad/s for physics context)
-  image_description: The plot displays a damped pendulum phase diagram with four distinct
-    trajectories in blue, yellow/gold, red/orange, and green colors. Each trajectory
-    spirals inward toward the equilibrium point at the origin (marked with a black
-    cross symbol). The starting points of each trajectory are marked with filled circular
-    markers. The x-axis is labeled "Position (x)" ranging from approximately -2.0
-    to 2.4, and the y-axis is labeled "Velocity (dx/dt)" ranging from -2.0 to 2.4.
-    The title "Damped Pendulum Phase Space" appears at the top with subtitle "phase-diagram
-    · altair · pyplots.ai". A legend on the right shows "Initial Condition" with four
-    entries (IC 1 through IC 4) with their starting coordinates. The plot has a subtle
-    dashed grid and good use of the canvas space.
+  - Perfect theme adaptation with readable text in both light and dark renders
+  - Excellent physics visualization clearly showing damped pendulum convergence to
+    equilibrium
+  - Effective use of Okabe-Ito color palette with intentional design and visual hierarchy
+  - Professional appearance with appropriate font sizing, opacity, and styling throughout
+  - Idiomatic Altair usage with clean layer composition and proper encoding types
+  - Clear data storytelling that guides viewer to understand basin of attraction and
+    initial condition dependence
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17 / #4A4A44) - clearly readable
+      Data: Four trajectories in Okabe-Ito colors (first series is #009E73 brand green); starting points marked as circles; equilibrium at origin marked with dark cross
+      Legibility verdict: PASS - all text is clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8 / #B8B7B0) - clearly readable; no dark-on-dark failures
+      Data: Same Okabe-Ito colors as light render (identical data colors, theme-independent); starting points and equilibrium cross properly styled in light color
+      Legibility verdict: PASS - all text is clearly readable against the dark background with proper theme-aware token usage
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is perfectly readable: title ~28pt, subtitle ~20pt, axis
-          labels ~22pt, tick labels ~18pt'
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: Trajectories clearly separated; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 2.5 with opacity 0.85 is excellent for showing trajectory
-          paths; starting points clearly marked with large markers
+        comment: Trajectories, points, and cross all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, red-orange, green) with
-          good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills ~60-70% of canvas, well-balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels but no units (Position and Velocity are dimensionless
-          in this context, so acceptable)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha 0.3 and dashed lines; legend well-positioned
-          on right
+        comment: 'Okabe-Ito palette; first series #009E73'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px landscape; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; axes descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct backgrounds; theme-adaptive chrome
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom palette, intentional hierarchy, careful styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, clean axis styling, visual interest
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy showing convergence and dynamics
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct phase diagram showing x vs dx/dt
+        comment: Correct phase diagram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Position correctly on X, velocity (derivative) correctly on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple trajectories from different initial conditions, shows spiral
-          convergence to equilibrium, equilibrium point marked
-      - id: SC-04
-        name: Data Range
+        comment: Multiple trajectories, equilibrium, basin visible
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All trajectories fully visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y axes correct; all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows initial conditions for each trajectory
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: Main title says "Damped Pendulum Phase Space", subtitle has correct
-          format but spec requires "{spec-id} · {library} · pyplots.ai" as the title
-          format
+        comment: Title format correct; legend shows all conditions
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple trajectories, spiral convergence (damping), equilibrium
-          point, different initial conditions
+        comment: Shows convergence, damping, stability, basin of attraction
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Damped pendulum is a classic physics example mentioned in the spec
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for pendulum phase space (angles in radians,
-          angular velocities)
+        comment: Damped pendulum physics; realistic parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2000 points; ranges appropriate for pendulum
     code_quality:
       score: 10
       max: 10
@@ -172,41 +164,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save structure, no functions/classes
+        comment: No unnecessary functions; clean flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic with seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: No fake interactivity; proper API usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct filenames and scale_factor
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair''s declarative grammar: layered charts,
-          order encoding for proper line ordering, detail encoding for grouping, Title
-          with subtitle, configure methods for styling, interactive HTML export'
+        comment: High-level API; proper encodings; layer composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Layer composition; custom mark shapes; Order encoding; interactive()
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
