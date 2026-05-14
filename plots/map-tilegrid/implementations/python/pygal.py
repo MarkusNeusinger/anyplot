@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 72/100 | Created: 2026-05-14
@@ -117,11 +117,11 @@ quintile_labels = [
     f"> {b[3]:.0f}%  (highest fifth)",
 ]
 
-# Organise data by quintile
+# Organise data by quintile — offset grid by 1 to prevent edge clipping
 quintile_data = [[] for _ in range(5)]
 for state, (row, col) in STATE_GRID.items():
     q = quintile_assignments[state]
-    quintile_data[q].append({"value": (col, -row), "label": f"{state}: {state_values[state]:.1f}%"})
+    quintile_data[q].append({"value": (col + 1, -(row + 1)), "label": f"{state}: {state_values[state]:.1f}%"})
 
 # Pygal style
 custom_style = Style(
@@ -131,18 +131,18 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=quintile_hex,
-    title_font_size=28,
-    label_font_size=18,
-    major_label_font_size=18,
-    legend_font_size=18,
-    value_font_size=16,
+    title_font_size=32,
+    label_font_size=22,
+    major_label_font_size=22,
+    legend_font_size=24,
+    value_font_size=50,
 )
 
 # Chart
 chart = pygal.XY(
     width=4800,
     height=2700,
-    title="Renewable Energy by US State · map-tilegrid · pygal · anyplot.ai",
+    title="map-tilegrid · pygal · anyplot.ai",
     stroke=False,
     dots_size=50,
     print_labels=True,
