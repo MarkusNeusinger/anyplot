@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 89/100 | Created: 2026-05-14
@@ -180,12 +180,17 @@ fig.add_trace(
             "len": 0.75,
             "x": 1.02,
         },
+        hoverlabel={"bgcolor": ELEVATED_BG, "font": {"size": 16, "color": INK}, "bordercolor": INK_SOFT},
     )
 )
 
 fig.update_layout(
     title={
         "text": "US Renewable Energy Share · map-tilegrid · plotly · anyplot.ai",
+        "subtitle": {
+            "text": "Pacific Northwest leads (70–83%) while the Southeast and DC lag far behind (5–22%)",
+            "font": {"size": 18, "color": INK_SOFT},
+        },
         "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -194,7 +199,14 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     xaxis={"showgrid": False, "showticklabels": False, "showline": False, "zeroline": False, "ticks": ""},
-    yaxis={"showgrid": False, "showticklabels": False, "showline": False, "zeroline": False, "ticks": "", "autorange": "reversed"},
+    yaxis={
+        "showgrid": False,
+        "showticklabels": False,
+        "showline": False,
+        "zeroline": False,
+        "ticks": "",
+        "autorange": "reversed",
+    },
     annotations=annotations,
     margin={"l": 40, "r": 140, "t": 80, "b": 40},
 )
