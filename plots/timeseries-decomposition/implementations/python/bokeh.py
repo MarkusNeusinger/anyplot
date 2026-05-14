@@ -1,17 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2025-05-14
 """
+
+import os
+import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 from bokeh.layouts import column
-from bokeh.models import Title
+from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from statsmodels.tsa.seasonal import seasonal_decompose
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Monthly airline passengers (classic time series dataset)
 np.random.seed(42)
@@ -35,88 +49,106 @@ trend_component = decomposition.trend.values
 seasonal_component = decomposition.seasonal.values
 residual_component = decomposition.resid.values
 
-# Color scheme (Python Blue primary)
-line_color = "#306998"
+# Panel dimensions (4 panels in vertical layout)
+panel_height = 650
+total_width = 4800
 
-# Create subplots (4800 x 2700 total, divided into 4 panels)
-panel_height = 620
 
-# Panel 1: Original Series
-p1 = figure(width=4800, height=panel_height, x_axis_type="datetime")
-p1.line(dates, original, line_width=4, color=line_color)
-p1.title.text = "Original Series"
-p1.title.text_font_size = "26pt"
-p1.yaxis.axis_label = "Passengers (thousands)"
-p1.yaxis.axis_label_text_font_size = "22pt"
-p1.xaxis.major_label_text_font_size = "18pt"
-p1.yaxis.major_label_text_font_size = "18pt"
-p1.xgrid.grid_line_alpha = 0.3
-p1.ygrid.grid_line_alpha = 0.3
-p1.xgrid.grid_line_dash = "dashed"
-p1.ygrid.grid_line_dash = "dashed"
-p1.outline_line_color = None
-p1.xaxis.visible = False
-p1.min_border_left = 120
+# Helper function to create themed figure
+def create_themed_figure(width, height, title_text, y_label, show_x_axis=False, x_range=None):
+    kwargs = {
+        "width": width,
+        "height": height,
+        "x_axis_type": "datetime",
+        "title": title_text,
+        "toolbar_location": None,  # Hide toolbar for cleaner look
+    }
+    if x_range is not None:
+        kwargs["x_range"] = x_range
 
-# Panel 2: Trend Component
-p2 = figure(width=4800, height=panel_height, x_axis_type="datetime", x_range=p1.x_range)
-p2.line(dates, trend_component, line_width=4, color=line_color)
-p2.title.text = "Trend Component"
-p2.title.text_font_size = "26pt"
-p2.yaxis.axis_label = "Trend"
-p2.yaxis.axis_label_text_font_size = "22pt"
-p2.xaxis.major_label_text_font_size = "18pt"
-p2.yaxis.major_label_text_font_size = "18pt"
-p2.xgrid.grid_line_alpha = 0.3
-p2.ygrid.grid_line_alpha = 0.3
-p2.xgrid.grid_line_dash = "dashed"
-p2.ygrid.grid_line_dash = "dashed"
-p2.outline_line_color = None
-p2.xaxis.visible = False
-p2.min_border_left = 120
+    p = figure(**kwargs)
 
-# Panel 3: Seasonal Component
-p3 = figure(width=4800, height=panel_height, x_axis_type="datetime", x_range=p1.x_range)
-p3.line(dates, seasonal_component, line_width=4, color=line_color)
-p3.title.text = "Seasonal Component"
-p3.title.text_font_size = "26pt"
-p3.yaxis.axis_label = "Seasonal"
-p3.yaxis.axis_label_text_font_size = "22pt"
-p3.xaxis.major_label_text_font_size = "18pt"
-p3.yaxis.major_label_text_font_size = "18pt"
-p3.xgrid.grid_line_alpha = 0.3
-p3.ygrid.grid_line_alpha = 0.3
-p3.xgrid.grid_line_dash = "dashed"
-p3.ygrid.grid_line_dash = "dashed"
-p3.outline_line_color = None
-p3.xaxis.visible = False
-p3.min_border_left = 120
+    # Theme-adaptive styling
+    p.background_fill_color = PAGE_BG
+    p.border_fill_color = PAGE_BG
+    p.outline_line_color = INK_SOFT
 
-# Panel 4: Residual Component
-p4 = figure(width=4800, height=panel_height, x_axis_type="datetime", x_range=p1.x_range)
-p4.line(dates, residual_component, line_width=4, color=line_color)
-p4.title.text = "Residual Component"
-p4.title.text_font_size = "26pt"
-p4.yaxis.axis_label = "Residual"
-p4.yaxis.axis_label_text_font_size = "22pt"
-p4.xaxis.axis_label = "Date"
-p4.xaxis.axis_label_text_font_size = "22pt"
-p4.xaxis.major_label_text_font_size = "18pt"
-p4.yaxis.major_label_text_font_size = "18pt"
-p4.xgrid.grid_line_alpha = 0.3
-p4.ygrid.grid_line_alpha = 0.3
-p4.xgrid.grid_line_dash = "dashed"
-p4.ygrid.grid_line_dash = "dashed"
-p4.outline_line_color = None
-p4.min_border_left = 120
+    p.title.text_color = INK
+    p.title.text_font_size = "28pt"
 
-# Add main title to top panel
-p1.add_layout(
-    Title(text="timeseries-decomposition · bokeh · pyplots.ai", text_font_size="32pt", align="center"), "above"
+    p.xaxis.axis_label_text_color = INK
+    p.yaxis.axis_label_text_color = INK
+    p.xaxis.axis_label_text_font_size = "22pt"
+    p.yaxis.axis_label_text_font_size = "22pt"
+
+    p.xaxis.major_label_text_color = INK_SOFT
+    p.yaxis.major_label_text_color = INK_SOFT
+    p.xaxis.major_label_text_font_size = "18pt"
+    p.yaxis.major_label_text_font_size = "18pt"
+
+    p.xaxis.axis_line_color = INK_SOFT
+    p.yaxis.axis_line_color = INK_SOFT
+    p.xaxis.major_tick_line_color = INK_SOFT
+    p.yaxis.major_tick_line_color = INK_SOFT
+
+    p.ygrid.grid_line_color = INK
+    p.ygrid.grid_line_alpha = 0.10
+    p.xgrid.grid_line_color = INK
+    p.xgrid.grid_line_alpha = 0.10
+
+    p.yaxis.axis_label = y_label
+    if not show_x_axis:
+        p.xaxis.visible = False
+    else:
+        p.xaxis.axis_label = "Date"
+
+    p.min_border_left = 120
+
+    return p
+
+
+# Create subplots with theme-aware styling
+p1 = create_themed_figure(total_width, panel_height, "Original Series", "Passengers (thousands)")
+source1 = ColumnDataSource(data={"date": dates, "value": original})
+p1.line("date", "value", source=source1, line_width=3, color=BRAND)
+
+p2 = create_themed_figure(total_width, panel_height, "Trend Component", "Trend", x_range=p1.x_range)
+source2 = ColumnDataSource(data={"date": dates, "value": trend_component})
+p2.line("date", "value", source=source2, line_width=3, color=BRAND)
+
+p3 = create_themed_figure(total_width, panel_height, "Seasonal Component", "Seasonal", x_range=p1.x_range)
+source3 = ColumnDataSource(data={"date": dates, "value": seasonal_component})
+p3.line("date", "value", source=source3, line_width=3, color=BRAND)
+
+p4 = create_themed_figure(
+    total_width, panel_height, "Residual Component", "Residual", show_x_axis=True, x_range=p1.x_range
 )
+source4 = ColumnDataSource(data={"date": dates, "value": residual_component})
+p4.line("date", "value", source=source4, line_width=3, color=BRAND)
 
 # Combine all panels into vertical layout
 layout = column(p1, p2, p3, p4)
 
-# Save
-export_png(layout, filename="plot.png")
+# Save interactive HTML
+output_file(f"plot-{THEME}.html")
+save(layout)
+
+# Screenshot with headless Chrome using Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # Let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
