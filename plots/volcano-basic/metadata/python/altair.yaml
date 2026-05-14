@@ -1,15 +1,226 @@
 library: altair
+language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:31:07Z'
-updated: '2025-12-31T05:36:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612780884
+updated: '2026-05-14T11:24:22Z'
+generated_by: claude-haiku
+workflow_run: 25856779633
 issue: 2924
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/altair/plot.html
-quality_score: 92
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/altair/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Perfect Visual Quality (30/30) — all text legible in both themes, colors accessible,
+    clean layout
+  - 'Full Spec Compliance (15/15) — all required features: threshold lines, significance
+    categories, transparency, proper axes'
+  - Realistic data generation — differential expression simulation with appropriate
+    fold change and p-value distributions
+  - Theme-adaptive styling executed cleanly — consistent INK/INK_SOFT tokens preserve
+    identity across light/dark
+  - Interactive tooltips enhance usability without fake UI
+  - Clean, reproducible code with proper seed and minimal abstractions
+  weaknesses:
+  - Design Excellence only 9/20 — baseline styling without visual polish or distinctive
+    treatment
+  - No feature annotations despite spec suggestion to 'consider labeling top significant
+    features'
+  - Threshold lines lack visual hierarchy — could vary width, opacity, or combine
+    dashed/solid patterns
+  - Legend styling is functional but not distinctive — no special treatment or creative
+    positioning
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white. Clean, inviting surface.
+      Chrome: Title "volcano-basic · altair · anyplot.ai" in dark text (INK=#1A1A17) at top center, clearly readable (28px). X-axis label "Log₂ Fold Change" and Y-axis label "-Log₁₀(p-value)" in dark text (INK=22px); all tick labels in INK_SOFT (#4A4A44) at 18px, fully legible. Grid lines at 10% opacity, subtle but visible.
+      Data: Up-regulated points in teal (#009E73, Okabe-Ito pos 1), down-regulated in orange (#D55E00, pos 2), not-significant in gray (#4A4A44). Circles with size=80 and opacity=0.7 handle overlapping points well. Horizontal threshold at y≈1.3 and vertical thresholds at x=±1 shown as dashed lines with strokeDash=[8,4], color INK_SOFT, appropriately subtle.
+      Legend: Right side, title "Significance" (INK, 18px font), labels in INK_SOFT (16px). Background is ELEVATED_BG (#FFFDF6), with stroke=INK_SOFT border. All text readable and distinct.
+      Legibility verdict: PASS — All elements clearly visible with strong contrast. No light-on-light failures. Title, labels, and data points all readable at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black. Sophisticated, readable surface.
+      Chrome: Title in light text (INK=#F0EFE8) at 28px, clearly readable against dark background. X and Y axis labels in INK at 22px; tick labels in INK_SOFT (#B8B7B0) at 18px, excellent contrast. Grid lines at 10% opacity with light color, visible without competing.
+      Data: Up-regulated teal (#009E73) — identical to light render, still vibrant and visible. Down-regulated orange (#D55E00) — identical, clearly distinct. Not-significant in light gray (#B8B7B0) — different from light render's darker gray, appropriate for dark theme. Threshold lines in light gray, dashed pattern maintained.
+      Legend: Background ELEVATED_BG (#242420) with stroke=INK_SOFT border. Title and labels in light colors (INK/INK_SOFT), fully readable. Dark-on-dark check: No failures — tick labels are light gray on near-black, not dark-on-dark.
+      Legibility verdict: PASS — All elements clearly visible with excellent contrast. No dark-on-dark failures. Data colors identical to light render (only chrome adapted to theme). Brand green (#009E73) remains vibrant and accessible.
+
+    Both renders pass theme-readability checks. Okabe-Ito positions 1–7 are identical between light and dark; only chrome (backgrounds, text, grid) flips appropriately.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 28px, labels 22px, ticks 18px; all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend well-positioned, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers visible; opacity=0.7 handles density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette, colorblind-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 scaled 3x to 4800×2700px correct
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units and proper notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito pos 1/2 correct; backgrounds #FAF8F1/#1A1A17 correct;
+          both renders theme-correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Default styling, no exceptional design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Dashed threshold lines and subtle grid; could be more polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Volcano structure clear; lacks emphasis and feature labels
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot structure
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thresholds, categories, transparency all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correct; scales show data properly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title and legend labels match spec
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All volcano aspects shown; N=500 realistic for omics
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Differential expression simulation plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fold change [-6,6] and p-value ranges sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary abstractions or functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures determinism
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os, altair, numpy, pandas'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; proper layer composition
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct filenames and scale_factor=3.0
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level API, proper encoding, theme tokens show expertise
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layer composition and tooltips; lacks advanced interactions
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,193 +230,6 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent implementation of all spec requirements including threshold lines with
-    dashed styling
-  - Clean declarative Altair code with proper encoding types (:Q, :N)
-  - Biologically realistic data generation with correlation between fold change and
-    significance
-  - Good use of Unicode subscripts in axis labels (Log₂, Log₁₀)
-  - Proper color scheme distinguishing up-regulated (red), down-regulated (blue),
-    and non-significant (gray)
-  weaknesses:
-  - Could use Altair interactive selection features for highlighting genes by category
-  - Color palette could be more colorblind-friendly (e.g., using orange instead of
-    red)
-  image_description: 'The volcano plot displays a scatter plot with Log₂ Fold Change
-    on the x-axis (ranging from -6 to 6) and -Log₁₀(p-value) on the y-axis (ranging
-    from approximately 0.2 to 4.0). The title reads "volcano-basic · altair · pyplots.ai"
-    in a clear font at the top. Three categories of points are displayed with appropriate
-    colors: red/coral for Up-regulated genes (on the right side), blue for Down-regulated
-    genes (on the left side), and gray for Not Significant genes (in the center).
-    Two vertical dashed threshold lines are positioned at ±1 log2 fold change, and
-    one horizontal dashed threshold line at approximately 1.3 (-log10(0.05)). The
-    legend is positioned in the upper right corner showing "Significance" categories.
-    The plot shows approximately 500 data points with good transparency (alpha) to
-    handle overlapping points.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels fully readable
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Markers are well-sized (size=80) with good opacity (0.7) for 500
-          points; slightly better with smaller markers for this density
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Red/blue/gray palette is distinguishable but red-blue is not ideal
-          for all colorblind types
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive labels with subscript notation (Log₂, Log₁₀)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle (alpha 0.3), legend well placed but could be more
-          prominent
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct volcano plot type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=log2 fold change, Y=-log10(p-value) correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Has horizontal threshold line at 1.3, vertical lines at ±1, three-color
-          scheme (red/blue/gray)
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly labels Up-regulated, Down-regulated, Not Significant
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "volcano-basic · altair · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows both up and down-regulated genes, non-significant genes, varied
-          p-values; could show a few more extreme outliers
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Simulated differential expression results with biologically plausible
-          correlation between fold change and significance
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are realistic for omics data; fold change range (-6 to 6)
-          and p-values are appropriate
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only uses altair, numpy, pandas (all necessary)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also saves plot.html (not an error, but html
-          wasn't strictly required)
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses Altair features
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of declarative encoding, Scale, tooltips; could leverage
-          more interactive features or selection
-  verdict: APPROVED
+  styling:
+  - dark-theme
+  - alpha-blending
