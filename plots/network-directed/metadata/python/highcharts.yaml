@@ -1,15 +1,215 @@
 library: highcharts
+language: python
 specification_id: network-directed
 created: '2025-12-30T23:56:36Z'
-updated: '2025-12-31T00:13:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608487760
+updated: '2026-05-14T03:39:39Z'
+generated_by: claude-haiku
+workflow_run: 25840037466
 issue: 2858
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-directed/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-directed/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/highcharts/plot-dark.html
 quality_score: 90
+review:
+  strengths:
+  - Correct directed network graph with effective arrow visualization showing dependency
+    flow
+  - 'Perfect theme-adaptive styling: colors identical between themes, chrome properly
+    adjusted'
+  - Clean hierarchical layout organizes software dependencies intuitively
+  - All text clearly readable and properly contrasted in both light and dark modes
+  - Excellent data quality with realistic, recognizable software module dependencies
+  - Proper file outputs (PNG + HTML) with correct naming convention
+  weaknesses:
+  - Custom JavaScript arrow drawing is a workaround; could explore more native Highcharts
+    arrow/path features for more polished look
+  - Design is professional but relatively standard; minimal aesthetic customization
+    beyond functional requirements
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "network-directed · highcharts · anyplot.ai" in dark text; node labels (main, api, auth, database, models, utils, config, cache, logging, validation, routes, middleware) all visible in dark text
+      Data: 12 nodes in Okabe-Ito brand green (#009E73); 22 gray edge lines with green triangular arrows showing direction
+      Legibility verdict: PASS - All elements clearly visible with strong contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light text (F0EFE8); all node labels in light text - fully readable
+      Data: 12 nodes in identical green (#009E73) as light render; 22 light gray edge lines with green arrows - data colors preserved
+      Legibility verdict: PASS - All text crisp and readable; no dark-on-dark failures; only chrome adapted between themes while data colors remain identical
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set; all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Hierarchical layout prevents collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All nodes and edges clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Okabe-Ito palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand color correct, backgrounds correct, theme-chrome perfect
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default, minimal custom aesthetic
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good margins and sizing, minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Hierarchical layout effectively shows dependency flow
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network graph
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct directional relationships
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Comprehensive software dependency network
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, recognizable software architecture
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ideal scale for visualization
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure, no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed node positions ensure deterministic layout
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct file naming
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of Highcharts networkgraph module
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses networkgraph and custom SVG arrow rendering
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -19,184 +219,3 @@ impl_tags:
   - data-generation
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Clear hierarchical layout showing software module dependencies in logical layers
-  - Properly implemented directional arrows using custom SVG rendering
-  - Good colorblind-safe color scheme (yellow nodes, blue edges)
-  - Fixed node positions ensure reproducibility across runs
-  - Correct title format following spec requirements
-  - Realistic software architecture example that demonstrates practical use case
-  weaknesses:
-  - Node labels are readable but slightly small for the 4800x2700 canvas; increasing
-    font size would improve legibility
-  - Significant empty space on left and right margins - nodes could be spread wider
-    to better utilize canvas
-  image_description: The plot displays a directed network graph showing software module
-    dependencies. It features 12 yellow circular nodes labeled with module names (main,
-    api, auth, database, models, utils, config, cache, logging, validation, routes,
-    middleware) arranged in a hierarchical layout. Blue directional edges (arrows)
-    connect the nodes, indicating import dependencies - arrows point from the importing
-    module to the imported module. The title "network-directed · highcharts · pyplots.ai"
-    appears at the top in bold, with a subtitle "Software Module Dependencies (arrows
-    show import direction)" below it. The graph is arranged across approximately 4-5
-    layers showing the hierarchy from main at the top down to cache and utils at the
-    bottom.
-  criteria_checklist:
-    visual_quality:
-      score: 35
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Title and labels are readable but could be slightly larger for the
-          4800x2700 canvas
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all node labels clearly visible
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Nodes and edges clearly visible, arrows are well-sized
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow nodes with blue edges, colorblind-safe palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good hierarchical layout but significant empty space on left/right
-          margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for network graphs, using subtitle for context
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean background, no distracting elements
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct directed network graph with arrows
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes and edges correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Has arrows showing direction, clear node labels, hierarchical layout
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 12 nodes and 22 edges visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for this chart type, subtitle explains the visualization
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: network-directed · highcharts · pyplots.ai'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows directed edges, multiple connection patterns, hierarchy, but
-          no edge weights shown
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software module dependencies is a real, practical use case
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: 12 nodes is appropriate, some module names could be more descriptive
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data → HTML generation → screenshot'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Fixed node positions ensure reproducible output
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses Highcharts networkgraph module
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of custom arrow rendering, but could leverage more built-in
-          features
-  verdict: APPROVED
