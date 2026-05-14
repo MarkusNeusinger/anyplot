@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-loss-training: Training Loss Curve
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 82/100 | Created: 2026-05-14
@@ -18,7 +18,7 @@ if script_dir in sys.path:
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, HoverTool  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, Label, Quad  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -61,10 +61,11 @@ min_val_loss = val_loss[min_val_idx]
 df = pd.DataFrame({"epoch": epochs, "train_loss": train_loss, "val_loss": val_loss})
 
 # Create Bokeh figure
+title_text = "line-loss-training · bokeh · anyplot.ai"
 p = figure(
     width=4800,
     height=2700,
-    title="Training and Validation Loss Over Epochs",
+    title=title_text,
     x_axis_label="Epoch",
     y_axis_label="Loss (Cross-Entropy)",
     toolbar_location="right",
@@ -73,6 +74,20 @@ p = figure(
 # Set up data sources
 train_source = ColumnDataSource(df[["epoch", "train_loss"]])
 val_source = ColumnDataSource(df[["epoch", "val_loss"]])
+
+# Create a shaded region to highlight potential overfitting area (after epoch 80)
+overfitting_start = 80
+max_loss = max(df["val_loss"].max(), df["train_loss"].max())
+overfitting_quad = p.quad(
+    left=[overfitting_start],
+    right=[n_epochs],
+    bottom=[0],
+    top=[max_loss],
+    fill_alpha=0.08,
+    fill_color=VAL_COLOR,
+    line_color=None,
+    level="underlay",
+)
 
 # Plot lines
 train_line = p.line(
@@ -97,25 +112,55 @@ val_line = p.line(
     muted_alpha=0.15,
 )
 
-# Add subtle circle markers at data points
-p.scatter(x="epoch", y="train_loss", source=train_source, size=5, color=TRAIN_COLOR, alpha=0.6)
-
-p.scatter(x="epoch", y="val_loss", source=val_source, size=5, color=VAL_COLOR, alpha=0.6)
-
-# Mark the epoch with minimum validation loss
+# Add circle markers at data points
 p.scatter(
+    x="epoch",
+    y="train_loss",
+    source=train_source,
+    size=5,
+    color=TRAIN_COLOR,
+    alpha=0.6,
+    hover_color=TRAIN_COLOR,
+    hover_alpha=1.0,
+)
+
+p.scatter(
+    x="epoch",
+    y="val_loss",
+    source=val_source,
+    size=5,
+    color=VAL_COLOR,
+    alpha=0.6,
+    hover_color=VAL_COLOR,
+    hover_alpha=1.0,
+)
+
+# Mark the epoch with minimum validation loss - larger marker for emphasis
+optimal_marker = p.scatter(
     x=[min_val_epoch],
     y=[min_val_loss],
-    size=12,
+    size=20,
     color=VAL_COLOR,
     line_color=INK,
-    line_width=2,
-    alpha=0.8,
+    line_width=3,
+    alpha=1.0,
     legend_label=f"Optimal epoch: {min_val_epoch}",
 )
 
-# Add hover tool
-hover = HoverTool(tooltips=[("Epoch", "@epoch"), ("Loss", "@y{0.0000}")])
+# Add annotation label at the optimal epoch
+label = Label(
+    x=min_val_epoch,
+    y=min_val_loss,
+    text=f"  Epoch {min_val_epoch}\n  Loss {min_val_loss:.4f}",
+    text_color=INK,
+    text_font_size="14pt",
+    text_baseline="middle",
+    text_align="left",
+)
+p.add_layout(label)
+
+# Add detailed hover tool
+hover = HoverTool(tooltips=[("Epoch", "@epoch{0}"), ("Loss", "@y{0.0000}")], mode="vline")
 p.add_tools(hover)
 
 # Apply text sizing
