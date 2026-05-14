@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 network-directed: Directed Network Graph
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-14
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -10,11 +12,19 @@ import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for group colors (first 4 positions)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data: Software package dependencies (arrows show import direction)
 np.random.seed(42)
 
 # Define modules with groups (core, utils, api, tests)
-# Positions optimized for 16:9 aspect ratio with better spread
 nodes = {
     "main": {"group": "core", "pos": (0.45, 0.88)},
     "config": {"group": "core", "pos": (0.18, 0.68)},
@@ -57,21 +67,18 @@ edges = [
     ("test_db", "database"),
 ]
 
-# Group colors (colorblind-safe palette)
-group_colors = {
-    "core": "#306998",  # Python Blue
-    "api": "#FFD43B",  # Python Yellow
-    "utils": "#4DAF4A",  # Green
-    "tests": "#984EA3",  # Purple
-}
+# Group colors (Okabe-Ito)
+group_colors = {"core": OKABE_ITO[0], "api": OKABE_ITO[1], "utils": OKABE_ITO[2], "tests": OKABE_ITO[3]}
 
-# Create plot (16:9 for directed graph)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Node radius for arrow endpoint calculations
 node_radius = 0.055
 
 # Draw edges with arrows
+edge_color = INK_SOFT if THEME == "light" else "#999999"
 for source, target in edges:
     pos1 = nodes[source]["pos"]
     pos2 = nodes[target]["pos"]
@@ -90,9 +97,9 @@ for source, target in edges:
         end,
         arrowstyle="-|>",
         mutation_scale=25,
-        color="#555555",
+        color=edge_color,
         linewidth=2.5,
-        alpha=0.65,
+        alpha=0.6,
         connectionstyle="arc3,rad=0.12",
     )
     ax.add_patch(arrow)
@@ -103,26 +110,30 @@ for name, props in nodes.items():
     color = group_colors[props["group"]]
 
     # Draw node circle
-    circle = Circle(pos, radius=node_radius, facecolor=color, edgecolor="#333333", linewidth=2.5, alpha=0.95, zorder=10)
+    circle = Circle(pos, radius=node_radius, facecolor=color, edgecolor=INK_SOFT, linewidth=2.5, alpha=0.9, zorder=10)
     ax.add_patch(circle)
 
     # Draw label
-    ax.text(pos[0], pos[1], name, ha="center", va="center", fontsize=13, fontweight="bold", color="#222222", zorder=11)
+    ax.text(pos[0], pos[1], name, ha="center", va="center", fontsize=13, fontweight="bold", color=INK, zorder=11)
 
-# Create legend
+# Legend
 legend_handles = [
-    mpatches.Patch(color=color, label=group.capitalize(), alpha=0.95) for group, color in group_colors.items()
+    mpatches.Patch(color=color, label=group.capitalize(), alpha=0.9) for group, color in group_colors.items()
 ]
-ax.legend(
+leg = ax.legend(
     handles=legend_handles, loc="upper left", fontsize=16, framealpha=0.95, title="Module Type", title_fontsize=18
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+for text in leg.get_texts():
+    text.set_color(INK_SOFT)
 
-# Styling
-ax.set_title("network-directed · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+# Style
+ax.set_title("network-directed · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 ax.set_xlim(-0.02, 1.02)
 ax.set_ylim(0.0, 1.0)
 ax.set_aspect("equal")
 ax.axis("off")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
