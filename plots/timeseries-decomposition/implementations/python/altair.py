@@ -1,27 +1,44 @@
-""" pyplots.ai
+""" anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-14
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
-from statsmodels.tsa.seasonal import seasonal_decompose
+import os
+import sys
 
 
-# Data - Monthly airline passengers (classic time series example)
+# Fix sys.path to avoid circular import: remove current dir and script location
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir and os.path.abspath(p) != os.getcwd()]
+sys.path.insert(0, "/usr/lib/python3.13")
+sys.path.insert(0, "/usr/local/lib/python3.13/dist-packages")
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from statsmodels.tsa.seasonal import seasonal_decompose  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (component colors)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Monthly airline passengers
 np.random.seed(42)
-dates = pd.date_range("2018-01-01", periods=96, freq="MS")  # 8 years monthly data
-# Create realistic airline passenger data with trend + seasonality
-trend = np.linspace(100, 180, 96)  # Increasing trend
-seasonal = 30 * np.sin(2 * np.pi * np.arange(96) / 12)  # Annual cycle
+dates = pd.date_range("2018-01-01", periods=96, freq="MS")
+trend = np.linspace(100, 180, 96)
+seasonal = 30 * np.sin(2 * np.pi * np.arange(96) / 12)
 noise = np.random.normal(0, 8, 96)
 values = trend + seasonal + noise
 
-df = pd.DataFrame({"date": dates, "value": values})
-
-# Decompose the time series
+# Decompose time series
 series = pd.Series(values, index=dates)
 decomposition = seasonal_decompose(series, model="additive", period=12)
 
@@ -39,31 +56,31 @@ df_decomp = pd.DataFrame(
 # Melt for faceted plotting
 df_long = df_decomp.melt(id_vars=["date"], var_name="component", value_name="value")
 
-# Define component order
+# Component order
 component_order = ["Original", "Trend", "Seasonal", "Residual"]
 
-# Color mapping for each component
-color_map = {
-    "Original": "#306998",  # Python Blue
-    "Trend": "#E63946",  # Red
-    "Seasonal": "#2A9D8F",  # Teal
-    "Residual": "#9B59B6",  # Purple
-}
+# Color mapping using Okabe-Ito palette
+color_map = {component: OKABE_ITO[i] for i, component in enumerate(component_order)}
 
-# Create the chart
-chart = (
+# Base chart with encoding
+base_chart = (
     alt.Chart(df_long)
     .mark_line(strokeWidth=2.5)
     .encode(
         x=alt.X(
-            "date:T", title="Date", axis=alt.Axis(labelFontSize=16, titleFontSize=20, labelAngle=-45, tickCount=12)
+            "date:T", title="Date", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=-45, tickCount=12)
         ),
-        y=alt.Y("value:Q", title="Value", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
+        y=alt.Y("value:Q", title="", axis=alt.Axis(labelFontSize=16, titleFontSize=18)),
         color=alt.Color(
             "component:N", scale=alt.Scale(domain=component_order, range=list(color_map.values())), legend=None
         ),
+        tooltip=["date:T", "value:Q", "component:N"],
     )
-    .properties(width=1500, height=180)
+)
+
+# Create faceted chart with grid lines
+chart = (
+    base_chart.properties(width=1600, height=200)
     .facet(
         row=alt.Row(
             "component:N",
@@ -74,14 +91,18 @@ chart = (
             ),
         )
     )
-    .properties(title=alt.Title("timeseries-decomposition · altair · pyplots.ai", fontSize=28, anchor="middle", dy=-10))
-    .configure_view(strokeWidth=0)
-    .configure_facet(spacing=25)
+    .properties(title=alt.Title("timeseries-decomposition · altair · anyplot.ai", fontSize=28, anchor="middle", dy=-10))
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_facet(spacing=20)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.12, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK, fontSize=28)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .resolve_scale(y="independent")
+    .interactive()
 )
 
-# Save as PNG (1600 × 900 base → 4800 × 2700 with scale_factor=3)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
