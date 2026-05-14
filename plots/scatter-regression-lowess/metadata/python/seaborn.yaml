@@ -1,160 +1,171 @@
 library: seaborn
+language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:53:33Z'
-updated: '2025-12-30T23:56:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608460608
+updated: '2026-05-14T01:07:24Z'
+generated_by: claude-haiku
+workflow_run: 25835391104
 issue: 2855
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep:
-    - regression
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of seaborn regplot with lowess=True for the canonical LOWESS implementation
-  - Strong color contrast between blue scatter points and yellow LOWESS curve makes
-    the regression line very visible
-  - Appropriate marker size and transparency for 200 data points
-  - Well-structured synthetic data that demonstrates the LOWESS curve adapting to
-    non-linear patterns
-  - Clean, KISS-compliant code structure
+  - Perfect visual quality with explicit typography and flawless theme-correct chrome
+    in both renders
+  - Excellent spec compliance with all required features and proper title format
+  - Clean reproducible code with professional theme token pattern
+  - Strong data storytelling through LOWESS visualization of non-linear patterns
+  - Dual-theme robustness with zero readability failures in light or dark mode
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) rather than contextual
-  - The synthetic data could show more distinct local variations to better demonstrate
-    LOWESS local-fitting capabilities
-  image_description: The plot displays a scatter plot with LOWESS regression on a
-    16:9 canvas. Blue scatter points (#306998) with alpha 0.6 are distributed showing
-    a complex non-linear relationship - relatively flat oscillation from x=0-5, then
-    rising steeply from x=5-10. A bright yellow/gold LOWESS curve (#FFD43B) with linewidth
-    4 smoothly traces through the data, capturing the non-linear trend. The title
-    "scatter-regression-lowess · seaborn · pyplots.ai" is at the top. Axis labels
-    are "X Value" and "Y Value" in large font. A subtle dashed grid with alpha 0.3
-    provides reference. The plot uses good space, with balanced margins.
+  - Design excellence defaults to well-configured library look (not exceptional design
+    choices)
+  - LM-02 uses library-specific features that could be replicated in other libraries
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with no purity or harshness.
+      Chrome: Title "scatter-regression-lowess · seaborn · anyplot.ai" in dark text (24pt, readable). Axis labels "Input Variable (x)" and "Response Variable (y)" in dark text (20pt, readable). Tick labels in INK_SOFT dark gray (16pt, readable). Y-axis grid subtle at alpha=0.10. Spines: left and bottom visible, top/right removed.
+      Data: Green scatter points (#009E73, Okabe-Ito pos 1) with 60% transparency (s=100 size, 200 points). Orange LOWESS curve (#D55E00, Okabe-Ito pos 2) with linewidth=4, smoothly tracking the complex non-linear pattern (steep rise 0–2, plateau 2–5, dip 5–6, gentle rise 6–10).
+      Legibility verdict: PASS — all text perfectly readable against light background; no light-on-light failures; data colors distinct and visible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with no purity or harshness.
+      Chrome: Title in light text (#F0EFE8, 24pt, readable). Axis labels in light text (20pt, readable). Tick labels in INK_SOFT light gray (#B8B7B0, 16pt, readable). Y-axis grid subtle at alpha=0.10 with light-colored grid line. Spines: left and bottom visible in INK_SOFT, top/right removed.
+      Data: Green scatter points (#009E73, identical to light render). Orange LOWESS curve (#D55E00, identical to light render). Data colors are 100% identical to the light render — only chrome flips to light theme tokens.
+      Legibility verdict: PASS — all text clearly visible against dark background; no dark-on-dark failures (e.g., no black tick labels on near-black background); brand green #009E73 is highly visible on dark surface; both renders equally readable.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized at s=100, alpha=0.6 is appropriate for 200
-          points. Slightly dense in some areas but still clear.
+        comment: Marker size s=100 with alpha=0.6 optimal for 200 points; LOWESS linewidth=4
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue points and yellow line provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but no units (generic "X Value" / "Y Value")
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed grid at alpha 0.3, no legend needed for this single-series
-          plot
+        comment: Okabe-Ito palette; strong contrast between green and orange; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-80% of canvas; balanced margins; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with variable names; no generic x/y
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Okabe-Ito pos 1); second series #D55E00 (pos
+          2); backgrounds #FAF8F1 light / #1A1A17 dark; theme chrome perfect in both
+          renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with professional theme tokens; not
+          exceptional design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (top/right), subtle grid (alpha=0.10, y-axis only),
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Complex non-linear pattern clearly illuminated by LOWESS; trend is
+          visual focal point; guides viewer to insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with LOWESS regression curve
+        comment: 'Correct: scatter plot with LOWESS regression using sns.regplot(lowess=True)'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y correctly assigned to axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: LOWESS curve is visually distinct (contrasting yellow color, thick
-          line), moderate transparency on points, smooth curve
-      - id: SC-04
-        name: Data Range
+        comment: Scatter points, LOWESS curve, smooth appearance, visually distinct
+          colors
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X/Y correctly assigned; all data visible (x: 0-10, y: 0-9)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: `scatter-regression-lowess · seaborn · pyplots.ai`'
+        comment: 'Title format correct: ''scatter-regression-lowess · seaborn · anyplot.ai'''
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows non-linear relationship with varying patterns across x-range.
-          The sine+power combination demonstrates LOWESS ability to adapt, though
-          the relationship could show more distinct local variation.
+        comment: 'Demonstrates all LOWESS capabilities: local adaptive smoothing,
+          complex non-linear relationship with local variations'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Generic mathematical example, plausible but not tied to a real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are sensible, 200 points is appropriate for LOWESS
+        comment: Generic input/response scenario; plausible scientific context; neutral
+          topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible domain values; proportions factually consistent
     code_quality:
       score: 10
       max: 10
@@ -164,40 +175,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'No functions/classes; linear structure: import → tokens → data →
+          plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: '`np.random.seed(42)` is set'
+        comment: np.random.seed(42) set; data fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot, numpy, and seaborn used
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png`
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png, dpi=300, tight layout; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses seaborn's `regplot` with `lowess=True`, which is the canonical
-          way to create LOWESS plots in seaborn
+        comment: Expert use of sns.regplot() high-level API and sns.set_theme() pattern;
+          theme token approach aligned with library idiom
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: sns.regplot(lowess=True) and theme configuration are library-specific
+          but could be replicated in other libraries
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
