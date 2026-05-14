@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T11:01:31Z'
-updated: '2026-05-14T17:13:41Z'
+updated: '2026-05-14T17:21:11Z'
 generated_by: claude-haiku
 workflow_run: 25873844269
 issue: 3002
@@ -15,32 +15,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 quality_score: 89
 review:
   strengths:
-  - Perfect theme adaptation with no legibility failures in either render
-  - Professional mosaic design with intentional hierarchy and deliberate region sizing
-  - Comprehensive feature showcase with six different plot types in a single layout
-  - Full specification compliance exceeding all requirements
-  - Realistic, appropriate data across all panels for business dashboard context
+  - 'Perfect visual quality: all text legible in both light and dark modes, no overlap,
+    proper theming, correct color palette'
+  - 'Strong spec compliance: mosaic layout correctly implemented with clear hierarchy
+    and six distinct plot types'
+  - 'Clean code: simple, reproducible, well-organized implementation with proper imports
+    and current API usage'
+  - 'Effective data hierarchy: layout creates clear overview → details → metrics narrative
+    flow'
+  - 'Comprehensive feature coverage: six plot types demonstrate mosaic subplot versatility'
+  - 'Proper theme adaptation: both light and dark renders fully functional with correct
+    colors and background consistency'
   weaknesses:
-  - Limited showcase of lets_plot distinctive features - code uses basic geoms without
-    interactive capabilities like hover tooltips
-  - Design Excellence could be higher - visual refinement is functional but not exceptional
-    beyond theme requirements
+  - 'Generic design excellence: styling relies heavily on defaults, no exceptional
+    visual polish or custom refinements beyond required palette'
+  - 'Limited distinctive library features: implementation uses standard ggplot2 patterns
+    rather than showcasing advanced letsplot-specific capabilities'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title is centered, bold, 26pt in dark ink. Axis labels (20pt) and tick labels (16pt) in INK_SOFT (#4A4A44) - all clearly readable against light background ✓
-      Data: Six plot types each using appropriate colors. Primary series is teal #009E73 (Okabe-Ito[0]). Heatmap uses viridis. All data is distinct and visible ✓
-      Grid: Subtle gridlines visible without being dominant
-      Layout: Clean mosaic with no overlapping elements. Panel A spans full width (top). B spans 2/3 width, C spans 1/3 width. D, E, F are equal-sized at bottom
-      Legibility verdict: PASS - all text is readable in both themes with proper contrast
+      Background: Warm off-white (#FAF8F1), correct theme surface
+      Chrome: Title "subplot-mosaic · letsplot · anyplot.ai" bold and prominent at top; all panel titles, axis labels, and tick labels in dark text (#1A1A17), clearly readable against light background
+      Data: Panel A (area chart) green (#009E73) with subtle fill; Panel B (bar chart) green bars with rotated x-labels preventing overlap; Panel C (scatter) green points with orange regression line (#D55E00); Panel D (histogram) green bars; Panel E (line chart) green line with points; Panel F (heatmap) viridis colormap with numeric labels. All colors consistent with Okabe-Ito palette.
+      Layout: Six-panel mosaic with clear hierarchy—Panel A spans full width at top (overview), Panels B-C in middle row (details), Panels D-E-F in bottom row (metrics). Spacing is generous and consistent.
+      Legibility verdict: PASS - All text readable, no collisions, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title centered, bold in light color (#F0EFE8). Axis labels and ticks in INK_SOFT (#B8B7B0) - excellent contrast against dark background. No dark-on-dark failures detected ✓
-      Data: All data colors identical to light render. Teal #009E73 for primary series, orange for secondary, viridis for heatmap ✓
-      Grid: Subtle gridlines in light soft-ink color, visible but not dominant
-      Layout: Identical to light render - clean mosaic structure maintained
-      Legibility verdict: PASS - all text is readable; chrome correctly adapted to dark theme
+      Background: Warm near-black (#1A1A17), correct theme surface
+      Chrome: Title at top in light text (#F0EFE8), all axis labels and tick labels in appropriate light color (#B8B7B0 for secondary), clearly readable against dark background. No dark-on-dark failures.
+      Data: Data colors identical to light render—green (#009E73), orange (#D55E00), viridis colormap unchanged. Only chrome elements (text, background, grid, legend frame) have flipped to dark theme tokens.
+      Layout: Same six-panel mosaic arrangement with consistent spacing as light render. Visual hierarchy maintained.
+      Legibility verdict: PASS - All text readable in light color, data colors match light render exactly, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,75 +55,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; proper sizing (26pt title, 20pt
-          labels, 16pt axis text)
+        comment: Font sizes follow letsplot guide; all text readable in both themes
+          with clear hierarchy
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean mosaic layout with no overlapping elements; x-axis labels rotated
-          for clarity
+        comment: No text collisions; rotated category labels prevent x-axis overlap;
+          ample panel spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, histogram bins, heatmap values readable; no density
-          issues
+        comment: All markers, lines, bars, histogram bins clearly visible with appropriate
+          alpha values
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (#009E73) is colorblind-safe; adequate contrast
-          throughout
+        comment: All colors from Okabe-Ito palette; CVD-safe greens and oranges; viridis
+          colormap perceptually uniform
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 base (→ 4800×2700 px at scale 3); proportions excellent;
-          nothing cut off
+        comment: Canvas 4800x2700px; landscape aspect ratio appropriate; all elements
+          fit with generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive titles for all panels; main title includes spec-id, library,
-          and domain
+        comment: All panels have descriptive axis labels with units; main title follows
+          format requirement
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); chrome flips appropriately; data colors identical between themes'
+        comment: 'First series #009E73; secondary #D55E00; viridis for continuous;
+          backgrounds correct for both themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Professional polish with intentional hierarchy; larger top panel
-          emphasizes overview; mosaic layout is deliberate and well-executed
+        passed: false
+        comment: Thoughtful hierarchy (overview → details → metrics) and multi-type
+          variety, but styling mostly defaults—generic composition
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Spines handled by theme_minimal; grid is subtle but visible; good
-          spacing between panels
+        passed: false
+        comment: Minimal spine customization; adequate grid styling; clean but not
+          particularly refined
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual narrative flowing from overview (top) to detail (bottom);
-          mosaic arrangement tells dashboard story effectively
+        comment: Clear visual hierarchy and narrative flow through layout; could be
+          more dramatic with emphasis techniques
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic subplot layout with varying panel sizes
+        comment: Correct mosaic subplot layout via ggbunch with region coordinates
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Asymmetric sizing and multiple plot types demonstrate all required
-          features
+        comment: 'All spec features: mosaic patterns, asymmetric arrangement, spacing,
+          hierarchy, six distinct plot types'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; axes show full data range; no clipping
+        comment: Correct x/y mappings; axes show all data; appropriate color encoding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title correct format; descriptive panel titles; heatmap includes
-          value legend
+        comment: Format requirement met; panel titles and legends present
     data_quality:
       score: 15
       max: 15
@@ -159,20 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six different plot types showcase mosaic capabilities
+        comment: Six distinct plot types showcase mosaic versatility comprehensively
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: All data is realistic and appropriate for business dashboard context
+        comment: All synthetic data plausible and neutral; realistic domain ranges
+          throughout
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue in $1000s, sales in units, effort in hours, growth in percentages—all
-          sensible
+        comment: All values within sensible domain ranges; no scale distortions
     code_quality:
       score: 10
       max: 10
@@ -182,58 +185,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward script
+        comment: Straightforward, readable code with clear logical flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot imported; all used
+        comment: Only used imports; no bloat
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity
+        comment: Well-organized with proper pandas/ggplot2 usage; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current API
+        comment: Correct output files and current API usage
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper ggplot/aes/geom pattern; ggbunch with region coordinates is
-          idiomatic
+        comment: Proper ggplot2 grammar and idiomatic letsplot patterns throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: ggbunch is distinctive to lets_plot; limited showcase of interactive
-          features
+        passed: false
+        comment: Uses ggbunch and theme control correctly, but mostly standard patterns
+          rather than pushing distinctive capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
-  - time-series
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
