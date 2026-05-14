@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-14
@@ -18,6 +18,7 @@ from plotnine import (
     geom_line,
     ggplot,
     labs,
+    scale_size_manual,
     scale_x_datetime,
     theme,
     theme_minimal,
@@ -76,12 +77,14 @@ df_plot["component"] = pd.Categorical(
 )
 
 # Create faceted plot with four components
+# Emphasize original series with thicker line
 plot = (
-    ggplot(df_plot, aes(x="date", y="value"))
-    + geom_line(color=BRAND, size=1.2)
+    ggplot(df_plot, aes(x="date", y="value", size="component"))
+    + geom_line(color=BRAND)
     + facet_wrap("~component", ncol=1, scales="free_y", dir="v")
     + scale_x_datetime(date_labels="%Y", date_breaks="2 years")
-    + labs(title="timeseries-decomposition · plotnine · anyplot.ai", x="Date", y="Value")
+    + scale_size_manual(values={"Original": 1.8, "Trend": 1.2, "Seasonal": 1.2, "Residual": 1.2}, guide=None)
+    + labs(title="timeseries-decomposition · plotnine · anyplot.ai", x="Date", y="Passengers")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
@@ -95,7 +98,7 @@ plot = (
         axis_line=element_line(color=INK_SOFT, size=0.5),
         strip_text=element_text(size=16, weight="bold", color=INK),
         strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        panel_spacing_y=0.04,
+        panel_spacing_y=0.06,
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_blank(),
     )
