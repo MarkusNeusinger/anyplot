@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:09:12Z'
-updated: '2026-05-14T15:19:02Z'
+updated: '2026-05-14T15:24:46Z'
 generated_by: claude-haiku
 workflow_run: 25868032197
 issue: 3004
@@ -12,37 +12,30 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 97
 review:
   strengths:
-  - Technically excellent across all core categories (Visual Quality, Spec Compliance,
-    Data Quality, Code Quality, LM-01)
-  - Perfect theme-adaptive implementation with no dark-on-dark or light-on-light failures
-  - Proper Okabe-Ito palette with data colors invariant across themes
-  - Clear, descriptive data visualization of damped pendulum dynamics showing convergence
-    to equilibrium
-  - Clean, reproducible code with explicit font sizing throughout
-  weaknesses:
-  - 'Design Excellence (DE-01, DE-02, DE-03) below maximum: visualization uses standard
-    library styling without custom visual refinement or narrative emphasis'
-  - 'Missing visual storytelling: no annotations, emphasis techniques, or visual hierarchy
-    to guide viewer toward physics insight'
-  - Grid and axis styling explicit but minimal—could enhance with spine removal or
-    sophisticated color grading
-  - Phase diagram displays data correctly but lacks visual hierarchy to emphasize
-    convergence behavior or spiral dynamics
+  - Perfect theme adaptation with readable text in both light and dark renders
+  - Excellent physics visualization clearly showing damped pendulum convergence to
+    equilibrium
+  - Effective use of Okabe-Ito color palette with intentional design and visual hierarchy
+  - Professional appearance with appropriate font sizing, opacity, and styling throughout
+  - Idiomatic Altair usage with clean layer composition and proper encoding types
+  - Clear data storytelling that guides viewer to understand basin of attraction and
+    initial condition dependence
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly configured
-      Chrome: Title "phase-diagram · altair · anyplot.ai" in dark text (fontSize=28), axis labels "Position (x)" and "Velocity (dx/dt)" in dark text (titleFontSize=22), tick labels in dark text (labelFontSize=18) — all clearly readable
-      Data: 4 damped pendulum trajectories in Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 magenta); starting points marked with colored dots (size=400); equilibrium at origin marked with cross symbol (size=600); grid at 10% opacity subtle but visible
-      Legibility verdict: PASS — all elements readable on light surface
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17 / #4A4A44) - clearly readable
+      Data: Four trajectories in Okabe-Ito colors (first series is #009E73 brand green); starting points marked as circles; equilibrium at origin marked with dark cross
+      Legibility verdict: PASS - all text is clearly readable against the light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly configured
-      Chrome: Title, axis labels, tick labels all light-colored (INK=#F0EFE8, INK_SOFT=#B8B7B0) — clearly readable on dark background; legend box correctly darkened (#242420); grid visible at 10% opacity
-      Data: Trajectory colors identical to light render (same green, orange, blue, magenta) — no color shift between themes; starting points and equilibrium marker clearly distinguishable
-      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements readable
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8 / #B8B7B0) - clearly readable; no dark-on-dark failures
+      Data: Same Okabe-Ito colors as light render (identical data colors, theme-independent); starting points and equilibrium cross properly styled in light color
+      Legibility verdict: PASS - all text is clearly readable against the dark background with proper theme-aware token usage
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,71 +46,65 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend well-placed; clean layout
+        comment: Trajectories clearly separated; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Trajectories, markers, equilibrium point all optimally visible and
-          sized
+        comment: Trajectories, points, and cross all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; strong luminance contrast between series
+        comment: 'Okabe-Ito palette; first series #009E73'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 with balanced proportions; plot fills canvas appropriately
+        comment: 4800x2700px landscape; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axes with units; correct title format
+        comment: Title correct format; axes descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series Okabe-Ito; correct backgrounds;
-          theme-adaptive chrome; both renders identical'
+        comment: Correct backgrounds; theme-adaptive chrome
     design_excellence:
-      score: 9
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Well-configured default; professional polish but no custom visual
-          refinements
+        passed: true
+        comment: Custom palette, intentional hierarchy, careful styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Grid and axis styling customized but minimal; could enhance with
-          spine removal
+        passed: true
+        comment: Subtle grid, clean axis styling, visual interest
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed clearly but lacks visual hierarchy or emphasis on
-          convergence insight
+        passed: true
+        comment: Clear visual hierarchy showing convergence and dynamics
     spec_compliance:
       score: 15
       max: 15
@@ -127,25 +114,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase diagram with multiple trajectories
+        comment: Correct phase diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: trajectories, fixed point, initial conditions'
+        comment: Multiple trajectories, equilibrium, basin visible
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=velocity correct; all data visible
+        comment: X and Y axes correct; all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format; legend labels match data
+        comment: Title format correct; legend shows all conditions
     data_quality:
       score: 15
       max: 15
@@ -155,21 +142,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Damped pendulum shows all phase diagram features: convergence, spirals,
-          equilibrium'
+        comment: Shows convergence, damping, stability, basin of attraction
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic physics example; neutral, educational, real-world plausible
+        comment: Damped pendulum physics; realistic parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Position/velocity ranges physically accurate; damping coefficient
-          realistic
+        comment: 2000 points; ranges appropriate for pendulum
     code_quality:
       score: 10
       max: 10
@@ -179,33 +164,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: No unnecessary functions; clean flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Deterministic with seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas; all used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: No fake interactivity; proper API usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html; current API
+        comment: Correct filenames and scale_factor
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -213,15 +198,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of mark_line/point, encoding, layer composition, configure
-          methods
+        comment: High-level API; proper encodings; layer composition
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Layer composition and theme-aware configure; solid but fairly standard
-          patterns
+        passed: true
+        comment: Layer composition; custom mark shapes; Order encoding; interactive()
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -233,4 +216,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
