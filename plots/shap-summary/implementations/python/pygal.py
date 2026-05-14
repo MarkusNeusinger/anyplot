@@ -1,7 +1,7 @@
 """ anyplot.ai
 shap-summary: SHAP Summary Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 38/100 | Created: 2026-05-14
+Quality: 81/100 | Created: 2026-05-14
 """
 
 import os

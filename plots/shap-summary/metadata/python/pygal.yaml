@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: shap-summary
 created: '2026-05-14T13:04:49Z'
-updated: '2026-05-14T13:31:45Z'
+updated: '2026-05-14T13:37:17Z'
 generated_by: claude-haiku
 workflow_run: 25861442180
 issue: 2923
@@ -12,88 +12,86 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/pygal/plot-dark.html
-quality_score: 38
+quality_score: 81
 review:
   strengths:
-  - Correct SHAP plot implementation with proper feature ordering by importance
-  - 'Perfect spec compliance: all required features present and correctly mapped'
-  - Excellent data quality with realistic credit/loan scenario
-  - BrBG colormap correctly shows low-to-high feature values with CVD-safe diverging
-    scale
-  - Clean code structure with deterministic random seed
-  - Light render fully readable and properly styled
-  - Reference line at x=0 clearly separates positive/negative impacts
+  - Both light and dark renders perfectly themed with correct color preservation and
+    readable text
+  - Proper BrBG diverging colormap selection for continuous feature values
+  - Data correctly sorted by importance with reference line at x=0 for clear interpretation
+  - Effective jittering reduces point overlap and improves visibility
+  - Realistic and neutral credit-scoring domain data with 10 features
+  - Responsive theme switching with appropriate text color adaptation
   weaknesses:
-  - Dark theme SVG text color post-processing completely failed - feature labels,
-    tick labels, and title are unreadable due to dark text on dark background (#1A1A17)
-  - SVG regex manipulation is fragile and does not properly apply light text colors
-    (#F0EFE8) to all text elements
-  - 'No design sophistication: generic default styling with no visual hierarchy or
-    aesthetic refinement'
-  - No distinctive library features or advanced pygal usage
-  - 'Minimal visual refinement: grid visible but uncustomized, no spine adjustments'
+  - 'Limited design sophistication: generic banding approach without custom styling
+    or visual polish'
+  - Text sizes set per spec but render somewhat small for 4800×2700px canvas
+  - Color binning loop is verbose and low-level, could benefit from vectorization
+    or refactoring
+  - No visual hierarchy or emphasis to guide viewer attention to key insights
+  - Limited leverage of pygal-distinctive features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "shap-summary · pygal · anyplot.ai" is clearly readable; y-axis label "Feature" and x-axis label "SHAP Value" are clearly visible; feature names (Age, Income, Credit Score, etc.) are all readable in dark text; x-axis tick marks are visible
-      Data: BrBG diverging colormap properly shows feature value ranges (blue=low to red=high); reference line at x=0 is dashed and clear; scatter points are visible with proper distribution across features
-      Legibility verdict: PASS - all text elements are perfectly readable on light background
+      Background: Warm off-white (#FAF8F1) with no pure white or harsh appearance
+      Chrome: Title "shap-summary · pygal · anyplot.ai" at 28px, y-axis label "Feature" at 22px, x-axis label "SHAP Value" at 22px, tick labels at 18px - all readable in dark text (#1A1A17)
+      Data: 200 points per feature × 10 features colored via BrBG diverging colormap (blue→brown/red), reference line at x=0 with dashed style in INK_SOFT color, vertical grid guides visible
+      Legibility verdict: PASS - all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title text is dark/hard to read (should be #F0EFE8 light); y-axis feature labels (Age, Income, Credit Score, Debt Ratio, Employment Years, Savings, Loan Amount, Interest Rate, Payment History, Inquiries) are DARK TEXT ON DARK BACKGROUND - nearly impossible to read; x-axis tick labels are similarly dark on dark - unreadable; **CRITICAL DARK-ON-DARK FAILURE**
-      Data: BrBG colors are identical to light render (correct - data colors should not change, only chrome) ✓; reference line at x=0 is visible ✓; scatter distribution matches light render ✓
-      Legibility verdict: FAIL - unreadable feature labels and tick labels due to failed SVG text color post-processing. Dark render is unusable.
+      Background: Warm near-black (#1A1A17) with no pure black or harshness
+      Chrome: Title, axis labels, tick labels all converted to light color (#F0EFE8) for readability against dark surface, no dark-on-dark failures detected
+      Data: Identical BrBG colors to light render (only chrome flipped), reference line and grid visible in light color
+      Legibility verdict: PASS - all text readable in light color, grid and reference line visible, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 5
         max: 8
-        passed: false
-        comment: Dark render completely unreadable - dark text on dark background
+        passed: true
+        comment: Font sizes explicitly set (28/22/18px) but appear slightly small
+          for 4800×2700px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All labels clearly visible, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Scatter points visible, slightly small but appropriate for density
+        comment: 200 points well-adapted with jittering, BrBG colors distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe BrBG colormap with good contrast
+        comment: BrBG colorblind-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper proportions, balanced margins
+        comment: Excellent layout with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with appropriate titles
+        comment: Correct format with descriptive labels
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Data palette correct but dark theme chrome failed - text colors not
-          properly light-filled
+        passed: true
+        comment: Correct backgrounds, theme-adaptive chrome, BrBG diverging
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -101,19 +99,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults, no custom design thought
+        comment: Generic banding approach without custom styling
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
+        comment: Grid present, minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Limited visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -129,20 +127,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: importance ordering, colormap, reference line,
-          feature names'
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y mapping and color encoding
+        comment: X/Y correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed
+        comment: Correct title format
     data_quality:
       score: 15
       max: 15
@@ -152,19 +149,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: 10 features with varying importance and distributions'
+        comment: All 10 features shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible credit/loan domain with neutral scenario
+        comment: Credit scoring scenario, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible SHAP values and feature ranges
+        comment: Plausible values
     code_quality:
       score: 9
       max: 10
@@ -174,32 +171,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports, data, plot, save'
+        comment: Clean linear structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: SVG regex post-processing is fragile and failed to apply dark theme
-          colors
+        comment: Banding loop could be cleaner
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and .html output
+        comment: Correct output format
     library_mastery:
       score: 4
       max: 10
@@ -209,20 +205,24 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses pygal.XY and Style correctly, but SVG manipulation is non-idiomatic
+        comment: Correct usage but manual approach
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic scatter usage, no distinctive pygal features
-  verdict: REJECTED
+        comment: Generic usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - binning
+  - normalization
   styling:
   - custom-colormap
+  - grid-styling
