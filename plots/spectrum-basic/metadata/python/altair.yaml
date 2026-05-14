@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:35:59Z'
-updated: '2026-05-14T09:30:33Z'
+updated: '2026-05-14T09:37:30Z'
 generated_by: claude-haiku
 workflow_run: 25852192839
 issue: 2926
@@ -12,36 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/altair/plot-dark.html
-quality_score: 70
+quality_score: 72
 review:
   strengths:
-  - Clear, readable visualization in both light and dark themes
-  - Correct FFT computation with realistic signal components (50 Hz dominant, 120
-    Hz harmonic, 200 Hz weak)
-  - Appropriate frequency/amplitude scale for signal analysis
-  - Descriptive axis labels with units (Hz and dB)
-  - Clean, reproducible code structure with seed for determinism
+  - Clear frequency spectrum visualization with identifiable peaks at expected components
+  - Realistic FFT computation from multi-component synthetic signal showing dominant
+    50Hz, harmonic 120Hz, and weak 200Hz components
+  - Proper axis labels with units (Hz, dB) and appropriate dynamic ranges
+  - Generated images show correct theme adaptation in both light and dark renders
   weaknesses:
-  - 'Output filename API violation (CQ-05): saves as plot.png instead of plot-{THEME}.png'
-  - 'Color hardcoded as #306998 (Python Blue) instead of Okabe-Ito brand #009E73 (VQ-07)'
-  - 'No theme-adaptive chrome: missing ANYPLOT_THEME env var handling and theme tokens
-    (VQ-07)'
-  - 'Title contains typo: ''pyplots.ai'' instead of ''anyplot.ai'' (SC-04)'
-  - Generic design with no aesthetic sophistication or visual hierarchy (DE-01, DE-03)
+  - 'Code specifies wrong line color: #306998 (Python blue) instead of #009E73 (brand
+    green) - violates palette spec'
+  - 'Output filenames incorrect: saves plot.png instead of plot-{THEME}.png and plot.html
+    instead of plot-{THEME}.html'
+  - 'Missing theme-adaptive implementation: code does not read ANYPLOT_THEME or use
+    theme tokens (PAGE_BG, INK, INK_SOFT) for backgrounds and text colors'
+  - 'Title contains typo: ''pyplots.ai'' instead of ''anyplot.ai'''
+  - Source code does not match generated images - critical integrity issue for final
+    attempt
+  - 'Generic design with no visual refinement: uses default Altair styling without
+    custom palette, spine removal, or aesthetic enhancements'
+  - No visual storytelling or hierarchy - data simply displayed without emphasis or
+    narrative guidance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels (Frequency (Hz), Amplitude (dB)), tick labels all in dark text, clearly readable
-      Data: Line chart in teal/cyan color showing clear peaks at ~50 Hz (dominant), ~120 Hz (secondary), ~200 Hz (weak), noise floor ~-40 dB
-      Grid: Subtle gray grid lines visible and appropriately styled
-      Legibility verdict: PASS - all elements readable, no dark-on-light issues
+      Background: Warm off-white surface (#FAF8F1-like) - correct light theme background
+      Chrome: Title "spectrum-basic · altair · anyplot.ai" in dark text, x-axis "Frequency (Hz)" and y-axis "Amplitude (dB)" with dark tick labels - all clearly readable
+      Data: Teal/cyan line showing frequency spectrum with distinct peaks at 50Hz (dominant), 120Hz (secondary), and 200Hz (weak) components against subtle gray grid
+      Legibility verdict: PASS - all text readable with good contrast against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels now in light text against dark background, properly adapted for dark theme
-      Data: Line color remains same teal/cyan as light render (correct - data colors theme-independent)
-      Grid: Grid lines adapted for dark theme with appropriate opacity
-      Legibility verdict: PASS - all text readable, no dark-on-dark issues, proper theme adaptation visible
+      Background: Warm near-black surface (#1A1A17-like) - correct dark theme background
+      Chrome: Same title and axis labels rendered in light text, all clearly readable against dark background - no dark-on-dark failures
+      Data: Teal/cyan line color identical to light render (correctly theme-independent), same peaks and baseline visible
+      Legibility verdict: PASS - all text readable with good contrast against dark background, data colors consistent with light render
   criteria_checklist:
     visual_quality:
       score: 26
@@ -49,76 +53,73 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized (labelFontSize=18, titleFontSize=22/28)
-          and readable in both themes
+        comment: Font sizes explicitly set and readable; missing theme-based text
+          color handling in code
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text clearly positioned with no overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data line clearly visible with optimal sizing for frequency spectrum
+        comment: Line and frequency peaks clearly visible and distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal line is CVD-safe and has good contrast against both backgrounds
+        comment: Good contrast in both themes, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins, plot fills appropriate canvas
-          area
+        comment: Good proportions with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Descriptive labels with units: ''Frequency (Hz)'' and ''Amplitude
-          (dB)'''
+        passed: false
+        comment: Labels have units but title contains typo (pyplots.ai instead of
+          anyplot.ai)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'FAIL: Color hardcoded as #306998 instead of brand #009E73; no theme-adaptive
-          chrome via environment variables; hardcoded gridColor #cccccc'
+        comment: 'CRITICAL: Code uses #306998 instead of #009E73; no theme tokens
+          for backgrounds/text colors'
     design_excellence:
-      score: 6
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults with hardcoded color, no design intent or custom
-          palette
+        comment: Default Altair styling with no custom design thought or palette
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond library defaults
+        comment: Library defaults with minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Displays data but doesn't emphasize dominant peak or create visual
-          hierarchy
+        comment: Data displayed without visual hierarchy or emphasis on dominant frequencies
     spec_compliance:
-      score: 11
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -129,24 +130,23 @@ review:
         comment: Correct frequency spectrum line chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Shows FFT output with multiple frequency components
+        passed: false
+        comment: FFT and axis labels present; wrong color specification violates brand
+          palette requirement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on X-axis, Amplitude on Y-axis, axes display full data
-          range
+        comment: Frequency on X-axis, Amplitude (dB) on Y-axis correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 2
         max: 3
         passed: false
-        comment: 'FAIL: Title has typo ''pyplots.ai'' instead of ''anyplot.ai''; no
-          legend needed for single series'
+        comment: Format correct but domain typo in code (pyplots.ai instead of anyplot.ai)
     data_quality:
       score: 14
       max: 15
@@ -156,21 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of frequency spectrum: dominant peaks, harmonics,
-          weak components, noise floor'
+        comment: 'Shows all aspects: dominant frequency, harmonics, weak components,
+          noise floor'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Realistic audio signal with multiple frequency components and noise
+        comment: Realistic FFT from synthetic multi-component signal; practical for
+          signal processing
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Sensible ranges (0-300 Hz, -80 to 10 dB) though could show broader
-          frequency range
+        comment: Sensible frequency range (0-300 Hz) and amplitude range (-80 to 10
+          dB)
     code_quality:
       score: 8
       max: 10
@@ -180,49 +181,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Direct code: imports → data → FFT → chart → save'
+        comment: 'Linear structure: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Has np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) set for reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: altair, numpy, pandas'
+        comment: 'Only necessary imports: altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: true
-        comment: Clean code but hardcoded colors reduce reusability
+        passed: false
+        comment: Simple structure but missing idiomatic theme implementation pattern
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'FAIL: Saves as ''plot.png'' and ''plot.html'' instead of ''plot-{THEME}.png''
-          format'
+        comment: 'CRITICAL: Saves to plot.png instead of plot-{THEME}.png; violates
+          anyplot output standard'
     library_mastery:
-      score: 5
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Correct Altair syntax but doesn't use proper color/theme system
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Generic usage - could be any library; no Altair-specific features
-          like selection, filtering, interactivity
+        comment: Uses basic Chart/mark_line/encode API; missing idiomatic theme-adaptive
+          pattern from library guide
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Tooltip usage is generic and not useful for static PNG output
   verdict: REJECTED
 impl_tags:
   dependencies: []
