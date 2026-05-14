@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-14
@@ -14,6 +14,7 @@ import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.area import AreaSplineSeries
+from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -26,6 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"
+ACCENT = "#D55E00"
 
 # Data - Generate a synthetic audio signal with multiple frequency components
 np.random.seed(42)
@@ -60,6 +62,16 @@ step = 4
 frequencies = frequencies[::step]
 amplitude_db = amplitude_db[::step]
 
+# Find dominant peaks programmatically
+peak_freqs = [440, 880, 1320]
+peak_indices = []
+peak_amplitudes = []
+
+for target_freq in peak_freqs:
+    idx = np.argmin(np.abs(frequencies - target_freq))
+    peak_indices.append(idx)
+    peak_amplitudes.append(amplitude_db[idx])
+
 # Prepare data for Highcharts
 data_points = [[float(f), float(a)] for f, a in zip(frequencies, amplitude_db, strict=True)]
 
@@ -92,10 +104,13 @@ chart.options.x_axis = {
     "min": 0,
     "max": 2000,
     "tickInterval": 400,
-    "gridLineWidth": 1,
+    "gridLineWidth": 2,
     "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
     "lineColor": INK_SOFT,
+    "lineWidth": 2,
     "tickColor": INK_SOFT,
+    "tickWidth": 2,
 }
 
 # Y-axis (Amplitude in dB)
@@ -103,15 +118,25 @@ chart.options.y_axis = {
     "title": {"text": "Amplitude (dB)", "style": {"fontSize": "22px", "color": INK}},
     "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "tickInterval": 20,
-    "gridLineWidth": 1,
+    "gridLineWidth": 2,
     "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
     "lineColor": INK_SOFT,
+    "lineWidth": 2,
     "tickColor": INK_SOFT,
+    "tickWidth": 2,
 }
 
-# Plot options
+# Plot options with enhanced styling
 chart.options.plot_options = {
-    "areaspline": {"fillOpacity": 0.3, "lineWidth": 3, "marker": {"enabled": False}, "threshold": None}
+    "areaspline": {
+        "fillOpacity": 0.35,
+        "lineWidth": 4,
+        "marker": {"enabled": False},
+        "threshold": None,
+        "shadow": False,
+    },
+    "scatter": {"marker": {"radius": 16, "lineWidth": 3, "lineColor": INK, "fillColor": ACCENT}},
 }
 
 # Legend
@@ -120,17 +145,39 @@ chart.options.legend = {"enabled": False}
 # Credits
 chart.options.credits = {"enabled": False}
 
-# Series - Frequency spectrum
+# Tooltip configuration for better interactivity
+chart.options.tooltip = {
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 2,
+    "style": {"color": INK, "fontSize": "18px"},
+    "shared": False,
+    "crosshairs": True,
+}
+
+# Series 1 - Frequency spectrum (main area chart)
 series = AreaSplineSeries()
 series.data = data_points
 series.name = "Power Spectrum"
 series.color = BRAND
 series.fill_color = {
     "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-    "stops": [[0, "rgba(0, 158, 115, 0.4)"], [1, "rgba(0, 158, 115, 0.05)"]],
+    "stops": [[0, "rgba(0, 158, 115, 0.5)"], [1, "rgba(0, 158, 115, 0.08)"]],
 }
+series.z_index = 2
 
 chart.add_series(series)
+
+# Series 2 - Peak points for visual emphasis (visual hierarchy)
+peak_series = ScatterSeries()
+peak_data = [[float(frequencies[idx]), float(peak_amplitudes[i])] for i, idx in enumerate(peak_indices)]
+peak_series.data = peak_data
+peak_series.name = "Dominant Peaks"
+peak_series.color = ACCENT
+peak_series.marker = {"radius": 16, "lineWidth": 3, "lineColor": INK, "fillColor": ACCENT}
+peak_series.z_index = 3
+
+chart.add_series(peak_series)
 
 # Download Highcharts JS for inline embedding
 urls = ["https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js", "https://code.highcharts.com/highcharts.js"]
