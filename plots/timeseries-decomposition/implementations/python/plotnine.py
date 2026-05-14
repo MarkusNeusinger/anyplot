@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Updated: 2026-05-14
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-14
 """
 
 import os
