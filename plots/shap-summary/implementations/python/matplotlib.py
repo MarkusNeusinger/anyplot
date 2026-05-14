@@ -1,12 +1,21 @@
-""" pyplots.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-14
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.colors import LinearSegmentedColormap
+import os
+import sys
+from pathlib import Path
+
+
+# Remove the script's directory from path temporarily to avoid import conflicts
+script_dir = str(Path(__file__).parent)
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 
 
 # Data - Simulating SHAP values from a house price prediction model
@@ -56,12 +65,19 @@ sorted_feature_names = [feature_names[i] for i in sorted_indices]
 sorted_shap_values = shap_values[:, sorted_indices]
 sorted_feature_values = feature_values[:, sorted_indices]
 
-# Create custom blue-to-red colormap
-colors = ["#306998", "#a0a0a0", "#d62728"]  # Python Blue -> Gray -> Red
-cmap = LinearSegmentedColormap.from_list("shap_cmap", colors, N=256)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+# Use BrBG colormap for diverging data (SHAP values range from negative to positive)
+cmap = plt.cm.BrBG
 
 # Plot each feature as a row of scattered points
 for i in range(top_n):
@@ -70,35 +86,43 @@ for i in range(top_n):
     feat_vals = sorted_feature_values[:, feature_idx]
 
     # Add jitter to y-position to reduce overlap
-    y_positions = np.ones(n_samples) * i + np.random.uniform(-0.2, 0.2, n_samples)
+    y_positions = np.ones(n_samples) * i + np.random.uniform(-0.15, 0.15, n_samples)
 
     # Scatter plot with color based on feature value
     scatter = ax.scatter(
-        shap_vals, y_positions, c=feat_vals, cmap=cmap, s=80, alpha=0.7, edgecolors="none", vmin=0, vmax=1
+        shap_vals, y_positions, c=feat_vals, cmap=cmap, s=100, alpha=0.6, edgecolors="none", vmin=0, vmax=1
     )
 
-# Vertical line at x=0
-ax.axvline(x=0, color="#333333", linewidth=2, linestyle="-", alpha=0.7)
+# Vertical line at x=0 (theme-adaptive)
+ax.axvline(x=0, color=INK_SOFT, linewidth=2.5, linestyle="-", alpha=0.8)
 
 # Styling
 ax.set_yticks(range(top_n))
-ax.set_yticklabels(sorted_feature_names[::-1], fontsize=16)
-ax.set_xlabel("SHAP Value (Impact on Model Output)", fontsize=20)
-ax.set_title("shap-summary · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="x", labelsize=16)
+ax.set_yticklabels(sorted_feature_names[::-1], fontsize=16, color=INK_SOFT)
+ax.set_xlabel("SHAP Value (Impact on Model Output)", fontsize=20, color=INK)
+ax.set_title("shap-summary · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
 
-# Grid (subtle, only vertical)
-ax.grid(True, axis="x", alpha=0.3, linestyle="--")
+# Grid (subtle, vertical only)
+ax.grid(True, axis="x", alpha=0.12, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Add colorbar
+# Spine styling
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+    ax.spines[s].set_linewidth(1.2)
+
+# Colorbar
 cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, aspect=30, pad=0.02)
-cbar.set_label("Feature Value", fontsize=18)
+cbar.set_label("Feature Value", fontsize=18, color=INK)
 cbar.set_ticks([0, 1])
-cbar.set_ticklabels(["Low", "High"])
-cbar.ax.tick_params(labelsize=14)
+cbar.set_ticklabels(["Low", "High"], fontsize=14, color=INK_SOFT)
+cbar.ax.tick_params(colors=INK_SOFT, labelsize=14)
+cbar.outline.set_edgecolor(INK_SOFT)
+cbar.outline.set_linewidth(1.2)
 
 # Adjust layout
-ax.set_xlim(ax.get_xlim()[0] * 1.1, ax.get_xlim()[1] * 1.1)
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
