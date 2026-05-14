@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-loss-training: Training Loss Curve
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-14
+Quality: 91/100 | Updated: 2026-05-14
 """
 
 import os
