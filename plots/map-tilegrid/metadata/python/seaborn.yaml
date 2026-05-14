@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: map-tilegrid
 created: '2026-05-14T14:12:03Z'
-updated: '2026-05-14T14:17:31Z'
+updated: '2026-05-14T14:33:27Z'
 generated_by: claude-sonnet
 workflow_run: 25864454521
 issue: 5246
@@ -15,33 +15,32 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Luminance-based tile text coloring handles both themes automatically without theme-dependency
-  - 'Perfect spec compliance: all 50 states, viridis for sequential data, colorbar
-    with units, correct title format'
-  - Fully theme-adaptive chrome with no dark-on-dark issues in either render
-  - Tile borders use edgecolor=PAGE_BG creating clean visual separation that adapts
-    between themes
-  - Realistic geographically plausible data with clear Pacific NW vs Southeast contrast
-    narrative
-  - 'Clean code: seed set, no classes/functions, all imports used'
+  - Luma-adaptive tile text coloring ensures readability across all 50 states in both
+    themes
+  - 'Both renders theme-correct: correct backgrounds, adaptive chrome, identical viridis
+    data colors between themes'
+  - 'Full spec compliance: all 50 US states, colorbar with units, geographic grid
+    layout, equal-area tiles'
+  - Clean reproducible code with proper random seed and flat script structure
   weaknesses:
-  - Large dead zone (3-4 tile-heights of empty canvas) between tile grid bottom and
-    colorbar — position colorbar closer to grid
-  - Title at 22pt instead of 24pt recommendation; tile labels at 15pt instead of 16pt
-  - Seaborn barely contributes beyond theme setup; entire visualization is matplotlib
-    patches — acceptable for tile grids but limits Library Mastery
+  - Title at 22pt vs. guideline 24pt for high-res canvas
+  - Seaborn contribution limited to sns.set_theme() theme setup; core visualization
+    is 100% raw matplotlib patches and text
+  - 'No data storytelling: Pacific NW vs Southeast renewable energy divide is visible
+    but not annotated or emphasized'
+  - State abbreviation fontsize 15pt slightly under 16pt guideline for high-res canvas
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "Renewable Energy by State · map-tilegrid · seaborn · anyplot.ai" in dark #1A1A17 — clearly readable. Colorbar label "Renewable Energy Adoption (%)" at 20pt in INK color, tick labels in INK_SOFT. All chrome text is fully legible.
-      Data: viridis colormap from dark purple/blue (low %) to yellow-green (high %). WA=yellow-green (74%), OR=green (66%), ME=teal (56%); RI, LA, WV=deep purple (17-19%). Each tile labeled with luminance-based text — dark text on bright tiles, light text on dark tiles.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 as specified
+      Chrome: Title "Renewable Energy by State - map-tilegrid - seaborn - anyplot.ai" at fontsize 22 in dark ink, clearly readable; colorbar label "Renewable Energy Adoption (%)" at fontsize 20 with ticks at fontsize 16 in INK_SOFT - all readable
+      Data: 50 US state tiles colored with viridis from deep purple (~10-20%) through teal/cyan (~40-50%) to yellow-green (~70-80%); state abbreviations in bold with luma-adaptive color (dark text on bright tiles, light text on dark tiles)
+      Legibility verdict: PASS - all text readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in off-white #F0EFE8, clearly readable against dark background. Colorbar label and tick labels in INK/INK_SOFT tokens — all legible. No dark-on-dark failures anywhere.
-      Data: All tile colors identical to light render (data colors are theme-independent). Luminance-based tile text still correctly contrasts against tile colors.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 as specified
+      Chrome: Title in light ink (#F0EFE8) clearly readable; colorbar label in light ink readable; ticks in INK_SOFT (#B8B7B0) readable against dark background; no dark-on-dark text failures
+      Data: Viridis tile colors identical to light render confirming only chrome has flipped; luma-adaptive state abbreviation text coloring unchanged and legible
+      Legibility verdict: PASS - all text readable against warm near-black background
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,48 +51,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 22pt (rec 24pt); tile labels 15pt (rec 16pt); both themes fully
-          readable
+        comment: Title at 22pt vs guideline 24pt; colorbar label 20pt and ticks 16pt
+          correct; state abbreviations 15pt clear
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; PAGE_BG tile borders prevent visual merging
+        comment: Tiles have proper gap; no text collisions between state labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 50 tiles distinct; colorbar clear across full range
+        comment: All 50 state tiles visible; viridis range clearly differentiated
+          across color spectrum
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe
+        comment: Viridis is perceptually uniform and CVD-safe; no red-green encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 12x12in square (3600x3600px) appropriate for tile grid; nothing cut
-          off
+        comment: Square 12x12 figure appropriate for tile grid; colorbar well-placed
+          below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; colorbar labeled with units (%)
+        comment: Descriptive title with spec-id; colorbar label includes unit (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis for sequential percentage data; backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: 'Viridis correct for continuous data; backgrounds #FAF8F1 light and
+          #1A1A17 dark both correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -101,21 +101,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Luminance-based tile text coloring is thoughtful; PAGE_BG borders
-          adapt to theme; above default but not exceptional
+        comment: Luma-adaptive tile text coloring is genuinely clever; otherwise functional
+          rather than artful
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: ax.axis('off') correct; but large dead zone between tile grid and
-          colorbar (~3-4 tile heights of empty space)
+        passed: true
+        comment: Axis fully hidden; clean layout; proper tile gap; limited additional
+          refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Pacific NW vs Southeast contrast clear; geographic narrative evident
+        comment: Geographic pattern visible but not emphasized; no annotations or
+          callouts guiding the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Square tile grid map with equal-area tiles
+        comment: Correct square-tile grid map with geographic positioning
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Tiles colored by value; region abbreviation labels; colorbar with
-          value mapping
+        comment: Region abbreviation labels, colorbar, equal-area tiles, geographic
+          row/col layout all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row/col positions approximate US geography; all 50 states present
+        comment: Value encoded via tile color; full 10-80% range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Renewable Energy by State · map-tilegrid · seaborn · anyplot.ai
+        comment: Title includes spec-id, library, anyplot.ai; colorbar legend present
     data_quality:
       score: 15
       max: 15
@@ -154,20 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 50 states; full value range; continuous color gradient effective
+        comment: Shows all defining characteristics of tile grid maps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Renewable energy % by US state; geographically sensible values; neutral
-          topic
+        comment: US state renewable energy adoption is plausible and politically neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 17-74%; colorbar range 10-80%; realistic for domain
+        comment: Values 10-80% with realistic geographic variation
     code_quality:
       score: 10
       max: 10
@@ -177,7 +177,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean sequential script
+        comment: Flat script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -195,31 +195,31 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-structured; luminance calculation clean; no fake interactivity
+        comment: Luma calculation for adaptive text color is elegant and correct
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight', facecolor=PAGE_BG)
+        comment: Saves as f"plot-{THEME}.png" correctly
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() used correctly; but visualization built on matplotlib
-          patches — seaborn limited to theming
+        comment: sns.set_theme() with rc dict is the correct seaborn theming pattern;
+          matplotlib patches appropriate for this chart type
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: No seaborn visualization functions; tile grid inherently requires
-          matplotlib patches but seaborn contributes little beyond theming
+        comment: Seaborn contribution limited to theme setup; core visualization is
+          100% matplotlib patches and text; no seaborn-specific features demonstrated
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -231,8 +231,8 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
   - custom-colormap
-  - edge-highlighting
