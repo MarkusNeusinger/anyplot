@@ -1,12 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: plotly | Python 3.13
+Quality: pending | Created: 2025-05-14
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+ZERO_LINE = INK_SOFT
 
 # Data - Generate synthetic SHAP values for ML model interpretability demo
 np.random.seed(42)
@@ -50,8 +62,8 @@ X[:, 12] = np.random.normal(2.87, 2.02, n_samples)  # perimeter error
 X[:, 13] = np.random.normal(40, 45, n_samples)  # area error
 X[:, 14] = np.random.normal(0.007, 0.003, n_samples)  # smoothness error
 
-# Simulated feature importances (as from a tree-based model)
-importances = np.array([0.25, 0.08, 0.12, 0.18, 0.03, 0.06, 0.10, 0.09, 0.02, 0.01, 0.02, 0.01, 0.01, 0.01, 0.01])
+# Simulated feature importances with more dramatic variation
+importances = np.array([0.32, 0.06, 0.14, 0.20, 0.02, 0.04, 0.08, 0.06, 0.01, 0.01, 0.02, 0.01, 0.01, 0.01, 0.01])
 
 # Generate SHAP values that correlate with feature values (simulating real SHAP behavior)
 shap_values = np.zeros((n_samples, n_features))
@@ -75,6 +87,13 @@ sorted_idx = sorted_idx[:top_n]
 # Create figure
 fig = go.Figure()
 
+# Store feature data for hover template
+feature_mins = {}
+feature_maxs = {}
+for i in range(n_features):
+    feature_mins[i] = X[:, i].min()
+    feature_maxs[i] = X[:, i].max()
+
 # Add traces for each feature (from bottom to top for proper y-axis ordering)
 for rank, feat_idx in enumerate(reversed(sorted_idx)):
     feat_shap = shap_values[:, feat_idx]
@@ -92,6 +111,12 @@ for rank, feat_idx in enumerate(reversed(sorted_idx)):
     # Create color array based on feature values (blue=low, red=high)
     colors = feat_normalized
 
+    # Create hover text with actual feature values
+    hover_texts = [
+        f"<b>{feature_names[feat_idx]}</b><br>SHAP Value: {shap:.3f}<br>Feature Value: {val:.3f}<extra></extra>"
+        for shap, val in zip(feat_shap, feat_vals, strict=False)
+    ]
+
     fig.add_trace(
         go.Scatter(
             x=feat_shap,
@@ -106,18 +131,15 @@ for rank, feat_idx in enumerate(reversed(sorted_idx)):
                 "opacity": 0.7,
                 "line": {"width": 0},
             },
+            text=hover_texts,
+            hoverinfo="text",
             name=feature_names[feat_idx][:25],
-            hovertemplate=(
-                f"<b>{feature_names[feat_idx]}</b><br>"
-                "SHAP: %{x:.3f}<br>"
-                "Feature value: %{marker.color:.2f}<extra></extra>"
-            ),
             showlegend=False,
         )
     )
 
 # Add vertical line at x=0
-fig.add_vline(x=0, line_width=2, line_color="#333333", line_dash="solid")
+fig.add_vline(x=0, line_width=2, line_color=ZERO_LINE, line_dash="solid")
 
 # Create y-axis labels (feature names in order from bottom to top)
 y_labels = [feature_names[idx][:25] for idx in reversed(sorted_idx)]
@@ -134,8 +156,8 @@ colorbar_trace = go.Scatter(
         "cmin": 0,
         "cmax": 1,
         "colorbar": {
-            "title": {"text": "Feature Value", "font": {"size": 20}, "side": "right"},
-            "tickfont": {"size": 16},
+            "title": {"text": "Feature Value", "font": {"size": 20, "color": INK}, "side": "right"},
+            "tickfont": {"size": 16, "color": INK_SOFT},
             "tickvals": [0, 0.5, 1],
             "ticktext": ["Low", "Medium", "High"],
             "len": 0.5,
@@ -153,37 +175,37 @@ fig.add_trace(colorbar_trace)
 # Update layout
 fig.update_layout(
     title={
-        "text": "shap-summary · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#333333"},
+        "text": "shap-summary · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "SHAP Value (Impact on Model Output)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "SHAP Value (Impact on Model Output)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "zeroline": True,
         "zerolinewidth": 2,
-        "zerolinecolor": "#333333",
-        "gridcolor": "rgba(128, 128, 128, 0.2)",
+        "zerolinecolor": ZERO_LINE,
+        "gridcolor": GRID,
         "showgrid": True,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Feature", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Feature", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 16, "color": INK_SOFT},
         "tickmode": "array",
         "tickvals": list(range(top_n)),
         "ticktext": y_labels,
         "showgrid": False,
+        "linecolor": INK_SOFT,
     },
-    template="plotly_white",
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    plot_bgcolor=PAGE_BG,
+    paper_bgcolor=PAGE_BG,
     margin={"l": 200, "r": 120, "t": 80, "b": 80},
     showlegend=False,
+    font={"family": "sans-serif", "color": INK},
 )
 
-# Save as PNG (4800 x 2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG and HTML (4800 x 2700)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
