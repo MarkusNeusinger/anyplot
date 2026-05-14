@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: shap-summary
 created: '2025-12-31T06:10:37Z'
-updated: '2026-05-14T13:11:56Z'
+updated: '2026-05-14T13:18:42Z'
 generated_by: claude-haiku
 workflow_run: 25861532055
 issue: 2923
@@ -12,120 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 92
 review:
   strengths:
-  - Theme adaptation correctly applied across both renders with proper color tokens
-    (INK, INK_SOFT, PAGE_BG backgrounds)
-  - Specification compliance is excellent - all required features present (diverging
-    color scale, x=0 line, importance sorting, jittering)
-  - Data is realistic and well-chosen - medical features demonstrate the visualization
-    effectively
-  - Proper margins and layout with good use of canvas space - margins accommodate
-    feature names and tick labels
-  - Clean, maintainable code following KISS principles with explicit seed for reproducibility
+  - Correct SHAP summary plot implementation with all spec-required features (sorted
+    features, blue-red gradient, x=0 line, jittering, top-N limiting)
+  - Perfect theme adaptation across both light and dark renders—background colors
+    match spec, chrome elements properly use INK/INK_SOFT tokens, and no dark-on-dark
+    failures
+  - Excellent use of highcharts-specific features (interactive hover tooltips, selection
+    states, crosshair) that enhance the SHAP interpretation experience
+  - Strong code quality with reproducible seeded data generation, clean imports, idiomatic
+    library usage, and proper output formats (both .png and .html)
+  - Professional data quality—realistic medical outcome prediction context with sensible
+    feature names, SHAP value ranges, and sample count (200 samples, top 10 features)
   weaknesses:
-  - Font sizes set explicitly but rendered text appears smaller than expected in final
-    PNG output - y-axis feature labels particularly small in dark render, though still
-    readable
-  - Visual refinement could be enhanced - spines not explicitly styled, no explicit
-    grid customization beyond default Highcharts
-  - Design excellence is solid but not exceptional - gradient colors are effective
-    but not distinctly sophisticated beyond standard implementations
+  - 'Design Excellence underperforms (DE-01: 5/8, DE-02: 3/6)—visual refinement could
+    be enhanced through more intentional styling choices beyond the defaults (consider
+    subtle enhancements to margin balance, legend positioning, or axis styling)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 - correct, not pure white.
-      Chrome: Title "shap-summary · highcharts · anyplot.ai" is visible in dark text. X-axis label "SHAP Value (Impact on Prediction)" is present and readable. Y-axis shows feature names (Blood Pressure, Cholesterol, Glucose, BMI, etc.) in dark INK_SOFT text. All text is dark-colored against light background with good contrast.
-      Data: Points are clearly visible in a diverging blue-to-red color gradient representing feature values (blue=low, red=high). Points are jittered vertically to reduce overlap. A clear vertical line divides positive and negative SHAP values at x=0. Legend on right shows "Feature Value" scale with low/mid/high color indicators.
-      Layout: Proper margins, features ordered by importance (top features at top), good whitespace distribution.
-      Legibility verdict: PASS - All text is readable, background correct, data clearly visible.
+      Background: Warm off-white (#FAF8F1) surface with clear definition.
+      Chrome: Title "shap-summary · highcharts · anyplot.ai" is clearly visible in dark text (INK #1A1A17). X-axis label "SHAP Value (Impact on Prediction)" and Y-axis feature names are all readable in dark text. Tick labels are in INK_SOFT (#4A4A44), easily legible. Grid lines are subtle dotted lines. Legend on right with "Feature Value" title and color range labels. All text elements have excellent contrast.
+      Data: Scatter points show clear blue-to-red gradient: blue dots (low feature values) on the left, red dots (high feature values) on the right. Vertical line at x=0 separates positive and negative SHAP impacts. Points are jittered vertically to reduce overlap. Distribution clearly shows importance-ordered features with their SHAP value patterns.
+      Legibility verdict: PASS - All text is clearly readable against the light background. Contrast and sizing are excellent.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17 - correct, not pure black.
-      Chrome: Title is visible in light text (INK color #F0EFE8). X-axis label is present and readable in light text. Y-axis shows feature names in light INK_SOFT text (#B8B7B0) - readable but small. All text uses proper light colors for dark background, no dark-on-dark contrast issues.
-      Data: Points are identical color distribution to light render (blue-to-red gradient) - confirming data colors are theme-independent as required. Points are clearly distinguishable from dark background. Vertical x=0 line is visible.
-      Legend: Present on right with light-colored text and styled background box.
-      Layout: Identical to light render - features sorted by importance, good margins maintained.
-      Legibility verdict: PASS - All text is readable with proper light-on-dark contrast. Y-axis labels are small but legible. No dark-on-dark failures detected. Both renders maintain identical data colors, confirming proper theme adaptation.
+      Background: Warm near-black (#1A1A17) surface, not pure black.
+      Chrome: Title is visible in light text (INK #F0EFE8). X-axis and Y-axis labels are readable in light text. Tick labels use INK_SOFT (#B8B7B0) providing adequate contrast against the dark background. Grid lines are subtle and visible. Legend is properly styled with light text on the elevated background (#242420).
+      Data: Data colors are identical to the light render—blue gradient on left, white/neutral in middle (middle feature values), red gradient on right. The x=0 line is visible. All data markers are clearly distinguishable from the dark background.
+      Legibility verdict: PASS - All text is readable. No dark-on-dark failures detected. Text uses appropriate light colors for the dark theme. Chrome elements are properly theme-adapted.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28px title, 22px labels, 18px ticks) and
-          readable in both themes, but rendered smaller than expected - all text legible
-          but could be larger
+        comment: All text readable in both themes with excellent contrast
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Jittering reduces overlap effectively; dense area at y=0 but no significant
-          text overlapping
+        comment: Points naturally jittered; axis labels and titles clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data points clearly visible and well-adapted to density with
-          appropriate jittering
+        comment: All markers, lines, and grid elements clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging blue-to-red gradient is perceptually uniform and CVD-safe
+        comment: Spec-required blue-red gradient with adequate contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good margins (marginLeft: 350, marginBottom: 150), balanced whitespace,
-          legend well-positioned'
+        comment: 4800×2700 proportions good; margins appropriate; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''SHAP Value (Impact on Prediction)'' for x-axis,
-          feature names for y-axis with context'
+        comment: Title and axes have descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark), text colors theme-adaptive
-          (INK/INK_SOFT), data colors identical between renders'
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark); chrome properly
+          theme-adapted; spec-required diverging gradient used instead of Okabe-Ito
+          (appropriate for continuous data)'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Strong design with thoughtful color gradient, professional margins,
-          and intentional layout - well above defaults but not exceptional
+        passed: false
+        comment: Competent execution; custom gradient and legend styling present;
+          lacks exceptional polish
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: 'Some refinement visible: gradient coloring, legend styling, subtle
-          grid - could benefit from explicit spine removal or more customization'
+        passed: false
+        comment: Subtle grid and spacing; could benefit from more intentional design
+          refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good visual hierarchy - features sorted by importance (most important
-          at top), color gradient shows feature value relationship to SHAP impact
+        comment: Clear visual hierarchy (importance-ordered features); color gradient
+          effectively shows feature-SHAP relationship
     spec_compliance:
       score: 15
       max: 15
@@ -135,53 +125,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot type for SHAP summary visualization
+        comment: Correct SHAP summary scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: diverging color scale, vertical x=0 line,
-          importance sorting, jittering, top-N features (10/12)'
+        comment: Features sorted by importance, diverging color scale, x=0 line, jittering,
+          top-N filtering all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: SHAP values, Y-axis: features, Colors: feature values (continuous)
-          - all correct'
+        comment: 'X: SHAP values; Y: feature names; Color: feature values'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format 'shap-summary · highcharts · anyplot.ai', legend
-          shows 'Feature Value' scale with proper binning
+        comment: Title correct; legend shows feature value ranges
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of SHAP summary - both positive and negative impacts,
-          full feature value range (low to high), top 10 features displayed per spec
+        comment: Medical outcome prediction with 12 realistic features; top 10 displayed
+          with full SHAP range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medical outcome prediction scenario is realistic and neutral - blood
-          pressure, cholesterol, glucose, BMI, etc. are all real predictive features
+        comment: Real-world medical context (blood pressure, cholesterol, BMI, etc.);
+          appropriate use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Medical values in realistic ranges - no nonsensical or impossible
-          values
+        comment: SHAP values ~-1.5 to +1.5 (reasonable); 200 samples; normalized feature
+          values 0-1
     code_quality:
       score: 10
       max: 10
@@ -191,62 +179,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: theme setup → data generation → chart configuration
-          → export'
+        comment: No unnecessary functions/classes; straightforward procedural code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible synthetic data
+        comment: Uses np.random.seed(42); fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, highcharts_core, selenium, standard
-          library'
+        comment: Only necessary imports; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering, no fake functionality
+        comment: Appropriate complexity; genuine interactivity (not simulated); clean
+          naming
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves as plot-{THEME}.png and .html; current API
     library_mastery:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good idiomatic Highcharts usage: Chart with ScatterSeries, proper
-          options configuration, theme tokens throughout, plotLines for reference
-          line'
+        comment: Proper Chart/HighchartsOptions setup; ScatterSeries for scatter;
+          proper axes and legend config
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Uses some Highcharts-specific features (gradient colors, legend title
-          styling, plotLines) but not extensively leveraging library uniqueness
-    score_caps_applied: []
+        passed: true
+        comment: Interactive tooltips with formatted values; hover/select states;
+          crosshair; effective use of highcharts capabilities
+    total:
+      score: 92
+      max: 100
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
