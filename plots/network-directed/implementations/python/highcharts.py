@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 network-directed: Directed Network Graph
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-14
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,6 +14,18 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first position for nodes, others for edge variants if needed)
+BRAND = "#009E73"  # First series, always
+SECONDARY = "#D55E00"  # For arrow highlights if multi-directional
 
 # Data - Software module dependencies showing import direction
 nodes = [
@@ -57,7 +70,6 @@ edges = [
 ]
 
 # Fixed node positions for reproducibility (arranged in hierarchical layers)
-# Spread nodes more to fill canvas better
 node_positions = {
     "main": (2400, 350),
     "api": (1400, 700),
@@ -81,10 +93,17 @@ links_data = [{"from": src, "to": tgt} for src, tgt in edges]
 highcharts_url = "https://code.highcharts.com/highcharts.js"
 networkgraph_url = "https://code.highcharts.com/modules/networkgraph.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Referer": "https://www.highcharts.com/",
+}
+
+req = urllib.request.Request(highcharts_url, headers=headers)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(networkgraph_url, timeout=30) as response:
+req = urllib.request.Request(networkgraph_url, headers=headers)
+with urllib.request.urlopen(req, timeout=30) as response:
     networkgraph_js = response.read().decode("utf-8")
 
 # Build data as JSON
@@ -102,7 +121,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{networkgraph_js}</script>
     <style>
-        body {{ margin: 0; padding: 0; }}
+        body {{ margin: 0; padding: 0; background: {PAGE_BG}; }}
         #container {{ width: 4800px; height: 2700px; }}
     </style>
 </head>
@@ -119,7 +138,7 @@ html_content = f"""<!DOCTYPE html>
                 type: 'networkgraph',
                 width: 4800,
                 height: 2700,
-                backgroundColor: '#ffffff',
+                backgroundColor: '{PAGE_BG}',
                 marginTop: 200,
                 marginBottom: 250,
                 marginLeft: 350,
@@ -149,16 +168,11 @@ html_content = f"""<!DOCTYPE html>
                 }}
             }},
             title: {{
-                text: 'network-directed · highcharts · pyplots.ai',
+                text: 'network-directed · highcharts · anyplot.ai',
                 style: {{
-                    fontSize: '56px',
-                    fontWeight: 'bold'
-                }}
-            }},
-            subtitle: {{
-                text: 'Software Module Dependencies (arrows show import direction)',
-                style: {{
-                    fontSize: '36px'
+                    fontSize: '28px',
+                    fontWeight: 'normal',
+                    color: '{INK}'
                 }}
             }},
             credits: {{
@@ -171,16 +185,17 @@ html_content = f"""<!DOCTYPE html>
                         initialPositions: 'circle'
                     }},
                     link: {{
-                        width: 6,
-                        color: '#306998'
+                        width: 3,
+                        color: '{INK_SOFT}'
                     }},
                     dataLabels: {{
                         enabled: true,
                         linkFormat: '',
                         style: {{
-                            fontSize: '32px',
-                            fontWeight: 'bold',
-                            textOutline: '4px white'
+                            fontSize: '22px',
+                            fontWeight: 'normal',
+                            color: '{INK}',
+                            textOutline: '3px {PAGE_BG}'
                         }}
                     }}
                 }}
@@ -189,27 +204,28 @@ html_content = f"""<!DOCTYPE html>
                 type: 'networkgraph',
                 draggable: false,
                 marker: {{
-                    radius: 50
+                    radius: 40
                 }},
                 dataLabels: {{
                     enabled: true,
                     style: {{
-                        fontSize: '32px',
-                        fontWeight: 'bold',
-                        textOutline: '4px white'
+                        fontSize: '18px',
+                        fontWeight: 'normal',
+                        color: '{INK}',
+                        textOutline: '3px {PAGE_BG}'
                     }}
                 }},
                 nodes: nodesData,
                 data: linksData,
-                color: '#FFD43B'
+                color: '{BRAND}'
             }}]
         }});
 
         // Draw arrow heads at end of each edge
         function drawArrows(chart, series, positions, edges) {{
             var renderer = chart.renderer;
-            var nodeRadius = 50;
-            var arrowSize = 20;
+            var nodeRadius = 40;
+            var arrowSize = 16;
 
             edges.forEach(function(edge) {{
                 var fromId = edge[0];
@@ -252,7 +268,7 @@ html_content = f"""<!DOCTYPE html>
                     'Z'
                 ])
                 .attr({{
-                    fill: '#306998',
+                    fill: '{BRAND}',
                     'stroke-width': 0,
                     zIndex: 10
                 }})
@@ -280,11 +296,11 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(6)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Also save the interactive HTML version
-Path("plot.html").write_text(html_content, encoding="utf-8")
+Path(f"plot-{THEME}.html").write_text(html_content, encoding="utf-8")
 
 # Clean up temp file
 Path(temp_path).unlink()
