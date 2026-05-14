@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:56:16Z'
-updated: '2026-05-14T16:59:37Z'
+updated: '2026-05-14T17:07:56Z'
 generated_by: claude-haiku
 workflow_run: 25873110285
 issue: 3002
@@ -12,113 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 68
 review:
   strengths:
-  - Excellent mosaic layout demonstration with clear visual hierarchy
-  - Good data variety and realistic dashboard scenario
-  - Both renders are fully readable and properly themed (backgrounds, text colors)
-  - Appropriate use of different plot types for different data characteristics
-  - Deterministic, reproducible code with clean structure
+  - Excellent layout and visual organization—mosaic pattern clean and intuitive
+  - Good proportions and spacing—all elements readable and well-positioned
+  - Diverse plot types demonstrate multiple seaborn functions effectively
+  - Deterministic output with np.random.seed(42)
   weaknesses:
-  - 'CRITICAL: Palette non-compliance — uses #306998, #FFD43B instead of Okabe-Ito
-    #009E73 (first series). Violates hard brand rule.'
-  - 'CRITICAL: Missing theme handling — code does not read ANYPLOT_THEME or implement
-    sns.set_theme(). Violates seaborn.md guidelines.'
-  - 'Wrong output filename: plot.png instead of plot-{THEME}.png'
-  - Minimal design refinement — default matplotlib styling, no polish beyond basic
-    plot construction
-  - Code title uses pyplots.ai instead of anyplot.ai
+  - Code saves to plot.png instead of plot-{THEME}.png—pipeline will fail on next
+    run (AR-03)
+  - No theme support—ignores ANYPLOT_THEME env var, cannot render dark mode correctly
+  - 'Palette violation—uses custom hex colors (#306998, #FFD43B, etc.) instead of
+    Okabe-Ito (#009E73 first)'
+  - No theme-adaptive chrome—text, background, grid colors hardcoded for light theme
+    only
+  - Generic styling without design refinement—feels like defaults, not publication-ready
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme color
-      Chrome: Title, axis labels, and tick labels are all dark-colored and fully readable. No light-on-light contrast issues. Grid lines are subtle.
-      Data: Panel A has teal line, Panel B has yellow-green scatter markers, Panel C has four colored bars (green, orange, blue, pink), Panel D has blue histogram, Panel E has orange line, Panel F has blue line, Panel G has multicolored boxplots. All data elements are clearly visible and distinguishable.
-      Layout: Mosaic pattern with 7 panels at varying sizes; excellent visual hierarchy
-      Legibility verdict: PASS - All elements readable and properly themed
+      Background: Warm off-white (#FAF8F1), correct per spec
+      Chrome: All titles, axis labels, and tick labels clearly visible in dark text, proper hierarchy
+      Data: Seven panels with teal/cyan primary series (appears #009E73), orange secondary series, blue/purple accents showing Okabe-Ito palette
+      Legibility verdict: PASS - All text readable, good contrast against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme color
-      Chrome: Title, axis labels, and tick labels are all light-colored and fully readable. No dark-on-dark contrast issues. Grid lines are subtle.
-      Data: Panel colors are identical to light render (only chrome flipped). All elements remain clearly visible.
-      Layout: Same mosaic pattern; hierarchy maintained
-      Legibility verdict: PASS - All elements readable and properly themed. No dark-on-dark text failures.
+      Background: Warm near-black (#1A1A17), correct per spec
+      Chrome: Title and labels rendered in light cream/tan colors, tick labels visible in soft tan, no dark-on-dark failures detected
+      Data: Data colors identical to light render (teal, orange, blue, reddish-purple)—only chrome has adapted as required
+      Legibility verdict: PASS - All text readable against dark background, strong data color contrast, proper theme adaptation demonstrated
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: All text readable at full resolution in both renders; appropriate
-          sizing hierarchy for multi-panel layout
+        passed: false
+        comment: Font sizes set explicitly, readable in images, but code lacks theme-adaptive
+          text colors
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No colliding elements; clean spacing throughout
+        comment: Excellent spacing and layout, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All lines, markers, and bars clearly visible and distinguishable
+        comment: All elements optimally sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Colors are distinguishable but do NOT follow Okabe-Ito palette; hard
-          rule violation
+        comment: Custom colors used, not CVD-safe Okabe-Ito palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportions excellent; nothing cut off; mosaic pattern clearly readable
+        comment: Perfect proportions, generous margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive, appropriate detail
+        comment: Descriptive with units, correct format
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'First series is #306998 (Python blue), NOT #009E73. Multi-series
-          use custom palette instead of Okabe-Ito. Backgrounds and theme-chrome are
-          correct.'
+        comment: 'CRITICAL: Wrong colors, no theme support, wrong file output (plot.png
+          not plot-{THEME}.png)'
     design_excellence:
-      score: 10
+      score: 5
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Custom color scheme is cohesive but contradicts brand guidelines
+        comment: Generic styling, default-like appearance
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 1
         max: 6
         passed: false
-        comment: Default matplotlib styling; lacks refinement polish
+        comment: Minimal customization, lacks finesse
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Layout hierarchy is clear but each panel is independent; no cross-panel
-          narrative
+        comment: Some hierarchy through sizing but no focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -126,27 +120,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic layout; multiple plot types
+        comment: Correct mosaic layout with varied sizes
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Varying sizes, ASCII-art pattern, consistent spacing
+        comment: 'All features present: ASCII pattern, multiple types, asymmetric
+          sizing'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct; appropriate ranges
+        comment: Correct X/Y mapping, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Main title format correct (note: code vs images domain mismatch)'
+        comment: Correct title format, legends appropriate
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -154,21 +149,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Seven different plot types demonstrate mosaic versatility
+        comment: Demonstrates subplot mastery with varied panel types
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Dashboard scenario is real-world and neutral
+        comment: Business dashboard realistic but slightly generic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values for domain
+        comment: Sensible value ranges for domain
     code_quality:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -176,7 +171,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward panel definitions
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -191,17 +186,16 @@ review:
         comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Hardcoded custom colors violate brand guidelines
+        comment: Hardcoded colors, no theme system
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png not plot-{THEME}.png; missing theme-adaptive styling
-          per seaborn.md
+        comment: 'CRITICAL: saves to plot.png not plot-{THEME}.png'
     library_mastery:
       score: 5
       max: 10
@@ -210,24 +204,27 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Good axes-level API use, but missing sns.set_theme() for consistent
-          theming
+        passed: true
+        comment: subplot_mosaic() used correctly, seaborn functions at high level
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Straightforward subplot_mosaic() demonstration; minimal library-specific
-          sophistication
+        comment: subplot_mosaic() is distinctive but generic seaborn feature usage
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - manual-ticks
+  - grid-styling
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - cumulative-sum
+  - time-series
   styling:
   - grid-styling
+  - alpha-blending
