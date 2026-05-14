@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:31:07Z'
-updated: '2026-05-14T11:18:06Z'
+updated: '2026-05-14T11:24:22Z'
 generated_by: claude-haiku
 workflow_run: 25856779633
 issue: 2924
@@ -12,39 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality with no legibility or readability issues
-  - Flawless theme adaptation — data colors identical across light/dark, chrome properly
-    adjusted
-  - Biologically realistic and scientifically sound data generation
-  - Clean, reproducible code with proper structure
-  - Correct application of Okabe-Ito palette following site standards
-  - Proper sizing for 4800×2700 px output with explicit font sizes
-  - Professional typography and layout
+  - Perfect Visual Quality (30/30) — all text legible in both themes, colors accessible,
+    clean layout
+  - 'Full Spec Compliance (15/15) — all required features: threshold lines, significance
+    categories, transparency, proper axes'
+  - Realistic data generation — differential expression simulation with appropriate
+    fold change and p-value distributions
+  - Theme-adaptive styling executed cleanly — consistent INK/INK_SOFT tokens preserve
+    identity across light/dark
+  - Interactive tooltips enhance usability without fake UI
+  - Clean, reproducible code with proper seed and minimal abstractions
   weaknesses:
-  - Design is generic without custom enhancements beyond configured defaults
-  - No visual hierarchy to emphasize significant findings in upper-left and upper-right
-    quadrants
-  - Minimal visual refinement — spines not removed, whitespace not optimized
-  - Basic Altair usage that doesn't leverage selections, transforms, or conditional
-    encoding
-  - Threshold lines are subtle but don't draw strong attention to significance boundaries
+  - Design Excellence only 9/20 — baseline styling without visual polish or distinctive
+    treatment
+  - No feature annotations despite spec suggestion to 'consider labeling top significant
+    features'
+  - Threshold lines lack visual hierarchy — could vary width, opacity, or combine
+    dashed/solid patterns
+  - Legend styling is functional but not distinctive — no special treatment or creative
+    positioning
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text. Subscripts in labels render correctly. fontSize settings (title=28px, labels=22px, ticks=18px) are explicit and readable. Grid lines are subtle (opacity=0.10). Legend positioned right with elevated background box.
-      Data: Green points (#009E73) for up-regulated, orange (#D55E00) for down-regulated, gray (INK_SOFT) for non-significant. Threshold lines dashed gray. All colors clearly distinguishable from background.
-      Legibility verdict: PASS — all text is readable against light background. No dark-on-light issues.
+      Background: Warm off-white (#FAF8F1), not pure white. Clean, inviting surface.
+      Chrome: Title "volcano-basic · altair · anyplot.ai" in dark text (INK=#1A1A17) at top center, clearly readable (28px). X-axis label "Log₂ Fold Change" and Y-axis label "-Log₁₀(p-value)" in dark text (INK=22px); all tick labels in INK_SOFT (#4A4A44) at 18px, fully legible. Grid lines at 10% opacity, subtle but visible.
+      Data: Up-regulated points in teal (#009E73, Okabe-Ito pos 1), down-regulated in orange (#D55E00, pos 2), not-significant in gray (#4A4A44). Circles with size=80 and opacity=0.7 handle overlapping points well. Horizontal threshold at y≈1.3 and vertical thresholds at x=±1 shown as dashed lines with strokeDash=[8,4], color INK_SOFT, appropriately subtle.
+      Legend: Right side, title "Significance" (INK, 18px font), labels in INK_SOFT (16px). Background is ELEVATED_BG (#FFFDF6), with stroke=INK_SOFT border. All text readable and distinct.
+      Legibility verdict: PASS — All elements clearly visible with strong contrast. No light-on-light failures. Title, labels, and data points all readable at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color
-      Chrome: Title, axis labels, tick labels all clearly visible in adapted light text (#F0EFE8 for title, #B8B7B0 for secondary). Grid remains subtle and visible. Legend text is light on dark background box (#242420).
-      Data: Data point colors are IDENTICAL to light render — green, orange, gray unchanged. Only chrome adapted for dark theme. This confirms proper color constancy across themes.
-      Legibility verdict: PASS — no dark-on-dark failures. All text is readable. Brand green (#009E73) and other data colors maintain excellent visibility on near-black surface.
+      Background: Warm near-black (#1A1A17), not pure black. Sophisticated, readable surface.
+      Chrome: Title in light text (INK=#F0EFE8) at 28px, clearly readable against dark background. X and Y axis labels in INK at 22px; tick labels in INK_SOFT (#B8B7B0) at 18px, excellent contrast. Grid lines at 10% opacity with light color, visible without competing.
+      Data: Up-regulated teal (#009E73) — identical to light render, still vibrant and visible. Down-regulated orange (#D55E00) — identical, clearly distinct. Not-significant in light gray (#B8B7B0) — different from light render's darker gray, appropriate for dark theme. Threshold lines in light gray, dashed pattern maintained.
+      Legend: Background ELEVATED_BG (#242420) with stroke=INK_SOFT border. Title and labels in light colors (INK/INK_SOFT), fully readable. Dark-on-dark check: No failures — tick labels are light gray on near-black, not dark-on-dark.
+      Legibility verdict: PASS — All elements clearly visible with excellent contrast. No dark-on-dark failures. Data colors identical to light render (only chrome adapted to theme). Brand green (#009E73) remains vibrant and accessible.
 
-    Both renders pass theme-readability check and color adaptation is correct.
+    Both renders pass theme-readability checks. Okabe-Ito positions 1–7 are identical between light and dark; only chrome (backgrounds, text, grid) flips appropriately.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,48 +60,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28px, labels=22px, ticks=18px).
-          Perfectly readable in both themes.
+        comment: Title 28px, labels 22px, ticks 18px; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend positioned well without collision.
+        comment: Legend well-positioned, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size=80, opacity=0.7 appropriate for 500 points. Threshold
-          lines clearly visible.
+        comment: Markers visible; opacity=0.7 handles density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe. Green/orange/gray have strong contrast.
+        comment: Okabe-Ito palette, colorblind-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas with balanced margins. Nothing cut off.
+        comment: 1600×900 scaled 3x to 4800×2700px correct
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context. Title format correct.
+        comment: Descriptive labels with units and proper notation
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito correct (#009E73 first, #D55E00 second). Backgrounds correct.
-          Chrome theme-adapted. Data colors identical across themes.'
+        comment: 'Okabe-Ito pos 1/2 correct; backgrounds #FAF8F1/#1A1A17 correct;
+          both renders theme-correct'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -104,23 +107,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default using theme tokens professionally.
-          No custom enhancements or intentional hierarchy beyond the palette.
+        comment: Default styling, no exceptional design choices
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization. Grid opacity set but spines not removed; whitespace
-          not optimized.
+        comment: Dashed threshold lines and subtle grid; could be more polished
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Threshold lines provide context but don't create visual emphasis
-          on significant regions. Data displayed but not interpreted through visual
-          hierarchy.
+        comment: Volcano structure clear; lacks emphasis and feature labels
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +129,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with quantitative axes and thresholds.
+        comment: Correct scatter plot structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal threshold at -log10(0.05), vertical at ±1 log2 FC, significance
-          categorization all present.
+        comment: Thresholds, categories, transparency all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. Axes show all data.
+        comment: X/Y axes correct; scales show data properly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'volcano-basic · altair · anyplot.ai'. Legend labels
-          correct.
+        comment: Title and legend labels match spec
     data_quality:
       score: 15
       max: 15
@@ -160,21 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all volcano plot aspects: up/down/non-significant with realistic
-          distributions.'
+        comment: All volcano aspects shown; N=500 realistic for omics
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real differential expression scenario. Biologically plausible correlation.
+        comment: Differential expression simulation plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log2 FC range and standard thresholds (2-fold, p=0.05) are scientifically
-          correct.
+        comment: Fold change [-6,6] and p-value ranges sensible
     code_quality:
       score: 10
       max: 10
@@ -184,61 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear code. No functions/classes.
+        comment: No unnecessary abstractions or functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, numpy, pandas. All used.
+        comment: 'Only used imports: os, altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No fake functionality.
+        comment: No fake UI; proper layer composition
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html. scale_factor=3.0 correct.
+        comment: Correct filenames and scale_factor=3.0
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct high-level API. Theme-adaptive implementation competent.
-          Default score for correct but not exceptional patterns.
+        passed: true
+        comment: High-level API, proper encoding, theme tokens show expertise
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Multi-layer composition is basic Altair. No selections, transforms,
-          or conditional encoding.
-    score_caps:
-      applied: false
-      details: None applied
-  verdict: REJECTED
+        comment: Layer composition and tooltips; lacks advanced interactions
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - dark-theme
   - alpha-blending
-  - grid-styling
