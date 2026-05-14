@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-loss-training: Training Loss Curve
 Library: highcharts unknown | Python 3.13.13
 Quality: 2/100 | Updated: 2026-05-14
@@ -135,22 +135,20 @@ series2.color = SECONDARY
 series2.marker = {"symbol": "square"}
 chart.add_series(series2)
 
-# Download Highcharts JS for inline embedding (with fallback)
-highcharts_js = ""
+# Download Highcharts JS for inline embedding (required for file:// headless Chrome)
+highcharts_url = "https://code.highcharts.com/highcharts.js"
 try:
-    highcharts_url = "https://code.highcharts.com/highcharts.js"
-    with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+    req = urllib.request.Request(
+        highcharts_url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+    )
+    with urllib.request.urlopen(req, timeout=60) as response:
         highcharts_js = response.read().decode("utf-8")
-except Exception:
-    # Fallback: use CDN link in script tag instead of inline (for testing)
-    pass
+except Exception as e:
+    raise RuntimeError(f"Failed to download Highcharts JS from {highcharts_url}: {e}") from e
 
-# Generate HTML with scripts
+# Generate HTML with INLINE scripts (critical for file:// headless Chrome)
 html_str = chart.to_js_literal()
-if highcharts_js:
-    script_tag = f"<script>{highcharts_js}</script>"
-else:
-    script_tag = '<script src="https://code.highcharts.com/highcharts.js"></script>'
+script_tag = f"<script>{highcharts_js}</script>"
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -181,7 +179,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)
+time.sleep(10)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
