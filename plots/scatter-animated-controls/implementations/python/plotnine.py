@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-animated-controls: Animated Scatter Plot with Play Controls
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-15
@@ -15,7 +15,10 @@ from plotnine import (
     element_rect,
     element_text,
     facet_wrap,
+    geom_hline,
+    geom_path,
     geom_point,
+    geom_vline,
     ggplot,
     ggsave,
     labs,
@@ -31,6 +34,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+REFERENCE_LINE = "#CCB8B0" if THEME == "light" else "#3A3935"
 
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
@@ -73,36 +77,45 @@ for year in years:
 
 df = pd.DataFrame(data_list)
 
+# Calculate medians for reference lines (visual structure)
+median_gdp = df["gdp_per_capita"].median()
+median_life = df["life_expectancy"].median()
+
 plot = (
     ggplot(df, aes(x="gdp_per_capita", y="life_expectancy", color="region", size="population"))
-    + geom_point(alpha=0.6, stroke=0.5)
-    + scale_color_manual(values=OKABE_ITO)
-    + scale_size_continuous(range=(2, 8))
+    + geom_vline(aes(xintercept=median_gdp), color=REFERENCE_LINE, size=0.5, alpha=0.4, linetype="dashed")
+    + geom_hline(aes(yintercept=median_life), color=REFERENCE_LINE, size=0.5, alpha=0.4, linetype="dashed")
+    + geom_path(aes(group="entity"), color=INK_SOFT, size=0.3, alpha=0.15, linetype="solid")
+    + geom_point(alpha=0.7, stroke=0.8)
+    + scale_color_manual(values=OKABE_ITO, name="Region")
+    + scale_size_continuous(range=(2.5, 9), name="Population\n(millions)")
     + facet_wrap("~year", nrow=2, ncol=3)
     + labs(
         x="GDP per Capita (USD thousands)",
         y="Life Expectancy (years)",
         title="scatter-animated-controls · plotnine · anyplot.ai",
-        color="Region",
-        size="Population\n(millions)",
     )
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_major=element_line(color=INK, size=0.25, alpha=0.08),
         panel_grid_minor=element_blank(),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.3),
-        axis_title=element_text(color=INK, size=20),
-        axis_text=element_text(color=INK_SOFT, size=16),
-        axis_line=element_line(color=INK_SOFT, size=0.3),
-        plot_title=element_text(color=INK, size=24, weight="medium"),
-        strip_text=element_text(color=INK, size=18, weight="medium"),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
-        legend_text=element_text(color=INK_SOFT, size=16),
-        legend_title=element_text(color=INK, size=16),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.4),
+        panel_spacing_x=0.15,
+        panel_spacing_y=0.15,
+        axis_title=element_text(color=INK, size=20, weight="medium"),
+        axis_text=element_text(color=INK_SOFT, size=15),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        plot_title=element_text(color=INK, size=26, weight="bold", margin={"t": 0, "b": 15}),
+        strip_text=element_text(color=INK, size=19, weight="bold"),
+        strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
+        legend_text=element_text(color=INK_SOFT, size=15),
+        legend_title=element_text(color=INK, size=16, weight="bold"),
         legend_position="right",
+        legend_margin=8,
     )
 )
 
