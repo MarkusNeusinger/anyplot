@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 Library: highcharts unknown | Python 3.13.13
-Quality: 78/100 | Created: 2026-05-15
 """
 
 import os
@@ -45,12 +44,12 @@ chart.options.chart = {
     "type": "column",
     "options3d": {
         "enabled": True,
-        "alpha": 15,
-        "beta": 25,
-        "depth": 400,
-        "viewDistance": 30,
+        "alpha": 22,
+        "beta": 40,
+        "depth": 450,
+        "viewDistance": 25,
         "frame": {
-            "bottom": {"size": 1, "color": GRID},
+            "bottom": {"size": 2, "color": GRID},
             "back": {"size": 1, "color": GRID},
             "side": {"size": 1, "color": GRID},
         },
@@ -58,16 +57,22 @@ chart.options.chart = {
     "width": 4800,
     "height": 2700,
     "backgroundColor": PAGE_BG,
-    "marginBottom": 180,
-    "marginTop": 120,
-    "marginLeft": 180,
-    "marginRight": 100,
+    "marginBottom": 200,
+    "marginTop": 140,
+    "marginLeft": 200,
+    "marginRight": 180,
 }
 
 chart.options.title = {
-    "text": "Quarterly Product Sales · bar-3d-categorical · highcharts · anyplot.ai",
-    "style": {"fontSize": "28px", "color": INK},
-    "margin": 40,
+    "text": "bar-3d-categorical · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "color": INK, "fontWeight": "600"},
+    "margin": 20,
+}
+
+chart.options.subtitle = {
+    "text": "Quarterly Revenue by Product Category ($ thousands) — Electronics leads across all quarters; Q4 peaks in every segment",
+    "style": {"fontSize": "20px", "color": INK_SOFT},
+    "margin": 30,
 }
 
 chart.options.x_axis = {
@@ -89,25 +94,31 @@ chart.options.y_axis = {
 
 chart.options.plot_options = {
     "column": {
-        "depth": 35,
+        "depth": 45,
         "grouping": False,
-        "groupZPadding": 10,
-        "borderColor": "rgba(255,255,255,0.25)",
+        "groupZPadding": 12,
+        "borderColor": "rgba(255,255,255,0.20)",
         "borderWidth": 1,
         "dataLabels": {
             "enabled": True,
             "format": "{point.y}",
-            "style": {"fontSize": "14px", "color": INK, "textOutline": "none", "fontWeight": "normal"},
+            "style": {"fontSize": "18px", "color": INK, "textOutline": "none", "fontWeight": "normal"},
         },
     }
 }
 
 chart.options.legend = {
-    "itemStyle": {"color": INK_SOFT, "fontSize": "16px"},
+    "itemStyle": {"color": INK_SOFT, "fontSize": "18px"},
+    "itemHoverStyle": {"color": INK},
     "backgroundColor": ELEVATED_BG,
     "borderColor": INK_SOFT,
     "borderWidth": 1,
-    "title": {"text": "Quarter", "style": {"color": INK_SOFT, "fontSize": "16px"}},
+    "borderRadius": 4,
+    "padding": 16,
+    "title": {"text": "Quarter", "style": {"color": INK, "fontSize": "18px", "fontWeight": "600"}},
+    "align": "right",
+    "verticalAlign": "middle",
+    "layout": "vertical",
 }
 
 chart.options.colors = OKABE_ITO
@@ -117,6 +128,10 @@ for i, quarter in enumerate(quarters):
     series.name = quarter
     series.data = sales_data[quarter]
     series.color = OKABE_ITO[i]
+    # Emphasize Q4 (peak quarter) with a prominent border to guide the viewer
+    if quarter == "Q4":
+        series.border_color = INK_SOFT
+        series.border_width = 2
     chart.add_series(series)
 
 # Download Highcharts JS files for inline embedding (CDN blocked in headless Chrome)
