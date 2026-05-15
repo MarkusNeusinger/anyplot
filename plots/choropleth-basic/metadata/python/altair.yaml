@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:54:48Z'
-updated: '2026-05-15T05:42:30Z'
+updated: '2026-05-15T05:51:22Z'
 generated_by: claude-haiku
 workflow_run: 25902212440
 issue: 3069
@@ -12,83 +12,86 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/altair/plot-dark.html
-quality_score: 78
+quality_score: 90
 review:
   strengths:
-  - Correct choropleth map type with US county-level geographic visualization
-  - Data mapping properly encoded via perceptually uniform color gradient
-  - Proper use of Altair geographic features (mark_geoshape, project, transform_lookup)
-  - Interactive tooltips with formatted county unemployment data
-  - Appropriate Albers USA map projection for continental visualization
-  - Light theme renders with excellent legibility and professional appearance
-  - Clean, straightforward code without unnecessary complexity
+  - Excellent visual quality and legibility in both light and dark themes
+  - Proper theme-adaptive implementation with all chrome correctly flipped
+  - Realistic data (US unemployment) with sensible domain scaling
+  - Clean, idiomatic Altair code using geospatial features appropriately
+  - Correct palette (viridis) for continuous data
+  - Full interactivity with tooltips and pan/zoom
   weaknesses:
-  - Dark theme title legibility failure - text barely visible on dark background despite
-    correct INK token
-  - Uses 'blues' continuous scheme instead of style-guide-recommended viridis/cividis/BrBG
-  - Minimal design sophistication - relies on default altair styling without custom
-    refinement
-  - Dark theme text contrast inadequate - fails mandatory both-render readability
-    requirement
+  - Design excellence is functional but generic—uses standard viridis palette and
+    serviceable styling without distinctive customization
+  - Could benefit from custom color choices or refined visual hierarchy to elevate
+    design sophistication
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "US County Unemployment · choropleth-basic · altair · anyplot.ai" clearly visible in dark text; legend with "Unemployment Rate" label, proper font sizes, all text readable
-      Data: Blue sequential gradient showing unemployment variation across US counties; boundaries clearly visible with thin light strokes; data-to-color mapping effective
-      Legibility verdict: PASS - excellent contrast and visibility for all elements
+      Background: Warm off-white #FAF8F1 (correct for light theme)
+      Chrome: Title "US County Unemployment · choropleth-basic · altair · anyplot.ai" in dark 44px text; legend "Unemployment Rate" with 20px title and 16px labels; all readable against light background
+      Data: Viridis colormap from purple (low unemployment) through teal/green to yellow (high); US counties with subtle gray boundaries (INK_SOFT strokes)
+      Legibility verdict: PASS - All text elements clearly readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title is BARELY VISIBLE/EXTREMELY FAINT against dark background - critical legibility failure despite INK color being set to #F0EFE8; legend labels have better but still suboptimal contrast
-      Data: Blue gradient identical to light render (data colors correctly theme-invariant); county boundaries visible but dark-themed chrome needs improvement
-      Legibility verdict: FAIL - title is functionally unreadable due to insufficient contrast on dark surface; dark theme adaptation inadequate despite correct color token values
+      Background: Warm near-black #1A1A17 (correct for dark theme)
+      Chrome: Title in light color (#F0EFE8) clearly readable; legend background #242420 with light labels (#B8B7B0); all readable against dark background
+      Data: Viridis colors identical to light render (purple → teal → yellow); confirms proper theme-adaptation (only chrome flipped, data colors preserved)
+      Legibility verdict: PASS - All text elements clearly readable, no dark-on-dark failures, brand colors visible
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 8
         max: 8
-        passed: false
-        comment: Title barely visible in dark theme - critical failure
+        passed: true
+        comment: Title at 44px, legend title 20px, legend labels 16px; all readable
+          in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; map and legend well-separated
+        comment: No text/data collisions; legend cleanly positioned on right with
+          offset=30
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All counties clearly distinguished; gradient effective
+        comment: County shapes distinctly visible; viridis colors well-differentiated
+          from background
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Uses 'blues' instead of viridis/cividis/BrBG
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe; adequate contrast
+          throughout
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; map appropriately sized
+        comment: 1600×900 chart dimensions with good proportions; nothing cut off;
+          generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows format correctly
+        comment: Title includes spec-id/library/brand; legend title descriptive with
+          percentage format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Dark theme readability failure - title contrast inadequate
+        passed: true
+        comment: 'Viridis correct for continuous unemployment data; backgrounds exactly
+          #FAF8F1 (light) and #1A1A17 (dark); both themes properly theme-adapted'
     design_excellence:
       score: 11
       max: 20
@@ -98,19 +101,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Standard altair styling; no custom design touches
+        comment: Functional design using default viridis palette; no custom palette
+          or distinctive visual elements; serviceable but not sophisticated
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Legend properly styled; limited overall visual polish
+        comment: County stroke configured (stroke=INK_SOFT, strokeWidth=0.5); legend
+          offset/padding thoughtful; slightly above minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy; effective regional variation display
+        comment: Color gradient clearly shows unemployment progression; visual hierarchy
+          through color intensity guides viewer from high to low values
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct choropleth map
+        comment: Correct choropleth map with geoshape mark encoding US counties
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Legend, projection, regional coloring all present
+        comment: Color legend present; region boundaries clearly visible; Albers USA
+          projection used; scale domain configured [0, 0.25]
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: County regions and values correctly encoded
+        comment: Unemployment rate correctly mapped to viridis color scale; all US
+          counties displayed; transform_lookup properly joins data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; labels match
+        comment: Title includes spec-id, library, and anyplot.ai; legend title descriptive
+          with format='.0%'
     data_quality:
       score: 15
       max: 15
@@ -148,21 +157,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full US geographic coverage
+        comment: 'All choropleth aspects shown: geographic regions, value mapping,
+          color legend, interactive tooltips, pan/zoom'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral unemployment data
+        comment: Real US unemployment data from vega_datasets; plausible and neutral
+          economic statistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-25% domain sensible for unemployment
+        comment: Domain [0, 0.25] sensible for US county unemployment rates; captures
+          typical range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,33 +182,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward, no unnecessary abstractions
+        comment: Direct script execution; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: vega_datasets deterministic
+        comment: Uses deterministic vega_datasets; no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'Only used imports: os, altair, vega_datasets'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Good patterns but dark theme failure undermines quality
+        passed: true
+        comment: No fake UI or simulated functionality; uses genuine Altair .interactive()
+          and tooltip features
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming with theme placeholder
+        comment: 'Correct naming: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -204,14 +217,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper geographic patterns and projection usage
+        comment: Proper encoding syntax; appropriate use of transforms and projections;
+          high-level API throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses geographic features; limited beyond standard capabilities
-  verdict: REJECTED
+        passed: true
+        comment: Effective use of geoshape mark, transform_lookup, .project(), .interactive(),
+          and tooltip encoding—Altair-specific features well-leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -220,5 +235,4 @@ impl_tags:
   patterns:
   - dataset-loading
   dataprep: []
-  styling:
-  - dark-theme
+  styling: []
