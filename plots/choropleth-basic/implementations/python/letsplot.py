@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-15
@@ -20,6 +20,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+NA_COLOR = "#D0CFC8" if THEME == "light" else "#5A5953"
+BORDER_COLOR = "#3A3934" if THEME == "light" else "#D8D7D0"
 
 # Data: GDP per capita by European countries (in thousands USD)
 data = {
@@ -96,11 +98,11 @@ plot = (
         data=df,
         map=df_geo,
         map_join=["country", "found name"],
-        color=INK_SOFT,
-        size=0.6,
-        alpha=0.95,
+        color=BORDER_COLOR,
+        size=1.0,
+        alpha=1.0,
     )
-    + scale_fill_viridis(name="GDP per Capita\n(thousands USD)", na_value="#E0E0E0")  # noqa: F405
+    + scale_fill_viridis(name="GDP per Capita\n(thousands USD)", na_value=NA_COLOR)  # noqa: F405
     + labs(title="choropleth-basic · letsplot · anyplot.ai")  # noqa: F405
     + coord_cartesian(xlim=[-12, 32], ylim=[35, 71])  # noqa: F405
     + ggsize(1600, 900)  # noqa: F405
