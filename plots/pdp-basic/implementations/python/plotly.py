@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: plotly | Python 3.13
-Quality: pending | Created: 2025-01-15
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-15
 """
 
 import os
