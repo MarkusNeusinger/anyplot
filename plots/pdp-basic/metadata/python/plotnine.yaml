@@ -1,15 +1,245 @@
 library: plotnine
+language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:34:04Z'
-updated: '2025-12-31T05:45:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612800365
+updated: '2026-05-15T22:45:27Z'
+generated_by: claude-haiku
+workflow_run: 25944769540
 issue: 2922
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - Excellent theme adaptation with both renders properly legible—no dark-on-dark
+    or light-on-light failures
+  - 'Perfect specification compliance: all required features (PDP, confidence interval,
+    rug plot) correctly implemented'
+  - 'Professional color palette: brand green + orange (Okabe-Ito) with high contrast
+    and CVD-safety'
+  - 'Sophisticated data visualization: confidence ribbon and rug plot add interpretability'
+  - Clean, reproducible code with clear intent and proper random seeding
+  - Appropriate typography hierarchy and sizing for large canvas
+  - Subtle grid and refined minimalist aesthetic
+  weaknesses:
+  - Design Excellence could be elevated with more distinctive visual treatment (e.g.,
+    custom spine styling, refined margins, or strategic emphasis techniques)
+  - Library Mastery could showcase advanced plotnine features (e.g., scale_manual
+    for explicit palette control, custom theme inheritance) though current implementation
+    is solid
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly renders theme-light surface
+      Chrome: Title "pdp-basic · plotnine · anyplot.ai" (24pt bold), X-axis "Room Size (standardized)" (20pt), Y-axis "Partial Dependence (avg. prediction)" (20pt), tick labels (16pt) — all in dark text (#1A1A17) and fully readable
+      Data: Main curve in brand green (#009E73, size=2) shows clear positive relationship; confidence ribbon (alpha=0.15, same green) surrounds curve; rug plot (orange #D55E00, alpha=0.6) at baseline shows feature distribution
+      Legibility verdict: PASS — all text is dark and readable on light background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly renders theme-dark surface
+      Chrome: Title and axis labels now in light text (#F0EFE8); tick labels in soft text (#B8B7B0) — all readable against dark surface with no dark-on-dark contrast issues
+      Data: Main curve and ribbon colors are identical to light render (brand green #009E73); rug plot color identical (orange #D55E00) — only chrome has adapted to dark theme as expected
+      Legibility verdict: PASS — all text is light and readable on dark background; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title (24pt bold), axis labels (20pt), and tick labels (16pt) explicitly
+          sized; all readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Generous spacing; title, axes, and elements have clear separation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve (size=2), confidence ribbon (alpha=0.15), and rug plot
+          (alpha=0.6, lower y-position) all appropriately visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette (#009E73 primary, #D55E00 secondary); colorblind-safe
+          with high contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16×9 at 300 DPI (4800×2700px); proportions ideal for line plots;
+          no cutoff
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"pdp-basic · plotnine · anyplot.ai" follows standard; axes descriptive
+          with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark); theme-adaptive chrome applied throughout; both renders
+          theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clean minimalist base with intentional customizations: color selection,
+          typography hierarchy, confidence ribbon for uncertainty, rug plot for data
+          context. Professional polish with clear design intent.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped frame (bottom/left spines only via theme_minimal); subtle
+          grid (INK_SOFT color, 10% alpha, 0.3px stroke) enhances readability without
+          competition
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point on main curve; visual hierarchy through weight
+          (size=2 vs. ribbon alpha=0.15); rug provides supporting context; confidence
+          band tells uncertainty story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chart type (line + confidence interval); shows feature-response
+          relationship as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Feature values (x), partial dependence (y), confidence intervals
+          (ribbon), rug plot (data distribution), model training all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: feature_value; Y: partial_dependence; Ribbon: ci_lower/ci_upper;
+          Rug: actual feature samples; all axes show full data range'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec; no legend needed (single series + rug
+          self-explanatory); axis labels descriptive
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: average prediction, confidence bounds, data distribution,
+          model interpretation'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 500 synthetic samples; realistic feature (Room Size); plausible model
+          (GradientBoostingRegressor); appropriate uncertainty quantification
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Feature range (-2 to 2.5) and PD range (-200 to 300) sensible for
+          standardized features and regression predictions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; direct linear flow from data gen → model →
+          PD → plot
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and GradientBoostingRegressor(random_state=42)
+          ensure deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os (THEME), numpy, pandas, plotnine, sklearn (no
+          extraneous)'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; clean variable names (pd_mean,
+          ci_lower); logical grouping
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as `plot-{THEME}.png` (not bare); current API (plot.save)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Grammar of graphics (ggplot + geoms + theme); high-level API (geom_line,
+          geom_ribbon, geom_segment); proper aesthetic mapping; idiomatic theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Solid plotnine usage with appropriate techniques; geom_ribbon for
+          confidence intervals; theme customization shows competence. Could extend
+          with scale_manual for more control, but current approach is suitable.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -20,192 +250,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent implementation of PDP using real sklearn partial_dependence computation
-  - Proper confidence interval calculation from ICE curves (mean ± 1.96*std)
-  - Clean rug plot implementation using geom_segment showing training data distribution
-  - Professional appearance with appropriate color scheme and typography
-  - Follows plotnine grammar of graphics idiomatically
-  weaknesses:
-  - Missing legend to explain what the shaded confidence band represents
-  - The confidence band is very wide, visually overwhelming the actual trend line
-  - Rug marks are positioned slightly below the plot area rather than at the axis
-  image_description: The plot displays a partial dependence plot with a dark blue
-    line showing the average predicted outcome across standardized Temperature values
-    (x-axis ranging from approximately -2 to 2). A light blue confidence band (ribbon)
-    surrounds the line, showing the 95% confidence interval derived from ICE curves.
-    The confidence band is quite wide, spanning roughly ±200 units around the mean
-    prediction. A yellow/gold rug plot at the bottom shows the distribution of training
-    data points along the x-axis, with most data concentrated between -1.5 and 1.5.
-    The title "pdp-basic · plotnine · pyplots.ai" appears at the top in bold. The
-    y-axis is labeled "Partial Dependence (avg. prediction)" and the x-axis is labeled
-    "Temperature (standardized)". The plot uses a minimal theme with subtle gray grid
-    lines.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and bold (~24pt), axis labels are clearly readable
-          (~20pt), tick labels are appropriately sized (~16pt)
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements anywhere
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Line is clearly visible with good thickness (size=2), confidence
-          band is appropriately transparent (alpha=0.25), rug marks are visible but
-          could be slightly taller
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) for main elements and gold (#FFD43B) for rug are colorblind-friendly
-          and high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though the confidence band dominates visually
-          due to its width
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with context: "Temperature (standardized)" and
-          "Partial Dependence (avg. prediction)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid is subtle and appropriate, but no legend explaining the confidence
-          band
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct partial dependence plot with line showing marginal effect
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Feature values on x-axis, partial dependence on y-axis as specified
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Includes confidence interval (as ribbon), rug plot for data distribution
-          as suggested in spec
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show full range of data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed for single-feature PDP (N/A, full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "pdp-basic · plotnine · pyplots.ai"
-    data_quality:
-      score: 17
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows clear upward trend in partial dependence, confidence band shows
-          variability, but the relationship is relatively linear/simple
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses sklearn GradientBoostingRegressor with synthetic regression
-          data, Temperature as feature name is plausible
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Standardized feature values are appropriate; PD values span a wide
-          range which is realistic for the model
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports → data/model → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42) and random_state=42 for model
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current sklearn and plotnine APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of ggplot grammar with geom_ribbon, geom_line, geom_segment
-          for rug, and proper theming. Could have used more plotnine-specific features
-          like scale_* customizations
-  verdict: APPROVED
