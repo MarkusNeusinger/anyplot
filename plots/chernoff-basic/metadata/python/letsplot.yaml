@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:07:14Z'
-updated: '2026-05-15T15:20:50Z'
+updated: '2026-05-15T15:26:39Z'
 generated_by: claude-haiku
 workflow_run: 25925524639
 issue: 3003
@@ -12,107 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 80
 review:
   strengths:
-  - Perfect Okabe-Ito palette compliance with correct theme-adaptive chrome (background,
-    text colors)
-  - Excellent data choice (Iris dataset) that demonstrates all four multivariate dimensions
-  - Clean, reproducible code with proper random seed and clear linear structure
-  - Professional layout and grid composition with balanced whitespace
-  - 'Correct feature mapping: sepal length → face width, sepal width → eye size, petal
-    length → mouth curvature, petal width → eyebrow slant'
+  - Excellent theme-adaptive chrome with fully readable light and dark renders
+  - Correct Okabe-Ito palette usage with proper species color mapping
+  - All facial features mathematically sound and mapped to data variables
+  - Clean KISS code structure with proper reproducibility
+  - Perfect spec compliance with all required features
+  - All text explicitly sized and readable in both themes
   weaknesses:
-  - 'Pupil visibility in dark mode: pupils render with light INK color (#F0EFE8) against
-    white eyes, creating low contrast. Pupils should be dark (e.g., INK_SOFT or inverted)
-    for visibility in both themes.'
-  - 'Design Excellence ceiling: visually generic implementation that looks like a
-    well-configured default rather than intentional aesthetic design.'
-  - 'Limited Library Mastery: does not leverage letsplot-specific features beyond
-    basic geom layering; no distinctive or sophisticated usage patterns.'
+  - Generic design lacking custom aesthetic touches or visual refinement
+  - No visual storytelling or emphasis—data presented but not interpreted
+  - Library mastery limited to basic API usage; could leverage more distinctive letsplot
+    features
+  - Design Excellence scores low due to default styling and lack of sophisticated
+    composition
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - matches specification
-      Chrome: Title "chernoff-basic · letsplot · anyplot.ai" is dark 24pt bold, clearly readable. Species labels below each face in dark gray, fully readable. Legend on right with species colors.
-      Data: 12 Chernoff faces in 3×4 grid. Setosa faces (#009E73 green) with various facial expressions. Versicolor faces (#D55E00 tan) showing different mouth curvatures. Virginica faces (#0072B2 blue) with varied eyebrow slants. Eyes have white fills with dark pupils - high contrast. All four facial features (face width, eye size, mouth curvature, eyebrow slant) are clearly distinguishable.
-      Legibility verdict: PASS - all text readable, all facial features visible with good contrast
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "chernoff-basic · letsplot · anyplot.ai" in dark INK (#1A1A17) at 24pt bold - clearly readable; species labels below faces in dark INK_SOFT (#4A4A44) at 12pt - fully readable; legend showing "Species" with dark text at 18pt title, 16pt items on elevated background (#FFFDF6) - all clearly visible
+      Data: 12 Chernoff faces arranged in 3×4 grid; Setosa faces in #009E73 (Okabe-Ito pos 1), Versicolor in #D55E00 (pos 2), Virginica in #0072B2 (pos 3); facial features (white eyes with dark pupils, dark mouth curves, eyebrows, noses) all visible and distinguishable; semi-transparent face fills add depth
+      Legibility verdict: PASS - All text readable without any light-on-light failures; facial features clear against background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - matches specification
-      Chrome: Title is light-colored and readable. Species labels in light gray (#B8B7B0) and readable. Legend text legible.
-      Data: Same 12 faces. Data colors (Okabe-Ito green #009E73, tan #D55E00, blue #0072B2) are IDENTICAL to light render - only chrome flips, not data colors. Mouth expressions, eyebrows, and nose features are visible.
-      **ISSUE**: Pupils are rendered with INK color (#F0EFE8 in dark mode) against white eye fills, creating near-white-on-white with very poor contrast. Pupils are barely distinguishable in dark render, whereas they are clearly dark and visible in light render. This is a theme-adaptation failure.
-      Legibility verdict: PARTIAL PASS - most elements readable, but pupil visibility is poor in dark mode
+      Background: Warm near-black (#1A1A17) - correct theme surface, not pure black
+      Chrome: Title in light INK (#F0EFE8) at 24pt - clearly readable against dark background; species labels in light INK_SOFT (#B8B7B0) at 12pt - fully readable; legend showing "Species" on elevated background (#242420) with light text at 18pt/16pt - all clearly visible with no dark-on-dark failures
+      Data: Same 12 Chernoff faces; data colors are IDENTICAL to light render - Setosa #009E73, Versicolor #D55E00, Virginica #0072B2; facial features (white eyes highly visible against dark, dark pupils, dark mouth/eyebrows/noses) all distinguishable and rendered correctly
+      Legibility verdict: PASS - All text readable in light colors; no dark-on-dark failures; data colors match light render exactly (only chrome has adapted as required)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized; readable in both themes
+        comment: Title (24pt), legend (18/16pt), labels (12pt) all explicitly sized
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Excellent grid spacing; no overlapping elements
+        comment: No overlapping text; clean positioning of labels and legend
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
-        passed: false
-        comment: Pupils lack contrast in dark mode; other features visible
+        passed: true
+        comment: All facial features visible and distinguishable; pupils clear against
+          white eyes; mouth and eyebrows render clearly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Good contrast; Okabe-Ito palette CVD-safe; species distinction clear
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Perfect composition; 50-70% canvas utilization
+        comment: Plot fills 50-70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format
+        comment: 'Title format correct: chernoff-basic · letsplot · anyplot.ai'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: Okabe-Ito order, correct backgrounds, theme-adapted text'
+        comment: 'First series #009E73; multi-series follows Okabe-Ito; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-adaptive in both renders'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-executed but generic; lacks exceptional polish
+        comment: Well-configured defaults; intentional feature mapping; lacks custom
+          design polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clean layout; adequate but not exceptional refinement
+        comment: Minimal customization; generic styling; library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Visual hierarchy through color; could emphasize species differences
-          more
+        comment: Data displayed clearly but no visual narrative or emphasis; viewer
+          must find their own story
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chernoff face implementation
+        comment: Correct Chernoff face visualization with all required features
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All four features mapped; grid layout; species coloring
+        comment: 'All 4 iris variables mapped: sepal length→face width, sepal width→eye
+          size, petal length→mouth curvature, petal width→eyebrow slant'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Data normalized; all samples shown; variation clear
+        comment: Correct mapping; all data visible; grid layout clear
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and labels
+        comment: Title correct; legend labels match (Setosa, Versicolor, Virginica)
     data_quality:
       score: 15
       max: 15
@@ -150,19 +152,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All iris dimensions; three species; varied expressions
+        comment: Shows all aspects of Chernoff face technique with varied features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Iris dataset; scientific context
+        comment: Iris dataset (real, well-known scientific data); neutral botanical
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic proportions; no impossible values
+        comment: Iris measurements factually correct; 0-1 normalization appropriate
     code_quality:
       score: 10
       max: 10
@@ -172,59 +175,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; minimal complexity
+        comment: 'Simple structure: imports → data → plot → save; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set
+        comment: np.random.seed(42) set; deterministic sampling
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code
+        comment: Clean, Pythonic code; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Correct output format with plot-{theme}.png and .html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Correct ggplot patterns; could be more distinctive
+        passed: true
+        comment: Uses ggplot2-style grammar correctly; proper geom composition and
+          high-level API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Generic usage despite novel concept
-  verdict: REJECTED
+        comment: Uses basic letsplot features; generic usage that could apply to other
+          libraries
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - layer-composition
-  - html-export
   patterns:
-  - data-generation
   - dataset-loading
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - normalization
   styling: []
