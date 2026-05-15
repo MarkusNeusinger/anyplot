@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
-Library: highcharts | Python 3.13
-Quality: 90/100 | Updated: 2025-05-15
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-15
 """
 
 import json
