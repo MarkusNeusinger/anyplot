@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 circos-basic: Circos Plot
 Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Quality: 91/100 | Updated: 2026-05-15
 """
 
 import math
+import os
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,7 @@ from lets_plot import (
     aes,
     coord_fixed,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     geom_text,
@@ -30,6 +32,13 @@ from lets_plot.export import ggsave
 LetsPlot.setup_html()
 
 np.random.seed(42)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Genomic-style data: 8 chromosomes with connections and expression data
 chromosomes = ["Chr1", "Chr2", "Chr3", "Chr4", "Chr5", "Chr6", "Chr7", "Chr8"]
@@ -277,45 +286,45 @@ plot = (
     ggplot()
     # Ribbons connecting chromosomes (innermost, with transparency)
     + geom_polygon(
-        aes(x="x", y="y", group="ribbon_id", fill="source"), data=ribbon_df, alpha=0.45, color="white", size=0.2
+        aes(x="x", y="y", group="ribbon_id", fill="source"), data=ribbon_df, alpha=0.45, color=PAGE_BG, size=0.2
     )
     # Expression track 2 (inner track)
     + geom_polygon(
-        aes(x="x", y="y", group="track_id", fill="chromosome"), data=track2_df, alpha=0.65, color="white", size=0.3
+        aes(x="x", y="y", group="track_id", fill="chromosome"), data=track2_df, alpha=0.65, color=PAGE_BG, size=0.3
     )
     # Expression track 1 (middle track)
     + geom_polygon(
-        aes(x="x", y="y", group="track_id", fill="chromosome"), data=track1_df, alpha=0.8, color="white", size=0.3
+        aes(x="x", y="y", group="track_id", fill="chromosome"), data=track1_df, alpha=0.8, color=PAGE_BG, size=0.3
     )
     # Outer chromosome ring
     + geom_polygon(
-        aes(x="x", y="y", group="arc_id", fill="chromosome"), data=arc_df, alpha=0.95, color="white", size=0.8
+        aes(x="x", y="y", group="arc_id", fill="chromosome"), data=arc_df, alpha=0.95, color=PAGE_BG, size=0.8
     )
     # Chromosome labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, color="#2C3E50", fontface="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, color=INK, fontface="bold")
     + scale_fill_manual(values=chr_colors, name="Chromosome")
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-1.45, 1.45))
     + scale_y_continuous(limits=(-1.45, 1.45))
-    + labs(title="Genomic Rearrangements · circos-basic · letsplot · pyplots.ai")
-    + ggsize(1200, 1200)  # Square format for circular diagram
+    + labs(title="circos-basic · letsplot · anyplot.ai")
+    + ggsize(1200, 1200)
     + theme(
-        plot_title=element_text(size=26, face="bold", color="#2C3E50"),
+        plot_title=element_text(size=26, face="bold", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
-        legend_text=element_text(size=14),
-        legend_title=element_text(size=16, face="bold"),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_title=element_text(size=16, face="bold", color=INK),
         legend_position="bottom",
-        panel_background=element_blank(),
-        plot_background=element_blank(),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
 
 # Save as PNG (scale 3x for 3600x3600 px output)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
