@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 49/100 | Updated: 2026-05-15
@@ -66,14 +66,8 @@ color_map = {
 df["color"] = df["name"].map(color_map)
 df["parent_total"] = df.groupby("parent")["value"].transform("sum")
 df["percentage"] = (df["value"] / df["parent_total"] * 100).fillna(0)
-df["display_label"] = df.apply(
-    lambda r: (
-        f"{r['name']}\n${r['value'] / 1e6:.2f}M ({r['percentage']:.1f}%)"
-        if r["value"] >= 1e6
-        else f"{r['name']}\n${r['value'] / 1e3:.0f}K ({r['percentage']:.1f}%)"
-    ),
-    axis=1,
-)
+df["pct_label"] = df["percentage"].apply(lambda x: f"{x:.0f}%")
+df["display_label"] = df["name"] + "\n" + df["pct_label"]
 
 selection = alt.selection_point(fields=["id"], empty=True, name="drill")
 
@@ -106,7 +100,7 @@ main_pie = (
 
 main_labels = (
     alt.Chart(root_view)
-    .mark_text(radius=350, fontSize=20, fontWeight="bold", align="center", baseline="middle")
+    .mark_text(radius=180, fontSize=13, align="center", baseline="middle")
     .encode(theta=alt.Theta("value:Q", stack=True), text=alt.Text("display_label:N"), color=alt.value(INK))
 )
 
@@ -148,7 +142,7 @@ for parent_id, parent_name in dept_configs:
 
     dept_labels = (
         alt.Chart(dept_view)
-        .mark_text(radius=350, fontSize=18, fontWeight="bold", align="center", baseline="middle", color=INK)
+        .mark_text(radius=180, fontSize=12, align="center", baseline="middle", color=INK)
         .encode(theta=alt.Theta("value:Q", stack=True), text=alt.Text("display_label:N"))
         .transform_filter(alt.datum.parent == parent_id)
     )
