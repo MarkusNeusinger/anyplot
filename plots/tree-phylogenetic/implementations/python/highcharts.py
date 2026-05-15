@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-15
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,118 +15,113 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for categorical data
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+
 # Data - Primate phylogenetic tree with branch lengths (MYA - Million Years Ago)
-# Branch lengths represent evolutionary distances
-phylo_data = {
-    "nodes": {
-        "Primates": {"name": "Primates", "rank": "Order", "depth": 0},
-        "Hominoidea": {"name": "Hominoidea", "rank": "Superfamily", "depth": 25},
-        "Cercopithecoidea": {"name": "Cercopithecoidea", "rank": "Superfamily", "depth": 25},
-        "Hominidae": {"name": "Hominidae", "rank": "Family", "depth": 40},
-        "Hylobatidae": {"name": "Hylobatidae", "rank": "Family", "depth": 40},
-        "Cercopithecidae": {"name": "Cercopithecidae", "rank": "Family", "depth": 40},
-        "Hominini": {"name": "Hominini", "rank": "Tribe", "depth": 55},
-        "Ponginae": {"name": "Ponginae", "rank": "Subfamily", "depth": 55},
-        "Cercopithecinae": {"name": "Cercopithecinae", "rank": "Subfamily", "depth": 55},
-        "Colobinae": {"name": "Colobinae", "rank": "Subfamily", "depth": 55},
-        "Homo_sapiens": {"name": "Homo sapiens", "rank": "Species", "depth": 75},
-        "Pan_troglodytes": {"name": "Pan troglodytes", "rank": "Species", "depth": 75},
-        "Pongo_pygmaeus": {"name": "Pongo pygmaeus", "rank": "Species", "depth": 75},
-        "Hylobates_lar": {"name": "Hylobates lar", "rank": "Species", "depth": 75},
-        "Symphalangus": {"name": "Symphalangus syndactylus", "rank": "Species", "depth": 75},
-        "Macaca_mulatta": {"name": "Macaca mulatta", "rank": "Species", "depth": 75},
-        "Papio_anubis": {"name": "Papio anubis", "rank": "Species", "depth": 75},
-        "Colobus_guereza": {"name": "Colobus guereza", "rank": "Species", "depth": 75},
-        "Nasalis_larvatus": {"name": "Nasalis larvatus", "rank": "Species", "depth": 75},
-    },
-    "edges": [
-        ("Primates", "Hominoidea"),
-        ("Primates", "Cercopithecoidea"),
-        ("Hominoidea", "Hominidae"),
-        ("Hominoidea", "Hylobatidae"),
-        ("Cercopithecoidea", "Cercopithecidae"),
-        ("Hominidae", "Hominini"),
-        ("Hominidae", "Ponginae"),
-        ("Cercopithecidae", "Cercopithecinae"),
-        ("Cercopithecidae", "Colobinae"),
-        ("Hominini", "Homo_sapiens"),
-        ("Hominini", "Pan_troglodytes"),
-        ("Ponginae", "Pongo_pygmaeus"),
-        ("Hylobatidae", "Hylobates_lar"),
-        ("Hylobatidae", "Symphalangus"),
-        ("Cercopithecinae", "Macaca_mulatta"),
-        ("Cercopithecinae", "Papio_anubis"),
-        ("Colobinae", "Colobus_guereza"),
-        ("Colobinae", "Nasalis_larvatus"),
-    ],
+phylo_nodes = {
+    "Primates": {"name": "Primates", "rank": "Order", "depth": 0},
+    "Hominoidea": {"name": "Hominoidea", "rank": "Superfamily", "depth": 25},
+    "Cercopithecoidea": {"name": "Cercopithecoidea", "rank": "Superfamily", "depth": 25},
+    "Hominidae": {"name": "Hominidae", "rank": "Family", "depth": 40},
+    "Hylobatidae": {"name": "Hylobatidae", "rank": "Family", "depth": 40},
+    "Cercopithecidae": {"name": "Cercopithecidae", "rank": "Family", "depth": 40},
+    "Hominini": {"name": "Hominini", "rank": "Tribe", "depth": 55},
+    "Ponginae": {"name": "Ponginae", "rank": "Subfamily", "depth": 55},
+    "Cercopithecinae": {"name": "Cercopithecinae", "rank": "Subfamily", "depth": 55},
+    "Colobinae": {"name": "Colobinae", "rank": "Subfamily", "depth": 55},
+    "Homo_sapiens": {"name": "Homo sapiens", "rank": "Species", "depth": 75},
+    "Pan_troglodytes": {"name": "Pan troglodytes", "rank": "Species", "depth": 75},
+    "Pongo_pygmaeus": {"name": "Pongo pygmaeus", "rank": "Species", "depth": 75},
+    "Hylobates_lar": {"name": "Hylobates lar", "rank": "Species", "depth": 75},
+    "Symphalangus": {"name": "Symphalangus syndactylus", "rank": "Species", "depth": 75},
+    "Macaca_mulatta": {"name": "Macaca mulatta", "rank": "Species", "depth": 75},
+    "Papio_anubis": {"name": "Papio anubis", "rank": "Species", "depth": 75},
+    "Colobus_guereza": {"name": "Colobus guereza", "rank": "Species", "depth": 75},
+    "Nasalis_larvatus": {"name": "Nasalis larvatus", "rank": "Species", "depth": 75},
 }
 
+phylo_edges = [
+    ("Primates", "Hominoidea"),
+    ("Primates", "Cercopithecoidea"),
+    ("Hominoidea", "Hominidae"),
+    ("Hominoidea", "Hylobatidae"),
+    ("Cercopithecoidea", "Cercopithecidae"),
+    ("Hominidae", "Hominini"),
+    ("Hominidae", "Ponginae"),
+    ("Cercopithecidae", "Cercopithecinae"),
+    ("Cercopithecidae", "Colobinae"),
+    ("Hominini", "Homo_sapiens"),
+    ("Hominini", "Pan_troglodytes"),
+    ("Ponginae", "Pongo_pygmaeus"),
+    ("Hylobatidae", "Hylobates_lar"),
+    ("Hylobatidae", "Symphalangus"),
+    ("Cercopithecinae", "Macaca_mulatta"),
+    ("Cercopithecinae", "Papio_anubis"),
+    ("Colobinae", "Colobus_guereza"),
+    ("Colobinae", "Nasalis_larvatus"),
+]
 
-# Calculate Y positions for each node (vertical spacing)
-def assign_y_positions(phylo_data):
-    """Assign vertical positions to nodes, with leaves evenly spaced."""
-    nodes = phylo_data["nodes"]
-    edges = phylo_data["edges"]
+# Assign Y positions to nodes
+parents = {e[0] for e in phylo_edges}
+leaves = [n for n in phylo_nodes if n not in parents]
+leaf_spacing = 100 / (len(leaves) + 1)
 
-    # Find leaf nodes (nodes with no children)
-    parents = {e[0] for e in edges}
-    leaves = [n for n in nodes if n not in parents]
+for i, leaf in enumerate(leaves):
+    phylo_nodes[leaf]["y"] = (i + 1) * leaf_spacing
 
-    # Assign Y positions to leaves (evenly spaced)
-    leaf_spacing = 100 / (len(leaves) + 1)
-    for i, leaf in enumerate(leaves):
-        nodes[leaf]["y"] = (i + 1) * leaf_spacing
-
-    # Build parent-child map
-    parent_map = {}
-    for parent, child in edges:
-        if parent not in parent_map:
-            parent_map[parent] = []
-        parent_map[parent].append(child)
-
-    # Propagate Y positions up (parent = mean of children)
-    def get_y(node):
-        if "y" in nodes[node]:
-            return nodes[node]["y"]
-        child_ys = [get_y(c) for c in parent_map.get(node, [])]
-        nodes[node]["y"] = sum(child_ys) / len(child_ys)
-        return nodes[node]["y"]
-
-    for node in nodes:
-        get_y(node)
-
-    return nodes
+# Build parent-child map
+parent_map = {}
+for parent, child in phylo_edges:
+    if parent not in parent_map:
+        parent_map[parent] = []
+    parent_map[parent].append(child)
 
 
-nodes = assign_y_positions(phylo_data)
+# Propagate Y positions up (parent = mean of children)
+def get_y(node):
+    if "y" in phylo_nodes[node]:
+        return phylo_nodes[node]["y"]
+    child_ys = [get_y(c) for c in parent_map.get(node, [])]
+    phylo_nodes[node]["y"] = sum(child_ys) / len(child_ys)
+    return phylo_nodes[node]["y"]
 
-# Generate line data for branches (rectangular/cladogram style with proportional lengths)
-branch_lines = []
-node_points = []
 
-# Colors based on rank
+for node in phylo_nodes:
+    get_y(node)
+
+# Rank color mapping using Okabe-Ito palette
 rank_colors = {
-    "Order": "#1a365d",
-    "Superfamily": "#2c5282",
-    "Family": "#3182ce",
-    "Tribe": "#63b3ed",
-    "Subfamily": "#63b3ed",
-    "Species": "#FFD43B",
+    "Order": OKABE_ITO[0],
+    "Superfamily": OKABE_ITO[1],
+    "Family": OKABE_ITO[2],
+    "Tribe": OKABE_ITO[3],
+    "Subfamily": OKABE_ITO[4],
+    "Species": OKABE_ITO[5],
 }
 
-for parent, child in phylo_data["edges"]:
-    p_node = nodes[parent]
-    c_node = nodes[child]
-    # Horizontal line from parent to parent's x at child's y
+# Generate branch lines
+branch_lines = []
+for parent, child in phylo_edges:
+    p_node = phylo_nodes[parent]
+    c_node = phylo_nodes[child]
     branch_lines.append(
         {
             "data": [[p_node["depth"], p_node["y"]], [p_node["depth"], c_node["y"]], [c_node["depth"], c_node["y"]]],
-            "color": rank_colors.get(c_node["rank"], "#306998"),
+            "color": rank_colors.get(c_node["rank"], INK_SOFT),
         }
     )
 
 # Create node markers
-for _node_id, node_data in nodes.items():
+node_points = []
+for _node_id, node_data in phylo_nodes.items():
     is_species = node_data["rank"] == "Species"
     node_points.append(
         {
@@ -136,21 +132,21 @@ for _node_id, node_data in nodes.items():
             "marker": {
                 "symbol": "circle",
                 "radius": 12 if is_species else 10,
-                "fillColor": rank_colors.get(node_data["rank"], "#306998"),
+                "fillColor": rank_colors.get(node_data["rank"], INK_SOFT),
                 "lineWidth": 2,
-                "lineColor": "#ffffff",
+                "lineColor": PAGE_BG,
             },
             "dataLabels": {
                 "enabled": is_species,
                 "format": "{point.name}",
                 "align": "left",
                 "x": 18,
-                "style": {"fontSize": "28px", "fontWeight": "normal", "color": "#333333"},
+                "style": {"fontSize": "22px", "fontWeight": "normal", "color": INK},
             },
         }
     )
 
-# Build series array - one line series per branch for proper colors
+# Build series: one line series per branch
 series = []
 for i, branch in enumerate(branch_lines):
     series.append(
@@ -178,7 +174,19 @@ series.append(
     }
 )
 
-# Add scale bar annotation (0-25 MYA scale bar in bottom right area)
+# Add legend series for rank colors (invisible data, legend-only)
+for rank in ["Order", "Superfamily", "Family", "Tribe", "Subfamily", "Species"]:
+    series.append(
+        {
+            "type": "scatter",
+            "name": rank,
+            "data": [],
+            "marker": {"radius": 8, "fillColor": rank_colors[rank], "lineWidth": 2, "lineColor": PAGE_BG},
+            "showInLegend": True,
+        }
+    )
+
+# Scale bar positioning
 scale_bar_x = 50
 scale_bar_y = 5
 scale_length = 25  # 25 MYA
@@ -188,37 +196,56 @@ chart_config = {
     "chart": {
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
-        "marginTop": 180,
-        "marginBottom": 180,
+        "backgroundColor": PAGE_BG,
+        "marginTop": 150,
+        "marginBottom": 150,
         "marginLeft": 200,
         "marginRight": 600,
     },
     "title": {
-        "text": "Primate Phylogeny · tree-phylogenetic · highcharts · pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold"},
+        "text": "tree-phylogenetic · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
     },
     "subtitle": {
-        "text": "Evolutionary relationships based on mitochondrial DNA divergence times",
-        "style": {"fontSize": "36px", "color": "#666666"},
+        "text": "Primate Evolutionary Relationships · Divergence Times from Mitochondrial DNA",
+        "style": {"fontSize": "22px", "color": INK_SOFT},
     },
     "credits": {"enabled": False},
-    "legend": {"enabled": False},
+    "legend": {
+        "enabled": True,
+        "align": "right",
+        "layout": "vertical",
+        "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
+        "title": {"text": "Taxonomic Rank", "style": {"fontSize": "20px", "color": INK}},
+    },
     "xAxis": {
-        "title": {"text": "Divergence Time (Million Years Ago)", "style": {"fontSize": "32px", "fontWeight": "bold"}},
-        "labels": {"style": {"fontSize": "26px"}},
+        "title": {"text": "Divergence Time (Million Years Ago)", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
         "min": -5,
         "max": 85,
         "tickInterval": 10,
-        "gridLineWidth": 1,
-        "gridLineColor": "#e0e0e0",
-        "reversed": True,  # Root on right, species on left
+        "gridLineWidth": 0,
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "reversed": True,
     },
-    "yAxis": {"title": {"text": ""}, "labels": {"enabled": False}, "gridLineWidth": 0, "min": 0, "max": 100},
-    "tooltip": {"style": {"fontSize": "28px"}},
+    "yAxis": {
+        "title": {"text": ""},
+        "labels": {"enabled": False},
+        "gridLineWidth": 1,
+        "gridLineColor": GRID,
+        "min": 0,
+        "max": 100,
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+    },
+    "tooltip": {"style": {"fontSize": "18px", "color": INK}},
     "plotOptions": {
         "series": {"animation": False},
-        "scatter": {"dataLabels": {"enabled": True, "style": {"fontSize": "28px", "textOutline": "2px white"}}},
+        "scatter": {"dataLabels": {"enabled": True, "style": {"fontSize": "22px"}}},
     },
     "annotations": [
         {
@@ -227,9 +254,9 @@ chart_config = {
             "labels": [
                 {
                     "point": {"x": scale_bar_x, "y": scale_bar_y, "xAxis": 0, "yAxis": 0},
-                    "text": f'<span style="font-size:26px;font-weight:bold;">Scale: {scale_length} MYA</span>',
+                    "text": f'<span style="font-size:20px;color:{INK};">Scale: {scale_length} MYA</span>',
                     "useHTML": True,
-                    "y": -30,
+                    "y": -40,
                 }
             ],
             "shapes": [
@@ -239,7 +266,7 @@ chart_config = {
                         {"x": scale_bar_x, "y": scale_bar_y, "xAxis": 0, "yAxis": 0},
                         {"x": scale_bar_x - scale_length, "y": scale_bar_y, "xAxis": 0, "yAxis": 0},
                     ],
-                    "stroke": "#333333",
+                    "stroke": INK_SOFT,
                     "strokeWidth": 6,
                 },
                 {
@@ -248,7 +275,7 @@ chart_config = {
                         {"x": scale_bar_x, "y": scale_bar_y - 1, "xAxis": 0, "yAxis": 0},
                         {"x": scale_bar_x, "y": scale_bar_y + 1, "xAxis": 0, "yAxis": 0},
                     ],
-                    "stroke": "#333333",
+                    "stroke": INK_SOFT,
                     "strokeWidth": 6,
                 },
                 {
@@ -257,7 +284,7 @@ chart_config = {
                         {"x": scale_bar_x - scale_length, "y": scale_bar_y - 1, "xAxis": 0, "yAxis": 0},
                         {"x": scale_bar_x - scale_length, "y": scale_bar_y + 1, "xAxis": 0, "yAxis": 0},
                     ],
-                    "stroke": "#333333",
+                    "stroke": INK_SOFT,
                     "strokeWidth": 6,
                 },
             ],
@@ -271,13 +298,14 @@ config_json = json.dumps(chart_config)
 
 # Download Highcharts JS and required modules
 modules = [
-    ("highcharts", "https://code.highcharts.com/highcharts.js"),
-    ("annotations", "https://code.highcharts.com/modules/annotations.js"),
+    ("highcharts", "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/highcharts.min.js"),
+    ("annotations", "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/modules/annotations.min.js"),
 ]
 
 js_modules = {}
 for name, url in modules:
-    with urllib.request.urlopen(url, timeout=30) as response:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=30) as response:
         js_modules[name] = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -288,7 +316,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{js_modules["highcharts"]}</script>
     <script>{js_modules["annotations"]}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         Highcharts.chart('container', {config_json});
@@ -296,8 +324,8 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML file with theme suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Write temp HTML and take screenshot
@@ -310,15 +338,13 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(6)
+time.sleep(5)
 
-# Get container element and screenshot it
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
