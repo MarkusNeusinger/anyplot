@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 76/100 | Created: 2026-05-15
+Quality: 86/100 | Created: 2026-05-15
 """
 
 import os
