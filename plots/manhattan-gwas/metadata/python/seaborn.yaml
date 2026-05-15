@@ -1,171 +1,186 @@
 library: seaborn
+language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:32:05Z'
-updated: '2025-12-31T05:38:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612790719
+updated: '2026-05-15T03:28:39Z'
+generated_by: claude-haiku
+workflow_run: 25898426933
 issue: 2925
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent biological realism with chromosome-specific significant peaks mimicking
-    real GWAS patterns (MHC region on chr6)
-  - Clean visual design with alternating chromosome colors and clear significance
-    thresholds
-  - Proper handling of dense data with appropriate marker size and transparency
-  - Correct title format following pyplots.ai conventions
-  - Yellow highlighting of significant SNPs provides excellent visual emphasis
+  - Excellent visual quality - both light and dark renders are highly readable with
+    proper contrast and theme adaptation
+  - Correct Manhattan plot implementation with all GWAS specification features - alternating
+    colors, cumulative positioning, significance thresholds
+  - Realistic and well-structured GWAS data generation with meaningful peaks on specific
+    chromosomes and proper p-value distribution
+  - Professional use of Okabe-Ito palette with first series as brand green (#009E73)
+    and clean color alternation
+  - Clean, idiomatic seaborn/matplotlib code with proper theme tokens and adaptive
+    styling
+  - Effective visual hierarchy through alpha blending (0.7) for regular SNPs and larger
+    size/edge highlighting for significant SNPs
+  - Proper performance optimization using rasterization for dense scatter data
   weaknesses:
-  - Y-axis grid could be styled more subtly (current alpha=0.3 is slightly prominent)
-  - Significant SNPs highlighting uses raw matplotlib instead of seaborn; could use
-    a second scatterplot call for consistency
-  image_description: 'The Manhattan plot displays simulated GWAS data with ~10,000
-    SNPs across 22 chromosomes. The x-axis shows chromosome positions with labels
-    1-22 centered beneath each chromosome''s region. The y-axis shows -log₁₀(p-value)
-    ranging from 0 to ~12. Points are colored with alternating blue (#306998) and
-    light blue/gray (#8B9DC3) for adjacent chromosomes. Three distinct significant
-    peaks are visible: a major peak on chromosome 6 reaching -log₁₀(p) ≈ 12 (highlighted
-    in yellow), a moderate peak on chromosome 11 reaching ≈ 9, and a smaller peak
-    on chromosome 2 reaching ≈ 8. Yellow markers with black edges highlight SNPs above
-    the genome-wide significance threshold. Two horizontal threshold lines are shown:
-    a red dashed line at y=7.3 (genome-wide significance, p < 5×10⁻⁸) and a gray dotted
-    line at y=5 (suggestive threshold, p < 1×10⁻⁵). The legend is positioned in the
-    upper right. The plot has a clean appearance with only y-axis gridlines and top/right
-    spines removed.'
+  - Design Excellence could be stronger - while solid and professional, could benefit
+    from more intentional visual refinement or emphasis techniques (16/20 vs typical
+    18+)
+  - Could leverage more distinctive seaborn-specific features beyond basic scatter
+    (e.g., palette objects, seaborn stylistic conventions)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified - correct and consistent
+      Chrome: Title "manhattan-gwas · seaborn · anyplot.ai" is clearly visible in dark text (24pt). X-axis label "Chromosome" and y-axis label "-log₁₀(p-value)" are prominent (20pt). All tick labels are readable (16pt). Axis spines are subtle and appropriate.
+      Data: Alternating green (#009E73, Okabe-Ito position 1) and orange (#D55E00, position 2) markers form distinct chromosome blocks. Significant SNPs above the 7.3 threshold are highlighted with larger markers (60px) and edge highlighting, creating clear visual hierarchy. Regular SNPs use 0.7 alpha for density visualization. Two horizontal threshold lines (dashed at 7.3, dotted at 5) are visible with legend entries.
+      Legibility verdict: PASS - All text is clearly readable against the light background with excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified - correct theme implementation
+      Chrome: Title, axis labels, and tick labels are all visible in light text (#F0EFE8 for title, #B8B7B0 for ticks). No dark-on-dark rendering failures - all text is light against the dark background. Legend text is readable with proper contrast.
+      Data: Data colors are identical to the light render - green and orange markers maintain their positions and identities. The alternating chromosome pattern is equally clear. Significant SNPs are equally highlighted. Grid lines are subtle but visible.
+      Legibility verdict: PASS - All text is clearly readable against the dark background. No dark-on-dark failures detected. Theme adaptation is correct and consistent.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 12-14pt, all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, chromosome labels well-spaced
+        comment: All text sizes explicitly set and readable in both themes - title
+          24pt, axis labels 20pt, tick labels 16pt
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements, chromosome labels well-spaced, legend properly
+          positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Good marker size (s=15) and alpha (0.7) for dense data; significant
-          hits highlighted well with larger yellow markers
+        comment: Markers clearly visible with appropriate alpha, significant SNPs
+          highlighted with larger size and edge color, density managed well
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/light blue alternating scheme is colorblind-safe; yellow highlights
-          provide excellent contrast
+        comment: Okabe-Ito palette is colorblind-safe, adequate contrast, no red-green
+          as sole signal
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned nicely
+        comment: 16:9 aspect ratio appropriate, nothing cut off, generous margins,
+          title and labels well-positioned
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has proper subscript notation (-log₁₀(p-value)), but x-axis
-          just says "Chromosome" without indicating it's genomic position
+        comment: Title follows spec format, axis labels descriptive with units (-log₁₀)
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend entries are clear and well-positioned; however, y-axis grid
-          at alpha=0.3 is appropriate
+        comment: 'First series is #009E73, second is #D55E00 (Okabe-Ito order), backgrounds
+          correct (#FAF8F1 light, #1A1A17 dark), both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Good design choices (alpha blending, edge highlighting on significant
+          points, color alternation) but fairly straightforward implementation without
+          exceptional visual polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines properly removed, grid subtle and y-axis only, whitespace
+          generous, minor room for more refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with highlighted significant peaks, guides
+          viewer to important findings, could have slightly stronger emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Manhattan plot for GWAS data
+        comment: Correct Manhattan plot type for GWAS visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X = cumulative genomic position, Y = -log10(p-value)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Alternating chromosome colors, significance threshold at 7.3, suggestive
-          threshold at 5, significant SNPs highlighted
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: alternating chromosome colors, cumulative
+          position mapping, -log10 p-value transformation, significance threshold'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full genome displayed, y-axis shows all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis cumulative genomic position, y-axis -log10(p-value), all data
+          visible and properly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels both threshold lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "manhattan-gwas · seaborn · pyplots.ai"'
+        comment: Title format correct 'manhattan-gwas · seaborn · anyplot.ai', legend
+          shows threshold lines with proper labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent: shows realistic distribution with multiple peaks of varying
-          significance (chr6 major, chr11 moderate, chr2 smaller)'
+        comment: Shows all aspects of Manhattan plot - multiple chromosomes, clear
+          peaks, background signal, significance thresholds
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: 'Simulates real GWAS patterns: chr6 peak mimics MHC region association,
-          realistic p-value distribution using beta distribution'
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Chromosome sizes are biologically accurate; however, ~10k SNPs is
-          on the lower end for GWAS (spec mentions 100k-1M typical)
+        comment: Realistic GWAS structure with simulated peaks on specific chromosomes,
+          proper p-value distribution, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10,000+ SNPs appropriate for GWAS, -log10 p-value scale standard,
+          realistic chromosome sizes and peak magnitudes
     code_quality:
       score: 10
       max: 10
@@ -175,41 +190,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → plot → save'
+        comment: No unnecessary functions or classes, straightforward linear code
+          structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Random seed set (np.random.seed(42)) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: Only necessary imports, no unused packages
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern seaborn API used correctly
+        comment: Appropriate complexity, no fake UI or misleading features
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct DPI and facecolor settings
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn scatterplot with hue for alternating colors
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses sns.set_theme() for global styling, proper matplotlib scatter
+          for custom rendering, theme-adaptive rc parameters
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of seaborn's scatterplot with palette, but falls back to
-          matplotlib for significant point highlighting rather than using seaborn
-          throughout
+        comment: Uses rasterization for performance, custom iteration for color grouping,
+          could use more seaborn-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
