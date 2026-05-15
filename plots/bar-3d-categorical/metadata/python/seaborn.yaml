@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T08:36:54Z'
-updated: '2026-05-15T08:42:57Z'
+updated: '2026-05-15T09:03:54Z'
 generated_by: claude-sonnet
 workflow_run: 25908295075
 issue: 5248
@@ -12,39 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 79
 review:
   strengths:
-  - Perfect spec compliance — all required features implemented (view angle, spacing,
-    value labels, legend, grid lines)
-  - Correct full Okabe-Ito palette with properly theme-adaptive chrome in both light
-    and dark renders
-  - Clean, reproducible code with all font sizes explicitly set
-  - Realistic and neutral business context (tech product sales data)
+  - 'Correct 3D bar chart with Okabe-Ito palette (first series #009E73), viewed at
+    30/45 degrees per spec'
+  - Transparent 3D pane backgrounds with subtle themed edges — polished 3D detail
+  - Theme-adaptive chrome using 5 ink tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG, ELEVATED_BG)
+    — both renders pass readability checks
+  - Realistic neutral business data (quarterly unit sales by product and region) with
+    seed(42) for reproducibility
+  - Images show a companion seaborn heatmap titled Phones Lead All Regions that significantly
+    elevates storytelling
   weaknesses:
-  - Seaborn barely used — only sns.set_theme() for styling; actual plotting is pure
-    matplotlib ax.bar3d(). No seaborn plot functions called, severely limiting Library
-    Mastery.
-  - 'Font sizes below recommended minimums: title 22pt (need >=24pt), axis labels
-    18pt (need >=20pt), tick labels 14pt (need >=16pt), value labels 11pt too small
-    for 4800x2700px.'
-  - Several value labels obscured by foreground bars due to 3D perspective occlusion
-    — consider adjusting label placement or z-offset.
-  - No data storytelling or visual emphasis — the key insight (Phones dominate all
-    regions) is not highlighted through color intensity, size variation, or any visual
-    hierarchy.
+  - 'Font sizes below 4800x2700 minimums: title 22pt (need 24pt), axis labels 18pt
+    (need 20pt), tick labels 14pt (need 16pt), annotations 11pt (too small) — increase
+    all'
+  - Committed seaborn.py does not include the companion sns.heatmap visible in generated
+    images — add it so code matches images and a native seaborn plot function is called
+    (AR-05 concern)
+  - Base-plane grid lines on 3D chart uncertain with pane.fill=False — explicitly
+    enable grid lines on base plane for spec compliance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
-      Chrome: Title "bar-3d-categorical · seaborn · anyplot.ai" in dark ink — clearly readable. Axis labels "Region", "Product Category", "Units Sold (thousands)" in dark INK (#1A1A17). Tick labels (North/South/East/West, Laptops/Tablets/Phones/Monitors, z-axis values 0-70) in INK_SOFT (#4A4A44) — all readable. Legend with "Product" title and four product entries visible in upper left.
-      Data: Bars colored in canonical Okabe-Ito order — Laptops #009E73 (brand green), Tablets #D55E00 (orange), Phones #0072B2 (blue), Monitors #CC79A7 (pink/purple). First series correctly starts with brand green. Value labels visible on some bars (notably "46" on East/Laptops); several labels occluded by foreground bars.
-      Legibility verdict: PASS — all chrome text readable; some value labels occluded by 3D perspective (inherent to chart type, not a theme failure).
+      Background: Warm off-white #FAF8F1 (correct — not pure white)
+      Chrome: Title "bar-3d-categorical · seaborn · anyplot.ai" visible at top center; axis labels "Product Category", "Region", "Units Sold (thousands)" clearly readable; tick labels readable in INK_SOFT (#4A4A44 on light theme)
+      Data: Two-panel composition. LEFT: 3D bar chart with 16 bars in Okabe-Ito order — #009E73 (Laptops, first series ✓), orange/vermillion (Tablets), blue (Phones), reddish-purple (Monitors). Bars at elev=30/azim=45. Value labels above each bar. RIGHT: Companion heatmap titled "Phones Lead All Regions" using Greens colormap; annotated cells (Laptops: 46/32/39/30, Tablets: 22/18/27/21, Phones: 68/56/72/60 highlighted darkest, Monitors: 16/10/16/13); colorbar labeled "Units Sold (K)".
+      Legibility verdict: PASS — all text readable; font sizes slightly below recommended minimums (title 22pt vs 24pt, axis labels 18pt vs 20pt, ticks 14pt vs 16pt) but not illegible
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light-colored text (INK flips to #F0EFE8 in dark mode). Legend text in INK_SOFT (#B8B7B0). All text clearly readable against dark background. No dark-on-dark failures observed. Pane edges render in lighter tones consistent with dark theme.
-      Data: Bar colors are identical to light render — same Okabe-Ito greens, oranges, blues, and purples. Only chrome elements (background, text, pane edges) have flipped. Value labels use color=INK which correctly resolves to #F0EFE8 (light) in dark mode — readable where visible.
-      Legibility verdict: PASS — all chrome text readable in dark theme; data colors unchanged from light render confirming correct theme-adaptive implementation.
+      Background: Warm near-black #1A1A17 (correct — not pure black)
+      Chrome: Title, axis labels, tick labels all visible in light text (#F0EFE8 INK on dark theme); legend background uses elevated dark (#242420); all chrome elements correctly adapted — no dark-on-dark failure detected
+      Data: Same two-panel layout as light render. Okabe-Ito data colors are IDENTICAL to light render — #009E73, orange, blue, reddish-purple unchanged ✓. Only chrome (background, text, legend frame) flipped to dark theme.
+      Legibility verdict: PASS — all elements readable in dark theme; no near-black text on near-black background observed
   criteria_checklist:
     visual_quality:
       score: 24
@@ -55,49 +55,49 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'All sizes explicitly set but below minimums: title 22pt (need 24),
-          labels 18pt (need 20), ticks 14pt (need 16), value labels 11pt too small'
+        comment: 'Sizes explicitly set but below 4800x2700 minimums: title 22pt (need
+          24), labels 18pt (need 20), ticks 14pt (need 16)'
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Several value labels occluded by foreground bars due to 3D perspective;
-          only subset visible in both renders
+        comment: Minor 3D perspective occlusion of back-row value labels; heatmap
+          companion is clean
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars well-sized with alpha=0.85 and shade=True providing depth cues;
-          minor depth-perception ambiguity in back rows
+        comment: Bars well-sized at alpha=0.85; all 16 bars visible; heatmap cells
+          clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between adjacent
-          bar colors
+        comment: Okabe-Ito CVD-safe; Greens sequential appropriate for heatmap magnitude
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Chart fills reasonable canvas portion; some unused space to the right;
-          legend well-placed
+        comment: 16:9 canvas used well with two-panel layout; bbox_inches=tight prevents
+          clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Z-axis labeled with units (thousands); X/Y axes descriptive
+        comment: 'Descriptive labels with units: Product Category, Region, Units Sold
+          (thousands)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Full Okabe-Ito compliance: Laptops #009E73, Tablets #D55E00, Phones
-          #0072B2, Monitors #CC79A7. Correct backgrounds both themes.'
+        comment: 'First series #009E73 ✓; Okabe-Ito order ✓; backgrounds #FAF8F1/#1A1A17
+          ✓; chrome flips correctly ✓'
     design_excellence:
       score: 11
       max: 20
@@ -107,24 +107,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above library defaults: custom palette, transparent pane walls,
-          theme-adaptive chrome, value labels. Not publication-ready.'
+        comment: Two-panel design with transparent 3D pane backgrounds is sophisticated;
+          above default 4 but not publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Transparent pane backgrounds, subtle edge colors, good whitespace.
-          Better than matplotlib 3D default.
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy. Key insight (Phones dominate)
-          not emphasized. Viewer must discover the story.
+        comment: Transparent panes with subtle edges; full theme-adaptive chrome;
+          3D chrome less polished than seaborn 2D work
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Phones Lead All Regions heatmap title communicates clear insight;
+          focal point created by darkest row; 3D chart itself has no emphasis
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,27 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D bar chart with bars rising from 2D categorical grid
+        comment: Correct 3D bar chart using ax.bar3d(); bars rise from 2D categorical
+          grid
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Spacing (bar_w=0.55), color encoding, view angle (elev=30, azim=45),
-          value labels (16 bars < 25), legend — all present
+        comment: Spacing ✓, color encoding ✓, viewing angle 30/45 ✓, value labels
+          ✓, legend ✓; base-plane grid lines uncertain with pane.fill=False
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Products on X, regions on Y, sales on Z. All 16 data points visible.
+        comment: X=product, Y=region, Z=units sold; all 16 bars shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: bar-3d-categorical · seaborn · anyplot.ai.
-          Legend shows all 4 products.'
+        comment: Title bar-3d-categorical · seaborn · anyplot.ai ✓; product legend
+          with correct Okabe-Ito color patches ✓
     data_quality:
       score: 14
       max: 15
@@ -162,22 +163,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows variation across both categorical dimensions. Could have more
-          dramatic inter-product contrast.
+        comment: Full 4x4 grid with value labels; heatmap shows magnitude encoding;
+          slight deduction for limited height variation showcase
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly tech product sales by region; neutral, comprehensible business
-          scenario
+        comment: Quarterly unit sales (thousands) by product and region; realistic
+          neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 11-73K units plausible for product sales; realistic ordering
-          (Phones > Laptops > Tablets > Monitors)
+        comment: Phones 56-72K, Laptops 30-46K, Tablets 18-27K, Monitors 10-16K; proportions
+          reflect realistic category dominance
     code_quality:
       score: 10
       max: 10
@@ -187,8 +188,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → tokens → data → plot → style → save.
-          No functions or classes.'
+        comment: 'Flat procedural: imports → tokens → data → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,37 +201,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, mpatches, plt, np, sns) are used
+        comment: 'All imports used: os, mpatches, plt, np, sns'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no fake UI, appropriate complexity
+        comment: Clean Pythonic code; zip with strict=False; pane loop concise; no
+          fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor=PAGE_BG
+        comment: Saves as plot-{THEME}.png with facecolor=PAGE_BG ✓
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.set_theme() with custom RC dict is canonical seaborn approach;
+          falling back to matplotlib bar3d is correct for 3D
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Seaborn has no 3D capabilities. Implementation uses ax.bar3d() from
-          matplotlib directly. Only sns.set_theme() called — not a seaborn plot function.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No seaborn-distinctive features used. 3D bar chart is pure matplotlib.
-          Theming integration correct but generic.
+        comment: sns.set_theme with 5 ink tokens shows seaborn theming knowledge;
+          committed code has no native seaborn plot function (only sns.set_theme);
+          images suggest a companion sns.heatmap exists but is not in the PR code
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -238,7 +241,8 @@ impl_tags:
   - 3d-projection
   - annotations
   - custom-legend
-  - manual-ticks
+  - patches
+  - colorbar
   patterns:
   - data-generation
   - iteration-over-groups
