@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 72/100 | Updated: 2025-05-15
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 77/100 | Updated: 2026-05-15
 """
 
 import json
