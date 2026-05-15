@@ -1,26 +1,32 @@
-"""pyplots.ai
+"""anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
 Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 72/100 | Created: 2025-12-31
+Quality: 72/100 | Updated: 2025-05-15
 """
 
 import json
+import os
+import time
 from math import pi
+from pathlib import Path
 
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, CustomJS, Div, Label, TapTool
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Hierarchical data: Company expense breakdown
-# Level 0: Total
-# Level 1: Departments
-# Level 2: Categories within departments
-# Level 3: Specific items
-
 hierarchy = {
     "root": {"name": "Total Expenses", "children": ["operations", "marketing", "research", "hr"]},
     "operations": {"name": "Operations", "parent": "root", "children": ["facilities", "logistics", "it_infra"]},
@@ -60,57 +66,50 @@ hierarchy = {
     "social": {"name": "Social Media", "parent": "digital", "value": 120000},
 }
 
-# Color palette - colorblind-safe (no red-green adjacency), high contrast
-# Using IBM's colorblind-safe palette and tableau-inspired colors
+# Okabe-Ito palette - first series ALWAYS #009E73
 colors = [
-    "#0072B2",  # Strong Blue (Operations)
-    "#E69F00",  # Orange/Amber (Marketing)
-    "#CC79A7",  # Pink/Magenta (Research)
-    "#56B4E9",  # Sky Blue (HR)
-    "#009E73",  # Teal Green
-    "#D55E00",  # Vermillion
+    "#009E73",  # Teal Green (Operations)
+    "#D55E00",  # Vermillion (Marketing)
+    "#0072B2",  # Blue (Research)
+    "#CC79A7",  # Pink/Magenta (HR)
+    "#E69F00",  # Orange
+    "#56B4E9",  # Sky Blue
     "#F0E442",  # Yellow
-    "#0072B2",  # Blue (repeat for deeper levels)
 ]
 
-# Calculate values for root level children (inline, no helper functions)
+# Calculate values for root level children
 root_children = hierarchy["root"]["children"]
 names = []
 values = []
 ids = []
 has_children_list = []
 
+
+def get_value(node_id):
+    node = hierarchy[node_id]
+    if "value" in node:
+        return node["value"]
+    if "children" not in node:
+        return 0
+    return sum(get_value(child_id) for child_id in node["children"])
+
+
 for child_id in root_children:
     child = hierarchy[child_id]
     names.append(child["name"])
     ids.append(child_id)
     has_children_list.append("children" in child)
-    # Calculate value: sum of all descendants
-    if "value" in child:
-        values.append(child["value"])
-    else:
-        # Sum values of all descendants
-        stack = list(child.get("children", []))
-        total_val = 0
-        while stack:
-            node_id = stack.pop()
-            node = hierarchy[node_id]
-            if "value" in node:
-                total_val += node["value"]
-            elif "children" in node:
-                stack.extend(node["children"])
-        values.append(total_val)
+    values.append(get_value(child_id))
 
 total = sum(values)
 percentages = [v / total * 100 for v in values]
 
 # Calculate angles for pie wedges (clockwise from 12 o'clock)
-# Start from pi/2 (12 o'clock position) and go clockwise (negative direction)
 angles = [v / total * 2 * pi for v in values]
 start_angles = [pi / 2 - sum(angles[:i]) for i in range(len(angles))]
 end_angles = [pi / 2 - sum(angles[: i + 1]) for i in range(len(angles))]
 
-# Assign colors to each slice
+# Assign distinct colors to each slice
 slice_colors = colors[: len(names)]
 
 # Create source data for wedges
@@ -129,45 +128,41 @@ source = ColumnDataSource(
 )
 
 # Label source for the center of each wedge
-# Use dynamic label radius - larger slices get inner labels, smaller ones get outer labels
 mid_angles = [(s + e) / 2 for s, e in zip(start_angles, end_angles, strict=True)]
-# Increase base radius so labels are more readable, especially for smaller slices
 label_radius_values = [0.55 if p >= 15 else 0.65 for p in percentages]
 label_x = [r * np.cos(a) for r, a in zip(label_radius_values, mid_angles, strict=True)]
 label_y = [r * np.sin(a) for r, a in zip(label_radius_values, mid_angles, strict=True)]
 
-# Create more compact labels for smaller slices
 label_texts = []
 for n, v, p in zip(names, values, percentages, strict=True):
     if p >= 15:
         label_texts.append(f"{n}\n${v / 1000:.0f}K\n({p:.1f}%)")
     else:
-        # Compact format for smaller slices
         label_texts.append(f"{n}\n${v / 1000:.0f}K ({p:.1f}%)")
 
 label_source = ColumnDataSource(data={"x": label_x, "y": label_y, "text": label_texts})
 
-# Create figure with extended y_range to fit breadcrumb and instruction text
+# Create figure with theme-adaptive styling
 p = figure(
     width=3600,
     height=3600,
-    title="pie-drilldown · bokeh · pyplots.ai",
+    title="pie-drilldown · bokeh · anyplot.ai",
     tools="tap,reset",
     toolbar_location=None,
     x_range=(-1.5, 1.5),
     y_range=(-1.6, 1.7),
 )
 
-# Style the figure
+# Style the figure with theme-adaptive chrome
 p.title.text_font_size = "48pt"
 p.title.align = "center"
-p.title.text_color = "#306998"
+p.title.text_color = INK
 p.axis.visible = False
 p.grid.visible = False
 p.outline_line_color = None
-p.background_fill_color = "#fafafa"
+p.background_fill_color = PAGE_BG
 
-# Draw wedges using ColumnDataSource for proper color rendering
+# Draw wedges with refined colors
 wedges = p.wedge(
     x=0,
     y=0,
@@ -175,13 +170,12 @@ wedges = p.wedge(
     start_angle="start_angle",
     end_angle="end_angle",
     fill_color="color",
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=4,
     source=source,
 )
 
-# Add text shadow/outline for better readability on lighter slices
-# First layer: dark outline for contrast
+# Add text shadow/outline for better readability
 label_shadow = p.text(
     x="x",
     y="y",
@@ -190,12 +184,12 @@ label_shadow = p.text(
     text_font_size="30pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#222222",
+    text_color="#222222" if THEME == "light" else "#EEEEEE",
     text_font_style="bold",
-    text_outline_color="#222222",
+    text_outline_color="#222222" if THEME == "light" else "#EEEEEE",
 )
 
-# Add labels with larger font size for 3600x3600 canvas
+# Add main labels
 labels = p.text(
     x="x",
     y="y",
@@ -204,30 +198,30 @@ labels = p.text(
     text_font_size="30pt",
     text_align="center",
     text_baseline="middle",
-    text_color="white",
+    text_color="white" if THEME == "light" else "#F0EFE8",
     text_font_style="bold",
 )
 
-# Add breadcrumb navigation label (visible in static PNG)
+# Add breadcrumb navigation label
 breadcrumb_label = Label(
     x=0,
     y=1.45,
     text="Total Expenses",
     text_font_size="36pt",
     text_font_style="bold",
-    text_color="#306998",
+    text_color=INK,
     text_align="center",
     text_baseline="middle",
 )
 p.add_layout(breadcrumb_label)
 
-# Add clickable indicator text (visible in static PNG)
+# Add clickable indicator text
 click_indicator = Label(
     x=0,
     y=-1.35,
     text="Click a slice to drill down",
     text_font_size="28pt",
-    text_color="#666666",
+    text_color=INK_SOFT,
     text_align="center",
     text_baseline="middle",
 )
@@ -235,11 +229,11 @@ p.add_layout(click_indicator)
 
 # Breadcrumb navigation div for HTML version
 breadcrumb = Div(
-    text='<div style="font-size: 32pt; font-family: Arial, sans-serif; color: #306998; '
-    'padding: 20px; text-align: center;">'
-    '<span style="cursor: pointer; color: #306998; font-weight: bold;">Total Expenses</span>'
-    '<span style="color: #999; margin: 0 10px;"> | Click a slice to drill down</span>'
-    "</div>",
+    text=f'<div style="font-size: 32pt; font-family: Arial, sans-serif; color: {INK}; '
+    f'padding: 20px; text-align: center;">'
+    f'<span style="cursor: pointer; color: {INK}; font-weight: bold;">Total Expenses</span>'
+    f'<span style="color: {INK_SOFT}; margin: 0 10px;"> | Click a slice to drill down</span>'
+    f"</div>",
     width=3600,
     height=100,
 )
@@ -248,7 +242,7 @@ breadcrumb = Div(
 hierarchy_json = json.dumps(hierarchy)
 colors_json = json.dumps(colors)
 
-# JavaScript callback for drilling down on click (uses main source for interactivity)
+# JavaScript callback for drilling down on click
 callback = CustomJS(
     args={
         "source": source,
@@ -261,7 +255,6 @@ callback = CustomJS(
     const hierarchy = JSON.parse(hierarchy_json);
     const colors = JSON.parse(colors_json);
 
-    // Track navigation path
     if (!window.nav_path) {
         window.nav_path = ['root'];
     }
@@ -272,12 +265,10 @@ callback = CustomJS(
     const clicked_id = source.data['ids'][indices[0]];
     const clicked_node = hierarchy[clicked_id];
 
-    // Check if node has children (can drill down)
     if (!clicked_node.children || clicked_node.children.length === 0) {
         return;
     }
 
-    // Calculate value recursively
     function getValue(node_id) {
         const node = hierarchy[node_id];
         if (node.value !== undefined) return node.value;
@@ -285,7 +276,6 @@ callback = CustomJS(
         return node.children.reduce((sum, child) => sum + getValue(child), 0);
     }
 
-    // Get children data
     const children = clicked_node.children;
     const names = children.map(id => hierarchy[id].name);
     const values = children.map(id => getValue(id));
@@ -293,7 +283,6 @@ callback = CustomJS(
     const percentages = values.map(v => v / total * 100);
     const has_children = children.map(id => hierarchy[id].children !== undefined);
 
-    // Calculate angles (clockwise from 12 o'clock)
     const angles = values.map(v => v / total * 2 * Math.PI);
     const start_angles = [];
     const end_angles = [];
@@ -304,7 +293,6 @@ callback = CustomJS(
         end_angles.push(cumsum);
     }
 
-    // Update source
     source.data['names'] = names;
     source.data['values'] = values;
     source.data['ids'] = children;
@@ -317,23 +305,19 @@ callback = CustomJS(
         n + '\\n$' + (values[i]/1000).toFixed(0) + 'K\\n(' + percentages[i].toFixed(1) + '%)'
     );
 
-    // Update label positions with dynamic radius for smaller slices
     const mid_angles = start_angles.map((s, i) => (s + end_angles[i]) / 2);
     const label_radii = percentages.map(p => p >= 15 ? 0.55 : 0.65);
     label_source.data['x'] = mid_angles.map((a, i) => label_radii[i] * Math.cos(a));
     label_source.data['y'] = mid_angles.map((a, i) => label_radii[i] * Math.sin(a));
-    // Compact format for smaller slices
     label_source.data['text'] = names.map((n, i) =>
         percentages[i] >= 15
             ? n + '\\n$' + (values[i]/1000).toFixed(0) + 'K\\n(' + percentages[i].toFixed(1) + '%)'
             : n + '\\n$' + (values[i]/1000).toFixed(0) + 'K (' + percentages[i].toFixed(1) + '%)'
     );
 
-    // Update navigation path
     window.nav_path.push(clicked_id);
 
-    // Update breadcrumb
-    let breadcrumb_html = '<div style="font-size: 32pt; font-family: Arial, sans-serif; color: #306998; padding: 20px; text-align: center;">';
+    let breadcrumb_html = '<div style="font-size: 32pt; font-family: Arial, sans-serif; padding: 20px; text-align: center;">';
     for (let i = 0; i < window.nav_path.length; i++) {
         const node_id = window.nav_path[i];
         const node = hierarchy[node_id];
@@ -356,7 +340,24 @@ p.select(type=TapTool).callback = callback
 layout = column(breadcrumb, p)
 
 # Save HTML with full interactivity
-save(layout, filename="plot.html", resources=INLINE, title="pie-drilldown · bokeh · pyplots.ai")
+output_file(f"plot-{THEME}.html")
+save(layout, resources=INLINE, title="pie-drilldown · bokeh · anyplot.ai")
 
-# Export static PNG (shows initial state)
-export_png(p, filename="plot.png", timeout=30)
+# Screenshot with headless Chrome
+W, H = 3600, 3600
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
