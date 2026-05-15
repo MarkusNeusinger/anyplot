@@ -1,7 +1,7 @@
 """ anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 75/100 | Updated: 2026-05-15
+Quality: 71/100 | Updated: 2026-05-15
 """
 
 import cairosvg
