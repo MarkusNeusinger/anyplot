@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 79/100 | Created: 2026-05-15
+Quality: 85/100 | Created: 2026-05-15
 """
 
 import os
