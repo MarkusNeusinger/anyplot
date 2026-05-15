@@ -1,12 +1,13 @@
-""" pyplots.ai
+""" anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-15
 """
 
-import tempfile
+import os
+import threading
 import time
-import urllib.request
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
 import numpy as np
@@ -18,7 +19,15 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Generate chirp signal (frequency increases over time)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Data
 np.random.seed(42)
 sample_rate = 1000  # 1000 Hz sampling rate
 duration = 2.0  # 2 seconds
@@ -28,7 +37,7 @@ t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
 f0, f1 = 10, 200
 chirp_signal = signal.chirp(t, f0=f0, f1=f1, t1=duration, method="linear")
 
-# Add some noise for realism
+# Add noise for realism
 noise = 0.1 * np.random.randn(len(t))
 combined_signal = chirp_signal + noise
 
@@ -40,7 +49,7 @@ frequencies, times, Sxx = signal.spectrogram(combined_signal, fs=sample_rate, np
 # Convert to dB scale for better visualization
 Sxx_db = 10 * np.log10(Sxx + 1e-10)
 
-# Get dB range for colorbar (use actual dB values, not normalized)
+# Get dB range for colorbar
 Sxx_min = float(Sxx_db.min())
 Sxx_max = float(Sxx_db.max())
 
@@ -70,40 +79,46 @@ chart.options.chart = {
     "type": "heatmap",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginTop": 160,  # Increased for subtitle
+    "backgroundColor": PAGE_BG,
+    "marginTop": 160,
     "marginBottom": 250,
     "marginLeft": 200,
-    "marginRight": 320,  # Increased for legend title spacing
+    "marginRight": 320,
 }
 
-# Title and subtitle
+# Title
 chart.options.title = {
-    "text": "spectrogram-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "spectrogram-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
+# Subtitle
 chart.options.subtitle = {
     "text": "Linear chirp signal (10-200 Hz) with linear frequency axis",
-    "style": {"fontSize": "32px", "color": "#666666"},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
 # X-axis (time)
 time_labels = [f"{t:.2f}" for t in times_ds]
 chart.options.x_axis = {
     "categories": time_labels,
-    "title": {"text": "Time (seconds)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "24px"}, "step": max(1, len(time_labels) // 10)},
-    "tickLength": 10,
+    "title": {"text": "Time (seconds)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "step": max(1, len(time_labels) // 10)},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Y-axis (frequency)
 freq_labels = [f"{f:.0f}" for f in frequencies_ds]
 chart.options.y_axis = {
     "categories": freq_labels,
-    "title": {"text": "Frequency (Hz)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "24px"}, "step": max(1, len(freq_labels) // 10)},
+    "title": {"text": "Frequency (Hz)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "step": max(1, len(freq_labels) // 10)},
     "reversed": False,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Color axis (legend for heatmap intensity) - use actual dB values
@@ -117,7 +132,7 @@ chart.options.color_axis = {
         [0.75, "#5ec962"],  # green
         [1, "#fde725"],  # yellow
     ],
-    "labels": {"style": {"fontSize": "24px"}, "format": "{value:.0f} dB"},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value:.0f} dB"},
 }
 
 # Legend
@@ -127,15 +142,19 @@ chart.options.legend = {
     "verticalAlign": "middle",
     "symbolHeight": 800,
     "symbolWidth": 40,
-    "x": -20,  # Shift legend left to avoid edge cramping
-    "title": {"text": "Power (dB)", "style": {"fontSize": "28px"}},
+    "x": -20,
+    "title": {"text": "Power (dB)", "style": {"fontSize": "22px", "color": INK}},
+    "itemStyle": {"color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
 }
 
-# Tooltip - show actual dB values
+# Tooltip
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": "<b>Time:</b> {point.x_label} s<br><b>Frequency:</b> {point.y_label} Hz<br><b>Power:</b> {point.value:.1f} dB",
-    "style": {"fontSize": "20px"},
+    "style": {"fontSize": "16px"},
 }
 
 # Series
@@ -146,35 +165,41 @@ series.border_width = 0
 
 chart.add_series(series)
 
-# Download Highcharts JS and heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
-with urllib.request.urlopen(heatmap_url, timeout=30) as response:
-    heatmap_js = response.read().decode("utf-8")
-
-# Generate HTML with inline scripts
+# Generate chart JavaScript
 html_str = chart.to_js_literal()
+
+# HTML with unpkg CDN (Cloudflare-friendly alternative)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <script>{highcharts_js}</script>
-    <script>{heatmap_js}</script>
+    <script src="https://unpkg.com/highcharts@11.4.7/highcharts.js"></script>
+    <script src="https://unpkg.com/highcharts@11.4.7/modules/heatmap.js"></script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
-with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
+# Save interactive HTML
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
-    temp_path = f.name
 
+
+# Start simple HTTP server in background thread to serve HTML
+class QuietHTTPRequestHandler(SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+
+html_dir = Path.cwd()
+server = HTTPServer(("127.0.0.1", 0), QuietHTTPRequestHandler)
+port = server.server_port
+server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+server_thread.start()
+
+# Take screenshot with Selenium via HTTP
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
@@ -182,27 +207,22 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--window-size=4800,2700")
 
-driver = webdriver.Chrome(options=chrome_options)
-driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
-driver.quit()
+try:
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.set_page_load_timeout(30)
+    driver.get(f"http://127.0.0.1:{port}/plot-{THEME}.html")
 
-Path(temp_path).unlink()  # Clean up temp file
+    # Wait for container to be visible and chart to render
+    time.sleep(20)
 
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>spectrogram-basic · highcharts · pyplots.ai</title>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(interactive_html)
+    # Additional wait to ensure rendering is complete
+    try:
+        driver.execute_script("return document.readyState === 'complete' && window.Highcharts !== undefined")
+    except Exception:
+        pass
+
+    time.sleep(2)
+    driver.save_screenshot(f"plot-{THEME}.png")
+    driver.quit()
+finally:
+    server.shutdown()
