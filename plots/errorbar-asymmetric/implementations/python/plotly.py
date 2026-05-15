@@ -1,99 +1,112 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-asymmetric: Asymmetric Error Bars Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-15
 """
 
+import os
+
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - Quarterly product sales with asymmetric confidence intervals (10th-90th percentile)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
 np.random.seed(42)
 
 products = ["Product A", "Product B", "Product C", "Product D", "Product E", "Product F"]
-
-# Central values (median sales in thousands)
 sales_median = np.array([85, 62, 45, 78, 95, 55])
-
-# Asymmetric errors (lower and upper bounds differ)
-# Lower errors are smaller (closer to median), upper errors are larger (right-skewed distribution)
 error_lower = np.array([12, 8, 15, 10, 18, 7])
 error_upper = np.array([25, 18, 10, 22, 35, 20])
 
-# Create figure
+lower_bound = sales_median - error_lower
+upper_bound = sales_median + error_upper
+
 fig = go.Figure()
 
-# Add scatter plot with asymmetric error bars
 fig.add_trace(
     go.Scatter(
         x=products,
         y=sales_median,
         mode="markers",
-        marker=dict(size=18, color="#306998", line=dict(width=2, color="white")),
+        marker=dict(size=18, color=BRAND, line=dict(width=2, color=PAGE_BG)),
         error_y=dict(
-            type="data",
-            symmetric=False,
-            array=error_upper,
-            arrayminus=error_lower,
-            color="#306998",
-            thickness=3,
-            width=12,
+            type="data", symmetric=False, array=error_upper, arrayminus=error_lower, color=BRAND, thickness=3, width=12
         ),
-        name="Median Sales (10th-90th percentile)",
+        name="Median Sales (10th–90th percentile)",
         showlegend=True,
+        hovertemplate=(
+            "<b>%{x}</b><br>"
+            "Median: %{y:.0f}k USD<br>"
+            "10th–90th: %{customdata[0]:.0f}k – %{customdata[1]:.0f}k USD"
+            "<extra></extra>"
+        ),
+        customdata=np.column_stack([lower_bound, upper_bound]),
     )
 )
 
-# Update layout for 4800×2700 px output
 fig.update_layout(
-    title=dict(text="errorbar-asymmetric · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
+    title=dict(
+        text="errorbar-asymmetric · plotly · anyplot.ai", font=dict(size=32, color=INK), x=0.5, xanchor="center"
+    ),
     xaxis=dict(
-        title=dict(text="Product Category", font=dict(size=24)),
-        tickfont=dict(size=20),
-        showgrid=True,
-        gridcolor="rgba(0, 0, 0, 0.1)",
-        gridwidth=1,
+        title=dict(text="Product Category", font=dict(size=24, color=INK)),
+        tickfont=dict(size=20, color=INK_SOFT),
+        showgrid=False,
+        showline=True,
+        linecolor=INK_SOFT,
+        mirror=False,
+        zeroline=False,
     ),
     yaxis=dict(
-        title=dict(text="Quarterly Sales (thousands USD)", font=dict(size=24)),
-        tickfont=dict(size=20),
+        title=dict(text="Quarterly Sales (thousands USD)", font=dict(size=24, color=INK)),
+        tickfont=dict(size=20, color=INK_SOFT),
         showgrid=True,
-        gridcolor="rgba(0, 0, 0, 0.1)",
+        gridcolor=GRID,
         gridwidth=1,
+        showline=True,
+        linecolor=INK_SOFT,
+        mirror=False,
+        zeroline=False,
         range=[0, 150],
     ),
-    template="plotly_white",
+    template="none",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
     legend=dict(
-        font=dict(size=18),
+        font=dict(size=18, color=INK_SOFT),
         x=0.02,
         y=0.98,
         xanchor="left",
         yanchor="top",
-        bgcolor="rgba(255, 255, 255, 0.8)",
-        bordercolor="rgba(0, 0, 0, 0.2)",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
     margin=dict(l=100, r=80, t=120, b=100),
-    plot_bgcolor="white",
 )
 
-# Add annotation explaining the error bars
 fig.add_annotation(
     x=0.98,
     y=0.02,
     xref="paper",
     yref="paper",
-    text="Error bars show 10th-90th percentile range",
+    text="Error bars show 10th–90th percentile range",
     showarrow=False,
-    font=dict(size=16, color="#666666"),
+    font=dict(size=16, color=INK_MUTED),
     align="right",
     xanchor="right",
     yanchor="bottom",
 )
 
-# Save as PNG (4800 × 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
