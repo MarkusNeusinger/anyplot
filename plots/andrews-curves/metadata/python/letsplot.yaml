@@ -1,168 +1,170 @@
 library: letsplot
+language: python
 specification_id: andrews-curves
 created: '2025-12-31T21:36:48Z'
-updated: '2025-12-31T21:39:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20627522568
+updated: '2026-05-15T13:13:48Z'
+generated_by: claude-haiku
+workflow_run: 25919380707
 issue: 2859
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/letsplot/plot.html
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/letsplot/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - dataset-loading
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent implementation of Andrews curves Fourier transformation algorithm
-  - Proper normalization of data using StandardScaler before transformation
-  - Good use of transparency (alpha=0.4) for overlapping curves as recommended in
-    spec
-  - Clear cluster separation visible between species
-  - Proper use of π symbols in x-axis tick labels
-  - Correct title format following pyplots.ai convention
-  - Clean, readable code structure
-  - Both PNG and HTML outputs generated for interactivity
+  - Perfect visual clarity in both light and dark themes with all text readable
+  - Correct Okabe-Ito palette usage with brand green first, proper color-to-species
+    mapping
+  - 'Proper Andrews curves implementation: Fourier transformation mathematically correct,
+    data properly normalized'
+  - Effective visualization of many overlapping curves (150) using semi-transparency
+    (alpha=0.4)
+  - Theme-adaptive styling throughout with correct INK/INK_SOFT/PAGE_BG tokens
+  - Idiomatic letsplot usage following grammar-of-graphics patterns correctly
   weaknesses:
-  - No visible grid lines to aid visual reference (theme_minimal may have removed
-    them, but subtle grid would help)
-  - Missing explicit random seed (though data is deterministic from sklearn, good
-    practice to include)
-  image_description: The plot displays Andrews curves for the Iris dataset, showing
-    150 Fourier series curves colored by species. Blue curves represent setosa (tightly
-    clustered in lower range), yellow curves represent versicolor (middle range),
-    and red/orange curves represent virginica (spreading into higher values). The
-    X-axis shows parameter t from -π to π with proper Greek letter labels at key intervals
-    (-π, -π/2, 0, π/2, π). The Y-axis displays Fourier Function Value ranging approximately
-    from -5 to 5.5. The title correctly follows the format "andrews-curves · letsplot
-    · pyplots.ai". A legend on the right identifies the three species. Transparency
-    (alpha=0.4) effectively reveals density patterns where curves overlap.
+  - 'Design Excellence slightly limited: default grid styling could be more refined'
+  - Legend styling follows defaults rather than having custom visual treatment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "andrews-curves · letsplot · anyplot.ai" clearly visible in dark text (INK token). Axis labels "Parameter t (radians)" and "Fourier Function Value" are readable. X-axis ticks show -π, -π/2, 0, π/2, π properly labeled. Y-axis ticks are numeric and visible. Legend on right side with light background.
+      Data: ~150 iris curves color-coded by species - setosa in #009E73 (brand green), versicolor in #D55E00 (orange), virginica in #0072B2 (blue). Lines are semi-transparent (alpha=0.4) allowing density patterns to show through.
+      Grid: Subtle grid lines present, not competing with data
+      Legibility verdict: PASS - All text readable against light background, proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title visible in light text (INK token #F0EFE8). Axis labels visible in light text. X-axis and Y-axis ticks visible in secondary text color (INK_SOFT token #B8B7B0). Legend background is appropriately darkened (#242420) with light text. No "dark-on-dark" failures.
+      Data: Identical curves to light render - same three colors (green, orange, blue) maintaining species identity across themes. Transparent lines still visible and distinguishable.
+      Grid: Subtle grid lines visible against dark background
+      Legibility verdict: PASS - Both renders are theme-correct with proper text contrast, no visibility issues in either theme
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend text are all clearly
-          readable at appropriate sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated
+        comment: All text properly sized and visible in both light and dark renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend placement clean, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are visible with good transparency; could be slightly thicker
-          for better visibility at high density
+        comment: 150 curves managed with appropriate transparency, species grouping
+          clear
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red are distinguishable but yellow-red may be challenging
-          for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Parameter t (radians)" and "Fourier
-          Function Value"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is not visible (missing grid lines reduce visual reference)
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional Okabe-Ito palette usage with theme-adaptive styling,
+          limited custom design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good use of theme_minimal() + custom theme, subtle grid styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Species clustering visually distinct through color grouping and wave
+          patterns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Andrews curves visualization with Fourier transformation
+        comment: Correct Andrews curves with proper Fourier transformation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped to Fourier coefficients, category to color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Normalization, transparency, color by category, t range from -π to
-          π all implemented
-      - id: SC-04
-        name: Data Range
+        comment: All species shown, colors correct, transparency appropriate
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=parameter t (-π to π), Y=Fourier function value
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "andrews-curves · letsplot · pyplots.ai"
+        comment: Format correct, species labels present
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all 150 observations, clear cluster separation visible between
-          species
+        comment: Iris dataset with 4 features, 150 observations
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses classic Iris dataset, a neutral scientific dataset
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Normalized data with appropriate Fourier transform values
+        comment: Classic botanical dataset, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: StandardScaler normalization, parameter t -π to π is standard
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,41 +172,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data → transform → plot → save'
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: Missing np.random.seed(42); uses sklearn dataset but transformation
-          should still be deterministic
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current API usage
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output naming
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar, scale_x_continuous with custom labels, theme
-          customization, but no interactive-specific features
+        comment: ggplot() + geom_line() + theme() pattern correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: ggsave() with scale, HTML export, but limited library-specific techniques
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - dataset-loading
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - theme-adaptive
