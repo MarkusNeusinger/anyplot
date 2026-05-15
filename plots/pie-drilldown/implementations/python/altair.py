@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 49/100 | Updated: 2026-05-15
+Quality: 80/100 | Updated: 2026-05-15
 """
 
 import os
