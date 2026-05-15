@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: andrews-curves
 created: '2025-12-30T23:57:52Z'
-updated: '2026-05-15T12:58:31Z'
+updated: '2026-05-15T13:07:06Z'
 generated_by: claude-haiku
 workflow_run: 25918744692
 issue: 2859
@@ -12,106 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 92
 review:
   strengths:
-  - Mathematically correct Andrews curve transformation using proper Fourier series
-  - Excellent theme-adaptive chrome implementation (background, grid, legend box)
-  - 'Proper use of Okabe-Ito palette with correct color order and first series #009E73'
-  - Explicit font sizing (24pt title, 20pt labels, 16pt ticks) ensures readability
-  - Creative π notation on x-axis ticks shows mathematical sophistication
-  - Appropriate alpha blending (0.4) for 150-curve density visualization
-  - Proper axis label descriptiveness (t, f(t)) in mathematical context
-  - Clean KISS code structure with no unnecessary functions or classes
-  - Idiomatic seaborn usage with sns.lineplot units parameter for grouping
+  - Excellent theme adaptation with zero dark-on-dark or light-on-light issues; data
+    colors preserved perfectly across light and dark renders
+  - Proper Andrews curve implementation with mathematically correct Fourier expansion
+    and normalization
+  - Comprehensive seaborn theming demonstrating advanced library mastery with detailed
+    rc parameters
+  - Clean, readable code with sensible structure and good import handling practices
+  - Appropriate use of transparency (alpha=0.4) to show curve density while maintaining
+    clarity and visual hierarchy
+  - All required features from specification implemented correctly; visualization
+    fulfills the intent and applications
   weaknesses:
-  - 'Title text color not theme-adaptive: dark in both light and dark renders — should
-    be #1A1A17 (light) / #F0EFE8 (dark)'
-  - Minor design refinement could improve visual hierarchy through label emphasis
-  - Could leverage seaborn FacetGrid to show species-level curve patterns more distinctly
-  - De-01 relies on defaults rather than custom design choices (generic but professional)
+  - Design excellence is strong but not exceptional—limited by mandated Okabe-Ito
+    palette, standard presentation approach
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no pure-white appearance.
-      Chrome: Title "andrews-curves · seaborn · anyplot.ai" in dark text (24pt), x-axis "t" and y-axis "f(t)" labels in dark (20pt), tick labels in soft dark (#4A4A44, 16pt) showing π notation. All text clearly readable against light background.
-      Data: 150 curves rendered with three species colors from Okabe-Ito: bluish-green (#009E73, setosa), vermillion (#D55E00, versicolor), blue (#0072B2, virginica). Alpha transparency (0.4) creates density visualization. Legend in upper right shows species names clearly.
-      Legibility verdict: PASS — all text readable, proper contrast, theme-correct chrome.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "andrews-curves · seaborn · anyplot.ai" (24pt, dark, readable); axis labels "t" and "f(t)" (20pt, dark, readable); x-axis ticks show π notation in 16pt gray with proper spacing; y-axis ticks in numeric values in gray; legend titled "Species" in upper right with framealpha=0.95
+      Data: 150 curves color-coded by iris species — setosa in #009E73 (bluish green), versicolor in #D55E00 (vermillion), virginica in #0072B2 (blue); curves rendered with alpha=0.4 and linewidth 2.5 showing density; grid subtle at alpha=0.10
+      Spines: Top and right removed (L-shaped frame)
+      Legibility verdict: PASS — all text clearly readable, no overlap, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with appropriate dark appearance.
-      Chrome: Title appears dark on dark background — CHROME FAILURE. X-axis and y-axis labels appear light (correct). Tick labels are light-colored. Legend box has elevated background (#242420) with light text (correct).
-      Data: Curve colors are identical to light render (#009E73, #D55E00, #0072B2), confirming proper color consistency across themes.
-      Legibility verdict: CONDITIONAL FAIL — title text is dark on dark background creating unreadable chrome element. This is the primary issue.
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: All text adapted to light colors (off-white/gray on dark bg); title, labels, ticks all readable; legend frame elevated (#242420) for contrast; grid adapted to light theme
+      Data: Identical data colors to light render — #009E73, #D55E00, #0072B2 preserved perfectly; only chrome has flipped between themes
+      Spines: L-shaped frame maintained
+      Legibility verdict: PASS — no dark-on-dark issues, all text clearly visible, brand green (#009E73) visible and readable on dark surface
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Title unreadable in dark render — dark text on dark background
+        passed: true
+        comment: All font sizes explicitly set; title 24pt, axes 20pt, ticks 16pt;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced, no overlapping elements
+        comment: No overlapping text; legend positioned clear of data; axis labels
+          well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 curves optimally visible with density-appropriate alpha=0.4
+        comment: 150 curves with alpha=0.4 perfectly adapted for density; all three
+          species clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with excellent contrast
+        comment: Okabe-Ito palette CVD-safe; strong contrast; no red-green dependence
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect canvas utilization, balanced margins, nothing cut off
+        comment: Plot fills ~65% of 4800×2700 canvas; balanced margins; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (t, f(t)) in mathematical context
+        comment: Descriptive labels with notation; title in correct format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Chrome failure: title color not theme-adaptive in dark render'
+        passed: true
+        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds correct;
+          both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with proper palette and mathematical sophistication
+        comment: Professional polish with intentional hierarchy; mandated palette
+          limits custom design choices
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: spines removed, subtle grid, could use more generous
-          margins'
+        comment: Spines removed, subtle grid, generous whitespace, legend styling
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy showing clusters and density patterns
+        comment: Species clustering evident through curve patterns; color hierarchy
+          guides interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews curve implementation with proper Fourier transformation
+        comment: Correct Andrews curves with proper Fourier expansion
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: multivariate, colored by category, full
-          range'
+        comment: 'All features present: multivariate data, normalization, grouping,
+          proper t range'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Axes correctly mapped: X=t, Y=f(t)'
+        comment: X=t values, Y=f(t) values, all 150 observations visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format and legend labels correct
+        comment: Title format correct; legend labels match iris species
     data_quality:
       score: 15
       max: 15
@@ -150,19 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all iris species with clear clustering patterns
+        comment: Uses all 4 iris features; shows all 3 species; demonstrates separation
+          patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, well-established iris dataset, neutral context
+        comment: Iris dataset is real, scientifically valid, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Feature normalization correct, curve values reasonable
+        comment: Normalized variables correct; t range -π to π standard; proportions
+          accurate
     code_quality:
       score: 10
       max: 10
@@ -172,31 +181,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Clean, direct flow: load → normalize → compute → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic iris dataset, no randomness
+        comment: Deterministic (iris dataset), no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, mathematically sound
+        comment: Pythonic, appropriate complexity, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filename format (plot-{THEME}.png)
+        comment: Saves as plot-{THEME}.png; uses current API
     library_mastery:
       score: 9
       max: 10
@@ -206,27 +215,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of sns.lineplot, sns.set_theme, units parameter
+        comment: Expertly uses sns.lineplot, sns.set_theme, sns.load_dataset
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of theme-adaptive styling and π notation
-    total:
-      score: 83
-      max: 100
-      verdict: REJECTED
-      attempt: 1/3
-      threshold: 90
-      status: Below threshold for Attempt 1
-  verdict: REJECTED
+        comment: Uses seaborn's units parameter + estimator=None for individual curves
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   patterns:
   - dataset-loading
+  - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
