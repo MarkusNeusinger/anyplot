@@ -1,20 +1,37 @@
-""" pyplots.ai
+"""anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-15
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
-from sklearn.datasets import load_iris
-from sklearn.preprocessing import StandardScaler
+import os
+import sys
 
 
-# Set random seed for reproducibility
-np.random.seed(42)
+# Remove script directory from sys.path to avoid importing local altair.py
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from sklearn.datasets import load_iris  # noqa: E402
+from sklearn.preprocessing import StandardScaler  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Load and prepare data
+np.random.seed(42)
 iris = load_iris()
 X = iris.data
 y = iris.target
@@ -50,39 +67,56 @@ for obs_idx in range(len(X_scaled)):
 
 df = pd.DataFrame(curves_data)
 
-# Define colors for species
-species_colors = ["#306998", "#FFD43B", "#6B8E23"]
-
 # Create chart
 chart = (
     alt.Chart(df)
-    .mark_line(opacity=0.4, strokeWidth=2)
+    .mark_line(opacity=0.5, size=2)
     .encode(
-        x=alt.X("t:Q", title="t (radians)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
-        y=alt.Y("value:Q", title="Andrews Curve Value", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
+        x=alt.X(
+            "t:Q",
+            title="t (radians)",
+            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK),
+        ),
+        y=alt.Y(
+            "value:Q",
+            title="Andrews Curve Value",
+            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK),
+        ),
         color=alt.Color(
             "species:N",
             title="Species",
-            scale=alt.Scale(domain=["Setosa", "Versicolor", "Virginica"], range=species_colors),
-            legend=alt.Legend(titleFontSize=22, labelFontSize=20),
+            scale=alt.Scale(domain=species_names, range=OKABE_ITO),
+            legend=alt.Legend(
+                titleFontSize=18,
+                labelFontSize=16,
+                titleColor=INK,
+                labelColor=INK_SOFT,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+            ),
         ),
         detail="observation:N",
+        tooltip=["species:N", "observation:N"],
     )
     .properties(
         width=1600,
         height=900,
-        title=alt.Title(
-            "Iris Classification · andrews-curves · altair · pyplots.ai",
-            fontSize=28,
-            subtitle="Fourier series transformation of multivariate data for visual pattern comparison",
-            subtitleFontSize=18,
-        ),
+        background=PAGE_BG,
+        title=alt.Title("andrews-curves · altair · anyplot.ai", fontSize=28, color=INK),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22)
-    .configure_view(strokeWidth=0)
-    .configure_title(fontSize=28)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10)
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_title(color=INK)
+    .configure_legend(
+        titleFontSize=18,
+        labelFontSize=16,
+        titleColor=INK,
+        labelColor=INK_SOFT,
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+    )
 )
 
 # Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
