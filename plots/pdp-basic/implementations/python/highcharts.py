@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 43/100 | Updated: 2026-05-15
 """
 
 import tempfile
