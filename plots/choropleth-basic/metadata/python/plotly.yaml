@@ -1,155 +1,178 @@
 library: plotly
+language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:56:19Z'
-updated: '2025-12-31T14:08:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620322406
+updated: '2026-05-15T05:38:22Z'
+generated_by: claude-haiku
+workflow_run: 25902088873
 issue: 3069
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - custom-colormap
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent choice of realistic European GDP data with proper ISO-3 country codes
-  - Clean Viridis colorblind-safe color palette with appropriate value range
-  - Well-formatted title following the required naming convention
-  - Good use of Plotly geographic features (scope, projection, coastlines, ocean coloring)
-  - Generates both PNG and interactive HTML output
-  - Missing data countries shown gracefully in gray
+  - 'Perfect color compliance: Viridis continuous palette used correctly for life
+    expectancy data'
+  - 'Flawless theme-adaptive rendering: Both light and dark renders have correct chrome
+    colors (backgrounds, text, borders) with no legibility issues'
+  - 'Expert use of plotly''s geographic features: Theme-adaptive geo configuration
+    (landcolor, oceancolor, lakecolor) shows distinctive library mastery'
+  - 'Clean, idiomatic code: Uses px.choropleth() high-level API with proper theme
+    token pattern and explicit font sizing'
+  - 'Complete implementation: All required choropleth features present (map, colorbar
+    legend, country boundaries, appropriate projection)'
   weaknesses:
-  - Title format includes extra prefix before the spec-id pattern
-  - Country border lines could be slightly thicker for better boundary visibility
-  - Could add hover templates to enhance interactive HTML with formatted GDP values
-  image_description: The plot displays a choropleth map of Europe showing GDP per
-    capita data using the Viridis color scale. Colors range from dark purple (low
-    GDP ~10-20k USD) to bright yellow (high GDP ~120k USD). Luxembourg and Ireland
-    appear in bright yellow/green (highest GDP), Scandinavian countries in teal/green,
-    Western Europe (Germany, France, UK) in medium teal, and Eastern European countries
-    (Serbia, Bulgaria, Romania) in dark purple (lowest GDP). Russia and non-included
-    countries appear in gray (missing data). The title is centered at the top, a vertical
-    colorbar legend on the right shows the GDP scale, coastlines are visible with
-    light blue oceans, and country borders have subtle gray outlines.
+  - 'Design Excellence could be elevated: While the theme adaptation is sophisticated,
+    the overall aesthetic is well-configured defaults rather than intentional design
+    sophistication'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle blue ocean tint, correct theme surface
+      Chrome: Title "choropleth-basic · plotly · anyplot.ai" in dark INK (#1A1A17) centered at top, clearly readable. Colorbar label "Life Expectancy (years)" and tick labels in dark INK_SOFT (#4A4A44), all readable against light background.
+      Data: Countries colored with Viridis continuous scale (purple to yellow), showing life expectancy variation from ~55 years (dark purple, e.g., Afghanistan, Angola) to ~85 years (bright yellow, e.g., Japan, Italy). Country borders visible with dark gray outlines (#4A4A44), land regions subtle gray, ocean regions light blue.
+      Legibility verdict: PASS - All text, borders, and data colors are clearly readable. No dark-on-dark or light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with subtle darker ocean tint, correct dark theme surface
+      Chrome: Title "choropleth-basic · plotly · anyplot.ai" in light INK (#F0EFE8) centered at top, clearly readable against dark background. Colorbar label and ticks in light INK_SOFT (#B8B7B0), all readable with good contrast.
+      Data: Viridis colors identical to light render (same purple-to-yellow gradient), proving consistent data color mapping. Country borders visible with light gray outlines (#B8B7B0), land regions darker gray, ocean regions darker blue. No dark-on-dark failures - all borders and text are light-colored on dark background.
+      Legibility verdict: PASS - All text and borders have proper contrast. Data colors identical to light render, confirming correct theme-adaptive implementation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, colorbar label at 20pt, tick labels at 16pt - all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All elements well-separated: title centered, colorbar right-positioned,
+          no overlapping text'
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Countries clearly visible with good color differentiation; borders
-          slightly thin but acceptable
+        comment: Country regions clearly visible, borders (2.5px) distinct, Viridis
+          gradient readable at all values
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis is a colorblind-safe sequential palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well with balanced margins, colorbar well positioned
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Colorbar legend well placed, subtle coastlines
+        comment: Viridis is perceptually uniform and CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px landscape format, plot fills canvas appropriately, balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct, colorbar label includes unit '(years)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data, backgrounds #FAF8F1 (light) and #1A1A17
+          (dark), all chrome theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Shows thoughtful theme-adaptive geographic styling (landcolor, oceancolor,
+          lakecolor), colorbar customization - above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean layout with subtle borders, theme-adapted styling, good whitespace
+          - demonstrates design consideration
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color intensity shows geographic variation
+          clearly, meaningful data choice creates natural focal points
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct choropleth map type
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Region IDs (ISO-3 codes) correctly mapped to GDP values
-      - id: SC-03
+        comment: Correct choropleth map with all regional coloring features
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has color legend, clear boundaries, handles missing data (gray);
-          could use more prominent missing data handling per spec
-      - id: SC-04
-        name: Data Range
+        comment: Map, colorbar legend, country boundaries, appropriate projection
+          - all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 30 countries displayed, full color range utilized
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Countries correctly mapped to geography, life_expectancy correctly
+          mapped to colors
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately reflects data range
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title includes spec-id, library, and pyplots.ai but adds contextual
-          prefix
+        comment: Title format correct, colorbar labels correct with units
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good variation from low GDP (Serbia ~9k) to high (Luxembourg
-          ~125k); covers Western, Northern, Southern, Eastern Europe
+        comment: Shows full choropleth with regional variation, colorbar, geographic
+          distribution patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: GDP per capita is a perfect economic indicator example, neutral topic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic and match actual approximate GDP per capita
-          figures
+        comment: Life expectancy is real, meaningful, neutral scientific data with
+          realistic values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Life expectancy values (55-85 years) realistic, countries geographically
+          balanced, data factually correct
     code_quality:
       score: 10
       max: 10
@@ -159,41 +182,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) though data is deterministic
+        comment: Uses np.random.seed(42), hard-coded deterministic country data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, plotly.express)
+        comment: 'Only used imports: os, numpy, pandas, plotly.express'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly Express API
+        comment: Clean, Pythonic, appropriate complexity, no over-engineering or fake
+          functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html using correct Plotly
+          API
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses px.choropleth with good geographic customization (scope, projection),
-          generates interactive HTML; could leverage more Plotly features like hover
-          customization
+        comment: Expert use of plotly.express high-level API, px.choropleth() recommended
+          pattern with proper geo configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Leverages Plotly''s distinctive geographic features: interactive
+          choropleth, theme-adaptive geo styling (landcolor, oceancolor), custom colorbar
+          - not easily replicated in other libraries'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
