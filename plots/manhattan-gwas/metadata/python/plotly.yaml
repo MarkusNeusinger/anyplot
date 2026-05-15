@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:32:43Z'
-updated: '2026-05-15T03:30:28Z'
+updated: '2026-05-15T03:36:38Z'
 generated_by: claude-haiku
 workflow_run: 25898484388
 issue: 2925
@@ -12,33 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Excellent theme adaptation with proper token usage throughout both renders
-  - Clean, professional GWAS visualization meeting all specification requirements
-  - Realistic synthetic data with interpretable peaks and threshold annotations
-  - Proper use of plotly features (manual ticks, shapes, annotations, hover tooltips)
-  - Readable text and markers across both light and dark themes
+  - Clean theme adaptation with both renders production-ready and fully readable
+  - Correct Okabe-Ito palette usage with stable data colors across light/dark themes
+  - Clear data storytelling through visual hierarchy and emphasis (significant SNP
+    diamonds, threshold lines)
+  - Excellent code quality with KISS structure and proper seed control
+  - Strong spec compliance with all required GWAS features
+  - Expert Plotly usage with interactive hover tooltips and professional layout
   weaknesses:
-  - Design is straightforward without exceptional polish or custom touches beyond
-    requirements
-  - Limited use of advanced plotly features (could leverage more interactive capabilities)
+  - 'Title domain incorrect: says "pyplots.ai" instead of "anyplot.ai" (line 221)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "manhattan-gwas · plotly · pyplots.ai" in dark INK (#1A1A17), axis labels and tick labels in INK_SOFT (#4A4A44) - all clearly readable
-      Data: Alternating green (#009E73) and orange (#D55E00) for chromosomes with opacity 0.7; significant SNPs highlighted as orange diamonds with white edges; subtle y-axis grid visible
-      Legibility verdict: PASS - all text elements readable with proper contrast
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels, tick labels all explicitly sized (28/22/18px) and readable in dark ink; threshold annotations clearly visible on right
+      Data: Alternating green (#009E73) and orange (#D55E00) chromosome blocks with overlaid scatter points; significant SNPs highlighted as larger orange diamonds; dashes and dots for threshold lines
+      Legibility verdict: PASS (all text readable against light background; no light-on-light issues)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title and labels in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) - all clearly readable; no dark-on-dark failures
-      Data: Identical colors to light render (green and orange for chromosomes, orange for significant SNPs); grid lines visible with light coloring
-      Legibility verdict: PASS - all text readable, no contrast issues, proper theme adaptation confirmed
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: All text light-colored (INK #F0EFE8 and INK_SOFT #B8B7B0) with sufficient contrast; grid visible at appropriate opacity; legend background themed
+      Data: Colors identical to light render (same green and orange for chromosomes); scatter and diamond markers equally distinct
+      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark failures; data colors stable across themes)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -46,67 +46,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes properly scaled; all readable in both themes
+        comment: All sizes explicitly set; perfect readability in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no text collisions
+        comment: No collisions; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Opacity appropriate for density; significant SNPs highlighted
+        comment: Dense scatter appropriately handled; significant SNPs clearly stand
+          out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe
+        comment: CVD-safe palette; good contrast; adequate alpha
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 4800×2700 px with proper margins
+        passed: false
+        comment: Good proportions; could use more generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with proper notation
+        comment: Descriptive with units and context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical #009E73; backgrounds theme-correct'
+        comment: Okabe-Ito correct; backgrounds and chrome theme-adaptive
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Professional polish, proper theme adaptation; straightforward execution
+        passed: false
+        comment: Above defaults but not Nature-level exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: true
-        comment: Subtle grid, generous whitespace; minimal customization
+        passed: false
+        comment: Spines removed, subtle grid, good whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Threshold lines guide eye; peaks emphasized; visual rhythm
+        passed: false
+        comment: Clear visual hierarchy; immediate insight into peaks and significance
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -114,25 +115,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Manhattan plot implementation
+        comment: Correct Manhattan plot with proper structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present and correct
+        comment: 'All GWAS features present: thresholds, highlights, colors'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly mapped
+        comment: X/Y correctly assigned; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Proper formatting
+        passed: false
+        comment: 'CRITICAL: title says pyplots.ai instead of anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -142,19 +143,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Realistic GWAS with interpretable peaks
+        comment: All GWAS aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic distribution, no controversies
+        comment: Plausible scientific data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proper thresholds and ranges
+        comment: Factually correct genome structure and thresholds
     code_quality:
       score: 10
       max: 10
@@ -164,58 +165,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, clean implementation
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for reproducibility
+        comment: Seed 42 set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Clean and Pythonic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming
+        comment: Correct file names and current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper plotly patterns and API usage
+        comment: Expert Plotly patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: Hover tooltips and interactive HTML; mostly standard
+        passed: false
+        comment: Good use of interactive features; not extraordinarily distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
   - hover-tooltips
-  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
