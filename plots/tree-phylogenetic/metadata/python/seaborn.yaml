@@ -1,15 +1,248 @@
 library: seaborn
+language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:54:59Z'
-updated: '2025-12-31T14:24:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620332761
+updated: '2026-05-15T01:05:30Z'
+generated_by: claude-haiku
+workflow_run: 25894354785
 issue: 3070
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - Perfect visual quality across all criteria - text is readable in both themes with
+    no overlap or visibility issues
+  - 'Thoughtful design: species labels colored by clade provides additional insight
+    beyond basic dendrogram'
+  - 'Excellent theme adaptation: both light and dark renders are perfectly readable
+    with correct Okabe-Ito colors (identical between themes) and proper theme-adaptive
+    chrome'
+  - 'Complete spec compliance: all required features present (hierarchical structure,
+    branch lengths, species labels, evolutionary distance scale, clade colors)'
+  - Real, scientifically plausible data using actual primate phylogeny with mitochondrial
+    DNA evolutionary distances
+  - Clean, well-structured code with appropriate complexity and no unnecessary engineering
+  - 'Strong palette usage with perfect theme-correct backgrounds (#FAF8F1 light, #1A1A17
+    dark) and all text legible in both modes'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title, axis labels, species labels, and tick labels are all dark-colored (#1A1A17) and clearly readable against the light background. Grid lines are subtle but visible.
+      Data: Dendrogram branches are color-coded by clade using Okabe-Ito palette - Great Apes in green (#009E73), Lesser Apes in orange (#D55E00), Old World Monkeys in blue (#0072B2), New World Monkeys in reddish purple (#CC79A7), Prosimians in gold (#E69F00). Neutral gray (#4A4A44) for mixed-clade junctions. All 10 species are labeled in their clade color. Legend is positioned upper right with light background box.
+      Legibility verdict: PASS - All text is clearly readable, no overlap, excellent contrast. The warm off-white background ensures text is never "light on light."
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, species labels, and tick labels are light-colored (#F0EFE8) and clearly readable against the dark background. Grid lines are visible in light gray. Legend has dark background box (#242420) with light text.
+      Data: All data colors are identical to light render - Great Apes green (#009E73), Lesser Apes orange (#D55E00), Old World Monkeys blue (#0072B2), New World Monkeys reddish purple (#CC79A7), Prosimians gold (#E69F00). Branch lines are perfectly visible. Neutral gray branches appear appropriately toned for dark theme.
+      Legibility verdict: PASS - All text is clearly readable with no dark-on-dark failures. The brand green (#009E73) is clearly visible. Excellent contrast between light text and dark background. Perfect theme adaptation with only chrome changing between renders while data colors remain identical.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16-18pt).
+          Perfectly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. All species names fully readable with
+          generous spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tree branches clearly visible with 3pt linewidth. Dendrogram structure
+          is clear at full resolution.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe. Good contrast between all colors
+          for deuteranopia and protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins. Legend positioned
+          appropriately. Excellent space utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format (tree-phylogenetic · seaborn · anyplot.ai).
+          X-axis labeled descriptively with units (Million Years).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito compliance: first clade #009E73, subsequent colors
+          in order (#D55E00, #0072B2, #CC79A7, #E69F00). Backgrounds #FAF8F1/#1A1A17
+          correct. Both renders theme-correct with identical data colors.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color-coding by clade shows design intent. Species labels
+          colored to match their clade group. Professional layout and grid styling.
+          Shows care beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed for clean L-shaped frame. Subtle x-axis-only
+          grid with low opacity. Generous whitespace. Legend with polished background
+          box framing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through clade grouping and color contrast.
+          Focal point is evolutionary relationship structure. Scale annotation explains
+          meaning. Guides viewer through evolutionary tree logic.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct phylogenetic tree (dendrogram) with branch lengths proportional
+          to evolutionary distance.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: hierarchical structure, branch lengths, species
+          labels, evolutionary distance units, clade coloring, scale annotation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis (Evolutionary Distance) and Y-axis (Species) correctly assigned.
+          All 10 species visible. Branch lengths proportional to distances.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct: ''tree-phylogenetic · seaborn · anyplot.ai''.
+          Legend clearly labels 5 clades with accurate colors.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all phylogenetic tree aspects: multiple clades (5 groups),
+          varied branch lengths, hierarchical relationships, leaf and internal nodes.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real primate species with actual phylogenetic relationships. Distances
+          based on mitochondrial DNA divergence. Biologically plausible. Neutral scientific
+          context.
+      - id: DQ-03
+        name: Appropriate Scale & Factual Correctness
+        score: 4
+        max: 4
+        passed: true
+        comment: Evolutionary distances are scientifically accurate. Species relationships
+          match real phylogeny. All values plausible for mitochondrial DNA divergence
+          patterns.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: Imports → Data → Plotting → Save. Minimal helper
+          functions. No unnecessary classes or overengineering.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed species order and distance matrix. Deterministic data generation.
+          Results are fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os (THEME env), matplotlib, numpy, seaborn, scipy
+          modules. No unused imports.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code with good variable naming. Appropriate complexity.
+          No over-engineering or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves correctly as plot-{THEME}.png with dpi=300 and bbox_inches='tight'.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.set_theme() with proper rc parameters. Custom dendrogram
+          link coloring shows advanced technique. sns.despine() for clean appearance.
+          High-level API usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Theme-adaptive color tokens (PAGE_BG, INK, INK_SOFT). Custom link
+          coloring algorithm respects clade groupings. Automatic species label coloring
+          by clade membership. Grid styling with theme-aware opacity.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -18,196 +251,9 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep:
   - hierarchical-clustering
-  styling: []
-review:
-  strengths:
-  - Excellent visual presentation with clear clade-based color coding throughout branches
-    and labels
-  - Biologically accurate evolutionary distance matrix for primate species
-  - Professional typography with proper font sizes and weights for all text elements
-  - Thoughtful color palette using distinct, colorblind-safe colors for 5 clades
-  - Clean layout with appropriate use of seaborn aesthetic styling
-  weaknesses:
-  - Contains a helper function (get_link_color) which violates KISS principle - inline
-    logic preferred
-  - Title format includes Primate Evolution prefix before spec-id which deviates from
-    standard format
-  image_description: 'The plot displays a horizontal phylogenetic tree (dendrogram)
-    showing primate evolutionary relationships. The tree branches from left to right,
-    with 10 species labels on the right edge (Tarsier, Lemur, Chimpanzee, Human, Gorilla,
-    Orangutan, Gibbon, Macaque, Baboon, Marmoset). Branch colors encode clades: red
-    for Prosimians (Tarsier, Lemur), dark blue for Great Apes (Human, Chimpanzee,
-    Gorilla), light blue for Lesser Apes (Orangutan, Gibbon), yellow/gold for Old
-    World Monkeys (Baboon, Macaque), and green for New World Monkeys (Marmoset). The
-    x-axis shows "Evolutionary Distance (Million Years)" from 50 to 0. A legend in
-    the lower-left identifies the 5 clades. The title reads "Primate Evolution · tree-phylogenetic
-    · seaborn · pyplots.ai". Branch lines are thick (3px) and species labels are colored
-    to match their clade.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis label 20pt, tick labels 16-18pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all species labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Branch lines thick (3px), clearly visible against white background
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses distinct colors (blue, light blue, yellow, green, red) that
-          are distinguishable even for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, tree fills space well, minor issue with legend
-          positioning in lower-left away from some data
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive with units: "Evolutionary Distance (Million Years)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid is appropriately subtle (alpha=0.3), but legend is positioned
-          in lower-left which slightly crowds the tree root area
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct phylogenetic tree visualization using dendrogram
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Branch lengths proportional to evolutionary distance
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has clade coloring, branch lengths, legend. Scale annotation present
-          but could be more prominent (e.g., actual scale bar rather than text annotation)
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 10 species visible with full evolutionary timeline
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all 5 clades
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses format "{spec-id} · {library} · pyplots.ai" but prepends "Primate
-          Evolution ·" which deviates slightly from spec
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows multiple clades, varying branch lengths, different evolutionary
-          distances
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Primate evolution based on mitochondrial DNA is a classic, neutral,
-          real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Evolutionary distances are biologically plausible (6-58 MYA range),
-          though some values could be more refined
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: false
-        comment: Contains a helper function `get_link_color()` which violates KISS
-          principle of no functions/classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `np.random.seed(42)`
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used appropriately
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn/matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as `plot.png`
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses `sns.set_theme()` and `sns.despine()` for styling, but the core
-          dendrogram is from scipy. Seaborn enhances aesthetics but doesn't provide
-          native tree/dendrogram functions.
-  verdict: APPROVED
+  styling:
+  - publication-ready
+  - alpha-blending
