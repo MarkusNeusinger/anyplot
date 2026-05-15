@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T08:46:38Z'
-updated: '2026-05-15T08:53:46Z'
+updated: '2026-05-15T09:27:01Z'
 generated_by: claude-sonnet
 workflow_run: 25908551462
 issue: 5248
@@ -12,188 +12,176 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/letsplot/plot-dark.html
-quality_score: 40
+quality_score: 83
 review:
   strengths:
-  - 'Perfect visual quality: explicit font sizing (title=24pt, axes=20pt, ticks=16pt),
-    clean adaptive theming in both light and dark renders'
-  - 'Correct Okabe-Ito palette in canonical order (#009E73 first, #D55E00 second,
-    #0072B2 third) with theme-correct backgrounds (#FAF8F1 light / #1A1A17 dark)'
-  - Code is clean, reproducible (np.random.seed(42)), and idiomatic; theme tokens
-    fully applied to all chrome elements
-  - Realistic, neutral dataset (job satisfaction by age group x education level) with
-    appropriate scale and plausible value variation
-  - Title format 'bar-3d-categorical · letsplot · anyplot.ai' is correct; legend labels
-    match data
+  - Sophisticated cabinet projection with per-face shading (front/right/top) creates
+    convincing 3D depth in a 2D library, demonstrating real visualization engineering
+  - 'Perfect spec compliance 15/15: correct plot type, all required features, accurate
+    data mapping, correct title and legend format'
+  - 'Full data quality 15/15: realistic survey context (education x age x satisfaction),
+    appropriate 0-10 scale, all 12 bars present'
+  - 'Perfect code quality 10/10: reproducible seed, clean imports, organized sections,
+    correct PNG+HTML outputs'
+  - Theme-adaptive chrome correctly applied in both renders — INK/INK_SOFT tokens
+    thread through to all geom_text color parameters, no dark-on-dark failures
   weaknesses:
-  - 'CRITICAL SC-01=0: Wrong chart type — spec requires a 3D bar chart with two categorical
-    spatial axes and a vertical height axis; letsplot cannot render 3D projections
-    (analogous to AR-06 not-feasible); implementation fell back to a 2D grouped bar
-    chart'
-  - 'SC-02 LOW: 3D-specific features entirely absent — no base-plane grid, no depth/perspective,
-    no two positional categorical axes, no viewing angle; only minor spec features
-    (value labels, bar spacing) are present'
-  - 'DE-01/DE-03: No visual emphasis or storytelling; the ''Graduate satisfaction
-    is consistently highest'' pattern is discoverable but never visually emphasized
-    through color contrast, size variation, or annotation'
-  - 'DE-02: Axis tick marks and legend border box could be removed for a cleaner look'
-  - 'LM-02: No distinctively letsplot-specific features used — basic ggplot2 grammar
-    patterns with no HTML interactivity leverage, no tooltips, no letsplot-exclusive
-    geoms'
+  - 'Design excellence (11/20) is the primary gap: functionally solid but lacks visual
+    polish — no legend background fill, tight right edge for 65+/Graduate bars'
+  - 'No descriptive axis titles: z-axis lacks ''Satisfaction Score'' label, x-axis
+    lacks ''Age Group'' label — viewers must infer from context'
+  - Value labels (size=10) and z-tick labels (size=11) are small for the 4800x2700
+    canvas; slightly larger sizes would improve immediate legibility
+  - Rightmost bars (65+/Graduate) are very close to the right canvas edge — adjust
+    DX or canvas width for breathing room
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "bar-3d-categorical · letsplot · anyplot.ai" in dark ink, clearly readable. X-axis label "Age Group" and Y-axis label "Satisfaction Score (0-10)" in dark ink, readable. Tick labels (18-34, 35-49, 50-64, 65+; 0-11 on Y) in muted dark ink (#4A4A44), readable. Value labels above bars (6.0, 6.9, 7.7, etc.) in muted ink, readable. Legend title "Education" and labels (High School, Bachelor's, Graduate) readable.
-      Data: Three bars per age group in green (#009E73 / High School), orange (#D55E00 / Bachelor's), blue (#0072B2 / Graduate). First series is #009E73 as required. Bars clearly visible, well-separated, with subtle PAGE_BG edge color.
-      Legibility verdict: PASS — all text fully readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "bar-3d-categorical · letsplot · anyplot.ai" in dark ink at top center — clearly readable. Z-axis tick labels (0,2,4,6,8,10) in INK_SOFT dark. Age group labels (18-34, 35-49, 50-64, 65+) in INK_SOFT below bars. Legend title "Education Level" in bold INK. All text readable against light background.
+      Data: Three Okabe-Ito bar groups — High School (#009E73 green, front), Bachelor's (#D55E00 orange, middle), Graduate (#0072B2 blue, back). Cabinet projection shading: front/right/top faces. 12 value labels (5.5-8.1) above bar tops. Base-plane grid lines in GRID_COLOR.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in off-white (#F0EFE8), clearly readable against dark background. Axis labels in off-white, readable. Tick labels in light muted tone (#B8B7B0), readable. Value labels above bars in light muted tone, readable. Legend text in light muted tone, readable. No dark-on-dark failures observed — all text is light-colored and legible.
-      Data: Bar colors are IDENTICAL to light render — green (#009E73), orange (#D55E00), blue (#0072B2). Only chrome elements (background, text, grid, legend frame) have flipped.
-      Legibility verdict: PASS — all text fully readable against near-black background; no dark-on-dark failures
-
-    CRITICAL NOTE (both renders): The chart is a 2D grouped bar chart, NOT a 3D bar chart. The spec requires bars rising from a 2D categorical grid with two categorical spatial axes and a vertical height axis. letsplot cannot render true 3D projections — this is an AR-06 not-feasible situation. SC-01=0, score capped at 40/100.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all labels rendered in light/near-white tones (#F0EFE8 for primary, #B8B7B0 for secondary). Title, z-tick labels, age labels, legend text all clearly readable against dark background. No dark-on-dark failures — INK token flips to #F0EFE8, INK_SOFT to #B8B7B0, correctly applied via geom_text color parameters.
+      Data: Bar colors identical to light render — green, orange, blue Okabe-Ito colors unchanged. Value labels switch to light #F0EFE8 and are fully readable on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
-          legend=16pt; fully readable in both themes'
+        comment: All text readable in both themes; value labels (size=10) and z-tick
+          labels (size=11) are small but legible at 4800x2700
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Value labels, tick labels, and legend are well-separated; position_dodge(0.75)
-          matches bar width correctly
+        comment: Minor overlap between back-row value labels and foreground bars in
+          3D perspective; labels still readable as topmost layer
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible with subtle PAGE_BG edge color for definition;
-          good sizing
+        comment: All 12 bars visible with distinct colors and shaded faces; 65+/Graduate
+          bar tight at right edge but contained
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; three bars easily distinguishable
-          by both hue and luminance
+        comment: Okabe-Ito palette, CVD-safe, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well; y-axis headroom for value labels is intentional;
-          balanced margins
+        comment: Good 16:9 layout; 65+/Graduate bar's right face is very close to
+          canvas edge with little margin
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Y-axis includes units '(0-10)'; title correct format
+        passed: false
+        comment: Title correct; z-axis ticks and x-axis age labels present, but no
+          descriptive axis titles (Satisfaction Score, Age Group)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first series, #D55E00 second, #0072B2 third; correct Okabe-Ito
-          order; backgrounds #FAF8F1/#1A1A17; chrome fully adaptive'
+        comment: 'First series #009E73 correct; Okabe-Ito order maintained; backgrounds
+          #FAF8F1/#1A1A17 correct; colors identical between themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured library default: theme_classic + adaptive chrome
-          + Okabe-Ito + value labels. Clean but not exceptional — no visual hierarchy
-          lifts it above ''configured ggplot'''
+        passed: true
+        comment: 'Above default: cabinet projection with per-face shading creates
+          convincing 3D depth; intentional color hierarchy; functional rather than
+          elegantly polished'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: theme_classic removes top/right spines; custom GRID_COLOR for subtle
-          y-only grid; all chrome colors set. Tick marks and legend border could be
-          removed for further polish
+        passed: true
+        comment: 'Above default: theme_void() cleans canvas; bar edges use PAGE_BG;
+          manually drawn grid and z-axis are tidy; no legend background fill'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed clearly but no visual emphasis highlights the 'Graduate
-          consistently highest' pattern. Data shown without interpretation.
+        passed: true
+        comment: 'Above default: clear hierarchy (Graduate > Bachelor > HS) immediately
+          visible; value labels enable precise comparison; no focal emphasis'
     spec_compliance:
-      score: 6
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: WRONG CHART TYPE. Spec requires 3D bar chart with two categorical
-          spatial axes and Z-height axis. Implementation is a 2D grouped bar chart.
-          letsplot cannot do 3D (analogous to AR-06 not-feasible).
+        passed: true
+        comment: Correct 3D bar chart with two categorical axes and height-encoded
+          values via cabinet projection
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: 'Only minor spec features present: value labels on top ✓, bar spacing
-          ✓. Missing: 3D base-plane grid, two positional categorical axes, depth/perspective,
-          viewing angle, color encoding of value magnitude'
+        passed: true
+        comment: 'All spec features: 2 categorical dims, height encoding, bar spacing,
+          color encoding, base-plane grid, value labels, viewing angle, legend'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Within 2D frame: Age Group→X and Satisfaction→Y correct. Education
-          encoded via fill/dodge (only 2D option). Second categorical axis is not
-          a spatial axis as spec requires.'
+        passed: true
+        comment: 'X: age groups (4); depth: education level (3); Z: satisfaction score;
+          all axes fully populated'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bar-3d-categorical · letsplot · anyplot.ai' correct format;
-          legend labels match data categories
+        comment: Title 'bar-3d-categorical · letsplot · anyplot.ai' correct; manual
+          legend with Education Level title and correct labels
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows variation across both dimensions; meaningful differences present.
-          However 3D spec features (grid of 9-100 bars on 2D base plane) not represented.
+        passed: true
+        comment: All 12 bars (4x3 grid); front/right/top faces; grid, z-axis, value
+          labels, and legend all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Job satisfaction by age group and education level: realistic, comprehensible,
-          neutral scenario'
+        comment: Survey satisfaction scores by age group x education level; plausible
+          5.5-8.1 range on 0-10 scale; neutral data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-10 satisfaction scale with values 5.5-8.1 appropriate; higher education
-          correlating with higher satisfaction is factually plausible
+        comment: Values 5.5-8.1 on 0-10 axis; ticks 0,2,4,6,8,10 sensible; 4x3 grid
+          within spec's 3-10 per axis requirement
     code_quality:
       score: 10
       max: 10
@@ -203,63 +191,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → data → plot → save; no functions or classes
+        comment: Small utility helpers (prj, shade, face, seg) justified by 3D complexity;
+          flat linear script otherwise
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) used
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used
+        comment: os, numpy, pandas, lets_plot — all used, none redundant
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; dict-mapped scale_fill_manual is idiomatic; position_dodge(0.75)
-          matches bar width correctly
+        comment: Well-organized sections; complexity matches task requirements; no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API with scale=3
-          for PNG
+        comment: ggsave scale=3 PNG + HTML, plot-{THEME}.png/html paths correct
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Correct ggplot2 grammar with layered geoms, named-dict scale_fill_manual,
-          theme_classic() + layered theme() override. Good; minor opportunity to use
-          scale_y_continuous(expand=...) for tighter layout.
+        passed: true
+        comment: Correct ggplot grammar, aes mappings, geom layers, scale_fill_manual
+          with identity mapping is idiomatic letsplot
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: position_dodge with matching geom_text position is a standard ggplot2
-          pattern. No distinctively letsplot-specific features (no HTML tooltip leverage,
-          no letsplot-exclusive geoms).
-  verdict: REJECTED
+        passed: true
+        comment: Creative use of geom_polygon for 3D faces with painter's-order z-sorting;
+          custom fill identity scale; theme_void for fully hand-crafted canvas; HTML+PNG
+          outputs
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - custom-legend
+  - manual-ticks
+  - 3d-projection
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - edge-highlighting
-  - grid-styling
