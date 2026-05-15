@@ -1,211 +1,237 @@
 library: plotly
+language: python
 specification_id: andrews-curves
 created: '2025-12-31T21:34:18Z'
-updated: '2025-12-31T21:36:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20627521331
+updated: '2026-05-15T13:09:30Z'
+generated_by: claude-haiku
+workflow_run: 25918836175
 issue: 2859
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of the Fourier transformation formula for Andrews curves
-  - Perfect use of transparency (alpha=0.4) to reveal curve density and overlap patterns
-  - Clear visual separation between Iris species demonstrates the technique utility
-  - 'Professional use of Plotly features: legendgroup for grouped legend entries,
-    custom hover templates'
-  - Proper data normalization prevents any single variable from dominating the curves
-  - Clean π notation on x-axis tick labels enhances readability
-  - Dual output (PNG + HTML) maximizes value for both static and interactive use cases
+  - Perfect visual quality with excellent legibility in both light and dark themes
+  - Flawless palette compliance and theme-adaptive chrome
+  - Comprehensive spec compliance with all required features
+  - Clean, reproducible code using real iris dataset
+  - Proper data normalization and appropriate transformation parameters
+  - Expert use of plotly's idiomatic API patterns
   weaknesses:
-  - Code contains a helper function andrews_curve() violating the KISS no functions
-    rule; should inline the transformation logic
-  - Yellow color for Versicolor may be less distinguishable for colorblind users;
-    consider using a more accessible palette
-  image_description: 'The plot displays Andrews curves for the Iris dataset with 150
-    samples transformed into Fourier series curves. Three species are shown: Setosa
-    (blue), Versicolor (yellow/gold), and Virginica (red/coral). The x-axis shows
-    parameter t in radians from -π to π with proper π notation tick labels. The y-axis
-    shows f(t) in normalized units ranging from approximately -4 to 4. The title correctly
-    reads "Iris Dataset · andrews-curves · plotly · pyplots.ai". The legend is well-positioned
-    in the upper right corner with a subtle border. Curves show clear visual separation
-    between species - Setosa curves (blue) cluster distinctly from Versicolor and
-    Virginica, which show some natural overlap. Transparency (alpha=0.4) effectively
-    reveals density patterns where curves converge and diverge.'
+  - Design is generic, following defaults without custom aesthetic choices
+  - Limited use of plotly's advanced visualization features
+  - Could enhance data storytelling through additional visual hierarchy or emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "andrews-curves · plotly · anyplot.ai" in dark text (28px), clearly visible. X-axis label "Parameter t (radians)" and Y-axis label "f(t) (normalized units)" both in dark INK color (22px), fully readable. Tick labels in INK_SOFT color (18px), clear against light background.
+      Data: 150 curves colored by iris species - green (#009E73) for setosa, orange (#D55E00) for versicolor, blue (#0072B2) for virginica. All curves have 0.4 opacity allowing overlapping patterns to be visible. Line width 2 is adequate at render size.
+      Legend: Top-right positioned with elevated background (#FFFDF6), border in INK_SOFT, labels in INK_SOFT - all clearly readable
+      Legibility verdict: PASS - All text is clearly readable with excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title in light text (INK for dark theme - #F0EFE8), clearly visible. X-axis and Y-axis labels in light INK color, fully readable. Tick labels in light INK_SOFT color (#B8B7B0), clear and legible.
+      Data: Identical colors to light render - green (#009E73) for setosa, orange (#D55E00) for versicolor, blue (#0072B2) for virginica. This confirms perfect theme-adaptive implementation: data colors unchanged, only chrome flips.
+      Legend: Top-right positioned with dark elevated background (#242420), border in light INK_SOFT, labels in light INK_SOFT - all properly themed
+      Legibility verdict: PASS - All text is clearly readable with excellent contrast against dark background. NO dark-on-dark issues detected. All elements properly adapt to dark theme while maintaining data color consistency.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt - all clearly
-          readable
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend positioned away from data
+        comment: No overlapping text, legend well-positioned, clear spacing throughout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width=2 with 0.4 opacity perfectly suited for 150 overlapping
-          curves
+        comment: 150 curves with 0.4 opacity optimally adapted to data density, all
+          curves visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow/red distinguishable, though yellow could be harder for
-          some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, minor extra whitespace on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Parameter t (radians)", "f(t) (normalized
-          units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures colorblind safety with good contrast between
+          series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800×2700px render with balanced margins (l=120, r=80, t=100,
+          b=100)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Parameter t (radians)'', ''f(t)
+          (normalized units)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds correct
+          (#FAF8F1/#1A1A17), theme-correct chrome in both renders'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid alpha 0.3 is appropriate, but the legend shows "Setosa", "Versicolor",
-          "Virginica" labels which appear small relative to the overall plot
+        comment: Well-configured defaults without custom palette or distinctive design
+          elements
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Subtle grid and standard styling, minimal customization beyond requirements
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly with color-based species grouping, but no
+          additional visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Andrews curves visualization with Fourier transformation
+        comment: Correct Andrews curves transformation with Fourier series implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped as Fourier coefficients, t parameter correctly
-          on x-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Normalization applied, transparency used, color by category implemented
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: normalization, species coloring, proper transformation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full t range [-π, π] shown, y-axis auto-scaled to data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (parameter t) and Y-axis (f(t)) correctly assigned, all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species names correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "Iris Dataset · andrews-curves · plotly · pyplots.ai"'
+        comment: Title format correct, legend labels match iris species
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all 150 samples, demonstrates cluster separation and overlap
-          patterns
+        comment: Uses all 4 iris features, shows 150 observations with clear species
+          separation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic Iris dataset, perfect for demonstrating multivariate visualization
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Normalized values are correct but deterministic data from sklearn
-          has no seed needed
+        comment: Real, well-known iris dataset in appropriate scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized data with standard parameter range (-π to π), all values
+          correct
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Contains a helper function `andrews_curve()` which violates the no-functions
-          rule
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses deterministic Iris dataset from sklearn
+        comment: Linear flow with inline transformation, no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic iris dataset, no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, plotly, sklearn)
+        comment: Only necessary imports, no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean, Pythonic code with appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format (plot-{THEME}.png/html), current API usage
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses Plotly features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Custom hover templates, interactive HTML export, proper legend grouping,
-          go.Scatter with graph_objects
+        comment: Expert use of go.Figure(), go.Scatter(), update_layout(), and plotly
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses hover templates and legend groups, but limited advanced plotly
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
