@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:36:21Z'
-updated: '2026-05-15T23:02:22Z'
+updated: '2026-05-15T23:12:39Z'
 generated_by: claude-haiku
 workflow_run: 25944957901
 issue: 2922
@@ -12,122 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-dark.html
-quality_score: 28
+quality_score: 94
 review:
   strengths:
-  - 'Correct spec implementation structure: includes PDP line, confidence band, ICE
-    lines, and rug plot'
-  - 'Okabe-Ito colors correctly applied to data elements (green #009E73 for main PDP,
-    orange #D55E00 for accents)'
-  - Proper canvas size (4800×2700 px), appropriate element sizes, and good data visualization
-    approach
-  - Theme-adaptive token structure is in place with correct conditional logic
-  - Generates both PNG and HTML outputs with correct naming convention
+  - Perfect theme-adaptive implementation with explicit color tokens (PAGE_BG, ELEVATED_BG,
+    INK, INK_SOFT) applied consistently across all elements
+  - 'Comprehensive PDP visualization demonstrating advanced technique: main prediction
+    line + confidence band + ICE lines + data distribution rug plot in single coordinated
+    view'
+  - 'Correct Okabe-Ito palette usage (#009E73 for main series, #D55E00 for secondary)
+    with identical data colors in both light and dark renders'
+  - 'Excellent visual hierarchy through layer composition: prominent main line (2.5pt),
+    secondary ICE lines (faint, 0.2 alpha), tertiary distribution rug (0.6 alpha)'
+  - Proper reproducibility with np.random.seed(42) and sklearn RandomState parameters
+  - Realistic, neutral domain (weather features → model predictions) with plausible
+    scales and meaningful scientific visualization
   weaknesses:
-  - 'CRITICAL: Theme color mapping is reversed or broken. Text appears light in light
-    render (unreadable) and dark in dark render (unreadable). INK and INK_SOFT colors
-    are not being applied correctly to axis_title, axis_text, plot_title, legend_text,
-    and legend_title.'
-  - 'Dark render has severe dark-on-dark failure: all text (title, axis labels, tick
-    labels, legend) is nearly invisible against dark background — a critical theme-adaptation
-    failure.'
-  - Light render has faint text (light on light) — axis labels and title barely readable.
-  - Grid styling may need adjustment — appears very subtle/hard to see in dark render.
-  - 'Theme token assignment needs debugging: verify that os.getenv(''ANYPLOT_THEME'')
-    is being read correctly and that letsplot is applying element_text(color=...)
-    correctly.'
+  - Top and right spines not removed per style guide recommendation — consider removing
+    via theme(axis_line=element_blank()) for minimal aesthetic
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color.
-      Chrome: Title "pdp-basic · letsplot · anyplot.ai" and axis labels ("Temperature (standardized)", "Partial Dependence (predicted outcome)") are rendered in very faint gray text, barely legible against the light background. Tick labels and legend text are similarly faint. This suggests theme colors are reversed or not properly applied — text should be dark (#1A1A17) for contrast, but appears light instead.
-      Data: Main PDP line is bright green (#009E73), clearly visible. Confidence band is orange (#D55E00). Individual ICE lines and rug plot are visible. Data colors are Okabe-Ito compliant and visible.
-      Legibility verdict: FAIL — title and axis labels are unreadably faint on light background. Theme color mapping appears reversed.
+      Background: Warm off-white (#FAF8F1), perfectly themed
+      Chrome: Title "pdp-basic · letsplot · anyplot.ai" in dark ink is prominent; axis labels "Temperature (standardized)" and "Partial Dependence (predicted outcome)" are clearly readable; tick labels and legend text all render in appropriate secondary ink (#4A4A44) with good contrast
+      Data: Main PDP line rendered in brand green (#009E73, Okabe-Ito position 1) with prominent 2.5pt thickness; confidence band shows in tan (accent #D55E00) with 25% alpha; 50 individual ICE lines in orange with low alpha (20%) show prediction variability; rug plot (data distribution) rendered as orange segments with 60% alpha along x-axis
+      Legibility verdict: PASS — all text readable at full resolution, color contrast excellent
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct surface color.
-      Chrome: Title, axis labels, tick labels, and legend text appear dark/nearly black, making them essentially unreadable against the dark background. This is a critical "dark-on-dark" failure. The intended INK color for dark theme (#F0EFE8, a light gray) is clearly not being applied; instead, text renders very dark.
-      Data: Green PDP line and orange confidence band are visible (data colors are identical to light render, as required). Individual ICE lines and rug plot visible.
-      Legibility verdict: FAIL — title, axis labels, tick labels, and legend text are unreadable. Dark text on dark background is a theme-adaptation failure. This render is unusable.
-
-    Both renders fail critical legibility checks. The implementation has the correct structural approach (theme tokens, correct color names) but the theme color mapping is reversed or broken, resulting in unreadable text in both themes. The dark render is particularly severe — a plot that ships with this dark-on-dark failure would be broken for dark-mode users.
+      Background: Warm near-black (#1A1A17), perfectly themed
+      Chrome: Title and axis labels render in light ink (#F0EFE8); secondary text in light soft ink (#B8B7B0) — no dark-on-dark failures; legend box has elevated background (#242420) with light border; all text clearly visible against dark surface
+      Data: Main PDP line still renders in identical brand green (#009E73) — data colors unchanged between themes as required; confidence band and ICE lines in same colors as light render; rug plot distinguishable
+      Legibility verdict: PASS — all elements readable, proper theme adaptation with data color consistency
   criteria_checklist:
     visual_quality:
-      score: 6
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Text unreadable in both renders due to reversed/broken theme color
-          mapping. Dark render has dark-on-dark text; light render has faint text.
+        passed: true
+        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements.
+        comment: No overlapping text elements, clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: Chrome elements (text, labels) are invisible or barely visible. Data
-          elements are visible but chrome failure makes plot unusable.
+        passed: true
+        comment: 'All elements optimally visible: main line prominent, confidence
+          band clear, ICE lines appropriately faint for density, rug marks distinguishable'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Data colors follow Okabe-Ito palette and are CVD-safe. No red-green
-          as sole signal.
+        comment: Okabe-Ito palette with good contrast, CVD-safe, no red-green dependency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct canvas size (4800×2700 px), good proportions, nothing cut
-          off.
+        comment: Plot fills ~65% of canvas with balanced margins, legend positioned
+          at top without overlap
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Labels are descriptive but unreadable due to theme color issue.
+        passed: true
+        comment: 'Descriptive labels with context: ''Temperature (standardized)''
+          and ''Partial Dependence (predicted outcome)'''
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Theme-adaptive chrome broken. Text colors appear reversed or not
-          applied. Dark render has dark text on dark background (critical failure).
-          Light render has light text on light background.
+        passed: true
+        comment: 'Perfect compliance: first series #009E73 (BRAND), secondary #D55E00
+          (Okabe-Ito pos 2), backgrounds #FAF8F1/#1A1A17, theme-adaptive text/grid/legend-box
+          colors in both renders'
     design_excellence:
-      score: 5
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 6
         max: 8
-        passed: false
-        comment: Generic styling approach, default theme structure, no custom palette
-          beyond Okabe-Ito.
+        passed: true
+        comment: Sophisticated theme-token system, intentional hierarchy, scientific
+          polish. Below publication-ready (6) due to generic grid styling, not FiveThirtyEight-level
+          (8)
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization. Spines not explicitly styled, grid is basic,
-          limited whitespace refinement.
+        passed: true
+        comment: Custom theme with element_rect/element_text/element_line. Good refinement
+          but spines not removed per style guide, grid size moderate (0.2pt)
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 5
         max: 6
-        passed: false
-        comment: Basic visualization of partial dependence; no visual hierarchy or
-          emphasis to guide interpretation.
+        passed: true
+        comment: 'Clear visual hierarchy: main prediction prominent, uncertainty via
+          confidence band and faint ICE lines, data distribution via rug. Tells story
+          of ML model behavior with minimal annotations'
     spec_compliance:
       score: 15
       max: 15
@@ -137,57 +131,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PDP visualization with confidence band, ICE lines, and rug
-          plot.
+        comment: Correct partial dependence plot with all subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: partial dependence line, confidence interval
-          band, individual conditional expectations, rug plot for data distribution.'
+        comment: 'All features present: main PDP, confidence band, ICE lines, rug
+          plot showing data distribution'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: feature values (Temperature). Y-axis: partial dependence
-          (predicted outcome). Axes show full data range.'
+        comment: Feature values on x-axis, partial dependence on y-axis, all data
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''pdp-basic · letsplot · anyplot.ai''. Legend
-          shows element types (Main PDP, Individual, Data Distribution, Confidence
-          Band).'
+        comment: 'Title format correct: ''pdp-basic · letsplot · anyplot.ai''; legend
+          labels match: Elements, Main PDP, Individual, Data Distribution'
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows PDP, ICE lines, and rug plot, but minimal exploration of other
-          PDP aspects (e.g., 2D PDP, feature interactions).
+        passed: true
+        comment: 'Shows all PDP aspects: main curve, confidence band, individual predictions
+          (ICE), data distribution'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic data (GradientBoostingRegressor on make_regression) is
-          real-world plausible and neutral.
+        comment: Real ML scenario (GradientBoostingRegressor), realistic weather features
+          (Temperature, Humidity, Pressure, WindSpeed, Altitude), neutral domain
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Grid resolution 80 points, 50 ICE lines, 100 rug samples provide
-          good representation of feature space.
+        comment: Sensible data generation (make_regression 500 samples, 5 features,
+          noise=20), standardized feature values typical of normalized input, output
+          values appropriate for regression
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -195,60 +188,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes. Direct, linear code structure.
+        comment: 'Clean linear flow: imports → theme tokens → model training → PDP
+          computation → plotting → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set (np.random.seed(42), random_state parameters). Deterministic
-          output.
+        comment: np.random.seed(42) and random_state=42 on model
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, pandas, lets_plot, sklearn.'
+        comment: 'All imports used: os (env), numpy (arrays), pandas (dataframes),
+          lets_plot (plotting), sklearn (model/data/inspection)'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Theme color mapping is broken/reversed. Code structure is appropriate,
-          but theme implementation does not work correctly.
+        passed: true
+        comment: Pythonic, clear variable names, appropriate complexity, no over-engineering
+          or fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly, but outputs
-          are unusable due to text legibility failure.
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current ggsave
+          API with w/h/unit/path parameters
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses letsplot API idiomatically (ggplot, geoms, theme), but theme
-          color application is not working correctly. Likely a debugging issue rather
-          than API misuse.
+        passed: true
+        comment: Perfect idiomatic ggplot() + geom_*() composition; proper aes() mappings;
+          scale_color_manual/scale_fill_manual for palettes; theme() for customization;
+          ggsize() for sizing; ggsave() for export
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Minimal use of letsplot-specific features beyond basic geoms and
-          theming.
-  verdict: REJECTED
+        passed: true
+        comment: Uses geom_ribbon() for confidence band, geom_segment() for rug plot,
+          layer composition to integrate multiple geoms, custom theme with element_*
+          functions. Shows library expertise but not exclusively unique to letsplot
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
