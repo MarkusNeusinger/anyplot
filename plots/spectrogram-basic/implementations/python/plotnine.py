@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-15
@@ -64,15 +64,15 @@ df = df[df["Frequency"] <= 250]
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
-    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
-    axis_title=element_text(color=INK, size=20),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.12),
+    panel_grid_minor=element_line(color=INK, size=0.15, alpha=0.06),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    axis_title=element_text(color=INK, size=20, weight="bold"),
     axis_text=element_text(color=INK_SOFT, size=16),
-    axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24),
+    axis_line=element_line(color=INK_SOFT, size=0.4),
+    plot_title=element_text(color=INK, size=24, weight="bold"),
     legend_text=element_text(color=INK_SOFT, size=14),
-    legend_title=element_text(color=INK, size=16),
+    legend_title=element_text(color=INK, size=16, weight="bold"),
     figure_size=(16, 9),
     text=element_text(size=14),
 )
@@ -81,7 +81,12 @@ plot = (
     ggplot(df, aes(x="Time", y="Frequency", fill="Power"))
     + geom_tile()
     + scale_fill_cmap(cmap_name="viridis", name="Power (dB)")
-    + labs(x="Time (s)", y="Frequency (Hz)", title="spectrogram-basic · plotnine · anyplot.ai")
+    + labs(
+        x="Time (s)",
+        y="Frequency (Hz)",
+        title="spectrogram-basic · plotnine · anyplot.ai",
+        caption="Chirp signal: linear frequency sweep from 50 Hz to 200 Hz over 2 seconds",
+    )
     + theme_minimal()
     + anyplot_theme
 )
