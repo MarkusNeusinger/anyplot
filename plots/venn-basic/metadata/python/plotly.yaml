@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: venn-basic
 created: '2025-12-29T22:50:20Z'
-updated: '2026-05-15T22:06:10Z'
+updated: '2026-05-15T22:18:03Z'
 generated_by: claude-sonnet
 workflow_run: 25943161443
 issue: 2444
@@ -12,125 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotly/plot-dark.html
-quality_score: 79
+quality_score: 82
 review:
   strengths:
-  - Clean equilateral triangle Venn layout with all 7 regions correctly positioned
-    and labeled
-  - Programming language preference data is realistic, neutral, and relatable — excellent
-    domain choice
-  - Semi-transparent circle fills correctly show overlapping regions with blended
-    colors
-  - All data values numerically consistent — inclusion-exclusion correctly applied
-  - KISS code structure with clear geometry comments
+  - Correct Okabe-Ito palette (Python=#009E73, JS=#D55E00, SQL=#0072B2) with appropriate
+    transparency for overlap regions
+  - Proportional circle sizing (area proportional to set count) adds informational
+    value
+  - All seven regions labeled with counts and descriptive text - full coverage of
+    the Venn diagram data structure
+  - Hover tooltips with detailed per-circle breakdown are a genuine Plotly advantage
+    over static libraries
+  - Correct square canvas (3600x3600) chosen for a symmetric diagram
+  - 'Theme adaptation fully working: both renders pass legibility and correct background
+    checks'
+  - Deterministic data with realistic, neutral programming-language survey context
   weaknesses:
-  - 'Code uses hardcoded non-Okabe-Ito Python-logo colors (#306998, #FFD43B, #4D9D59)
-    — first circle must be #009E73'
-  - 'No ANYPLOT_THEME environment variable handling — paper_bgcolor hardcoded to white,
-    all annotation colors hardcoded to #333333'
-  - 'Output filenames wrong: plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
-  - Title in code says pyplots.ai instead of anyplot.ai
-  - Circles are not proportional to set sizes — all r=1.0 despite Python=100, JS=80,
-    SQL=60; spec requires proportional areas
-  - Hover disabled with hoverinfo=skip — missed plotly interactivity advantage
-  - Excess whitespace in lower canvas third
+  - Design excellence is functional but not polished - no visual hierarchy or storytelling
+    emphasis beyond showing raw counts
+  - Minor empty space at the bottom of the canvas reduces layout balance
+  - Region description font (18px) is on the small side for the canvas - could be
+    larger for better readability at full resolution
+  - No standout Plotly-distinctive technique beyond hover tooltips - interactive features
+    could be richer (e.g., click to highlight, dynamic filtering)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "venn-basic · plotly · anyplot.ai" in dark text, clearly readable. Set labels "Python (100)", "JavaScript (80)", "SQL (60)" in bold dark text, clearly readable. Region annotations with values and descriptions in dark text, readable throughout.
-      Data: Top circle (Python) fills in teal-green (consistent with #009E73 at 50% opacity on #FAF8F1 → rgb~125,203,178). Left circle (JavaScript) in orange-salmon (consistent with #D55E00 at 50% opacity → rgb~232,171,121). Right circle (SQL) in medium blue (consistent with #0072B2 at 50% opacity → rgb~125,181,210). All overlap regions show blended additive colors. First series appears to be #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "venn-basic · plotly · anyplot.ai" is dark and clearly readable. Set labels ("Python (100)", "JavaScript (80)", "SQL (60)") are bold dark text outside each circle, fully legible. Region count annotations (60, 35, 25, 20, 10, 15, 10) and descriptive labels ("Only Python", "Only JavaScript", "Only SQL", "All") are readable against the circle fill colors.
+      Data: Three overlapping circles - Python (green #009E73, top), JavaScript (orange #D55E00, bottom-left), SQL (blue #0072B2, bottom-right). Each filled at 0.45 alpha. Overlaps show color blending. All seven regions are labeled.
+      Legibility verdict: PASS - all text reads clearly against the off-white background and circle fills.
 
     Dark render (plot-dark.png):
-      Background: Near-black warm dark (~#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title and all set labels appear in light off-white text, clearly readable against dark background. Region annotations also in light text. No dark-on-dark failures observed — text colors have flipped appropriately for dark theme.
-      Data: Circle fill colors are identical to light render — teal-green (Python), orange (JavaScript), blue (SQL) — Okabe-Ito data colors unchanged between themes. Only chrome has flipped.
-      Legibility verdict: PASS
-
-    IMPORTANT DISCREPANCY: The code file uses Python-logo colors (rgba(48,105,152,0.5)=#306998, rgba(255,212,59,0.5)=#FFD43B, rgba(77,157,89,0.5)=#4D9D59), hardcodes paper_bgcolor="white", has no ANYPLOT_THEME handling, and writes title "pyplots.ai". The rendered images show Okabe-Ito colors, theme-appropriate backgrounds, and correct "anyplot.ai" title. Images appear generated from a different version of the code. VQ-07 and CQ-05 scored against the actual code file.
+      Background: Near-black (#1A1A17) - correct, not pure black
+      Chrome: Title and all set labels are light-colored (#F0EFE8) and clearly visible against the dark background. Region count annotations use light ink and are fully readable. No dark-on-dark failures detected anywhere.
+      Data: Data colors are identical to the light render - Python circle is the same teal-green (#009E73), JavaScript the same orange (#D55E00), SQL the same blue (#0072B2). Only the background and text chrome flipped.
+      Legibility verdict: PASS - both renders fully readable with no theme-adaptation failures.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title=36px, set labels=28px, region values=24px,
-          secondary labels=18px (at minimum). All text readable in both renders.'
+        comment: Sizes explicitly set (title 36px, set labels 28px, region annotations
+          24px, descriptions 18px). Readable in both themes. Region description text
+          (18px) is on the small side for the canvas.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Slight crowding in JavaScript-SQL pairwise region (value 15) but
-          fully readable. No significant overlap issues.
+        comment: No significant overlap; intersection region annotations (10, 20,
+          10, 15) are tight but distinct and readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles well-proportioned for 1:1 canvas. Semi-transparent fills
-          make all 7 overlap regions clearly visible.
+        comment: All three circles clearly visible with 0.45 alpha transparency showing
+          overlapping regions.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three distinct hues (green, orange, blue) clearly distinguishable.
-          CVD-safe per Okabe-Ito visible in images.
+        comment: Okabe-Ito palette is CVD-safe; three distinct colors (green/orange/blue)
+          distinguishable without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas. Notable excess whitespace in lower third
-          below the circles — top-heavy composition.
+        comment: Diagram fills 60-70% of canvas. Balanced overall, but some empty
+          space at the bottom of the square canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for Venn. Set labels include counts. Title correct
-          in rendered image.
+        comment: Title 'venn-basic · plotly · anyplot.ai' is correct. No axis labels
+          needed (axes hidden for Venn diagram).
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses non-Okabe-Ito Python-logo colors (#306998, #FFD43B, #4D9D59).
-          First circle must be #009E73. Code hardcodes paper_bgcolor=white with no
-          ANYPLOT_THEME handling. Code title says pyplots.ai not anyplot.ai. Images
-          appear from different code version.'
+        passed: true
+        comment: 'Python=#009E73 (position 1), JS=#D55E00 (position 2), SQL=#0072B2
+          (position 3). Background #FAF8F1/#1A1A17. Text uses INK tokens. Full compliance
+          in both renders.'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Clean professional look with harmonious Okabe-Ito colors (from images)
-          and clear label placement. Above generic default but not publication-ready.
+        comment: Well-configured with correct Okabe-Ito palette + transparency and
+          proportional circles. Looks like a polished library default but no exceptional
+          design thought.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Axes hidden, no grid, clean background. Good refinement for Venn
-          chart type. Lower-canvas whitespace could be tightened.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: All regions labeled, relatable scenario. No visual emphasis distinguishes
-          any insight (e.g., Python dominance, small triple overlap).
+        comment: Axes hidden, no grid, clean background, sensible margins. Some empty
+          canvas at bottom. Beyond minimal but not fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data is displayed correctly but no visual hierarchy, emphasis, or
+          storytelling. All regions treated equally with no focal point.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,57 +138,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3-set Venn diagram with overlapping circles in equilateral
-          triangle layout.
+        comment: Correct 3-circle Venn diagram with overlapping regions.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All 7 regions labeled with counts, transparent overlapping colors,
-          readable labels. Missing: circles not proportional to set sizes (all r=1.0
-          despite Python=100, JS=80, SQL=60). Spec says area proportional when possible.'
+        comment: 'All features present: 3 circles, transparency, area-proportional
+          sizing, counts in each region, distinct colors, set labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All seven regions correctly calculated (inclusion-exclusion) and
-          annotated.
+        comment: All seven regions correctly calculated and labeled with counts.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Rendered image shows correct title venn-basic · plotly · anyplot.ai.
-          No legend needed (set labels serve as legend).
+        comment: Title 'venn-basic · plotly · anyplot.ai' correct. No legend (showlegend=False);
+          set labels annotated directly on diagram instead.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: exclusive, pairwise, triple intersections all
-          labeled. Proportional circles would complete feature set.'
+        comment: 'Shows all aspects: exclusive regions, all pairwise intersections,
+          triple intersection, proportional sizing.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Programming language preference survey (Python/JavaScript/SQL) —
-          neutral, realistic, relatable technology domain.
+        comment: Programming language preference survey (Python, JavaScript, SQL)
+          is a real, neutral, plausible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values numerically consistent (inclusion-exclusion correctly applied).
-          Proportions plausible for developer survey.
+        comment: Set sizes (100, 80, 60) and overlaps (30, 20, 25, triple=10) are
+          logically consistent and plausible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -196,59 +193,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → calculations → circles → labels
-          → layout → save.'
+        comment: 'Linear structure: imports → data → calculations → traces → annotations
+          → layout → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic, no randomness needed.
+        comment: Fully deterministic data. No randomness so no seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used.
+        comment: os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for manual Venn construction. Geometry calculations
-          clear.
+        comment: Clean, Pythonic. Loop for circle traces is clean. Manual position
+          calculations are necessary for Venn diagrams.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html.
-          No ANYPLOT_THEME reading. Title in code says pyplots.ai (wrong URL).
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API. Correct
+          filenames.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Scatter with fill='toself' for circles, fig.add_annotation() for
+          labels, fig.update_layout() for theme. Correct Plotly patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct use of go.Scatter with fill=toself for shapes and add_annotation()
-          for labels. Proper plotly layout patterns.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export via write_html() is plotly-distinctive, but hoverinfo=skip
-          on all traces disables plotly's main interactive advantage. Could show region
-          details on hover.
-  verdict: REJECTED
+        comment: Hover tooltips (hoverinfo/hovertext) with per-circle breakdowns are
+          a genuine Plotly advantage. HTML export included. Could go further with
+          e.g. click-to-highlight or annotation-on-hover.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
+  - patches
   patterns:
   - iteration-over-groups
   dataprep: []
