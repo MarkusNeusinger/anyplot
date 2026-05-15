@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-05-15
@@ -28,7 +28,7 @@ chart = (
     .encode(
         color=alt.Color(
             "rate:Q",
-            scale=alt.Scale(scheme="blues", domain=[0, 0.25]),
+            scale=alt.Scale(scheme="viridis", domain=[0, 0.25]),
             legend=alt.Legend(
                 title="Unemployment Rate",
                 titleFontSize=20,
@@ -50,7 +50,7 @@ chart = (
         width=1600,
         height=900,
         title=alt.Title(
-            text="US County Unemployment · choropleth-basic · altair · anyplot.ai", fontSize=28, anchor="middle"
+            text="US County Unemployment · choropleth-basic · altair · anyplot.ai", fontSize=44, anchor="middle"
         ),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
@@ -62,7 +62,7 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_title(color=INK)
+    .configure_title(color=INK if THEME == "light" else "#FFFFFF", fontSize=44, fontWeight="bold", align="center")
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
