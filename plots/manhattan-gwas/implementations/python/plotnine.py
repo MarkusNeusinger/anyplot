@@ -1,14 +1,17 @@
-""" pyplots.ai
+"""anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-12-31
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_hline,
     geom_point,
@@ -22,10 +25,17 @@ from plotnine import (
 )
 
 
-# Data - Simulated GWAS results with significant peaks
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Chromosome sizes (approximate in Mb, scaled for visualization)
+# Data - Simulated GWAS results with independent peaks
+np.random.seed(123)  # Different seed to produce different peaks
+
+# Chromosome sizes (approximate in Mb)
 chr_sizes = {
     "1": 249,
     "2": 243,
@@ -71,15 +81,15 @@ for chrom in chromosomes:
     # Generate p-values (mostly non-significant, with some peaks)
     p_values = np.random.uniform(0.001, 1, n_snps)
 
-    # Add significant peaks on some chromosomes
-    if chrom in ["2", "6", "11", "17"]:
+    # Add significant peaks on specific chromosomes (different from other libraries)
+    if chrom in ["1", "7", "9", "18"]:
         # Add 20-40 highly significant SNPs
         n_sig = np.random.randint(20, 40)
         peak_idx = np.random.choice(n_snps, n_sig, replace=False)
         p_values[peak_idx] = 10 ** np.random.uniform(-10, -7.3, n_sig)
 
     # Add some suggestive signals on other chromosomes
-    if chrom in ["4", "9", "15", "20"]:
+    if chrom in ["5", "12", "14", "19"]:
         n_sug = np.random.randint(10, 20)
         sug_idx = np.random.choice(n_snps, n_sug, replace=False)
         p_values[sug_idx] = 10 ** np.random.uniform(-7, -5, n_sug)
@@ -127,27 +137,32 @@ chr_labels = chromosomes
 df["cumulative_pos_mb"] = df["cumulative_pos"] / 1e6
 
 # Plot
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=element_rect(color=INK_SOFT, fill=None),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_text_x=element_text(size=14),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24, hjust=0.5),
+    legend_position="none",
+)
+
 plot = (
     ggplot(df, aes(x="cumulative_pos_mb", y="neg_log_p", color="color_group"))
-    + geom_point(size=1.2, alpha=0.7, show_legend=False)
+    + geom_point(size=1.5, alpha=0.7)
     + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color="#E31A1C", size=1)
     + geom_hline(yintercept=suggestive_threshold, linetype="dotted", color="#FF7F00", size=0.8)
-    + scale_color_manual(values={"odd": "#306998", "even": "#636363"})
+    + scale_color_manual(values={"odd": "#0072B2", "even": "#D55E00"})
     + scale_x_continuous(breaks=chr_ticks, labels=chr_labels)
     + scale_y_continuous(limits=(0, max(df["neg_log_p"]) * 1.05))
-    + labs(x="Chromosome", y="-log₁₀(p-value)", title="manhattan-gwas · plotnine · pyplots.ai")
+    + labs(x="Chromosome", y="-log₁₀(p-value)", title="manhattan-gwas · plotnine · anyplot.ai")
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center"),
-        axis_title_x=element_text(size=20),
-        axis_title_y=element_text(size=20),
-        axis_text_x=element_text(size=12),
-        axis_text_y=element_text(size=16),
-        panel_grid_major_x=element_blank(),
-        panel_grid_minor=element_blank(),
-    )
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
