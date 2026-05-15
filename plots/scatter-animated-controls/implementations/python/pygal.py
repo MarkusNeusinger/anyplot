@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-animated-controls: Animated Scatter Plot with Play Controls
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-15
+Quality: 90/100 | Updated: 2026-05-15
 """
 
 import io
