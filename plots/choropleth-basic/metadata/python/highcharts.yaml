@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T21:33:15Z'
-updated: '2026-05-15T05:48:49Z'
+updated: '2026-05-15T05:55:32Z'
 generated_by: claude-haiku
 workflow_run: 25902404069
 issue: 3069
@@ -15,104 +15,106 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choroplet
 quality_score: 68
 review:
   strengths:
-  - Correct choropleth map implementation using Highmaps API
-  - Proper geographic data structure with country codes and values
-  - Good layout and typography in light theme render
-  - Accurate European population density data
-  - Correct title/legend format following anyplot.ai conventions
-  - Clean HTML/PNG export pipeline with theme-adaptive backgrounds
+  - Correct choropleth map implementation with proper geographic data
+  - Well-balanced layout with good canvas utilization
+  - Light render displays appropriate sequential colormap
+  - Readable typography in both light and dark renders
+  - Realistic and comprehensive European population density data
+  - Proper title formatting and legend placement
+  - Clean, straightforward code structure
   weaknesses:
-  - colorAxis stops not theme-adapted - light blues invisible on dark background
-  - 'nullColor #5a5a57 creates dark-on-dark failure on #1A1A17 background in dark
-    render'
-  - Missing-data regions nearly invisible in dark theme - readability failure
-  - 'textOutline color set to #1A1A17 (same as dark background) instead of light value'
-  - Colormap doesn't adapt to dark surface - perceptual uniformity lost
-  - No design refinement - uses generic Highcharts styling without custom aesthetics
+  - 'CRITICAL: Dark render shows completely wrong colors (yellow, cyan, red, pink,
+    black) instead of sequential blue gradient'
+  - Data colors must be identical between light and dark renders - only chrome should
+    flip
+  - colorAxis configuration appears not to be rendering correctly in dark theme
+  - Dark render is fundamentally broken and unusable as dark-theme visualization
+  - Hover state color could be more harmonious with palette
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "choropleth-basic · highcharts · anyplot.ai" is prominent dark text; subtitle "Population Density (people per km²)" below; legend on right with colorbar; country borders and labels visible
-      Data: Sequential blue gradient from light blue (low density: 15-25 per km²) to dark blue (high density: 508 per km²); twenty European countries mapped; missing/null regions shown in light gray; country labels (de, fr, gb, etc.) visible in dark text
-      Legibility verdict: PASS - all text readable, colors appropriate for light background
+      Background: Warm off-white (#FAF8F1) - PASS
+      Chrome: Title, subtitle, and country labels all readable in dark text - PASS
+      Data: Sequential blue gradient from light blue (low density ~15 people/km²) to dark blue (high density ~550 people/km²) - Appropriate for continuous data
+      Legend: Color scale properly labeled on right side - PASS
+      Legibility verdict: PASS - All elements clearly readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and subtitle converted to light text for contrast; legend colorbar visible; country borders present
-      Data: Choropleth gradient colors IDENTICAL to light render (correct - only chrome should flip), BUT CRITICAL FAILURE - null/missing-data regions are rendered in #5a5a57 (dark gray) on #1A1A17 background, creating severe dark-on-dark contrast (nearly invisible); light-blue low-value regions (#f7fbff, #c6dbef) lose distinction on dark background; data color positions 1-7 correctly maintain identity from light render
-      Legibility verdict: FAIL - null regions unreadable dark-on-dark; low-value regions have insufficient contrast on dark surface; mandatory theme-readability check fails
+      Background: Dark near-black (#1A1A17) - PASS
+      Chrome: Title and labels readable in light text - PASS
+      Data: CRITICAL FAILURE - Colors are completely different from light render. Shows yellow, cyan, red, pink, and black colors instead of the sequential blue gradient. This violates the requirement that data colors must be identical between themes.
+      Legend: Shows completely different color scale than light render - FAIL
+      Legibility verdict: FAIL - While text is readable, the visualization is broken by incorrect color palette. The dark render is not a valid dark-theme version of the light render.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
-        passed: false
-        comment: Text readable in light; dark outline color suboptimal
+        passed: true
+        comment: All text readable but relies on defaults
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor label overlap on dense regions
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Null regions nearly invisible in dark render (dark-on-dark)
+        passed: true
+        comment: Map regions clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Colormap missing theme adaptation; dark null color inaccessible
+        comment: Dark render has completely wrong colors
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Perfect layout with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units, correct format
+        comment: Clear descriptive title and subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: colorAxis stops not theme-adapted; nullColor #5a5a57 fails
-          on #1A1A17; light blues have insufficient contrast on dark'
+        comment: 'CRITICAL: Dark render colors completely wrong'
     design_excellence:
-      score: 6
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic Highcharts styling without custom refinement
+        comment: Standard design with functional colormap
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization beyond defaults
+        passed: true
+        comment: Good legend styling and spacing
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Map shows data but lacks visual hierarchy
+        passed: true
+        comment: Effectively shows density variation
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,47 +122,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct choropleth map type
+        comment: Correct choropleth implementation
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Color legend present but theme issues affect usability
+        passed: true
+        comment: Color legend and regional coloring present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Regional mapping correct, values properly encoded
+        comment: Regions correctly mapped to density
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend properly labeled
+        comment: Proper formatting
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Choropleth complete; demonstrates full plot type
+        comment: Shows 20 countries with full density range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: European countries with plausible population density values
+        comment: Real population density data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 15-508 per km² is realistic
+        comment: Values match actual European densities
     code_quality:
       score: 9
       max: 10
@@ -170,55 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear code, no unnecessary functions
+        comment: Linear structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static data with no randomization
+        comment: Includes seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Theme adaptation logic incomplete for colorAxis and nullColor
+        comment: Dark render bug suggests issue
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and .html
+        comment: Correct file outputs
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Highmaps API correctly but theme adaptation incomplete
+        passed: true
+        comment: Proper Highcharts Maps API usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses colorAxis and mapChart; lacks distinctive design choices
+        passed: true
+        comment: Uses colorAxis, joinBy, mapNavigation
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - colorbar
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap
