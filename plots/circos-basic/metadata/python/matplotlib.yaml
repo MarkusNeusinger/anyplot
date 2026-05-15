@@ -1,168 +1,179 @@
 library: matplotlib
+language: python
 specification_id: circos-basic
 created: '2025-12-31T11:08:24Z'
-updated: '2025-12-31T11:19:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617639912
+updated: '2026-05-15T09:22:08Z'
+generated_by: claude-haiku
+workflow_run: 25910100330
 issue: 3005
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circos-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - bezier-curves
-  - patches
-  - manual-ticks
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent circular layout with proper segment proportions and visual gaps
-  - Bezier curve ribbons correctly show connection magnitude through width
-  - Inner data track adds additional information layer as specified
-  - Clean colorblind-safe palette with 8 distinct, identifiable colors
-  - Professional-quality output suitable for publication
-  - Well-structured, readable code following KISS principles
+  - Perfect spec compliance with sophisticated circos geometry (bezier-curve ribbons,
+    proportional widths, nested concentric tracks)
+  - 'Excellent theme adaptation: both renders pass legibility checks with correct
+    chrome color flipping'
+  - 'Professional palette execution: Okabe-Ito colors in canonical order, brand green
+    (#009E73) properly featured'
+  - Clean, reproducible code with proper random seed and current matplotlib API
+  - Clear visual hierarchy guides viewer through complex relational data
   weaknesses:
-  - Figure uses 12x12 square format instead of recommended 3600x3600 pixels (12*300=3600,
-    so dimensions are correct but explicit figsize comment would help)
-  - Legend positioned outside main canvas area requiring bbox_inches=tight - could
-    be integrated more elegantly
-  - Could use matplotlib built-in Wedge/Arc patches for cleaner segment drawing
-  image_description: 'The plot displays a circular Circos visualization showing software
-    module dependencies. Eight segments are arranged around a circular ring: Core
-    (blue), API (yellow), Database (green), Auth (crimson), Cache (purple), Queue
-    (teal), Logger (orange), and Config (gray). Each segment is proportionally sized
-    based on module importance. The outer ring shows the segments with white separating
-    gaps. An inner concentric track displays bar heights representing importance values
-    for each segment. Curved ribbon connections in the center show dependencies between
-    modules, with ribbon width proportional to connection strength. The title "circos-basic
-    · matplotlib · pyplots.ai" appears at the top. A legend box labeled "Modules"
-    is positioned in the lower right, listing all eight modules with their corresponding
-    colors.'
+  - 'Design Excellence below potential: legend styling could be more refined; inner
+    track could receive more visual emphasis to highlight secondary data dimension'
+  - Typography hierarchy could include more weight variation between title, labels,
+    and legend
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 as required
+      Chrome: Title "circos-basic · matplotlib · anyplot.ai" in dark ink at top, clearly readable. Chromosome labels (chr1–chr8) positioned around circle perimeter in dark text, all legible. Legend on right with "Chromosomes" header, all text visible.
+      Data: 8 colored segments using Okabe-Ito palette starting with brand green #009E73 for chr1. Proportional ribbon connections with semi-transparent bezier curves showing connection magnitudes. Inner concentric track displays expression values in muted segment colors.
+      Legibility verdict: PASS - All text clearly readable, no collisions, excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 as required
+      Chrome: Title rendered in light text (#F0EFE8), clearly readable. Chromosome labels in secondary light text (#B8B7B0), all legible. Legend frame uses elevated background #242420 with light borders, clear and readable. No dark-on-dark failures detected.
+      Data: Okabe-Ito colors identical to light render - only chrome has flipped to dark-theme colors. Brand green #009E73 prominent in chr1. All segments and ribbons clearly distinguishable from dark background.
+      Legibility verdict: PASS - All text legible, excellent theme adaptation, data colors unchanged between renders
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 24pt, segment labels at 18pt bold, legend at 14pt - all
-          clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, segments well-spaced with gaps
+        comment: Font sizes properly set (24pt title, 16pt labels, 14pt legend); readable
+          in both themes with clear contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text spaced without collisions; chromosome labels, title, and
+          legend well-separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Segments and ribbons clearly visible, inner track bars well-sized
+        comment: Transparency (alpha=0.4 ribbons, alpha=0.5 track) handles density;
+          overlapping elements remain distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Eight distinct colors that are colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Circular plot well-centered, good use of canvas with legend placed
-          appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for Circos plots (no traditional axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-positioned, clean styling
+        comment: Okabe-Ito palette ensures colorblind safety; no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12x12 format ideal for circular plots; proper padding prevents
+          element cutoff
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title format; chromosome labels serve as category identifiers
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; colors 1-7 Okabe-Ito order ✓; backgrounds
+          #FAF8F1/#1A1A17 ✓; both renders theme-correct ✓'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom bezier curves for ribbons, intentional gap sizing, proportional
+          ribbon widths show thoughtful design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean composition with generous spacing; legend placement outside
+          plot provides good separation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy: outer segments dominant, inner track secondary,
+          ribbons guide through connections; effective genomic narrative'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Circos plot with circular segments and ribbon connections
+        comment: Perfect circos plot with outer segments, inner tracks, and ribbon
+          connections
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source/target connections properly mapped, segment sizes reflect
-          importance
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has outer ring, inner data track, and ribbon connections as specified
-      - id: SC-04
-        name: Data Range
+        comment: Segments with gaps ✓; proportional ribbon widths ✓; distinct colors
+          per chromosome ✓; concentric data track ✓
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All segments and connections visible and proportional
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 8 chromosomes and 14 connections visible; ribbon widths correctly
+          scaled to connection values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly lists all 8 modules with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "circos-basic · matplotlib · pyplots.ai"
+        comment: Title format correct; legend labels match data categories
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied segment sizes, multiple connection strengths, inner
-          track variations
+        comment: 'All circos elements present: outer ring segments, inner expression
+          track, ribbon connections'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software module dependencies is a real, neutral, comprehensible scenario
+        comment: Genomic chromosome data is realistic (chromosome-like sizes) and
+          neutral (no biased representation)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 8 segments with 14 connections is appropriate; connection values
-          realistic
+        comment: Chromosome sizes normalized to degrees; connection values sensibly
+          scaled for ribbon width_factor
     code_quality:
       score: 10
       max: 10
@@ -172,40 +183,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: Clean procedural code; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: matplotlib.patches, Path, and numpy all used; no extraneous imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Appropriate complexity for bezier path construction; no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses current matplotlib API correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper axes-based API; theme-aware environment variable handling;
+          Path objects with CURVE3 bezier curves are idiomatic matplotlib
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of PathPatch for Bezier curves, custom polygon drawing with
-          fill(), but could leverage matplotlib's Arc or Wedge patches more
+        comment: Sophisticated use of matplotlib's Path system and PathPatch for custom
+          ribbon geometry
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
