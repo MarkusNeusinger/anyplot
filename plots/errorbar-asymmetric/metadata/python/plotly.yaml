@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:48:01Z'
-updated: '2026-05-15T22:06:34Z'
+updated: '2026-05-15T22:19:56Z'
 generated_by: claude-sonnet
 workflow_run: 25943142824
 issue: 2781
@@ -12,129 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/plotly/plot-dark.html
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - Correct use of plotly's asymmetric error bar API (symmetric=False, array/arrayminus)
-    — idiomatic and concise
-  - All font sizes explicitly set well above minimum thresholds; markers and error
-    bars clearly visible at full resolution
-  - Annotation explaining the 10th-90th percentile interpretation adds meaningful
-    context to the error bars
-  - Realistic quarterly product sales scenario with varied asymmetry ratios demonstrating
-    the full asymmetric concept
-  - HTML export included alongside PNG for interactivity
+  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, GRID,
+    PAGE_BG, ELEVATED_BG) applied correctly; both renders fully readable.'
+  - All font sizes explicitly set at correct pixel sizes for 4800x2700 resolution
+    (title=32, labels=24, ticks=20, legend=18, annotation=16).
+  - Error bars correctly configured as asymmetric with symmetric=False, array, and
+    arrayminus; caps visible via width=12.
+  - Rich Plotly-native hover tooltip using customdata to display lower/upper percentile
+    bounds.
+  - Clean single-file linear code with seed and only necessary imports.
   weaknesses:
-  - No ANYPLOT_THEME environment variable logic — os.getenv('ANYPLOT_THEME', 'light')
-    missing entirely; implementation cannot produce theme-adaptive renders
-  - 'Code uses #306998 (Python Blue) instead of #009E73 (Okabe-Ito first series);
-    plot_bgcolor=''white'' (pure white, forbidden by style guide)'
-  - Output filenames are plot.png / plot.html — must be plot-{THEME}.png / plot-{THEME}.html
-    (two files each, one per theme)
-  - Title in code says 'pyplots.ai' — must be 'anyplot.ai'
-  - Legend bgcolor='rgba(255,255,255,0.8)' and annotation color '#666666' are hardcoded
-    and produce wrong-chrome on dark render (white boxes on dark background)
-  - Full four-sided frame visible — top and right spines should be removed for cleaner
-    L-shaped layout
+  - 'DE-03: No visual hierarchy or storytelling emphasis — the viewer cannot immediately
+    identify which product is most uncertain or most notable.'
+  - 'DQ-01: Asymmetry variation is present but modest; the reversed case (Product
+    C) is subtle and easily overlooked.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white, not dark. PASS.
-      Chrome: Title "errorbar-asymmetric · plotly · anyplot.ai" in dark ink, centered, clearly readable. X-axis label "Product Category" and Y-axis label "Quarterly Sales (thousands USD)" in dark text, fully legible. Tick labels (Product A–F, 0–140) in dark secondary ink, readable. Legend box at bottom center with white background border, dark text "Median Sales (10th–90th percentile)" readable. Annotation "Error bars show 10th–90th percentile range" in medium gray (#666666) at lower right, readable.
-      Data: Six teal-green (#009E73) filled circular markers with white edges and asymmetric error bars in same green. Caps clearly visible. Error bars are visibly asymmetric — upper extents larger than lower for most products (notably Product E: upper +35, lower −18; Product C: upper +10, lower −15).
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "errorbar-asymmetric · plotly · anyplot.ai" in dark ink, centered and clearly readable. X-axis label "Product Category" and Y-axis label "Quarterly Sales (thousands USD)" in dark INK. Tick labels in muted INK_SOFT. Legend frame uses elevated background #FFFDF6. All text clearly readable against the light background.
+      Data: Six filled circular markers in brand green #009E73 with subtle background-colored edge rings. Asymmetric error bars in the same #009E73 with visible horizontal caps. Error bar magnitudes vary across products (Product E has the largest spread). Annotation in lower-right in muted INK_MUTED.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Very dark, consistent with #1A1A17 near-black. PASS.
-      Chrome: Title and axis labels render in white/light text — clearly readable against dark surface. Tick labels (x and y) appear in light color, readable. HOWEVER: legend box at bottom center retains a white/light background (hardcoded bgcolor="rgba(255,255,255,0.8)") — jarring white box on dark canvas, wrong-theme chrome. Annotation box at lower right also appears with a light/white background (plotly_white template default, no dark override) — same issue. Annotation text color #666666 (medium gray) is not theme-adaptive but appears marginally readable in the dark context.
-      Data: Same #009E73 teal-green markers and error bars — identical to light render. PASS for data color consistency.
-      Legibility verdict: PARTIAL FAIL — primary title/axis/tick text is readable (light on dark); white legend and annotation boxes are wrong-theme chrome and should use #242420 elevated background with INK_SOFT text.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light colors (INK flipped to #F0EFE8, INK_SOFT to #B8B7B0). All text clearly readable against the dark background. No dark-on-dark text detected. Legend frame uses elevated dark background #242420 with light-colored text.
+      Data: Data markers and error bars remain exactly #009E73 — identical to the light render. Only chrome elements (background, text, grid, legend box) have flipped. No color drift in data series.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 32px, axes 24px, ticks 20px,
-          legend 18px); readable in both renders; -1 for hardcoded annotation color
-          #666666 not theme-adaptive'
+        comment: 'All font sizes explicitly set: title=32, axis labels=24, ticks=20,
+          legend=18, annotation=16. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions; six products well-spaced on categorical
-          x-axis
+        comment: No overlapping elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size 18 with white edge clearly visible; error bars thickness=3
-          cap width=12 prominent at full resolution
+        comment: Markers size=18 and error bar caps width=12 well-sized and clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single CVD-safe Okabe-Ito series; adequate contrast on both light
-          and dark surfaces
+        comment: Brand green on warm off-white/near-black; CVD-safe single series.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margin allocation (l=100, r=80, t=120, b=100); -1 for legend
-          at canvas bottom creating slight disconnection from data area
+        comment: Six categories fill width evenly; generous balanced margins (l=100,
+          r=80, t=120, b=100).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Quarterly Sales (thousands USD)' with units; X-axis 'Product
-          Category' descriptive
+        comment: Quarterly Sales (thousands USD) and Product Category — descriptive
+          with units.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Images show #009E73 data color; dark render has white legend box
-          (rgba(255,255,255,0.8) hardcoded) and white annotation box — wrong-theme
-          chrome. Code also contains #306998 (Python Blue) and plot_bgcolor=''white''
-          (pure white) — explicit violations that would manifest on re-run'
+        passed: true
+        comment: 'First (only) series is #009E73; backgrounds are #FAF8F1/#1A1A17;
+          all chrome tokens theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured plotly_white default with clean markers and white
-          edges; all-four-border frame visible; no spine removal; no intentional visual
-          hierarchy or typographic polish beyond sizing — scores as default
+        passed: true
+        comment: template=none eliminates Plotly defaults; explicit sizing; marker
+          edge matches background. Above configured default but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Explicit grid opacity (10%), generous margins, annotation styling
-          show some refinement; penalized for full visible frame (no spine removal)
-          and inelegant white legend box
+        passed: true
+        comment: X-grid disabled, subtle y-grid only, generous margins, no mirror
+          axes.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Annotation contextualises error bars with percentile range; data
-          shows clear variation in asymmetry; no focal point or emphasis on most extreme
-          asymmetry (Product E)
+        comment: Data displayed with explanatory annotation but no visual hierarchy
+          or emphasis to guide viewer to insight.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,58 +127,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar scatter with symmetric=False, separate
-          array/arrayminus
+        comment: Correct asymmetric error bar scatter plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps (width=12), asymmetric magnitudes, annotation explaining
-          percentile bounds — all present
+        comment: Visible caps (width=12), asymmetric arrays (array/arrayminus), legend
+          names percentile range, annotation confirms it.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categorical x-axis, quantitative y-axis, correct upper/lower error
-          mapping
+        comment: Categories on x, sales on y; all 6 products visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title in code is 'errorbar-asymmetric · plotly · pyplots.ai' (wrong
-          domain — must be anyplot.ai); images show correct domain suggesting stale
-          renders; legend label descriptive and correct
+        passed: true
+        comment: Title exactly errorbar-asymmetric · plotly · anyplot.ai; legend Median
+          Sales (10th-90th percentile).
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Six products with genuinely different asymmetry ratios (Product
-          C: lower > upper; Product E: upper >> lower) showcasing full asymmetric
-          concept'
+        comment: Shows variation in asymmetry magnitude and direction (Product C reversed).
+          Could push further extremes.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Quarterly product sales with percentile-based CI is realistic business
-          scenario; -1 for generic Product A–F naming
+        comment: Quarterly sales data with percentile ranges — real, neutral business
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales range 45–95k USD with error bars 7–35 units; proportionate
-          and physically plausible
+        comment: Values in tens of thousands USD; error magnitudes 7-35 plausible
+          for distribution spread.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,61 +182,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save; no functions or classes
+        comment: 'Linear: imports -> tokens -> data -> figure -> layout -> save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported and used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Readable structure; -1 for missing ANYPLOT_THEME handling, hardcoded
-          #306998, pure white plot_bgcolor, hardcoded legend/annotation chrome, wrong
-          title domain'
+        passed: true
+        comment: Clean, Pythonic, no over-engineering.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png / plot.html — must be plot-{THEME}.png / plot-{THEME}.html
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct go.Scatter with error_y=dict(type='data', symmetric=False,
-          array, arrayminus) — canonical plotly pattern; fig.add_annotation with paper
-          coordinates; fig.update_layout used appropriately
+        comment: go.Scatter with error_y(symmetric=False, array, arrayminus) is the
+          correct Plotly pattern. hovertemplate + customdata used idiomatically.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Asymmetric error bar API (symmetric=False, arrayminus) is distinctively
-          plotly; HTML interactivity export demonstrates library strength; no hover
-          template customisation or color_discrete_map
-  verdict: REJECTED
+        passed: true
+        comment: Rich hover tooltip via hovertemplate/customdata showing percentile
+          bounds; HTML output for interactive use. Plotly-specific and adds genuine
+          value.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - edge-highlighting
+  - grid-styling
