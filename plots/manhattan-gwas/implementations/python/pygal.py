@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-15
 """
 
 import os
