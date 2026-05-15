@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T05:36:53Z'
-updated: '2026-05-15T21:58:54Z'
+updated: '2026-05-15T22:12:25Z'
 generated_by: claude-haiku
 workflow_run: 25906243314
 issue: 2927
@@ -12,49 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Correct spectrogram implementation using scipy.signal.spectrogram with real FFT
-    computation and dB scale
-  - Viridis colormap (via explicit stops) is perceptually uniform and colorblind-safe
-    — matches spec requirement
-  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, ELEVATED_BG, GRID tokens
-    all correctly wired to ANYPLOT_THEME for both light and dark renders'
-  - Realistic chirp signal data (10-200 Hz sweep, 1000 Hz sample rate, 2 s duration
-    with noise) makes the spectrogram concept immediately comprehensible
-  - Title format is exact ('spectrogram-basic · highcharts · anyplot.ai'), subtitle
-    adds useful context
-  - 'Correct output: saves plot-THEME.png and plot-THEME.html with proper naming'
+  - 'Perfect spec compliance: correct spectrogram type with time-frequency heatmap,
+    dB power scale, viridis colormap, and labeled colorbar'
+  - 'Excellent theme adaptation: both renders use correct background tokens (#FAF8F1/#1A1A17)
+    with fully theme-adaptive chrome (INK, INK_SOFT tokens throughout); no legibility
+    failures in either theme'
+  - Informative subtitle contextualizes the signal; the natural chirp sweep focal
+    point (bright yellow diagonal band) provides immediate visual storytelling without
+    annotations
+  - Realistic signal processing pipeline (scipy chirp + STFT spectrogram) with appropriate
+    dB scaling and noise for a scientifically credible example
   weaknesses:
-  - 'Y-axis category axis is not constrained: Highcharts auto-extends the category
-    range below index 0, generating spurious negative labels (-3, -9, -15, …, -99
-    dB shown as Hz labels) in the lower portion of the chart. Fix: add ''min'': 0,
-    ''max'': len(frequencies_ds)-1 to the y_axis options to clamp the category axis
-    to valid range. This causes ~60% of the canvas to be wasted empty space.'
-  - 'HTTP server + CDN approach is over-engineered and fragile: the library guide
-    recommends downloading Highcharts JS and embedding it inline to avoid CDN dependency.
-    The current approach requires a local HTTP server, threading, and CDN availability.
-    Replace with urllib.request.urlopen to download highcharts.js and heatmap.js inline.'
-  - 'Design Excellence is generic: no spine removal, no intentional whitespace hierarchy,
-    legend box is a heavy bordered box. Refine by removing the legend border or reducing
-    its visual weight.'
-  - 'CQ-01: class definition (QuietHTTPRequestHandler) and threading add unnecessary
-    structural complexity for what should be a linear script.'
+  - CDN + HTTP server approach deviates from the highcharts.md guideline to embed
+    JS inline; introduces network dependency and extra complexity (threading, class
+    definition)
+  - Design sophistication is at the well-configured defaults tier (DE-01=4); lacks
+    distinctive typographic or layout choices that would push to publication-ready
+    quality
+  - Downsampling to 80x50 grid creates blocky cell appearance; higher resolution (e.g.,
+    120x70) would better represent the smooth frequency sweep and improve perceived
+    quality
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface. PASS.
-      Chrome: Title "spectrogram-basic · highcharts · anyplot.ai" visible at top center (dark text). Subtitle below title visible. Y-axis label "Frequency (Hz)" on left (dark text). X-axis label "Time (seconds)" at bottom (dark text). Tick labels dark, readable. Colorbar title "Power (dB)" visible. All chrome text dark on light background. PASS.
-      Data: Heatmap rendered with viridis colormap (deep purple → blue → teal → green → yellow). Clear diagonal yellow-green stripe rising from bottom-left to upper-right showing the chirp signal's frequency sweep from 10 Hz to 200 Hz. The colorbar on the right shows the viridis gradient labeled in dB.
-      LAYOUT BUG: The heatmap area occupies only the top ~37% of the canvas height. The bottom ~60% shows empty background with spurious y-axis labels (-3, -9, -15, -21, -27, -33, -39, -45, -51, -57, -63, -69, -75, -81, -87, -93, -99) — these are Highcharts auto-generating tick positions below category index 0 (no min constraint set on y-axis). Canvas utilization approximately 33-37%.
-      Legibility verdict: PASS for text readability; FAIL for layout (severe wasted space).
+      Background: Warm off-white (#FAF8F1) - correct light theme surface, not pure white
+      Chrome: Title "spectrogram-basic · highcharts · anyplot.ai" in dark ink (#1A1A17) clearly readable at top. Subtitle "Linear chirp signal (10-200 Hz) with linear frequency axis" in INK_SOFT (#4A4A44) readable below title. X-axis label "Time (seconds)" and Y-axis label "Frequency (Hz)" in dark ink, clearly visible. Tick labels (0-469 Hz on Y; 0.06-1.91s on X) in INK_SOFT, readable. Colorbar "Power (dB)" title and dB labels (-70 to -10 dB) in INK_SOFT on right side, readable.
+      Data: Viridis colormap (dark purple low power → teal mid → bright yellow high power). Clear diagonal yellow band tracing chirp sweep from ~10 Hz at t=0 to ~188 Hz at t=1.91s. Background shows green/teal noise floor. First and only series uses viridis continuous scale (not categorical Okabe-Ito, correct for continuous data).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface. PASS.
-      Chrome: Title and subtitle visible in light text. Y-axis label "Frequency (Hz)" visible in light color. X-axis label "Time (seconds)" visible in light color. Tick labels in light color (INK_SOFT token applied). Colorbar labels light. No dark-on-dark failures detected. PASS.
-      Data: Heatmap colors are identical to light render (viridis: purple→yellow, same stops). The chirp diagonal stripe is equally clear. Data colors confirmed identical to light render — only background and chrome flipped. PASS.
-      SAME LAYOUT BUG: Identical spurious negative y-axis labels in lower canvas area. Same ~37% canvas utilization.
-      Legibility verdict: PASS for text readability; FAIL for layout (same severe wasted space as light render).
+      Background: Warm near-black (#1A1A17) - correct dark theme surface, not pure black
+      Chrome: Title in off-white (#F0EFE8) clearly readable against dark background. Subtitle in INK_SOFT dark token (#B8B7B0) clearly visible. X-axis and Y-axis labels in light off-white, clearly readable. Tick labels in #B8B7B0, visible against dark surface. Colorbar title and labels in #B8B7B0, readable. No dark-on-dark failures detected - all chrome text is appropriately light-colored.
+      Data: Viridis color stops identical to light render - same diagonal yellow chirp sweep, same teal/green noise floor. Data colors (positions in viridis) unchanged between themes, confirming only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -62,54 +54,55 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
-          18px — matching pixel-based library guidelines. Readable in both themes.'
+        comment: All font sizes explicitly set (title 28px, axis labels 22px, tick
+          labels 18px); readable in both themes; minor deduction for colorbar labels
+          being on smaller end within the margin column
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No overlapping text; axis label stepping configured to avoid crowding
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible, viridis palette provides excellent
-          contrast, chirp stripe immediately visible.
+        comment: Chirp sweep clearly visible as bright diagonal band; heatmap cells
+          well-sized at 80x50 grid; colorbar distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe.
+        comment: Viridis is perceptually uniform and fully CVD-safe; excellent contrast
+          across power range
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Heatmap fills only ~37% of canvas height. Bottom ~60% is wasted space
-          due to Highcharts extending the category y-axis below index 0 (no min constraint).
-          Canvas utilization ~33% (technically in 30-50% range).
+        passed: true
+        comment: Plot fills approximately 70-75% of canvas; margins balanced and accommodate
+          colorbar; slight bottom whitespace prevents perfect 4
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (seconds) on x, Frequency (Hz) on y, Power (dB) on colorbar
-          — all descriptive with units.
+        comment: 'X: Time (seconds), Y: Frequency (Hz), colorbar: Power (dB) - all
+          descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses viridis stops (#440154 to #fde725). Background
-          #FAF8F1 (light) / #1A1A17 (dark) correct. All chrome tokens theme-adaptive.'
+        comment: 'Viridis stops correctly applied to continuous data; light bg #FAF8F1,
+          dark bg #1A1A17; all chrome tokens theme-adaptive in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -117,27 +110,25 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured output with subtitle and colorbar, but the layout
-          bug undermines overall polish. Looks like a configured default rather than
-          a publication-ready chart.
+        comment: Well-configured professional appearance with proper theme tokens
+          and viridis colormap, but falls in configured library default tier; no custom
+          typography or distinctive visual flourish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Custom margins, grid opacity via GRID token, colorbar sizing (symbolHeight=800)
-          show refinement. However layout bug creates large dead zone, and legend
-          has heavy border styling.
+        passed: true
+        comment: 'Custom margins, borderWidth: 0 for cleaner cells, subtle GRID tokens;
+          noticeably above bare defaults'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chirp signal's diagonal yellow-green stripe immediately conveys increasing
-          frequency over time. Subtitle provides explicit context. Viridis colormap
-          makes the story visually clear.
+        comment: Subtitle contextualizes signal; viridis creates natural focal point
+          with bright yellow sweep; viewer reads chirp trajectory immediately
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,126 +136,124 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct spectrogram implemented as heatmap using Highcharts HeatmapSeries
-          with real scipy.signal.spectrogram computation.
+        comment: Correct spectrogram as time-frequency heatmap using HeatmapSeries
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar with dB units, time on x-axis (seconds), frequency on y-axis
-          (Hz), dB scale, scipy-computed spectrogram — all present.
+        comment: Color intensity encodes power; dB scale; time on X, frequency on
+          Y; colorbar with dB labels; chirp demonstrates non-stationary frequency
+          content
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Time on X and frequency on Y is correct. However, spurious negative
-          y-axis labels below the heatmap create a misleading visual impression of
-          the frequency axis range.
+        passed: true
+        comment: Time (seconds) on X, Frequency (Hz) on Y, Power (dB) in color - all
+          correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'spectrogram-basic · highcharts · anyplot.ai' matches required
-          format. Colorbar labeled 'Power (dB)' correctly.
+          format; colorbar labeled 'Power (dB)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Chirp signal demonstrates the core spectrogram concept: time-frequency
-          representation, frequency sweep, noise background, dB scale.'
+        comment: Demonstrates chirp sweep, background noise, power dynamic range,
+          full spectrogram structure; minor deduction for 80x50 downsampling losing
+          fine frequency resolution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Linear chirp (10-200 Hz, 1000 Hz sample rate, 2 s) is a real signal
-          type used in radar, sonar, and audio analysis. Neutral and scientifically
-          accurate.
+        comment: Chirp signal with gaussian noise is a standard neutral signal processing
+          test case; scientifically realistic and non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values physically realistic: 1000 Hz sample rate, 10-200 Hz
-          chirp range well below Nyquist, dB values in typical range.'
+        comment: 1000 Hz sample rate, 2-second duration, 10-200 Hz sweep, dB scaling
+          - all physically realistic and domain-appropriate
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Class definition (QuietHTTPRequestHandler) and threading add structural
-          complexity beyond a simple linear script. The HTTP server pattern is clever
-          but more complex than needed.
+        passed: true
+        comment: Sequential flow clear but QuietHTTPRequestHandler class definition
+          deviates from pure imports-data-plot-save pattern
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before noise generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imported modules are used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: HTTP server + threading is over-engineered vs the recommended inline-script
-          approach from the library guide. The workaround works but adds significant
-          complexity.
+        passed: true
+        comment: HTTP server approach justified; spectrogram pipeline clean; try/finally
+          ensures server cleanup
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-THEME.png and plot-THEME.html correctly.
-    library_features:
-      score: 6
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly for interactive
+          library
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Chart(container='container'), HeatmapSeries, color_axis correctly.
-          But the CDN+HTTP-server approach deviates from the recommended inline-script
-          pattern in the library guide.
+        passed: true
+        comment: Correctly uses HeatmapSeries with [x, y, value] format, color_axis
+          for colorbar, chart.to_js_literal(); deduction for CDN via HTTP server instead
+          of recommended inline embedding
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts-specific HeatmapSeries, color_axis with stops for
-          continuous colormap, interactive tooltip with pointFormat, and HTML export
-          — all distinctive to Highcharts.
-  verdict: REJECTED
+        comment: Highcharts-specific color_axis with custom viridis stops, symbolHeight/symbolWidth
+          for colorbar legend, HeatmapSeries - not trivially portable to other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
-  - html-export
   - colorbar
-  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - stft
   styling:
   - custom-colormap
