@@ -1,13 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: altair | Python 3.13
+Quality: 91 | Updated: 2026-05-15
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data: Generate a chirp signal with increasing frequency
 np.random.seed(42)
@@ -84,7 +93,13 @@ chart = (
             "Power (dB):Q",
             scale=alt.Scale(scheme="viridis"),
             legend=alt.Legend(
-                title="Power (dB)", titleFontSize=18, labelFontSize=16, gradientLength=400, gradientThickness=20
+                title="Power (dB)",
+                titleFontSize=18,
+                labelFontSize=16,
+                gradientLength=400,
+                gradientThickness=20,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
             ),
         ),
         tooltip=[
@@ -93,12 +108,22 @@ chart = (
             alt.Tooltip("Power (dB):Q", format=".1f"),
         ],
     )
-    .properties(width=1400, height=800, title="spectrogram-basic · altair · pyplots.ai")
-    .configure_title(fontSize=28, anchor="middle")
-    .configure_axis(labelFontSize=18, titleFontSize=22, tickSize=10)
-    .configure_view(strokeWidth=0)
+    .properties(width=1600, height=900, background=PAGE_BG, title="spectrogram-basic · altair · anyplot.ai")
+    .configure_title(fontSize=28, anchor="middle", color=INK)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        tickSize=10,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
