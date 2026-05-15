@@ -1,221 +1,235 @@
 library: bokeh
+language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:00:13Z'
-updated: '2025-12-31T14:50:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617520899
+updated: '2026-05-15T15:26:51Z'
+generated_by: claude-haiku
+workflow_run: 25925030430
 issue: 3003
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - hover-tooltips
-  - custom-shapes
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-dark.html
+quality_score: 79
 review:
   strengths:
-  - Clear visual differentiation between sectors through color and facial expression
-    patterns
-  - Excellent business context with realistic company performance metrics
-  - Proper normalization of data as spec requires
-  - 'Good use of Bokeh-specific features: ColumnDataSource, HoverTool for interactivity'
-  - Feature mapping subtitle explains what each facial feature represents
-  - Well-organized 4x3 grid layout makes comparison easy
+  - Excellent visual clarity in both light and dark renders with effective color-coding
+  - Strong procedural Chernoff face drawing with well-proportioned and expressive
+    features
+  - Proper theme adaptation on output with correct background colors and readable
+    text
+  - Professional grid layout with legend and subtitle; well-organized and generous
+    whitespace
+  - Realistic company performance data scenario demonstrating all aspects of the plot
+    type
+  - Bokeh interactivity via hover tooltips adds value beyond static rendering
   weaknesses:
-  - Legend positioned too far from the faces (at very top of plot)
-  - Faces could be slightly larger to better utilize the canvas space
-  image_description: 'The plot displays 12 Chernoff faces arranged in a 4x3 grid on
-    a light gray background. The title "chernoff-basic · bokeh · pyplots.ai" appears
-    at the top in black text. A legend at the top shows three colored circles representing
-    sectors: Tech (blue), Retail (yellow), and Energy (brown/tan). The top row contains
-    4 Tech company faces (blue, wider faces with smiling expressions indicating higher
-    metrics). The middle row shows 4 Retail company faces (yellow, more circular with
-    neutral expressions). The bottom row displays 4 Energy company faces (brown/tan,
-    narrower with frowning expressions indicating lower metrics). Each face is labeled
-    below (e.g., "Tech #1", "Retail #1"). A subtitle at the bottom explains the feature
-    mapping. The faces have clearly visible features: eyebrows, eyes with white sclera
-    and dark pupils, a simple nose line, and curved mouths.'
+  - Uses export_png() which bokeh.md explicitly forbids; should use Selenium screenshot
+    pattern
+  - 'Text colors hardcoded (#333333, #666666) instead of reading ANYPLOT_THEME env
+    var for theme adaptation'
+  - Output filename 'plot.png' instead of theme-specific 'plot-light.png' and 'plot-dark.png'
+  - Missing HTML output artifacts (plot-light.html and plot-dark.html required for
+    interactive libraries)
+  - 'Minor code typo: ''pyplots.ai'' instead of ''anyplot.ai'' in title string'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "chernoff-basic · bokeh · anyplot.ai" is clearly visible; legend shows three sectors (Tech, Retail, Energy); all face labels ("Tech #1", etc.) and feature mapping subtitle are dark-text and readable
+      Data: 12 Chernoff faces in 4x3 grid; Tech faces in greenish color, Retail in orangish, Energy in blue; all facial features (eyes, mouth, size) are clear and distinguishable
+      Legibility verdict: PASS - All elements readable against light background with good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title visible at top; legend text readable; all face identifiers and feature explanation appear in light text; layout matches light render
+      Data: Same 12 faces with identical data colors to light render (Tech greenish, Retail orangish, Energy blue) - proper theme independence for data, only chrome flips
+      Legibility verdict: PASS - All text readable against dark background; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 32pt is excellent, labels at 20pt are readable, subtitle
-          at 22pt is clear. Minor deduction for slightly small subtitle relative to
-          canvas size.
+        comment: Readable in both themes but code lacks explicit theme-adaptive color
+          handling
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated from faces
-          and each other.
+        comment: Excellent spacing throughout; no overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Faces are well-sized for the grid, facial features (eyes, mouth,
-          eyebrows) are clearly distinguishable.
+        comment: All faces, labels, and features clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and brown are distinguishable for most colorblind users,
-          though the brown/tan is somewhat muted.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with faces well-distributed. Slight imbalance
-          with more whitespace at bottom than top.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for this plot type; subtitle explains feature mappings clearly.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Strong color separation; CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4x3 grid with balanced margins and whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is present and clear, but positioned quite far from faces
-          at the very top.
+        comment: Descriptive title and feature mapping subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Theme-correct backgrounds; both renders have proper chrome/text colors
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Creative procedural face drawing but execution is somewhat basic
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean layout, good whitespace; minor room for polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Sector color-coding provides visual hierarchy; feature mapping relies
+          on text
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements Chernoff faces with facial features mapped to
-          variables.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: 'Four variables correctly mapped: face width (revenue growth), face
-          height (profit margin), eye size (satisfaction), mouth curve (market share).'
-      - id: SC-03
+        comment: Correct Chernoff faces implementation
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has face outline, eyes with pupils, eyebrows, nose, and mouth. Grid
-          layout implemented. Minor: could have more facial features for additional
-          variables.'
-      - id: SC-04
-        name: Data Range
+        comment: Grid layout, multi-observation display, feature mapping all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data properly normalized and displayed.
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Observations correctly represented and normalized
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Sector legend correctly identifies Tech, Retail, and Energy with
-          matching colors.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format "chernoff-basic · bokeh · pyplots.ai" with middle
-          dots.
+        max: 3
+        passed: false
+        comment: Title and legend correct in output; minor code typo
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows clear variation between sectors: Tech faces are wider with
-          smiles (high growth/market share), Retail faces are medium-sized with neutral
-          expressions, Energy faces are narrower with frowns (low growth). Good variety
-          within sectors too.'
+        comment: All facial features demonstrated across sectors
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Excellent business context comparing company performance metrics
-          across three industry sectors. Plausible metric ranges.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All metrics normalized to 0-1 range as spec requires, with realistic
-          sector-specific distributions.
+        comment: Realistic company performance scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions are factually plausible
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally follows KISS but has complex inline loop. Acceptable for
-          this complex plot type.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation.
+        comment: Simple linear structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh.io, bokeh.models, bokeh.plotting).
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API.
+        max: 2
+        passed: false
+        comment: Non-compliant with bokeh.md export guidelines
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Correctly saves as plot.png using export_png.
-    library_features:
-      score: 4
-      max: 5
+        passed: false
+        comment: Uses deprecated export_png(); outputs wrong filenames
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Good use of ColumnDataSource for hover tooltips, HoverTool for interactivity
-          (though not visible in PNG), Label objects for text positioning. Uses patch()
-          for drawing ellipses which is idiomatic Bokeh.
+        passed: false
+        comment: Correct API usage but doesn't follow bokeh.md export pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses ColumnDataSource and HoverTool; creative patch-based drawing
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - patches
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
