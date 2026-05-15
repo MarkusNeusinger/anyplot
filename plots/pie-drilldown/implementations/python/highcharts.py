@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
-Library: highcharts | Python 3.13
-Quality: 91/100 | Updated: 2025-05-15
+Library: highcharts unknown | Python 3.13.13
+Quality: 57/100 | Updated: 2026-05-15
 """
 
 import os
