@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: scatter-animated-controls
 created: '2026-05-15T11:02:23Z'
-updated: '2026-05-15T11:07:40Z'
+updated: '2026-05-15T11:14:16Z'
 generated_by: claude-haiku
 workflow_run: 25914216874
 issue: 3067
@@ -12,33 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation (both light and dark renders pass legibility checks)
-  - Correct Okabe-Ito palette usage with brand green as first series
-  - Proper interpretation of animated spec for static library using faceted grid
-  - Clean reproducible code with deterministic data generation
-  - All required data dimensions present (x, y, time, color, labels)
-  - Excellent theme token implementation across matplotlib rcParams
+  - Perfect visual quality with excellent text legibility in both light and dark themes
+  - Proper adaptation of interactive spec to seaborn's static capabilities using faceted
+    grid per library guidelines
+  - Clean, reproducible code with simple linear structure and deterministic random
+    seed
+  - Solid theme token integration applied consistently throughout (colors, grid, legend,
+    spines)
   weaknesses:
-  - Canvas proportions (6036x1015px) deviate significantly from style guide targets
-    (4800x2700px 16:9 aspect ratio) - extreme 5.94:1 width:height ratio
+  - 'Missing population-based size encoding: Population Proxy column generated but
+    never used in visualization; marker size should vary with this column to add third
+    data dimension'
+  - Generic design using standard seaborn defaults; no custom refinements or special
+    visual hierarchy to guide viewer through temporal evolution
+  - Size encoding omission reduces data storytelling potential - implementation could
+    show population dimension to create richer narrative
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme-adaptive surface
-      Chrome: Title "scatter-animated-controls · seaborn · anyplot.ai" is visible in dark text (#1A1A17). Axis labels "GDP per Capita ($1000s)" and "Life Expectancy (years)" are clearly readable. Tick labels and year labels (2000, 2005, 2010, 2015, 2020) are visible in dark text. Legend titled "Country" with entries A-E is readable. Grid lines are subtle and support readability.
-      Data: Five scatter plots showing the relationship between GDP per capita and life expectancy for 5 countries across 5 time periods. Colors are Okabe-Ito palette: position 1 (#009E73 green), position 2 (#D55E00 orange), position 3 (#0072B2 blue), position 4 (#CC79A7 purple), position 5 (#E69F00 orange). All data points are clearly distinguishable from the light background.
-      Legibility verdict: PASS - All text is readable against the light background. No text-on-text collisions. Data colors are distinct and visible.
+      Background: Warm off-white (#FAF8F1) - correct and appropriate for light theme
+      Chrome: Title, axis labels, year labels, tick labels all in dark text (#1A1A17, #4A4A44). All text is clearly readable against the light background. Legend uses elevated background (#FFFDF6) with dark text.
+      Data: 5 countries color-coded with Okabe-Ito palette (first series #009E73 green, plus orange, blue, reddish-purple, yellow). Markers have s=150, alpha=0.8 with edge definition. All markers clearly visible and distinguishable.
+      Legibility verdict: PASS - All chrome elements properly themed and readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme-adaptive surface
-      Chrome: Title is visible in light text (#F0EFE8). Axis labels are visible in light text. Tick labels and year labels are readable in light text. Legend is readable with light text. Grid lines are visible and properly adapted to the dark theme. No dark-on-dark text failures detected.
-      Data: Same faceted layout as light render showing temporal progression. The Okabe-Ito data colors are identical to the light render (green, orange, blue, purple, orange) - only the background and text chrome adapted to the dark theme. All data points are clearly visible against the dark background with strong contrast.
-      Legibility verdict: PASS - All text is readable against the dark background. Data colors maintain their identity and visibility. Proper theme adaptation with no illegible "dark-on-dark" text.
+      Background: Warm near-black (#1A1A17) - correct and appropriate for dark theme
+      Chrome: Title, axis labels, year labels, tick labels all in light text (#F0EFE8, #B8B7B0). All text is clearly readable against the dark background. Legend uses dark elevated background (#242420) with light text. No dark-on-dark failures detected.
+      Data: Colors identical to light render (confirming only chrome theme-adaptation, not data color changes). Grid lines subtle and visible.
+      Legibility verdict: PASS - All chrome elements properly themed and readable; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -46,89 +52,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, tick labels) clearly readable in both
-          light and dark renders. Font sizes appropriate for canvas size. Theme-adaptive
-          colors correctly applied (INK for light, light text for dark).
+        comment: All font sizes explicitly set (title 20pt, axis 14pt, ticks 12pt).
+          Readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Year labels, axis labels, and legend all fit without
-          collision. Data points may overlap naturally in scatter but that's expected
-          density behavior.
+        comment: 5-panel grid (3x2) with good spacing. No overlapping text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers visible across all 5 panels. Faceted layout provides
-          good spatial separation. Grid lines visible but subtle.
+        comment: Markers clearly visible with s=150, alpha=0.8, edgecolor='face' for
+          definition.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses Okabe-Ito palette which is colorblind-safe (deuteranopia and
-          protanopia safe). No problematic color combinations.
+        comment: Okabe-Ito palette is CVD-safe. No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas proportions deviate significantly from style guide targets.
-          Output is 6036x1015px (5.94:1 aspect ratio) vs recommended 4800x2700px (16:9
-          = 1.78:1). Faceted grid becomes extremely wide and narrow. While readable,
-          this violates layout guidelines.
+        passed: true
+        comment: Good proportions with height=4.3, aspect=1.05. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''scatter-animated-controls · seaborn · anyplot.ai''.
-          Axis labels descriptive with units: ''GDP per Capita ($1000s)'' and ''Life
-          Expectancy (years)''.'
+        comment: Descriptive labels with units (GDP per Capita, Life Expectancy).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series is #009E73 (Okabe-Ito position 1). Multi-series
-          follows Okabe-Ito canonical order (positions 1-5). Plot backgrounds are
-          #FAF8F1 (light) and #1A1A17 (dark). Both renders are theme-correct with
-          matching data colors.'
+        comment: 'First series #009E73, correct Okabe-Ito order, backgrounds #FAF8F1/#1A1A17
+          correct for both themes.'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Professional polish with intentional design choices. Okabe-Ito palette
-          use is correct, not generic. Faceting layout intentionally shows temporal
-          progression. However, styling remains relatively standard seaborn (no custom
-          enhancements beyond defaults).
+        passed: false
+        comment: Theme tokens thoughtfully integrated; spine removal clean. Relies
+          on defaults rather than custom refinements.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Top and right spines removed (L-shaped frame). Grid is subtle (alpha=0.10).
-          Whitespace is adequate. Limited customization beyond standard refinement
-          choices.
+        passed: false
+        comment: Minimal customization. Standard grid styling at alpha=0.10. No special
+          refinements.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Faceted layout guides temporal progression left-to-right (2000→2020).
-          Countries are consistently color-coded across all panels. Clear focal point
-          on GDP vs life expectancy relationship. Good visual hierarchy from layout
-          design.
+        passed: false
+        comment: Faceted layout shows progression but lacks visual hierarchy or focal
+          point to guide viewer.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -136,61 +126,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct interpretation: animated spec adapted to static faceted
-          scatter plots. Seaborn cannot animate, so faceted grid showing key time
-          points (2000, 2005, 2010, 2015, 2020) follows spec''s guidance for non-interactive
-          libraries.'
+        comment: Scatter plot type correct.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Shows x (GDP per capita), y (life expectancy), time dimension (5
-          key years), color encoding (5 countries), and labels (legend with country
-          names). Size parameter is optional and omitted (acceptable).
+        passed: false
+        comment: 'Animation/controls omitted per library limitation (correct adaptation).
+          Gap: size encoding missing - Population Proxy generated but never used.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis correctly shows GDP per Capita. Y-axis correctly shows Life
-          Expectancy. Axes are scaled appropriately (x: 5-45, y: 64-82). All data
-          visible.'
+        comment: X, Y, Color mapped correctly. Axes span data range well.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format is correct: ''scatter-animated-controls · seaborn ·
-          anyplot.ai''. Legend properly labeled ''Country'' with entries A-E that
-          match data.'
+        comment: Title format correct. Legend properly labeled.
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 'Shows all aspects of the plot type: GDP per capita, life expectancy,
-          5 countries, 5 time periods. Demonstrates full feature set across temporal
-          and categorical dimensions.'
+        passed: false
+        comment: '5 countries x 5 years shown clearly. Missing: population variation
+          as size encoding.'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Simulated data is realistic and plausible. GDP grows over time (exponential
-          trend), life expectancy improves linearly. Domain is neutral (generic countries).
-          Values are realistic: GDP $5K-$45K, life expectancy 64-82 years.'
+        passed: false
+        comment: Plausible GDP/life expectancy ranges. Generic country names (neutral).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges are sensible for the simulated domain. No extreme outliers.
-          Scales work well across the 5 time periods and 5 countries.
+        comment: Sensible axis scales. No distortion.
     code_quality:
       score: 10
       max: 10
@@ -200,39 +178,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Linear, straightforward script: data generation
-          → plotting → save. Appropriate simplicity for a single visualization.'
+        comment: Simple linear flow, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation. Results
-          are reproducible across runs.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: matplotlib, pandas, numpy, seaborn, os, sys.
-          No unused imports. sys manipulation for seaborn import is unusual but serves
-          a purpose (avoiding local seaborn conflict).'
+        comment: Only necessary imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or simulated UI elements. Code is straightforward
-          and appropriate for the task. No unnecessary complexity.
+        comment: No fake interactivity. Straightforward code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct naming convention. Uses current
-          matplotlib/seaborn API. dpi=300, bbox_inches='tight' are appropriate choices.
+        comment: Saves as plot-{THEME}.png correctly.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -240,28 +212,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses sns.relplot() - the idiomatic high-level API for faceted plots.
-          Properly uses sns.set_style(), sns.set_context(), and matplotlib.rcParams
-          for theme configuration. Faceting with col_wrap is the standard seaborn
-          pattern.
+        comment: sns.relplot() with col_wrap for faceting; high-level API; correct
+          theme integration.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: Uses standard seaborn features without pushing distinctive library
-          capabilities. Theme token configuration (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-          is well-executed but follows a common pattern. Faceting is appropriate but
-          not seaborn-specific.
+        passed: false
+        comment: Standard relplot usage only. No distinctive seaborn features beyond
+          defaults.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - subplots
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - alpha-blending
