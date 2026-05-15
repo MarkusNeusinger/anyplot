@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-15
 """
 
 import math
