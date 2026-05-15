@@ -1,270 +1,231 @@
-""" pyplots.ai
+"""anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2025-12-31
 """
 
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
-from matplotlib.collections import PatchCollection
+import os
+import sys
 
 
-# Data: US states arranged in a tile grid map layout (all 50 states)
-# Grid positions (col, row) - approximating geographic positions
+# Prevent matplotlib.py from shadowing the matplotlib package
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
+
+import matplotlib.patches as mpatches  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.collections import PatchCollection  # noqa: E402
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data: World regions life expectancy (years)
+# Arranged in geographic approximation layout
 regions = {
-    # Alaska and Hawaii (positioned separately)
-    "Alaska": (0, 5),
-    "Hawaii": (0, 1),
-    # West Coast
-    "Washington": (1, 5),
-    "Oregon": (1, 4),
-    "California": (0, 3),
-    "Nevada": (1, 3),
-    # Mountain West
-    "Idaho": (2, 5),
-    "Montana": (3, 5),
-    "Wyoming": (3, 4),
-    "Utah": (2, 3),
-    "Arizona": (2, 2),
-    "Colorado": (3, 3),
-    "New Mexico": (3, 2),
-    # Great Plains
-    "North Dakota": (4, 5),
-    "South Dakota": (4, 4),
-    "Nebraska": (4, 3),
-    "Kansas": (4, 2),
-    "Oklahoma": (4, 1),
-    "Texas": (3, 1),
-    # Midwest
-    "Minnesota": (5, 5),
-    "Iowa": (5, 4),
-    "Missouri": (5, 3),
-    "Arkansas": (5, 2),
-    "Louisiana": (5, 1),
-    "Wisconsin": (6, 5),
-    "Illinois": (6, 4),
-    "Indiana": (7, 4),
-    "Michigan": (7, 5),
-    "Ohio": (8, 4),
-    "Kentucky": (7, 3),
-    "Tennessee": (6, 3),
-    "Mississippi": (6, 2),
-    "Alabama": (7, 2),
-    # Southeast
-    "Georgia": (8, 2),
-    "Florida": (8, 1),
-    "South Carolina": (9, 2),
-    "North Carolina": (9, 3),
-    "Virginia": (9, 4),
-    "West Virginia": (8, 3),
-    # Northeast
-    "Pennsylvania": (10, 4),
-    "New York": (10, 5),
-    "Vermont": (11, 5),
-    "New Hampshire": (11, 4),
-    "Maine": (12, 5),
-    "Massachusetts": (11, 3),
-    "Rhode Island": (12, 3),
-    "Connecticut": (11, 2),
-    "New Jersey": (10, 3),
-    "Delaware": (10, 2),
-    "Maryland": (9, 1),
-    # District of Columbia (no data - demonstrates missing data handling)
-    "District of Columbia": (10, 1),
+    # North America
+    "Canada": (1, 4),
+    "United States": (1, 3),
+    "Mexico": (1, 2),
+    # Central America & Caribbean
+    "Guatemala": (1.5, 1.5),
+    "Cuba": (2, 1.5),
+    # South America
+    "Colombia": (2, 2),
+    "Brazil": (2.5, 2),
+    "Peru": (2, 1),
+    "Argentina": (2, 0),
+    # Europe
+    "Iceland": (3.5, 4.5),
+    "United Kingdom": (3.5, 4),
+    "France": (4, 4),
+    "Germany": (4.5, 4),
+    "Spain": (3.8, 3.8),
+    "Italy": (4.2, 3.6),
+    "Poland": (4.5, 4.2),
+    "Russia": (5, 4),
+    # Africa
+    "Nigeria": (4.5, 2.5),
+    "Egypt": (5, 2.8),
+    "South Africa": (5, 1),
+    "Kenya": (5.5, 2),
+    # Middle East
+    "Saudi Arabia": (5.5, 2.5),
+    "Iran": (6, 2.5),
+    "Israel": (5.5, 2.8),
+    # South Asia
+    "India": (6.5, 2),
+    "Pakistan": (6.5, 2.5),
+    "Bangladesh": (7, 2),
+    # Southeast Asia
+    "Thailand": (7, 1.5),
+    "Indonesia": (7.5, 1),
+    "Vietnam": (7.5, 1.8),
+    "Philippines": (8, 1.5),
+    # East Asia
+    "China": (7.5, 2.5),
+    "Japan": (8.5, 3),
+    "South Korea": (8, 3),
+    # Oceania
+    "Australia": (8.5, 0),
+    "New Zealand": (8.5, -0.5),
 }
 
-# Population density values (simulated but realistic ranges)
-# Note: District of Columbia intentionally omitted to demonstrate missing data handling
-density_values = {
-    "Alaska": 1,
-    "Hawaii": 226,
-    "California": 253,
-    "Texas": 112,
-    "Florida": 411,
-    "New York": 408,
-    "Pennsylvania": 286,
-    "Illinois": 227,
-    "Ohio": 289,
-    "Georgia": 185,
-    "North Carolina": 218,
-    "Michigan": 177,
-    "New Jersey": 1263,
-    "Virginia": 218,
-    "Washington": 117,
-    "Arizona": 64,
-    "Massachusetts": 901,
-    "Tennessee": 167,
-    "Indiana": 189,
-    "Missouri": 89,
-    "Maryland": 636,
-    "Wisconsin": 108,
-    "Colorado": 57,
-    "Minnesota": 71,
-    "South Carolina": 173,
-    "Alabama": 99,
-    "Louisiana": 107,
-    "Kentucky": 114,
-    "Oregon": 44,
-    "Oklahoma": 58,
-    "Connecticut": 733,
-    "Iowa": 57,
-    "Mississippi": 63,
-    "Arkansas": 58,
-    "Utah": 40,
-    "Nevada": 28,
-    "Kansas": 36,
-    "New Mexico": 17,
-    "Nebraska": 25,
-    "West Virginia": 74,
-    "Idaho": 23,
-    "Maine": 44,
-    "New Hampshire": 154,
-    "Rhode Island": 1061,
-    "Montana": 8,
-    "Delaware": 508,
-    "South Dakota": 12,
-    "North Dakota": 11,
-    "Vermont": 68,
-    "Wyoming": 6,
+# Life expectancy data (years) - realistic global ranges
+life_expectancy = {
+    "Canada": 82,
+    "United States": 78,
+    "Mexico": 75,
+    "Guatemala": 74,
+    "Cuba": 79,
+    "Colombia": 76,
+    "Brazil": 76,
+    "Peru": 74,
+    "Argentina": 76,
+    "Iceland": 83,
+    "United Kingdom": 81,
+    "France": 83,
+    "Germany": 82,
+    "Spain": 84,
+    "Italy": 84,
+    "Poland": 79,
+    "Russia": 72,
+    "Nigeria": 54,
+    "Egypt": 72,
+    "South Africa": 65,
+    "Kenya": 67,
+    "Saudi Arabia": 76,
+    "Iran": 76,
+    "Israel": 82,
+    "India": 68,
+    "Pakistan": 67,
+    "Bangladesh": 73,
+    "Thailand": 77,
+    "Indonesia": 72,
+    "Vietnam": 74,
+    "Philippines": 72,
+    "China": 78,
+    "Japan": 84,
+    "South Korea": 83,
+    "Australia": 83,
+    "New Zealand": 82,
 }
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Create patches for each region
 patches = []
-missing_patches = []
 colors = []
-cmap = plt.cm.Blues
+cmap = plt.cm.RdYlGn  # Diverging colormap: Red (low) -> Yellow -> Green (high)
 
 # Normalize values for coloring
-values = list(density_values.values())
+values = list(life_expectancy.values())
 vmin, vmax = min(values), max(values)
+norm = plt.Normalize(vmin=vmin, vmax=vmax)
 
-for state, (col, row) in regions.items():
-    # Create rectangle for each state (simplified grid representation)
+for country, (col, row) in regions.items():
+    # Create rectangle for each country (simplified grid representation)
     rect = mpatches.FancyBboxPatch(
-        (col * 1.1, row * 1.1), 1.0, 1.0, boxstyle="round,pad=0.02,rounding_size=0.1", linewidth=2, edgecolor="white"
+        (col * 1.15, row * 1.15),
+        1.0,
+        1.0,
+        boxstyle="round,pad=0.02,rounding_size=0.1",
+        linewidth=1.5,
+        edgecolor=INK_SOFT,
     )
 
-    # Handle missing data (state not in density_values)
-    if state not in density_values:
-        missing_patches.append(rect)
-    else:
-        patches.append(rect)
-        # Get color based on density value
-        density = density_values[state]
-        norm_value = (density - vmin) / (vmax - vmin)
-        colors.append(cmap(norm_value))
+    patches.append(rect)
+    # Get color based on life expectancy value
+    le = life_expectancy[country]
+    colors.append(cmap(norm(le)))
 
-# Create patch collection for states with data
-collection = PatchCollection(patches, facecolors=colors, edgecolors="white", linewidths=2)
+# Create patch collection for countries with data
+collection = PatchCollection(patches, facecolors=colors, edgecolors=INK_SOFT, linewidths=1.5)
 ax.add_collection(collection)
 
-# Create patch collection for missing data (gray with hatched pattern)
-missing_collection = PatchCollection(
-    missing_patches, facecolors="#d0d0d0", edgecolors="white", linewidths=2, hatch="///"
-)
-ax.add_collection(missing_collection)
-
-# Add state labels
-# State abbreviation dictionary (all 50 states + DC)
+# Add country labels
 abbrev = {
-    "Alaska": "AK",
-    "Hawaii": "HI",
-    "Washington": "WA",
-    "Oregon": "OR",
-    "California": "CA",
-    "Nevada": "NV",
-    "Idaho": "ID",
-    "Montana": "MT",
-    "Wyoming": "WY",
-    "Utah": "UT",
-    "Arizona": "AZ",
-    "Colorado": "CO",
-    "New Mexico": "NM",
-    "North Dakota": "ND",
-    "South Dakota": "SD",
-    "Nebraska": "NE",
-    "Kansas": "KS",
-    "Oklahoma": "OK",
-    "Texas": "TX",
-    "Minnesota": "MN",
-    "Iowa": "IA",
-    "Missouri": "MO",
-    "Arkansas": "AR",
-    "Louisiana": "LA",
-    "Wisconsin": "WI",
-    "Illinois": "IL",
-    "Indiana": "IN",
-    "Michigan": "MI",
-    "Ohio": "OH",
-    "Kentucky": "KY",
-    "Tennessee": "TN",
-    "Mississippi": "MS",
-    "Alabama": "AL",
-    "Georgia": "GA",
-    "Florida": "FL",
-    "South Carolina": "SC",
-    "North Carolina": "NC",
-    "Virginia": "VA",
-    "West Virginia": "WV",
-    "Pennsylvania": "PA",
-    "New York": "NY",
-    "Vermont": "VT",
-    "New Hampshire": "NH",
-    "Maine": "ME",
-    "Massachusetts": "MA",
-    "Rhode Island": "RI",
-    "Connecticut": "CT",
-    "New Jersey": "NJ",
-    "Delaware": "DE",
-    "Maryland": "MD",
-    "District of Columbia": "DC",
+    "Canada": "CA",
+    "United States": "US",
+    "Mexico": "MX",
+    "Guatemala": "GT",
+    "Cuba": "CU",
+    "Colombia": "CO",
+    "Brazil": "BR",
+    "Peru": "PE",
+    "Argentina": "AR",
+    "Iceland": "IS",
+    "United Kingdom": "UK",
+    "France": "FR",
+    "Germany": "DE",
+    "Spain": "ES",
+    "Italy": "IT",
+    "Poland": "PL",
+    "Russia": "RU",
+    "Nigeria": "NG",
+    "Egypt": "EG",
+    "South Africa": "ZA",
+    "Kenya": "KE",
+    "Saudi Arabia": "SA",
+    "Iran": "IR",
+    "Israel": "IL",
+    "India": "IN",
+    "Pakistan": "PK",
+    "Bangladesh": "BD",
+    "Thailand": "TH",
+    "Indonesia": "ID",
+    "Vietnam": "VN",
+    "Philippines": "PH",
+    "China": "CN",
+    "Japan": "JP",
+    "South Korea": "KR",
+    "Australia": "AU",
+    "New Zealand": "NZ",
 }
 
-for state, (col, row) in regions.items():
-    # Handle text color based on background
-    if state not in density_values:
-        # Missing data regions have gray background
-        text_color = "#333333"
-    else:
-        density = density_values[state]
-        norm_value = (density - vmin) / (vmax - vmin)
-        text_color = "white" if norm_value > 0.5 else "#306998"
+for country, (col, row) in regions.items():
+    le = life_expectancy[country]
+    norm_value = norm(le)
+    # Use white text on dark backgrounds, dark text on light backgrounds
+    text_color = INK if norm_value < 0.4 else "white"
 
     ax.text(
-        col * 1.1 + 0.5,
-        row * 1.1 + 0.5,
-        abbrev.get(state, state[:2].upper()),
+        col * 1.15 + 0.5,
+        row * 1.15 + 0.5,
+        abbrev.get(country, country[:2].upper()),
         ha="center",
         va="center",
-        fontsize=13,
+        fontsize=14,
         fontweight="bold",
         color=text_color,
     )
 
 # Set axis limits and remove axes
-ax.set_xlim(-0.5, 14)
-ax.set_ylim(0.3, 6.5)
+ax.set_xlim(-0.5, 9.5)
+ax.set_ylim(-1.5, 5.5)
 ax.set_aspect("equal")
 ax.axis("off")
 
 # Add colorbar
-sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax, shrink=0.6, aspect=20, pad=0.02)
-cbar.set_label("Population Density (per sq mile)", fontsize=18)
-cbar.ax.tick_params(labelsize=14)
-
-# Add legend for missing data
-missing_patch = mpatches.Patch(facecolor="#d0d0d0", edgecolor="gray", hatch="///", label="No data")
-ax.legend(handles=[missing_patch], loc="lower left", fontsize=14, framealpha=0.9)
+cbar.set_label("Life Expectancy (years)", fontsize=18, color=INK)
+cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
+plt.setp(cbar.ax.spines.values(), color=INK_SOFT)
 
 # Title
-ax.set_title(
-    "US Population Density · choropleth-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20
-)
+title = "World Life Expectancy · choropleth-basic · matplotlib · anyplot.ai"
+ax.text(0.5, 1.08, title, transform=ax.transAxes, fontsize=24, fontweight="medium", color=INK, ha="center")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+
+# Save to script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+output_path = os.path.join(script_dir, f"plot-{THEME}.png")
+plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
