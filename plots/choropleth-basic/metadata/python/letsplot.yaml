@@ -1,161 +1,180 @@
 library: letsplot
+language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:57:47Z'
-updated: '2025-12-31T14:09:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620327888
+updated: '2026-05-15T05:59:16Z'
+generated_by: claude-haiku
+workflow_run: 25902465693
 issue: 3069
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of lets-plot geocode_countries() for automatic boundary retrieval
-  - Clean professional appearance with appropriate coordinate limits focusing on Europe
-  - Good colorblind-accessible yellow-blue color scheme
-  - Proper missing data handling with na_value parameter
-  - Well-structured theme with appropriate removal of axes/grid for map visualization
-  - Generates both PNG and HTML outputs for interactive capability
+  - Perfect implementation of choropleth specification with all required features
+  - Excellent theme adaptation — both light and dark renders perfectly legible with
+    no chrome failures
+  - Viridis colormap is perceptually uniform and colorblind-safe for continuous data
+  - Clean, idiomatic letsplot code following ggplot2 grammar
+  - Realistic and meaningful data (European GDP per capita) showing clear geographic
+    patterns
+  - Proper handling of missing data with distinct NA color
+  - All visual elements correctly sized for large canvas (4800×2700)
   weaknesses:
-  - Legend could be larger and more prominent for better readability at full size
-  - Some European countries missing from data (UK, Iceland, Southern Europe) - more
-    coverage recommended
-  - Extreme outlier (Luxembourg 126.4k) compresses color scale making mid-range countries
-    harder to distinguish
-  image_description: The plot displays a choropleth map of Europe showing GDP per
-    capita by country. Countries are shaded using a yellow-to-blue color gradient
-    (low=#FFD43B to high=#306998). Most Eastern European countries appear in yellow/golden
-    tones (lower GDP), while Nordic countries (Norway, Sweden, Finland) and Western
-    European nations (Netherlands, Belgium, Austria, Switzerland) show brownish-gray
-    tones (higher GDP). Luxembourg appears as a tiny blue spot (highest GDP at ~126k
-    USD). The map includes clear country boundaries with dark gray outlines. A vertical
-    color legend in the lower-right displays "GDP per Capita (thousands USD)" with
-    scale from 20 to 120. The title at the top reads "European GDP per Capita · choropleth-basic
-    · letsplot · pyplots.ai". The map uses a clean white background with no grid lines
-    or axis labels, which is appropriate for geographic visualization.
+  - Uses default viridis colormap without customization — could benefit from color
+    palette refinement for publication quality
+  - Visual refinement is good but basic — legend styling and overall polish could
+    be more sophisticated
+  - While color gradient creates storytelling through visual hierarchy, no annotations
+    or additional emphasis on insights
+  - Relies on standard ggplot2 patterns — could leverage more distinctive letsplot
+    capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1
+      Chrome: Title 'choropleth-basic · letsplot · anyplot.ai' (24pt dark text) clearly visible; legend title 'GDP per Capita (thousands USD)' (18pt) and legend labels (18pt) fully readable; all text has strong contrast against light background
+      Data: European map with 27 countries colored by GDP using viridis colormap; green (high GDP ~$126k) through blue/cyan to dark purple (low GDP ~$14k); region boundaries sharp and visible; missing data shown in light neutral gray
+      Legibility verdict: PASS — no text legibility issues; all elements readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17
+      Chrome: Title in light color #F0EFE8 fully readable against dark background; legend title and text in #B8B7B0 clearly visible; no dark-on-dark text failures; all chrome properly theme-adapted
+      Data: Identical viridis colors to light render (green to purple gradient unchanged) — confirms correct theme-independent data coloring; region boundaries visible in light outline color; no color shift between renders
+      Legibility verdict: PASS — no dark-on-dark failures; perfect theme adaptation with light text on dark background
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and readable (26pt), legend text is clear. Slightly
-          under ideal sizes but very legible.
+        comment: Title 24pt, legend title/text 18pt, all explicitly set and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: Legend well-positioned, no text collisions, clean spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Countries are well-sized and clearly distinguishable
+        comment: All 27 regions visible with distinct colors, sharp boundaries, optimal
+          sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Yellow-to-blue gradient is colorblind-friendly, though the mid-tones
-          (brownish) could be slightly more distinct
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well, legend is appropriately positioned, good use
-          of coordinate limits to focus on Europe
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed but very small relative to the map size; the
-          legend bar could be larger and more prominent
+        comment: Viridis is colorblind-safe, good luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% canvas, balanced margins, no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; legend includes units (thousands USD)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses viridis (correct); backgrounds #FAF8F1/#1A1A17;
+          theme chrome correctly adapted'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default viridis, professional composition, but no
+          custom palette or intentional design beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid removed, theme_minimal applied, good whitespace; legend styling
+          basic
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color gradient creates visual hierarchy (green=wealthy, purple=developing);
+          good visual guidance but no annotations
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct choropleth map implementation
+        comment: Correct choropleth using geom_map()
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Country-to-GDP mapping correctly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes color legend with value range, visible boundaries, sequential
-          color palette
-      - id: SC-04
-        name: Data Range
+        comment: Color legend, clear boundaries, NA handling, map projection all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data values displayed correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: GDP mapped to fill correctly; coordinate crop shows all European
+          data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labeled with units
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct "{spec-id} · {library} · pyplots.ai" format
+        comment: Title and legend format correct; units included
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good range of GDP values (13.9k-126.4k), demonstrates geographic
-          patterns well. Missing data handling shown (some countries appear gray)
+        comment: Shows full GDP spectrum across 27 countries; demonstrates wealth
+          disparity
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real-world scenario with plausible European GDP per capita values
+        comment: Real-world European GDP per capita data, factually neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic but Luxembourg's 126.4k is somewhat outlier-heavy,
-          slightly skewing the color distribution
+        comment: Values plausible and factually correct (Luxembourg wealthy, Eastern
+          Europe developing)
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,41 +182,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → geocode → plot → save structure
+        comment: Linear structure with no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed, but data is deterministic; geocoding service may
-          vary
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded data, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean Pythonic code, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct output format and current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses lets-plot's geocode_countries() and geom_map() effectively,
-          demonstrating the library's geographic capabilities
+        comment: Expert ggplot2 patterns with geom_map and theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses geocode_countries() and geom_map(); mostly standard ggplot2
+          patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns: []
+  dataprep: []
+  styling: []
