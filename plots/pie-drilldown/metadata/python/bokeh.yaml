@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: pie-drilldown
 created: '2025-12-31T14:08:22Z'
-updated: '2026-05-15T17:02:42Z'
+updated: '2026-05-15T17:16:25Z'
 generated_by: claude-haiku
 workflow_run: 25930270446
 issue: 3072
@@ -15,107 +15,110 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-drill
 quality_score: 77
 review:
   strengths:
-  - Correct pie chart implementation with proper hierarchical data structure
-  - Interactive drilldown functionality properly coded with CustomJS callbacks
-  - Excellent code quality with clean, readable implementation and proper library
-    usage
-  - Good layout and proportions on 3600×3600 canvas
-  - Label positioning adapts intelligently based on percentage values
-  - Selenium-based screenshot approach correctly implemented per library guidelines
+  - Correct Okabe-Ito palette compliance with theme-adaptive backgrounds and text
+    colors
+  - Solid theme-readability in both light and dark modes with no accessibility failures
+  - Realistic hierarchical expense data and well-structured taxonomy
+  - Core pie chart rendering and click-to-drill functionality works correctly
+  - Proper use of Bokeh ColumnDataSource and CustomJS callback patterns
+  - Effective label positioning algorithm avoids text overlaps
   weaknesses:
-  - Dark theme title and breadcrumb text nearly invisible - INK color tokens not producing
-    sufficient contrast against dark background
-  - 'Pie slice colors do not match Okabe-Ito palette order - first series should be
-    #009E73 (teal green) but renders as pink/magenta'
-  - Color palette assignment to slices is completely wrong across all categories
-  - Missing prominent back button navigation (though clickable breadcrumbs coded in
-    interactive version)
-  - Generic aesthetic design without visual storytelling or emphasis beyond defaults
+  - Breadcrumb back-navigation references undefined window.navTo() function — clicking
+    breadcrumbs causes JavaScript ReferenceError
+  - Missing animated transitions when drilling down/up (explicitly required in spec)
+  - Click indicator label at bottom doesn't update based on navigation depth
+  - Design is functional but generic — no aesthetic refinement beyond spec requirements
+  - No visual storytelling or focal points to guide user exploration
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "pie-drilldown · bokeh · anyplot.ai" in dark text, clearly readable at top; Breadcrumb "Total Expenses | Click a slice to drill down" readable; footer "Click a slice to drill down" readable
-      Data: Four pie slices with labels showing name, $value in thousands, and percentage. Labels positioned with radius adaptation - larger slices (>15%) inside at 0.55r, smaller outside at 0.65r. Text is white/light colored
-      Colors: First slice (Operations, 34.1%) appears pink/magenta instead of #009E73; second (Marketing, 23.3%) pink instead of #D55E00; third (Research, 25.8%) pink instead of #0072B2; fourth (HR, 16.8%) blue (#0072B2 is correct) - palette order completely wrong
-      Legibility verdict: PASS (for light theme only) - all text readable, but color palette is non-compliant
+      Background: Warm off-white (#FAF8F1) — correct surface color
+      Chrome: Title dark text at top ("pie-drilldown · bokeh · anyplot.ai"), breadcrumb label "Total Expenses", click indicator "Click a slice to drill down" — all readable with good contrast
+      Data: Four colored wedges representing expense categories (Operations/teal, Marketing/orange, Research/blue, HR/pink) with white outlined labels showing names, dollar values, and percentages (e.g., "Human Resources $650K (16.8%)", "Research $1000K (27.1%)", "Marketing $900K (23.3%)"). Teal (#009E73) slice is visually subtle in light mode but distinguishable via wedge borders.
+      Legibility verdict: PASS — all text readable, colors distinguishable, no contrast failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title "pie-drilldown · bokeh · anyplot.ai" at top appears EXTREMELY FAINT and nearly invisible - appears to be light gray but with insufficient contrast to dark background. Breadcrumb text also appears very faint and barely readable. Footer text is barely visible.
-      Data: Same pie slices visible with same color order (pink, pink, pink, blue). Slice labels (name, values, percentages) remain readable as they are white text. Color palette matches light render which is correct for data consistency, but chrome text fails legibility
-      Colors: Data colors are correctly identical to light render - only chrome should flip between themes, but the chrome text is not readable
-      Legibility verdict: FAIL - Dark theme title unreadable (dark-on-light text visibility problem). Title should use INK (#F0EFE8) which should be clearly visible, but appears extremely faint. This is a critical theme-readability failure per the guidelines.
+      Background: Warm near-black (#1A1A17) — correct dark surface color
+      Chrome: Title and breadcrumb show in light text (#F0EFE8), click indicator visible — all readable, no dark-on-dark failures
+      Data: All four data colors **identical to light render** (teal, orange, blue, pink), confirming theme-independent palette. Teal color is now highly visible against dark background, validating light-mode rendering was correct. Labels in white/light text with bold styling.
+      Legibility verdict: PASS — all elements readable, data colors consistent with light render, no theme-adaptation failures
+
+    Both renders meet legibility standards. No accessibility failures detected.
   criteria_checklist:
     visual_quality:
-      score: 18
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Dark theme title/breadcrumb nearly invisible - critical legibility
-          failure
+        passed: true
+        comment: 48pt title, 30pt labels. Readable in both themes with proper outline
+          styling.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Labels positioned via mid-angles and radius adjustments. No detected
+          overlaps.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible and well-positioned
+        comment: All four slices visible. Teal is subtler in light mode but distinguished
+          by wedge borders.
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Palette colors not applied correctly to slices
+        passed: true
+        comment: Okabe-Ito palette (positions 1-4). Colorblind-safe, no red-green
+          dependency.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout on 3600×3600 canvas
+        comment: Centered, well-proportioned on 3600×3600 square canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct
+        comment: Title present and correctly formatted.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series should be #009E73 but is pink/magenta - palette order
-          completely wrong'
+        passed: true
+        comment: 'Okabe-Ito order correct. Background colors match spec (#FAF8F1 light,
+          #1A1A17 dark). Theme-adaptive chrome.'
     design_excellence:
-      score: 11
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Generic styling using library defaults
+        comment: Generic defaults. No custom palette refinement or intentional visual
+          hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Label radius adjustment shows some refinement
+        comment: Minimal customization. Wedge borders provide subtle definition but
+          no polish.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Breadcrumb navigation supports exploration but no visual emphasis
+        comment: Functional but lacks narrative emphasis or focal points.
     spec_compliance:
       score: 14
       max: 15
@@ -125,50 +128,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pie chart with drilldown
+        comment: Correct pie chart with drilldown structure.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: false
-        comment: Breadcrumb, labels, clickable indicator present; missing visible
-          back button
+        comment: ✓ Breadcrumbs, click-to-drill, labels. ✗ Missing animations, back-navigation
+          broken (window.navTo undefined).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hierarchy properly mapped
+        comment: Hierarchical structure correct, values accurate, percentages calculated
+          properly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, breadcrumb provides navigation
+        comment: Correct title format. Legend N/A for single-level pie.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Full hierarchical structure shown
+        passed: false
+        comment: 'Comprehensive hierarchy, 3-4 levels, realistic structure. Minor:
+          animations missing.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Company expense breakdown is plausible and neutral
+        comment: Plausible company expense breakdown, neutral framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic for domain
+        comment: Sensible values for expense budget context.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -176,56 +181,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no unnecessary abstraction
+        comment: No unnecessary functions/classes. Procedural code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic hierarchical data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: CustomJS callbacks are legitimate
+        passed: false
+        comment: 'BUG: CustomJS breadcrumbs reference undefined window.navTo() — ReferenceError
+          on click. Click indicator doesn''t update on navigation.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Correct output naming (plot-{THEME}.png/html).
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper ColumnDataSource, callbacks, Selenium
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Uses bokeh-specific features but not exceptionally
+        comment: Good use of ColumnDataSource, wedge(), tap tool, CustomJS. Proper
+          theme handling via env var. Selenium screenshot is appropriate.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: CustomJS for interactivity is Bokeh-specific, but incomplete (missing
+          back-nav callback).
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
