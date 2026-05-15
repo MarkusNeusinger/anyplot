@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: andrews-curves
 created: '2025-12-31T21:34:18Z'
-updated: '2026-05-15T13:00:45Z'
+updated: '2026-05-15T13:09:30Z'
 generated_by: claude-haiku
 workflow_run: 25918836175
 issue: 2859
@@ -12,34 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Perfect theme adaptation with identical data colors and adaptive chrome in both
-    renders
-  - Excellent text legibility in both light and dark themes with explicit font sizing
-  - Clean, maintainable code with proper data normalization and correct Andrews curve
-    transformation
-  - Appropriate data choice using canonical iris dataset that clearly demonstrates
-    the visualization technique
-  - Proper Okabe-Ito palette compliance and theme-correct styling throughout
+  - Perfect visual quality with excellent legibility in both light and dark themes
+  - Flawless palette compliance and theme-adaptive chrome
+  - Comprehensive spec compliance with all required features
+  - Clean, reproducible code using real iris dataset
+  - Proper data normalization and appropriate transformation parameters
+  - Expert use of plotly's idiomatic API patterns
   weaknesses:
-  - Design excellence is functional but not sophisticated—follows template defaults
-    without additional visual polish
-  - Library mastery is straightforward—uses standard Plotly API without leveraging
-    distinctive features like subplots or callbacks
+  - Design is generic, following defaults without custom aesthetic choices
+  - Limited use of plotly's advanced visualization features
+  - Could enhance data storytelling through additional visual hierarchy or emphasis
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in dark ink (#1A1A17). Legend with light background box and border.
-      Data: Three species in Okabe-Ito colors—setosa in #009E73 (brand green), versicolor in #D55E00 (orange), virginica in #0072B2 (blue). 150 curves with opacity 0.4 showing clear density patterns.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "andrews-curves · plotly · anyplot.ai" in dark text (28px), clearly visible. X-axis label "Parameter t (radians)" and Y-axis label "f(t) (normalized units)" both in dark INK color (22px), fully readable. Tick labels in INK_SOFT color (18px), clear against light background.
+      Data: 150 curves colored by iris species - green (#009E73) for setosa, orange (#D55E00) for versicolor, blue (#0072B2) for virginica. All curves have 0.4 opacity allowing overlapping patterns to be visible. Line width 2 is adequate at render size.
+      Legend: Top-right positioned with elevated background (#FFFDF6), border in INK_SOFT, labels in INK_SOFT - all clearly readable
+      Legibility verdict: PASS - All text is clearly readable with excellent contrast against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 ✓
-      Chrome: All text adapted to light colors—title and labels in #F0EFE8, secondary text in #B8B7B0. Legend box with dark background. All elements clearly readable against dark background.
-      Data: Same three colors as light render (#009E73, #D55E00, #0072B2)—perfect theme consistency. Data colors identical between renders, only chrome flips.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title in light text (INK for dark theme - #F0EFE8), clearly visible. X-axis and Y-axis labels in light INK color, fully readable. Tick labels in light INK_SOFT color (#B8B7B0), clear and legible.
+      Data: Identical colors to light render - green (#009E73) for setosa, orange (#D55E00) for versicolor, blue (#0072B2) for virginica. This confirms perfect theme-adaptive implementation: data colors unchanged, only chrome flips.
+      Legend: Top-right positioned with dark elevated background (#242420), border in light INK_SOFT, labels in light INK_SOFT - all properly themed
+      Legibility verdict: PASS - All text is clearly readable with excellent contrast against dark background. NO dark-on-dark issues detected. All elements properly adapt to dark theme while maintaining data color consistency.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,48 +49,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px, legend 16px. Perfect readability in both themes.'
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Legend positioned cleanly with adequate
-          spacing.
+        comment: No overlapping text, legend well-positioned, clear spacing throughout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 curves with opacity 0.4 perfectly adapted to density. All three
-          species clearly distinguishable.
+        comment: 150 curves with 0.4 opacity optimally adapted to data density, all
+          curves visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Good contrast between all three data
-          series.
+        comment: Okabe-Ito palette ensures colorblind safety with good contrast between
+          series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Generous margins. Canvas utilization optimal at 4800×2700px.
+        comment: Perfect 4800×2700px render with balanced margins (l=120, r=80, t=100,
+          b=100)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Axes descriptive with units.
+        comment: 'Descriptive labels with units: ''Parameter t (radians)'', ''f(t)
+          (normalized units)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Okabe-Ito order correct. Backgrounds #FAF8F1/#1A1A17.
-          Both renders theme-correct.'
+        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds correct
+          (#FAF8F1/#1A1A17), theme-correct chrome in both renders'
     design_excellence:
       score: 8
       max: 20
@@ -101,21 +101,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional clean defaults. Theme adaptation is thoughtful. No exceptional
-          polish beyond correct template implementation.
+        comment: Well-configured defaults without custom palette or distinctive design
+          elements
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Subtle grid and clean legend. Library defaults with minimal customization.
+        comment: Subtle grid and standard styling, minimal customization beyond requirements
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clearly displays clustering patterns. Color coding guides interpretation
-          but no additional visual hierarchy.
+        comment: Data displayed clearly with color-based species grouping, but no
+          additional visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -125,28 +125,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews curves with proper Fourier transformation.
+        comment: Correct Andrews curves transformation with Fourier series implementation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: multivariate transformation, curve visualization,
-          categorical coloring, parameter range.'
+        comment: 'All features present: normalization, species coloring, proper transformation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis parameter t correct. Y-axis f(t) correct. All 150 observations
-          represented.
+        comment: X-axis (parameter t) and Y-axis (f(t)) correctly assigned, all data
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows three species with proper color
-          mapping.
+        comment: Title format correct, legend labels match iris species
     data_quality:
       score: 15
       max: 15
@@ -156,19 +154,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete iris dataset with all four features and 150 observations.
+        comment: Uses all 4 iris features, shows 150 observations with clear species
+          separation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Canonical iris dataset. Neutral, educational, well-established.
+        comment: Real, well-known iris dataset in appropriate scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized features and appropriate parameter range -π to π.
+        comment: Normalized data with standard parameter range (-π to π), all values
+          correct
     code_quality:
       score: 10
       max: 10
@@ -178,56 +178,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow. No unnecessary functions or classes.
+        comment: Linear flow with inline transformation, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic iris dataset. No randomness.
+        comment: Deterministic iris dataset, no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, plotly, sklearn.'
+        comment: Only necessary imports, no unused dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI.
+        comment: Clean, Pythonic code with appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html.
+        comment: Correct output format (plot-{THEME}.png/html), current API usage
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses go.Figure() and go.Scatter() correctly. Standard API but not
-          advanced patterns.
+        passed: true
+        comment: Expert use of go.Figure(), go.Scatter(), update_layout(), and plotly
+          patterns
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Uses hovertemplate. No advanced Plotly-specific features like callbacks
-          or subplots.
+        comment: Uses hover templates and legend groups, but limited advanced plotly
+          features
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - manual-ticks
   - hover-tooltips
+  - html-export
   patterns:
   - dataset-loading
   - iteration-over-groups
