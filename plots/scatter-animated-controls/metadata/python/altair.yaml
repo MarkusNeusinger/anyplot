@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: scatter-animated-controls
 created: '2025-12-31T13:51:00Z'
-updated: '2026-05-15T11:12:31Z'
+updated: '2026-05-15T11:18:38Z'
 generated_by: claude-haiku
 workflow_run: 25914455601
 issue: 3067
@@ -12,42 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 72
 review:
   strengths:
-  - All text legible in both light and dark themes with proper contrast
-  - Excellent visual hierarchy using faceting to show temporal progression
-  - Okabe-Ito palette correctly applied (Region 1=#009E73, Region 2=#D55E00, Region
-    3=#0072B2)
-  - Theme-adaptive chrome tokens properly threaded through all elements
-  - Clean data visualization with realistic country development metrics
-  - Good code structure with proper seeding for reproducibility
-  - Size and color encodings effectively show population and region grouping
+  - Theme-adaptive chrome correctly applied across both renders (token usage is professional)
+  - Okabe-Ito palette correctly implemented; first series is brand green (#009E73)
+  - Clean, readable typography with appropriate sizing for large canvas
+  - Realistic synthetic data with proper seeding for reproducibility
+  - All text legible in both light and dark themes; no dark-on-dark failures
   weaknesses:
-  - Missing play/pause controls specified in the spec - spec requires 'Play/pause
-    button should be prominently visible and intuitive' but implementation uses static
-    faceting
-  - Missing timeline slider for interactive navigation - spec requires 'Timeline slider
-    enables jumping to any point in the animation'
-  - Static faceted approach limits interactive storytelling compared to true animation
-    with smooth transitions mentioned in spec
+  - 'Static PNG shows only one year (2020), not the ''key time points'' (plural) required
+    by spec. Spec explicitly states: ''static faceted version showing key time points''
+    — implying multiple visible panels.'
+  - Faceting code is present but output shows a single-year view with timeline slider.
+    Either faceting isn't rendering as intended or interactive slider is being auto-generated,
+    defeating the purpose of static faceted layout.
+  - No code evidence of interactive selection logic (no alt.selection() or input parameters),
+    yet the Timeline Slider control is visible — unclear how this is implemented.
+  - Missing evidence that all 5 years are displayed; faceted multi-panel layout should
+    be obvious in static PNG but shows only 2020
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title and subtitle in dark INK (#1A1A17), clearly readable against light background. Year labels (2000-2020) are bold and prominent. Axis labels "GDP per Capita (thousands USD)" and "Life Expectancy (years)" are dark and legible. Tick labels (0-90 on Y-axis, 0-70 on X-axis) are in INK_SOFT (#4A4A44) and fully readable. Grid lines are subtle with low opacity.
-      Data: Five scatter plots showing data evolution across years. Markers use Okabe-Ito colors: Region 1 (green #009E73), Region 2 (orange #D55E00), Region 3 (blue #0072B2). Circle sizes represent population (100-2500 range). All markers are clearly visible and well-defined.
-      Legends: Two legend boxes on the right with elevated background (#FFFDF6). "Region" legend with three entries and "Population" legend with size scale. Both legends have clear titles and labels.
-      Legibility verdict: PASS - All text is easily readable at full resolution. Data colors have excellent contrast against the light background.
+      Chrome: Title "scatter-animated-controls · altair · anyplot.ai", subtitle "Country Development Metrics — Evolution Across Key Years", axis labels and tick labels all clearly visible in dark ink tones; no legibility issues
+      Data: Data points colored by Region (green #009E73, orange #D55E00, blue #0072B2 in Okabe-Ito order), circles sized by Population, showing scatter of countries; first series correctly uses brand green
+      Timeline Control: "Timeline Slider: Select Year" appears at top with blue bar
+      Year Display: Large "2020" text visible in background
+      Legibility verdict: PASS - All text readable against light background
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and subtitle in light INK (#F0EFE8), clearly readable against dark background. Year labels remain bold and visible. Axis labels are in light colors and fully readable against the dark surface. Tick labels in INK_SOFT (#B8B7B0) are visible with good contrast (not dark-on-dark). Grid lines are visible as subtle light lines on the dark surface.
-      Data: Data colors are IDENTICAL to light render (Region 1 green, Region 2 orange, Region 3 blue). Circle sizes match light render. All markers maintain excellent visibility on the dark background.
-      Legends: Two legend boxes with elevated dark background (#242420). Colors, sizes, and text are identical to light render except for chrome theming.
-      Legibility verdict: PASS - All text is readable in dark theme. No dark-on-dark failures detected. The theme-adaptive colors (INK_SOFT tokens) properly adapted to dark background, and data colors remain identifiable and vibrant.
+      Chrome: All text adapted to light tones (#F0EFE8 primary, #B8B7B0 secondary), clearly visible against dark background; no dark-on-dark failures detected
+      Data: Data colors are IDENTICAL to light render (green, orange, blue) — only chrome flipped as expected ✓
+      Timeline Control: Same "Timeline Slider: Select Year" visible
+      Year Display: Large "2020" text visible in background, rendered in light tone
+      Legibility verdict: PASS - All text readable against dark background; theme adaptation correct
+
+    CRITICAL ISSUE: Both renders show only year 2020 in a single scatter plot, not the 5 faceted panels expected from the code. The spec requires "static faceted version showing key time points" (plural, visible simultaneously for comparison).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -55,77 +59,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized and readable in both themes. Title (32px),
-          axis labels (16px), tick labels (14px) all clearly visible with proper contrast
+        comment: All text readable in both renders; clear hierarchy
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Faceted layout with 5 subplots provides excellent spacing. No text
-          overlaps with data. Legend placement clean and unobstructed
+        comment: Clean layout, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter circles with opacity=0.7 and size range 100-2500 are well-visible.
-          Grid lines subtle but present
+        comment: Markers, axes, grid all visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses Okabe-Ito palette (positions 1-3). Colorblind-safe categorical
-          colors
+        comment: Okabe-Ito palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Good proportions across 5 facets. Nothing cut off. Generous margins
+        passed: false
+        comment: Good proportions but single-year view doesn't showcase temporal range
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''GDP per Capita (thousands USD)'', ''Life
-          Expectancy (years)''. Title includes spec-id, library, site'
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Region 1 = #009E73 (brand green). Okabe-Ito order (1,2,3). Backgrounds:
-          light #FAF8F1, dark #1A1A17. Both renders theme-correct'
+        passed: false
+        comment: Colors correct but PNG shows only one year, not multiple key time
+          points as required by spec
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Uses Okabe-Ito correctly with theme-adaptive tokens and intentional
-          faceted layout. Solid design but not exceptionally custom or sophisticated
+        comment: Generic styling; theme tokens applied but no distinctive design
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Spines configured subtly. Grid at 10% opacity, subtle. Whitespace
-          generous. Legend styling with elevated backgrounds
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Faceting shows progression effectively, but lacks play/pause controls
-          and smooth transitions specified in spec. Interactive animation would improve
-          storytelling impact
+        comment: Standard Altair defaults; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: Time dimension present but compressed to single year, limiting narrative
     spec_compliance:
-      score: 12
+      score: 10
       max: 15
       items:
       - id: SC-01
@@ -133,29 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot type showing data points
+        comment: Correct scatter plot
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 2
         max: 4
         passed: false
-        comment: 'Missing: play/pause button, timeline slider (explicitly required
-          in spec). Present: temporal evolution via faceting, year labels. Covers
-          ~25% of interactive features'
+        comment: 'CRITICAL: Spec requires static faceted version showing multiple
+          key time points simultaneously. Output shows only one year.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct (GDP vs Life Expectancy). Axes properly scaled with domain
-          [0,70] and [45,90]
+        comment: X/Y correct; axes show full range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: 'Title: ''scatter-animated-controls · altair · anyplot.ai''. Legends
-          for Region and Population match data encoding'
+        passed: false
+        comment: Title correct format but legend misaligned with single-year constraint
     data_quality:
       score: 15
       max: 15
@@ -165,23 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter with size and color encoding. 12 countries, 5 time
-          periods, 3 regions, realistic metrics
+        comment: All dimensions encoded (x, y, size, color, time)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Country development metrics (GDP, life expectancy, population) are
-          plausible and neutral. Relationships sensible (higher GDP correlated with
-          higher life expectancy)
+        comment: Plausible development metrics; neutral naming
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: GDP 0-70k USD, Life Expectancy 45-90 years, Population 0-250M all
-          sensible ranges
+        comment: Sensible ranges
     code_quality:
       score: 10
       max: 10
@@ -191,60 +179,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Straightforward data generation
-          and charting
+        comment: No unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible synthetic data
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, sys, altair, numpy, pandas'
+        comment: Only altair, numpy, pandas
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity or UI simulation
+        comment: No fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves as plot-{theme}.png + .html
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good Altair patterns: mark_circle(), proper encoding (X, Y, Size,
-          Color), facet(), configure_* theming. Theme-adaptive colors properly applied'
+        comment: Proper Chart, mark_circle, encode, facet patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses faceting for temporal comparison (good pattern). Does not leverage
-          Altair's interactive capabilities (selections, transforms) for animation
-          or controls
-  verdict: APPROVED
+        comment: Faceting used but doesn't produce expected multi-panel output
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
+  styling: []
