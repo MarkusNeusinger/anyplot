@@ -129,7 +129,7 @@ class DashboardResponse(BaseModel):
     tag_distribution: dict[str, dict[str, int]]
     score_distribution: dict[str, int]
     timeline: list[TimelinePoint]
-    daily_impls: list[DailyImplPoint]  # Last 30 days, zero-filled
+    daily_impls: list[DailyImplPoint]  # Last 28 days, zero-filled
 
 
 class PlotOfTheDayResponse(BaseModel):
@@ -361,15 +361,15 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
     # Timeline sorted by month
     timeline = [TimelinePoint(month=m, count=c) for m, c in sorted(monthly_counts.items())]
 
-    # Daily impls for the last 30 days, zero-filled. Same shape the debug
-    # dashboard uses, so the public stats page can mirror that visualization.
+    # Daily impls for the last 28 days, zero-filled. Window matches the
+    # visitors chart on the stats page so the two strips read side-by-side.
     today = datetime.now(timezone.utc).date()
     daily_impls = [
         DailyImplPoint(
             date=(today - timedelta(days=offset)).isoformat(),
             count=daily_counts.get((today - timedelta(days=offset)).isoformat(), 0),
         )
-        for offset in range(29, -1, -1)
+        for offset in range(27, -1, -1)
     ]
 
     # Coverage
@@ -627,14 +627,18 @@ async def get_related_specs(
 
 
 async def _fetch_plausible_visitors() -> VisitorsResponse:
-    """Query the Plausible Stats API v2 for unique visitors per day (last 30d).
+    """Query the Plausible Stats API v2 for unique visitors per day (last 28d).
+
+    The 28-day window matches Plausible's own default "Last 28 days" report so
+    the totals here align with what the dashboard at plausible.io/anyplot.ai
+    shows by default.
 
     Returns an empty `points` list when the API key is not configured or the
     upstream call fails — the stats page treats `points: []` as "no data" and
     renders a placeholder instead of an all-zero chart, so we can distinguish
     real zeros (Plausible returned 0 visitors for a day) from missing data.
-    On a successful fetch the response is zero-filled across all 30 days so
-    the chart has a stable 30-bar width even for days Plausible has no row for.
+    On a successful fetch the response is zero-filled across all 28 days so
+    the chart has a stable 28-bar width even for days Plausible has no row for.
     """
     if not settings.plausible_api_key:
         return VisitorsResponse(points=[])
@@ -642,7 +646,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
     payload = {
         "site_id": settings.plausible_site_id,
         "metrics": ["visitors"],
-        "date_range": "30d",
+        "date_range": "28d",
         "dimensions": ["time:day"],
     }
     try:
@@ -680,20 +684,20 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
             date=(today - timedelta(days=offset)).isoformat(),
             visitors=by_date.get((today - timedelta(days=offset)).isoformat(), 0),
         )
-        for offset in range(29, -1, -1)
+        for offset in range(27, -1, -1)
     ]
     return VisitorsResponse(points=points)
 
 
 @router.get("/visitors", response_model=VisitorsResponse)
 async def get_visitors() -> VisitorsResponse:
-    """Get unique visitors per day for the last 30 days (Plausible Stats API).
+    """Get unique visitors per day for the last 28 days (Plausible Stats API).
 
     Cached for ~1h via stale-while-revalidate so we stay well under Plausible's
     600-req/h rate limit even under traffic spikes on the public stats page.
     """
     return await get_or_set_cache(
-        cache_key("insights", "visitors", "30d"),
+        cache_key("insights", "visitors", "28d"),
         _fetch_plausible_visitors,
         refresh_after=3600,
         refresh_factory=_fetch_plausible_visitors,

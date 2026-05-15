@@ -1792,7 +1792,7 @@ class TestInsightsRouter:
             assert response.json()["points"] == []
 
     def test_visitors_parses_plausible_response(self, client: TestClient) -> None:
-        """Visitor counts from Plausible should be merged into the zero-filled 30-day series.
+        """Visitor counts from Plausible should be merged into the zero-filled 28-day series.
 
         Time is frozen via a patched `datetime` in the module under test so the
         "today" the endpoint computes for zero-filling matches the "today" the
@@ -1841,7 +1841,7 @@ class TestInsightsRouter:
             response = client.get("/insights/visitors")
             assert response.status_code == 200
             points = response.json()["points"]
-            assert len(points) == 30
+            assert len(points) == 28
             today_point = next(p for p in points if p["date"] == today_iso)
             assert today_point["visitors"] == 42
 

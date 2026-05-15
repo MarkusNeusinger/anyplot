@@ -222,16 +222,20 @@ describe('StatsPage', () => {
     });
   });
 
-  it('renders visitors chart header and "more →" link when Plausible returns data', async () => {
+  it('renders visitors section header, chart, and Plausible link when Plausible returns data', async () => {
     mockFetchSuccess();
 
     render(<StatsPage />);
 
     await waitFor(() => {
-      // 12 + 25 + 7 = 44 daily-uniques sum
-      expect(screen.getByText(/unique visitors · last 30 days · 44 daily-uniques sum/)).toBeInTheDocument();
+      // 12 + 25 + 7 = 44 total
+      expect(screen.getByText(/unique visitors · last 28 days · 44 total/)).toBeInTheDocument();
     });
-    expect(screen.getByText('more →')).toBeInTheDocument();
+    // section header matches the libraries/timeline pattern
+    expect(screen.getByText('visitors')).toBeInTheDocument();
+    // link makes the destination explicit, styled as a code-call to match the
+    // site's terminal/monospace aesthetic
+    expect(screen.getByText('plausible.view()')).toBeInTheDocument();
   });
 
   it('renders the "visitor data unavailable" placeholder when Plausible returns empty points', async () => {

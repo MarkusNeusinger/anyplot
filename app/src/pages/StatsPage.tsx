@@ -180,19 +180,23 @@ export function StatsPage() {
             </Box>
           ))}
         </Box>
-        {/* Unique visitors (last 30 days) — sourced from the Plausible Stats API.
-            Visualized like the other in-page bar charts; "more →" links out
-            to the full Plausible dashboard for deeper analytics. */}
+        {/* Unique visitors (last 28 days) — sourced from the Plausible Stats API.
+            The 28-day window matches Plausible's own default "Last 28 days"
+            report so totals here align with the dashboard at plausible.io/anyplot.ai.
+            `plausible.view()` lives in the section-header link slot, matching
+            the `libraries.all()` / `map.explore()` style used across the site. */}
+        <Box sx={{ mt: 4 }}>
+          <SectionHeader
+            prompt="❯"
+            title={<em>visitors</em>}
+            linkText="plausible.view()"
+            linkHref="https://plausible.io/anyplot.ai"
+          />
+        </Box>
         <Box sx={{ mt: 1, mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText }}>
-              unique visitors · last 30 days{visitors !== null && visitorPoints.length > 0 ? ` · ${formatNum(totalVisitors)} daily-uniques sum` : ''}
-            </Typography>
-            <Link href="https://plausible.io/anyplot.ai" target="_blank" rel="noopener noreferrer"
-              onClick={() => trackEvent('external_link', { destination: 'plausible' })}
-              sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, textDecoration: 'none', '&:hover': { color: colors.primaryDark } }}
-            >more →</Link>
-          </Box>
+          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
+            unique visitors · last 28 days{visitors !== null && visitorPoints.length > 0 ? ` · ${formatNum(totalVisitors)} total` : ''}
+          </Typography>
           {visitors === null ? (
             <Box sx={{ height: 70, display: 'flex', alignItems: 'center' }}>
               <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
@@ -350,16 +354,16 @@ export function StatsPage() {
           <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>more</Typography>
         </Box>
 
-        {/* Timeline — daily implementation updates over the last 30 days.
-            Mirrors the debug-page activity strip so the public stats page
-            shows whether the catalog is actively being worked on. */}
+        {/* Timeline — daily implementation updates over the last 28 days.
+            Window matches the visitors chart above so the two bar strips
+            read side-by-side. */}
         {dailyImpls.length > 0 && (
           <>
             <Box sx={{ mt: 4 }}>
               <SectionHeader prompt="❯" title={<em>timeline</em>} />
             </Box>
             <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
-              implementations updated · last 30 days · {totalDailyImpls} total
+              implementations updated · last 28 days · {totalDailyImpls} total
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}>
               {dailyImpls.map(point => (

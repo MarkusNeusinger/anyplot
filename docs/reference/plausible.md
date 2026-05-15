@@ -584,7 +584,9 @@ public stats page.
 
 - **Endpoint**: `GET /insights/visitors` (in `api/routers/insights.py`)
 - **Upstream call**: `POST https://plausible.io/api/v2/query` with body
-  `{"site_id": "anyplot.ai", "metrics": ["visitors"], "date_range": "30d", "dimensions": ["time:day"]}`
+  `{"site_id": "anyplot.ai", "metrics": ["visitors"], "date_range": "28d", "dimensions": ["time:day"]}`
+  (28d matches Plausible's own default "Last 28 days" report so totals here
+  align with the dashboard at plausible.io/anyplot.ai)
 - **Auth**: `Authorization: Bearer ${PLAUSIBLE_API_KEY}` (Stats API key
   created in Plausible → Account Settings → API Keys, then mirrored to
   GCP Secret Manager as `PLAUSIBLE_API_KEY` for Cloud Run)
