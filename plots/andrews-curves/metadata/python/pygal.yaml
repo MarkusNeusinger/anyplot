@@ -1,34 +1,221 @@
 library: pygal
+language: python
 specification_id: andrews-curves
 created: '2025-12-31T21:35:14Z'
-updated: '2025-12-31T21:53:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20627536627
+updated: '2026-05-15T13:12:31Z'
+generated_by: claude-haiku
+workflow_run: 25919201064
 issue: 2859
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/pygal/plot-dark.html
 quality_score: 88
+review:
+  strengths:
+  - Perfect visual quality with explicit font sizing for large canvas legibility
+  - Flawless spec compliance and data quality
+  - Proper theme-adaptive chrome in both light and dark renders
+  - Clean, reproducible code with proper seed and normalization
+  - Strong use of color coding to create visual hierarchy and species separation
+  - Professional handling of custom Style object for theme tokens
+  weaknesses:
+  - Design Excellence could be more refined; grid styling not optimized
+  - Could leverage more distinctive pygal features beyond theme adaptation
+  - Legend and grid styling somewhat generic relative to defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct theme background
+      Chrome: Title "andrews-curves · pygal · anyplot.ai" in dark text; X-axis "t (radians)" and Y-axis "f(t)" both dark and readable; tick labels visible; grid subtle
+      Data: Three species color-coded with Okabe-Ito palette - Setosa in green (#009E73), Versicolor in orange (#D55E00), Virginica in blue (#0072B2); 45 total curves with clear visual separation
+      Legibility verdict: PASS - all text elements perfectly readable against light background; no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct theme background
+      Chrome: Title in light text clearly visible; axis labels and tick labels in light colors; all readable against dark surface; grid subtle
+      Data: Three species colors identical to light render (green, orange, blue unchanged); only chrome flipped as expected
+      Legibility verdict: PASS - all text elements light-colored and readable; no dark-on-dark failures; proper theme adaptation confirmed
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (28, 22, 18); all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all elements fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 45 curves optimally visible; species distinguishable by color
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800×2700 px; balanced proportions and margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title with spec-id and domain; axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds; theme-correct
+          chrome'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default with theme adaptation; not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Functional grid and legend; could be more refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color separation; good focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY Andrews curves with proper Fourier transform
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: multivariate data, categories, transparency,
+          clustering'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match species
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 4D data, 3 species, clustering patterns'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris-inspired botanical data; neutral, scientific
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized data; appropriate t range for Fourier expansion
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; clean implementation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME} output format
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Style object usage; proper XY chart type
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Leverages theme system; could use more distinctive features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - alpha-blending
-review:
-  strengths:
-  - Excellent colorblind-safe color palette (blue/orange/purple)
-  - Proper data normalization (z-score standardization) as recommended in spec
-  - Interactive tooltips showing original iris measurements for each curve
-  - Clean legend with only 3 entries (one per species) rather than per-curve
-  - Correct Andrews curve formula implementation
-  - Good use of pygal custom Style for large canvas sizing
-  weaknesses:
-  - Grid lines could be slightly more subtle (alpha/opacity could be reduced)
-  - Some individual curves are hard to trace due to overlapping in the middle region
+  - publication-ready
