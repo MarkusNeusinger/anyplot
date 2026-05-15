@@ -1,42 +1,45 @@
-""" pyplots.ai
+"""anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: altair 6.0.0 | Python 3.13
+Quality: pending | Created: 2025-05-15
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
-# Primate phylogenetic tree data (simplified example)
-# Based on approximate evolutionary relationships from mitochondrial DNA studies
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for clade coloring
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+
+# Primate phylogenetic tree with clade assignments
 np.random.seed(42)
 
-# Define tree structure manually with (parent, child, branch_length)
-# Tree structure: Primates -> (Hominidae, Cercopithecidae)
-# Hominidae -> (Homininae, Pongo)
-# Homininae -> (Homo, Pan)
-# Pan -> (P.troglodytes, P.paniscus)
-# Cercopithecidae -> (Macaca, Papio)
-
 edges = [
-    ("Root", "Hominoidea", 0.15),
-    ("Root", "Cercopithecidae", 0.18),
-    ("Hominoidea", "Hominidae", 0.08),
-    ("Hominoidea", "Hylobatidae", 0.12),
-    ("Hominidae", "Homininae", 0.05),
-    ("Hominidae", "Pongo pygmaeus", 0.09),
-    ("Homininae", "Homo sapiens", 0.03),
-    ("Homininae", "Pan", 0.02),
-    ("Pan", "Pan troglodytes", 0.015),
-    ("Pan", "Pan paniscus", 0.015),
-    ("Hylobatidae", "Hylobates lar", 0.06),
-    ("Cercopithecidae", "Macaca mulatta", 0.10),
-    ("Cercopithecidae", "Papio anubis", 0.11),
+    ("Root", "Hominoidea", 0.15, "Apes"),
+    ("Root", "Cercopithecidae", 0.18, "Old World Monkeys"),
+    ("Hominoidea", "Hominidae", 0.08, "Apes"),
+    ("Hominoidea", "Hylobatidae", 0.12, "Lesser Apes"),
+    ("Hominidae", "Homininae", 0.05, "Apes"),
+    ("Hominidae", "Pongo pygmaeus", 0.09, "Apes"),
+    ("Homininae", "Homo sapiens", 0.03, "Apes"),
+    ("Homininae", "Pan", 0.02, "Apes"),
+    ("Pan", "Pan troglodytes", 0.015, "Apes"),
+    ("Pan", "Pan paniscus", 0.015, "Apes"),
+    ("Hylobatidae", "Hylobates lar", 0.06, "Lesser Apes"),
+    ("Cercopithecidae", "Macaca mulatta", 0.10, "Old World Monkeys"),
+    ("Cercopithecidae", "Papio anubis", 0.11, "Old World Monkeys"),
 ]
 
-# Species labels (leaf nodes)
 leaf_nodes = {
     "Homo sapiens": "Human",
     "Pan troglodytes": "Chimpanzee",
@@ -47,17 +50,19 @@ leaf_nodes = {
     "Papio anubis": "Olive Baboon",
 }
 
-# Build adjacency list
+# Build tree structure
 children = {}
 branch_lengths = {}
-for parent, child, length in edges:
+clade_map = {}
+for parent, child, length, clade in edges:
     if parent not in children:
         children[parent] = []
     children[parent].append(child)
     branch_lengths[(parent, child)] = length
+    clade_map[child] = clade
 
 
-# Calculate y-positions for leaf nodes (spread evenly)
+# Get leaf nodes
 def get_leaves(node):
     if node not in children:
         return [node]
@@ -72,7 +77,7 @@ n_leaves = len(all_leaves)
 leaf_y = {leaf: i for i, leaf in enumerate(all_leaves)}
 
 
-# Calculate x-positions based on cumulative branch lengths from root
+# Calculate positions
 def calc_x_positions(node, current_x=0):
     positions = {node: current_x}
     if node in children:
@@ -82,10 +87,6 @@ def calc_x_positions(node, current_x=0):
     return positions
 
 
-x_positions = calc_x_positions("Root")
-
-
-# Calculate y-positions (internal nodes = average of children)
 def calc_y_positions(node):
     if node not in children:
         return {node: leaf_y[node]}
@@ -99,103 +100,174 @@ def calc_y_positions(node):
     return positions
 
 
+x_positions = calc_x_positions("Root")
 y_positions = calc_y_positions("Root")
 
-# Create line segments for the tree (horizontal and vertical lines)
+# Build line segments
 lines_data = []
-for parent, child, _length in edges:
+for parent, child, _length, clade in edges:
     parent_x = x_positions[parent]
     parent_y = y_positions[parent]
     child_x = x_positions[child]
     child_y = y_positions[child]
+    clade_idx = ["Apes", "Old World Monkeys", "Lesser Apes"].index(clade)
+    color = OKABE_ITO[clade_idx]
 
-    # Horizontal line from parent to child's x
-    lines_data.append({"x": parent_x, "y": parent_y, "x2": parent_x, "y2": child_y, "type": "vertical"})
-    # Vertical line at child's y from parent_x to child_x
-    lines_data.append({"x": parent_x, "y": child_y, "x2": child_x, "y2": child_y, "type": "horizontal"})
+    lines_data.append(
+        {
+            "x": parent_x,
+            "y": parent_y,
+            "x2": parent_x,
+            "y2": child_y,
+            "type": "vertical",
+            "clade": clade,
+            "color": color,
+        }
+    )
+    lines_data.append(
+        {
+            "x": parent_x,
+            "y": child_y,
+            "x2": child_x,
+            "y2": child_y,
+            "type": "horizontal",
+            "clade": clade,
+            "color": color,
+        }
+    )
 
 lines_df = pd.DataFrame(lines_data)
 
-# Create node points for leaf labels
+# Leaf nodes data
 nodes_data = []
 for node in all_leaves:
     label = leaf_nodes.get(node, node)
-    nodes_data.append({"x": x_positions[node], "y": y_positions[node], "label": label, "species": node})
+    clade = clade_map.get(node, "Unknown")
+    clade_idx = (
+        ["Apes", "Old World Monkeys", "Lesser Apes"].index(clade)
+        if clade in ["Apes", "Old World Monkeys", "Lesser Apes"]
+        else 0
+    )
+    color = OKABE_ITO[clade_idx]
+    nodes_data.append(
+        {
+            "x": x_positions[node],
+            "y": y_positions[node],
+            "label": label,
+            "species": node,
+            "clade": clade,
+            "color": color,
+        }
+    )
 
 nodes_df = pd.DataFrame(nodes_data)
 
-# Create internal node points
+# Internal nodes data
 internal_nodes = [n for n in x_positions.keys() if n not in all_leaves and n != "Root"]
-internal_data = [{"x": x_positions[n], "y": y_positions[n], "name": n} for n in internal_nodes]
+internal_data = []
+for n in internal_nodes:
+    clade = clade_map.get(n, "Unknown")
+    clade_idx = (
+        ["Apes", "Old World Monkeys", "Lesser Apes"].index(clade)
+        if clade in ["Apes", "Old World Monkeys", "Lesser Apes"]
+        else 0
+    )
+    color = OKABE_ITO[clade_idx]
+    internal_data.append({"x": x_positions[n], "y": y_positions[n], "name": n, "clade": clade, "color": color})
 internal_df = pd.DataFrame(internal_data)
 
-# Define color palette - Python colors
-branch_color = "#306998"  # Python Blue
-node_color = "#FFD43B"  # Python Yellow
-text_color = "#2d2d2d"  # Dark gray for text
-
-# Create the tree branches using rule marks
+# Create branches with clade colors
 branches = (
-    alt.Chart(lines_df).mark_rule(strokeWidth=4, color=branch_color).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
+    alt.Chart(lines_df)
+    .mark_rule(strokeWidth=3.5)
+    .encode(
+        x="x:Q",
+        y="y:Q",
+        x2="x2:Q",
+        y2="y2:Q",
+        color=alt.Color("color:N", scale=alt.Scale(domain=OKABE_ITO, range=OKABE_ITO), legend=None),
+        tooltip=["clade:N"],
+    )
 )
 
 # Create leaf node points
 leaf_points = (
     alt.Chart(nodes_df)
-    .mark_circle(size=400, color=node_color, stroke=branch_color, strokeWidth=2)
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), tooltip=["species:N", "label:N"])
+    .mark_circle(size=600)
+    .encode(
+        x="x:Q",
+        y="y:Q",
+        color=alt.Color("color:N", scale=alt.Scale(domain=OKABE_ITO, range=OKABE_ITO), legend=None),
+        tooltip=["species:N", "label:N", "clade:N"],
+    )
 )
 
 # Create leaf labels
 leaf_labels = (
     alt.Chart(nodes_df)
-    .mark_text(align="left", baseline="middle", dx=15, fontSize=20, fontWeight="bold", color=text_color)
-    .encode(x="x:Q", y="y:Q", text="label:N")
+    .mark_text(align="left", baseline="middle", dx=12, fontSize=20, fontWeight="bold")
+    .encode(x="x:Q", y="y:Q", text="label:N", color=alt.value(INK))
 )
 
-# Create internal node points (smaller)
+# Create internal node points (larger now)
 internal_points = (
     alt.Chart(internal_df)
-    .mark_circle(size=200, color=branch_color, stroke="#ffffff", strokeWidth=2)
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), tooltip=["name:N"])
+    .mark_circle(size=350)
+    .encode(
+        x="x:Q",
+        y="y:Q",
+        color=alt.Color("color:N", scale=alt.Scale(domain=OKABE_ITO, range=OKABE_ITO), legend=None),
+        tooltip=["name:N", "clade:N"],
+    )
 )
 
-# Create scale bar data
+# Create scale bar
 max_x = max(x_positions.values())
-scale_bar_length = 0.05  # 0.05 substitutions per site
+scale_bar_length = 0.05
 scale_bar_data = pd.DataFrame([{"x": 0.02, "y": -0.8, "x2": 0.02 + scale_bar_length, "y2": -0.8}])
-
 scale_bar = (
-    alt.Chart(scale_bar_data).mark_rule(strokeWidth=4, color=text_color).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
+    alt.Chart(scale_bar_data)
+    .mark_rule(strokeWidth=3.5)
+    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value(INK_SOFT))
 )
 
 scale_bar_label = (
     alt.Chart(pd.DataFrame([{"x": 0.02 + scale_bar_length / 2, "y": -1.2, "text": "0.05 subs/site"}]))
-    .mark_text(fontSize=16, color=text_color)
+    .mark_text(fontSize=16, color=INK_SOFT)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
-# Combine all layers
+# Combine layers
 chart = (
     alt.layer(branches, internal_points, leaf_points, leaf_labels, scale_bar, scale_bar_label)
     .properties(
-        width=1400,
-        height=800,
+        width=1600,
+        height=900,
+        background=PAGE_BG,
         title=alt.Title(
-            "Primate Evolution · tree-phylogenetic · altair · pyplots.ai",
+            "Primate Evolution · tree-phylogenetic · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
-            color=text_color,
-            subtitle="Phylogenetic tree based on mitochondrial DNA divergence",
-            subtitleFontSize=18,
-            subtitleColor="#666666",
+            color=INK,
+            subtitle="Phylogenetic relationships with evolutionary distance",
+            subtitleFontSize=20,
+            subtitleColor=INK_SOFT,
         ),
     )
-    .configure_axis(labelFontSize=16, titleFontSize=20, gridColor="#e0e0e0", gridOpacity=0.3, domainColor=text_color)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        titleColor=INK,
+        labelColor=INK_SOFT,
+        domainColor=INK_SOFT,
+        gridColor=INK_SOFT,
+        gridOpacity=0.10,
+    )
+    .configure_title(color=INK)
+    .configure_view(fill=PAGE_BG, stroke=None)
 )
 
-# Customize axes
+# Set axes
 chart = chart.encode(
     x=alt.X(
         "x:Q", title="Evolutionary Distance (substitutions per site)", scale=alt.Scale(domain=[-0.02, max_x + 0.15])
@@ -208,6 +280,6 @@ chart = chart.encode(
     ),
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save outputs
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
