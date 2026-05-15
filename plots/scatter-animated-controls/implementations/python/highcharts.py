@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-animated-controls: Animated Scatter Plot with Play Controls
-Library: highcharts | Python 3.13
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-15
 """
 
 import http.server
