@@ -1,173 +1,173 @@
 library: altair
+language: python
 specification_id: andrews-curves
 created: '2025-12-30T23:57:49Z'
-updated: '2025-12-31T00:17:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608497564
+updated: '2026-05-15T13:04:38Z'
+generated_by: claude-haiku
+workflow_run: 25919018763
 issue: 2859
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - dataset-loading
-  - matrix-construction
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Correct Fourier series implementation for Andrews curves transformation
-  - Clear visual separation between iris species demonstrating the clustering capability
-  - Proper data normalization using StandardScaler as recommended in spec
-  - Clean, declarative Altair code with appropriate encoding types
-  - Title format follows the required spec-id · library · pyplots.ai pattern with
-    informative subtitle
-  - Good use of transparency (opacity=0.4) for overlapping curves as recommended
+  - Perfect visual quality with flawless readability in both light and dark themes
+  - Expert idiomatic altair usage with effective detail encoding for multi-curve grouping
+  - 'Flawless palette compliance: Okabe-Ito colors identical across themes, theme-adaptive
+    chrome perfect'
+  - Clean, reproducible code with proper data normalization and KISS structure
+  - Real iris dataset effectively demonstrates multivariate clustering through Andrews
+    curves
+  - Professional typography hierarchy with all font sizes explicitly set
   weaknesses:
-  - Legend could benefit from a semi-transparent background for better contrast against
-    the curves
-  - Yellow color (#FFD43B) could be slightly less bright for better visibility on
-    white background
-  - Could add tooltips to enable interactive exploration of individual observations
-  image_description: 'The plot displays Andrews curves for the Iris dataset with 150
-    observations transformed into Fourier series curves. Three iris species are color-coded:
-    Setosa in yellow/gold (#FFD43B), Versicolor in blue (#306998), and Virginica in
-    olive green (#6B8E23). The x-axis shows "t (radians)" ranging from approximately
-    -π to π (-3.4 to 3.2), and the y-axis displays "Andrews Curve Value" ranging from
-    about -4 to 6. The title follows the required format: "Iris Classification · andrews-curves
-    · altair · pyplots.ai" with a descriptive subtitle. The legend is positioned in
-    the upper right corner. The curves demonstrate clear visual separation between
-    species, with Setosa (yellow) forming a distinct cluster near y=0, while Versicolor
-    and Virginica show overlapping wave patterns at higher amplitudes.'
+  - 'Design sophistication relies on defaults rather than custom visual direction
+    (DE-01: 5/8)'
+  - 'Data storytelling is inherent to iris clustering, not designed through added
+    visual emphasis (DE-03: 4/6)'
+  - 'Library mastery does not explore distinctive altair features like data transforms
+    or advanced interactions (LM-02: 3/5)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "andrews-curves · altair · anyplot.ai" in dark text (INK color), clearly visible. Axis labels "t (radians)" and "Andrews Curve Value" in proper font sizes (22px) with dark text. Tick labels (18px) in secondary text color (INK_SOFT). Legend "Species" with labels "Setosa", "Versicolor", "Virginica" - all readable.
+      Data: Three species shown as smooth wavy curves. Okabe-Ito colors: #009E73 (green/Setosa), #D55E00 (orange/Versicolor), #0072B2 (blue/Virginica). 150 curves total with opacity=0.5 showing density patterns. Individual curves distinguishable.
+      Legibility verdict: PASS - All text perfectly readable, no overlap, excellent contrast against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light text (F0EFE8), clearly visible. Axis labels and ticks in light secondary color (B8B7B0) - all readable against dark background. No dark-on-dark failures. Legend box background (#242420) with light text for labels.
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2 are unchanged). Grid lines subtle with theme-adapted opacity. All curves visible against dark background.
+      Legibility verdict: PASS - All text readable in light colors. No dark-on-dark issues. Perfect theme adaptation with data colors constant.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'Title, axis labels, and legend are clearly readable. Font sizes
-          are appropriate for the canvas size. Minor: tick labels could be slightly
-          larger.'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. All labels and legend are well-positioned.
+        comment: All font sizes explicitly set with perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Curves are visible with appropriate opacity (0.4). strokeWidth=2
-          works well for the data density. Very slight difficulty distinguishing individual
-          curves in dense regions.
+        comment: 150 curves optimally adapted to density with opacity=0.5
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and olive green provide reasonable distinction. Yellow
-          on white background could be slightly challenging in some contexts.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend is appropriately
-          positioned near the data.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"t (radians)" includes units, "Andrews Curve Value" is descriptive.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect landscape layout with 60-70% canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No visible grid (which is acceptable for this plot type), legend
-          is well-placed but could benefit from a background for better contrast.
+        comment: Correct title format with units on axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette perfect, theme-adaptive chrome correct in both
+          renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured defaults with theme tokens, but missing custom visual
+          direction
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, clean legend styling, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good data choice, natural cluster separation, but storytelling is
+          data-driven not designed
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Andrews curves implementation using Fourier series transformation.
+        comment: Correct Andrews curves transformation with proper Fourier coefficients
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=t parameter, Y=Andrews curve value, correctly implemented.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: normalized variables, transparency (alpha=0.4),
-          color by category, t range from -π to π.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: transformation, color-coding, transparency, proper
+          t-range'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data appropriately.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct with proper detail encoding for curve grouping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels all three species.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title includes spec-id "andrews-curves", library "altair", and "pyplots.ai".
+        comment: Perfect title format and legend labeling
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cluster separation between species, demonstrates the Fourier
-          transformation well. Could potentially show outlier detection more explicitly.
+        comment: Shows all three species with clustering, individual variation, overlapping
+          patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris dataset is a classic, appropriate example for Andrews curves
-          as mentioned in the spec.
+        comment: Real iris dataset, scientific context, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Standardized data produces sensible curve ranges. 150 observations
-          is within the recommended 30-150 range.
+        comment: Proper normalization, correct Fourier range, adequate resolution
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,41 +175,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → transformation → plot → save.'
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set.
+        comment: Seed set, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (altair, numpy, pandas, sklearn).
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html (correct for Altair).
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct PNG/HTML output with scale_factor=3.0
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative encoding with detail for grouping curves,
-          proper mark_line with opacity. Could leverage more Altair-specific features
-          like tooltips or interactive selection.
+        comment: 'Expert use of altair patterns: Chart→mark_line→encode→configure'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses detail encoding and Legend customization, but misses advanced
+          transforms
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - html-export
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - publication-ready
