@@ -1,7 +1,7 @@
 """ anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 66/100 | Updated: 2026-05-15
+Quality: 81/100 | Updated: 2026-05-15
 """
 
 import os
