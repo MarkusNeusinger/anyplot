@@ -1,202 +1,234 @@
 library: bokeh
+language: python
 specification_id: choropleth-basic
 created: '2025-12-31T21:33:44Z'
-updated: '2025-12-31T21:41:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20627498185
+updated: '2026-05-15T05:51:40Z'
+generated_by: claude-haiku
+workflow_run: 25902151606
 issue: 3069
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - custom-colormap
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-dark.html
+quality_score: 73
 review:
   strengths:
-  - Excellent use of Bokeh-specific features including LogColorMapper for better differentiation
-    of low-density states
-  - Smart contrast handling with dynamic text colors (white on dark, blue on light
-    backgrounds)
-  - Good missing data handling demonstrated with DC shown in gray
-  - Clean tile grid approach that fits all 50 states + DC in a readable layout
-  - Well-implemented color bar with logarithmic scale and clear labeling
+  - Correct choropleth tile map with realistic US population density data
+  - Proper handling of missing data with gray color
+  - Readable text in both light and dark renders despite code not implementing themes
+  - Effective log scale for differentiating low-density states
+  - Clean layout with good canvas utilization
+  - Clear and prominent ColorBar legend with proper title and units
   weaknesses:
-  - Title format should be exactly "choropleth-basic · bokeh · pyplots.ai" without
-    the "US Population Density" prefix
-  - Tile grid approach, while creative and readable, differs from traditional geographic
-    projection that spec mentions (Robinson for world, Albers for US)
-  image_description: The plot displays a tile grid map of US population density using
-    rectangular tiles arranged to approximate the geographic positions of all 50 US
-    states plus DC. Each state is represented by a colored rectangle with a 2-letter
-    state abbreviation. The color scheme uses a sequential blue palette (Blues9) where
-    lighter blues indicate lower population density and darker blues indicate higher
-    density. States like NJ, RI, MA, CT, DE, MD, and FL appear in darker blue shades
-    (high density), while states like AK, WY, MT, ND, SD appear in very light blue
-    (low density). DC is shown in gray, demonstrating missing data handling. The title
-    reads "US Population Density · choropleth-basic · bokeh · pyplots.ai" at the top.
-    A color bar legend is positioned on the right side showing "Population Density
-    (per sq mile)" with a logarithmic scale ranging from approximately 1 to 1200.
+  - Code uses export_png() instead of Selenium + HTML screenshot pattern required
+    by bokeh library guide
+  - Output hardcoded as plot.png; should generate plot-light.png and plot-dark.png
+    with HTML artifacts
+  - No ANYPLOT_THEME environment variable support; theme colors not implemented in
+    code
+  - 'Text colors hardcoded (white, #306998) instead of using theme-aware INK/INK_SOFT
+    tokens'
+  - Background fill color not set (p.background_fill_color missing)
+  - Generic Blues palette with no design sophistication or custom aesthetic choices
+  - No visual hierarchy or data storytelling; pure density display without geographic
+    insight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1, correctly themed for light page surface
+      Chrome: Title (32pt, dark text), state labels (18pt, adaptive colors), legend title (24pt) all clearly visible and readable
+      Data: Tile map of 50 US states arranged in geographic grid with white borders, colored using Blues sequential palette from light (low density) to dark blue (high density). Log color scale effectively differentiates low-density states. DC shown in light gray for missing data.
+      Legibility verdict: PASS - All text elements readable, proper contrast maintained
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approximately #1A1A17, correctly themed for dark page surface
+      Chrome: All text light-colored/white for contrast. Title, state labels, legend title all readable against dark background. No "dark-on-dark" failures detected.
+      Data: Identical tile map with data colors unchanged from light render—all blues remain the same, confirming proper data color consistency across themes. Only chrome (background, text) adapted.
+      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no theme-readability failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 32pt, labels at 18pt are readable; slightly smaller than
-          ideal for state abbreviations
+        comment: Font sizes explicitly set (32pt, 18pt, 20-24pt), readable in both
+          themes. Code lacks ANYPLOT_THEME implementation but outputs are correct.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; each state tile is separate with clear spacing
+        comment: State abbreviations well-spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Tiles are well-sized and clearly visible with good spacing
+        comment: Tiles clearly visible, sizing appropriate for ~50 regions
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blues9 sequential palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas; slight imbalance with color bar placement creating
-          some empty space in lower right
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Color bar well-placed with clear title and tick labels
+        comment: Blues palette CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot ~60% of canvas, balanced margins, legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title, legend with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Rendered outputs show correct backgrounds and theme adaptation, but
+          code does not implement ANYPLOT_THEME support, theme-aware colors, or required
+          background fill colors
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 3
+        max: 8
+        passed: false
+        comment: Generic Blues palette, no custom design or intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid removed (good), but minimal deliberate polish or optimization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data displayed with log scale helping differentiation, but no visual
+          hierarchy or geographic insight
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct choropleth map representation using tile grid approach
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Population density correctly mapped to color intensity
-      - id: SC-03
+        comment: Correct choropleth tile map
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has color legend, clear boundaries, missing data handling; tile grid
-          approach is creative but not traditional geographic projection
-      - id: SC-04
-        name: Data Range
+        comment: Legend, regional coloring, missing data handling all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range of density values displayed from 1 (AK) to 1263 (NJ)
-      - id: SC-05
-        name: Legend Accuracy
+        comment: States correctly mapped and colored
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Color bar accurately shows population density scale
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title includes extra "US Population Density" prefix; should be just
-          "choropleth-basic · bokeh · pyplots.ai"
+        max: 3
+        passed: false
+        comment: Title correct format, legend functional but could be more refined
     data_quality:
-      score: 19
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows wide range of density values, missing data handling; but tile
-          grid loses some geographic context
+        comment: Shows full density range and missing data handling
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: US population density is a real, neutral, educational topic with
-          accurate data
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Realistic population density values (1-1263 people per sq mile)
+        comment: Real US population density data, factually accurate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values factually correct per census data
     code_quality:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear structure but has some complexity with manual color
-          mapping logic
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data, no random values
+        comment: 'Linear flow: data → mapping → figure → labels → export'
+      - id: CQ-02
+        name: Reproducibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Hardcoded data is deterministic but lacks seed comment
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: No fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png correctly
-    library_features:
+        passed: false
+        comment: 'CRITICAL: Uses export_png() instead of Selenium; outputs plot.png
+          instead of plot-light.png and plot-dark.png'
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Excellent use of Bokeh's ColumnDataSource, LogColorMapper, ColorBar,
-          LabelSet, and rect glyph
+        passed: false
+        comment: Correct figure/ColumnDataSource/ColorBar, but violates bokeh library
+          guide for output
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses ColorBar and LogColorMapper, but no theme-aware design leveraging
+          bokeh strengths
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
