@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:32:21Z'
-updated: '2026-05-15T03:37:08Z'
+updated: '2026-05-15T03:44:08Z'
 generated_by: claude-haiku
 workflow_run: 25898654810
 issue: 2925
@@ -15,34 +15,40 @@ preview_html_dark: null
 quality_score: 84
 review:
   strengths:
-  - Clean, readable Manhattan plot with proper genome-wide and suggestive thresholds
-  - Excellent data quality with realistic GWAS simulation (real chromosome sizes,
-    SNP density)
-  - Perfect theme adaptation with both light and dark renders fully legible
-  - Professional code structure with proper seeding and imports
-  - Effective use of alternating colors for chromosome distinction
+  - Perfect theme implementation with no dark-on-dark or light-on-light readability
+    issues
+  - Comprehensive GWAS data with realistic chromosome sizes, SNP density, and significance
+    peaks
+  - Correct Manhattan plot structure with both genome-wide and suggestive threshold
+    lines
+  - Explicit font sizing (title 24pt, labels 20pt, ticks 14-16pt) ensures excellent
+    readability at full resolution
+  - Clean, reproducible code with proper seed setting and KISS structure
+  - Good visual hierarchy created by threshold lines to guide viewer attention to
+    significant associations
   weaknesses:
-  - 'Palette uses #0072B2 (position 3) instead of canonical #009E73 (position 1) -
-    violates Okabe-Ito first series rule'
-  - X-axis label "Chromosome" is generic; should be more descriptive
-  - Design relies on library defaults; lacks aesthetic sophistication and distinctive
-    styling
-  - Does not leverage plotnine-specific distinctive features
+  - 'VQ-07: First categorical color should be Okabe-Ito #009E73 (brand green), not
+    #0072B2 (blue) — change odd chromosomes to #009E73 and shift even to #D55E00 per
+    style guide rule'
+  - 'VQ-03: Point markers could be slightly larger (current 1.5 is small for 8000-point
+    dataset) to improve visibility while maintaining density adaptation through alpha'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title "manhattan-gwas · plotnine · anyplot.ai" (24pt, dark), axis labels (20pt, dark), tick labels (14-16pt, dark) - all clearly readable
-      Data: Alternating blue (#0072B2) and orange (#D55E00) chromosomes; red dashed line at -log10(5×10⁻⁸)≈7.3; orange dotted line at -log10(1×10⁻⁵)=5; peaks visible on chr 1, 7, 9, 18
-      Legibility verdict: PASS (all text readable, no overlap, proper contrast)
+      Background: Warm off-white (#FAF8F1) — exactly correct per style guide
+      Chrome: Title "manhattan-gwas · plotnine · anyplot.ai" is dark (#1A1A17) and clearly readable at top center. X-axis label "Genomic Position (by Chromosome)" and Y-axis label "-log₁₀(p-value)" are dark and perfectly legible. Tick labels (chromosome numbers 1-22 and p-value increments 0.0–10.0) are in gray (#4A4A44) and easily readable. Grid lines are subtle and light.
+      Data: Manhattan plot with 22 chromosomes displayed as alternating cyan (#0072B2) and orange (#D55E00) bands to distinguish adjacent chromosomes. Points are scattered within each band, representing SNPs. Two horizontal threshold lines are prominent: a dashed red line at -log10(5e-8) ≈ 7.3 (genome-wide significance) and a dotted orange line at -log10(1e-5) = 5 (suggestive threshold). Several peaks above the genome-wide threshold are visible, particularly on chromosomes 1, 7, 9, and 18. All data colors remain consistent.
+      Legibility verdict: PASS — All text is clearly visible with no dark-on-light conflicts. Elements are well-spaced and readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: All text in light colors (#F0EFE8 primary, #B8B7B0 secondary), clearly visible against dark background - no dark-on-dark failures
-      Data: Colors identical to light render (same blue/orange alternation); threshold lines maintain visibility
-      Legibility verdict: PASS (all text readable, both renders equally legible)
+      Background: Warm near-black (#1A1A17) — exactly correct per style guide
+      Chrome: Title is light (#F0EFE8) and clearly readable against dark background. Axis labels and tick labels are all light gray (#B8B7B0) and clearly visible with no dark-on-dark failures. Grid lines are subtle and light-colored.
+      Data: Identical data colors to light render: cyan (#0072B2) and orange (#D55E00) for chromosome bands are unchanged. Threshold lines (red dashed, orange dotted) remain clearly visible. All SNP points are distinguishable from the dark background.
+      Legibility verdict: PASS — All text is light-colored and readable on dark background. No dark-on-dark issues. Data colors show no theme-related degradation.
+
+    Both renders correctly implement theme-adaptive chrome with consistent data colors. The implementation successfully renders a fully functional Manhattan plot on both light and dark backgrounds without readability issues.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,68 +56,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 14-16pt - all explicitly set and readable
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          14-16pt. Perfectly readable in both light and dark themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Chromosome labels well-spaced, no text collisions
+        comment: No overlapping text elements. Title, axis labels, tick labels, and
+          legend are well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: ~9,600 SNPs with size=1.5, alpha=0.7 optimal for density
+        comment: Data points visible with alpha=0.7 density adaptation. Markers could
+          be slightly larger (1.5→2.0) for improved clarity with 8000-point dataset.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue/orange contrast good, CVD-safe via Okabe-Ito
+        comment: Cyan and orange have strong contrast. CVD-safe. Threshold lines (red
+          and orange) are distinguishable. No red-green dependence.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot uses ~70% canvas with balanced margins
+        comment: Perfect layout. Plot fills 60-70% of canvas. Balanced margins. No
+          cut-off. Title and axes well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis descriptive with units; X-axis generic
+        passed: true
+        comment: Title 'manhattan-gwas · plotnine · anyplot.ai' correct format. X-axis
+          'Genomic Position (by Chromosome)' and Y-axis '-log₁₀(p-value)' are descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Uses #0072B2 (position 3) instead of canonical #009E73 (position
-          1)'
+        comment: 'PARTIAL: Uses Okabe-Ito colors (#0072B2, #D55E00) but violates ''first
+          series = #009E73'' rule. Should use #009E73 for odd chromosomes, #D55E00
+          for even. Backgrounds (#FAF8F1 light, #1A1A17 dark) and text colors are
+          correct and theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults; threshold lines add some sophistication
-          but overall not exceptional
+        passed: true
+        comment: Looks like well-configured library defaults. Clean aesthetic with
+          explicit theming, but not publication-level design sophistication.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, good whitespace; visible attention to
-          detail
+        comment: 'Good refinement: grid lines customized (major size 0.3, minor 0.2,
+          alpha 0.10 and 0.05), panel border styled, whitespace balanced. More than
+          defaults but not extensive polish.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Visual hierarchy guides through chromosome bands and thresholds
+        comment: 'Good visual hierarchy: red threshold line creates focal point for
+          significant findings. Alternating chromosome colors guide the eye. Threshold
+          lines emphasize the GWAS insight (identifying significant variants).'
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Manhattan plot format
+        comment: Correct Manhattan plot with cumulative genomic position on x-axis,
+          -log10(p-value) on y-axis, alternating chromosome colors.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both thresholds, alternating colors, p-value transformation present
+        comment: 'All features present: chromosome labels, alternating colors, genome-wide
+          threshold (dashed red ≈7.3), suggestive threshold (dotted orange = 5).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cumulative position vs -log10(p) correct
+        comment: X-axis correctly shows cumulative genomic position with chromosome
+          labels centered. Y-axis correctly displays -log10(p-value). All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend appropriately omitted
+        comment: 'Title format correct: ''manhattan-gwas · plotnine · anyplot.ai''.
+          No legend needed (structural colors for chromosome distinction, not categorical
+          data series).'
     data_quality:
       score: 15
       max: 15
@@ -149,19 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Significant and suggestive peaks demonstrated across multiple chromosomes
+        comment: 'Shows all aspects of GWAS data: background SNPs, suggestive signals
+          (orange threshold), and significant peaks (red threshold) on multiple chromosomes.
+          Realistic variation across chromosomes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real GWAS scenario with accurate threshold values
+        comment: Real scientific domain (genomics/GWAS). Neutral, non-controversial.
+          Comprehensive example data suitable for publication context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Real chromosome proportions, realistic SNP density
+        comment: Chromosome sizes (Mb) are factually correct. SNP density ~40 per
+          Mb = 8000 total is realistic. P-value ranges (background 0.001-1, significant
+          1e-10 to 1e-7.3) are accurate. All proportions logically sound.
     code_quality:
       score: 10
       max: 10
@@ -171,31 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Perfect simplicity: imports → theme tokens → data generation → plot
+          creation → save. No unnecessary functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (123) for deterministic output
+        comment: np.random.seed(123) set. Data generation is deterministic and reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'Only necessary imports: os, numpy, pandas, plotnine components.
+          No unused imports.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering
+        comment: Clean, Pythonic, appropriate complexity. No over-engineering. No
+          fake UI elements or fake-functionality code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG output with DPI=300
+        comment: 'Correct: plot.save(f''plot-{THEME}.png'', dpi=300, width=16, height=9).
+          Filename format correct, DPI 300, dimensions 4800×2700 per spec.'
     library_mastery:
       score: 6
       max: 10
@@ -205,21 +236,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot + geom pattern with proper aes mapping
+        comment: 'Good idiomatic plotnine usage: ggplot grammar of graphics, aesthetic
+          mapping (aes), geom layers, scale functions, theme customization. Uses high-level
+          API correctly.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Standard plotnine patterns; limited distinctive usage
-  verdict: REJECTED
+        passed: true
+        comment: Uses grammar of graphics and element-based theming (distinctive to
+          plotnine ecosystem), but in a standard way. Does not leverage unique plotnine
+          capabilities for advanced visualization.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - grid-styling
