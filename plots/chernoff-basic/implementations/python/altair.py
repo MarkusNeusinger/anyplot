@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 87/100 | Created: 2025-12-31
+Library: altair | Python 3.13
+Quality: 87/100 | Updated: 2026-05-15
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette for species
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Iris dataset features for 12 representative flowers
 np.random.seed(42)
@@ -36,8 +49,8 @@ data = pd.DataFrame(
     }
 )
 
-# Map species to colors
-species_colors = {"setosa": "#306998", "versicolor": "#FFD43B", "virginica": "#4B8BBE"}
+# Map species to Okabe-Ito colors
+species_colors = {"setosa": OKABE_ITO[0], "versicolor": OKABE_ITO[1], "virginica": OKABE_ITO[2]}
 data["color"] = data["species"].map(species_colors)
 
 # Create descriptive labels including species name
@@ -120,12 +133,13 @@ for _, r in data.iterrows():
     )
 
     # Left eyebrow (line represented by two points)
+    eyebrow_color = INK_SOFT
     face_records.append(
         {
             "x": xc - fw * 0.38,
             "y": yc + fh * 0.32 + eb_slant * 0.3,
             "size": 120,
-            "color": "#2C3E50",
+            "color": eyebrow_color,
             "part": "eyebrow",
             "observation": r["observation"],
             "species": r["species"],
@@ -137,7 +151,7 @@ for _, r in data.iterrows():
             "x": xc - fw * 0.22,
             "y": yc + fh * 0.32 - eb_slant * 0.3,
             "size": 120,
-            "color": "#2C3E50",
+            "color": eyebrow_color,
             "part": "eyebrow",
             "observation": r["observation"],
             "species": r["species"],
@@ -150,7 +164,7 @@ for _, r in data.iterrows():
             "x": xc + fw * 0.22,
             "y": yc + fh * 0.32 - eb_slant * 0.3,
             "size": 120,
-            "color": "#2C3E50",
+            "color": eyebrow_color,
             "part": "eyebrow",
             "observation": r["observation"],
             "species": r["species"],
@@ -162,7 +176,7 @@ for _, r in data.iterrows():
             "x": xc + fw * 0.38,
             "y": yc + fh * 0.32 + eb_slant * 0.3,
             "size": 120,
-            "color": "#2C3E50",
+            "color": eyebrow_color,
             "part": "eyebrow",
             "observation": r["observation"],
             "species": r["species"],
@@ -175,7 +189,7 @@ for _, r in data.iterrows():
             "x": xc - fw * 0.30,
             "y": yc + fh * 0.15,
             "size": es * 45,
-            "color": "#1A252F",
+            "color": INK,
             "part": "eye",
             "observation": r["observation"],
             "species": r["species"],
@@ -188,33 +202,34 @@ for _, r in data.iterrows():
             "x": xc + fw * 0.30,
             "y": yc + fh * 0.15,
             "size": es * 45,
-            "color": "#1A252F",
+            "color": INK,
             "part": "eye",
             "observation": r["observation"],
             "species": r["species"],
             "opacity": 1.0,
         }
     )
-    # Left pupil (white highlight)
+    # Left pupil (white/light highlight)
+    pupil_color = PAGE_BG if THEME == "light" else INK_SOFT
     face_records.append(
         {
             "x": xc - fw * 0.30 + 3,
             "y": yc + fh * 0.15 + 3,
             "size": es * 12,
-            "color": "#FFFFFF",
+            "color": pupil_color,
             "part": "pupil",
             "observation": r["observation"],
             "species": r["species"],
             "opacity": 0.95,
         }
     )
-    # Right pupil (white highlight)
+    # Right pupil (white/light highlight)
     face_records.append(
         {
             "x": xc + fw * 0.30 + 3,
             "y": yc + fh * 0.15 + 3,
             "size": es * 12,
-            "color": "#FFFFFF",
+            "color": pupil_color,
             "part": "pupil",
             "observation": r["observation"],
             "species": r["species"],
@@ -222,12 +237,13 @@ for _, r in data.iterrows():
         }
     )
     # Nose
+    nose_color = INK_MUTED
     face_records.append(
         {
             "x": xc,
             "y": yc - fh * 0.05,
             "size": 90,
-            "color": "#5D6D7E",
+            "color": nose_color,
             "part": "nose",
             "observation": r["observation"],
             "species": r["species"],
@@ -235,6 +251,7 @@ for _, r in data.iterrows():
         }
     )
     # Mouth - using horizontal ellipse shape for better representation
+    mouth_color = OKABE_ITO[1] if THEME == "light" else OKABE_ITO[4]
     mouth_y = yc - fh * 0.30
     for dx in np.linspace(-mw * 0.4, mw * 0.4, 7):
         # Parabolic curve for mouth (smiling effect based on width)
@@ -244,7 +261,7 @@ for _, r in data.iterrows():
                 "x": xc + dx,
                 "y": mouth_y + dy,
                 "size": 80 if abs(dx) < mw * 0.3 else 50,
-                "color": "#C0392B",
+                "color": mouth_color,
                 "part": "mouth",
                 "observation": r["observation"],
                 "species": r["species"],
@@ -280,7 +297,7 @@ features = (
 # Labels with species info
 labels = (
     alt.Chart(label_df)
-    .mark_text(fontSize=13, fontWeight="bold", color="#2C3E50")
+    .mark_text(fontSize=13, fontWeight="bold", color=INK_SOFT)
     .encode(x=alt.X("x_center:Q", axis=None), y=alt.Y("y_label:Q", axis=None), text="label:N")
 )
 
@@ -290,7 +307,7 @@ legend_data = pd.DataFrame(
         "species": ["setosa", "versicolor", "virginica"],
         "x": [850, 850, 850],
         "y": [780, 730, 680],
-        "color": ["#306998", "#FFD43B", "#4B8BBE"],
+        "color": [OKABE_ITO[0], OKABE_ITO[1], OKABE_ITO[2]],
     }
 )
 
@@ -302,7 +319,7 @@ legend_points = (
 
 legend_text = (
     alt.Chart(legend_data)
-    .mark_text(align="right", fontSize=14, dx=-25, fontWeight="bold")
+    .mark_text(align="right", fontSize=14, dx=-25, fontWeight="bold", color=INK_SOFT)
     .encode(x="x:Q", y="y:Q", text="species:N")
 )
 
@@ -324,7 +341,7 @@ mapping_data = pd.DataFrame(
 
 mapping_text = (
     alt.Chart(mapping_data)
-    .mark_text(align="left", fontSize=12, color="#34495E")
+    .mark_text(align="left", fontSize=12, color=INK_MUTED)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
@@ -334,17 +351,20 @@ chart = (
     .properties(
         width=1600,
         height=900,
+        background=PAGE_BG,
         title=alt.Title(
-            "chernoff-basic · altair · pyplots.ai",
+            "chernoff-basic · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
+            color=INK,
             subtitle="Iris Dataset: Each face represents a flower sample with features encoding measurements",
             subtitleFontSize=16,
+            subtitleColor=INK_SOFT,
         ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
 # Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
