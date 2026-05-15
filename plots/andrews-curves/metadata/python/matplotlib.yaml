@@ -1,171 +1,188 @@
 library: matplotlib
+language: python
 specification_id: andrews-curves
 created: '2025-12-30T23:55:55Z'
-updated: '2025-12-31T00:02:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608490813
+updated: '2026-05-15T12:55:58Z'
+generated_by: claude-haiku
+workflow_run: 25918654244
 issue: 2859
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - dataset-loading
-  - iteration-over-groups
-  - matrix-construction
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of Andrews curves algorithm using Fourier basis functions
-  - Clean visualization that clearly shows Setosa species separation from Versicolor/Virginica
-  - Proper normalization with StandardScaler prevents dominant variables
-  - Appropriate transparency (alpha=0.4) for 150 overlapping curves reveals density
-    patterns
-  - X-axis uses mathematically meaningful tick labels (-π, -π/2, 0, π/2, π)
+  - 'Perfect visual quality: all text legible in both themes, no overlaps, proper
+    typography hierarchy at 4800×2700 scale'
+  - 'Flawless spec compliance: correct Andrews curves plot type, complete multivariate
+    transformation, proper category coloring'
+  - 'Strong data storytelling: visual hierarchy through color separation, transparency
+    revealing density patterns, clear focal point at curve origin'
+  - Clean, reproducible code with deterministic iris dataset and proper data normalization
+  - 'Perfect palette compliance: Okabe-Ito colors maintain identity across light/dark
+    themes, backgrounds and chrome correctly adapt per style guide'
   weaknesses:
-  - Missing np.random.seed(42) in code (though Iris dataset is deterministic, best
-    practice is to include it)
-  - Linewidth=1.5 is slightly below recommended 2-4 for high-resolution plots per
-    library guidelines
-  - Legend sample lines use alpha=0.8 while actual curves use alpha=0.4, creating
-    visual inconsistency
-  image_description: 'The plot shows Andrews curves visualization using the Iris dataset
-    with 150 observations (50 per species). Three distinct colors are used: blue (#306998)
-    for Setosa, yellow (#FFD43B) for Versicolor, and coral/pink (#E06C75) for Virginica.
-    The x-axis displays t values from -π to π in radians with clear labels at -π,
-    -π/2, 0, π/2, π. The y-axis shows f(t) values ranging approximately from -4 to
-    5. The title "andrews-curves · matplotlib · pyplots.ai" is displayed at the top.
-    A legend in the upper right identifies the three species. The curves clearly show
-    Setosa (blue) clustering distinctly from the other two species, demonstrating
-    good separation, while Versicolor (yellow) and Virginica (coral) overlap significantly
-    but have some separation in certain regions. A subtle dashed grid (alpha=0.3)
-    aids readability.'
+  - Design Excellence relies on well-configured defaults rather than distinctive custom
+    design choices - could benefit from more sophisticated aesthetic treatment
+  - Library Mastery could be enhanced with more advanced matplotlib techniques beyond
+    standard plotting (e.g., custom color normalization, advanced legend handling)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly themed
+      Chrome: Title "andrews-curves · matplotlib · anyplot.ai" clearly visible in dark text; axis labels "t (radians)" and "f(t)" readable; tick labels "-π", "-π/2", "0", "π/2", "π" fully legible in gray text (INK_SOFT)
+      Data: Three iris species color-coded - Setosa in green (#009E73) in lower region, Versicolor in orange (#D55E00) in middle region, Virginica in blue (#0072B2) in upper region. All curves visible with alpha=0.4 transparency showing density patterns
+      Legend: Right-aligned with elevated background frame, light-theme styling
+      Grid: Subtle y-axis only, alpha=0.15
+      Legibility verdict: PASS - all text and data elements clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly themed
+      Chrome: Title clearly visible in light text (#F0EFE8); axis labels readable in light text; tick labels light gray (INK_SOFT value) on dark background - no dark-on-dark failures
+      Data: Colors identical to light render - Setosa green, Versicolor orange, Virginica blue maintain same hex values. Curves equally visible and distinguishable. Density patterns revealed through transparency
+      Legend: Dark-theme styled with light text and dark background frame, properly color-coordinated
+      Grid: Subtle grid lines visible against dark background
+      Legibility verdict: PASS - all elements readable against dark background, proper contrast throughout, no dark-on-dark text failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
+          Perfectly readable in both light and dark themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; legend well-positioned; tick labels clear.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines at linewidth=1.5 with alpha=0.4 work well for 150 curves, though
-          slightly thin per library guidelines (recommends linewidth=2-4)
+        comment: 150 curves with alpha=0.4 optimally adapted to density; all clearly
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/coral palette is mostly colorblind-safe, though yellow
-          can be hard to distinguish from coral for some types of colorblindness
+        comment: Okabe-Ito palette is colorblind-safe; good contrast in both themes.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Figsize (16,9) optimal; tight_layout() and bbox_inches='tight' ensure
+          good canvas utilization; legend placement excellent.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"t (radians)" and "f(t)" are descriptive but f(t) could be more
-          explanatory (e.g., "Andrews Function Value")'
+        comment: 'Title fully descriptive; axis labels include units: ''t (radians)''
+          and ''f(t)''.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha=0.3, but legend alpha=0.8 sample lines differ
-          from plotted alpha=0.4 curves
+        comment: 'First series #009E73; multi-series follows Okabe-Ito order (#009E73,
+          #D55E00, #0072B2); backgrounds (#FAF8F1 light, #1A1A17 dark) correct; both
+          renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults with thoughtful styling (custom
+          legend frames, proper theme tokens). Solid professional execution but not
+          exceptionally distinctive or innovative.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines properly removed (top/right); grid subtle with alpha=0.15;
+          good whitespace. Some refinement visible but minimal additional customization.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent visual hierarchy: colors naturally separate species, transparency
+          reveals density patterns, focal point at origin where curves converge guides
+          viewer interpretation.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Andrews curves visualization
+        comment: Correct Andrews curves implementation with proper Fourier basis transformation.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly transformed using Fourier expansion
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Normalized data, appropriate alpha for overlapping curves, colored
-          by category, t from -π to π
-      - id: SC-04
-        name: Data Range
+        comment: Multivariate visualization, category coloring by species, proper
+          data normalization, all spec features present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All curves visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: t from -π to π; Y-axis: f(t) coefficients; all 150 iris
+          observations visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "andrews-curves · matplotlib · pyplots.ai"
+        comment: 'Title: ''andrews-curves · matplotlib · anyplot.ai'' correct format;
+          legend labels (Setosa, Versicolor, Virginica) match data.'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cluster separation (Setosa distinct) and overlap patterns (Versicolor/Virginica),
-          demonstrating Andrews curves' utility for multivariate comparison
+        comment: Shows all three iris species, complete multivariate transformation,
+          clustering patterns and variations.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses classic Iris dataset, a standard benchmark in data visualization
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: StandardScaler normalization produces appropriate f(t) range
+        comment: Classic iris dataset, real scientific scenario (species comparison),
+          neutral and comprehensible context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: StandardScaler normalization applied; t range [-π, π] standard for
+          Fourier expansion; y-axis scale appropriate for multivariate coefficients.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,34 +190,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear flow: imports → data → process → plot → save. No unnecessary
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No np.random.seed(42), though sklearn's Iris is deterministic so
-          output is reproducible
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; load_iris() is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports (os, matplotlib, numpy, sklearn); all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clear variable naming, appropriate complexity, no over-engineering,
+          no fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Correctly saves as plot-{THEME}.png; uses current matplotlib API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: 'Proper idiomatic usage: ax.plot(), set_facecolor(), spine removal,
+          grid styling, tick_params. Could leverage more advanced matplotlib features.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses alpha transparency for density visualization, manual π-labeled
+          ticks, custom legend. Some library-specific features but room for more sophisticated
+          usage.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - dataset-loading
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
