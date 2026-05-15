@@ -1,13 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 circos-basic: Circos Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: altair | Python 3.13
+Quality: 90/100 | Updated: 2025-05-15
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito categorical palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data: Software module dependencies
 np.random.seed(42)
@@ -41,17 +53,19 @@ connections = [
 # Inner track data (simulated importance/activity values)
 track_data = np.random.uniform(0.3, 1.0, n_segments)
 
-# Colors for each segment (colorblind-safe palette)
-colors = {
-    "Core": "#306998",  # Python Blue
-    "API": "#FFD43B",  # Python Yellow
-    "Database": "#2E8B57",  # Sea Green
-    "Auth": "#DC143C",  # Crimson
-    "Cache": "#9370DB",  # Medium Purple
-    "Queue": "#20B2AA",  # Light Sea Green
-    "Logger": "#FF8C00",  # Dark Orange
-    "Config": "#708090",  # Slate Gray
-}
+# Map segments to Okabe-Ito colors
+segment_colors = {segments[i]: OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_segments)}
+
+# Darker shades for inner track (reduce lightness while maintaining hue)
+inner_colors = {}
+for i, seg in enumerate(segments):
+    color = OKABE_ITO[i % len(OKABE_ITO)]
+    # Create darker shade by reducing brightness
+    import colorsys
+
+    h, lightness, s = colorsys.rgb_to_hls(*bytes.fromhex(color[1:]))
+    darker = colorsys.hls_to_rgb(h, lightness * 0.6, s)
+    inner_colors[seg] = "#{:02x}{:02x}{:02x}".format(int(darker[0] * 255), int(darker[1] * 255), int(darker[2] * 255))
 
 # Target output: 3600x3600 px (1:1 aspect ratio for circular plot) with scale_factor=3.0
 # Internal canvas: 1200x1200 pixels
@@ -101,7 +115,7 @@ for name in segments:
                 "x": center_x + outer_radius * np.cos(angle),
                 "y": center_y + outer_radius * np.sin(angle),
                 "order": j,
-                "color": colors[name],
+                "color": segment_colors[name],
             }
         )
 
@@ -113,7 +127,7 @@ for name in segments:
                 "x": center_x + inner_radius * np.cos(angle),
                 "y": center_y + inner_radius * np.sin(angle),
                 "order": n_arc_points + j,
-                "color": colors[name],
+                "color": segment_colors[name],
             }
         )
 
@@ -262,13 +276,13 @@ labels_df = pd.DataFrame(labels_data)
 # Create outer ring chart
 outer_ring_chart = (
     alt.Chart(outer_ring_df)
-    .mark_line(filled=True, strokeWidth=1, stroke="white")
+    .mark_line(filled=True, strokeWidth=1, stroke=INK_SOFT)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
         color=alt.Color(
             "segment:N",
-            scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values())),
+            scale=alt.Scale(domain=list(segment_colors.keys()), range=list(segment_colors.values())),
             legend=alt.Legend(title="Modules", titleFontSize=18, labelFontSize=14, orient="right", symbolSize=200),
         ),
         detail="segment:N",
@@ -276,22 +290,10 @@ outer_ring_chart = (
     )
 )
 
-# Define darker shades for inner track (to distinguish from outer ring)
-inner_colors = {
-    "Core": "#1E4A6E",  # Darker Python Blue
-    "API": "#C4A12B",  # Darker Python Yellow
-    "Database": "#1E6B42",  # Darker Sea Green
-    "Auth": "#A01030",  # Darker Crimson
-    "Cache": "#6A4AAB",  # Darker Medium Purple
-    "Queue": "#18877D",  # Darker Light Sea Green
-    "Logger": "#C46B00",  # Darker Dark Orange
-    "Config": "#505A64",  # Darker Slate Gray
-}
-
 # Create inner track chart with distinct styling
 inner_track_chart = (
     alt.Chart(inner_track_df)
-    .mark_line(filled=True, strokeWidth=2, stroke="#333333", opacity=0.85)
+    .mark_line(filled=True, strokeWidth=2, stroke=INK_SOFT, opacity=0.85)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
@@ -313,7 +315,9 @@ ribbons_chart = (
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
         color=alt.Color(
-            "source:N", scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values())), legend=None
+            "source:N",
+            scale=alt.Scale(domain=list(segment_colors.keys()), range=list(segment_colors.values())),
+            legend=None,
         ),
         detail="ribbon_id:N",
         order="order:Q",
@@ -334,7 +338,9 @@ labels_chart = (
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
         text="segment:N",
         color=alt.Color(
-            "segment:N", scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values())), legend=None
+            "segment:N",
+            scale=alt.Scale(domain=list(segment_colors.keys()), range=list(segment_colors.values())),
+            legend=None,
         ),
     )
 )
@@ -345,22 +351,26 @@ chart = (
     .properties(
         width=width,
         height=height,
-        title=alt.Title(text="circos-basic · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        title=alt.Title(text="circos-basic · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_title(color=INK, fontSize=28)
     .configure_legend(
         padding=15,
         cornerRadius=5,
-        fillColor="#FFFFFF",
-        strokeColor="#CCCCCC",
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
         strokeWidth=1,
         titleFontSize=20,
         labelFontSize=16,
         symbolSize=250,
         offset=20,
+        titleColor=INK,
+        labelColor=INK_SOFT,
     )
 )
 
-# Save as PNG (3600x3600 px with scale_factor=3.0)
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
