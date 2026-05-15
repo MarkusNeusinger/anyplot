@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-15
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from plotnine import (
     aes,
     coord_fixed,
     element_blank,
+    element_line,
     element_rect,
     element_text,
     geom_polygon,
@@ -21,11 +24,16 @@ from plotnine import (
 )
 
 
-# Seed for reproducibility
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MISSING_DATA_COLOR = "#A9A9A9" if THEME == "light" else "#696969"
+
 np.random.seed(42)
 
 # Simplified European country boundaries (approximate polygon coordinates)
-# Using stylized country shapes for a clean visualization
 countries = {
     "France": [(0, 0), (3, 0), (4, 2), (3, 4), (1, 4), (0, 2)],
     "Germany": [(4, 2), (7, 1), (8, 3), (7, 5), (4, 5), (3, 4)],
@@ -42,101 +50,95 @@ countries = {
     "Switzerland": [(3, 1), (5, 0), (6, 1), (5, 2), (4, 2), (3, 2)],
     "Portugal": [(-4, -2), (-3, -3), (-2, -1), (-3, 0), (-4, 0)],
     "Denmark": [(5, 6), (7, 5), (8, 6), (7, 7), (5, 7)],
-    "Czechia": [(7, 3), (9, 3), (10, 4), (9, 5), (7, 5), (6, 4)],  # Added for missing data demo
+    "Czechia": [(7, 3), (9, 3), (10, 4), (9, 5), (7, 5), (6, 4)],
 }
 
-# Population density data (people per sq km) - realistic values for 2024
-# Czechia has None to demonstrate missing data handling (shown in gray)
-population_density = {
-    "France": 119,
-    "Germany": 238,
-    "Spain": 94,
-    "Italy": 201,
-    "Poland": 123,
-    "UK": 277,
-    "Sweden": 25,
-    "Norway": 15,
-    "Finland": 18,
-    "Austria": 109,
-    "Netherlands": 521,
-    "Belgium": 383,
-    "Switzerland": 219,
-    "Portugal": 111,
-    "Denmark": 137,
-    "Czechia": None,  # Missing data - will be displayed in gray
+# Life expectancy at birth (years) - realistic values for 2023-2024
+# Czechia has None to demonstrate missing data handling
+life_expectancy = {
+    "France": 82.4,
+    "Germany": 81.8,
+    "Spain": 83.1,
+    "Italy": 83.5,
+    "Poland": 78.0,
+    "UK": 81.3,
+    "Sweden": 84.2,
+    "Norway": 84.6,
+    "Finland": 82.5,
+    "Austria": 81.9,
+    "Netherlands": 82.1,
+    "Belgium": 81.8,
+    "Switzerland": 84.0,
+    "Portugal": 82.2,
+    "Denmark": 81.5,
+    "Czechia": None,
 }
 
 # Build polygon dataframe
 polygon_data = []
 for country, coords in countries.items():
-    # Close the polygon
     closed_coords = coords + [coords[0]]
     for i, (x, y) in enumerate(closed_coords):
-        polygon_data.append({"country": country, "x": x, "y": y, "order": i, "density": population_density[country]})
+        polygon_data.append(
+            {"country": country, "x": x, "y": y, "order": i, "life_expectancy": life_expectancy[country]}
+        )
 
 df = pd.DataFrame(polygon_data)
 
-# Calculate centroids for country labels with manual adjustments to avoid overlap
-# Adjustments for crowded central Europe region (Netherlands, Belgium, Germany, Denmark)
+# Calculate centroids for country labels
 label_offsets = {
-    "Netherlands": (0.5, 1.0),  # Move label up-right to avoid Belgium overlap
-    "Belgium": (-0.8, -0.5),  # Move label down-left
-    "Germany": (0.5, -0.5),  # Move label slightly down-right
-    "Denmark": (0.5, 0.5),  # Move label up-right
-    "Czechia": (0, -0.5),  # Move label down (missing data country)
+    "Netherlands": (0.5, 1.0),
+    "Belgium": (-0.8, -0.5),
+    "Germany": (0.5, -0.5),
+    "Denmark": (0.5, 0.5),
+    "Czechia": (0, -0.5),
 }
 
 centroids = []
 for country, coords in countries.items():
     cx = np.mean([c[0] for c in coords])
     cy = np.mean([c[1] for c in coords])
-    # Apply offset if defined for this country
     if country in label_offsets:
         cx += label_offsets[country][0]
         cy += label_offsets[country][1]
-    density = population_density[country]
-    centroids.append({"country": country, "x": cx, "y": cy, "density": density})
+    expectancy = life_expectancy[country]
+    centroids.append({"country": country, "x": cx, "y": cy, "life_expectancy": expectancy})
 
 df_centroids = pd.DataFrame(centroids)
 
 # Separate data with and without values for missing data handling
-df_with_data = df[df["density"].notna()].copy()
-df_missing = df[df["density"].isna()].copy()
+df_with_data = df[df["life_expectancy"].notna()].copy()
+df_missing = df[df["life_expectancy"].isna()].copy()
 
 # Create the choropleth map
 plot = (
     ggplot()
-    # First layer: countries with missing data (gray fill)
     + geom_polygon(
-        df_missing, aes(x="x", y="y", group="country"), fill="#cccccc", color="#444444", size=0.6, alpha=0.95
+        df_missing, aes(x="x", y="y", group="country"), fill=MISSING_DATA_COLOR, color=INK_SOFT, size=0.6, alpha=0.7
     )
-    # Second layer: countries with data (colored by density)
     + geom_polygon(
-        df_with_data, aes(x="x", y="y", group="country", fill="density"), color="#444444", size=0.6, alpha=0.95
+        df_with_data, aes(x="x", y="y", group="country", fill="life_expectancy"), color=INK_SOFT, size=0.6, alpha=0.95
     )
-    + geom_text(df_centroids, aes(x="x", y="y", label="country"), size=8, color="#222222", fontweight="bold")
-    + scale_fill_cmap(
-        cmap_name="Blues", name="Population\nDensity\n(per km²)", limits=(0, 550)
-    )  # Max set to 550 to encompass Netherlands (521)
+    + geom_text(df_centroids, aes(x="x", y="y", label="country"), size=7, color=INK)
+    + scale_fill_cmap(cmap_name="BrBG", name="Life Expectancy\n(years)", limits=(77, 85))
     + coord_fixed(ratio=1.0)
-    + labs(title="choropleth-basic · plotnine · pyplots.ai")
+    + labs(title="choropleth-basic · plotnine · anyplot.ai")
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=28, ha="center", weight="bold", margin={"b": 20}),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-        legend_position="right",
-        legend_key_width=25,
-        legend_key_height=150,
-        legend_background=element_rect(fill="white", alpha=0.9),
-        panel_background=element_rect(fill="#f0f5fa"),
-        plot_background=element_rect(fill="white"),
+        plot_title=element_text(size=24, ha="center", color=INK),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid=element_blank(),
+        panel_border=element_line(color=INK_SOFT, size=0.3),
         axis_text=element_blank(),
         axis_title=element_blank(),
         axis_ticks=element_blank(),
-        panel_grid=element_blank(),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
     )
 )
 
 # Save the plot
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
