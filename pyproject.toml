@@ -67,7 +67,7 @@ dev = [
     "pre-commit>=4.6.0",
 ]
 typecheck = [
-    "mypy>=1.20.2",
+    "mypy>=2.1.0",
 ]
 plotting = [
     # Additional plotting libraries (matplotlib already in main dependencies)
