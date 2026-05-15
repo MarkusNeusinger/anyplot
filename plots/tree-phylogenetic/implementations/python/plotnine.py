@@ -1,7 +1,7 @@
 """ anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-15
+Quality: 90/100 | Updated: 2026-05-15
 """
 
 import os
