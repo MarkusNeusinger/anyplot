@@ -1,14 +1,22 @@
-""" anyplot.ai
+"""anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-15
 """
 
 import os
+import sys
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
+
+
+# Remove current directory from path to avoid shadowing plotly package
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir in sys.path:
+    sys.path.remove(current_dir)
+
+import plotly.graph_objects as go  # noqa: E402
 
 
 # Theme configuration
@@ -127,7 +135,7 @@ for chrom in chr_lengths.keys():
             x=chr_data["cumulative_pos"],
             y=chr_data["neg_log_p"],
             mode="markers",
-            marker=dict(size=5, color=color, opacity=0.7),
+            marker={"size": 5, "color": color, "opacity": 0.7},
             name=f"Chr {chrom}",
             showlegend=False,
             hovertemplate=(
@@ -146,11 +154,11 @@ fig.add_shape(
     xref="paper",
     y0=significance_threshold,
     y1=significance_threshold,
-    line=dict(color=THRESHOLD_COLOR, width=2, dash="dash"),
+    line={"color": THRESHOLD_COLOR, "width": 2, "dash": "dash"},
 )
 fig.add_annotation(
     text="Genome-wide significance (p = 5×10⁻⁸)",
-    font=dict(size=16, color=THRESHOLD_COLOR),
+    font={"size": 16, "color": THRESHOLD_COLOR},
     xref="paper",
     x=0.99,
     xanchor="right",
@@ -169,11 +177,11 @@ fig.add_shape(
     xref="paper",
     y0=suggestive_threshold,
     y1=suggestive_threshold,
-    line=dict(color=INK_MUTED, width=2, dash="dot"),
+    line={"color": INK_MUTED, "width": 2, "dash": "dot"},
 )
 fig.add_annotation(
     text="Suggestive threshold (p = 10⁻⁵)",
-    font=dict(size=16, color=INK_MUTED),
+    font={"size": 16, "color": INK_MUTED},
     xref="paper",
     x=0.99,
     xanchor="right",
@@ -191,7 +199,7 @@ if len(significant_snps) > 0:
             x=significant_snps["cumulative_pos"],
             y=significant_snps["neg_log_p"],
             mode="markers",
-            marker=dict(size=10, color=HIGHLIGHT_COLOR, symbol="diamond", line=dict(color="white", width=1)),
+            marker={"size": 10, "color": HIGHLIGHT_COLOR, "symbol": "diamond", "line": {"color": "white", "width": 1}},
             name="Significant SNPs",
             showlegend=True,
             hovertemplate=(
@@ -210,38 +218,38 @@ chr_labels = list(chr_lengths.keys())
 
 # Layout
 fig.update_layout(
-    title=dict(text="manhattan-gwas · plotly · pyplots.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Chromosome", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        tickmode="array",
-        tickvals=chr_positions,
-        ticktext=chr_labels,
-        showgrid=False,
-        zeroline=False,
-        linecolor=INK_SOFT,
-    ),
-    yaxis=dict(
-        title=dict(text="-log₁₀(p-value)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=1,
-        zeroline=False,
-        linecolor=INK_SOFT,
-    ),
+    title={"text": "manhattan-gwas · plotly · pyplots.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={
+        "title": {"text": "Chromosome", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "tickmode": "array",
+        "tickvals": chr_positions,
+        "ticktext": chr_labels,
+        "showgrid": False,
+        "zeroline": False,
+        "linecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": "-log₁₀(p-value)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "zeroline": False,
+        "linecolor": INK_SOFT,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    legend=dict(
-        yanchor="top",
-        y=0.99,
-        xanchor="left",
-        x=0.01,
-        font=dict(size=16, color=INK_SOFT),
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-    ),
-    margin=dict(l=80, r=50, t=80, b=80),
+    legend={
+        "yanchor": "top",
+        "y": 0.99,
+        "xanchor": "left",
+        "x": 0.01,
+        "font": {"size": 16, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    margin={"l": 80, "r": 50, "t": 80, "b": 80},
     hovermode="closest",
 )
 
