@@ -1,172 +1,186 @@
 library: letsplot
+language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:36:21Z'
-updated: '2025-12-31T05:49:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612804067
+updated: '2026-05-15T23:12:39Z'
+generated_by: claude-haiku
+workflow_run: 25944957901
 issue: 2922
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of PDP with comprehensive visualization including ICE
-    lines, confidence band, and rug plot
-  - Clean code structure using sklearn partial_dependence for proper ML interpretation
-  - Professional color scheme with yellow main line contrasting against blue uncertainty
-    elements
-  - Proper use of lets-plot ggplot2-style grammar with layered geoms
-  - Good choice of realistic weather-related feature names for the regression context
+  - Perfect theme-adaptive implementation with explicit color tokens (PAGE_BG, ELEVATED_BG,
+    INK, INK_SOFT) applied consistently across all elements
+  - 'Comprehensive PDP visualization demonstrating advanced technique: main prediction
+    line + confidence band + ICE lines + data distribution rug plot in single coordinated
+    view'
+  - 'Correct Okabe-Ito palette usage (#009E73 for main series, #D55E00 for secondary)
+    with identical data colors in both light and dark renders'
+  - 'Excellent visual hierarchy through layer composition: prominent main line (2.5pt),
+    secondary ICE lines (faint, 0.2 alpha), tertiary distribution rug (0.6 alpha)'
+  - Proper reproducibility with np.random.seed(42) and sklearn RandomState parameters
+  - Realistic, neutral domain (weather features → model predictions) with plausible
+    scales and meaningful scientific visualization
   weaknesses:
-  - Missing legend to explain the different plot elements (main PDP line, ICE lines,
-    confidence band)
-  - The rug plot is very subtle and may be hard to see; could use slightly taller
-    segments
-  image_description: The plot displays a Partial Dependence Plot (PDP) for the "Temperature
-    (standardized)" feature. The main PDP line is rendered in bright yellow/gold color
-    showing the average predicted outcome increasing from approximately -25 to +40
-    as temperature increases from -2.5 to 2.5. Multiple light blue ICE (Individual
-    Conditional Expectation) lines are shown fanning out behind the main line, creating
-    a confidence envelope effect. A light blue shaded region (80% confidence band)
-    covers the range from approximately -175 to +175. A subtle rug plot is visible
-    along the bottom near y=0 showing the distribution of training data. The title
-    "pdp-basic · letsplot · pyplots.ai" appears at the top. Axes are clearly labeled
-    with "Temperature (standardized)" on x-axis and "Partial Dependence (predicted
-    outcome)" on y-axis.
+  - Top and right spines not removed per style guide recommendation — consider removing
+    via theme(axis_line=element_blank()) for minimal aesthetic
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), perfectly themed
+      Chrome: Title "pdp-basic · letsplot · anyplot.ai" in dark ink is prominent; axis labels "Temperature (standardized)" and "Partial Dependence (predicted outcome)" are clearly readable; tick labels and legend text all render in appropriate secondary ink (#4A4A44) with good contrast
+      Data: Main PDP line rendered in brand green (#009E73, Okabe-Ito position 1) with prominent 2.5pt thickness; confidence band shows in tan (accent #D55E00) with 25% alpha; 50 individual ICE lines in orange with low alpha (20%) show prediction variability; rug plot (data distribution) rendered as orange segments with 60% alpha along x-axis
+      Legibility verdict: PASS — all text readable at full resolution, color contrast excellent
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), perfectly themed
+      Chrome: Title and axis labels render in light ink (#F0EFE8); secondary text in light soft ink (#B8B7B0) — no dark-on-dark failures; legend box has elevated background (#242420) with light border; all text clearly visible against dark surface
+      Data: Main PDP line still renders in identical brand green (#009E73) — data colors unchanged between themes as required; confidence band and ICE lines in same colors as light render; rug plot distinguishable
+      Legibility verdict: PASS — all elements readable, proper theme adaptation with data color consistency
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large (~24pt), axis labels are ~20pt, tick labels
-          ~16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16pt),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Main PDP line is highly visible in yellow, ICE lines appropriately
-          subtle. Minor deduction: ICE lines could be slightly more distinguishable'
+        comment: 'All elements optimally visible: main line prominent, confidence
+          band clear, ICE lines appropriately faint for density, rug marks distinguishable'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow/gold main line contrasts well with blue ICE lines and confidence
-          band; colorblind-safe combination
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; minimal theme provides clean look. Minor
-          whitespace on edges
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: "Temperature (standardized)" and
-          "Partial Dependence (predicted outcome)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with good contrast, CVD-safe, no red-green dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas with balanced margins, legend positioned
+          at top without overlap
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle and well-styled, but no legend is present to explain
-          the yellow line vs ICE lines vs confidence band
+        passed: true
+        comment: 'Descriptive labels with context: ''Temperature (standardized)''
+          and ''Partial Dependence (predicted outcome)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect compliance: first series #009E73 (BRAND), secondary #D55E00
+          (Okabe-Ito pos 2), backgrounds #FAF8F1/#1A1A17, theme-adaptive text/grid/legend-box
+          colors in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Sophisticated theme-token system, intentional hierarchy, scientific
+          polish. Below publication-ready (6) due to generic grid styling, not FiveThirtyEight-level
+          (8)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Custom theme with element_rect/element_text/element_line. Good refinement
+          but spines not removed per style guide, grid size moderate (0.2pt)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: main prediction prominent, uncertainty via
+          confidence band and faint ICE lines, data distribution via rug. Tells story
+          of ML model behavior with minimal annotations'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct partial dependence plot type
+        comment: Correct partial dependence plot with all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Feature values on x-axis, partial dependence on y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes confidence band, ICE lines, and rug plot as suggested in
-          spec
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: main PDP, confidence band, ICE lines, rug
+          plot showing data distribution'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full feature range displayed with appropriate y-axis scale
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Feature values on x-axis, partial dependence on y-axis, all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type (self-explanatory elements)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "pdp-basic · letsplot · pyplots.ai"'
+        comment: 'Title format correct: ''pdp-basic · letsplot · anyplot.ai''; legend
+          labels match: Elements, Main PDP, Individual, Data Distribution'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows main PDP behavior, uncertainty via ICE lines, data distribution
-          via rug. Shows increasing relationship typical of ML models
+        comment: 'Shows all PDP aspects: main curve, confidence band, individual predictions
+          (ICE), data distribution'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses weather-related features (Temperature, Humidity, Pressure, etc.)
-          from a regression model - neutral scientific scenario
+        comment: Real ML scenario (GradientBoostingRegressor), realistic weather features
+          (Temperature, Humidity, Pressure, WindSpeed, Altitude), neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Standardized feature values are appropriate; partial dependence scale
-          is plausible for regression predictions
+        comment: Sensible data generation (make_regression 500 samples, 5 features,
+          noise=20), standardized feature values typical of normalized input, output
+          values appropriate for regression
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,42 +188,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data/model → compute PDP → create
-          dataframes → plot → save'
+        comment: 'Clean linear flow: imports → theme tokens → model training → PDP
+          computation → plotting → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42 for model
+        comment: np.random.seed(42) and random_state=42 on model
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, lets_plot, sklearn components)
+        comment: 'All imports used: os (env), numpy (arrays), pandas (dataframes),
+          lets_plot (plotting), sklearn (model/data/inspection)'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, clear variable names, appropriate complexity, no over-engineering
+          or fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current sklearn and lets-plot APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html but path parameter usage is unconventional
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current ggsave
+          API with w/h/unit/path parameters
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Good use of ggplot grammar with geom_ribbon, geom_line, geom_segment,
-          and theme customization. Could leverage more lets-plot specific features
-          like tooltips for interactive version
+        passed: true
+        comment: Perfect idiomatic ggplot() + geom_*() composition; proper aes() mappings;
+          scale_color_manual/scale_fill_manual for palettes; theme() for customization;
+          ggsize() for sizing; ggsave() for export
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses geom_ribbon() for confidence band, geom_segment() for rug plot,
+          layer composition to integrate multiple geoms, custom theme with element_*
+          functions. Shows library expertise but not exclusively unique to letsplot
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
