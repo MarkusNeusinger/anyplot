@@ -13,13 +13,14 @@ A line plot using different line styles (solid, dashed, dotted, dash-dot) to dis
 
 ## Data
 
-The visualization requires:
-- **X variable**: Continuous variable (often time or sequence)
-- **Multiple Y variables**: Different series to compare
+- `x` (continuous) - Time or sequence variable for the horizontal axis
+- `y_1`, `y_2`, ... (numeric) - Multiple series to distinguish with different line styles
+- Size: 50-500 points recommended (sufficient to show trends and line style clarity)
+- Example: Time series data with 3-5 series for optimal line style distinction
 
 Example structure:
 ```
-X    | Series A | Series B | Series C
+x    | Series A | Series B | Series C
 -----|----------|----------|----------
 0    | 10       | 15       | 12
 1    | 12       | 14       | 15

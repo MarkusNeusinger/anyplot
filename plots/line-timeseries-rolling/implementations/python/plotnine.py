@@ -1,29 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-13
 """
+
+import os
 
 import numpy as np
 import pandas as pd
+import plotnine as pn
 from mizani.breaks import breaks_date
 from mizani.labels import label_date
-from plotnine import (
-    aes,
-    element_line,
-    element_text,
-    geom_line,
-    ggplot,
-    guides,
-    labs,
-    scale_alpha_manual,
-    scale_color_manual,
-    scale_size_manual,
-    scale_x_datetime,
-    theme,
-    theme_minimal,
-)
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00"]  # brand green, vermillion
 
 # Data - Daily temperature readings with 7-day rolling average
 np.random.seed(42)
@@ -60,29 +58,34 @@ df_long["series"] = pd.Categorical(
 
 # Plot
 plot = (
-    ggplot(df_long, aes(x="date", y="value", color="series", alpha="series", size="series"))
-    + geom_line()
-    + scale_color_manual(values={"Daily Temperature": "#306998", "7-Day Rolling Average": "#FFD43B"})
-    + scale_alpha_manual(values={"Daily Temperature": 0.5, "7-Day Rolling Average": 1.0})
-    + scale_size_manual(values={"Daily Temperature": 0.8, "7-Day Rolling Average": 2.0})
-    + guides(alpha="none", size="none")
-    + scale_x_datetime(breaks=breaks_date(7), labels=label_date("%b %Y"))
-    + labs(x="Date", y="Temperature (°C)", title="line-timeseries-rolling · plotnine · pyplots.ai", color="")
-    + theme_minimal()
-    + theme(
+    pn.ggplot(df_long, pn.aes(x="date", y="value", color="series", alpha="series", size="series"))
+    + pn.geom_line()
+    + pn.scale_color_manual(values={"Daily Temperature": OKABE_ITO[0], "7-Day Rolling Average": OKABE_ITO[1]})
+    + pn.scale_alpha_manual(values={"Daily Temperature": 0.5, "7-Day Rolling Average": 1.0})
+    + pn.scale_size_manual(values={"Daily Temperature": 0.8, "7-Day Rolling Average": 2.0})
+    + pn.guides(alpha="none", size="none")
+    + pn.scale_x_datetime(breaks=breaks_date(14), labels=label_date("%b %Y"))
+    + pn.labs(x="Date", y="Temperature (°C)", title="line-timeseries-rolling · plotnine · anyplot.ai", color="")
+    + pn.theme_minimal()
+    + pn.theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_x=element_text(angle=30, hjust=1),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=0),
+        plot_background=pn.element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=pn.element_rect(fill=PAGE_BG),
+        panel_grid_major=pn.element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=pn.element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=pn.element_rect(color=INK_SOFT, fill=None),
+        axis_title=pn.element_text(size=20, color=INK),
+        axis_text=pn.element_text(size=16, color=INK_SOFT),
+        axis_text_x=pn.element_text(angle=30, hjust=1),
+        axis_line=pn.element_line(color=INK_SOFT),
+        plot_title=pn.element_text(size=24, color=INK),
+        legend_background=pn.element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=pn.element_text(size=16, color=INK_SOFT),
+        legend_title=pn.element_text(size=0),
         legend_position="right",
-        panel_grid_major=element_line(color="#cccccc", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#dddddd", size=0.3, alpha=0.2),
+        text=pn.element_text(size=14),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

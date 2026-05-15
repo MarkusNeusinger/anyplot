@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 shap-summary: SHAP Summary Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-14
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,24 +18,32 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated SHAP values for a regression model
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Data - SHAP values for medical outcome prediction model
 np.random.seed(42)
 n_samples = 200
 n_features = 12
 
 feature_names = [
-    "House Size (sqft)",
-    "Bedrooms",
-    "Location Score",
+    "Blood Pressure (mmHg)",
+    "Cholesterol (mg/dL)",
+    "Glucose (mg/dL)",
+    "BMI",
+    "Heart Rate (bpm)",
     "Age (years)",
-    "Bathrooms",
-    "Garage Spaces",
-    "Lot Size (acres)",
-    "School Rating",
-    "Crime Rate",
-    "Distance to City (mi)",
-    "Year Built",
-    "HOA Fee ($)",
+    "Hemoglobin A1C (%)",
+    "Triglycerides (mg/dL)",
+    "LDL Cholesterol (mg/dL)",
+    "HDL Cholesterol (mg/dL)",
+    "Smoking Status",
+    "Physical Activity (min/week)",
 ]
 
 # Generate feature values (normalized 0-1 for coloring)
@@ -52,7 +61,6 @@ for i in range(n_features):
     shap_values[:, i] = base_effect + noise
 
 # Sort features by mean absolute SHAP value (most important first)
-mean_abs_shap = np.mean(np.abs(shap_values), axis=1)
 feature_importance = np.mean(np.abs(shap_values), axis=0)
 sorted_indices = np.argsort(feature_importance)[::-1]
 
@@ -114,36 +122,49 @@ chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginLeft": 350,
     "marginBottom": 150,
 }
 
 # Title
 chart.options.title = {
-    "text": "shap-summary \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "shap-summary · highcharts · anyplot.ai",
+    "style": {"fontSize": "32px", "fontWeight": "bold", "color": INK},
 }
-
-# Subtitle
-chart.options.subtitle = {"text": "Feature Importance and Impact on Model Predictions", "style": {"fontSize": "28px"}}
 
 # X-axis (SHAP value)
 chart.options.x_axis = {
-    "title": {"text": "SHAP Value (Impact on Prediction)", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {
+        "text": "SHAP Value (Impact on Prediction)",
+        "style": {"fontSize": "26px", "fontWeight": "600", "color": INK},
+        "margin": 20,
+    },
+    "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "plotLines": [{"value": 0, "color": "#333333", "width": 4, "zIndex": 5}],
+    "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
+    "lineColor": INK_SOFT,
+    "lineWidth": 2,
+    "tickColor": INK_SOFT,
+    "tickLength": 8,
+    "crosshair": {"color": INK_SOFT, "width": 2, "zIndex": 10},
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 4, "zIndex": 5, "dashStyle": "Solid"}],
 }
 
 # Y-axis (features)
 y_categories = [feature_names[i] for i in sorted_indices][::-1]  # Reverse for top-to-bottom
 chart.options.y_axis = {
-    "title": {"text": "", "style": {"fontSize": "28px"}},
+    "title": {"text": "", "style": {"fontSize": "26px", "color": INK}},
     "categories": y_categories,
-    "labels": {"style": {"fontSize": "30px"}},
-    "gridLineWidth": 0,
+    "labels": {"style": {"fontSize": "24px", "color": INK_SOFT, "fontWeight": "500"}},
+    "gridLineWidth": 1,
+    "gridLineColor": GRID,
+    "gridLineDashStyle": "Dot",
+    "lineColor": INK_SOFT,
+    "lineWidth": 2,
+    "tickColor": INK_SOFT,
+    "tickLength": 8,
     "reversed": False,
 }
 
@@ -153,28 +174,45 @@ chart.options.legend = {
     "align": "right",
     "verticalAlign": "middle",
     "layout": "vertical",
-    "title": {"text": "Feature Value", "style": {"fontSize": "32px", "fontWeight": "bold"}},
-    "itemStyle": {"fontSize": "26px"},
-    "symbolRadius": 8,
-    "symbolHeight": 20,
-    "symbolWidth": 20,
-    "itemMarginBottom": 10,
+    "title": {"text": "Feature Value", "style": {"fontSize": "26px", "fontWeight": "bold", "color": INK}},
+    "itemStyle": {"fontSize": "22px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 2,
+    "borderRadius": 4,
+    "symbolRadius": 10,
+    "symbolHeight": 24,
+    "symbolWidth": 24,
+    "itemMarginBottom": 12,
+    "padding": 16,
 }
 
-# Plot options
+# Plot options with enhanced Highcharts features
 chart.options.plot_options = {
     "scatter": {
-        "marker": {"radius": 8, "states": {"hover": {"enabled": True, "lineColor": "#333333"}}},
+        "marker": {
+            "radius": 8,
+            "states": {
+                "hover": {"enabled": True, "lineColor": INK, "lineWidth": 2, "radiusPlus": 3},
+                "select": {"fillColor": INK_SOFT, "borderColor": INK},
+            },
+        },
         "jitter": {"x": 0, "y": 0},
+        "cursor": "pointer",
     },
     "series": {"animation": False},
 }
 
-# Tooltip
+# Tooltip with enhanced styling
 chart.options.tooltip = {
     "headerFormat": "<b>{series.name}</b><br>",
     "pointFormat": "SHAP Value: {point.x:.3f}",
-    "style": {"fontSize": "18px"},
+    "style": {"fontSize": "20px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 2,
+    "borderRadius": 4,
+    "padding": 12,
 }
 
 # Add all series
@@ -182,7 +220,7 @@ for s in all_series:
     chart.add_series(s)
 
 # Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://unpkg.com/highcharts@latest/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
@@ -194,13 +232,17 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -215,11 +257,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)

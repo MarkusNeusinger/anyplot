@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-15
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,18 @@ from lets_plot import *
 
 
 LetsPlot.setup_html()
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for alternating chromosomes
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -24,7 +38,7 @@ chrom_centers = {}
 
 for i, chrom in enumerate(chromosomes):
     # Random positions within chromosome (scaled by chromosome "size")
-    chrom_size = 250_000_000 - i * 5_000_000  # Varying chromosome sizes
+    chrom_size = 250_000_000 - i * 5_000_000
     positions = np.sort(np.random.randint(1, chrom_size, n_snps_per_chrom))
 
     # Generate p-values - mostly non-significant with some peaks
@@ -61,11 +75,9 @@ for i, chrom in enumerate(chromosomes):
 
 df = pd.DataFrame(data)
 
-# Create chromosome index for coloring (alternating pattern)
+# Assign alternating colors using Okabe-Ito palette
 df["chrom_idx"] = df["chromosome"].astype(int) % 2
-
-# Assign colors based on alternating pattern
-df["color_group"] = df["chrom_idx"].map({0: "even", 1: "odd"})
+df["color_group"] = df["chrom_idx"].map({0: OKABE_ITO[0], 1: OKABE_ITO[1]})
 
 # Significance thresholds
 genome_wide_threshold = -np.log10(5e-8)  # ~7.3
@@ -80,33 +92,40 @@ tick_positions = [chrom_centers[c] for c in chromosomes]
 # Create the Manhattan plot
 plot = (
     ggplot(df, aes(x="cumulative_pos", y="neg_log10_p", color="color_group"))
-    + geom_point(size=1.5, alpha=0.7)
-    + scale_color_manual(values=["#306998", "#7A9BBD"], guide="none")
+    + geom_point(size=2, alpha=0.7)
+    + scale_color_identity()
     # Highlight significant points
     + geom_point(
-        data=df[df["significant"]], mapping=aes(x="cumulative_pos", y="neg_log10_p"), color="#DC2626", size=3, alpha=0.9
+        data=df[df["significant"]],
+        mapping=aes(x="cumulative_pos", y="neg_log10_p"),
+        color=OKABE_ITO[4],
+        size=3.5,
+        alpha=0.9,
     )
     # Genome-wide significance threshold line
-    + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color="#DC2626", size=0.8)
+    + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color=OKABE_ITO[4], size=1)
     # Suggestive threshold line
-    + geom_hline(yintercept=suggestive_threshold, linetype="dotted", color="#666666", size=0.6)
-    + labs(title="manhattan-gwas · letsplot · pyplots.ai", x="Chromosome", y="-log₁₀(p-value)")
+    + geom_hline(yintercept=suggestive_threshold, linetype="dotted", color=INK_MUTED, size=0.7)
+    + labs(title="manhattan-gwas · letsplot · anyplot.ai", x="Chromosome", y="-log₁₀(p-value)")
     + scale_x_continuous(breaks=tick_positions, labels=chromosomes)
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=28, face="bold"),
-        axis_title_x=element_text(size=22),
-        axis_title_y=element_text(size=22),
-        axis_text_x=element_text(size=14),
-        axis_text_y=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major_y=element_line(color=RULE, size=0.3),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
+        plot_title=element_text(size=28, face="bold", color=INK),
+        axis_title_x=element_text(size=22, color=INK),
+        axis_title_y=element_text(size=22, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        axis_line_x=element_line(color=INK_SOFT, size=0.6),
+        axis_line_y=element_line(color=INK_SOFT, size=0.6),
     )
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save interactive HTML version
-ggsave(plot, "plot.html", path=".")
+# Save as PNG and HTML with theme suffix
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")

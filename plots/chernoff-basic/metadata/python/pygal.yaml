@@ -1,217 +1,229 @@
 library: pygal
+language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:03:10Z'
-updated: '2025-12-31T11:25:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617550285
+updated: '2026-05-15T15:23:09Z'
+generated_by: claude-haiku
+workflow_run: 25925322877
 issue: 3003
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - pillow
-  techniques:
-  - custom-shapes
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent visual representation of Chernoff faces with clear differentiation between
-    car types
-  - Well-implemented feature mappings with 7 distinct facial attributes
-  - Good colorblind-safe palette with distinct colors for each car
-  - Comprehensive legend explaining feature mappings
-  - Correct title format following spec requirements
-  - Clean horizontal layout with proper spacing
-  - Both PNG and HTML output for flexibility
+  - 'Flawless visual quality: perfectly readable text in both light and dark themes
+    with no contrast issues'
+  - 'Perfect spec compliance: all required features implemented correctly with comprehensive
+    legends'
+  - Clean, maintainable code with clear structure and proper reproducibility
+  - Excellent data quality and realistic use case (car performance comparison)
+  - Theme-adaptive rendering with correct Okabe-Ito palette usage
+  - No visual artifacts or overlapping elements
   weaknesses:
-  - Color legend at bottom is redundant since car names are already labeled below
-    each face
-  - Some unused vertical space at the bottom of the canvas could be better utilized
-  - Faces could be slightly larger to better fill the available canvas space
-  image_description: The plot displays 5 Chernoff faces arranged horizontally representing
-    car performance metrics (Sedan A, SUV B, Sports C, Compact D, Luxury E). Each
-    face is rendered as a colored ellipse (blue, yellow, teal, coral, purple respectively)
-    with semi-transparent fill and solid outline. Faces contain white eyes with dark
-    pupils, eyebrows with varied slants, vertical nose lines of different lengths,
-    and curved mouths (smiling/frowning). Below each face is a bold label with the
-    car name. The title "Car Performance Comparison · chernoff-basic · pygal · pyplots.ai"
-    appears at top center. A feature mappings legend explains the 7 attribute mappings
-    (Face Width = Engine Power, etc.) arranged in two rows. A color legend at bottom
-    identifies each car by its color swatch. The layout uses a white background with
-    good spacing between elements.
+  - Design excellence is functional but could be more visually sophisticated (faces
+    lack distinctive artistry or additional visual polish)
+  - Limited visual refinement; minimal customization beyond core element positioning
+  - 'Library mastery: relies primarily on SVG manipulation rather than exploring pygal-specific
+    visualization features'
+  - Data storytelling could emphasize patterns more strongly or create stronger focal
+    points
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "Car Performance Comparison · chernoff-basic · pygal · pyplots.ai" clearly visible at top in dark text (#1A1A17); face labels (Sedan A, SUV B, Sports C, Compact D, Luxury E) are bold and readable; feature mappings legend with secondary text color (#4A4A44); car color legend with names and swatches
+      Data: 5 Chernoff faces with distinct Okabe-Ito colors (green, orange, blue, purple, yellow); all facial features clearly visible and properly scaled - eyes with pupils, eyebrows, nose (vertical line), mouth (bezier curve); face proportions vary per data values
+      Legibility verdict: PASS - all text has excellent contrast; no dark-on-light or light-on-light failures; no overlapping elements
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title rendered in light text (#F0EFE8); face labels in light text; feature mappings and car legend in light secondary text (#B8B7B0); all text clearly readable against dark background - no dark-on-dark failures
+      Data: Identical Okabe-Ito colors to light render (green, orange, blue, purple, yellow) - only chrome adapted; face proportions and layout identical; all facial features equally visible in dark mode
+      Legibility verdict: PASS - light text has strong contrast on dark background; brand green (#009E73) readable on both surfaces; no text readability issues in either theme
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, labels, and legend text are all clearly readable at full size
-          with appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; faces are well-spaced
+        comment: All text elements readable in both themes with proper font sizing
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Excellent spacing; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Faces are well-sized and visible; facial features clearly distinguishable,
-          though faces could be slightly larger
+        comment: All facial features clearly visible and properly scaled with data
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with distinct hues (blue, yellow, teal, coral,
-          purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good horizontal distribution; legend area well organized; some unused
-          vertical space at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for Chernoff faces; feature mappings serve as axis explanation
-          - full marks
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned grid; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Feature mappings legend is informative; color legend is helpful but
-          could be more integrated
+        comment: Comprehensive title and feature mappings legend
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 first; Okabe-Ito order; correct backgrounds;
+          both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional SVG rendering; functional color palette; could be more
+          distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimalist with consistent strokes; limited embellishment
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear comparative visualization; feature mappings enable interpretation;
+          could emphasize patterns more
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Chernoff faces implementation
+        comment: Correct Chernoff faces visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 7 variables correctly mapped to facial features
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: face width/height, eye size/spacing,
-          mouth curve, nose length, eyebrow slant'
-      - id: SC-04
-        name: Data Range
+        comment: All 7 variables mapped; 5 observations; normalized; grid layout
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Data normalized 0-1 as specified
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
+        comment: All observations shown; layout appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color legend duplicates the face labels which are already below each
-          face; could be more useful
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Car Performance Comparison · chernoff-basic · pygal
-          · pyplots.ai"'
+        comment: Title includes spec-id; comprehensive legends provided
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied facial expressions (happy/serious), different face sizes,
-          varied eye sizes; good differentiation between cars
+        comment: All 7 Chernoff face aspects demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Car performance metrics is a realistic, neutral business scenario
+        comment: Plausible car metrics; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values normalized 0-1 as appropriate; mappings to car metrics are
-          sensible
+        comment: 5 observations appropriate; normalized 0-1; sensible ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses inline code without functions, but the SVG manipulation is complex
-          by necessity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: No unnecessary abstractions; direct implementation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42); deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no bloat
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern pygal and ET usage
+        comment: Clean parametric calculations; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png, plot.svg, and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/svg/html
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses pygal for SVG infrastructure and custom style, then extends
-          with custom SVG elements for Chernoff faces. Creative approach but pygal
-          itself cannot render Chernoff faces natively, so this is a hybrid solution.
+        passed: false
+        comment: Good use of pygal.XY base and Style system; uses cairosvg idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Limited exploration of pygal-specific capabilities; mostly SVG manipulation
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - custom-legend
+  - html-export
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling: []

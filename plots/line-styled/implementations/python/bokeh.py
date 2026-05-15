@@ -1,14 +1,35 @@
-""" pyplots.ai
+""" anyplot.ai
 line-styled: Styled Line Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-12
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Legend
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+]
 
 # Data - Monthly performance metrics over a year
 np.random.seed(42)
@@ -30,22 +51,20 @@ source = ColumnDataSource(
 p = figure(
     width=4800,
     height=2700,
-    title="line-styled · bokeh · pyplots.ai",
+    title="line-styled · bokeh · anyplot.ai",
     x_axis_label="Month",
     y_axis_label="Utilization (%)",
 )
 
 # Define line styles and colors
-# Using solid, dashed, dotted, and dash-dot patterns with pronounced differences
 line_styles = ["solid", [20, 10], [4, 8], [20, 8, 4, 8]]
-colors = ["#306998", "#FFD43B", "#4CAF50", "#FF5722"]
 series_names = ["CPU Usage", "Memory Usage", "Disk I/O", "Network Traffic"]
 y_columns = ["cpu", "memory", "disk", "network"]
 
 # Create legend items
 legend_items = []
 
-for col, style, color, name in zip(y_columns, line_styles, colors, series_names, strict=True):
+for col, style, color, name in zip(y_columns, line_styles, OKABE_ITO, series_names, strict=True):
     # Add line with appropriate style
     line = p.line(x="month", y=col, source=source, line_width=6, color=color, line_dash=style)
 
@@ -54,31 +73,38 @@ for col, style, color, name in zip(y_columns, line_styles, colors, series_names,
 
     legend_items.append((name, [line, scatter]))
 
-# Create and configure legend - place inside plot area
+# Create and configure legend
 legend = Legend(items=legend_items, location="top_left")
 legend.label_text_font_size = "28pt"
+legend.label_text_color = INK_SOFT
 legend.glyph_height = 40
 legend.glyph_width = 80
 legend.spacing = 15
 legend.padding = 20
-legend.background_fill_alpha = 0.85
-legend.background_fill_color = "white"
-legend.border_line_color = "#cccccc"
+legend.background_fill_alpha = 0.95
+legend.background_fill_color = ELEVATED_BG
+legend.border_line_color = INK_SOFT
 legend.border_line_width = 2
 p.add_layout(legend, "center")
-p.legend.location = "top_left"
 
 # Style configuration - larger fonts for 4800x2700 canvas
 p.title.text_font_size = "48pt"
+p.title.text_color = INK
 p.title.align = "center"
 p.xaxis.axis_label_text_font_size = "36pt"
 p.yaxis.axis_label_text_font_size = "36pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "28pt"
 p.yaxis.major_label_text_font_size = "28pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling - subtle
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = "dashed"
+# Grid styling
+p.grid.grid_line_alpha = 0.10
+p.grid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
 # Axis styling
 p.xaxis.ticker = list(range(1, 13))
@@ -98,19 +124,40 @@ p.xaxis.major_label_overrides = {
 }
 
 # Background and outline
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
-p.outline_line_color = "#333333"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
 # Axis line styling
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.major_tick_line_width = 2
 p.yaxis.major_tick_line_width = 2
 
-# Save as PNG
-export_png(p, filename="plot.png")
-
-# Save as HTML for interactivity
-output_file("plot.html")
+# Save as HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with Selenium (headless Chrome)
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

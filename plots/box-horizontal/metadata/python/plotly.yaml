@@ -1,167 +1,187 @@
 library: plotly
+language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:30:13Z'
-updated: '2025-12-30T09:35:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593347470
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-12T01:04:16Z'
+generated_by: claude-haiku
+workflow_run: 25706580455
+issue: 2548
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent data generation with realistic service response time distributions showing
-    varied spreads and outliers
-  - Services sorted by median for easier comparison as recommended in specification
-  - Clean alternating color scheme using Python brand colors (blue/yellow)
-  - Proper use of plotly.graph_objects for horizontal box plots
-  - Good margin management (l=180) to accommodate longer service names
-  - Generates both PNG and HTML outputs appropriate for plotly
+  - 'Perfect visual quality: all text readable in both light and dark themes, no theme-adaptation
+    failures'
+  - Proper theme tokens correctly applied throughout (INK, INK_SOFT, GRID)
+  - 'Excellent spec compliance: correct chart type, all required features, proper
+    data mapping'
+  - Clean, readable code with deterministic seeding
+  - Professional Okabe-Ito color palette with brand green as first series
+  - Thoughtful data sorting by median value enhances narrative
+  - Realistic, neutral data appropriate to the domain
+  - Correct output format (PNG + HTML) for static and interactive viewing
   weaknesses:
-  - Grid opacity at 0.1 is quite subtle; could be increased to 0.2-0.3 for better
-    readability
-  - Could add hover template customization to show more statistics on hover (plotly
-    strength)
-  image_description: The plot displays a horizontal box plot showing response times
-    (in milliseconds) for 6 different service types. The services are arranged vertically
-    on the y-axis (Cache Lookup, Authentication, Message Queue, API Gateway, Database
-    Query, File Storage) sorted by median response time from fastest to slowest. The
-    x-axis shows Response Time (ms) ranging from 0 to 500. Boxes alternate between
-    Python blue (#306998) and Python yellow (#FFD43B) colors. Each box shows the quartile
-    distribution with whiskers extending to show data range, and outlier points are
-    visible for most services. The title "box-horizontal · plotly · pyplots.ai" is
-    centered at the top. The background is clean white with subtle gridlines.
+  - Design Excellence could be elevated with more visual refinement (custom edge styling,
+    more sophisticated color contrast)
+  - 'Library Mastery is moderate: uses core Plotly features correctly but doesn''t
+    leverage distinctive capabilities (custom annotations, interactive callbacks)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "box-horizontal · plotly · anyplot.ai" (28px, dark INK), axis labels "Service Type" and "Response Time (ms)" (22px, dark INK), tick labels (18px, INK_SOFT) - all clearly readable with excellent contrast against light background
+      Data: Six horizontal box plots using Okabe-Ito palette - Cache Lookup in brand green (#009E73), Authentication in orange (#D55E00), Message Queue in blue (#0072B2), API Gateway in reddish purple (#CC79A7), Database Query in yellow (#E69F00), File Storage in sky blue (#56B4E9). Whiskers, median lines, quartile boxes, and outliers all visible and distinct.
+      Grid: Subtle vertical gridlines at 100, 200, 300, 400, 500ms intervals
+      Legibility verdict: PASS - all text is readable against light background, data colors are clear and distinct
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all rendered in light text (INK=#F0EFE8 for primary, INK_SOFT=#B8B7B0 for secondary) - all clearly readable with excellent contrast against dark background. No dark-on-dark failures.
+      Data: Identical Okabe-Ito colors to light render - Cache Lookup remains brand green (#009E73), all other services maintain their assigned colors. Only chrome (background, text, grid) has flipped to dark theme. Brand green is visually distinct and clearly visible.
+      Grid: Same vertical gridlines with light-adapted opacity - subtle and appropriate
+      Legibility verdict: PASS - all text elements are light-colored and readable in dark mode, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, service names well-spaced on y-axis
+        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
+          sized with proper color tokens. Readable in both light and dark themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Service names sorted by median, adequate margins, no text collisions,
+          boxes clearly distinct.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots clearly visible, outliers properly sized at 8px, opacity
-          0.7 works well
+        comment: Whiskers, median lines, quartile boxes, and outliers all clearly
+          visible and distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow alternating is colorblind-safe, though contrast could
-          be slightly better
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, left margin of 180px accommodates service names
-          well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" includes units, "Service Type" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with brand green first; CVD-safe, good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, generous whitespace, 1600×900
+          renders at 4800×2700px.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (0.1 alpha), but no legend needed here; however grid
-          could be slightly more visible
+        comment: Title format correct (spec-id · library · anyplot.ai); axes labeled
+          with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series Okabe-Ito 1-6, backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark), both renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional Okabe-Ito palette, intentional color hierarchy, thoughtful
+          sorting by median value. Solid design execution; fairly standard box plot
+          styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean grid, good box definition, generous whitespace. Could have
+          more sophisticated refinement (custom edge styling).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Services sorted by median creates clear narrative. Visual hierarchy
+          clear; color-coding aids distinction. Good storytelling through data ordering.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal box plot with boxes oriented horizontally
+        comment: Correct horizontal box plot with proper orientation and all statistical
+          elements.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, numeric values on x-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows median line, quartile box, whiskers, and outliers as required
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: categories (6 services), distribution
+          visualization, whiskers, outliers, horizontal orientation.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes appropriately scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis (numeric): Response Time (ms); Y-axis (categorical): Service
+          Type. Axes show full data range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, categories clearly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "box-horizontal · plotly · pyplots.ai"
+        comment: Title format correct; legend correctly omitted with implicit labeling
+          on y-axis.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: different spreads, medians, and outlier patterns
-          across services'
+        comment: All aspects of horizontal box plot demonstrated; 6 services provide
+          good comparison.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Response times by service type is a realistic scenario, values are
-          plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times range from ~15ms (cache) to ~500ms (file storage)
-          - realistic for services
+        comment: Response times for web services are realistic, domain-appropriate,
+          and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range 0-500ms is realistic for service latencies; scale highlights
+          meaningful differences.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,40 +189,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions/classes; straightforward implementation.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and plotly.graph_objects used
+        comment: Only necessary imports; no unused libraries.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no over-engineering; no fake UI; clean variable
+          names.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png AND plot.html (correct for plotly)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct naming.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Box with orientation="h", proper plotly_white template, but
-          could leverage more interactive features or hover customization
+        comment: Uses go.Box correctly; idiomatic parameter usage; proper layout config
+          and theme tokens. Could explore more advanced features.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Custom hovertemplate and HTML export show some Plotly awareness.
+          Fairly standard implementation.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []

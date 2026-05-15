@@ -1,166 +1,173 @@
 library: letsplot
+language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:43:40Z'
-updated: '2025-12-30T10:51:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594566810
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-13T15:41:11Z'
+generated_by: claude-haiku
+workflow_run: 25809014115
+issue: 2600
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent step line visualization with clear horizontal-then-vertical transitions
-    using direction=hv
-  - Points overlay on steps helps identify exact data points at each hour
-  - Good color scheme with Python-inspired blue and yellow that is colorblind accessible
-  - Realistic server response time monitoring scenario that demonstrates discrete
-    state changes
-  - Proper title format following spec-id · library · pyplots.ai convention
-  - Clean KISS code structure with reproducible random seed
-  - Both PNG and HTML outputs generated correctly
+  - Perfect text legibility with explicit font sizing in both themes
+  - Flawless theme-adaptive styling—both renders equally readable with correct chrome
+    adaptation
+  - 'Correct palette compliance (brand green #009E73) with perfect background colors
+    (#FAF8F1 light / #1A1A17 dark)'
+  - Excellent data choice demonstrating real-world server monitoring step function
+    use case
+  - Clean, reproducible code with no unnecessary imports or over-engineering
+  - Strong spec compliance—correct plot type with all required features (discrete
+    changes, value persistence, instantaneous transitions)
   weaknesses:
-  - Grid line color could be slightly more subtle
-  - Points at every hour are slightly redundant - could highlight only the change
-    points
-  - Data pattern is somewhat predictable with changes only at specific scheduled hours
-  image_description: The plot displays a step line chart showing server response time
-    monitoring over a 24-hour period. A dark blue step line (#306998) creates clear
-    horizontal-then-vertical transitions characteristic of step functions. Yellow
-    circular points (#FFD43B) with visible outlines mark each data point at every
-    hour. The title "line-stepwise · letsplot · pyplots.ai" appears at the top in
-    bold. The X-axis is labeled "Hour of Day" ranging from 0 to 24 in increments of
-    3, and the Y-axis is labeled "Response Time (ms)" ranging from approximately 50
-    to 150. The plot uses a minimal theme with subtle gray grid lines. The response
-    time starts at 50ms and shows discrete jumps at hours 6, 9, 12, 15, 18, and 21,
-    eventually reaching peaks of 150ms before declining.
+  - Design Excellence moderate (9/20)—looks like a configured library default rather
+    than custom, polished design
+  - Limited distinctive library features—straightforward implementation that doesn't
+    leverage letsplot's advanced capabilities
+  - No visual storytelling or emphasis—data clearly displayed but no visual hierarchy
+    or focal points to guide viewer attention
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "line-stepwise · letsplot · anyplot.ai" is dark (#1A1A17) and clearly visible; axis labels "Hour of Day" and "Response Time (ms)" are dark and readable; tick labels (0, 3, 6...24 on x-axis; 50, 60...150 on y-axis) are dark and legible; grid is subtle gray
+      Data: Step line is brand green (#009E73) with size=2; transition points marked with green circles (size=5); horizontal segments show value persistence, vertical segments show instantaneous changes
+      Legibility verdict: PASS (all elements clearly readable, no light-on-light issues)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, tick labels are all light-colored (#F0EFE8, #B8B7B0) and clearly visible on dark background; grid is subtle light gray; no dark-on-dark text issues
+      Data: Step line remains identical brand green (#009E73) as light render (only chrome flipped); points marked the same; step visualization equally clear
+      Legibility verdict: PASS (all text light on dark background, no contrast issues, brand green clearly visible on both surfaces)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large (~24pt), axis labels are clear (~20pt), tick
-          labels readable (~16pt)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text overlap, all elements clearly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line is thick and visible (size=2), points are appropriately
-          sized (size=5), good contrast
+        comment: Data line (size=2) and points (size=5) optimally adapted to sparse
+          data (24 points)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, plot fills majority of area, minor whitespace
-          at top
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Response Time (ms)", "Hour of Day"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green (#009E73) excellent contrast on both backgrounds; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, balanced margins, efficient canvas use
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is appropriately subtle, but no legend needed for single series
+        comment: 'Descriptive with units: ''Hour of Day'' and ''Response Time (ms)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; perfect theme
+          chrome adaptation'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default, no exceptional design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Uses theme_minimal() plus custom layer, mostly standard customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Realistic scenario but no visual hierarchy or emphasis beyond plot
+          type
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly uses step line plot with geom_step()
+        comment: Correct step plot with geom_step(direction='hv')
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=hours (time), Y=response time (values that change at specific points)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows horizontal segments (value persistence), vertical segments
-          (instantaneous changes), uses direction="hv" for pre-step alignment
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: discrete changes, value persistence, instantaneous
+          transitions'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-stepwise · letsplot · pyplots.ai"'
+        comment: Correct title format; legend appropriately omitted for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows discrete state changes at specific times, value persistence
-          between changes, both increases and decreases
+        comment: 'All aspects shown: transitions, persistence, discrete behavior'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response time monitoring is a realistic and neutral scenario,
-          plausible for system performance
+        comment: Real, neutral scenario (24-hour server monitoring)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 50-150ms are realistic, though the pattern is somewhat
-          regular
+        comment: Realistic values (20-150 ms), plausible changes, sensible timespan
     code_quality:
       score: 10
       max: 10
@@ -170,40 +177,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Clean flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic, appropriate complexity, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct format: plot-{THEME}.png/html with scale=3'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_step, theme_minimal, ggsize for sizing,
-          scale_x_continuous for axis breaks, but no advanced lets-plot specific features
+        comment: Correct ggplot2 grammar-of-graphics patterns, high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses direction control and ggsize(), but relatively basic
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive

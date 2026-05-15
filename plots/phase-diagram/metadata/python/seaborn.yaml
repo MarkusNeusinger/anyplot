@@ -1,15 +1,235 @@
 library: seaborn
+language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:05:40Z'
-updated: '2025-12-31T11:15:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617609208
+updated: '2026-05-14T15:08:50Z'
+generated_by: claude-haiku
+workflow_run: 25867554007
 issue: 3004
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Excellent visual quality across both light and dark themes with flawless theme
+    adaptation
+  - Correct and complete implementation of phase diagram specification with all required
+    features (multiple trajectories, equilibrium point, direction arrows)
+  - Proper Okabe-Ito palette usage with brand green (#009E73) as first series and
+    correct theme-adaptive chrome
+  - Clean, reproducible code with minimal complexity; uses seeding for deterministic
+    generation
+  - 'Professional design with thoughtful visual elements: direction arrows show time
+    evolution, starting points emphasized, reference lines provide context'
+  - All typography fully readable at specified sizes in both light and dark renders
+    with excellent contrast and no theme-readability failures
+  weaknesses:
+  - 'Library Mastery could be higher: direction arrows and scatter points use matplotlib
+    directly rather than leveraging more seaborn-specific features; primary contribution
+    is styling system and DataFrame integration'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, correctly themed
+      Chrome: Title "phase-diagram · seaborn · anyplot.ai" (24pt, INK color), axis labels "Position (x)" and "Velocity (dx/dt)" (20pt, INK), tick labels (16pt, INK_SOFT), legend with theme-aware background (#FFFDF6)
+      Data: Four trajectories in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2, purple #CC79A7), starting points marked as large colored circles, equilibrium at origin marked with black X, direction arrows on each trajectory showing time evolution, reference lines at x=0 and y=0 (subtle dashed)
+      Legibility verdict: PASS - all text clearly readable against light background with strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correctly themed
+      Chrome: Title (light text INK=#F0EFE8), axis labels (light text INK), tick labels (INK_SOFT=#B8B7B0), legend with dark theme background (#242420)
+      Data: Four trajectories with identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7), starting points and equilibrium marker identical to light
+      Legibility verdict: PASS - all text clearly visible against dark background with no dark-on-dark failures; colors identical to light render confirming proper theme adaptation (only chrome changed)
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All text readable in both themes: title 24pt, axes 20pt, ticks 16pt,
+          legend 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; legend positioned clear of data; all elements
+          distinguishable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Trajectories at linewidth=3, starting points s=300, equilibrium s=400,
+          direction arrows clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; adequate contrast throughout; no single-signal
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape (4800×2700px) with excellent proportions and generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title 'phase-diagram · seaborn · anyplot.ai' correct; axes labeled
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds correct (#FAF8F1/#1A1A17);
+          both renders theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Professional seaborn styling; thoughtful visual elements (direction
+          arrows, starting points, reference lines); clear hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped frame (top/right spines removed); subtle grid (alpha=0.10);
+          custom legend styling with theme colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point (equilibrium); direction arrows guide viewer; four
+          trajectories tell complete narrative of convergence
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct phase diagram showing position vs. velocity
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: multiple trajectories, equilibrium, direction
+          arrows'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis position, Y-axis velocity, axes range appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend complete with all conditions and equilibrium
+          labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Comprehensive phase diagram with multiple trajectories, equilibrium,
+          damped oscillation behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Based on damped harmonic oscillator equations; realistic physics
+          parameters; appropriate for education
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Time range 0-5s reasonable; amplitude/velocity values sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; straightforward data-generation → plotting
+          flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42); deterministic generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no unused dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; no AR-08 violations; clean implementation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png correctly with dpi=300
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot(), sns.set_theme() idiomatically; proper pandas
+          integration
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Leverages seaborn styling system; direction arrows use matplotlib
+          directly
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,198 +240,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent visualization of phase space dynamics with clear spiral trajectories
-    converging to equilibrium
-  - Well-chosen physics example (damped harmonic oscillator) that perfectly demonstrates
-    the plot type
-  - Starting points clearly marked with large scatter markers distinguishing each
-    trajectory
-  - Direction arrows effectively show time evolution along the trajectories
-  - Reference lines (dashed gray at x=0 and y=0) help identify equilibrium crossing
-  - Proper use of seaborn lineplot with hue for trajectory differentiation
-  - Clean readable code with analytical solution for underdamped oscillator
-  weaknesses:
-  - Legend positioning and styling could be improved - the Equilibrium marker is added
-    separately and its legend entry appears disconnected
-  - Inner portions of spirals become dense and harder to distinguish near the origin
-  - Could benefit from using a colorblind-friendly palette instead of custom colors
-  image_description: 'The plot shows a phase diagram (state space plot) for a damped
-    harmonic oscillator. Four spiral trajectories are displayed, each starting from
-    different initial conditions marked by large colored dots: blue (2.0, 0.0), yellow
-    (0.0, 8.0), red/orange (-1.5, -5.0), and teal (1.0, 4.0). All trajectories spiral
-    inward toward the equilibrium point at the origin, marked with a black ''X''.
-    The x-axis shows Position (x) ranging from about -1.5 to 2.0, and the y-axis shows
-    Velocity (dx/dt) ranging from about -10 to 7.5. Dashed gray reference lines cross
-    at the origin. Direction arrows are visible on the trajectories showing time evolution.
-    The title follows the correct format: "phase-diagram · seaborn · pyplots.ai".
-    A legend in the upper right identifies each trajectory by its initial condition.
-    The background uses seaborn''s whitegrid style.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 16pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, legend is well-positioned
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Trajectories clearly visible with good linewidth, starting points
-          marked well, but some inner spiral portions get dense
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, red-orange, teal) provide good
-          contrast; yellow-teal distinction could be slightly better for colorblind
-          users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization, plot fills space well with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: '"Position (x)" and "Velocity (dx/dt)" are descriptive with units
-          indicated'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid is visible but legend entry for "Equilibrium" is displayed despite
-          not being added properly to the hue legend (uses separate scatter)
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct phase diagram showing x vs dx/dt trajectories
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Position on x-axis, velocity on y-axis as required
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Multiple trajectories, direction arrows, fixed point, different initial
-          conditions - all present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show full trajectory ranges without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies each trajectory by initial condition
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "phase-diagram · seaborn · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows spiral convergence to equilibrium, multiple initial conditions
-          with varying starting positions and velocities; could show limit cycle or
-          unstable case for contrast
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Damped harmonic oscillator is a classic physics example, excellent
-          educational context
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are reasonable for a physics simulation; omega and zeta parameters
-          produce realistic behavior
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn and matplotlib APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: true
-        comment: 'Saves as plot.png (note: correcting - this should be 1/1)'
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses sns.lineplot with hue grouping and sns.set_style, but direction
-          arrows are done with matplotlib's annotate rather than leveraging seaborn
-          further
-  verdict: APPROVED

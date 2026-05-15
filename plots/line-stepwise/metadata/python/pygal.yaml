@@ -1,164 +1,185 @@
 library: pygal
+language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:42:35Z'
-updated: '2025-12-30T10:50:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594562908
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T15:30:36Z'
+generated_by: claude-haiku
+workflow_run: 25808772537
+issue: 2600
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent step visualization achieved through clever data point duplication for
-    horizontal-then-vertical transitions
-  - Clean, professional appearance with appropriate Python Blue color scheme
-  - Realistic server response time scenario that clearly demonstrates discrete state
-    changes
-  - Proper title format and descriptive axis labels with units
-  - Good font sizing for the 4800x2700 canvas
+  - Flawless visual quality with perfect text sizing and proper palette compliance
+    (#009E73 brand green)
+  - Excellent contrast and readability in both light (#FAF8F1) and dark (#1A1A17)
+    themes
+  - Technically correct step line implementation with creative point-duplication approach
+  - 'Strong realistic data quality: server response time scenario with appropriate
+    40-200ms scale over 24-hour cycle'
+  - Idiomatic pygal usage with explicit theme-adaptive styling via Style object and
+    tokens
+  - Clean, maintainable code with deterministic data generation and KISS structure
   weaknesses:
-  - Manual step data construction is verbose; pygal native line interpolation options
-    could be explored
-  - Right margin has slight excess whitespace
-  - Grid only shows Y-axis guides; X-axis guides could improve readability of hour
-    markers
-  image_description: The plot displays a step line chart showing server response times
-    over a 24-hour period. The line is rendered in Python Blue (#306998) on a white
-    background. The chart clearly shows horizontal segments representing constant
-    response times, with vertical jumps at specific hours (8, 12, 14, 18, 21, 23).
-    The Y-axis ranges from 40ms to 200ms with "Response Time (ms)" label. The X-axis
-    shows hours 0-24 with "Hour of Day" label. Subtle horizontal grid lines aid readability.
-    The title "line-stepwise · pygal · pyplots.ai" appears at the top in the correct
-    format.
+  - 'Design Excellence (12/20) could be elevated: consider custom visual emphasis
+    techniques or refined whitespace treatment to move from ''well-configured default''
+    (4/8) toward exceptional design (6+/8)'
+  - 'Library Mastery (8/10): while step implementation is effective, could be more
+    distinctive to pygal''s unique strengths (currently 3/5 on distinctive features)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "line-stepwise · pygal · anyplot.ai" dark and prominent; X-axis "Hour of Day" (0-24) and Y-axis "Response Time (ms)" (40-200) both dark and clearly readable; tick labels in dark tone
+      Data: Teal/cyan line (#009E73 brand green) with clear step transitions at hours 8, 12, 14, 18, 21, 23; horizontal segments show value persistence; vertical segments show instantaneous changes; 3px stroke width ensures visibility
+      Grid: Subtle light gray horizontal grid lines support axis reading without competing with data
+      Legibility verdict: PASS - All text elements are dark and readable against light background; no "light on light" issues; grid is appropriately subtle
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light text color (appear to use INK and INK_SOFT tokens); all clearly legible against dark background
+      Data: Teal/cyan line color identical to light render (#009E73), confirming proper color consistency across themes; step transitions match light render exactly
+      Grid: Subtle grid with light tones - visible but not dominant
+      Legibility verdict: PASS - All text is light-colored and readable against dark background; no dark-on-dark contrast failures; brand green (#009E73) remains visible and reads well
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are clearly readable, tick labels well-sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all axis labels, ticks, and title well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line is clearly visible with good stroke width, though slightly
-          thin
+        comment: Step line stroke 3px; perfectly adapted to 24-hour data density;
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, excellent contrast on white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, minor excess margin on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Response Time (ms)", "Hour of Day"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Brand green (#009E73) has excellent contrast in both themes; CVD-safe
+          Okabe-Ito palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800×2700px layout; plot fills ~60% with balanced margins;
+          no canvas waste
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Subtle horizontal grid lines, no legend needed (single series)
+        comment: 'Descriptive labels with units: ''Response Time (ms)'', ''Hour of
+          Day'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); all chrome theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default with explicit typography and theme tokens;
+          professional but not exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid styling controlled; legend omitted appropriately; basic refinement
+          applied
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy showing server response time changes over
+          24-hour cycle
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step/stepwise line chart showing horizontal-then-vertical
-          transitions
+        comment: Correct step line chart with proper horizontal-vertical transitions
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time (hours), Y=values that change at specific points
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows discrete state changes, horizontal segments for persistence,
-          vertical for jumps
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: discrete changes, value persistence, instantaneous
+          transitions'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range (40-200ms, 0-24 hours)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis hours (0-24), Y-axis response times (40-200ms); all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series, appropriately hidden
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-stepwise · pygal · pyplots.ai"'
+        comment: Title format correct 'line-stepwise · pygal · anyplot.ai'; legend
+          omitted appropriately
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple step transitions (up and down), constant periods,
-          but could show more variation patterns
+        comment: 'Shows all step plot aspects: horizontal persistence and vertical
+          changes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response time scenario is realistic and neutral (technology
-          domain)
+        comment: Real-world server monitoring scenario; neutral, comprehensible professional
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 40-200ms are realistic, though the jumps are somewhat
-          idealized
+        comment: Response times 40-200ms realistic; 24-hour cycle standard; values
+          factually plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,40 +187,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → style → chart → save'
+        comment: 'Linear flow: imports → constants → data → style → chart → render'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data generation (no random seed needed)
+        comment: Deterministic data generation; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: 'Only necessary imports: os, pygal, Style'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; creative step approach via point duplication
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (expected for pygal)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html using current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level pygal API throughout; Style object configuration; standard
+          patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's Style customization and Line chart, but manual step
-          data construction rather than native pygal feature
+        comment: Uses interactive HTML output and comprehensive Style theming; approach
+          is creative but not unique to pygal
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready

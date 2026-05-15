@@ -1,13 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-15
 """
+
+import os
 
 import numpy as np
 from pygal.style import Style
 from pygal_maps_world.maps import World
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Viridis-inspired sequential colors (light to dark purples/blues)
+# These work well on both light and dark backgrounds
+VIRIDIS_COLORS = [
+    "#440154",  # dark purple
+    "#31688e",  # blue
+    "#35b779",  # green
+    "#fde724",  # yellow
+]
 
 # Data: GDP per capita (synthetic but realistic ranges)
 np.random.seed(42)
@@ -76,24 +94,24 @@ bins = [
     ("GDP > $50k", {k: v for k, v in gdp_data.items() if v >= 50}),
 ]
 
-# Sequential blue palette for choropleth (light to dark)
-colors = ["#a6cee3", "#6baed6", "#3182bd", "#08519c"]
+# Map bins to colors from viridis palette
+bin_colors = VIRIDIS_COLORS[: len(bins)]
 
-# Custom style for large canvas
+# Custom style for large canvas with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#111111",
-    foreground_subtle="#666666",
-    colors=tuple(colors),
-    title_font_size=80,
-    label_font_size=48,
-    legend_font_size=48,
-    major_label_font_size=40,
-    value_font_size=40,
-    tooltip_font_size=36,
-    no_data_font_size=36,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=tuple(bin_colors),
+    title_font_size=28,
+    label_font_size=22,
+    legend_font_size=16,
+    major_label_font_size=18,
+    value_font_size=14,
+    tooltip_font_size=14,
+    no_data_font_size=14,
 )
 
 # Create world map
@@ -101,11 +119,12 @@ worldmap = World(
     style=custom_style,
     width=4800,
     height=2700,
-    title="choropleth-basic \u00b7 pygal \u00b7 pyplots.ai",
+    title="choropleth-basic · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
     legend_box_size=40,
+    no_data="#888888" if THEME == "light" else "#666666",
 )
 
 # Add each bin as a separate series
@@ -113,5 +132,5 @@ for label, data in bins:
     worldmap.add(label, data)
 
 # Save outputs
-worldmap.render_to_file("plot.html")
-worldmap.render_to_png("plot.png")
+worldmap.render_to_file(f"plot-{THEME}.html")
+worldmap.render_to_png(f"plot-{THEME}.png")

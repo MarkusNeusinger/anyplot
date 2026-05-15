@@ -1,162 +1,170 @@
 library: pygal
+language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:38:00Z'
-updated: '2025-12-30T10:45:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594557818
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T13:18:48Z'
+generated_by: claude-haiku
+workflow_run: 25736387052
+issue: 2597
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/pygal/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - alpha-blending
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent use of Iris-like data providing a realistic, scientifically meaningful
-    context
-  - Clean three-cluster separation clearly demonstrates categorical grouping
-  - Good color palette (Python colors) that is colorblind-safe
-  - Proper use of pygal custom Style with appropriately scaled font sizes for 4800x2700
-    canvas
-  - Correct title format and descriptive axis labels with units
-  - Alpha transparency (0.7) allows visibility of any overlapping points
+  - Perfect visual quality across both light and dark themes with zero legibility
+    or overlap issues
+  - Complete specification compliance with all required features correctly implemented
+  - Excellent data quality with realistic, well-separated biological data (iris-like)
+    demonstrating clear categorical clustering
+  - Clean, reproducible code with proper theme-adaptive styling and deterministic
+    data generation
+  - Correct Okabe-Ito palette application with proper theme-correct chrome in both
+    renders
+  - 4800×2700 px canvas properly utilized with balanced proportions and generous margins
   weaknesses:
-  - Legend positioned in top-left overlaps with the plot area grid region; consider
-    legend_at_bottom=True or repositioning
-  - Marker stroke_width=0 removes outlines which could help distinguish overlapping
-    points
-  image_description: 'The plot displays a categorical scatter plot visualizing Iris-like
-    flower measurements. Three distinct species clusters are shown: **Setosa** (blue,
-    #306998) in the lower-left with small petal dimensions (length ~1-2cm, width ~0.1-0.5cm),
-    **Versicolor** (yellow, #FFD43B) in the middle region (length ~3-5cm, width ~0.9-1.9cm),
-    and **Virginica** (green, #2ca02c) in the upper-right (length ~4.5-7cm, width
-    ~1.4-3cm). The title "scatter-categorical · pygal · pyplots.ai" appears at the
-    top center. Axis labels include units: "Petal Length (cm)" on X-axis and "Petal
-    Width (cm)" on Y-axis. A legend with colored squares is positioned in the top-left
-    corner. Subtle grid lines aid readability. The markers are well-sized dots with
-    transparency (opacity 0.7) allowing overlap visibility.'
+  - Design Excellence limited to generic styling using library defaults without custom
+    aesthetic refinement or visual hierarchy
+  - Library Mastery modest - implementation doesn't showcase pygal-specific interactive
+    features or distinctive capabilities beyond standard scatter
+  - No visual storytelling - data is clearly displayed but lacks design-driven emphasis
+    or viewer guidance; species clustering is inherent to data, not emphasized by
+    design
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "scatter-categorical · pygal · anyplot.ai" and axis labels "Petal Length (cm)" / "Petal Width (cm)" rendered in dark text, fully readable. Grid lines subtle but visible on both axes. Legend at bottom clear and legible.
+      Data: Three flower species color-coded with Okabe-Ito palette - Setosa (teal #009E73) in lower-left, Versicolor (orange #D55E00) in middle, Virginica (blue #0072B2) in upper-right. Clear spatial clustering pattern. Marker dots at appropriate size (8px).
+      Legibility verdict: PASS - All elements readable, no overlap, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title and axis labels rendered in light text (#F0EFE8), fully readable against dark background. No dark-on-dark failures. Grid lines subtle and visible. Legend maintains light text and legibility.
+      Data: Data colors identical to light render (teal, orange, blue preserved), confirming theme-adaptive chrome while maintaining categorical identity. Marker visibility excellent on dark surface.
+      Legibility verdict: PASS - All elements readable on dark background, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and legend are clearly readable; tick labels
-          slightly small but acceptable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
+        passed: true
+        comment: Font sizes explicitly set; all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
         passed: true
         comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized with good alpha; dots_size=12 is appropriate for
-          120 points
+        comment: Markers optimally sized; clear spatial separation of categories
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/green palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, balanced margins, legend near plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Petal Length (cm)", "Petal Width (cm)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions; balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units; clear title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds correct;
+          theme chrome perfect'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend overlaps with plot area and first data point region
+        comment: Well-configured defaults without custom refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct XY scatter chart with categorical coloring
+        comment: Correct scatter plot with categorical coloring
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned to petal length/width
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Categorical colors, legend, transparency all present
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels all three species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "scatter-categorical · pygal · pyplots.ai"'
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters with different distributions; could
-          show more overlap between categories
+        comment: Shows all scatter-categorical aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris flower measurements - classic, neutral scientific dataset
+        comment: Iris-like flower data; realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values realistic for iris petals; Setosa width slightly low but plausible
+        comment: Sensible petal measurement ranges
     code_quality:
       score: 10
       max: 10
@@ -166,11 +174,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -178,28 +186,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current pygal API used
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output files
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses pygal's XY chart and custom Style; could leverage more pygal-specific
-          features like tooltips
+        passed: false
+        comment: Proper pygal.XY and Style usage but doesn't leverage advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic implementation; could be any library
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

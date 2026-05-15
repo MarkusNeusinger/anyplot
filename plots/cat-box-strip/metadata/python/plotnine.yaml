@@ -1,160 +1,172 @@
 library: plotnine
+language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:30:02Z'
-updated: '2025-12-30T16:37:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601058662
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-13T05:49:29Z'
+generated_by: claude-haiku
+workflow_run: 25780574620
+issue: 2695
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent ggplot2 grammar of graphics implementation with clean layer composition
-  - Good use of alpha transparency (0.7 for boxes, 0.6 for jitter points) to show
-    overlay clearly
-  - Well-designed data showcasing different distribution characteristics (tight vs
-    wide spread, outliers, bimodal)
-  - Proper figure sizing (16, 9) and font sizes following library guidelines
-  - Color palette is visually appealing and accessible
+  - Perfect visual quality with all text legible in both themes
+  - Excellent theme-adaptive chrome implementation with no dark-on-dark or light-on-light
+    failures
+  - Comprehensive data representation combining box plot summary with individual point
+    visibility
+  - Clean, reproducible code with proper seeding and idiomatic plotnine patterns
+  - 'Proper Okabe-Ito palette compliance with first series #009E73 and multi-series
+    canonical order'
   weaknesses:
-  - Grid is barely visible (nearly invisible), could use slightly higher alpha for
-    better reference
-  image_description: 'The plot displays a box plot with strip overlay showing plant
-    growth (cm) across four treatment groups: Control (blue), Fertilizer A (yellow),
-    Fertilizer B (light blue), and Fertilizer C (green). Each category has a colored
-    box showing median, quartiles, and whiskers, with individual data points (jittered)
-    overlaid on top. The title "cat-box-strip · plotnine · pyplots.ai" appears at
-    the top. X-axis is labeled "Treatment Group" and Y-axis is labeled "Plant Growth
-    (cm)". A legend on the right identifies each fertilizer type. The Control group
-    shows lower values (~15-35 cm), Fertilizer A shows moderate improvement (~25-45
-    cm), Fertilizer B shows tighter distribution (~38-52 cm), and Fertilizer C shows
-    highest values with some outliers (~27-55 cm).'
+  - Design excellence is modest; no custom refinements or distinctive aesthetic choices
+    beyond library defaults
+  - Limited visual storytelling; data displayed clearly but without strategic emphasis
+    or visual hierarchy to guide insight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title in 24pt dark ink (#1A1A17), axis labels 20pt, tick labels 16pt secondary text (#4A4A44); all clearly readable
+      Data: Okabe-Ito colors (green #009E73 for Control, orange #D55E00, blue #0072B2, purple #CC79A7); box plots alpha=0.7, points alpha=0.6
+      Grid: Subtle horizontal lines (alpha 0.10 major, 0.05 minor)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title and labels in light text (#F0EFE8 and #B8B7B0); all clearly readable against dark background
+      Data: Okabe-Ito colors identical to light render (same #009E73, #D55E00, #0072B2, #CC79A7); only chrome colors changed
+      Grid: Light-colored subtle gridlines with opacity, appropriately visible
+      Legibility verdict: PASS - no dark-on-dark failures; all text readable; theme adaptation complete
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend all clearly readable
-          at appropriate sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, categories well-spaced
+        comment: All sizes explicitly set; title 24pt, labels 20pt, ticks 16pt; fully
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; box and jitter widths properly balanced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Boxes and jittered points are clearly visible, good alpha transparency
+        comment: 160 data points with optimal alpha (box 0.7, points 0.6); markers
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, light blue, green) are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Plant Growth (cm)" includes units, "Treatment Group" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 16:9 proportions; 50-70% canvas utilization; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is very subtle/nearly invisible, legend is well-placed
+        comment: Descriptive with units (Plant Growth (cm))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito positions 1-4; backgrounds #FAF8F1/#1A1A17;
+          theme-correct in both renders'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; no distinctive design flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Spines removed by theme_minimal; subtle grid; minimal customization
+          beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Clear display with natural hierarchy; no special emphasis or visual
+          focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct box plot with strip overlay
+        comment: Correct box + strip combination
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categorical on X, numeric on Y as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Box shows median/quartiles/whiskers, strip points with jitter and
-          transparency
-      - id: SC-04
-        name: Data Range
+        comment: Box, strip, jitter, transparency all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct; all data visible; colors map to categories
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four treatment groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "cat-box-strip · plotnine · pyplots.ai"
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions, spreads, and outliers; Fertilizer
-          C shows bimodal behavior with underperformers
+        comment: Shows medians, quartiles, whiskers, individual points; distributions
+          vary (control tight, treatments improving, C bimodal)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plant growth/fertilizer experiment is a plausible, neutral scientific
-          scenario
+        comment: Plant growth scenario; realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Plant growth values (15-55 cm) are reasonable, though actual fertilizer
-          trials might show less dramatic differences
+        comment: Values 15-55cm appropriate for plant growth; proportions sensible
     code_quality:
       score: 10
       max: 10
@@ -164,41 +176,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports; sys.path handled properly
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, Pythonic; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of ggplot2 grammar: geom_boxplot + geom_jitter layering,
-          scale_fill_manual/scale_color_manual, theme_minimal with custom element_text
-          sizing'
+        comment: Expert ggplot grammar; all patterns idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Proper choices but generic/standard approach; no distinctive library-specific
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -1,0 +1,254 @@
+library: plotnine
+language: python
+specification_id: diagnostic-regression-panel
+created: '2026-05-13T16:14:13Z'
+updated: '2026-05-13T16:38:00Z'
+generated_by: claude-sonnet
+workflow_run: 25809989108
+issue: 5242
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - All four diagnostic panels correctly implemented with statistically correct computations
+    (hat matrix, internally studentized residuals, Cook's distance, LOWESS, Q-Q reference
+    line)
+  - 'Excellent data engineering: heteroscedastic errors + response outliers + high-leverage
+    extreme observations makes all four panels visually informative'
+  - Both light and dark renders are fully theme-correct with no dark-on-dark or light-on-light
+    failures
+  - Color storytelling via Okabe-Ito green (normal) vs orange (influential) creates
+    immediate visual hierarchy
+  - Idiomatic grammar-of-graphics facet approach with multiple per-panel DataFrames
+    is a distinctive plotnine strength
+  weaknesses:
+  - 'Font sizes below canvas guidelines: title=20pt (need >=24pt), axis_title=16pt
+    (need >=20pt), axis_text=13pt (need >=16pt)'
+  - Normal Q-Q panel (panel 2) missing observation index labels on top influential
+    points; spec requires labels in each subplot
+  - Global x=\"\" y=\"\" means no per-panel axis descriptions for Fitted values, Theoretical
+    quantiles, Leverage, etc.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "diagnostic-regression-panel · plotnine · anyplot.ai" in dark ink (#1A1A17), readable. Strip headers in elevated-bg (#FFFDF6) with dark text. Tick labels in INK_SOFT (#4A4A44), visible but on the small side (13pt). No global axis labels (x="", y=""). Grid lines extremely subtle (alpha=0.10).
+      Data: Normal observations in #009E73 (brand green), top-3 influential in #D55E00 (orange). LOWESS curves in orange on panels 1 and 3. Dashed Q-Q reference line in light gray on panel 2. Dotted Cook's distance contours on panel 4. Observation index labels in INK_SOFT on influential points in panels 1, 3, 4.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues. Tick labels slightly small but legible.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct theme surface, not pure black.
+      Chrome: Title and strip text in #F0EFE8 (light ink), clearly visible. Tick labels in #B8B7B0 (INK_SOFT dark), readable against dark background. Panel borders in INK_SOFT dark. Grid lines subtle.
+      Data: Colors IDENTICAL to light render — #009E73 green for normal points, #D55E00 orange for influential points and LOWESS curves. Cook's distance contours and Q-Q reference line remain distinguishable against dark background.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements adapt correctly to dark surface. Brand green #009E73 remains well-visible on dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Sizes explicitly set but below guidelines: title=20pt (need >=24),
+          axis_title=16pt (need >=20), axis_text=13pt (need >=16). Text readable but
+          undersized for 4800x2700 canvas.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No significant overlap across all four panels. Influential-point
+          labels spaced cleanly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points size=2.5 alpha=0.7 visible for ~100 observations across 4
+          panels. Slightly small for canvas but functional.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito green/orange are CVD-safe with good luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 2x2 panel grid fills 16:9 canvas reasonably well. Minor wasted space
+          around panel borders.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Title format correct. Global x='', y='' means no per-panel axis descriptions.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00 — correct Okabe-Ito order.
+          Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Good professional design with theme-adaptive tokens and elevated-bg
+          strip headers. Above default but not exceptional — uniform panel borders,
+          no typography weight variation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10), no minor grid, INK_SOFT panel borders.
+          Good refinement, L-shaped spines would be cleaner than full panel borders.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual narrative: green vs orange color coding identifies
+          influential observations. LOWESS guides trend reading. Cook''s contours
+          quantify influence.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: All four classic regression diagnostic panels correctly implemented
+          in 2x2 layout.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'LOWESS, Q-Q reference, zero lines, Cook''s contours all present.
+          Missing: Normal Q-Q panel has no observation index labels (spec requires
+          labels in each subplot).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All four panels use correct x/y variable assignments.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'diagnostic-regression-panel · plotnine · anyplot.ai' exact.
+          No legend appropriate for this diagnostic plot design.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Heteroscedastic errors, response outliers (+25/-28), high-leverage
+          extreme-temperature points — all diagnostic features visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Materials testing: tensile strength vs temperature and load. Neutral,
+          scientifically plausible, real-world engineering scenario.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 20-210C, load ~Normal(50,10), strength ~100-130, leverage
+          up to ~0.3 — all physically reasonable.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data generation → plot construction → save. No functions
+          or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: scipy, sklearn, statsmodels, and all plotnine elements are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI elements. Complexity (hat matrix, Cook's distance) is
+          appropriate for multi-panel diagnostic plot.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', dpi=300) correct.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of facet_wrap with free scales, pd.Categorical with ordered
+          categories, scale_color_manual, per-panel DataFrames — textbook grammar-of-graphics.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-DataFrame layer approach with categorical panel filtering is
+          distinctively idiomatic to plotnine/ggplot2.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - sklearn
+  - statsmodels
+  techniques:
+  - faceting
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending

@@ -1,11 +1,11 @@
 spec_id: line-stepwise
 title: Step Line Plot
 created: '2025-12-30T10:30:00Z'
-updated: '2025-12-30T10:30:00Z'
+updated: '2026-05-13T15:08:42Z'
 issue: 2600
 suggested: claude-code
 tags:
   plot_type: [line, step]
   domain: [general, signal-processing]
-  features: [discrete, step-function, piecewise]
+  features: [discrete, stepwise, piecewise]
   data_type: [numeric, discrete]

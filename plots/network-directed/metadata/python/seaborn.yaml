@@ -1,162 +1,167 @@
 library: seaborn
+language: python
 specification_id: network-directed
 created: '2025-12-30T23:56:22Z'
-updated: '2025-12-31T00:12:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608483455
+updated: '2026-05-14T03:30:10Z'
+generated_by: claude-haiku
+workflow_run: 25839788251
 issue: 2858
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-directed/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 96
 review:
   strengths:
-  - Excellent visual clarity with well-sized nodes and clearly visible directed arrows
-  - Smart use of curved edges (arc3,rad=0.1) to prevent arrow overlap on bidirectional-style
-    edges
-  - Edge weight visualization through both line thickness and alpha transparency creates
-    good visual hierarchy
-  - Proper title format and professional layout with light background
-  - Realistic software module dependency scenario with meaningful groupings
-  - Clean code structure following KISS principles
-  weaknesses:
-  - Legend shows module types but edge weight legend (Weak/Strong) mentioned in code
-    may not be rendering in final image
-  - Node label font size at 14pt is acceptable but 16pt would improve readability
-    at full resolution
-  image_description: 'The plot displays a directed network graph representing software
-    module dependencies. It features 11 circular nodes arranged in a semi-hierarchical
-    layout with "app" at the top. Nodes are color-coded by module type: blue (Core:
-    app, config), yellow (Data: db, cache, model), green (Services: api, auth, router,
-    mware), and coral/red (Utils: log, valid). Directed arrows connect nodes showing
-    dependencies, with curved edges and arrow heads indicating direction. The arrows
-    vary in thickness based on dependency weight. The title "network-directed · seaborn
-    · pyplots.ai" appears at the top in bold. A legend in the upper left shows the
-    four module type categories. The background is a light gray (#fafafa) with white
-    node borders providing good contrast.'
+  - Perfect spec compliance with all required features (nodes, edges, directional
+    arrows, weights)
+  - Excellent theme adaptation with flawless readability in both light and dark renders
+  - Professional hierarchical layout showing clear software module dependencies
+  - Proper Okabe-Ito palette compliance with brand green (#009E73) leading
+  - Polished arrow styling with weight-based thickness and opacity variation
+  - Clean, reproducible code with appropriate complexity
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "network-directed · seaborn · anyplot.ai" is dark, bold, and clearly visible at top. Legend "Module Type / Edge Weight" in upper left with soft background and border. All axis elements disabled (clean look).
+      Data: Eleven circular nodes arranged hierarchically representing software modules. Core group (green #009E73) at top, Services (blue #0072B2) on right, Data (orange #D55E00) on left, Utils (purple #CC79A7) at bottom. Node labels (app, api, auth, db, etc.) are white text inside colored nodes with excellent contrast. Nineteen directed arrows with arrowheads show dependency flow. Arrow thickness and opacity vary by weight (1-5), creating visual hierarchy.
+      Legibility verdict: PASS - All text is crisp and readable against light background. Dark labels on colored nodes have perfect contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title is light-colored and clearly visible. Legend maintains same layout with adapted background. All theme elements properly inverted.
+      Data: Same hierarchical network structure. Node colors are identical to light render (#009E73, #0072B2, #D55E00, #CC79A7 - perfect Okabe-Ito compliance). All labels remain readable against colored nodes. Arrows maintain identical style and weight encoding.
+      Legibility verdict: PASS - No dark-on-dark failures. All elements distinguish cleanly from the dark background. Data colors are identical to light render (only chrome adapted).
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is 24pt and clear, node labels at 14pt bold are readable but
-          could be slightly larger
+        comment: Title, labels, legend all explicitly sized and perfectly readable
+          at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements, curved edges prevent arrow collisions
+        comment: All text fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes are large (s=3000) and clearly visible, edge weights differentiated
-          by thickness
+        comment: Nodes and edges optimally sized and adapted to 11-node network density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, green, coral) are colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, slightly more whitespace on right side
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed in upper left, clean design with module types
-          shown
+        comment: Okabe-Ito palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions with balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, multi-series follows Okabe-Ito order, backgrounds
+          are #FAF8F1 (light) and #1A1A17 (dark), both renders theme-correct'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Professional polish with hierarchical layout, curved edges, and weight-based
+          styling creating intentional visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes turned off, no grid (appropriate), generous whitespace, refined
+          legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Excellent visual hierarchy through spatial arrangement and weight
+          encoding guides understanding of dependencies
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct directed network graph with arrows indicating direction
+        comment: Correct directed network graph with clear arrows
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes correctly positioned, edges properly directed from source to
-          target
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has directed arrows, node grouping, edge weights shown via thickness,
-          curved edges for clarity
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: nodes, edges, directional arrows, weights,
+          hierarchical layout'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 11 nodes and 19 edges visible within canvas bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 11 nodes and 19 edges correctly positioned and visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all four module types with accurate colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title matches spec format, legend labels correct
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows directed edges, multiple groups, varying weights, but edge
-          weight legend was mentioned in code but not visible in image
+        comment: 'Shows all directed network aspects: nodes with groups, weighted
+          edges, clear directionality'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software module dependencies is a highly relevant, realistic use
-          case
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 11 nodes is within spec range (10-50), but could show more complex
-          dependencies
+        comment: Real-world software module dependencies scenario, neutral and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 11 nodes within spec range (10-50), 19 edges with sensible weights
+          (1-5)
     code_quality:
       score: 10
       max: 10
@@ -166,41 +171,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean procedural code with clear data structures
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set (42) and deterministic layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.patches, plt, numpy, pandas, seaborn)
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn 0.13+ API
+        comment: No fake functionality, thoughtful implementation with custom arrows
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct settings
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct parameters
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of sns.set_theme(), sns.scatterplot(), and theme-aware
+          rc configuration
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.scatterplot for nodes with hue grouping, sns.set_theme for
-          styling, and seaborn color palette. However, network graphs are not a seaborn
-          specialty, so implementation relies heavily on matplotlib patches.
+        comment: Good seaborn mastery but FancyArrowPatch integration is matplotlib-level
+          rather than seaborn-distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

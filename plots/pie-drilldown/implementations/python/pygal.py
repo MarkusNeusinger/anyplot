@@ -1,127 +1,144 @@
-""" pyplots.ai
+""" anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-15
 """
 
-import pygal
-from pygal.style import Style
+import os
+import sys
 
 
-# Define hierarchical data structure for company budget
-# Root level: main departments
-# Level 2: sub-categories within each department
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+if _script_dir in sys.path:
+    sys.path.remove(_script_dir)
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+if _script_dir not in sys.path:
+    sys.path.insert(0, _script_dir)
+
+os.chdir(_script_dir)
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Sales data hierarchy: region > country > product category
 data = {
-    "root": {"name": "Company Budget", "children": ["engineering", "marketing", "operations", "hr"]},
-    "engineering": {
-        "name": "Engineering",
-        "parent": "root",
-        "value": 450000,
-        "children": ["eng_salaries", "eng_tools", "eng_cloud", "eng_training"],
+    "root": {"name": "Global Sales", "children": ["americas", "europe", "asia_pacific"]},
+    "americas": {"name": "Americas", "parent": "root", "value": 2800000, "children": ["us", "canada", "latam"]},
+    "us": {
+        "name": "United States",
+        "parent": "americas",
+        "value": 1800000,
+        "children": ["us_electronics", "us_software", "us_services"],
     },
-    "eng_salaries": {"name": "Salaries", "parent": "engineering", "value": 280000},
-    "eng_tools": {"name": "Tools & Software", "parent": "engineering", "value": 75000},
-    "eng_cloud": {"name": "Cloud Services", "parent": "engineering", "value": 65000},
-    "eng_training": {"name": "Training", "parent": "engineering", "value": 30000},
-    "marketing": {
-        "name": "Marketing",
-        "parent": "root",
-        "value": 280000,
-        "children": ["mkt_digital", "mkt_content", "mkt_events", "mkt_brand"],
+    "us_electronics": {"name": "Electronics", "parent": "us", "value": 900000},
+    "us_software": {"name": "Software", "parent": "us", "value": 650000},
+    "us_services": {"name": "Services", "parent": "us", "value": 250000},
+    "canada": {
+        "name": "Canada",
+        "parent": "americas",
+        "value": 650000,
+        "children": ["ca_electronics", "ca_software", "ca_services"],
     },
-    "mkt_digital": {"name": "Digital Ads", "parent": "marketing", "value": 120000},
-    "mkt_content": {"name": "Content Creation", "parent": "marketing", "value": 65000},
-    "mkt_events": {"name": "Events", "parent": "marketing", "value": 55000},
-    "mkt_brand": {"name": "Brand Design", "parent": "marketing", "value": 40000},
-    "operations": {
-        "name": "Operations",
-        "parent": "root",
-        "value": 180000,
-        "children": ["ops_facilities", "ops_equipment", "ops_supplies"],
+    "ca_electronics": {"name": "Electronics", "parent": "canada", "value": 320000},
+    "ca_software": {"name": "Software", "parent": "canada", "value": 220000},
+    "ca_services": {"name": "Services", "parent": "canada", "value": 110000},
+    "latam": {
+        "name": "Latin America",
+        "parent": "americas",
+        "value": 350000,
+        "children": ["la_electronics", "la_software", "la_services"],
     },
-    "ops_facilities": {"name": "Facilities", "parent": "operations", "value": 95000},
-    "ops_equipment": {"name": "Equipment", "parent": "operations", "value": 55000},
-    "ops_supplies": {"name": "Supplies", "parent": "operations", "value": 30000},
-    "hr": {
-        "name": "Human Resources",
-        "parent": "root",
-        "value": 90000,
-        "children": ["hr_recruiting", "hr_benefits", "hr_development"],
+    "la_electronics": {"name": "Electronics", "parent": "latam", "value": 170000},
+    "la_software": {"name": "Software", "parent": "latam", "value": 115000},
+    "la_services": {"name": "Services", "parent": "latam", "value": 65000},
+    "europe": {"name": "Europe", "parent": "root", "value": 2200000, "children": ["uk", "germany", "france"]},
+    "uk": {
+        "name": "United Kingdom",
+        "parent": "europe",
+        "value": 950000,
+        "children": ["uk_electronics", "uk_software", "uk_services"],
     },
-    "hr_recruiting": {"name": "Recruiting", "parent": "hr", "value": 35000},
-    "hr_benefits": {"name": "Benefits Admin", "parent": "hr", "value": 30000},
-    "hr_development": {"name": "Development", "parent": "hr", "value": 25000},
+    "uk_electronics": {"name": "Electronics", "parent": "uk", "value": 480000},
+    "uk_software": {"name": "Software", "parent": "uk", "value": 320000},
+    "uk_services": {"name": "Services", "parent": "uk", "value": 150000},
+    "germany": {
+        "name": "Germany",
+        "parent": "europe",
+        "value": 780000,
+        "children": ["de_electronics", "de_software", "de_services"],
+    },
+    "de_electronics": {"name": "Electronics", "parent": "germany", "value": 390000},
+    "de_software": {"name": "Software", "parent": "germany", "value": 260000},
+    "de_services": {"name": "Services", "parent": "germany", "value": 130000},
+    "france": {
+        "name": "France",
+        "parent": "europe",
+        "value": 470000,
+        "children": ["fr_electronics", "fr_software", "fr_services"],
+    },
+    "fr_electronics": {"name": "Electronics", "parent": "france", "value": 235000},
+    "fr_software": {"name": "Software", "parent": "france", "value": 160000},
+    "fr_services": {"name": "Services", "parent": "france", "value": 75000},
+    "asia_pacific": {
+        "name": "Asia Pacific",
+        "parent": "root",
+        "value": 1900000,
+        "children": ["japan", "china", "india"],
+    },
+    "japan": {
+        "name": "Japan",
+        "parent": "asia_pacific",
+        "value": 850000,
+        "children": ["jp_electronics", "jp_software", "jp_services"],
+    },
+    "jp_electronics": {"name": "Electronics", "parent": "japan", "value": 425000},
+    "jp_software": {"name": "Software", "parent": "japan", "value": 300000},
+    "jp_services": {"name": "Services", "parent": "japan", "value": 125000},
+    "china": {
+        "name": "China",
+        "parent": "asia_pacific",
+        "value": 680000,
+        "children": ["cn_electronics", "cn_software", "cn_services"],
+    },
+    "cn_electronics": {"name": "Electronics", "parent": "china", "value": 340000},
+    "cn_software": {"name": "Software", "parent": "china", "value": 230000},
+    "cn_services": {"name": "Services", "parent": "china", "value": 110000},
+    "india": {
+        "name": "India",
+        "parent": "asia_pacific",
+        "value": 370000,
+        "children": ["in_electronics", "in_software", "in_services"],
+    },
+    "in_electronics": {"name": "Electronics", "parent": "india", "value": 185000},
+    "in_software": {"name": "Software", "parent": "india", "value": 130000},
+    "in_services": {"name": "Services", "parent": "india", "value": 55000},
 }
 
-# Colorblind-friendly palette with more distinct colors (avoid similar blues)
-# Using: blue, yellow, orange, green (distinct from each other)
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=(
-        "#306998",  # Blue (Engineering)
-        "#FFD43B",  # Yellow (Marketing)
-        "#E07A5F",  # Coral/Orange (Operations - distinctly different from blue)
-        "#7FB069",  # Green (HR)
-        "#9B59B6",  # Purple
-        "#3498DB",  # Light blue
-        "#E67E22",  # Orange
-        "#1ABC9C",  # Teal
-    ),
-    title_font_size=56,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=36,  # Increased for better readability on large canvas
-    value_font_size=28,
-    tooltip_font_size=28,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    tooltip_font_size=14,
+    stroke_width=2,
 )
-
-# Calculate total for percentages
-root_children = data["root"]["children"]
-total_value = sum(data[child_id]["value"] for child_id in root_children)
-
-# Create main pie chart showing top-level departments
-pie_chart = pygal.Pie(
-    width=3600,
-    height=3600,
-    style=custom_style,
-    inner_radius=0.35,  # Creates a donut effect for better visual
-    title="pie-drilldown · pygal · pyplots.ai",  # Correct title format
-    legend_at_bottom=True,
-    legend_box_size=36,  # Larger legend boxes
-    print_values=True,
-    print_labels=True,
-    margin=80,
-)
-
-
-# Custom formatter to show both value and percentage
-def format_value_with_percent(value):
-    percentage = (value / total_value) * 100
-    return f"${value:,.0f} ({percentage:.1f}%)"
-
-
-pie_chart.value_formatter = format_value_with_percent
-
-# Add main category slices with drill-down links via xlink
-for child_id in root_children:
-    child_data = data[child_id]
-    # Each slice has xlink for SVG interactivity
-    pie_chart.add(
-        child_data["name"], [{"value": child_data["value"], "label": child_data["name"], "xlink": f"#{child_id}"}]
-    )
-
-# Add a subtitle showing breadcrumb
-pie_chart.x_title = "All Departments  |  Click slice to drill down"
-
-# Render to PNG for static preview
-pie_chart.render_to_png("plot.png")
-
-# Create interactive HTML using pygal's native SVG rendering with JavaScript for drilldown
-# Generate SVG charts for each level using pygal (native pygal rendering)
 
 
 def create_pygal_chart(level_id, level_data):
@@ -133,28 +150,13 @@ def create_pygal_chart(level_id, level_data):
     total = sum(data[cid]["value"] for cid in children_ids)
 
     chart = pygal.Pie(
-        width=800,
-        height=600,
-        style=Style(
-            background="transparent",
-            plot_background="transparent",
-            foreground="#333333",
-            foreground_strong="#333333",
-            foreground_subtle="#666666",
-            colors=("#306998", "#FFD43B", "#E07A5F", "#7FB069", "#9B59B6", "#3498DB", "#E67E22", "#1ABC9C"),
-            title_font_size=24,
-            label_font_size=14,
-            legend_font_size=14,
-            value_font_size=12,
-            tooltip_font_size=14,
-        ),
-        inner_radius=0.35,
+        width=4800,
+        height=2700,
+        style=custom_style,
+        title=f"{level_data['name']} · pie-drilldown · pygal · anyplot.ai",
         legend_at_bottom=True,
-        legend_box_size=18,
         print_values=True,
         print_labels=True,
-        show_legend=True,
-        explicit_size=True,
     )
 
     def format_val(value):
@@ -170,189 +172,171 @@ def create_pygal_chart(level_id, level_data):
     return chart.render(is_unicode=True)
 
 
-# Generate SVG for root level
-root_svg = create_pygal_chart("root", data["root"])
+# Generate SVG for all levels
+svg_data = {}
+for level_id in list(data.keys()):
+    level_svg = create_pygal_chart(level_id, data[level_id])
+    if level_svg:
+        svg_data[level_id] = level_svg
 
-# Generate SVGs for each department
-svg_data = {"root": root_svg}
-for dept_id in data["root"]["children"]:
-    dept_svg = create_pygal_chart(dept_id, data[dept_id])
-    if dept_svg:
-        svg_data[dept_id] = dept_svg
-
-html_content = """<!DOCTYPE html>
+html_content = (
+    """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>pie-drilldown · pygal · pyplots.ai</title>
+    <title>pie-drilldown · pygal · anyplot.ai</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: """
+    + PAGE_BG
+    + """;
+            color: """
+    + INK
+    + """;
+            padding: 40px 20px;
+            min-height: 100vh;
         }
         .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            padding: 30px;
-            max-width: 900px;
-            width: 100%;
+            background: """
+    + PAGE_BG
+    + """;
+            border: 1px solid """
+    + INK_MUTED
+    + """;
+            border-radius: 8px;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         h1 {
-            color: #333;
             text-align: center;
-            margin: 0 0 10px 0;
+            margin-bottom: 30px;
             font-size: 28px;
+            color: """
+    + INK
+    + """;
         }
-        .breadcrumb {
-            background: #306998;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 18px;
+        .controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
         }
-        .breadcrumb span {
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 16px;
+        }
+        .breadcrumb-item {
             cursor: pointer;
-        }
-        .breadcrumb span:hover {
+            color: """
+    + OKABE_ITO[0]
+    + """;
             text-decoration: underline;
+            transition: opacity 0.2s;
         }
-        .breadcrumb .separator {
+        .breadcrumb-item:hover {
             opacity: 0.7;
         }
-        .breadcrumb .current {
-            font-weight: bold;
+        .breadcrumb-item.current {
+            color: """
+    + INK
+    + """;
             cursor: default;
-        }
-        .breadcrumb .current:hover {
             text-decoration: none;
+            font-weight: 500;
+        }
+        .breadcrumb-separator {
+            color: """
+    + INK_SOFT
+    + """;
+            margin: 0 4px;
+        }
+        .back-btn {
+            background: """
+    + OKABE_ITO[0]
+    + """;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        .back-btn:hover:not(:disabled) {
+            opacity: 0.85;
+        }
+        .back-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
         #chart-container {
             width: 100%;
-            min-height: 500px;
             display: flex;
             justify-content: center;
-            align-items: center;
+            margin-bottom: 30px;
         }
         #chart-container svg {
             max-width: 100%;
             height: auto;
         }
-        .back-btn {
-            background: #FFD43B;
-            color: #333;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-right: 15px;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        .back-btn:hover {
-            background: #E6BE35;
-        }
-        .back-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
         .hint {
             text-align: center;
-            color: #666;
-            margin-top: 15px;
+            color: """
+    + INK_SOFT
+    + """;
             font-size: 14px;
+            margin-top: 20px;
         }
-        /* Make pygal SVG slices interactive */
-        .slice {
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .slice:hover {
-            opacity: 0.8;
+        .hint.hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>pie-drilldown · pygal · pyplots.ai</h1>
-        <div class="breadcrumb">
+        <h1>Global Sales Drilldown · pygal · anyplot.ai</h1>
+        <div class="controls">
             <button class="back-btn" id="backBtn" disabled>← Back</button>
-            <div id="breadcrumb-path">
-                <span class="current">All Departments</span>
-            </div>
+            <div class="breadcrumb" id="breadcrumb-path"></div>
         </div>
         <div id="chart-container"></div>
-        <p class="hint" id="hint">Click on a slice to drill down into its subcategories</p>
+        <p class="hint" id="hint">Click on a slice to explore regional sales breakdown</p>
     </div>
 
     <script>
-        // Hierarchical data structure
         const hierarchyData = {
-            root: {
-                name: "All Departments",
-                children: ["engineering", "marketing", "operations", "hr"]
-            },
-            engineering: {
-                name: "Engineering",
-                parent: "root",
-                value: 450000,
-                children: ["eng_salaries", "eng_tools", "eng_cloud", "eng_training"]
-            },
-            eng_salaries: { name: "Salaries", parent: "engineering", value: 280000 },
-            eng_tools: { name: "Tools & Software", parent: "engineering", value: 75000 },
-            eng_cloud: { name: "Cloud Services", parent: "engineering", value: 65000 },
-            eng_training: { name: "Training", parent: "engineering", value: 30000 },
-            marketing: {
-                name: "Marketing",
-                parent: "root",
-                value: 280000,
-                children: ["mkt_digital", "mkt_content", "mkt_events", "mkt_brand"]
-            },
-            mkt_digital: { name: "Digital Ads", parent: "marketing", value: 120000 },
-            mkt_content: { name: "Content Creation", parent: "marketing", value: 65000 },
-            mkt_events: { name: "Events", parent: "marketing", value: 55000 },
-            mkt_brand: { name: "Brand Design", parent: "marketing", value: 40000 },
-            operations: {
-                name: "Operations",
-                parent: "root",
-                value: 180000,
-                children: ["ops_facilities", "ops_equipment", "ops_supplies"]
-            },
-            ops_facilities: { name: "Facilities", parent: "operations", value: 95000 },
-            ops_equipment: { name: "Equipment", parent: "operations", value: 55000 },
-            ops_supplies: { name: "Supplies", parent: "operations", value: 30000 },
-            hr: {
-                name: "Human Resources",
-                parent: "root",
-                value: 90000,
-                children: ["hr_recruiting", "hr_benefits", "hr_development"]
-            },
-            hr_recruiting: { name: "Recruiting", parent: "hr", value: 35000 },
-            hr_benefits: { name: "Benefits Admin", parent: "hr", value: 30000 },
-            hr_development: { name: "Development", parent: "hr", value: 25000 }
-        };
+"""
+)
 
-        // Pre-rendered pygal SVG charts (native pygal output)
+for level_id, level_info in data.items():
+    html_content += '            "' + level_id + '": {"name": "' + level_info["name"] + '"'
+    if "children" in level_info:
+        html_content += ', "children": ' + str(level_info["children"]).replace("'", '"')
+    html_content += "},\n"
+
+html_content += """        };
+
         const svgCharts = {
 """
 
-# Insert SVG data as JavaScript strings
 for level_id, svg_content in svg_data.items():
-    # Escape backticks and backslashes for JavaScript template literal
     escaped_svg = svg_content.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
-    html_content += f'            "{level_id}": `{escaped_svg}`,\n'
+    html_content += '            "' + level_id + '": `' + escaped_svg + "`,\n"
 
-html_content += """        };
+html_content += (
+    """        };
 
         let currentLevel = 'root';
         let history = [];
@@ -362,16 +346,24 @@ html_content += """        };
             const backBtn = document.getElementById('backBtn');
 
             let html = '';
-            const fullPath = ['root', ...history, currentLevel].filter((v, i, a) => a.indexOf(v) === i);
+            const fullPath = ['root'];
+            for (const id of history) {
+                if (!fullPath.includes(id)) {
+                    fullPath.push(id);
+                }
+            }
+            if (!fullPath.includes(currentLevel)) {
+                fullPath.push(currentLevel);
+            }
 
             fullPath.forEach((id, index) => {
                 if (index > 0) {
-                    html += '<span class="separator"> > </span>';
+                    html += '<span class="breadcrumb-separator">›</span>';
                 }
                 if (id === currentLevel) {
-                    html += `<span class="current">${hierarchyData[id].name}</span>`;
+                    html += `<span class="breadcrumb-item current">${hierarchyData[id].name}</span>`;
                 } else {
-                    html += `<span onclick="navigateTo('${id}')">${hierarchyData[id].name}</span>`;
+                    html += `<span class="breadcrumb-item" onclick="navigateTo('${id}')">${hierarchyData[id].name}</span>`;
                 }
             });
 
@@ -390,7 +382,6 @@ html_content += """        };
             if (svgCharts[levelId]) {
                 container.innerHTML = svgCharts[levelId];
 
-                // Add click handlers to pygal slices
                 const children = getChildrenAtLevel(levelId);
                 const slices = container.querySelectorAll('.slice');
 
@@ -407,12 +398,13 @@ html_content += """        };
                     }
                 });
 
-                // Show/hide hint based on whether there are drillable slices
                 const hasDrillable = children.some(cid => hierarchyData[cid]?.children);
-                hint.style.display = hasDrillable ? 'block' : 'none';
+                hint.classList.toggle('hidden', !hasDrillable);
             } else {
-                container.innerHTML = '<p style="text-align:center;color:#666;">No sub-categories available</p>';
-                hint.style.display = 'none';
+                container.innerHTML = '<p style="text-align:center;color:"""
+    + INK_SOFT
+    + """;">No breakdown available</p>';
+                hint.classList.add('hidden');
             }
         }
 
@@ -447,12 +439,42 @@ html_content += """        };
 
         document.getElementById('backBtn').addEventListener('click', goBack);
 
-        // Initial render
         updateBreadcrumb();
         renderChart('root');
     </script>
 </body>
 </html>"""
+)
 
-with open("plot.html", "w") as f:
+# Save theme-specific files
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(html_content)
+
+# Render static PNG
+root_svg = create_pygal_chart("root", data["root"])
+if root_svg:
+    # Create a temporary chart to render PNG
+    root_children = data["root"]["children"]
+    root_total = sum(data[cid]["value"] for cid in root_children)
+
+    pie_chart = pygal.Pie(
+        width=4800,
+        height=2700,
+        style=custom_style,
+        title="pie-drilldown · pygal · anyplot.ai",
+        legend_at_bottom=True,
+        print_values=True,
+        print_labels=True,
+    )
+
+    def format_val(value):
+        pct = (value / root_total) * 100
+        return f"${value:,.0f} ({pct:.1f}%)"
+
+    pie_chart.value_formatter = format_val
+
+    for child_id in root_children:
+        child = data[child_id]
+        pie_chart.add(child["name"], [{"value": child["value"], "label": child["name"]}])
+
+    pie_chart.render_to_png(f"plot-{THEME}.png")

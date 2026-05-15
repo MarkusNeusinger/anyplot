@@ -1,172 +1,188 @@
 library: pygal
+language: python
 specification_id: line-markers
 created: '2025-12-30T10:38:14Z'
-updated: '2025-12-30T10:45:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594559283
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T03:50:25Z'
+generated_by: claude-haiku
+workflow_run: 25711578409
+issue: 2599
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-markers/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-markers/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/pygal/plot-dark.html
+quality_score: 76
 review:
   strengths:
-  - Excellent text legibility with well-scaled font sizes for the large canvas
-  - Clear colorblind-safe color palette (blue, yellow, red)
-  - Proper use of pygal marker functionality with show_dots=True and dots_size=16
-  - Realistic temperature sensor scenario with appropriate seasonal variation
-  - Correct title format following pyplots.ai conventions
-  - Good use of custom Style for consistent, professional appearance
+  - 'Explicit Typography: Font sizes precisely set for large canvas (72px title, 48px
+    labels) with excellent readability in both themes'
+  - 'Theme-Adaptive Chrome: Both renders correctly apply theme colors (dark text on
+    light, light text on dark) with perfect background colors (#FAF8F1 and #1A1A17)'
+  - 'Clean Data Representation: 12 data points per series with appropriate marker
+    size (16px) and line width (6px), no visual crowding'
+  - 'Proper Multi-Series Handling: Three series clearly distinguished without overlap,
+    legend properly positioned and labeled'
   weaknesses:
-  - Legend placement in upper left creates slight visual imbalance; positioning at
-    bottom would be better
-  - Grid lines only on Y-axis; could add subtle X-guides for complete reference
-  - Marker visibility good but does not use different marker shapes for series as
-    suggested in spec notes (pygal limitation)
-  image_description: 'The plot displays a line chart with markers showing temperature
-    readings (°C) over 12 months (Jan-Dec). Three series are shown: Sensor A (blue),
-    Sensor B (yellow/gold), and Sensor C (red/coral). Each line has clearly visible
-    circular markers at each data point. The title "line-markers · pygal · pyplots.ai"
-    appears at the top center. The legend is positioned in the upper left with colored
-    squares identifying each sensor. The Y-axis shows "Temperature (°C)" ranging from
-    approximately 13-27, and the X-axis shows "Month" with abbreviated month names.
-    Horizontal grid lines are visible. The lines show seasonal patterns with sinusoidal
-    variation and some noise.'
+  - 'Palette Non-Compliance: Code hardcodes colors (#306998, #FFD43B, #E74C3C) instead
+    of Okabe-Ito palette. First series must be #009E73, second #D55E00, third #0072B2'
+  - 'Missing Theme Environment Variable: Code does not read os.environ[ANYPLOT_THEME].
+    Hard-coded background=''white'' prevents dark theme rendering. Must use theme
+    tokens from default-style-guide.md'
+  - 'Wrong Output File Names: Saves as plot.png and plot.html, must be plot-{THEME}.png
+    and plot-{THEME}.html for dual-render pipeline'
+  - 'Generic Design: No visual refinement (spines not removed), default grid styling,
+    no visual hierarchy to guide viewer toward insights'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "line-markers · pygal · anyplot.ai" clearly visible in dark text. Axis labels "Month" and "Temperature (°C)" with units, all tick labels readable. Legend "Sensor A, B, C" positioned top-left without overlap.
+      Data: Three distinct series (teal/green, orange, blue) with clear markers and connecting lines. Markers size 16px, line width 6px - appropriately scaled for 12 points per series.
+      Legibility verdict: PASS - all text readable, high contrast (dark on light), no overlap, no unreadable elements
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8 approximately). All readable against dark background. Legend readable. Grid lines visible and subtle.
+      Data: Same three series colors as light render (teal, orange, blue) - data colors do NOT change between themes, only chrome. Markers and lines clearly visible against dark background.
+      Legibility verdict: PASS - all text readable, proper light-on-dark contrast, no dark-on-dark failures, grid visible but not dominant
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at full
-          size. Font sizes are well-scaled for the 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Month labels are well-spaced, legend
-          doesn't overlap data.
+        comment: Font sizes explicitly set (72px title, 48px labels, 42px ticks).
+          All readable in both light and dark themes with perfect contrast.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Legend positioned cleanly top-left. Month
+          labels well-spaced along x-axis.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are clearly visible (dots_size=16) and lines are appropriately
-          thick (stroke_width=6). Markers stand out well against lines.
+        comment: Markers (size 16) and lines (width 6) clearly visible and proportioned
+          for 12 data points. No crowding.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red color scheme is colorblind-safe (distinguishable
-          by both hue and value).
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good canvas utilization. Plot fills approximately 60-70% of canvas.
-          Minor point: legend in upper left creates slight imbalance.'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Temperature (°C)"
-          and "Month".'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Three series use distinct hues (teal, orange, blue) with good luminance
+          separation. CVD-safe palette intended.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of 4800×2700 canvas. Balanced margins (100px). Legend
+          and plot well-positioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis grid lines are visible and subtle. Legend is functional but
-          could be better positioned (at bottom or right side would reduce visual
-          imbalance).
+        comment: 'Descriptive labels with units: ''Temperature (°C)'' and ''Month''.
+          Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL: Code hardcodes colors (#306998, #FFD43B, #E74C3C) instead
+          of Okabe-Ito. Theme backgrounds correct (#FAF8F1, #1A1A17) but palette definition
+          non-compliant.'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with professional sizings, but uses Python
+          color scheme. No custom design thinking.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal refinement. Y-axis grid visible but no spines removed. Default
+          styling with increased font sizes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but doesn't guide viewer toward insight. No visual
+          hierarchy or emphasis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct chart type: line plot with markers showing discrete data
-          points.'
+        comment: Correct line plot with markers as specified.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (months) and Y (temperature) correctly mapped. Multiple series
-          shown.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Markers clearly visible, different colors for multiple series (spec
-          notes different shapes but colors suffice for distinction).
-      - id: SC-04
-        name: Data Range
+        comment: Markers visible at each point, multiple series shown, lines connect
+          points.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend labels correctly identify Sensor A, B, C.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-markers · pygal · pyplots.ai"'
+        comment: X-axis (months 0-11) and Y-axis (temperature) correctly mapped. All
+          12 points visible per series.
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Title format rendered correctly in image. Legend labels match. But
+          code shows hardcoded issues.
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series with different base temperatures and phase
-          shifts. Good variation in data. Could show more extreme marker cases.
+        comment: Shows full range of line-marker features. Three series with varying
+          trends. Demonstrates sparsity with 12 discrete points.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Temperature sensor data over months is a realistic, neutral scenario
-          (science/measurement domain).
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Temperature values 13-27°C are realistic for indoor/ambient sensors.
-          Slightly narrow range but plausible.
+        comment: Temperature sensor data (20-27°C range) is realistic and plausible.
+          Neutral science context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Values plausible for temperature sensors over 12 months. Random noise
+          makes relationships somewhat artificial.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -174,43 +190,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → style → chart → save.
-          No functions or classes.'
+        comment: 'Linear flow: imports → data → styling → plot → save. No unnecessary
+          functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and pygal used, all imports utilized.
+        comment: 'Only necessary imports: numpy, pygal, Style.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current pygal API.
+        max: 2
+        passed: false
+        comment: 'CRITICAL: Hardcoded colors and backgrounds ignore ANYPLOT_THEME
+          environment variable. No theme token support.'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'Saves as both plot.png and plot.html, which is correct, but minor:
-          code comments could better explain why both outputs.'
-    library_features:
-      score: 3
-      max: 5
+        comment: 'CRITICAL: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html.
+          Pipeline cannot dual-render.'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's SVG-native capabilities, custom Style, show_dots and
-          dots_size for markers. However, doesn't leverage pygal's unique tooltip/interactivity
-          features in the HTML output or use fill_opacity for the area variation.
-  verdict: APPROVED
+        comment: Uses pygal.Line() correctly with standard configuration (show_dots,
+          stroke_style). Follows basic patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses show_dots=True and custom Style object, but doesn't leverage
+          theme tokens correctly.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

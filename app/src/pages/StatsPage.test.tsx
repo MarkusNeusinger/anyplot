@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '../test-utils';
 import { StatsPage } from './StatsPage';
 
@@ -62,24 +62,55 @@ const mockDashboard = {
     { month: '2025-01', count: 10 },
     { month: '2025-02', count: 20 },
   ],
+  daily_impls: [
+    { date: '2026-04-14', count: 3 },
+    { date: '2026-04-15', count: 5 },
+    { date: '2026-04-16', count: 0 },
+  ],
 };
 
-function mockFetchSuccess() {
+const mockVisitors = {
+  points: [
+    { date: '2026-04-14', visitors: 12 },
+    { date: '2026-04-15', visitors: 25 },
+    { date: '2026-04-16', visitors: 7 },
+  ],
+};
+
+/**
+ * StatsPage performs two independent fetches: /insights/dashboard and
+ * /insights/visitors. Route by URL so the visitors response isn't silently
+ * replaced by the dashboard payload (and vice versa).
+ */
+function mockFetchSuccess(visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors) {
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockDashboard),
+    vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/insights/visitors')) {
+        return Promise.resolve({
+          ok: visitorsPayload !== null,
+          json: () => Promise.resolve(visitorsPayload ?? { points: [] }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockDashboard),
+      });
     }),
   );
 }
 
 function mockFetchError() {
+  // /insights/dashboard fails; visitors fetch can succeed-with-empty so the
+  // visitors `useEffect` resolves cleanly and the test asserts on the
+  // dashboard error path only.
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
+    vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/insights/visitors')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
+      }
+      return Promise.resolve({ ok: false, status: 500 });
     }),
   );
 }
@@ -87,6 +118,12 @@ function mockFetchError() {
 describe('StatsPage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  // vi.restoreAllMocks() doesn't undo vi.stubGlobal — without this hook the
+  // mocked `fetch` would leak into other test suites in the same worker.
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('renders loading state initially', () => {
@@ -182,6 +219,32 @@ describe('StatsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('timeline')).toBeInTheDocument();
+    });
+  });
+
+  it('renders visitors section header, chart, and Plausible link when Plausible returns data', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      // 12 + 25 + 7 = 44 total
+      expect(screen.getByText(/unique visitors · last 28 days · 44 total/)).toBeInTheDocument();
+    });
+    // section header matches the libraries/timeline pattern
+    expect(screen.getByText('visitors')).toBeInTheDocument();
+    // link makes the destination explicit, styled as a code-call to match the
+    // site's terminal/monospace aesthetic
+    expect(screen.getByText('plausible.view()')).toBeInTheDocument();
+  });
+
+  it('renders the "visitor data unavailable" placeholder when Plausible returns empty points', async () => {
+    mockFetchSuccess({ points: [] });
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/visitor data unavailable/)).toBeInTheDocument();
     });
   });
 });

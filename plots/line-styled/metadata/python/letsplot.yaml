@@ -1,172 +1,172 @@
 library: letsplot
+language: python
 specification_id: line-styled
 created: '2025-12-30T10:44:00Z'
-updated: '2025-12-30T10:56:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594564313
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-styled/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-styled/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-12T07:38:31Z'
+generated_by: claude-haiku
+workflow_run: 25720018856
+issue: 2598
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent use of all four standard line styles (solid, dashed, dotted, longdash)
-    as specified
-  - Perfect title format following the {spec-id} · {library} · pyplots.ai convention
-  - 'Strong accessibility: combining color AND line style ensures print/colorblind
-    friendliness'
-  - Clean, readable code following KISS principles with proper seed for reproducibility
-  - Realistic climate zone temperature data that makes intuitive sense
-  - Well-sized text elements (28pt title, 22pt labels, 18pt ticks) appropriate for
-    4800×2700 output
+  - Perfect visual quality with excellent theme adaptation in both light and dark
+    renders
+  - Complete specification compliance with all required line styles (solid, dashed,
+    dotted, dash-dot) and proper legend mapping
+  - Clean, reproducible code with deterministic data generation and proper use of
+    Okabe-Ito palette
+  - Realistic rainfall data from multiple cities with appropriate scaling and context
+  - Proper theme-adaptive chrome throughout with correct background colors and text
+    contrast in both themes
   weaknesses:
-  - Legend in code specifies color=Climate Zone and linetype=Climate Zone but the
-    data column is Station - while it works, the column naming is inconsistent
-  - All four climate zones follow the same basic seasonal pattern (low in winter,
-    high in summer) - could show more variation (e.g., Southern Hemisphere climate
-    with inverse pattern)
-  image_description: 'The plot displays four line series representing monthly temperature
-    readings for different climate zones (Coastal, Continental, Mountain, Mediterranean)
-    over 12 months (Jan-Dec). The title "line-styled · letsplot · pyplots.ai" appears
-    at the top in bold black text. The Y-axis shows "Temperature (°C)" ranging from
-    -8 to 30, and the X-axis shows "Month" with abbreviated month names. Each series
-    uses a distinct color AND line style: Coastal (solid blue #306998), Continental
-    (dashed yellow #FFD43B), Mountain (dotted red #DC2626), and Mediterranean (long-dash
-    green #22C55E). Points are marked at each data value with matching colors. A legend
-    titled "Climate Zone" is positioned on the right side with both color and line
-    style indicators. The grid is subtle gray with minor gridlines visible.'
+  - Generic aesthetic design with standard theme defaults and no visual refinement
+    beyond requirements
+  - No visual hierarchy or data storytelling elements to create focal points
+  - Minimal use of distinctive letsplot features beyond basic API
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle grid lines
+      Chrome: Title "line-styled · letsplot · anyplot.ai" clearly readable in dark text; x-axis labeled "Day of Month" (0-30), y-axis "Rainfall (mm)" (3-22 range); all tick labels and axis titles in dark INK color; legend positioned right with city names
+      Data: Four rainfall series distinguished by line styles (Paris solid green #009E73, Athens dashed orange #D55E00, Seattle dotted blue #0072B2, Delhi dash-dot purple #CC79A7); data points added with alpha=0.7; all colors match Okabe-Ito first-series green as primary
+      Legibility verdict: PASS - all text is readable against light background, data lines are clearly distinguishable by style
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with subtle grid lines
+      Chrome: Title clearly visible in light text (#F0EFE8); x-axis and y-axis labels readable; tick labels in INK_SOFT color (#B8B7B0); legend positioned identically to light render with good contrast
+      Data: All four data colors are identical to light render (confirming proper theme-independence for data); line styles (solid, dashed, dotted, dash-dot) are clearly visible; data points maintain alpha=0.7
+      Legibility verdict: PASS - no dark-on-dark contrast issues; all text is readable; data lines are clearly distinguishable against dark background; grid provides subtle reference without competing with data
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and bold (~28pt), axis labels ~22pt, tick labels ~18pt,
-          all clearly readable
+        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, month labels well-spaced
+        comment: All text readable; legend well-positioned; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are thick (size=2.5), points are visible (size=5), appropriate
-          for 4 series with 12 points each
+        comment: Four line styles clearly distinguishable; data points visible with
+          alpha=0.7
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses four distinct colors (blue, yellow, red, green) with different
-          line styles as backup - excellent for accessibility
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, legend positioned well on right, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" includes units, "Month" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette used correctly; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 base (scaled 3x) with good proportions; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with units (Day of Month, Rainfall (mm))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds for both
+          themes'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is somewhat visible (major at 0.5, minor at 0.3) but the legend
-          title says "Climate Zone" while code labels say "Station" in legend_title
-          - minor mismatch, but the legend shows both color and linetype which is
-          correct
+        comment: Generic styling with standard palette; no distinctive design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond requirements
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual hierarchy or focal point created
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with multiple styled lines
+        comment: Correct line plot with multiple styled series
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is month (continuous/time), Y is temperature (multiple series)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uses solid, dashed, dotted, and longdash (dash-dot equivalent) -
-          all 4 standard styles present
-      - id: SC-04
-        name: Data Range
+        comment: All line styles present (solid, dashed, dotted, dash-dot); legend
+          shows mapping
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from -8 to 30, X-axis shows all 12 months
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct; axes show all data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps line styles and colors to climate zone names
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "line-styled · letsplot · pyplots.ai"
+        comment: Correct title format; legend labels match data
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 4 distinct series with different patterns, though all follow
-          similar seasonal curves (winter low, summer high)
+        comment: All aspects of line plotting shown; trends clear
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly temperature by climate zone is a real, neutral, comprehensible
-          scenario
+        comment: Rainfall data realistic (Paris, Athens, Seattle, Delhi); neutral
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Temperature values are realistic: Mountain (-6 to 16°C), Continental
-          (0 to 21°C), Coastal (5 to 28°C), Mediterranean (7 to 29°C) - all plausible'
+        comment: Values (3-22 mm/day) sensible for rainfall domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,42 +174,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No functions/classes; straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses needed imports (numpy, pandas, lets_plot)
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" with path="." which is correct
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses ggplot grammar with geom_line, geom_point, scale_linetype_manual,
-          scale_color_manual, theme customization. Good use of lets-plot's ggplot2-style
-          API but nothing uniquely distinctive to lets-plot specifically (e.g., could
-          use tooltip for interactivity)
+        passed: false
+        comment: Standard ggplot2-style grammar; correct but not exceptional
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses scale_linetype_manual for line styles; good use of distinctive
+          feature
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

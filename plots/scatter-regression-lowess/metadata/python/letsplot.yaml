@@ -1,171 +1,176 @@
 library: letsplot
+language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:53:52Z'
-updated: '2025-12-30T23:58:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608465143
+updated: '2026-05-14T01:27:53Z'
+generated_by: claude-haiku
+workflow_run: 25835838027
 issue: 2855
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/letsplot/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - regression
-  styling:
-    - alpha-blending
-    - gradient-fill
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent LOWESS implementation using geom_smooth with loess method and confidence
-    band (se=True)
-  - Perfect title format and descriptive axis labels with units
-  - Realistic plant growth vs temperature scenario that naturally demonstrates LOWESS
-    benefits
-  - Good color contrast between blue points and yellow curve with appropriate transparency
-  - Clean code structure following KISS principles with reproducible seed
+  - 'Perfect visual quality: all text legible in both themes, correct palette, ideal
+    transparency levels'
+  - 'Flawless spec compliance: scatter + LOWESS + confidence band all present and
+    correct'
+  - 'Excellent theme adaptation: chrome properly switches between light/dark while
+    data colors remain constant'
+  - 'Strong code quality: reproducible with seed, clean structure, proper imports'
+  - 'High-resolution export ready: correctly uses scale=3 for 4800×2700px PNG output'
   weaknesses:
-  - Confidence band fill color (#FFD43B) same as line color - could use a lighter/different
-    shade for better visual distinction
-  - Some imports listed individually could be consolidated (minor style issue)
-  image_description: 'The plot displays a scatter plot with approximately 200 blue
-    data points (#306998) representing plant growth rate vs temperature. A smooth
-    yellow LOWESS curve (#FFD43B) is overlaid with a light yellow confidence band
-    (se=True). The curve shows a clear non-linear relationship: growth rate increases
-    from ~17 cm/day at 5°C to a peak of ~22 cm/day around 15-17°C, then gradually
-    declines back to ~18 cm/day at 40°C. The title "scatter-regression-lowess · letsplot
-    · pyplots.ai" is properly formatted at the top. Axis labels include units: "Temperature
-    (°C)" and "Growth Rate (cm/day)". The minimal theme provides a clean white background
-    with subtle gray grid lines. Points have appropriate alpha (0.6) showing density
-    while allowing the LOWESS curve to be clearly visible.'
+  - 'Design excellence is solid but not exceptional: relatively standard LOWESS visualization
+    without surprising visual elements'
+  - Library mastery shows competent usage but limited exploration of letsplot's more
+    advanced interactive features beyond HTML export
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct tone, not pure white
+      Chrome: Title "scatter-regression-lowess · letsplot · anyplot.ai" in dark text clearly visible at top; axis labels "Temperature (°C)" and "Growth Rate (cm/day)" in dark ink; tick labels in soft gray; grid lines subtle and do not compete
+      Data: 200 scatter points in brand green (#009E73) with alpha=0.6, LOWESS curve in orange/vermillion (#D55E00) with light orange confidence band (alpha=0.15) showing smooth trend from ~20 to ~21.5 cm/day growth rate peak around 18°C temperature
+      Legibility verdict: PASS - all text is dark and clearly readable on light background; no "light-on-light" failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct tone, not pure black
+      Chrome: Title in light cream text (#F0EFE8) clearly visible; axis labels in light text; tick labels in light gray (#B8B7B0); grid lines subtle and visible
+      Data: Scatter points identical green (#009E73), LOWESS curve and band identical orange (#D55E00) - data colors unchanged from light render, only chrome adapted
+      Legibility verdict: PASS - all text is light and clearly readable on dark background; no dark-on-dark failures; brand green visible throughout
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks all clearly readable at full size
-          with appropriate font sizes (24pt title, 20pt axis labels, 16pt ticks)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: Title, axis labels, tick labels all clearly readable in both themes
+          with proper font sizing and contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, no text collisions, good visual hierarchy
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Points well-sized (size=4) with good alpha (0.6), LOWESS line clearly
-          visible (size=2.5). Minor deduction: some points at edges slightly small
-          relative to canvas'
+        comment: Scatter points and LOWESS curve both clearly visible; transparency
+          appropriately shows density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue points and yellow curve provide excellent contrast, colorblind-safe
-          combination
+        comment: Okabe-Ito palette is colorblind-safe with good contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization, plot fills most of the space with balanced
-          margins. Minor whitespace at top
+        comment: Landscape format with generous margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Temperature (°C)" and "Growth Rate
-          (cm/day)"'
+        comment: Descriptive title with library/spec-id format; axis labels include
+          units
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Minimal theme with subtle grid, no legend needed for this single-series
-          plot
+        comment: 'First series #009E73, second series #D55E00; backgrounds correct
+          for both themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive styling with proper tokens. Confidence band adds refinement.
+          Exceeds defaults but relatively straightforward
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and semi-transparent confidence band show attention to
+          detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: LOWESS curve guides viewer; points provide context. Clear focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct scatter plot with LOWESS regression
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=temperature, Y=growth rate correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: LOWESS curve distinct from points (solid yellow vs blue), confidence
-          band included, moderate smoothing (span=0.4), appropriate transparency
-      - id: SC-04
-        name: Data Range
+        comment: Scatter points, LOWESS curve, confidence band, smooth appearance
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range displayed (5-40°C, 14-27 cm/day)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis and Y-axis map correctly; all data visible without clipping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, single series clearly distinguished by color
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correctly formatted: "scatter-regression-lowess · letsplot · pyplots.ai"'
+        comment: Title format correct; axis labels with units; single series requires
+          no legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows non-linear relationship with varying pattern across x-range
-          (rise, peak, decline). Minor: could show more extreme outliers'
+        comment: 200 points demonstrate scatter; LOWESS spans full range; confidence
+          band shows uncertainty
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plant growth vs temperature is a real, neutral scientific scenario
-          that naturally exhibits non-linear patterns
+        comment: Plant growth vs temperature is plausible; non-linear with noise is
+          realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature 5-40°C is realistic for plant studies. Growth rate 14-27
-          cm/day is on the high end but plausible for fast-growing plants
+        comment: Temperature and growth rate ranges are sensible and well-scaled
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,40 +178,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Straightforward data → plot → save flow, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports used, but some could be condensed (minor)
+        comment: Uses np.random.seed(42) for deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only imports used: numpy, pandas, lets_plot, os'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; no fake UI; clean API usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ggplot2-style composition correct; theme layering and element styling
+          idiomatic
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_smooth with loess method and se=True for confidence bands,
-          theme_minimal(), element_text() for styling. Good usage but not exceptional
+        comment: Theme-adaptive chrome and HTML export showcase library knowledge
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready

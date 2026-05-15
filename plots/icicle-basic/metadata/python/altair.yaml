@@ -1,166 +1,189 @@
 library: altair
+language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:03:43Z'
-updated: '2025-12-30T00:22:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585400003
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-13T22:54:44Z'
+generated_by: claude-haiku
+workflow_run: 25830646986
+issue: 2497
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent hierarchical visualization with clear parent-child relationships visible
-    through spatial adjacency
-  - Smart label hiding for narrow rectangles prevents text overlap
-  - Good use of Altair declarative syntax with mark_rect and transform_calculate
-  - Interactive tooltips enhance usability
-  - File system example matches specification suggested application perfectly
-  - Clean code structure following KISS principles with iterative tree building
+  - Perfect text legibility in both themes with proper theme-adaptive chrome (INK,
+    INK_SOFT tokens correctly applied)
+  - Correct Okabe-Ito palette usage - first series is brand green (#009E73), multi-level
+    hierarchy follows positions 1-4 in order
+  - Accurate icicle chart implementation with proper proportional sizing and clear
+    parent-child spatial relationships
+  - Smart conditional label visibility (width > 0.05 threshold) prevents clutter while
+    maintaining readability
+  - Clean minimal design with white rectangle borders providing clear visual definition
+  - 'Theme backgrounds exactly match specification (#FAF8F1 light, #1A1A17 dark)'
+  - Both PNG and HTML outputs properly generated with correct naming convention
   weaknesses:
-  - Color palette uses only blue hues which may reduce accessibility for some colorblind
-    users; consider using more distinct hues across levels
-  - Some leaf nodes appear very narrow making the hierarchy harder to read in that
-    section
-  image_description: 'The plot displays a horizontal icicle chart showing a file system
-    hierarchy. The root node (dark blue) spans the entire width at the bottom (level
-    0). Level 1 shows three main folders: "Documents", "Media", and "Projects" in
-    medium blue. Level 2 shows subfolders including "Reports", "Videos", and "Audio"
-    in lighter blue. Level 3 (lightest blue) shows leaf files like "tutorial.mp4",
-    "demo.mp4", and "podcast.mp3". The rectangles are separated by white strokes.
-    A legend on the right shows levels 0-3. The title "icicle-basic · altair · pyplots.ai"
-    appears at the top center. The Y-axis is labeled "Hierarchy Level" with values
-    0-4.'
+  - 'DE-01 MODERATE: Design could be more sophisticated - consider subtle visual enhancements
+    like enhanced typography hierarchy or refined spacing to elevate aesthetic polish'
+  - 'LM-02 MINOR: Could showcase more distinctive Altair features - current implementation
+    is solid but fairly standard; opportunity to leverage more advanced layer composition
+    or interactions'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) providing clean, professional appearance
+      Chrome: Title "icicle-basic · altair · anyplot.ai" is bold and clearly visible; Y-axis label "Hierarchy Level" and tick marks (0-4) are dark text with excellent contrast against the light background; all text is readable and properly sized
+      Data: Four-level icicle chart with Okabe-Ito colors - Level 0 (root) in brand green (#009E73), Level 1 in vermillion (#D55E00), Level 2 in blue (#0072B2), Level 3 in reddish purple (#CC79A7); white rectangle borders clearly define hierarchy structure; file size data represented proportionally; all node labels visible where space permits (width > 5%)
+      Legend: "Level" legend on right side showing color-to-level mapping, clearly readable
+      Legibility verdict: PASS - all elements (title, labels, ticks, data labels) are readable with strong contrast and appropriate sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) providing high contrast without harshness
+      Chrome: Title and Y-axis elements are light text (#F0EFE8) with excellent contrast against dark background; tick labels and all typography remain legible; no dark-on-dark failures detected
+      Data: Colors are identical to light render - Okabe-Ito palette maintained across themes (only chrome flips, not data colors); white rectangle borders remain visible and defining; all data labels readable in light text on colored rectangles
+      Legend: "Level" legend clearly visible with light text on dark elevated background
+      Legibility verdict: PASS - all elements remain readable in dark mode; theme adaptation is correct with proper INK and INK_SOFT token usage; no text visibility issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and axis labels are clearly readable; some leaf node labels
-          in narrow rectangles are missing (by design for small nodes)
+        comment: All text (title, labels, ticks) readable in both themes; proper font
+          sizes (28px title, 22px axis labels, 18px ticks)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; labels hidden for small rectangles
+        comment: Conditional label visibility prevents overlap; all labels have clear
+          space
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangles are well-sized and clearly visible with good proportions
+        comment: All rectangles and hierarchy levels clearly visible; white borders
+          define elements sharply
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue color scheme with good level differentiation, but all blues
-          may be harder for some colorblind users
+        comment: Okabe-Ito palette is CVD-safe; adequate contrast between adjacent
+          rectangles
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent use of canvas space, plot fills ~70% of the area
+        comment: 1600x900 dimensions scale to 4800x2700 at 3x; good proportions; all
+          elements visible
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label "Hierarchy Level", but no units (appropriate
-          for this context); X-axis hidden (appropriate)
+        comment: Title format correct; Y-axis labeled appropriately; X-axis hidden
+          (appropriate for icicle)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend is clear and well-placed; no grid needed for this chart type
+        comment: 'First series #009E73 brand green; Okabe-Ito order 1-4; backgrounds
+          correct; both themes theme-compliant'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean Okabe-Ito palette and intentional color hierarchy; fairly standard
+          application, could be more sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines, subtle grid (opacity 0.10), generous whitespace, white
+          borders add definition
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color and layout; guides viewer through
+          file system structure
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct icicle chart with horizontal orientation (top-to-bottom hierarchy)
+        comment: Correct icicle chart with horizontal stacking representing hierarchy
+          levels
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchy levels correctly mapped to Y-axis, values determine width
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows parent-child relationships, proportional sizing, labels for
-          larger nodes
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: hierarchical data, parent-child relationships,
+          proportional sizing, level-based coloring'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All hierarchy levels visible (0-4)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Y-axis shows levels 0-4; X-axis proportional to file sizes; full
+          data range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Level legend accurately represents the data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "icicle-basic · altair · pyplots.ai"'
+        comment: 'Title: ''icicle-basic · altair · anyplot.ai''; Legend shows Level
+          mapping'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows multiple hierarchy levels, varying node sizes, parent-child
-          relationships; minor: some leaf nodes very narrow'
+        comment: Complete 4-level file system hierarchy; demonstrates root, folders,
+          and files with realistic variety
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: File system hierarchy is a realistic, neutral scenario matching spec's
-          application examples
+        comment: File system context is realistic; file types and sizes plausible
+          (45-350 MB range)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: File sizes in MB are realistic; some variation in proportions could
-          be more balanced
+        comment: File size values sensible; hierarchy depth appropriate for icicle
+          chart demonstration
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,33 +191,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → processing → plot → save'
+        comment: No functions or classes; straightforward procedural code with clear
+          sections
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random), but no explicit seed statement
+        comment: Deterministic data; no randomness; consistent output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only necessary imports (os, sys, altair, pandas) - all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Altair API used
+        comment: No fake UI; appropriate complexity; well-organized code flow
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current Altair API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses high-level API (mark_rect, encode); proper encoding and scale
+          configuration; idiomatic configure methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages transform_calculate for dynamic labels; layer composition
+          (rect + text); theme-adaptive config
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling: []

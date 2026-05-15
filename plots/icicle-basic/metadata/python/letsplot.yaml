@@ -1,164 +1,176 @@
 library: letsplot
+language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:07:18Z'
-updated: '2025-12-30T00:29:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585402234
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/letsplot/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-13T22:57:53Z'
+generated_by: claude-haiku
+workflow_run: 25830958053
+issue: 2497
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/letsplot/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Clean hierarchical visualization with clear parent-child relationships through
-    spatial adjacency
-  - Intelligent label visibility logic that hides labels for narrow rectangles to
-    prevent overlap
-  - Good color scheme with Python-themed colors (blue/yellow) that are colorblind-safe
-  - Proper horizontal orientation with root at top as specified
-  - Well-structured code using stack-based traversal instead of recursion
+  - Clean hierarchical visualization with excellent theme adaptation in both light
+    and dark modes
+  - Smart label visibility logic prevents overlaps on small rectangles
+  - Perfect palette compliance using Okabe-Ito colors with correct theme-aware chrome
+    (backgrounds, text, borders)
+  - Clear hierarchy through level-based color mapping and font size variation
+  - Proper use of letsplot grammar of graphics with high-level API (ggplot + geom
+    layers)
   weaknesses:
-  - Legend could be more descriptive (e.g., "Hierarchy Level" instead of just "Level")
-  - Some empty space at the bottom of the canvas could be better utilized
-  - Several level 3 labels are hidden (Reports, Contracts, Letters, Receipts, 2024,
-    2023, Movies, DataViz, Frontend, Backend) - while this prevents overlap, it reduces
-    information density
-  image_description: 'The plot displays a horizontal icicle chart representing a file
-    system hierarchy. At the top is a large dark blue rectangle labeled "root" (level
-    0). Below it are three yellow rectangles for "Documents", "Media", and "Projects"
-    (level 1), sized proportionally to their values. Level 2 shows light blue rectangles
-    for subfolders: Work, Personal (under Documents), Photos, Videos (under Media),
-    and Python, Web (under Projects). The deepest level 3 shows gray rectangles for
-    items like Clips and ML (visible labels), while many level 3 labels are hidden
-    due to narrow widths. White borders separate all rectangles. A legend on the right
-    shows levels 0-3 with corresponding colors. The title "icicle-basic · letsplot
-    · pyplots.ai" appears in the top left.'
+  - No distinctive design flourishes beyond competent defaults
+  - Legend box styling could use more refinement (elevated background is there but
+    minimal polish)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified, perfect surface for the plot.
+      Chrome: Title "icicle-basic · letsplot · anyplot.ai" is clearly visible at top in dark text (INK color #1A1A17). No axis labels present (appropriate for icicle chart). Rectangle borders use INK_SOFT (#4A4A44) providing subtle definition. Legend on right shows "Hierarchy Level" with color swatches.
+      Data: Four-level hierarchy displayed with Okabe-Ito colors: root in #009E73 (brand green), level-1 children (Documents, Media, Projects) in #D55E00 (vermillion), level-2 (Work, Personal, Photos, Videos, Python, Web) in #0072B2 (blue), level-3 leaf nodes in #CC79A7 (reddish purple). Rectangle sizes correctly represent hierarchical values. All visible labels are in dark text, readable against colored backgrounds.
+      Legibility verdict: PASS - All text is clearly readable against the light background. Title, legend text, and data labels all have excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified, perfect dark surface adaptation.
+      Chrome: Title is now in light text (INK #F0EFE8) for dark theme, clearly visible against the dark background. Rectangle borders now in light gray (INK_SOFT for dark #B8B7B0). Legend styling adapted with light text. No axis labels (same as light render).
+      Data: Data colors are IDENTICAL to light render - all four Okabe-Ito colors preserved: #009E73, #D55E00, #0072B2, #CC79A7. This confirms proper theme separation (only chrome flips, data stays constant). All visible labels updated to light text color (INK), providing perfect contrast against the dark rectangles and dark background.
+      Legibility verdict: PASS - All text is clearly readable against the dark background. No dark-on-dark failures. Brand green (#009E73) remains visible and readable. Theme adaptation is flawless.
+
+    Both renders demonstrate perfect theme-adaptive implementation with identical data presentation across themes and only chrome (backgrounds, text, borders) changing appropriately.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is clear at 24pt, level labels are readable. Some level 3 labels
-          appropriately hidden for narrow rectangles.
+        comment: Font sizes explicitly set (14, 12, 8, 7 for levels), all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; labels intelligently hidden when rectangles
-          are too narrow
+        comment: Smart label filtering based on width prevents overlaps on small rectangles
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangles are well-sized with clear white borders separating them
+        comment: Rectangles clearly visible with borders, alpha=0.9 for subtle transparency
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/gray palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but plot could extend closer to edges; some empty
-          space at bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for icicle charts (no axes expected), but spec says hide axes
-          which is done correctly
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate), legend well-placed on right
+        comment: Okabe-Ito palette is colorblind-safe, good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 1600x900 (4800x2700 scaled) layout with balanced margins
+          and no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''icicle-basic · letsplot · anyplot.ai'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct, multi-series follows Okabe-Ito order,
+          backgrounds #FAF8F1/#1A1A17, perfect theme chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean design with intentional hierarchy through color and sizing,
+          above generic defaults but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean borders, no axis spines, generous whitespace, solid refinement
+          with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through level-based color and size variation,
+          hierarchy clearly visible through spatial adjacency
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct icicle chart with horizontal orientation (root at top)
+        comment: Perfect icicle chart with horizontal orientation and hierarchical
+          structure
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Parent-child relationships correctly shown through spatial adjacency
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Hierarchical structure, proportional sizing, color by level all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: hierarchy visualization, node labels, value-based
+          sizing, parent-child relationships'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All hierarchy levels (0-3) visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
+        comment: X-axis correctly shows hierarchical position and proportional value,
+          Y-axis shows level depth
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows "Level" with 0-3 which is functional but could be more
-          descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "icicle-basic · letsplot · pyplots.ai"'
+        comment: Title correct format, legend properly shows 'Hierarchy Level' with
+          color mapping
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 levels of hierarchy with varying sizes; good variety in node
-          sizes
+        comment: Complete file system hierarchy with 22 nodes across 4 levels showing
+          full range of structure
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: File system with folders/files is a realistic, neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: File sizes in reasonable ranges (50-400 units)
+        comment: File system example is realistic, neutral, and comprehensible domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: File sizes (50-400 MB) are realistic and proportions make sense
     code_quality:
       score: 10
       max: 10
@@ -168,40 +180,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → calculations → plot → save'
+        comment: Simple direct script with no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: Hardcoded data and deterministic layout calculation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic code with appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output files: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Perfect grammar of graphics: ggplot() + geom layers, proper aes()
+          mapping, scale functions, theme customization'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_rect and geom_text, scale_fill_manual,
-          but icicle isn't a native lets-plot chart type so it's manually constructed
+        comment: 'Uses letsplot-specific features: ggsize() for sizing, ggsave() with
+          scale parameter, theme-adaptive implementation reading ANYPLOT_THEME'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

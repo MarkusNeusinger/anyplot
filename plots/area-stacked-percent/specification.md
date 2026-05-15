@@ -13,18 +13,22 @@ A stacked area chart normalized to 100%, where each area represents the percenta
 
 ## Data
 
-The visualization requires:
-- **X variable**: Continuous variable (typically time)
-- **Multiple Y variables**: Categories to stack (values normalized to percentages)
+- `time` (continuous) - X-axis variable representing temporal progression (dates, years, or time periods)
+- `category` (categorical) - Identifies each stacked area (e.g., product, region, segment name)
+- `value` (numeric) - Raw count or amount for each category; automatically normalized to percentage within each time point
+- Size: 50–5000 points (10–100 time periods × 5–50 categories)
+- Example: Monthly revenue by product line (12 months × 5 products = 60 rows)
 
 Example structure:
 ```
-Time | Category A | Category B | Category C
------|------------|------------|------------
-2020 | 40         | 35         | 25
-2021 | 45         | 30         | 25
-2022 | 50         | 28         | 22
-...
+Time | Category   | Value
+-----|------------|-------
+2020 | Product A  | 400
+2020 | Product B  | 350
+2020 | Product C  | 250
+2021 | Product A  | 450
+2021 | Product B  | 300
+2021 | Product C  | 250
 ```
 
 ## Notes

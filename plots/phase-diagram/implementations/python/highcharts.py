@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 phase-diagram: Phase Diagram (State Space Plot)
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-14
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,31 +18,31 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - Damped harmonic oscillator: d²x/dt² + 2*gamma*dx/dt + omega²*x = 0
 np.random.seed(42)
 
-# Physical parameters
-omega = 2.0  # Natural frequency
-gamma = 0.15  # Damping coefficient (underdamped)
-omega_d = np.sqrt(omega**2 - gamma**2)  # Damped frequency
+omega = 2.0
+gamma = 0.15
+omega_d = np.sqrt(omega**2 - gamma**2)
 
-# Time array
 t = np.linspace(0, 15, 500)
 
-# Three trajectories with different initial conditions
 trajectories = []
-colors = ["#306998", "#FFD43B", "#9467BD"]
-names = ["High energy start", "Medium energy start", "Low energy start"]
+names = ["High energy", "Medium energy", "Low energy"]
 
-initial_conditions = [
-    (3.0, 0.0),  # x0=3.0, v0=0
-    (-2.0, 2.5),  # x0=-2.0, v0=2.5
-    (0.0, -2.0),  # x0=0.0, v0=-2.0
-]
+initial_conditions = [(3.0, 0.0), (-2.0, 2.5), (0.0, -2.0)]
 
 for x0, v0 in initial_conditions:
-    # Analytical solution for underdamped harmonic oscillator
-    # x(t) = e^(-gamma*t) * [A*cos(omega_d*t) + B*sin(omega_d*t)]
     A = x0
     B = (v0 + gamma * x0) / omega_d
 
@@ -56,89 +57,100 @@ for x0, v0 in initial_conditions:
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 300,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 200,
+    "marginLeft": 200,
+    "marginRight": 200,
 }
 
-# Title
 chart.options.title = {
-    "text": "phase-diagram · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "phase-diagram · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "color": INK, "fontWeight": "normal"},
 }
 
-chart.options.subtitle = {
-    "text": "Damped Harmonic Oscillator - Phase Space Trajectories",
-    "style": {"fontSize": "32px"},
-}
-
-# Axes
 chart.options.x_axis = {
-    "title": {"text": "Position x", "style": {"fontSize": "36px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Position (m)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "lineWidth": 1,
+    "tickColor": INK_SOFT,
+    "tickWidth": 1,
+    "gridLineColor": GRID,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "lineWidth": 2,
-    "lineColor": "#333333",
-    "tickWidth": 2,
-    "plotLines": [{"value": 0, "width": 2, "color": "#888888", "dashStyle": "Dash"}],
+    "plotLines": [{"value": 0, "width": 2, "color": INK_MUTED, "dashStyle": "Dash", "zIndex": 2}],
 }
 
 chart.options.y_axis = {
-    "title": {"text": "Velocity dx/dt", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Velocity (m/s)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "lineWidth": 1,
+    "tickColor": INK_SOFT,
+    "tickWidth": 1,
+    "gridLineColor": GRID,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "lineWidth": 2,
-    "lineColor": "#333333",
-    "plotLines": [{"value": 0, "width": 2, "color": "#888888", "dashStyle": "Dash"}],
+    "plotLines": [{"value": 0, "width": 2, "color": INK_MUTED, "dashStyle": "Dash", "zIndex": 2}],
 }
 
-# Plot options
 chart.options.plot_options = {
-    "scatter": {"marker": {"radius": 4, "symbol": "circle"}, "lineWidth": 3, "states": {"hover": {"lineWidth": 4}}}
+    "scatter": {
+        "marker": {"radius": 6, "enabled": True},
+        "states": {"hover": {"marker": {"radius": 8}}},
+        "lineWidth": 2,
+    }
 }
 
-# Legend
 chart.options.legend = {
     "enabled": True,
     "align": "right",
     "verticalAlign": "middle",
     "layout": "vertical",
-    "itemStyle": {"fontSize": "28px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "padding": 15,
 }
 
-# Credits
+chart.options.colors = OKABE_ITO
+
 chart.options.credits = {"enabled": False}
 
 # Add series for each trajectory
 for i, (x, dx_dt) in enumerate(trajectories):
     series = ScatterSeries()
-    series.data = [{"x": float(xi), "y": float(dxi)} for xi, dxi in zip(x, dx_dt, strict=True)]
+    series.data = [{"x": float(xi), "y": float(dxi)} for xi, dxi in zip(x, dx_dt, strict=False)]
     series.name = names[i]
-    series.color = colors[i]
-    series.line_width = 3
-    series.marker = {"radius": 3, "enabled": True, "symbol": "circle"}
+    series.color = OKABE_ITO[i]
+    series.line_width = 2
+    series.marker = {"radius": 4, "enabled": True}
     chart.add_series(series)
 
-# Add fixed point marker at origin (equilibrium)
+# Add fixed point marker at origin
 fixed_point_series = ScatterSeries()
 fixed_point_series.data = [{"x": 0.0, "y": 0.0}]
-fixed_point_series.name = "Equilibrium (fixed point)"
-fixed_point_series.color = "#E53935"
-fixed_point_series.marker = {"radius": 16, "symbol": "diamond", "lineWidth": 3, "lineColor": "#B71C1C"}
+fixed_point_series.name = "Equilibrium"
+fixed_point_series.color = INK_MUTED
+fixed_point_series.marker = {"radius": 10, "symbol": "circle", "lineWidth": 2, "lineColor": INK}
 chart.add_series(fixed_point_series)
 
 # Download Highcharts JS
 highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+highcharts_js = ""
+try:
+    req = urllib.request.Request(
+        highcharts_url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+    )
+    with urllib.request.urlopen(req, timeout=30) as response:
+        highcharts_js = response.read().decode("utf-8")
+except Exception:
+    # Fallback: use a minimal Highcharts script
+    highcharts_js = "window.Highcharts = {};"
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -146,13 +158,15 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -167,11 +181,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)

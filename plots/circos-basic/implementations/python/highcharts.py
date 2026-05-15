@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 circos-basic: Circos Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-15
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,151 +16,149 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulating trade flows between 8 regions
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Simulating trade flows between 8 chromosomes with expression tracks
 np.random.seed(42)
 
-regions = ["N.America", "S.America", "Europe", "Africa", "MidEast", "S.Asia", "E.Asia", "Oceania"]
+chromosomes = ["Chr1", "Chr2", "Chr3", "Chr4", "Chr5", "Chr6", "Chr7", "Chr8"]
 
-# Generate flow matrix - inter-regional trade flows
-n_regions = len(regions)
-flow_matrix = np.zeros((n_regions, n_regions))
+# Generate flow matrix - inter-chromosomal connections (similar to genomic translocations)
+n_chrs = len(chromosomes)
+flow_matrix = np.zeros((n_chrs, n_chrs))
 
-# Create realistic flow patterns with some regions having stronger connections
-for i in range(n_regions):
-    for j in range(n_regions):
+for i in range(n_chrs):
+    for j in range(n_chrs):
         if i != j:
-            base_flow = np.random.exponential(50)
-            # Some regional pairs have stronger trade relationships
-            if (i == 0 and j == 6) or (i == 6 and j == 0):  # North America - East Asia
+            base_flow = np.random.exponential(40)
+            # Some chr pairs have stronger connections (realistic genomic patterns)
+            if (i == 0 and j == 6) or (i == 6 and j == 0):
                 base_flow *= 3
-            elif (i == 2 and j == 6) or (i == 6 and j == 2):  # Europe - East Asia
+            elif (i == 2 and j == 5) or (i == 5 and j == 2):
                 base_flow *= 2.5
-            elif (i == 0 and j == 2) or (i == 2 and j == 0):  # North America - Europe
+            elif (i == 1 and j == 4) or (i == 4 and j == 1):
                 base_flow *= 2
             flow_matrix[i, j] = base_flow
 
-# Prepare data for Highcharts dependency wheel (circular chord-like visualization)
-# Format: [from, to, weight] arrays
+# Filter connections for clarity
 connections = []
-for i in range(n_regions):
-    for j in range(n_regions):
-        if i != j and flow_matrix[i, j] > 20:  # Filter small connections
-            connections.append([regions[i], regions[j], float(round(flow_matrix[i, j], 1))])
+for i in range(n_chrs):
+    for j in range(n_chrs):
+        if i != j and flow_matrix[i, j] > 15:
+            connections.append([chromosomes[i], chromosomes[j], float(round(flow_matrix[i, j], 1))])
 
-# Colorblind-safe colors for each region
-colors = [
-    "#306998",  # Python Blue - N. America
-    "#FFD43B",  # Python Yellow - S. America
-    "#9467BD",  # Purple - Europe
-    "#17BECF",  # Cyan - Africa
-    "#8C564B",  # Brown - Mid. East
-    "#E377C2",  # Pink - S. Asia
-    "#2CA02C",  # Green - E. Asia
-    "#BCBD22",  # Olive - Oceania
-]
-
-# Full region names for legend
-region_full_names = [
-    "North America",
-    "South America",
-    "Europe",
-    "Africa",
-    "Middle East",
-    "South Asia",
-    "East Asia",
-    "Oceania",
-]
-
-# Generate inner track data (regional GDP representation as percentage)
-gdp_data = [26.0, 4.5, 22.0, 3.5, 5.0, 8.0, 28.0, 3.0]  # Approximate world GDP share %
+# Use Okabe-Ito palette for chromosomes (cycling through palette)
+chr_colors = [OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_chrs)]
 
 # Create nodes with colors
-nodes = [{"id": regions[i], "color": colors[i]} for i in range(n_regions)]
+nodes = [{"id": chromosomes[i], "color": chr_colors[i]} for i in range(n_chrs)]
 
-# Create inner track pie chart data (GDP representation)
-inner_track_data = [{"name": region_full_names[i], "y": gdp_data[i], "color": colors[i]} for i in range(n_regions)]
+# Create inner track data (expression values as percentages)
+expression_data = [28.0, 19.0, 16.0, 13.0, 10.0, 7.0, 5.0, 2.0]
 
-# Create Highcharts configuration directly
+inner_track_data = [{"name": chromosomes[i], "y": expression_data[i], "color": chr_colors[i]} for i in range(n_chrs)]
+
+# Create Highcharts configuration with theme-adaptive colors
 chart_config = {
     "chart": {
         "type": "dependencywheel",
         "width": 3600,
         "height": 3600,
-        "backgroundColor": "#ffffff",
-        "marginRight": 420,
+        "backgroundColor": PAGE_BG,
+        "marginRight": 500,
+        "style": {"color": INK},
     },
-    "title": {"text": "circos-basic · highcharts · pyplots.ai", "style": {"fontSize": "52px", "fontWeight": "bold"}},
-    "subtitle": {"text": "Global Trade Flows Between Regions (with GDP Inner Track)", "style": {"fontSize": "36px"}},
+    "title": {
+        "text": "circos-basic · highcharts · anyplot.ai",
+        "style": {"fontSize": "52px", "fontWeight": "bold", "color": INK},
+    },
+    "subtitle": {
+        "text": "Chromosomal Connections with Expression Tracks",
+        "style": {"fontSize": "32px", "color": INK_SOFT},
+    },
     "accessibility": {"enabled": False},
     "credits": {"enabled": False},
-    "tooltip": {"style": {"fontSize": "28px"}},
+    "tooltip": {"style": {"fontSize": "20px", "color": INK}},
     "legend": {
         "enabled": True,
         "align": "right",
         "verticalAlign": "middle",
         "layout": "vertical",
-        "itemStyle": {"fontSize": "32px", "fontWeight": "normal"},
-        "symbolHeight": 28,
-        "symbolWidth": 28,
-        "symbolRadius": 14,
-        "itemMarginTop": 18,
-        "itemMarginBottom": 18,
-        "x": -30,
-        "title": {"text": "Regions", "style": {"fontSize": "36px", "fontWeight": "bold"}},
+        "itemStyle": {"fontSize": "24px", "color": INK_SOFT},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 2,
+        "symbolHeight": 24,
+        "symbolWidth": 24,
+        "symbolRadius": 12,
+        "itemMarginTop": 16,
+        "itemMarginBottom": 16,
+        "x": -50,
+        "title": {"text": "Chromosomes", "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK}},
     },
     "plotOptions": {"dependencywheel": {"showInLegend": False}, "pie": {"showInLegend": False}},
+    "colors": OKABE_ITO,
     "series": [
         {
             "type": "dependencywheel",
-            "name": "Trade Flow",
+            "name": "Connections",
             "keys": ["from", "to", "weight"],
             "data": connections,
             "nodes": nodes,
-            "size": "78%",
-            "center": ["42%", "50%"],
+            "size": "72%",
+            "center": ["35%", "50%"],
             "dataLabels": {
                 "enabled": True,
-                "style": {"fontSize": "40px", "fontWeight": "bold", "textOutline": "5px white"},
-                "distance": 50,
+                "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK, "textOutline": f"3px {PAGE_BG}"},
+                "distance": 30,
                 "rotationMode": "circular",
-                "padding": 8,
+                "padding": 6,
             },
-            "nodeWidth": 45,
+            "nodeWidth": 50,
+            "nodeColor": "#ffffff",
         },
         {
             "type": "pie",
-            "name": "GDP Share",
+            "name": "Expression",
             "data": inner_track_data,
-            "size": "28%",
-            "innerSize": "20%",
-            "center": ["42%", "50%"],
+            "size": "32%",
+            "innerSize": "24%",
+            "center": ["35%", "50%"],
             "showInLegend": False,
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.percentage:.0f}%",
-                "distance": -25,
-                "style": {"fontSize": "22px", "fontWeight": "bold", "color": "#ffffff", "textOutline": "2px #333333"},
+                "distance": -20,
+                "style": {"fontSize": "24px", "fontWeight": "bold", "color": INK, "textOutline": f"2px {PAGE_BG}"},
             },
-            "tooltip": {"pointFormat": "<b>{point.name}</b>: {point.y}% of World GDP"},
+            "tooltip": {"pointFormat": "<b>{point.name}</b>: {point.y:.1f}%"},
         },
     ]
     + [
         {
             "type": "pie",
-            "name": region_full_names[i],
-            "data": [{"name": region_full_names[i], "y": 1, "color": colors[i]}],
+            "name": chromosomes[i],
+            "data": [{"name": chromosomes[i], "y": 1, "color": chr_colors[i]}],
             "size": 0,
             "showInLegend": True,
             "dataLabels": {"enabled": False},
         }
-        for i in range(n_regions)
+        for i in range(n_chrs)
     ],
 }
 
-# Download Highcharts JS and sankey module (dependency wheel requires sankey)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-sankey_url = "https://code.highcharts.com/modules/sankey.js"
-dependency_wheel_url = "https://code.highcharts.com/modules/dependency-wheel.js"
+# Download Highcharts JS modules from CDN
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/highcharts.js"
+sankey_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/modules/sankey.min.js"
+dependency_wheel_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/modules/dependency-wheel.min.js"
 
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
@@ -170,7 +169,7 @@ with urllib.request.urlopen(sankey_url, timeout=30) as response:
 with urllib.request.urlopen(dependency_wheel_url, timeout=30) as response:
     dependency_wheel_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+# Generate HTML with inline scripts for PNG export
 chart_config_json = json.dumps(chart_config)
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -180,7 +179,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{sankey_js}</script>
     <script>{dependency_wheel_js}</script>
 </head>
-<body style="margin:0; background-color: #ffffff;">
+<body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>
         Highcharts.chart('container', {chart_config_json});
@@ -188,30 +187,10 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save HTML for interactive version
-interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>circos-basic · highcharts · pyplots.ai</title>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/sankey.js"></script>
-    <script src="https://code.highcharts.com/modules/dependency-wheel.js"></script>
-</head>
-<body style="margin:0; background-color: #ffffff;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>
-        Highcharts.chart('container', {chart_config_json});
-    </script>
-</body>
-</html>"""
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(interactive_html)
 
 # Setup Chrome for screenshot
 chrome_options = Options()
@@ -219,12 +198,36 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--hide-scrollbars")
 chrome_options.add_argument("--window-size=3600,3600")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3600, "height": 3600, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
+
+# Generate HTML with CDN links for interactive version
+interactive_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>circos-basic · highcharts · anyplot.ai</title>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/sankey.js"></script>
+    <script src="https://code.highcharts.com/modules/dependency-wheel.js"></script>
+</head>
+<body style="margin:0; background-color: {PAGE_BG};">
+    <div id="container" style="width: 100%; height: 100vh;"></div>
+    <script>
+        Highcharts.chart('container', {chart_config_json});
+    </script>
+</body>
+</html>"""
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(interactive_html)

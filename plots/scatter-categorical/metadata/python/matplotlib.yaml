@@ -1,171 +1,177 @@
 library: matplotlib
+language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:37:25Z'
-updated: '2025-12-30T10:42:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594554566
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - alpha-blending
-  - edge-highlighting
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-12T13:05:10Z'
+generated_by: claude-haiku
+workflow_run: 25735717925
+issue: 2597
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of different marker shapes (circle, square, triangle) for additional
-    category distinction beyond color
-  - Clean, well-organized code following KISS principles
-  - Realistic Iris-like data scenario that is scientifically relevant and neutral
-  - White edge colors on markers improve visibility and separation
-  - Proper font sizing throughout for high-resolution output
+  - Perfect visual quality with all text explicitly sized and clearly readable in
+    both themes
+  - Excellent theme-adaptive styling with proper use of INK and INK_SOFT tokens
+  - Clean implementation with correct data mapping, legend labels, and axis units
+  - Strong element visibility with appropriate marker sizes (s=200) and alpha transparency
+    for data density
+  - Okabe-Ito palette compliance with brand green (#009E73) in primary series
+  - Marker shape variety (circles, squares, triangles) adds visual distinction beyond
+    color
+  - Good code quality with KISS structure, deterministic seeding, and idiomatic matplotlib
+    usage
   weaknesses:
-  - Library features could be more distinctive - matplotlib offers patheffects, custom
-    marker paths, or gradient fills that are not utilized
-  - Yellow markers with white background could have slightly better contrast
-  image_description: The plot shows a categorical scatter plot with three distinct
-    species groups displayed using different colors and marker shapes. Species A (blue
-    circles) appears in the lower-left cluster with petal lengths ~1-2 cm and widths
-    ~0.1-0.5 cm. Species B (yellow/gold squares) occupies the middle region with petal
-    lengths ~3-5 cm and widths ~1-1.8 cm. Species C (teal triangles) forms the upper-right
-    cluster with petal lengths ~4.5-7 cm and widths ~1.4-3.1 cm. The title reads "scatter-categorical
-    · matplotlib · pyplots.ai" at the top. Axis labels show "Petal Length (cm)" and
-    "Petal Width (cm)" with units. A legend in the upper-left clearly identifies the
-    three species. Grid lines are subtle with dashed style. The overall layout is
-    well-balanced with good use of the canvas space.
+  - Design Excellence could be elevated with stronger visual narrative or emphasis
+    (plot currently displays data without interpretive storytelling)
+  - DE-01 scores as well-configured default (4/8) rather than strong design - could
+    benefit from more distinctive aesthetic choices or custom refinements
+  - LM-02 limited to standard marker customization rather than distinctive matplotlib-specific
+    features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with clean appearance
+      Chrome: Title, axis labels ("Petal Length (cm)", "Petal Width (cm)"), and tick labels all in dark text and clearly readable against the light surface. Legend positioned upper-left with light frame and soft-gray text. Y-axis grid subtle at alpha=0.1.
+      Data: Species A (green circles, lower-left cluster), Species B (orange squares, middle cluster), Species C (blue triangles, upper-right cluster). All markers clearly distinguishable with white edges. Alpha=0.8 provides good visibility without excessive transparency.
+      Legibility verdict: PASS - all text readable, no overlap, clear visual hierarchy through spatial separation and color/marker encoding
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with appropriate contrast
+      Chrome: Title, axis labels, and tick labels all in light colors (white/light gray) and clearly readable against the dark surface. Legend frame dark with light edges, text in soft light-gray. Y-axis grid subtle and visible.
+      Data: Species A, B, and C colors IDENTICAL to light render (green #009E73, orange #D55E00, blue #0072B2). All markers equally visible with no dark-on-dark failures. No brand-green visibility issues.
+      Legibility verdict: PASS - excellent theme adaptation with no unreadable text, all chrome colors theme-correct, data colors preserved
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, legend at
-          16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both renders'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: No overlapping text elements; legend positioned clearly without collision
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size s=200 is appropriate for 120 points (40 per group), alpha=0.8
-          provides good visibility with slight transparency
+        comment: Marker size s=200 optimal for 120 data points; clear clustering visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue (#306998), yellow (#FFD43B), and teal (#2AA198) are distinguishable
-          and avoid red-green confusion. Different marker shapes (circle, square,
-          triangle) provide additional distinction. Minor deduction as yellow could
-          be slightly challenging against white background for some viewers
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend well-positioned
-          in upper-left without overlapping data
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Petal Length (cm)"
-          and "Petal Width (cm)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette with good contrast; marker shapes add distinction
+          beyond color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; legend integrated
+          near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Grid is subtle (alpha=0.3, dashed), legend well placed with framealpha=0.9.
-          Minor deduction: legend could have slightly more contrast/padding'
+        comment: Both axes labeled with units (cm); descriptive and complete
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito positions 1-3 correct; backgrounds #FAF8F1 light and #1A1A17
+          dark; theme-chrome correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured library default with thoughtful choices (marker shapes,
+          theme adaptation), but not publication-ready exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, legend frame styling
+          shows good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Spatial separation and visual hierarchy guide reader, but no interpretive
+          emphasis or narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct categorical scatter plot with distinct colors per category
+        comment: Correct scatter plot with categorical coloring
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y correctly assigned to continuous numeric variables, color
-          mapped to category
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct colors per category, legend included, varying marker shapes
-          for additional distinction, alpha transparency for overlaps
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: distinct colors, legend, colorblind-safe palette'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps colors/shapes to Species A, B, C
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "scatter-categorical · matplotlib · pyplots.ai"
+        comment: Title format correct; legend labels match data perfectly
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows three distinct categories with clear separation, demonstrates
-          correlation within groups. Minor deduction: could show overlapping groups
-          to demonstrate how colors distinguish overlapping data'
+        comment: 'Shows all aspects: three distinct species with different petal characteristics'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris-like petal measurements scenario is a classic, neutral, scientific
-          example
+        comment: Plant species with petal measurements - realistic, neutral, scientific
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Petal measurements are realistic (1-7 cm length, 0-3 cm width).
-          Minor deduction: the gap between Species A and B/C is quite large (1-2cm
-          to 3-5cm jump)'
+        comment: Petal length 0-7cm and width 0-3cm are plausible; proportions realistic
     code_quality:
       score: 10
       max: 10
@@ -175,40 +181,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear structure: imports → theme tokens → data → plot → styling
+          → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; all generation deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only three imports (os, matplotlib, numpy), all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, readable, appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
+        comment: Correct output naming (plot-{THEME}.png); current matplotlib API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct axes-based pattern; proper figure creation; good spine and
+          legend customization
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses standard scatter() with colors and markers. Could leverage matplotlib-specific
-          features like patheffects, custom markers, or colormaps more distinctively
+        comment: Uses marker shapes for distinction, but this is standard matplotlib
+          usage replicable in other libraries
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

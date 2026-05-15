@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-15
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,6 +15,12 @@ import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Population density by European country (synthetic data)
 np.random.seed(42)
@@ -45,22 +52,16 @@ map_data = [{"code": code.upper(), "name": name, "value": value} for code, name,
 
 # Create JavaScript configuration for Highmaps
 chart_config = {
-    "chart": {
-        "map": None,  # Will be set by topology
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "spacing": [80, 100, 80, 80],
-    },
+    "chart": {"map": None, "width": 4800, "height": 2700, "backgroundColor": PAGE_BG, "spacing": [80, 100, 80, 80]},
     "title": {
-        "text": "choropleth-basic \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "72px", "fontWeight": "bold"},
-        "y": 50,
+        "text": "choropleth-basic · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
+        "y": 40,
     },
     "subtitle": {
-        "text": "Population Density (people per km\u00b2)",
-        "style": {"fontSize": "48px", "color": "#666666"},
-        "y": 110,
+        "text": "Population Density (people per km²)",
+        "style": {"fontSize": "22px", "color": INK_SOFT},
+        "y": 90,
     },
     "mapNavigation": {"enabled": False},
     "colorAxis": {
@@ -74,24 +75,27 @@ chart_config = {
             [0.8, "#2171b5"],
             [1, "#08306b"],
         ],
-        "labels": {"style": {"fontSize": "36px"}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "title": {"text": "Density (per km²)", "style": {"fontSize": "22px", "color": INK}},
     },
     "legend": {
         "layout": "vertical",
         "align": "right",
         "verticalAlign": "middle",
         "floating": False,
-        "backgroundColor": "rgba(255, 255, 255, 0.95)",
-        "padding": 30,
-        "symbolHeight": 700,
-        "symbolWidth": 50,
-        "itemStyle": {"fontSize": "36px"},
-        "title": {"text": "Density<br/>(per km\u00b2)", "style": {"fontSize": "40px", "fontWeight": "bold"}},
+        "backgroundColor": ELEVATED_BG,
+        "padding": 24,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
+        "symbolHeight": 400,
+        "symbolWidth": 28,
+        "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+        "title": {"text": "Density<br/>(per km²)", "style": {"fontSize": "22px", "color": INK}},
     },
     "tooltip": {
-        "style": {"fontSize": "36px"},
+        "style": {"fontSize": "18px", "color": INK},
         "headerFormat": "",
-        "pointFormat": "<b>{point.name}</b><br/>Density: {point.value} per km\u00b2",
+        "pointFormat": "<b>{point.name}</b><br/>Density: {point.value} per km²",
     },
     "series": [
         {
@@ -103,11 +107,15 @@ chart_config = {
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.name}",
-                "style": {"fontSize": "24px", "fontWeight": "normal", "textOutline": "3px white"},
+                "style": {
+                    "fontSize": "16px",
+                    "color": INK,
+                    "textOutline": "2px #FFFFFF" if THEME == "light" else "2px #1A1A17",
+                },
             },
-            "borderColor": "#ffffff",
-            "borderWidth": 3,
-            "nullColor": "#e0e0e0",
+            "borderColor": INK_SOFT,
+            "borderWidth": 2,
+            "nullColor": "#e8e8e8" if THEME == "light" else "#5a5a57",
         }
     ],
 }
@@ -119,10 +127,13 @@ chart_json = json.dumps(chart_config)
 highcharts_url = "https://code.highcharts.com/maps/highmaps.js"
 europe_url = "https://code.highcharts.com/mapdata/custom/europe.topo.json"
 
-with urllib.request.urlopen(highcharts_url, timeout=60) as response:
+headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.highcharts.com/"}
+req_hc = urllib.request.Request(highcharts_url, headers=headers)
+with urllib.request.urlopen(req_hc, timeout=60) as response:
     highmaps_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(europe_url, timeout=60) as response:
+req_eu = urllib.request.Request(europe_url, headers=headers)
+with urllib.request.urlopen(req_eu, timeout=60) as response:
     europe_topo = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -132,7 +143,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highmaps_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         var topology = {europe_topo};
@@ -144,28 +155,8 @@ html_content = f"""<!DOCTYPE html>
 </html>"""
 
 # Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/maps/highmaps.js"></script>
-    <script src="https://code.highcharts.com/mapdata/custom/europe.topo.json"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>
-        fetch('https://code.highcharts.com/mapdata/custom/europe.topo.json')
-            .then(response => response.json())
-            .then(topology => {{
-                var chartConfig = {chart_json};
-                chartConfig.chart.map = topology;
-                Highcharts.mapChart('container', chartConfig);
-            }});
-    </script>
-</body>
-</html>"""
-    f.write(standalone_html)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -181,8 +172,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(6)  # Wait for chart to render (maps need more time)
-driver.save_screenshot("plot.png")
+time.sleep(6)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()

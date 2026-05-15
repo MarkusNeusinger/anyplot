@@ -1,13 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 subplot-grid: Subplot Grid Layout
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 98/100 | Updated: 2026-05-13
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+BRAND = OKABE_ITO[0]
+SECONDARY = OKABE_ITO[1]
 
 # Data
 np.random.seed(42)
@@ -45,7 +59,7 @@ scatter = (
     .encode(
         x=alt.X("Units Sold:Q", title="Units Sold"),
         y=alt.Y("Revenue ($K):Q", title="Revenue ($K)"),
-        color=alt.value("#306998"),
+        color=alt.value(BRAND),
         tooltip=["Product", "Units Sold", "Revenue ($K)"],
     )
     .properties(width=750, height=420, title=alt.Title("Product Performance", fontSize=22, anchor="start"))
@@ -60,7 +74,7 @@ line = (
         y=alt.Y("Value:Q", title="Sales ($K)", scale=alt.Scale(zero=False)),
         color=alt.Color(
             "Metric:N",
-            scale=alt.Scale(domain=["Sales", "Target"], range=["#306998", "#FFD43B"]),
+            scale=alt.Scale(domain=["Sales", "Target"], range=[BRAND, SECONDARY]),
             legend=alt.Legend(title="Metric", titleFontSize=16, labelFontSize=14),
         ),
         strokeDash=alt.StrokeDash(
@@ -77,7 +91,7 @@ bar = (
     .encode(
         x=alt.X("Region:N", title="Region", axis=alt.Axis(labelAngle=0)),
         y=alt.Y("Performance:Q", title="Performance Score", scale=alt.Scale(domain=[0, 100])),
-        color=alt.condition(alt.datum.Performance >= 80, alt.value("#306998"), alt.value("#FFD43B")),
+        color=alt.condition(alt.datum.Performance >= 80, alt.value(BRAND), alt.value(SECONDARY)),
         tooltip=["Region", "Performance"],
     )
     .properties(width=750, height=420, title=alt.Title("Regional Performance", fontSize=22, anchor="start"))
@@ -90,7 +104,7 @@ histogram = (
     .encode(
         x=alt.X("Order Value ($):Q", bin=alt.Bin(maxbins=25), title="Order Value ($)"),
         y=alt.Y("count():Q", title="Frequency"),
-        color=alt.value("#306998"),
+        color=alt.value(BRAND),
         tooltip=[alt.Tooltip("count()", title="Count")],
     )
     .properties(width=750, height=420, title=alt.Title("Order Value Distribution", fontSize=22, anchor="start"))
@@ -102,13 +116,32 @@ row2 = alt.hconcat(bar, histogram, spacing=60)
 
 chart = (
     alt.vconcat(row1, row2, spacing=60)
-    .properties(title=alt.Title("subplot-grid · altair · pyplots.ai", fontSize=28, anchor="middle", offset=20))
-    .configure_axis(labelFontSize=16, titleFontSize=18, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
-    .configure_title(fontSize=22)
+    .properties(
+        background=PAGE_BG,
+        title=alt.Title("subplot-grid · altair · anyplot.ai", fontSize=28, anchor="middle", offset=20),
+    )
+    .configure_axis(
+        labelFontSize=16,
+        titleFontSize=18,
+        gridOpacity=0.10,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_title(color=INK, fontSize=22)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=16,
+        labelFontSize=14,
+    )
 )
 
 # Save outputs
-# Target: 4800 × 2700 px (width=1600, height=900 at scale_factor=3)
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

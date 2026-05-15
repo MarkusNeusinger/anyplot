@@ -1,169 +1,176 @@
 library: letsplot
+language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:50:31Z'
-updated: '2025-12-30T18:03:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602454238
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep:
-  - rolling-window
-  styling:
-  - alpha-blending
+updated: '2026-05-13T13:36:45Z'
+generated_by: claude-haiku
+workflow_run: 25801401757
+issue: 2786
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent dual-layer visualization clearly distinguishing raw data from smoothed
-    trend
-  - Appropriate use of alpha/size differentiation to show raw data as secondary and
-    rolling average as primary
-  - Realistic temperature sensor scenario with seasonal variation matches specification
-    perfectly
-  - Clean ggplot2-style grammar of graphics implementation
-  - Proper legend placement at top with clear labeling including window size
+  - Excellent theme adaptation with identical data colors and properly flipped chrome
+    between light and dark
+  - Strong visual hierarchy with thin semi-transparent line vs. thick smooth line
+    effectively distinguishing raw vs. smoothed data
+  - Perfect text legibility in both themes with no dark-on-dark or light-on-light
+    issues
+  - Complete spec compliance with all required features present and correctly labeled
+  - Deterministic reproducibility with explicit random seed
   weaknesses:
-  - Legend appears as three separate legend groups (color, alpha, size) instead of
-    a unified legend - consider using guides() to merge them
-  - Raw data line could be slightly thicker for better visibility while maintaining
-    transparency
-  image_description: The plot displays a time series of simulated daily sensor temperature
-    readings spanning January to July 2024. The raw data is shown as a semi-transparent
-    blue line with noticeable day-to-day volatility ranging from approximately 12°C
-    to 33°C. Overlaid is a thick yellow/gold line representing the 14-Day Rolling
-    Average, which smoothly reveals the underlying seasonal warming trend (rising
-    from ~16°C in January to ~26°C in May, then declining). The title "line-timeseries-rolling
-    · letsplot · pyplots.ai" appears at the top. The x-axis shows "Date" with monthly
-    labels (Jan-Jul), and the y-axis shows "Temperature (°C)". A legend at the top
-    clearly distinguishes "Raw Data" from "14-Day Rolling Avg". Grid lines are subtle
-    gray. The rolling average line is shorter than the raw data (starts mid-January)
-    as expected due to the window requirement.
+  - 'Palette violation: first series uses #306998 (blue) instead of required #009E73
+    (brand green)'
+  - 'Output files not theme-suffixed: saves plot.png instead of plot-{THEME}.png;
+    doesn''t read ANYPLOT_THEME environment variable'
+  - 'Generic design without distinctive visual refinement: no spine removal, standard
+    theme_minimal defaults'
+  - 'Limited library mastery: no letsplot-specific features beyond standard ggplot'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1 — correct theme surface
+      Chrome: Title "line-timeseries-rolling · letsplot · anyplot.ai" is dark and readable (24pt). Axis labels "Date" and "Temperature (°C)" are dark and clear (20pt). Tick labels are readable (16pt). Grid lines are subtle but visible.
+      Data: Thin cyan/teal line represents Raw Data (semi-transparent), thick orange line represents 14-Day Rolling Avg (solid). Both colors are clearly distinguishable. Legend at top shows both series correctly labeled.
+      Legibility verdict: PASS — all text is readable, no light-on-light issues, data elements distinct from background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, and tick labels are light and readable against dark background. No dark-on-dark text issues detected. Grid lines are subtly visible.
+      Data: Cyan/teal thin line (Raw Data) and orange thick line (14-Day Rolling Avg) are identical in color to the light render — only chrome has flipped from dark text/light grid to light text/dark grid. This is correct theme adaptation.
+      Legibility verdict: PASS — all text is readable, no dark-on-dark failures, colors are identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend all clearly readable at
-          full size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text sizes (title 24pt, axis labels 20pt, ticks 16pt) readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements. Clear separation between series.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Raw data line is appropriately thin and semi-transparent, rolling
-          average is prominent; minor deduction as raw data could be slightly more
-          visible
+        comment: Both lines clearly distinguishable. Thin vs. thick effectively shows
+          data emphasis.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" includes units, "Date" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Cyan and orange are distinct. No colorblind accessibility issues
+          with color contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions (4800×2700 landscape). Nothing cut off. Generous
+          spacing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, but legend shows 3 separate rows instead of merged
-          legend entries
+        comment: Title shows spec-id, library, domain. Axes labeled with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL: Code uses #306998 (blue) and #FFD43B (yellow) instead
+          of required Okabe-Ito starting with #009E73 (brand green)'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Custom colors/alpha/sizes applied, but palette violation and generic
+          approach limit sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Theme_minimal() applied with subtle grid, but no spine removal or
+          enhanced whitespace management
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: thin raw vs. thick smoothed effectively
+          guides viewer to trend identification'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line chart with rolling average overlay
+        comment: Correct time series with rolling average overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, temperature values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Raw data with lighter style, prominent rolling average, legend with
-          window size, grid lines present
-      - id: SC-04
-        name: Data Range
+        comment: Raw data, rolling average, legend, grid, title all present as spec
+          requires
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=date, Y=temperature correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Correctly labels "Raw Data" and "14-Day Rolling Avg"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: `line-timeseries-rolling · letsplot · pyplots.ai`'
+        comment: Title shows spec-id/library/domain. Window size (14-day) in legend.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation, noise, and underlying trend; could show
-          more extreme outliers to demonstrate smoothing effect better
+        comment: Shows both raw observations and rolling average clearly
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature sensor readings is a perfect, neutral real-world scenario
+        comment: Temperature data with seasonal variation and warming trend is plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for temperature (12-33°C), though 180 days from
-          Jan 1st would end in late June, not July
+        comment: Range 12-34°C sensible for seasonal sensor data
     code_quality:
       score: 9
       max: 10
@@ -173,41 +180,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Simple code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used and all necessary
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity, no faked UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as `plot.png` but uses `path="."` which works, though unconventional
-    library_features:
-      score: 3
-      max: 5
+        comment: 'ERROR: Saves plot.png instead of plot-{THEME}.png. Doesn''t read
+          ANYPLOT_THEME environment variable.'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot2-style grammar with scale_manual functions, theme customization,
-          and proper ggsave with scale parameter; could leverage more interactive
-          features
+        comment: Standard ggplot + geom_line + manual scales. Idiomatic but not sophisticated.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: No letsplot-specific features beyond basic ggplot. Generic approach.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending

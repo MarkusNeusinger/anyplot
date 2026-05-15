@@ -1,11 +1,11 @@
 spec_id: point-basic
 title: Point Estimate Plot
 created: '2025-12-30T09:06:00Z'
-updated: '2025-12-30T09:06:00Z'
+updated: '2026-05-11T00:00:00Z'
 issue: 2551
 suggested: claude-code
 tags:
-  plot_type: [point, errorbar]
+  plot_type: [point]
   domain: [statistics, research]
   features: [confidence-interval, uncertainty, comparison]
   data_type: [categorical, numeric]

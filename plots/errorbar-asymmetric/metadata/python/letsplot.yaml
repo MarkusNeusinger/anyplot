@@ -1,168 +1,166 @@
 library: letsplot
+language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:48:53Z'
-updated: '2025-12-30T17:57:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602452663
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/letsplot/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - grid-styling
+updated: '2026-05-13T07:43:18Z'
+generated_by: claude-haiku
+workflow_run: 25785054436
+issue: 2781
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent visual clarity with well-sized elements and readable text at all levels
-  - Clear demonstration of asymmetric error bars with visible caps
-  - Proper title format and informative caption explaining the error bounds
-  - Clean, KISS-compliant code structure following lets-plot conventions
-  - Good use of theme_minimal() with subtle grid customization
-  - Generates both PNG and HTML outputs as expected for lets-plot
+  - 'Perfect visual quality: all text sizes explicitly set and readable in both light
+    and dark themes'
+  - Correct and precise palette implementation with Okabe-Ito colors and theme-adaptive
+    chrome
+  - Complete spec compliance with all required asymmetric error bar features
+  - Realistic, well-contextualized quarterly sales data with meaningful error asymmetry
+  - Clean, Pythonic code structure with idiomatic letsplot usage
+  - Interactive tooltips demonstrate library mastery
   weaknesses:
-  - The interactive HTML version does not include tooltips to show exact values on
-    hover
-  - Grid/Legend score reduced because there is no formal legend element (caption serves
-    the purpose but is not a legend)
-  image_description: The plot displays a quarterly sales performance visualization
-    with asymmetric error bars. Four data points (Q1-Q4) are shown as blue circular
-    markers on a clean white background with subtle gray gridlines. Each quarter has
-    vertical error bars with horizontal caps at both ends - the asymmetry is clearly
-    visible where upper and lower bars have different lengths. Q4 shows the largest
-    upside potential (error bar extending to ~127), while Q3 shows the largest downside
-    risk (extending down to ~66). The title "errorbar-asymmetric · letsplot · pyplots.ai"
-    appears at the top in bold. The y-axis is labeled "Sales (thousands USD)" and
-    x-axis shows "Quarter". A caption at the bottom right explains "Error bars represent
-    10th-90th percentile forecast range". The color scheme uses a consistent blue
-    (#306998) for all elements.
+  - 'Design excellence is generic: uses library defaults without custom styling'
+  - Visual refinement relies entirely on theme_minimal() and theme tokens
+  - Data storytelling is implicit; no visual hierarchy or emphasis to guide viewer
+    focus
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "errorbar-asymmetric · letsplot · anyplot.ai" (bold, 24pt), Y-axis "Sales (thousands USD)" (20pt, dark), X-axis "Quarter" (20pt, dark), tick labels Q1-Q4 (16pt, dark), caption (14pt, dark). All text is dark and clearly readable against light background. Grid lines are subtle and visible.
+      Data: Four data points rendered in Okabe-Ito green (#009E73). Error bars display with visible horizontal caps showing asymmetric magnitudes: Q1 (77-100), Q2 (87-110), Q3 (66-84), Q4 (98-127). Marker size (6) is appropriate for 4-point dataset.
+      Legibility verdict: PASS - All text fully readable, excellent contrast, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, and tick labels rendered in light color (#F0EFE8/#B8B7B0). All text is clearly readable against dark background. Grid lines are subtle but visible with light opacity.
+      Data: Data colors are identical to light render - same Okabe-Ito green (#009E73) for points and error bars. Error bar caps and marker outlines maintain visibility.
+      Legibility verdict: PASS - All text light-colored and readable, no dark-on-dark failures, excellent theme adaptation. Grid and data elements distinguish well from background.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold and large (~24pt), axis labels clearly readable (~20pt),
-          tick labels appropriately sized (~16pt)
+        comment: 'All sizes explicit: title 24pt, labels 20pt, ticks 16pt; perfectly
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: Zero overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (size=6), error bars have good thickness (size=1.5),
-          caps clearly visible (width=0.3)
+        comment: Markers and error bars optimally visible for 4-point dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme, no colorblind issues, good contrast against
-          white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, minor excess whitespace at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units "Sales (thousands USD)", X-axis appropriately
-          labeled "Quarter"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance with generous margins and appropriate plot fill
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), but no legend present - the caption serves
-          as explanation but a formal legend would be better
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 and #1A1A17; theme chrome
+          correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; relies on theme_minimal() defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed with variation but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct asymmetric error bar plot with points and error bars
+        comment: Correct asymmetric error bar scatter plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=quarters (categorical), Y=sales values, error bounds correctly
-          mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has visible caps on error bars, includes caption explaining what
-          bounds represent (10th-90th percentile)
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: central points, asymmetric errors, caps, annotation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range [50, 140] shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Caption accurately describes the asymmetric bounds
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "errorbar-asymmetric · letsplot · pyplots.ai"'
+        comment: Correct title format; caption explains bounds
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear asymmetry with different upper/lower errors across quarters;
-          Q2 has large upside, Q3 has large downside - demonstrates the key feature
-          well but could show more extreme asymmetry
+        comment: 'Shows all aspects: varying asymmetry across quarters'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly sales forecast with percentile ranges is a realistic business
-          scenario
+        comment: Real business scenario with plausible confidence intervals
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Sales values (78-105k) are plausible; error ranges are reasonable
-          but Q4's upper bound of 127k seems high
+        comment: Values and proportions are factually plausible
     code_quality:
       score: 10
       max: 10
@@ -172,41 +170,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Clean import-data-plot-save structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) even though data is deterministic
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct PNG and HTML output
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ggplot2-style grammar with geom_errorbar and geom_point,
-          theme customization, but could leverage more lets-plot specific features
-          like tooltips for the interactive HTML version
+        comment: Expert use of ggplot + geom_* API with theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses letsplot's interactive tooltips; could leverage more distinctive
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

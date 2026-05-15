@@ -1,170 +1,177 @@
 library: letsplot
+language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:57:55Z'
-updated: '2025-12-31T11:08:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617485300
+updated: '2026-05-14T23:01:46Z'
+generated_by: claude-haiku
+workflow_run: 25890079491
 issue: 2992
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - statsmodels
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of gggrid() to create vertically stacked decomposition panels
-  - Clean, colorblind-safe color palette with distinct colors for each component
-  - Proper use of statsmodels seasonal_decompose for actual decomposition
-  - Good realistic temperature scenario with clear seasonal patterns
-  - Correct title format following pyplots.ai conventions
-  - Properly handles NaN values from decomposition by using dropna()
+  - Perfect theme adaptation with no dark-on-dark or light-on-light readability failures
+  - Data colors follow Okabe-Ito palette with correct brand green as first series
+  - Clear decomposition storytelling with intuitive stacked subplot layout
+  - Proper statsmodels implementation with scientifically sound additive decomposition
+  - Clean, reproducible code with deterministic seed and proper output format
   weaknesses:
-  - Grid lines are too subtle and barely visible - could increase alpha for better
-    readability
-  - File handling requires moving files from lets-plot-images subdirectory (workaround
-    needed)
-  image_description: The plot displays a time series decomposition with four vertically
-    stacked panels showing monthly temperature data over 5 years (2019-2024). The
-    **Original Series** (blue line) shows temperature fluctuations ranging from ~7°C
-    to ~30°C with clear seasonal patterns. The **Trend** component (red line) shows
-    a gradual warming from ~15°C to ~18°C. The **Seasonal** component (green line)
-    displays a repeating annual cycle oscillating between approximately -11°C and
-    +11°C. The **Residual** (purple line) shows random noise centered around 0, ranging
-    from about -2°C to +3°C. All panels share a common x-axis showing dates (Jul,
-    Oct, Jan, Apr pattern), with the main title "timeseries-decomposition · letsplot
-    · pyplots.ai" at the top. Each panel has "Temperature (°C)" on the y-axis and
-    clear component labels. Light grid lines aid readability.
+  - Design could be more sophisticated with distinctive visual refinements beyond
+    defaults
+  - Limited exploration of letsplot-specific features like interactive tooltips or
+    advanced aesthetics
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with excellent contrast
+      Chrome: Bold 24pt title, dark gray axis labels and ticks — all clearly readable against light surface
+      Data: Four lines (teal #009E73, orange #D55E00, blue #0072B2, reddish-purple #CC79A7) clearly visible with subtle grid
+      Layout: Four balanced subplots stacked vertically with "Temperature (°C)" y-label and rotated date labels on final subplot
+      Legibility verdict: PASS — no unreadable elements, no color conflicts, proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with proper dark theme surface
+      Chrome: White/cream titles and labels, light gray ticks — all clearly readable. NO dark-on-dark failures detected.
+      Data: Colors identical to light render (teal, orange, blue, reddish-purple) — only chrome has flipped as expected
+      Layout: Same subplot arrangement with light text on dark background, grid visible and appropriately subtle
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, proper theme-adaptive handling
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is readable; title ~24pt, subplot titles ~20pt, axis labels
-          and ticks clearly visible, though axis tick text could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; x-axis labels are well-spaced
+        comment: 'All font sizes explicitly set: title 24pt, labels 16pt, ticks 14pt;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; date labels angled on final plot to prevent
+          collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are clearly visible with good thickness (size=1.2), though
-          could be slightly thicker for the scaled output
+        comment: Lines sized at 1.2; optimal for 60 monthly data points; clearly distinguishable
+          in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent colorblind-safe palette: blue (#306998), red (#DC2626),
-          green (#059669), purple (#7C3AED) - all distinguishable'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas; four panels fill the space well with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All y-axes labeled "Temperature (°C)" with units; x-axis labeled
-          "Date"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette; colorblind-safe; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions; four subplots fill canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Axis labels descriptive with units; subplot titles clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito correct; backgrounds #FAF8F1 and #1A1A17; theme-adapted
+          text in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is present but very subtle (almost invisible); no legend needed
-          for this plot type
+        comment: Well-configured defaults; lacks distinctive design touches or custom
+          refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Some refinement: hidden axis labels on repeated plots, angled labels,
+          subtle grid; minimal customization'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but components given equal treatment; no visual
+          hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series decomposition with all four components
+        comment: 'Four vertically stacked subplots: Original, Trend, Seasonal, Residual'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, values on y-axis for all panels
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All four components present: Original, Trend, Seasonal, Residual'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: consistent time axis, clear labels, statsmodels decomposition,
+          grid lines'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on x-axis, temperature on y-axis; all data visible across 60-month
+          span
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type (components labeled via subplot titles)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "timeseries-decomposition · letsplot · pyplots.ai"'
+        comment: Title format correct; component labels clearly identify subplots
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear trend, seasonal pattern, and residual noise; seasonal
-          cycle is well-defined; could show more residual variation
+        comment: 'Demonstrates all decomposition aspects: trend, seasonality, residual
+          noise'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature data over 5 years is a classic, neutral, and comprehensible
-          scenario for time series decomposition
+        comment: 'Real-world scenario: monthly temperature data; neutral, scientific
+          domain'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature values are realistic (7-30°C annual range), though the
-          3°C warming trend over 5 years is slightly aggressive
+        comment: Temperature range 15-18°C realistic; seasonal amplitude and trend
+          plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +179,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern; uses gggrid for composition
+        comment: 'Linear flow: imports, data, decomposition, plots, save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png but requires file moving from lets-plot-images
-          subdirectory
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct naming
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses gggrid for multi-panel layout and theme_minimal(); could leverage
-          more lets-plot specific features like tooltips or interactive elements
+        comment: Expert use of ggplot + geom + theme pattern; proper ggsave with scale
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses gggrid() for subplot arrangement; somewhat distinctive to letsplot
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - time-series
+  dataprep: []
+  styling: []

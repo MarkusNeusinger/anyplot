@@ -1,12 +1,12 @@
-""" pyplots.ai
+""" anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-13
 """
 
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -18,21 +18,28 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Position 1 — always first series
+OI_SECONDARY = "#D55E00"  # Position 2
+
 # Data - Plant growth measurements under different light conditions
 np.random.seed(42)
 categories = ["Low Light", "Medium Light", "High Light", "Full Sun"]
 
 # Generate realistic plant growth data (cm) with different distributions
 data_by_category = {
-    "Low Light": np.random.normal(12, 3, 40),  # Lower growth, moderate spread
-    "Medium Light": np.random.normal(22, 4, 45),  # Medium growth
-    "High Light": np.random.normal(35, 5, 50),  # Higher growth, more variation
-    "Full Sun": np.concatenate(
-        [  # Highest growth with outliers
-            np.random.normal(42, 4, 45),
-            np.array([20, 22, 58, 60]),  # Some outliers
-        ]
-    ),
+    "Low Light": np.random.normal(12, 3, 40),
+    "Medium Light": np.random.normal(22, 4, 45),
+    "High Light": np.random.normal(35, 5, 50),
+    "Full Sun": np.concatenate([np.random.normal(42, 4, 45), np.array([20, 22, 58, 60])]),
 }
 
 # Calculate box plot statistics for each category
@@ -52,7 +59,6 @@ scatter_data = []
 for i, cat in enumerate(categories):
     values = data_by_category[cat]
     for val in values:
-        # Add jitter to x position (-0.2 to 0.2)
         jitter = np.random.uniform(-0.2, 0.2)
         scatter_data.append([i + jitter, float(val)])
 
@@ -65,37 +71,45 @@ chart.options.chart = {
     "type": "boxplot",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 200,
     "spacingBottom": 50,
-    "style": {"fontFamily": "Arial, sans-serif"},
+    "style": {"fontFamily": "Arial, sans-serif", "color": INK},
 }
 
 # Title
 chart.options.title = {
-    "text": "cat-box-strip · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "cat-box-strip · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
 # X-axis
 chart.options.x_axis = {
     "categories": categories,
-    "title": {"text": "Light Condition", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Light Condition", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Plant Growth (cm)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
-    "gridLineColor": "#e0e0e0",
+    "title": {"text": "Plant Growth (cm)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
     "gridLineWidth": 1,
 }
 
 # Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "28px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "align": "right",
     "verticalAlign": "top",
     "layout": "vertical",
@@ -103,53 +117,43 @@ chart.options.legend = {
     "y": 100,
 }
 
-# Plot options
+# Plot options with Okabe-Ito colors
 chart.options.plot_options = {
     "boxplot": {
-        "fillColor": "rgba(48, 105, 152, 0.3)",
-        "color": "#306998",
+        "fillColor": "rgba(0, 158, 115, 0.15)",
+        "color": BRAND,
         "lineWidth": 3,
         "medianWidth": 5,
-        "medianColor": "#FFD43B",
+        "medianColor": OI_SECONDARY,
         "stemWidth": 3,
-        "stemColor": "#306998",
+        "stemColor": BRAND,
         "whiskerWidth": 4,
-        "whiskerColor": "#306998",
+        "whiskerColor": BRAND,
         "whiskerLength": "50%",
     },
-    "scatter": {
-        "marker": {
-            "radius": 10,
-            "symbol": "circle",
-            "fillColor": "rgba(255, 212, 59, 0.7)",
-            "lineWidth": 2,
-            "lineColor": "#FFD43B",
-        }
-    },
+    "scatter": {"marker": {"radius": 8, "symbol": "circle", "fillColor": BRAND, "lineWidth": 1, "lineColor": PAGE_BG}},
 }
 
 # Add box plot series
 box_series = BoxPlotSeries()
 box_series.name = "Distribution Statistics"
 box_series.data = box_data
-box_series.color = "#306998"
+box_series.color = BRAND
 chart.add_series(box_series)
 
 # Add scatter series for strip plot
 scatter_series = ScatterSeries()
 scatter_series.name = "Individual Measurements"
 scatter_series.data = scatter_data
-scatter_series.color = "#FFD43B"
+scatter_series.color = BRAND
 chart.add_series(scatter_series)
 
-# Download Highcharts JS files
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Load Highcharts JS files from npm installation
+with open("/tmp/node_modules/highcharts/highcharts.js", "r", encoding="utf-8") as f:
+    highcharts_js = f.read()
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+with open("/tmp/node_modules/highcharts/highcharts-more.js", "r", encoding="utf-8") as f:
+    highcharts_more_js = f.read()
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -160,20 +164,20 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+# Write HTML file
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 # Setup Chrome for screenshot
 chrome_options = Options()
@@ -185,8 +189,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()

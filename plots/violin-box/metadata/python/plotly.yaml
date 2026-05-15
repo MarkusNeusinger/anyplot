@@ -1,167 +1,182 @@
 library: plotly
+language: python
 specification_id: violin-box
 created: '2025-12-30T11:23:43Z'
-updated: '2025-12-30T11:36:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595336413
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-box/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-box/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-12T15:24:25Z'
+generated_by: claude-haiku
+workflow_run: 25743952669
+issue: 2646
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent demonstration of bimodal distribution in Online group showcasing violin
-    plot capability
-  - Clean embedded box plots with visible median, quartiles, and whiskers
-  - Mean lines (red) add extra statistical information beyond spec requirements
-  - Realistic education scenario with plausible test score distributions
-  - Proper output sizing (4800x2700) with readable fonts
-  - Both PNG and interactive HTML outputs provided
+  - Perfect visual quality with explicit font sizing and complete theme adaptation
+  - 'Correct Okabe-Ito palette with all four series in canonical order (#009E73, #D55E00,
+    #0072B2, #CC79A7)'
+  - Excellent data quality with realistic teaching method scenario showing diverse
+    distribution shapes and variability patterns
+  - Flawless spec compliance with all required features (violin, box plot, median
+    line, quartiles, whiskers, outliers)
+  - Clean, idiomatic Plotly code with proper reproducibility (seed=42) and theme-aware
+    styling
+  - Both light and dark renders properly theme-adapted with no legibility issues in
+    either render
   weaknesses:
-  - Grid alpha at 0.1 makes gridlines very faint; could use 0.2-0.3 for better readability
-  - Outlier markers are small (size 8); increasing to 10-12 would improve visibility
-  - Yellow color for Interactive group may have reduced contrast for some colorblind
-    users
-  image_description: 'The plot displays four violin plots with embedded box plots,
-    comparing test scores across four teaching methods: Traditional (blue), Interactive
-    (yellow), Online (light blue), and Hybrid (pink). Each violin shows the kernel
-    density estimate (KDE) of the distribution with a white box plot embedded inside
-    showing median, quartiles, and whiskers. The title "violin-box · plotly · pyplots.ai"
-    is centered at the top in black text. The y-axis shows "Test Score (points)" ranging
-    from 0 to ~105, and the x-axis shows "Teaching Method" with the four category
-    labels. The background is clean white with subtle horizontal gridlines. Outliers
-    are visible as small dots (one below Traditional around 30, one below Hybrid around
-    27). The Online group shows a bimodal distribution shape. Mean lines (red) are
-    visible within each violin.'
+  - 'Design Excellence could be elevated: consider custom spine removal or more sophisticated
+    visual hierarchy to push DE-01 beyond 4/8'
+  - 'Library Mastery LM-02 at 4/5: while Plotly''s embedded box plot feature is distinctive,
+    implementation is straightforward usage rather than innovative feature combination'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified in style guide
+      Chrome: Title "violin-box · plotly · anyplot.ai" in 28px dark text; X-axis "Teaching Method" in 22px dark text; Y-axis "Test Score (points)" in 22px dark text; all tick labels (Traditional, Interactive, Online, Hybrid, 0-100) in 18px dark text—all clearly readable against light surface
+      Data: Four violins in Okabe-Ito colors—Traditional in green (#009E73), Interactive in orange (#D55E00), Online in blue (#0072B2), Hybrid in pink (#CC79A7); embedded white box plots showing quartiles; colored median lines inside boxes; gray outlier points positioned centrally; KDE shapes clearly visible around boxes
+      Layout: Generous margins, centered title, proper axis spacing, subtle y-axis grid (10% opacity)
+      Legibility verdict: PASS—all text fully readable, no overlaps, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified in style guide
+      Chrome: Title in 28px light text (#F0EFE8); axis labels in 22px light text; all tick labels in 18px secondary-light text (#B8B7B0)—all clearly visible against dark surface with excellent contrast
+      Data: Data colors identical to light render—green, orange, blue, pink violins in canonical Okabe-Ito order; embedded light-colored box plots; colored median lines; light-gray outlier points; KDE shapes clearly visible
+      Layout: Margins match light render, no cramping, balanced whitespace
+      Legibility verdict: PASS—all text fully readable on dark background, no dark-on-dark legibility failures, brand green (#009E73) remains visible and distinct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          output resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels well spaced
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks)
+          and perfectly readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, all elements fully readable with proper spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violins well-sized, box plots visible inside, outliers shown as points;
-          minor deduction as outlier markers could be slightly larger
+        comment: Violins, boxes, median lines, and outliers all optimally sized and
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color differentiation, though yellow and light blue could be
-          challenging for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Test Score (points)", X-axis descriptive "Teaching
-          Method"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures colorblind safety with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot uses 60-70% of canvas with balanced generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend present (acceptable since categories are on x-axis), but
-          grid could be more subtle
+        comment: Y-axis has units (points), both axes descriptive, title in correct
+          format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito canonical order,
+          backgrounds and chrome properly theme-adaptive in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library defaults with standard Okabe-Ito palette;
+          professional but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean Plotly template, subtle grid, generous whitespace; good visual
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Realistic teaching scenario with clear visual hierarchy through color;
+          shows distribution differences between methods
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct violin plot with embedded box plot
+        comment: Correct violin plot with embedded box plot, all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Numeric values on Y, categorical groups on X
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows KDE (violin shape), median, quartiles (box), whiskers, and
-          outliers as specified
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: KDE violin, box plot, median line, quartiles,
+          whiskers, outliers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range 0-105 shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis correctly shows groups, Y-axis shows test scores [0-105],
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; categories clearly labeled on x-axis
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "violin-box · plotly · pyplots.ai"
+        comment: Title format correct (violin-box · plotly · anyplot.ai), group names
+          shown on x-axis
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: normal distributions, bimodal (Online), different
-          spreads, outliers present; minor deduction as more distinct outliers could
-          strengthen demonstration'
+        comment: 'Shows all aspects: varied distributions, different spreads, bimodal
+          (Online), high variability (Hybrid)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Education/teaching methods comparison is neutral, realistic, and
-          relatable
+        comment: Realistic education scenario with plausible teaching methods and
+          test score ranges
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Test scores 0-100 are realistic; some clipping at boundaries may
-          slightly affect distribution shapes
+        comment: Test scores 0-100 standard for education, sensible proportions and
+          relationships
     code_quality:
       score: 10
       max: 10
@@ -171,41 +186,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Clean linear flow: imports → theme → data → plot → save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: 'Only necessary imports used: importlib, numpy, os'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean, Pythonic, no over-engineering, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format (plot-{THEME}.png at 4800×2700), current Plotly
+          API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Violin with box_visible, meanline_visible, and points options;
-          saves interactive HTML; could leverage more Plotly-specific features like
-          hover customization
+        comment: Expert use of Plotly's high-level API (go.Figure, go.Violin, update_layout)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Plotly-specific Violin features (box_visible, meanline_visible,
+          fillcolor opacity), but implementation is straightforward
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -1,163 +1,173 @@
 library: seaborn
+language: python
 specification_id: shap-summary
 created: '2025-12-31T05:47:51Z'
-updated: '2025-12-31T06:06:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612920953
+updated: '2026-05-14T12:57:57Z'
+generated_by: claude-haiku
+workflow_run: 25860974962
 issue: 2923
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/shap-summary/seaborn/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - colorbar
-  patterns:
-  - dataset-loading
-  - groupby-aggregation
-  - wide-to-long
-  dataprep: []
-  styling:
-  - custom-colormap
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Good use of seaborn stripplot with jitter for SHAP value distribution visualization
-  - Correct coolwarm diverging colormap from blue (low) to red (high) feature values
-  - Features properly sorted by importance with most important at top
-  - Clean vertical reference line at x=0 clearly separates positive and negative impacts
-  - Well-placed colorbar with clear labeling for feature value interpretation
+  - Excellent theme adaptation with no dark-on-dark or light-on-light failures in
+    both renders
+  - Comprehensive use of theme tokens ensures chrome flips correctly while data colors
+    remain identical
+  - Proper SHAP visualization with vertical reference line, stripplot with jitter,
+    and appropriate diverging colormap
+  - Strong spec compliance with all required features correctly implemented
+  - Realistic data context (credit approval domain) with well-structured 200 samples
+    and 10 top features
+  - Clean, reproducible code using idiomatic seaborn patterns and proper random seeding
   weaknesses:
-  - Consider using slightly larger marker size (s=10-12) for better visibility of
-    individual points
-  image_description: 'The plot displays a SHAP summary visualization with 12 breast
-    cancer features sorted vertically by importance (most important at top). Each
-    row represents a feature with dots representing individual samples. The horizontal
-    axis shows SHAP values ranging from approximately -0.75 to 1.0, with a clear blue
-    vertical reference line at x=0. Points are colored using a coolwarm diverging
-    colormap: blue indicates low feature values (0.0) and red indicates high feature
-    values (1.0). The colorbar on the right clearly labels "Feature Value (Low to
-    High)". Features like "mean area" and "mean concave points" show wide SHAP value
-    distributions, while "mean compactness" shows a narrow distribution. The title
-    reads "shap-summary · seaborn · pyplots.ai" at the top. The layout is clean with
-    subtle gridlines on the x-axis.'
+  - Left spine remains visible - consider removing for minimal aesthetic
+  - Design Excellence could be elevated with more aggressive spine removal and subtle
+    visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, tick labels, colorbar all in dark text (#1A1A17, #4A4A44) and clearly readable. Vertical reference line at x=0 visible in soft gray.
+      Data: Stripplot with jitter showing SHAP value distributions. Points colored by BrBG diverging colormap (teal=low feature values, orange/brown=high). All markers clearly distinguishable.
+      Legibility verdict: PASS - all text readable, no dark-on-light failures, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels in light text (#F0EFE8, #B8B7B0) and clearly readable. No dark-on-dark failures. Vertical reference line visible. Colorbar readable.
+      Data: Identical colors to light render - BrBG colormap unchanged, confirming proper theme adaptation where only chrome flips
+      Legibility verdict: PASS - all text readable in dark theme, no dark-on-dark or light-on-light failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, feature names clearly separated, jitter prevents
-          point overlap
+        comment: Title, axis labels, ticks explicit sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Stripplot with jitter; feature names and labels collision-free
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Points visible with good alpha, but marker size=8 could be slightly
-          larger for optimal viewing
+        comment: Point size 11px, alpha=0.7, vertical line and grid all visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Coolwarm colormap is colorblind-safe diverging palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas, colorbar properly integrated
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"SHAP Value (Impact on Model Output)" and "Feature" are descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: BrBG diverging colormap is CVD-safe and perceptually uniform
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure 4800x2700px, well-proportioned, colorbar correctly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3, but legend=False means no legend (colorbar
-          serves this purpose adequately)
+        comment: Title format correct; axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BrBG for continuous; backgrounds #FAF8F1/#1A1A17; theme-correct
+          chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: BrBG colormap chosen intentionally; theme tokens threaded through;
+          professional but could be more refined
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (left legend), subtle grid (alpha=0.15), generous
+          whitespace; could remove left spine for cleaner look
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong hierarchy: features by importance, vertical line at x=0 guides
+          viewer, color tells story'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct SHAP summary plot with stripplot approach
+        comment: Correct SHAP summary stripplot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: SHAP values on X, features on Y, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has diverging colormap, vertical zero line, jitter, sorted by importance,
-          top 10 features
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: x=0 line, importance sort, diverging colormap, jitter'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range of SHAP values displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/hue correctly mapped; all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately represents feature value scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "shap-summary · seaborn · pyplots.ai"
+        comment: Title format correct; colorbar properly labeled
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows varied SHAP distributions but some features show limited spread
+        comment: 'All SHAP aspects: distribution, importance, direction, magnitude,
+          effect'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Breast cancer dataset is a real, neutral scientific domain
+        comment: Credit approval domain; GradientBoostingClassifier; plausible SHAP
+          approximation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: SHAP values are realistic for probability outputs (-0.75 to 1.0)
+        comment: SHAP -1 to +1; features 0-1; 10 top features; 200 samples
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,40 +175,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No unnecessary functions; linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42
+        comment: np.random.seed(42); GradientBoostingClassifier(random_state=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn, sklearn)
+        comment: All imports used; no dead code
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern seaborn API used correctly
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png; current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of sns.stripplot with hue mapping and palette, sns.despine
-          for styling, but could leverage more seaborn features
+        comment: High-level API; axes-level plotting; sns.set_theme; sns.despine
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ScalarMappable + colorbar; stripplot with hue/jitter; domain-specific
+          vertical line
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - theme-adaptive
+  - alpha-blending
+  - grid-styling

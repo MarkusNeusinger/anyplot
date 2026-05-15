@@ -1,181 +1,180 @@
 library: altair
+language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:10Z'
-updated: '2025-12-30T17:55:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602449694
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-13T09:28:37Z'
+generated_by: claude-haiku
+workflow_run: 25790202123
+issue: 2782
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/altair/plot-dark.html
+quality_score: 98
 review:
   strengths:
-  - Excellent implementation of 4 distinct plot types in a cohesive 2x2 grid demonstrating
-    Altair's concatenation capabilities
-  - Thoughtful conditional coloring on bar chart (blue for high performers, yellow
-    for lower) adds analytical value
-  - Clean, consistent color scheme using Python's signature blue/yellow
-  - Proper use of Altair's encoding types (Q, T, N) and scale customization
-  - Good data context with a coherent financial dashboard theme
-  weaknesses:
-  - Grid/legend styling could be enhanced—legend font sizes could be larger for the
-    line chart
-  - Canvas utilization has some extra whitespace on the right side
-  - Could leverage more Altair-specific features like interactive selections or layered
-    annotations
-  image_description: "The plot displays a well-organized 2×2 grid of four distinct\
-    \ visualizations with a centered main title \"subplot-grid · altair · pyplots.ai\"\
-    \ at the top. \n\n**Top-left (Scatter)**: \"Product Performance\" showing Units\
-    \ Sold (x-axis, 0-1000) vs Revenue ($K) (y-axis, 0-100) with ~50 blue circles\
-    \ of consistent size and good transparency.\n\n**Top-right (Line)**: \"Monthly\
-    \ Sales Trend\" displaying two lines—solid blue for actual Sales and dashed yellow\
-    \ for Target—spanning February to December. A legend labeled \"Metric\" distinguishes\
-    \ the two series. The y-axis shows Sales ($K) ranging from ~500 to 1,150.\n\n\
-    **Bottom-left (Bar)**: \"Regional Performance\" with 5 vertical bars for Central,\
-    \ East, North, South, and West regions. Bars are conditionally colored—blue for\
-    \ scores ≥80 (East, North) and yellow for <80 (Central, South, West). Y-axis shows\
-    \ Performance Score (0-100).\n\n**Bottom-right (Histogram)**: \"Order Value Distribution\"\
-    \ showing a right-skewed lognormal distribution of order values ($20-$420) with\
-    \ frequency on the y-axis (0-50). Blue bars with good visibility.\n\nColor scheme\
-    \ uses Python's signature blue (#306998) and yellow (#FFD43B). All text is clearly\
-    \ readable with appropriate font sizes. Grid lines are subtle."
+  - Perfect theme-aware implementation with consistent token system for both light
+    and dark renders
+  - Excellent altair idiom usage (hconcat/vconcat layout, encode/configure pattern)
+  - All text elements properly configured for legibility in both themes (no dark-on-dark
+    or light-on-light failures)
+  - Clear professional dashboard narrative with 4 complementary metrics
+  - Proper Okabe-Ito palette compliance with CVD-safe colors throughout
+  - Clean, reproducible code with proper seed management
+  - Independent axes and appropriate scales for each subplot
+  - Proper spacing and alignment prevent clutter
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "subplot-grid · altair · anyplot.ai" clearly visible at top; all axis labels and tick labels in dark text, fully readable on light background; grid is subtle but visible
+      Data: Scatter plot with green (#009E73) markers; line chart with solid green Sales and orange dotted Target; bar chart with conditional coloring (green ≥80, orange <80); histogram with green bars. First categorical series is #009E73 per spec.
+      Legibility verdict: PASS ✓ — All elements readable, no dark-on-light or light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title clearly visible in light color; axis labels and tick labels in light text (#B8B7B0 INK_SOFT), fully readable on dark background; grid is subtle and visible; no dark-on-dark text issues
+      Data: Colors are IDENTICAL to light render — green (#009E73) for primary series, orange (#D55E00) for secondary. Only chrome (background, text, grid, legend frames) flips between themes. All colors maintain proper contrast and visibility.
+      Legibility verdict: PASS ✓ — All elements readable, brand green clearly visible, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is readable; subplot titles ~22pt, axis labels ~16-18pt,
-          tick labels ~16pt. Slightly smaller than ideal for 4800×2700 but still good.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text anywhere; x-axis labels are horizontal and well-spaced.
+        comment: Explicit font sizing (title 22-28px, axis title 18px, labels 16px,
+          legend 14-16px). All text readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No colliding text. Subplots well-spaced (60px gaps).
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Scatter markers (size=120) are appropriately sized for 50 points.
-          Line thickness (3) is good. Bar chart readable. Histogram bars could be
-          slightly wider.
+        comment: Scatter points visible (size=120, opacity=0.7), line strokes clear
+          (strokeWidth=3), bars distinct (size=60), histogram bins properly binned.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe; good contrast against
-          white background.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good 2×2 layout with consistent spacing (60px). Some extra whitespace
-          on the right side of the canvas.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Revenue ($K)", "Sales ($K)", "Performance
-          Score", "Order Value ($)".'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette (CVD-safe). Line differentiation via stroke-dash.
+          Good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced 2×2 grid (750×420 per subplot). Nothing cut off. Clean proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid opacity at 0.3 is subtle. Legend for line chart is well-placed
-          but could be more prominent.
+        comment: 'All descriptive with units: Units Sold, Revenue ($K), Month, Sales
+          ($K), Performance Score, Order Value ($), Frequency.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series Okabe-Ito order, backgrounds
+          correct (#FAF8F1/#1A1A17), both renders theme-correct.'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Intentional styling: custom marker sizes (120), line stroke width
+          (3), scatter opacity (0.7), conditional coloring, stroke-dash differentiation.
+          Professional polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Subtle grid (gridOpacity=0.10), no border strokes, generous whitespace,
+          legend properly styled.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Dashboard scenario with four complementary views: product metrics
+          → sales trend → regional comparison → distribution. Clear focal point per
+          subplot.'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements a subplot grid with 4 different plot types (scatter,
-          line, bar, histogram).
+        comment: Correct subplot grid with 4 distinct chart types (scatter, line,
+          bar, histogram).
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y mappings are correct for all four subplots.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: configurable grid (2×2), different plot
-          types per cell, clear titles, consistent spacing.'
-      - id: SC-04
-        name: Data Range
+        comment: Configurable grid (2×2), independent axes, different plot types per
+          cell, consistent spacing, clear titles.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show complete data ranges without clipping.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct for each type. Ranges sensible. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend in line chart accurately shows Sales vs Target.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format "subplot-grid · altair · pyplots.ai" but uses
-          regular dot instead of middle dot (·).
+        comment: Main title correct. Subplot titles descriptive. Legend present and
+          labeled.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: scatter for correlation, line for time series
-          with dual metrics, bar for categorical comparison with conditional coloring,
-          histogram for distribution.'
+        comment: Scatter (product metrics), line (sales trend), bar (regional comparison),
+          histogram (distribution) — comprehensive coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Financial dashboard theme is realistic and neutral: product metrics,
-          monthly sales vs targets, regional performance, order value distribution.'
+        comment: Financial dashboard scenario (products, sales, regions, orders) is
+          realistic, plausible, and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (revenue 10-100K, performance scores 0-100,
-          order values $20-420). Sales starting at 500K and reaching 1150K is plausible
-          but the cumulative growth pattern could be more realistic.
+        comment: Units 0-1000, revenue $10-100K, sales $500-1100K, performance 0-100,
+          order values log-normal. All sensible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -183,42 +182,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → charts → combine → save.
-          No functions or classes.'
+        comment: No unnecessary functions/classes. Linear structure.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) at the start.
+        comment: Uses np.random.seed(42) for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas.'
+        comment: Only os, altair, numpy, pandas. All used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Proper altair idioms. Clean alt.condition() usage.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All APIs are current.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html which is correct for Altair.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative grammar with hconcat/vconcat for grid layout,
-          condition for color encoding, and scale/domain customization. Could leverage
-          more interactive features or layering.
+        comment: 'Uses altair idiomatically: alt.Chart, alt.X/Y, mark_*(), encode(),
+          properties(). Proper hconcat/vconcat for layout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: StrokeDash encoding, alt.condition() for conditional coloring, alt.Tooltip
+          interactivity, theme token system, configure_* methods.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep: []
+  styling: []

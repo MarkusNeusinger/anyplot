@@ -1,0 +1,251 @@
+library: altair
+language: python
+specification_id: heatmap-polar
+created: '2026-05-13T19:51:26Z'
+updated: '2026-05-13T19:59:04Z'
+generated_by: claude-sonnet
+workflow_run: 25822030095
+issue: 5244
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/altair/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Full spec compliance: correct polar heatmap with arc marks, cyclic angular wrapping,
+    colorbar legend, and cell borders'
+  - Theme-adaptive chrome correctly implemented for both light and dark renders with
+    all tokens applied
+  - Idiomatic Altair usage with declarative encoding, layer composition, and interactive
+    tooltips
+  - Clean KISS code structure with reproducible data and all required PNG+HTML outputs
+  - Seasonal energy consumption story is immediately readable from the viridis color
+    distribution
+  weaknesses:
+  - Year labels positioned within colored arc cells (11 o'clock); varying viridis
+    backgrounds reduce guaranteed contrast — consider placing just outside the outermost
+    ring or adding semi-transparent text background
+  - Canvas margin is very tight (~5%); the chart fills nearly edge-to-edge on the
+    3600x3600 canvas
+  - 'DQ-03 partial deduction: energy values (80-265 kWh/month) fit a sub-meter or
+    low-consumption device better than a whole-house measurement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-polar · altair · anyplot.ai" in dark INK (#1A1A17) at top, clearly readable. Month labels (Jan-Dec) in bold INK_SOFT (#4A4A44) around perimeter, all readable. Year labels (2019-2023) in INK_SOFT inside arc cells at 11 o'clock, readable at full resolution. Legend title "kWh / month" and tick labels in INK/INK_SOFT, clearly readable.
+      Data: Viridis colormap from deep purple (low ~80 kWh) through teal/cyan to yellow-green (high ~265 kWh). Arc cells clearly defined with subtle PAGE_BG stroke borders.
+      Legibility verdict: PASS — all text readable; year labels inside arcs are the smallest element but legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8), clearly readable. Month labels in INK_SOFT (#B8B7B0, light gray) around perimeter, all readable. Year labels in INK_SOFT (#B8B7B0) inside arc cells, readable against viridis colors. Legend uses ELEVATED_BG (#242420) fill with light text. No dark-on-dark failures detected.
+      Data: Viridis colors are identical to light render — data encoding unchanged, only chrome flips.
+      Legibility verdict: PASS — all text visible against dark background; no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=28px, month=18px bold, year=16px,
+          legend 16-18px). Minor deduction for year labels inside colored arc cells
+          with varying contrast.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Month labels spaced at 30-degree intervals; year labels at different
+          radii, no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All arc cells clearly rendered with full viridis range. Narrower
+          innermost ring is expected polar behavior per spec.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe; purple-to-yellow
+          provides strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions but chart fills ~90% of canvas leaving minimal margins.
+          No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend titled 'kWh / month' with units; month and year axes labeled;
+          title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for sequential data; backgrounds #FAF8F1/#1A1A17; all chrome
+          tokens theme-adaptive in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design above defaults: full theme-adaptive chrome, custom
+          legend styling, bold month labels, subtle cell borders. Visually striking
+          polar result.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: configure_view(stroke=None) removes frame; legend fully styled; arc
+          strokeWidth=0.8 adds definition. No radial grid separators.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Seasonal energy patterns immediately apparent; year-over-year increase
+          readable across rings. Cyclic format reinforces message.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap with arc marks and theta/radius dual encoding.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: cyclic wrapping, radial rings, sequential
+          colormap, month labels, colorbar, cell borders.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angular=months, radial=years (innermost=2019), color=kWh value.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-polar · altair · anyplot.ai'; legend 'kWh / month'.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: cyclic dimension, radial rings, full color range
+          with clear variation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly energy consumption across five years; neutral domain; seasonal
+          peaks physically plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Values 80-265 kWh/month; plausible for sub-meter or low-consumption
+          device but below typical whole-house (~877 kWh/month). Seasonal shape and
+          trend are realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat linear structure: sys.path guard, tokens, data, chart, save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys, altair, numpy, pandas.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Data loop and layer composition are readable. No
+          over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of Altair declarative grammar: arc marks with dual theta/radius,
+          alt.Scale(type=''identity''), typed encoding, layer composition with +.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages mark_arc with theta/theta2 and radius/radius2 for polar
+          sector cells; interactive tooltips and layer composition are distinctly
+          Altair.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting

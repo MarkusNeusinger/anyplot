@@ -13,20 +13,10 @@ A bar chart arranged in a circle with bars radiating outward from the center. Ea
 
 ## Data
 
-The visualization requires:
-- **Direction variable**: Angular categories (N, NE, E, SE, S, SW, W, NW or degrees)
-- **Magnitude variable**: Bar height/frequency
-
-Example structure:
-```
-Direction | Frequency
-----------|----------
-N         | 15
-NE        | 8
-E         | 12
-SE        | 5
-...
-```
+- `direction` (categorical) - Angular category representing compass bearing (N, NE, E, SE, S, SW, W, NW, or degrees 0-360)
+- `frequency` (numeric) - Bar height or magnitude value representing counts, speed, or intensity
+- Size: 8-16 categories (standard compass points) to several hundred observations
+- Example: Meteorological wind direction and speed distribution dataset with directional categories and frequency counts
 
 ## Notes
 

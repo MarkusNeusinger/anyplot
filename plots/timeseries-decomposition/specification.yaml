@@ -6,7 +6,7 @@ title: Time Series Decomposition Plot
 
 # Specification tracking
 created: 2025-12-31T10:25:56Z
-updated: null
+updated: 2026-05-14T22:30:07Z
 issue: 2992
 suggested: MarkusNeusinger
 
@@ -15,8 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - timeseries
-    - decomposition
   data_type:
     - timeseries
     - datetime
@@ -31,4 +29,4 @@ tags:
     - trend
     - seasonal
     - residual
-    - analysis
+    - diagnostic

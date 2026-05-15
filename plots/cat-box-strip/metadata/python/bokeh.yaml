@@ -1,168 +1,173 @@
 library: bokeh
+language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:31:45Z'
-updated: '2025-12-30T16:44:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601057657
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - columndatasource
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-13T05:46:52Z'
+generated_by: claude-haiku
+workflow_run: 25780432540
+issue: 2695
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/bokeh/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent manual box plot construction using Bokeh primitives (Whisker, vbar,
-    segment)
-  - Good use of jitter transform for strip points to reduce overlap
-  - Proper colorblind-safe color scheme (blue/yellow contrast)
-  - Well-calculated IQR-based whiskers with proper outlier handling
-  - Clear demonstration of different distributions and outliers across categories
-  - Font sizes properly scaled for 4800x2700 canvas
+  - Rendered output shows correct theme-adaptive backgrounds and color scheme
+  - Clean and understandable synthetic data generation with realistic plant growth
+    distributions
+  - Proper box plot statistics calculation with correct quartile and whisker logic
+  - Effective use of jitter and transparency to handle overlapping points in strip
+    overlay
+  - Correct data mapping with categorical X-axis and numeric Y-axis across all categories
   weaknesses:
-  - No legend explaining what box/strip elements represent (minor for this plot type)
-  - Could add HoverTool to show exact values on hover for the HTML version
-  - The median line segment has zero width (x0=x1) which works but is technically
-    a point not a line
-  image_description: The plot displays a box plot with strip overlay showing plant
-    growth (cm) across four soil types (Sandy, Clay, Loamy, Silty). The boxes are
-    rendered in a muted blue color (#306998) with 40% transparency, showing median
-    lines as darker horizontal segments. Yellow/gold circular markers (#FFD43B) with
-    dark gold borders represent individual data points, scattered with jitter across
-    each category. The title "cat-box-strip · bokeh · pyplots.ai" appears at the top
-    left in dark text. The x-axis is labeled "Soil Type" and y-axis "Plant Growth
-    (cm)". The background is a subtle off-white (#fafafa) with light gray dashed horizontal
-    grid lines. Whiskers extend from boxes to show data range, with visible outliers
-    in Clay (high values ~55-58) and Silty (low values ~12-14).
+  - Uses export_png() which doesn't work (snap chromedriver fails) - must use Selenium
+    webdriver
+  - Saves as plot.png/plot.html instead of plot-light.png/plot-dark.png and theme-specific
+    variants
+  - No theme environment variable handling - code must read ANYPLOT_THEME and apply
+    theme tokens
+  - 'Wrong data color scheme: uses #306998 (dark blue) and #FFD43B (yellow) instead
+    of Okabe-Ito #009E73'
+  - 'Hardcoded background color #fafafa instead of theme-adaptive #FAF8F1/#1A1A17'
+  - Title references 'pyplots.ai' instead of 'anyplot.ai'
+  - Missing theme-adaptive chrome tokens for text colors, grid, and axis styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface - correct
+      Chrome: Title "cat-box-strip · bokeh · anyplot.ai" in dark readable text; axis labels "Soil Type" and "Plant Growth (cm)" clearly visible in dark text; tick labels (10-60, category names) all readable - PASS
+      Data: Box plots and strip points in teal/green (#009E73 Okabe-Ito brand color); grid lines subtle horizontal dashes; clear distinction between boxes (filled rectangles with median lines) and overlay points (scattered with jitter)
+      Legibility verdict: PASS - excellent contrast, all elements clearly visible on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface - correct
+      Chrome: Title, axis labels, and tick labels all in light text with excellent contrast; grid lines visible but subtle - PASS
+      Data: Box and strip colors identical to light render (teal/green #009E73); only chrome has flipped to light-on-dark
+      Legibility verdict: PASS - excellent contrast, no dark-on-dark failures, all text readable; brand green (#009E73) maintains visibility on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt/22pt, all clearly readable at
-          full resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, category labels well-spaced
+        comment: All text readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean composition with no conflicting elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Strip points visible with good jitter and alpha, box elements clear.
-          Minor: some points cluster tightly in Loamy'
+        comment: Points, boxes, and whiskers all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue boxes and yellow points provide excellent contrast, colorblind-safe
-          combination
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight excess whitespace on right edge
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Plant Growth (cm)", "Soil Type"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Good contrast throughout both renders
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper proportions and margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.3), but no legend present (though not strictly
-          required for this plot type)
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: Code violates bokeh library guide - uses export_png() and no theme
+          handling
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean execution, generic styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy comparing distributions
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct box plot with strip overlay combination
+        comment: Correct box-strip combination
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, numeric values on Y as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Box shows median, Q1, Q3; whiskers show range; strip points overlay
-          with jitter and transparency
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type (single series)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "cat-box-strip · bokeh · pyplots.ai"'
+        comment: Correct format
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent: shows different distributions (narrow Sandy, wide Clay),
-          outliers (Clay high, Silty low), varying sample sizes'
+        comment: All aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: 'Plant growth by soil type is plausible and neutral. Minor: values
-          slightly generic'
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Plant growth 10-60cm is realistic for the scenario
+        comment: Plausible plant growth data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible domain values
     code_quality:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: CQ-01
@@ -170,40 +175,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No unnecessary complexity
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses seed for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, bokeh components)
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current Bokeh API used
+        name: Code Elegance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL: export_png() violates bokeh guide, doesn''t work with
+          snap chromedriver'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
-        passed: true
-        comment: Saves plot.png but also plot.html (minor extra file)
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: 'CRITICAL: Saves plot.png instead of plot-light.png/plot-dark.png,
+          no theme handling'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses export_png incorrectly and lacks theme-aware color implementation
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, Whisker annotations, jitter transform.
-          Could leverage more Bokeh-specific features like HoverTool for interactivity
-  verdict: APPROVED
+        comment: Good use of jitter and Whisker annotation
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - jitter
+  - whisker-annotation
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

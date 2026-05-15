@@ -6,7 +6,7 @@ title: Phase Diagram (State Space Plot)
 
 # Specification tracking
 created: 2025-12-31T10:44:42Z
-updated: 2025-12-31T10:44:42Z
+updated: 2026-05-14T10:30:00Z
 issue: 3004
 suggested: MarkusNeusinger
 
@@ -15,12 +15,10 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - trajectory
-    - phase-portrait
   data_type:
     - numeric
     - continuous
-    - timeseries
+    - bivariate
   domain:
     - science
     - physics

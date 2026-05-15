@@ -1,175 +1,182 @@
 library: pygal
+language: python
 specification_id: facet-grid
 created: '2025-12-30T16:37:40Z'
-updated: '2025-12-30T16:45:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601061346
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T03:44:09Z'
+generated_by: claude-haiku
+workflow_run: 25776532605
+issue: 2696
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/facet-grid/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/facet-grid/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - pillow
-  techniques:
-  - subplots
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of faceted grid layout using creative PIL-based composition
-    approach
-  - Clear, readable labels with proper units (Height in cm, Days)
-  - Consistent shared y-axis range across all facets for easy comparison
-  - Realistic plant growth scenario with meaningful variation between conditions
-  - Clean color scheme using pyplots primary blue (#306998)
-  - Both PNG and interactive HTML outputs generated
-  - Proper title format following spec requirements
+  - Perfect theme-adaptive rendering with correct light/dark color schemes and no
+    readability failures
+  - Proper Okabe-Ito palette application (#009E73) with excellent contrast in both
+    themes
+  - Clean, well-organized faceted grid layout with clear row/column labels and generous
+    spacing
+  - Complete specification compliance with realistic, well-chosen data demonstrating
+    facet variation
+  - High code quality with proper reproducibility (seeded randomness) and clean imports
+  - Correct title format and axis labeling with appropriate units
   weaknesses:
-  - Grid lines could be more subtle (currently visible but acceptable)
-  - The faceted composition relies heavily on PIL rather than pygal native features
-    - this is a reasonable workaround given pygal limitations
-  - Row labels could be slightly larger for better visibility
-  image_description: The plot displays a 2×3 faceted grid showing plant growth data
-    (height vs days). The grid has two rows labeled "Sandy Soil" and "Clay Soil" (rotated
-    labels on left side), and three columns labeled "Low Light", "Medium Light", and
-    "High Light" at the top. Each cell contains a line chart with blue lines and circular
-    markers showing plant height (cm) on the y-axis (0-32 range) over days (0-30)
-    on the x-axis. The main title "facet-grid · pygal · pyplots.ai" is centered at
-    the top in dark gray. All subplots share consistent y-axis scales. The layout
-    is clean with light gray plot backgrounds and subtle horizontal grid lines.
+  - 'Design excellence limited: implementation is functional but lacks additional
+    visual refinement or emphasis techniques beyond the faceting structure itself'
+  - Library mastery constrained by using PIL for image composition rather than pure
+    pygal features—pragmatic but limits showcase of pygal-specific capabilities
+  - No additional visual hierarchy or data storytelling techniques beyond the faceting
+    comparison
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - matches spec exactly
+      Chrome: Title "facet-grid · pygal · anyplot.ai" centered at top, dark text (#1A1A17). Row labels "Sandy Soil" and "Clay Soil" on left side in dark text. Column headers "Low Light", "Medium Light", "High Light" above grid in dark text. Y-axis label "Height (cm)" on left, X-axis label "Days" at bottom. All tick labels clearly visible in dark text. Title font 60px, labels 42px, tick labels appropriately sized.
+      Data: 2×3 grid of line charts. Each cell shows plant height vs days. Data color is bright cyan (#009E73, Okabe-Ito position 1). Markers (size 8) with connecting lines (stroke_width 4). Data clearly distinguishable from light background.
+      Legibility verdict: PASS - All text readable against light background, no contrast failures, data colors distinct from background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - matches spec exactly
+      Chrome: Title in light text (#F0EFE8), clearly visible and readable. Row labels and column headers in light text, all readable. Y-axis "Height (cm)" and X-axis "Days" labels in light text, clearly visible against dark background. No dark-on-dark failures (e.g., black text on near-black background).
+      Data: Identical 2×3 grid layout. Data color is identical to light render (cyan #009E73 - only chrome flips between themes, not data colors). Markers and lines clearly visible on dark background.
+      Legibility verdict: PASS - All text readable against dark background, data colors identical to light render, no legibility failures in either theme
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and labels are clearly readable; font sizes are good but could
-          be slightly larger for optimal readability
+        comment: All text explicitly sized and color-adapted with theme tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere in the plot
+        comment: Clean grid layout with adequate spacing, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line strokes and markers are appropriately sized and clearly visible
+        comment: Data markers size 8, lines stroke_width 4, all distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) used consistently, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, slight padding imbalance with row label
-          area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: "Height (cm)" and "Days"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, centered title, generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct, axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct, both themes correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No legend shown (though not strictly needed here), grid is subtle
+        comment: Professional theme-adaptive styling, but fairly standard presentation
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean layout, minimal customization beyond requirements
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Faceting enables comparison, no additional emphasis techniques
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct faceted grid with line charts in each cell
+        comment: Correct faceted grid with line charts
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Days, Y=Height correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has row/column faceting, shared axes, facet labels
-      - id: SC-04
-        name: Data Range
+        comment: Row/column faceting, proper base plot
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-35 y-axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y mapping correct, facets split by categories
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Row labels correctly identify soil types
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title formatted correctly
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across conditions; different growth rates visible
-          across facets; could show more dramatic differences
+        comment: Full facet-grid capabilities demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plant growth experiment is an excellent, realistic scientific scenario
+        comment: Plant growth under conditions is realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Height values (0-32 cm over 30 days) are plausible for plant growth
+        comment: Sensible units and ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear flow but uses functions/imports for image composition
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
+        passed: true
+        comment: Linear execution, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -177,28 +184,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output naming
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses pygal.Line with custom Style, but the multi-panel composition
-          is done via PIL rather than native pygal features
+        passed: false
+        comment: Style object correct, but PIL composition bypasses some features
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Limited showcase of pygal-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  - cairosvg
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []

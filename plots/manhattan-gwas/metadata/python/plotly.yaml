@@ -1,174 +1,161 @@
 library: plotly
+language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:32:43Z'
-updated: '2025-12-31T05:42:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612787650
+updated: '2026-05-15T03:36:38Z'
+generated_by: claude-haiku
+workflow_run: 25898484388
 issue: 2925
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of the Manhattan plot with proper GWAS conventions (alternating
-    chromosome colors, cumulative positions, threshold lines)
-  - Clear visual hierarchy with significant SNPs highlighted as distinct red diamonds
-    above the main point cloud
-  - Comprehensive hover information showing chromosome, position, and -log10(p) value
-    with proper formatting
-  - Both PNG and HTML outputs generated for static and interactive viewing
-  - Proper threshold line annotations positioned to avoid data overlap
+  - Clean theme adaptation with both renders production-ready and fully readable
+  - Correct Okabe-Ito palette usage with stable data colors across light/dark themes
+  - Clear data storytelling through visual hierarchy and emphasis (significant SNP
+    diamonds, threshold lines)
+  - Excellent code quality with KISS structure and proper seed control
+  - Strong spec compliance with all required GWAS features
+  - Expert Plotly usage with interactive hover tooltips and professional layout
   weaknesses:
-  - Could leverage more Plotly-specific interactive features like chromosome filtering
-    dropdown or range slider for genomic position
-  - Grid lines could be slightly more visible (currently very faint at alpha 0.1)
-  image_description: 'The plot displays a Manhattan plot for GWAS visualization with
-    -log₁₀(p-value) on the y-axis and chromosome positions (1-22) on the x-axis. Points
-    are colored in alternating shades of blue (darker blue #306998 for odd chromosomes,
-    lighter blue #7A9FBF for even chromosomes). Three clear peaks of significant SNPs
-    are visible: on chromosome 2 (reaching ~12), chromosome 8 (reaching ~9.5), and
-    chromosome 15 (reaching ~13). Significant SNPs above the genome-wide significance
-    threshold are highlighted as red diamond markers. Two horizontal threshold lines
-    are present: a red dashed line at ~7.3 for genome-wide significance (p = 5×10⁻⁸)
-    and a yellow/gold dotted line at 5 for the suggestive threshold (p = 10⁻⁵). The
-    title "manhattan-gwas · plotly · pyplots.ai" is centered at the top. A legend
-    in the upper left shows "Significant SNPs" with the red diamond marker. The overall
-    layout is clean with a white background.'
+  - 'Title domain incorrect: says "pyplots.ai" instead of "anyplot.ai" (line 221)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels, tick labels all explicitly sized (28/22/18px) and readable in dark ink; threshold annotations clearly visible on right
+      Data: Alternating green (#009E73) and orange (#D55E00) chromosome blocks with overlaid scatter points; significant SNPs highlighted as larger orange diamonds; dashes and dots for threshold lines
+      Legibility verdict: PASS (all text readable against light background; no light-on-light issues)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: All text light-colored (INK #F0EFE8 and INK_SOFT #B8B7B0) with sufficient contrast; grid visible at appropriate opacity; legend background themed
+      Data: Colors identical to light render (same green and orange for chromosomes); scatter and diamond markers equally distinct
+      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark failures; data colors stable across themes)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis titles at 24pt, tick fonts at 16-18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, chromosome labels well-spaced
+        comment: All sizes explicitly set; perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately for dense GWAS data (size=5), good alpha=0.7,
-          significant SNPs highlighted distinctly
+        comment: Dense scatter appropriately handled; significant SNPs clearly stand
+          out
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/light blue alternating colors are colorblind-safe, red for significant
-          points provides good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, balanced margins, plot fills appropriate area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "-log₁₀(p-value)" with proper subscript notation, X-axis
-          has "Chromosome"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: CVD-safe palette; good contrast; adequate alpha
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good proportions; could use more generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.1), but legend placement in upper left could
-          overlap with data peaks in some scenarios; threshold line annotations are
-          well-positioned
+        comment: Descriptive with units and context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito correct; backgrounds and chrome theme-adaptive
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Above defaults but not Nature-level exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid, good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: Clear visual hierarchy; immediate insight into peaks and significance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Manhattan plot visualization
+        comment: Correct Manhattan plot with proper structure
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Cumulative genomic position on X, -log₁₀(p) on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: alternating chromosome colors, genome-wide
-          significance threshold, suggestive threshold, significant SNP highlighting,
-          chromosome labels centered'
-      - id: SC-04
-        name: Data Range
+        comment: 'All GWAS features present: thresholds, highlights, colors'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full data range (0-13), X-axis shows all 22 chromosomes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies "Significant SNPs" with red diamond marker
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "manhattan-gwas · plotly · pyplots.ai"'
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'CRITICAL: title says pyplots.ai instead of anyplot.ai'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple significant peaks across different chromosomes, demonstrates
-          the "Manhattan skyline" pattern well, includes SNPs at various significance
-          levels
+        comment: All GWAS aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: GWAS data is a perfect neutral scientific context, simulated data
-          follows realistic patterns
+        comment: Plausible scientific data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: p-values and -log₁₀ transformations are realistic; chromosome lengths
-          are reasonable approximations
+        comment: Factually correct genome structure and thresholds
     code_quality:
       score: 10
       max: 10
@@ -178,42 +165,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → plot creation → save'
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at the beginning
+        comment: Seed 42 set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and plotly.graph_objects used, all necessary
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct file names and current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert Plotly patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses Plotly's graph_objects effectively with custom hover templates,
-          but doesn't leverage Plotly's full interactive potential (e.g., clickable
-          points with callbacks, range sliders, dropdown filters for chromosomes).
-          The HTML output does provide basic interactivity (hover, zoom, pan).
+        comment: Good use of interactive features; not extraordinarily distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending

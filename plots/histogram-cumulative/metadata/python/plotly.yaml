@@ -1,165 +1,167 @@
 library: plotly
+language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:31:29Z'
-updated: '2025-12-30T09:40:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593348147
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/plotly/plot.html
+updated: '2026-05-11T22:42:04Z'
+generated_by: claude-haiku
+workflow_run: 25701351140
+issue: 2549
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - cumulative-sum
-  styling: []
 review:
   strengths:
-  - Excellent visual design with clear step function representation of cumulative
-    distribution
-  - Thoughtful addition of percentile reference lines (25th, 50th, 75th) with dashed
-    yellow styling that enhances understanding
-  - Custom hover templates provide informative tooltips showing exact proportions
-  - Proper use of shape=hv for authentic step function appearance
-  - Good color scheme using Python Blue and Yellow with appropriate contrast
+  - Perfect text legibility across both themes
+  - Correct cumulative histogram implementation with Plotly's native feature
+  - Clear percentile reference lines and markers enhance readability
+  - Theme-adaptive styling fully correct (both renders readable)
+  - Realistic test score data with intentional distribution
+  - Proper Okabe-Ito color compliance (#009E73 brand green)
+  - Well-structured code with good reproducibility (seeded RNG)
   weaknesses:
-  - Uses manual histogram calculation with np.histogram instead of Plotly native go.Histogram
-    with cumulative_enabled=True
-  - Legend position in upper-left could be moved to avoid potential visual overlap
-  image_description: The plot displays a cumulative histogram showing test score distribution.
-    The main cumulative distribution curve is rendered as a step function in Python
-    Blue (#306998) with a light blue fill beneath it (tozeroy fill). The x-axis shows
-    "Test Score (points)" ranging from 0 to 100, and the y-axis shows "Cumulative
-    Proportion" ranging from 0% to 100%. Three horizontal dashed yellow lines mark
-    the 25th, 50th, and 75th percentiles, with corresponding vertical dashed lines
-    dropping down to the x-axis. Yellow circular markers with blue outlines are placed
-    at each percentile intersection point, labeled with "25%", "50%", and "75%" text.
-    The title "histogram-cumulative · plotly · pyplots.ai" is centered at the top.
-    A legend in the upper-left corner identifies the "Cumulative Distribution" trace.
-    The background uses the plotly_white template with subtle gray gridlines.
+  - Design refinement could be enhanced with custom spines or subtle grid styling
+  - Library mastery could explore more distinctive Plotly features beyond basic implementation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "histogram-cumulative · plotly · anyplot.ai" clearly readable (28px dark text). Axis labels "Test Score (points)" and "Cumulative Proportion (%)" are clearly visible in 22px dark text. Tick labels (0, 20, 40, 60, 80, 100) in 18px dark text. All readable with excellent contrast.
+      Data: Green histogram bars (#009E73 brand color) showing proper monotonic increasing cumulative distribution. Three percentile reference lines (dashed, in INK_SOFT #4A4A44) at 25%, 50%, 75% with corresponding markers and text labels. Legend box contains "Cumulative Distribution".
+      Legibility verdict: PASS - All elements highly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title clearly visible in light text. Axis labels and tick labels all readable with excellent contrast against dark background. No dark-on-dark failures - all text uses appropriate light tokens.
+      Data: Identical green histogram bars (#009E73 - data color preserved from light render). Same reference lines and markers with appropriate visibility. Legend readable.
+      Legibility verdict: PASS - All elements readable, no dark-on-dark issues, chrome properly themed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick fonts at 18pt - all perfectly
-          readable
+        comment: All text readable at scale in both themes - title 28px, axis labels
+          22px, ticks 18px
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements, percentile labels well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line width of 4 is clearly visible, percentile markers at size
-          14 are prominent
+        comment: All bars, markers, and reference lines clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow combination is colorblind-safe, good contrast
+        comment: 'Okabe-Ito #009E73 is CVD-safe with good contrast'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
+        comment: Good proportions, nothing cut off, generous margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: X-axis has units "(points)" but Y-axis lacks units (proportion is
-          unitless, but could specify "of total")
+        passed: true
+        comment: Title format correct, axis labels descriptive with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle at 0.1 alpha (good), but legend could be better positioned
-          (top-left overlaps with visual area slightly)
+        passed: true
+        comment: 'Brand color #009E73, correct backgrounds #FAF8F1/#1A1A17, theme-correct
+          both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean professional design with intentional percentile reference lines
+          and markers
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good whitespace and subtle grid, minimal custom styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy, percentile guides aid interpretation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative histogram as step function
+        comment: Correct cumulative histogram with monotonic increasing steps
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X shows bin edges (score values), Y shows cumulative proportion
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows cumulative count/proportion, monotonically increasing, step
-          function display
-      - id: SC-04
-        name: Data Range
+        comment: Cumulative histogram, cumulative proportion on Y-axis, percentile
+          reference lines
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 0-105, Y-axis 0-105% shows all data clearly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: test scores 0-105, Y: cumulative proportion 0-105%, all data
+          shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: '"Cumulative Distribution" label is accurate'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-cumulative · plotly · pyplots.ai"'
+        comment: Format correct, legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multimodal distribution with low/average/high performers, demonstrates
-          percentile lookups
+        comment: All aspects of cumulative histogram shown with percentile reference
+          context
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: false
-        comment: Test scores is a good scenario, but mixing three normal distributions
-          is somewhat artificial
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Scores 0-100 is realistic for test scores
+        comment: Test scores with realistic bimodal distribution, clipped to 0-100
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ranges 0-105% sensible for test score domain
     code_quality:
       score: 10
       max: 10
@@ -169,41 +171,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: No unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png and .html output
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, add_trace, native cumulative feature, hovertemplate
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Good use of hover templates with custom formatting, but doesn't leverage
-          Plotly's built-in histogram with cumulative=True parameter which would be
-          more idiomatic
+        passed: true
+        comment: Uses Plotly's cumulative histogram feature and hover templates
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []

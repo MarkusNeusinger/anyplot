@@ -1,163 +1,170 @@
 library: pygal
+language: python
 specification_id: line-filled
 created: '2025-12-30T11:22:10Z'
-updated: '2025-12-30T11:28:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595336991
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T17:30:50Z'
+generated_by: claude-haiku
+workflow_run: 25750075235
+issue: 2643
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-filled/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-filled/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-    - custom-legend
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/pygal/plot-dark.html
+quality_score: 70
 review:
   strengths:
-  - Clean implementation with proper fill effect emphasizing magnitude
-  - Good custom style configuration with appropriate font sizes for large canvas
-  - Realistic website traffic data with seasonal patterns
-  - Correct title format following spec requirements
-  - Semi-transparent fill (opacity=0.4) makes the visualization effective
+  - 'Rendered images show correct theme-adaptive backgrounds (#FAF8F1 and #1A1A17)'
+  - Clean, readable visualization in both light and dark modes
+  - Appropriate use of filled area to emphasize magnitude
+  - Realistic, neutral website traffic dataset with proper seeding
+  - Data colors identical between light/dark renders
   weaknesses:
-  - Legend placement is awkward - appears in top-left corner outside the main plot
-    area
-  - Dots are functional but could be slightly larger for better visibility at full
-    resolution
-  - Could leverage pygal interpolation feature for smoother curves
-  image_description: The plot displays a filled line chart showing monthly website
-    traffic over 12 months (January to December). The chart uses Python Blue (#306998)
-    for both the line and the semi-transparent fill area beneath it. The title "line-filled
-    · pygal · pyplots.ai" is centered at the top. The X-axis is labeled "Month" with
-    abbreviated month names (Jan through Dec), and the Y-axis is labeled "Page Views"
-    with values ranging from approximately 41,000 to 64,000. Small dots mark each
-    data point. The fill area effectively emphasizes the magnitude of values, showing
-    a seasonal pattern with a summer peak in July (~63,000) and a holiday spike in
-    December (~64,000). A legend reading "Website Traffic" appears in the top-left
-    corner. Horizontal grid lines are present and subtle.
+  - Code doesn't implement theme adaptation — hardcodes white backgrounds, no ANYPLOT_THEME
+    reading
+  - Wrong color palette in code — uses Python Blue (#306998) instead of brand green
+    (#009E73)
+  - Output filenames hardcoded — must generate plot-{THEME}.png and plot-{THEME}.html
+  - Title contains typo — code has 'pyplots.ai' instead of 'anyplot.ai'
+  - Code-image mismatch — rendered output doesn't match what the code should produce
+  - No visual refinement — no spine removal, minimal grid styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1, correct for light theme
+      Chrome: Title "line-filled · pygal · anyplot.ai" readable in dark text; X-axis label "Time (days)" and Y-axis "Page Views (y)" both readable; tick labels clear; grid lines subtle and visible
+      Data: Filled area under line with teal/green semi-transparent fill (alpha ~0.4) in Okabe-Ito brand green (#009E73); line visible on top
+      Legibility verdict: PASS (all text readable and properly contrasted)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17, correct for dark theme
+      Chrome: Title, axis labels, and tick labels rendered in light text with good contrast; no dark-on-dark failures; grid lines subtle and visible
+      Data: Colors identical to light render (same teal/green fill and line); data representation is consistent between themes
+      Legibility verdict: PASS (all text readable and properly contrasted; no theme failures)
+
+    Summary: Both renders are legible and properly adapted to their themes. Data colors are consistent between light and dark renders, confirming proper theme-independent color application. However, the source code does not match this output — it hardcodes white backgrounds and uses Python Blue instead of brand green.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are clearly readable. Font sizes
-          are appropriate for the canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; month labels are well-spaced.
+        comment: All text readable in both themes with appropriate font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping or collision between elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line and fill are clearly visible. Dots are small but adequate.
+        comment: Line and fill clearly distinguishable from background
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color is colorblind-safe.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; slight issue with legend placement in top-left.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels ("Month", "Page Views").
+        comment: Good contrast; Okabe-Ito palette is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with appropriate margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units; title format correct
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Legend placement is awkward (top-left, outside plot area, small text
-          "=Website Traffic"). Grid is subtle but acceptable.
+        comment: Code uses hardcoded colors and backgrounds instead of reading ANYPLOT_THEME
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic styling with hardcoded defaults, no intentional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: No spine removal, minimal grid customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Filled area emphasizes trend; reasonable visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct filled line plot (area chart effect).
+        comment: Correct filled line chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is time (months), Y is numeric (page views).
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Fill is semi-transparent, line visible on top, fill color matches
-          line.
-      - id: SC-04
-        name: Data Range
+        score: 2
+        max: 4
+        passed: false
+        comment: Has fill and visible line, but missing color compliance and theme
+          adaptation
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full data range appropriately.
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Correct X/Y mapping, all data visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies the series.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows "{spec-id} · {library} · pyplots.ai" format.
+        max: 3
+        passed: false
+        comment: 'Title has typo: ''pyplots.ai'' instead of ''anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows seasonal variation and trends well, but data is relatively
-          smooth without dramatic features.
+        comment: Shows all aspects of filled line chart
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Website traffic is a realistic scenario; seasonal patterns are plausible.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Page view values (~40k-65k) are realistic for a website.
+        comment: Website traffic data is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for domain
     code_quality:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -165,40 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure.
+        comment: Simple, straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal, Style).
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
+          doesn't read ANYPLOT_THEME
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Uses pygal's fill=True option and custom Style, but doesn't leverage
-          more advanced features like tooltips or interpolation.
+        passed: false
+        comment: Uses pygal.Line() correctly but fails to implement mandatory theme-adaptive
+          Style pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses fill=True parameter but limited leverage of pygal-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

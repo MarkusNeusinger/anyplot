@@ -1,15 +1,240 @@
 library: seaborn
+language: python
 specification_id: polar-line
 created: '2025-12-30T16:29:48Z'
-updated: '2025-12-30T16:35:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601055649
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T22:48:42Z'
+generated_by: claude-haiku
+workflow_run: 25766311634
+issue: 2692
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-line/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - Perfect visual quality across all 7 criteria—all text legible in both themes with
+    zero chrome-theme failures
+  - Flawless spec compliance—polar projection, multi-series lines, grid, and legend
+    correctly implemented
+  - Excellent data quality and code cleanliness—realistic wind data, reproducible
+    with seed, deterministic
+  - Theme-adaptive styling correctly implemented—Okabe-Ito data colors identical between
+    renders; all chrome uses correct INK tokens
+  - Strong library mastery—polar projection and seaborn theming show solid matplotlib/seaborn
+    proficiency
+  - Clear visual hierarchy—prevailing winds pattern visually emphasized with consistent
+    marker/line treatment
+  weaknesses:
+  - Design excellence is solid but not exceptional—plot is professional but lacks
+    distinctive aesthetic flourishes or advanced storytelling techniques
+  - Could enhance visual refinement—consider explicit spine removal or additional
+    grid customization for more polished appearance
+  - Library mastery slightly generic—while correct, lacks distinctive seaborn features
+    like advanced palette chaining or faceting patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified—NOT pure white or dark
+      Chrome: Title, compass direction labels, and radial tick labels all rendered in dark INK colors; clearly readable against light surface
+      Data: Green line (#009E73) with circular markers for "Prevailing Winds"; orange line (#D55E00) with square markers for "Secondary Pattern"; both colors vivid and distinct
+      Grid: Concentric circles and radial lines present with subtle styling (alpha=0.15); visible but not dominant
+      Legend: Positioned upper right with proper styling and frameon=True
+      Legibility verdict: PASS—all text is readable; no light-on-light conflicts
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified—NOT pure black or light
+      Chrome: Title and axis labels rendered in light INK colors (#F0EFE8 and #B8B7B0); clearly readable against dark surface
+      Data: Green line (#009E73) and orange line (#D55E00) identical to light render—data colors unchanged; only chrome has adapted
+      Grid: Equally subtle as light render; maintains visual consistency
+      Legend: Light-colored text on darker background; properly styled
+      Legibility verdict: PASS—no dark-on-dark conflicts; all text readable; brand green maintains visibility
+
+    Color identity confirmed: Okabe-Ito positions 1–7 are identical between renders; only backgrounds and text colors (chrome) differ.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text sizes explicitly set with theme-adaptive colors; readable
+          in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Compass labels, legend, and radial ticks well-spaced with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Distinct markers per series; line width 3.5 and marker sizes appropriately
+          scaled
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12×12 figsize appropriate for polar plots; generous padding
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive with correct format; axis labels clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green (#009E73); backgrounds correct (#FAF8F1
+          light, #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional marker differentiation; custom grid styling; thoughtful
+          legend placement. Slightly generic overall.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid customized; clean composition; generous whitespace. Could benefit
+          from explicit spine removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; realistic data; legend supports narrative.
+          Straightforward presentation without advanced techniques.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar coordinate projection; lines connect points in theta
+          order
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Lines present; multiple series shown; grid lines and legend included
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Theta: 8 compass directions; Radius: 0-20 m/s; all data plotted;
+          no clipping'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels descriptive and match data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates cyclical data, multiple series, continuous measurements
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Wind speed by direction is meteorologically plausible; neutral; realistic
+          patterns
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds 0-20 m/s reasonable; 8 compass directions standard; sensible
+          increments
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple script; no extraneous functions/classes; direct plotting code
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random seed set (np.random.seed(42)); deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, seaborn'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; idiomatic matplotlib/seaborn
+          usage
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct matplotlib polar projection API; sns.set_theme() for theming;
+          theme token system follows seaborn best practices
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn theming effectively; custom marker styles; polar projection
+          well-implemented. Generic defaults; lacks advanced techniques.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -18,191 +243,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent color accessibility using seaborn colorblind palette (blue/orange contrast)
-  - Perfect title format following pyplots.ai conventions
-  - Well-chosen real-world scenario (hourly temperature by season) that demonstrates
-    cyclical data visualization
-  - Clean code structure with proper reproducibility (seed=42)
-  - Good use of closed loops to create continuous circular lines
-  - Clear axis labeling with units and 24-hour time format
-  weaknesses:
-  - Legend styling (fancybox=True, shadow=True) is overly decorative and inconsistent
-    with clean seaborn aesthetic
-  image_description: 'The plot shows a polar/circular line chart displaying hourly
-    temperature patterns for Summer and Winter seasons. The circular layout has hour
-    labels (0:00, 3:00, 6:00, 9:00, 12:00, 15:00, 18:00, 21:00) around the perimeter,
-    representing a 24-hour cycle. Concentric circles show temperature values (10°C,
-    20°C, 30°C, 40°C). Two lines with markers are displayed: an orange line for Summer
-    (larger radius, ~17-33°C) and a blue line for Winter (smaller radius, ~3-13°C).
-    Both lines form closed loops connecting all 24 hourly data points. The legend
-    is positioned in the upper right corner with a white background box. The title
-    "Hourly Temperature Pattern · polar-line · seaborn · pyplots.ai" appears at the
-    top in bold. The plot uses a clean white background with subtle gray grid lines.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt bold, hour labels at 18pt, temperature labels at 16pt
-          - all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Lines at 3.5 width and markers at size 10 are visible, though markers
-          could be slightly larger for the data density
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses seaborn's colorblind palette (orange/blue), excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good square format (12x12), plot fills canvas well, legend slightly
-          extends outside
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Temperature labels include units (°C), hour format is clear
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid alpha at 0.4 is acceptable, but legend with fancybox and shadow
-          is overly decorative
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct polar line plot with circular axis
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta (angle) = hours, Radius = temperature - correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Line connects points in theta order, multiple series with different
-          colors, grid with concentric circles and radial lines
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, appropriate y-axis range (0-40°C)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies Summer and Winter series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correctly uses format: Hourly Temperature Pattern · polar-line ·
-          seaborn · pyplots.ai'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows cyclical data (24-hour pattern), multiple series comparison,
-          clear seasonal difference
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Hourly temperature pattern is a real-world scenario, though the sinusoidal
-          pattern is slightly idealized
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Summer temps (17-33°C) and winter temps (3-13°C) are realistic, though
-          ranges could be slightly more varied
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only matplotlib, numpy, and seaborn imported, all used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly, but the filename in code is correct
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses sns.set_theme() and sns.color_palette() for styling, but doesn't
-          use seaborn's high-level plotting functions (this is acceptable since seaborn
-          doesn't have native polar plot support)
-  verdict: APPROVED
+  styling:
+  - grid-styling

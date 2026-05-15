@@ -1,168 +1,179 @@
 library: highcharts
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:33:15Z'
-updated: '2025-12-30T09:44:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593353051
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T17:23:07Z'
+generated_by: claude-haiku
+workflow_run: 25685622351
+issue: 2551
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-basic/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/highcharts/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent horizontal orientation for category readability
-  - Clear point estimates with distinct yellow markers and blue confidence interval
-    bars
-  - Reference line at 75 adds valuable context for interpretation
-  - Good use of Highcharts columnrange for confidence intervals combined with scatter
-    for points
-  - Colorblind-safe color scheme (blue/yellow)
-  - Realistic business scenario with department performance scores
-  - Proper title format following spec-id · library · pyplots.ai convention
-  weaknesses:
-  - Confidence intervals lack endpoint caps as mentioned in specification notes
-  - Legend could be positioned closer to the plot area for better visual cohesion
-  image_description: The plot displays a horizontal point estimate chart showing department
-    performance scores with 95% confidence intervals. Eight departments (Marketing,
-    Engineering, Sales, Operations, Finance, HR, Research, Customer Support) are listed
-    on the left y-axis. Each department has a yellow circular point marker representing
-    the point estimate, with blue horizontal bars extending to show the confidence
-    interval range. A vertical dashed gray reference line is positioned at score 75.
-    The x-axis shows "Performance Score" ranging from 50 to 100. The title "point-basic
-    · highcharts · pyplots.ai" appears at the top with a subtitle explaining the data
-    context. The layout uses white background with subtle gray grid lines. Engineering
-    and Research show the highest scores (~85-88), while HR and Sales show lower scores
-    (~66-68).
+  - Excellent theme handling with both light and dark renders fully readable and properly
+    color-adapted
+  - Clean, reproducible code with proper imports and no unnecessary abstractions
+  - 'Correct Okabe-Ito palette compliance with theme-adaptive backgrounds (#FAF8F1
+    light, #1A1A17 dark)'
+  - Strong library mastery with proper use of ColumnRangeSeries for error bars, inverted
+    layout, and plotLines reference line
+  - 'Perfect spec compliance: all required features present with correct axis mapping
+    and data visualization'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct theme color)
+      Chrome: Title, axis labels (Department, Performance Score), category names, and tick labels all in dark INK (#1A1A17) with excellent contrast and readability
+      Data: Orange bars (#D55E00) represent 95% confidence intervals; green points (#009E73) mark point estimates; both colors clearly visible and distinct from background
+      Legend: "95% CI" and "Point Estimate" clearly visible in light background box
+      Reference line at 75: dashed line in INK_SOFT color, provides useful context
+      Grid: Subtle horizontal gridlines visible
+      Legibility verdict: PASS - All elements fully readable with proper contrast and sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct theme color)
+      Chrome: Title, axis labels, category names, and tick labels all in light INK (#F0EFE8) with excellent contrast against dark background; no "dark on dark" failures
+      Data: Orange bars (#D55E00) and green points (#009E73) are identical to light render - confirming proper separation of data colors (theme-independent) from chrome (theme-adaptive)
+      Legend: "95% CI" and "Point Estimate" clearly visible in dark background box (#242420)
+      Reference line at 75: dashed line visible and properly colored for dark theme
+      Grid: Subtle gridlines visible
+      Legibility verdict: PASS - All elements fully readable; no contrast failures or theme-adaptation issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title at 48px, axis labels at 36px, tick
-          labels at 24-28px'
+        comment: All font sizes properly scaled (title 28px, axis labels 22px, tick
+          labels 18px); readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, horizontal layout prevents label collisions
+        comment: Clean spacing; no overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Point markers (radius 16) and CI bars clearly visible, well-sized
-          for 8 data points
+        comment: 8 categories well-distributed; markers and bars clearly visible with
+          no crowding
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent blue (#306998) and yellow (#FFD43B) combination, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with appropriate margins, slight excess whitespace
-          at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Department" and "Performance Score"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures colorblind-safe colors; high contrast between
+          green and orange
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape format well-utilized; generous margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (good), but legend is at bottom with extra vertical
-          space separating it from plot
+        passed: true
+        comment: Title follows format; axes are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors correct; backgrounds properly themed for both light
+          and dark
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, clean execution; reference line at 75 shows intentional
+          context
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; generous whitespace; standard spine handling appropriate
+          for chart type
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: green points draw the eye, orange bars provide
+          uncertainty context'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct point estimate plot with confidence intervals
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on y-axis, estimates on x-axis, CI bars correct
-      - id: SC-03
+        comment: Correct horizontal point estimate plot with confidence intervals
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has horizontal orientation, distinct markers, reference line at 75;
-          missing endpoint caps on error bars as noted in spec
-      - id: SC-04
-        name: Data Range
+        comment: Point estimates, confidence intervals, categories all present; reference
+          line adds context
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axis range 50-100 shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'Correct axes: categories vertical, scores horizontal (50–100)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "95% CI" and "Point Estimate"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "point-basic · highcharts · pyplots.ai"'
+        comment: Title format correct; legend properly shows series labels
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in estimates and different CI widths (asymmetric
-          intervals); Research has narrow CI, Finance has wide CI
+        comment: 'All aspects of plot type shown: point estimates, confidence intervals,
+          reference context'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Department performance scores is a plausible business scenario, neutral
-          topic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Performance scores 66-88 with CIs ranging ~±3-8 points are realistic
+        comment: Department performance metrics are realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 50–100 range sensible for performance scores
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,42 +181,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data → chart config → series
-          → export'
+        comment: Clean procedural code; no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized; no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" (correct) but also creates plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output naming; current highcharts_core API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of inverted chart, columnrange series for CIs, plotLines
-          for reference line; could leverage more Highcharts-specific features like
-          data labels or tooltips in HTML version
+        comment: Excellent use of Chart, HighchartsOptions, ColumnRangeSeries, ScatterSeries;
+          proper container and Selenium setup
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnRangeSeries for error bars, inverted layout, plotLines
+          for reference line
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
