@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: bokeh 3.8.1 | Python 3.13
-Quality: 91 | Updated: 2026-05-15
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-15
 """
 
 import importlib
