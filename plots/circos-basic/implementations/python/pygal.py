@@ -1,7 +1,7 @@
 """ anyplot.ai
 circos-basic: Circos Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 60/100 | Created: 2026-05-15
+Quality: 91/100 | Created: 2026-05-15
 """
 
 import math
