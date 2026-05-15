@@ -1,7 +1,7 @@
 """ anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-15
+Quality: 82/100 | Updated: 2026-05-15
 """
 
 import os

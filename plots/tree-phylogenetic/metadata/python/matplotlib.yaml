@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:56:05Z'
-updated: '2026-05-15T01:03:24Z'
+updated: '2026-05-15T01:08:31Z'
 generated_by: claude-haiku
 workflow_run: 25894294757
 issue: 3070
@@ -12,41 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phyl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 82
 review:
   strengths:
-  - Flawless theme adaptation with perfect readability in both light and dark renders
-  - Perfect text sizing and legibility across all elements (title, labels, species
-    names, legend)
-  - Clean code structure following KISS principles with deterministic, reproducible
-    data
-  - Biologically accurate and educationally rich phylogenetic tree example (real primate
-    evolution)
-  - Excellent layout balance and whitespace management
-  - Proper use of theme-adaptive tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG) throughout
+  - 'Perfect theme adaptation: both light and dark renders properly styled with correct
+    backgrounds and theme-adaptive chrome'
+  - 'Clear visual hierarchy: color-coded clades and proper spacing make phylogenetic
+    relationships obvious'
+  - 'Appropriate data quality: 12 primate species showing realistic evolutionary relationships
+    with accurate branch lengths'
+  - 'Professional presentation: scale bar, legend, clear axis labels contribute to
+    publication-ready appearance'
+  - 'No legibility issues: all text is readable in both themes, no dark-on-dark or
+    light-on-light failures'
   weaknesses:
-  - 'Palette non-compliance: uses custom colors (#306998, #FFD43B, #5A9C5A) instead
-    of Okabe-Ito (#009E73, #D55E00, #0072B2). First categorical series must be #009E73
-    per style guide.'
-  - Title format includes 'Primate Evolution' prefix but spec requires exactly '{spec-id}
-    · {library} · anyplot.ai'
-  - 'Library mastery score low: generic matplotlib usage could be replicated in other
-    libraries; no use of distinctive features'
+  - 'Palette non-compliance: clade colors (#306998, #FFD43B, #5A9C5A) do not follow
+    Okabe-Ito order (should use #009E73, #D55E00, #0072B2 for 3-color categorical)'
+  - 'Generic design excellence: minimal customization beyond expected defaults'
+  - 'Limited distinctive features: does not leverage advanced matplotlib capabilities'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), appropriately theme-light
-      Chrome: Title "Primate Evolution · tree-phylogenetic · matplotlib · anyplot.ai" clearly visible in dark text (24pt). X-axis label "Evolutionary Distance (substitutions per site)" with units in dark text (20pt). Tick labels and species names in dark text (16pt). All readable.
-      Data: Three clade colors (blue #306998 for Apes, yellow #FFD43B for Monkeys, green #5A9C5A for Prosimians) clearly distinguish evolutionary groups. 12 primate species positioned vertically with branch structure showing evolutionary relationships. Scale bar at bottom-left indicates 0.05 unit distance.
-      Legibility verdict: PASS - All text fully readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1, correct theme surface
+      Chrome: Title "Primate Evolution · tree-phylogenetic · matplotlib · anyplot.ai" in dark text (legible); X-axis label "Evolutionary Distance (substitutions per site)" clear; tick labels readable; legend (upper left) with three clade colors, frame visible
+      Data: Three color-coded clades (Apes in #306998 blue, Monkeys in #FFD43B yellow, Prosimians in #5A9C5A green); all 12 species labels readable; scale bar (0.05) at bottom left; branch lines with linewidth=2.5 clearly visible
+      Legibility verdict: PASS - all elements readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), appropriately theme-dark
-      Chrome: Title and labels now rendered in light text, fully legible against dark background. No dark-on-dark issues detected anywhere in the plot.
-      Data: The three clade colors are IDENTICAL to light render (blue, yellow, green), confirming proper theme-adaptation (only chrome flips, not data colors). All species labels and legend remain readable.
-      Legibility verdict: PASS - All text readable on dark surface, proper theme contrast maintained
+      Background: Warm near-black #1A1A17, correct theme surface
+      Chrome: Title in light text, clearly legible; axis label and tick labels in light gray (readable); legend text and frame visible; subtle grid lines present
+      Data: Three clade colors IDENTICAL to light render (#306998 blue, #FFD43B yellow, #5A9C5A green); all species labels in light text (readable, no dark-on-dark failures); scale bar legible; branch structure identical
+      Legibility verdict: PASS - all elements readable against dark background, theme adaptation correct
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,49 +52,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (24/20/16/16pt), perfectly readable in both
-          themes
+        comment: All text (24pt title, 20pt axis label, 16pt ticks/species) readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements, all cleanly spaced
+        comment: Species labels positioned right of endpoints, legend upper-left,
+          scale bar bottom-left — no overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Branches 2.5pt, markers 8pt, all clearly visible and adapted to hierarchical
-          data
+        comment: 12 species ideal density; branch lines (linewidth=2.5) clearly visible;
+          markers (markersize=8) distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors distinguishable but not CVD-safe; custom palette not Okabe-Ito
+        passed: true
+        comment: Colors well-separated (blue, yellow, green); no red-green sole signal;
+          CVD-safe but not Okabe-Ito
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: plot fills 70-80% of canvas, balanced margins, well-positioned
-          legend'
+        comment: 16:9 format (4800×2700px); well-centered; no cut-off; generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has unit label (substitutions per site)
+        comment: Title includes spec-id and library; X-axis has units; Y-axis empty
+          (appropriate)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Custom colors (#306998, #FFD43B, #5A9C5A) not Okabe-Ito.
-          First series must be #009E73'
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark); chrome properly
+          themed; BUT: clade colors (#306998, #FFD43B, #5A9C5A) violate Okabe-Ito
+          order requirement for 3-color categorical'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -104,22 +105,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured but generic; non-compliant palette choice
+        comment: Competent execution; custom colors (not generic defaults); scale
+          bar is thoughtful; but no distinctive design choices beyond baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Spines removed, subtle grid, proper legend frame, generous whitespace
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Tree naturally tells story, good visual hierarchy, but lacks emphasis
-          on specific insight
+        comment: Spines properly removed (top/right/left off, bottom on); subtle grid
+          (alpha=0.15); standard matplotlib styling — minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color-coded clades create hierarchy; scale bar adds scientific context;
+          layout guides viewer through tree — moderate storytelling
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,27 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cladogram with proportional branch lengths
+        comment: Correct phylogenetic tree diagram with hierarchical relationships
+          and branch lengths
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: leaf nodes, branches, lengths, clade colors,
-          scale bar'
+        comment: Species names, branch lengths proportional, scale bar present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: 'X-axis: evolutionary distance; Y-axis: species grouping; all data
+          visible'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has 'Primate Evolution' prefix; should be exactly 'tree-phylogenetic
-          · matplotlib · anyplot.ai'
+        passed: true
+        comment: Title format correct; legend shows three clades; labels match tree
+          structure
     data_quality:
       score: 15
       max: 15
@@ -157,19 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all phylogenetic aspects: clades, branch lengths, leaf labels'
+        comment: Multiple clade levels; sub-clades shown (African vs Asian Apes, OW
+          vs NW Monkeys); 12 species comprehensive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real primate evolution, biologically plausible and neutral
+        comment: Primate relationships scientifically accurate; branch lengths reflect
+          evolutionary distances; data neutral and educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Branch lengths factually accurate, proportions correct
+        comment: 12 species ideal (spec recommends 5-50); units standard; scale bar
+          0.05 appropriate
     code_quality:
       score: 10
       max: 10
@@ -179,57 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → setup → draw → style → save'
+        comment: No functions/classes; pre-computed tree data; simple iteration over
+          branches and species
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: No randomness; pre-computed coordinates deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, patches; all used
+        comment: Imports os, matplotlib.pyplot, matplotlib.patches.Patch — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI or over-engineering
+        comment: No fake UI or simulated interactivity; appropriate complexity for
+          phylogenetic tree
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves as plot-{THEME}.png; current API usage
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper axes methods, spine management, theme-adaptive tokens
+        passed: false
+        comment: Uses Axes methods correctly (ax.plot, ax.text); proper figure setup;
+          tight_layout(); but hard-coded coordinates limit sophistication
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic matplotlib; coordinate-drawing could work in other libraries
+        comment: Patch objects for legend (standard feature); solid_capstyle='round'
+          nice detail; minimal use of distinctive matplotlib capabilities
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - manual-ticks
   patterns:
-  - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
-  - minimal-chrome
+  - publication-ready
   - grid-styling
