@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:00:13Z'
-updated: '2026-05-15T15:12:44Z'
+updated: '2026-05-15T15:19:43Z'
 generated_by: claude-haiku
 workflow_run: 25925030430
 issue: 3003
@@ -12,112 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-dark.html
-quality_score: 83
+quality_score: 72
 review:
   strengths:
-  - Excellent Chernoff face implementation with creative facial feature mapping to
-    multivariate data (face width=revenue, height=margin, eye size=satisfaction, mouth=market
-    share)
-  - 'Good visual storytelling: facial expressions intuitively encode company performance
-    (smiling tech companies, neutral retail, sad energy companies)'
-  - Clean 4×3 grid layout with no text overlap and excellent use of white space
-  - Proper use of Bokeh's HoverTool for interactive tooltips with full data context
-  - 'All required features present: observation labels, legend, feature mapping subtitle,
-    hover data'
-  - Realistic and neutral company performance data across three sectors with clear
-    variation
-  - Both renders are visually readable and layout is balanced
+  - Creative Chernoff face concept with intuitive feature mappings (face width, height,
+    eye size, mouth curve)
+  - 'Facial expressions effectively communicate multivariate patterns: happy Tech,
+    neutral Retail, sad Energy creates strong visual narrative'
+  - Clean 4×3 grid layout with perfect spacing and balanced whitespace
+  - Proper use of Bokeh HoverTool for interactive data exploration (sector and metric
+    tooltips)
+  - Both light and dark renders display good visual readability and contrast
+  - Accurate data mapping across all four business metrics with normalized scales
+  - All 12 faces fully rendered with consistent facial feature proportions
   weaknesses:
-  - 'CRITICAL: Code uses arbitrary color palette (#306998 Python Blue, #FFD43B yellow,
-    #8B4513 brown) instead of required Okabe-Ito palette starting with #009E73 brand
-    green - violates VQ-07 hard requirement'
-  - 'CRITICAL: Code does not read ANYPLOT_THEME environment variable for theme adaptation.
-    Uses hardcoded background (#FAFAFA) and text colors (#333333) instead of dynamic
-    theme tokens. This breaks the two-render requirement where chrome adapts but data
-    colors remain constant'
-  - 'CRITICAL: Output filename is ''plot.png'' instead of ''plot-light.png'' and ''plot-dark.png''
-    - violates CQ-05 output API requirement. Should generate both PNG and HTML files'
-  - Missing HTML output files (plot-light.html, plot-dark.html) - Bokeh implementation
-    should save both static PNG and interactive HTML
-  - 'Background color #FAFAFA should be #FAF8F1 (light theme per style guide) - minor
-    but inconsistent'
-  - Code uses bokeh.io.export_png which style guide explicitly says NOT to use; should
-    use Selenium+Chrome for robust rendering
-  - 'Code/image version mismatch: rendered colors and text appearance don''t match
-    hardcoded values in code, suggesting implementation wasn''t executed from provided
-    source file'
+  - 'Palette compliance critical failure: Code uses hardcoded colors (#306998 Python
+    Blue, #FFD43B yellow, #8B4513 brown) instead of required Okabe-Ito palette starting
+    with #009E73 brand green'
+  - Code does not read ANYPLOT_THEME environment variable - hardcodes background and
+    text colors instead of theme-adaptive tokens
+  - 'Output method violates bokeh.md specification: uses export_png() (explicitly
+    forbidden) instead of Selenium+headless Chrome screenshot approach'
+  - Output files saved as 'plot.png' instead of 'plot-light.png' and 'plot-dark.png'
+    per pipeline requirements
+  - Missing HTML output files (plot-light.html, plot-dark.html) - interactive Bokeh
+    library must produce both PNG and HTML
+  - 'Code/image render mismatch: Code hardcodes #FAFAFA background but images show
+    correct theme-adaptive backgrounds suggesting repair was partial'
+  - Theme-adaptive chrome tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT) completely
+    absent from code - all colors hardcoded
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAFAFA (should be #FAF8F1, very close)
-      Chrome: Title "chernoff-basic · bokeh · anyplot.ai" is dark, centered, and clearly visible. Face labels (Tech #1, Retail #1, Energy #1, etc.) are dark text and fully readable. Legend showing three sector colors with labels is clear.
-      Data: Faces displayed in a 4×3 grid showing three sectors. Tech faces (top, teal color), Retail faces (middle, tan/orange color), Energy faces (bottom, blue color). Facial features are clearly visible: eyes with pupils, eyebrows, noses, mouths with expressions varying by metrics.
-      Legibility verdict: PASS - All text is readable. However, CRITICAL ISSUE: Code specifies colors ["#306998", "#FFD43B", "#8B4513"] but rendered colors appear to be [teal/green, orange/tan, blue] which don't match the code values. This suggests a code/image sync issue.
+      Background: Warm off-white surface, appears to match #FAF8F1 specification - perfect light theme background
+      Chrome: Title "chernoff-basic · bokeh · anyplot.ai" is clearly visible in dark text at top. Face labels (Tech #1, Retail #1, Energy #1, etc.) below each face are fully readable in dark text. Legend at top shows three sector colors with labels. Subtitle at bottom explaining feature mapping is readable. All text has excellent contrast against light background.
+      Data: 12 Chernoff faces arranged in 4×3 grid. Tech sector (top row) shows teal/greenish faces with happy/smiling expressions. Retail sector (middle row) shows tan/orange faces with neutral expressions. Energy sector (bottom row) shows blue faces with sad/frowning expressions. Face features vary: eye size, face width, face height, mouth curvature all encode different metrics. Facial expressions effectively communicate performance differences across sectors.
+      Legibility verdict: PASS - All elements readable, text colors appropriate for light background, data clearly distinguishable
 
     Dark render (plot-dark.png):
-      Background: Very dark, approximately #1A1A17 or darker (dark theme appropriate)
-      Chrome: Title text is light-colored and readable. Face labels are light-colored and readable against the dark background. Legend items are visible with light text labels.
-      Data: Same 12 faces in 4×3 grid. Facial feature representations are identical to light render (same expressions, eye sizes, mouth curves). Data colors should be identical hex codes to light render (only chrome changes between themes).
-      Legibility verdict: PASS - All text is readable, dark-on-light contrast achieved. However, comparing to light render, the overall appearance differs more than expected if using identical hex codes, suggesting potential theme-adaptation issues or image generation concerns.
+      Background: Warm near-black surface, appears to match #1A1A17 specification - appropriate dark theme background, NOT pure black
+      Chrome: Title is light-colored and clearly readable against dark background. Face labels appear to be light text and are readable. Legend text is light-colored. Subtitle text is light and readable. Text contrast is good for dark background.
+      Data: Same 12-face grid with identical layout to light render. Face colors appear consistent with light render (teal for Tech, orange for Retail, blue for Energy) - data colors correctly preserved across theme. All facial features maintain same size and position as light render. Emotional expressions are identical to light version.
+      Legibility verdict: PASS - All text readable in both title and labels, good contrast despite dark background, data colors preserved from light render
 
-    CRITICAL OBSERVATIONS: The rendered images and code show discrepancies. Code defines colors=["#306998", "#FFD43B", "#8B4513"], but rendered faces appear different colors. Additionally, code uses hardcoded text_color="#333333" (dark gray) throughout, which should fail readability on dark background, yet dark render is readable. This indicates either: (1) code file is not version-matched to rendered output, (2) pipeline applies post-processing, or (3) execution differs from code. Both renders are visually legible despite these concerns.
+    Both renders demonstrate good theme adaptation of chrome elements (background, text colors), though the code shown does not appear to implement the full ANYPLOT_THEME environment variable integration that the rendered output suggests.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both renders. Font sizes explicitly
-          set. Subtitle slightly smaller than optimal.
+        comment: All text readable in both light and dark renders with explicit font
+          sizes set
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Grid layout with perfect spacing. No overlapping text elements.
+        comment: Perfect 4×3 grid spacing, no text collisions, excellent whitespace
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 faces and facial features clearly visible and properly sized
-          for the 4×3 grid.
+        comment: All 12 faces and facial features clearly visible at appropriate scale
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: 'Adequate contrast but uses arbitrary palette (#306998, #FFD43B,
-          #8B4513) instead of Okabe-Ito. No red-green sole signal. Deducted for non-compliant
-          palette.'
+        comment: 'Custom palette used (#306998, #FFD43B, #8B4513) instead of required
+          Okabe-Ito'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas with balanced margins. Good whitespace
-          around elements.
+        comment: Well-balanced layout with generous margins and good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct (chernoff-basic · bokeh · anyplot.ai). Subtitle
-          clearly explains feature mapping. Legend labels descriptive.
+        comment: Title format correct, subtitle clearly explains feature mappings
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'FAILS: Uses #306998 (legacy Python Blue explicitly forbidden per
-          style guide), #FFD43B, #8B4513. Should use Okabe-Ito starting with #009E73.
-          Background #FAFAFA instead of #FAF8F1. No theme-adaptive chrome in code
-          despite renders appearing theme-adapted.'
+        comment: 'First series must be #009E73 (Okabe-Ito), not custom colors. Background
+          colors appear theme-adaptive in renders but code hardcodes colors.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -125,24 +114,21 @@ review:
         score: 3
         max: 8
         passed: false
-        comment: Creative face concept but undermined by wrong palette. Generic color
-          scheme (Python colors) rather than professional Okabe-Ito. No intentional
-          design hierarchy beyond face expressions.
+        comment: Creative Chernoff face concept, but generic color choices and default
+          styling
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal customization, basic face rendering without polish
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clean grid layout, minimal unnecessary elements, clear legend. Some
-          refinement visible but could be more polished.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Good visual hierarchy through facial expressions: happy faces for
-          high-performing tech, neutral for retail, sad for low-growth energy. Mouth
-          curves encode market share. Viewer understands story.'
+        comment: 'Facial expressions tell clear story: happy Tech → neutral Retail
+          → sad Energy creates visual hierarchy'
     spec_compliance:
       score: 15
       max: 15
@@ -152,29 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chernoff face implementation with all subtypes (multivariate
-          feature mapping).
+        comment: Correct Chernoff face implementation with all required facial features
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: observation IDs, multiple variables, facial
-          mapping, legend, hover tooltips, feature explanation.'
+        comment: Observation IDs, multivariate mapping, legend, hover tooltips, feature
+          explanation all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'All four variables correctly mapped: revenue→width, margin→height,
-          satisfaction→eye_size, market_share→mouth_curve. All data visible.'
+        comment: Face width=revenue, height=margin, eye_size=satisfaction, mouth=market_share
+          correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format perfect. Legend clearly labeled with sector names and
-          colors.
+        comment: Title format 'chernoff-basic · bokeh · anyplot.ai' correct, legend
+          properly labeled
     data_quality:
       score: 15
       max: 15
@@ -184,26 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 12 observations across 3 sectors with full range
-          of metric variations. Tech shows high-performing characteristics, Energy
-          shows low-performing.'
+        comment: 'Comprehensive: 4 variables, 3 sectors, 12 faces showing full range
+          of variation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real company performance metrics (Revenue Growth, Profit Margin,
-          Customer Satisfaction, Market Share) across realistic sectors (Tech, Retail,
-          Energy). Neutral, professional scenario.
+        comment: Company performance metrics across sectors are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized 0-1 scale is appropriate for facial feature mapping. All
-          proportions make sense and are factually plausible for business domain.
+        comment: Normalized 0-1 scale appropriate for facial feature mapping
     code_quality:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: CQ-01
@@ -211,39 +192,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: data generation → processing → plotting. Inline
-          face drawing in loop. No helper functions as per spec.'
+        comment: Linear structure without over-engineering, inline face drawing
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. All data generation deterministic.
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.plotting, bokeh.models, bokeh.io.export_png.
-          No unused imports.'
+        comment: All imports used, no unnecessary dependencies
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Acceptable but uses export_png which style guide explicitly says
-          NOT to use (should use Selenium+Chrome). Some inline repetition in face
-          drawing could be refactored, but KISS principle overrides.
+        comment: Uses export_png() which bokeh.md explicitly forbids; must use Selenium+Chrome.
+          Code lacks theme-adaptation tokens (PAGE_BG, INK, INK_SOFT, etc.)
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'FAILS: Saves as ''plot.png'' instead of ''plot-light.png'' / ''plot-dark.png''.
-          Does not read ANYPLOT_THEME environment variable. Should generate both PNG
-          and HTML per bokeh.md guidelines.'
+        comment: Saves as 'plot.png' instead of 'plot-light.png' and 'plot-dark.png'.
+          Does not read ANYPLOT_THEME env var. Missing HTML output files.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -251,30 +228,25 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses Bokeh's high-level API (figure, patch, line, scatter) and ColumnDataSource
-          correctly. But misses theme-adaptation patterns (should read ANYPLOT_THEME).
-          export_png not recommended.
+        comment: Uses HoverTool and ColumnDataSource correctly but misses theme-adaptation
+          patterns required by bokeh.md
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses HoverTool for interactive tooltips (Bokeh-specific). Uses ColumnDataSource
-          (idiomatic). Could leverage more Bokeh-specific features but adequate for
-          spec.
+        comment: HoverTool for interactive tooltips is Bokeh-specific, but missing
+          other distinctive features like Legend rendering
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - patches
   - custom-legend
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
-  - columndatasource
   dataprep:
   - normalization
-  styling:
-  - minimal-chrome
-  - alpha-blending
+  styling: []
