@@ -1,18 +1,40 @@
-""" pyplots.ai
+""" anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 88/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-15
 """
 
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
 
-# Generate synthetic Iris-like data (4 features, 3 species)
+# Remove current directory from sys.path to avoid shadowing the pygal module
+_cwd = sys.path[0] if sys.path[0] else "."
+if _cwd in sys.path:
+    sys.path.remove(_cwd)
+
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Restore current directory
+sys.path.insert(0, _cwd)
+
+
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2")
+
+# Data
 np.random.seed(42)
 
-# Simulate sepal length, sepal width, petal length, petal width for 3 species
+# Simulate iris-like data (4 features, 3 species)
 # Species 1: Setosa - small petals, medium sepals
 setosa = np.column_stack(
     [
@@ -56,35 +78,31 @@ X_scaled = (X - X_mean) / X_std
 # Andrews curve function: f(t) = x1/sqrt(2) + x2*sin(t) + x3*cos(t) + x4*sin(2t) + ...
 t_values = np.linspace(-np.pi, np.pi, 100)
 
-# Colors for 3 species - colorblind-safe palette (blue, orange, purple)
-species_colors = ("#306998", "#E67E22", "#9B59B6")
+# Number of curves per species to display
 n_curves_per_species = 15
 
-# Custom style for large canvas with increased font sizes for readability
+# Custom style for theme-adaptive rendering
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=species_colors,
-    title_font_size=96,
-    label_font_size=64,
-    major_label_font_size=56,
-    legend_font_size=64,
-    value_font_size=48,
-    stroke_width=2,
-    opacity=0.4,
-    opacity_hover=0.8,
-    tooltip_font_size=48,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Create XY chart with interactive features
+# Create XY chart
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="andrews-curves · pygal · pyplots.ai",
+    title="andrews-curves · pygal · anyplot.ai",
     x_title="t (radians)",
     y_title="f(t)",
     show_dots=False,
@@ -95,11 +113,9 @@ chart = pygal.XY(
     legend_at_bottom_columns=3,
     legend_box_size=32,
     truncate_legend=-1,
-    tooltip_border_radius=10,
-    js=["https://kozea.github.io/pygal.js/2.0.x/pygal-tooltips.min.js"],
 )
 
-# Plot curves for each species - group all curves into single series per species
+# Plot curves for each species
 for species_idx in range(3):
     species_mask = y == species_idx
     species_data = X_scaled[species_mask]
@@ -117,21 +133,16 @@ for species_idx in range(3):
         curve_values = (
             row[0] / np.sqrt(2) + row[1] * np.sin(t_values) + row[2] * np.cos(t_values) + row[3] * np.sin(2 * t_values)
         )
-        # Create points with metadata for interactive tooltips
-        tooltip = (
-            f"{species_names[species_idx]}: Sepal {orig[0]:.1f}×{orig[1]:.1f}cm, Petal {orig[2]:.1f}×{orig[3]:.1f}cm"
-        )
-        points = [
-            {"value": (float(t), float(v)), "label": tooltip} for t, v in zip(t_values, curve_values, strict=True)
-        ]
+        # Create points for the curve
+        points = [(float(t), float(v)) for t, v in zip(t_values, curve_values, strict=True)]
         all_points.extend(points)
-        # Add None to create a break between curves (discontinuity)
+        # Add None to create a break between curves
         if curve_num < len(indices) - 1:
             all_points.append(None)
 
-    # Add single series per species - clean legend with only 3 entries
+    # Add series for this species
     chart.add(species_names[species_idx], all_points, show_dots=False)
 
 # Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
