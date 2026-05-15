@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: andrews-curves
 created: '2025-12-31T21:35:14Z'
-updated: '2026-05-15T13:07:21Z'
+updated: '2026-05-15T13:12:31Z'
 generated_by: claude-haiku
 workflow_run: 25919201064
 issue: 2859
@@ -12,40 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - Correctly implements Andrews curve visualization with proper Fourier series transformation
-    (f(t) = x1/√2 + x2·sin(t) + x3·cos(t) + x4·sin(2t))
-  - Perfect theme adaptation - both light and dark renders fully readable with appropriate
-    text colors (#1A1A17/#F0EFE8) and backgrounds (#FAF8F1/#1A1A17)
-  - Excellent data quality - realistic iris-like data with 4 dimensions, proper z-score
-    normalization, deterministic output (seed=42)
-  - All visual quality criteria met - proper font sizes (title 28px, labels 22px,
-    ticks 18px), clear Okabe-Ito palette with brand green as first series, clean layout
-  - Spec-compliant - correct title format 'andrews-curves · pygal · anyplot.ai', legend
-    shows species names, axes properly labeled
+  - Perfect visual quality with explicit font sizing for large canvas legibility
+  - Flawless spec compliance and data quality
+  - Proper theme-adaptive chrome in both light and dark renders
+  - Clean, reproducible code with proper seed and normalization
+  - Strong use of color coding to create visual hierarchy and species separation
+  - Professional handling of custom Style object for theme tokens
   weaknesses:
-  - Design excellence limited to defaults - could enhance with spine removal (top/right),
-    custom grid styling, or refined whitespace treatment
-  - Library mastery modest - doesn't leverage pygal's interactive capabilities like
-    tooltips or hover effects to display variable values and species on demand
-  - Visual hierarchy is implicit through color/legend rather than explicit through
-    sizing, emphasis, or strategic positioning
+  - Design Excellence could be more refined; grid styling not optimized
+  - Could leverage more distinctive pygal features beyond theme adaptation
+  - Legend and grid styling somewhat generic relative to defaults
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines. PASS
-      Chrome: Title "andrews-curves · pygal · anyplot.ai" is clearly visible in dark text at top. Axis labels "t (radians)" and "f(t)" are crisp and readable. Tick labels are visible along both axes. Legend at bottom shows three species with colored squares. PASS
-      Data: Three series of curves representing iris species. Green curves (#009E73, Setosa) as first series, orange curves (#D55E00, Versicolor) as second, blue curves (#0072B2, Virginica) as third. Curves are well-separated by color and show distinct patterns. PASS
-      Legibility verdict: PASS - All text fully readable against light background. No light-on-light issues.
+      Background: Warm off-white #FAF8F1 - correct theme background
+      Chrome: Title "andrews-curves · pygal · anyplot.ai" in dark text; X-axis "t (radians)" and Y-axis "f(t)" both dark and readable; tick labels visible; grid subtle
+      Data: Three species color-coded with Okabe-Ito palette - Setosa in green (#009E73), Versicolor in orange (#D55E00), Virginica in blue (#0072B2); 45 total curves with clear visual separation
+      Legibility verdict: PASS - all text elements perfectly readable against light background; no dark-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with visible grid lines. PASS
-      Chrome: Title is clearly visible in light-colored text. Axis labels "t (radians)" and "f(t)" are clearly readable. Tick labels are visible and light-colored. Legend at bottom is readable. PASS
-      Data: Identical data colors to light render - green (#009E73), orange (#D55E00), blue (#0072B2) all visible against dark background. Curves show same patterns and separation as light render. PASS
-      Legibility verdict: PASS - No dark-on-dark failures. All text is light-colored and visible. Brand green #009E73 remains visible and readable.
-
-    Both renders pass theme-readability check. Data colors are identical between light and dark; only chrome (background, text, grid) adapts correctly to theme.
+      Background: Warm near-black #1A1A17 - correct theme background
+      Chrome: Title in light text clearly visible; axis labels and tick labels in light colors; all readable against dark surface; grid subtle
+      Data: Three species colors identical to light render (green, orange, blue unchanged); only chrome flipped as expected
+      Legibility verdict: PASS - all text elements light-colored and readable; no dark-on-dark failures; proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,49 +47,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set via Style object; readable at full size
-          in both themes
+        comment: Font sizes explicitly set (28, 22, 18); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend and axes well-spaced
+        comment: No overlapping text; all elements fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 curves per species with proper breaks between curves; all clearly
-          visible
+        comment: 45 curves optimally visible; species distinguishable by color
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; three colors well-separated
+        comment: Okabe-Ito palette CVD-safe; good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px landscape format; proportions balanced, nothing cut off
+        comment: Perfect 4800×2700 px; balanced proportions and margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'andrews-curves · pygal · anyplot.ai' present; axes labeled
-          't (radians)' and 'f(t)'
+        comment: Title with spec-id and domain; axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, third #0072B2; backgrounds
-          #FAF8F1 light / #1A1A17 dark; both themes correct'
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds; theme-correct
+          chrome'
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,20 +94,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses style guide defaults competently but without extra polish or
-          custom touches
+        comment: Well-configured default with theme adaptation; not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: No spine removal, no custom grid styling; serviceable but not refined
+        comment: Functional grid and legend; could be more refined
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Cluster separation implicit through color/pattern but not emphasized
+        passed: true
+        comment: Clear visual hierarchy through color separation; good focal point
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews curve implementation with Fourier series transformation
+        comment: Correct XY Andrews curves with proper Fourier transform
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shows curves by category, handles density via overlapping, displays
-          all 4 dimensions
+        comment: 'All features present: multivariate data, categories, transparency,
+          clustering'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: t ∈ [-π, π], Y-axis: f(t) values; axes show all data'
+        comment: X/Y correctly assigned; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Spec-compliant title format; legend labels match species names
+        comment: Title format correct; legend labels match species
     data_quality:
       score: 15
       max: 15
@@ -158,22 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of Andrews curve visualization; 3 species with
-          distinct patterns
+        comment: 'Shows all aspects: 4D data, 3 species, clustering patterns'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic iris-like measurements; sepal/petal data is domain-appropriate
-          and neutral
+        comment: Iris-inspired botanical data; neutral, scientific
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Iris dimensions realistic (sepal ~5-7, petal ~1-5.5); t range [-π,
-          π] appropriate for Fourier
+        comment: Normalized data; appropriate t range for Fourier expansion
     code_quality:
       score: 10
       max: 10
@@ -183,33 +167,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward implementation
+        comment: No functions/classes; linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports: os, numpy, pygal.Style; all used'
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; appropriate complexity for Andrews curve generation
+        comment: No fake UI; clean implementation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly outputs plot-{THEME}.html and plot-{THEME}.png
+        comment: Correct plot-{THEME} output format
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -217,14 +201,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY appropriately; Style object and theme adaptation are
-          idiomatic
+        comment: Good Style object usage; proper XY chart type
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Doesn't leverage pygal's interactive capabilities (tooltips, callbacks)
+        comment: Leverages theme system; could use more distinctive features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -234,4 +217,5 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - normalization
-  styling: []
+  styling:
+  - publication-ready
