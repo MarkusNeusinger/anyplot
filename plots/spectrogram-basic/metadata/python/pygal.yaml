@@ -1,212 +1,266 @@
 library: pygal
+language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T21:35:31Z'
-updated: '2025-12-31T21:43:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20627534676
+updated: '2026-05-15T07:39:00Z'
+generated_by: claude-haiku
+workflow_run: 25906165868
 issue: 2927
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - colorbar
-  - patches
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of a custom heatmap chart type by extending pygal Graph
-    class
-  - Uses viridis colormap which is perceptually uniform and colorblind-safe as recommended
-    in the spec
-  - Proper dB scale conversion for power representation
-  - Smooth color interpolation between colormap stops
-  - 'Includes all required outputs: PNG, SVG, and HTML'
-  - Clean handling of scipy import path collision issue
-  - Good signal generation with chirp plus harmonics showing time-frequency characteristics
+  - 'Perfect visual quality: all text legible, no overlap, proper spacing across both
+    themes'
+  - 'Excellent spec compliance: correct spectrogram type with time-frequency heatmap,
+    proper axis labeling with units, perceptually uniform viridis colormap'
+  - 'Flawless data quality: realistic chirp signal with harmonics, appropriate sample
+    rate and duration, dB scale for power representation'
+  - 'Clean code: proper seed for reproducibility, theme-adaptive styling, zero unused
+    imports'
+  - 'Theme adaptation: identical data colors between light and dark renders, only
+    chrome flips—exemplary theme handling'
   weaknesses:
-  - Code uses a class structure rather than KISS flat script (though necessary for
-    extending pygal)
-  - Grid opacity at 0.25 with white color may be slightly too visible on the colorful
-    background
-  image_description: The plot displays a spectrogram showing a chirp signal with frequency
-    increasing over time (0-2 seconds on x-axis, 0-2000 Hz on y-axis). The visualization
-    uses the viridis colormap (dark purple to bright yellow), with the diagonal bright
-    band clearly showing the frequency sweep from ~100 Hz to ~1200 Hz. A secondary
-    weaker harmonic trace is visible. The colorbar on the right shows power in dB
-    ranging from approximately -99 to -16 dB. The title "spectrogram-basic · pygal
-    · pyplots.ai" appears at the top. Subtle white grid lines help read values. All
-    axis labels include units (Time (s), Frequency (Hz), Power (dB)).
+  - 'Design Excellence modest: functional colormap choice (viridis) is correct but
+    utilitarian—could add more visual sophistication (e.g., custom accent colors for
+    high-power regions, enhanced title typography, or refined grid styling)'
+  - 'Library Mastery slightly underutilized: while the Graph subclass approach is
+    idiomatic, the manual SVG construction could benefit from more distinctive pygal-specific
+    patterns or enhanced interactivity hooks'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, correct theme surface
+      Chrome: Title "spectrogram-basic · pygal · anyplot.ai" in grey (72px), X-axis "Time (s)" (52px), Y-axis "Frequency (Hz)" (52px), tick labels (38px), colorbar title "Power (dB)" (42px), colorbar labels (36px) — all clearly visible against light background with strong contrast
+      Data: Viridis colormap (purple/blue base to yellow peak) showing chirp signal evolution 100–800 Hz over 2 seconds, with harmonics visible as secondary power bands
+      Legibility verdict: PASS — all text readable, proper hierarchy, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correct theme surface
+      Chrome: Title, axis labels, and all tick labels now light-colored text on dark background, maintaining same font sizes as light render, all clearly readable with proper contrast. No dark-on-dark failures detected.
+      Data: Viridis colormap identical to light render—data colors are unchanged, proving theme-only chrome flip. Chirp pattern and harmonics visually identical between renders.
+      Legibility verdict: PASS — all text readable in dark theme, excellent theme-adaptive implementation, no legibility regression
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all readable at full size;
-          tick font could be slightly larger but acceptable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Title (72px), axis labels (52px), tick labels (38px), colorbar title
+          (42px) — all explicitly set with large font sizes, readable in both light
+          and dark themes with proper contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text properly positioned with adequate spacing; tick labels,
+          axis labels, and colorbar elements non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Heatmap cells are clearly visible with good resolution; the chirp
-          signal is clearly distinguishable
+        comment: Heatmap cells clearly visible and well-proportioned; grid lines subtle
+          but visible; all elements distinctly rendered
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses viridis colormap which is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with plot filling most of the canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'All axes have descriptive labels with units: "Time (s)", "Frequency
-          (Hz)", "Power (dB)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis colormap is perceptually uniform and safe for colorblindness;
+          high contrast between palette segments
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape (4800×2700) with proper proportions; generous margins;
+          nothing cut off; well-balanced composition
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title includes spec-id, library, and domain; X-axis 'Time (s)' and
+          Y-axis 'Frequency (Hz)' include units; colorbar labeled 'Power (dB)' with
+          units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis (continuous data) used correctly; backgrounds #FAF8F1 (light)
+          and #1A1A17 (dark); both renders theme-correct; data colors identical between
+          renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid lines are present but no legend needed; colorbar serves as the
-          legend equivalent
+        comment: Professional implementation with appropriate colormap and theme handling;
+          custom color interpolation shows intent; somewhat utilitarian without extra
+          visual flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid (opacity 0.10), clean borders, professional typography;
+          minimal but functional; could benefit from enhanced refinement in grid styling
+          or accent colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with heatmap as focal point; title→axes→colorbar
+          guides the eye; effectively shows frequency evolution over time; tells coherent
+          analytical story
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements a spectrogram time-frequency heatmap
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Time on x-axis, frequency on y-axis, power as color intensity
-      - id: SC-03
+        comment: Correct spectrogram heatmap type; shows time-frequency representation;
+          displays how frequency content changes over time as specified
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has colorbar with dB units, perceptually uniform colormap, proper
-          axis labels; missing log scale option for frequency
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar with dB scale present; axes labeled with units; perceptually
+          uniform colormap (viridis) chosen; all spec requirements met
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Time on x-axis (0–2 seconds), frequency on y-axis (0–2000 Hz range);
+          all data visible; axes span full data range appropriately
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar is present and labeled; colorbar title "Power (dB)" is correct
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "spectrogram-basic · pygal · pyplots.ai"
+        comment: 'Title format correct: ''spectrogram-basic · pygal · anyplot.ai'';
+          colorbar serves as legend; proper placement and formatting'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows chirp signal with harmonics and noise, demonstrating time-varying
-          frequency content well
+        comment: Full spectrogram displayed with time-frequency resolution; colorbar
+          shows power scale; amplitude variation clearly visible; demonstrates complete
+          plot type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Chirp signal is a realistic scenario used in audio analysis, radar,
-          and communications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sample rate of 4000 Hz, 2-second duration, frequency range up to
-          Nyquist - all sensible values
+        comment: 'Realistic signal: chirp with harmonics and noise; sample rate 4000
+          Hz (audio-realistic); 2-second duration (appropriate for demo); neutral,
+          non-controversial context'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Time range 0–2 seconds (reasonable); frequency range matches sample
+          rate; dB scale standard for audio; all values sensible for domain
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 2
         max: 3
         passed: false
-        comment: Uses a custom class `SpectrogramHeatmap` extending pygal's Graph
-          - necessary for the heatmap functionality not natively supported
+        comment: Custom Graph subclass and manual SVG construction; justified for
+          complex visualization but slightly over-structured compared to simpler pygal
+          patterns
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)` for reproducibility
+        comment: 'Seed set: np.random.seed(42); deterministic; no random variation
+          after seeding'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, scipy.signal, pygal)
+        comment: 'All imports used: os, sys, numpy, scipy.signal, pygal.Graph, pygal.Style;
+          no unused imports'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Color interpolation well-implemented; manual SVG construction appropriate;
+          proper theme handling; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 2
-        max: 1
-        passed: true
-        comment: Saves as plot.png, plot.svg, and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png, plot-{THEME}.svg, plot-{THEME}.html; correct
+          naming convention; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Creates a custom pygal Graph subclass with SVG rendering, demonstrates
-          pygal's extensibility for non-standard chart types
+        comment: Uses pygal's Graph subclass pattern (idiomatic); Style object for
+          theme tokens (idiomatic); custom kwargs handling (idiomatic); manual SVG
+          advanced but appropriate
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Demonstrates Graph subclass and SVG rendering; color interpolation
+          shows mastery; somewhat specialized/advanced for typical pygal usage; could
+          showcase more library-specific patterns
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  - manual-ticks
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - grid-styling
