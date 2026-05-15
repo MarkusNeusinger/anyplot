@@ -1,170 +1,178 @@
 library: bokeh
+language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:32:51Z'
-updated: '2025-12-31T05:42:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612790523
+updated: '2026-05-15T03:38:34Z'
+generated_by: claude-haiku
+workflow_run: 25898541332
 issue: 2925
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/bokeh/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of Manhattan plot with proper chromosome coloring and
-    cumulative positioning
-  - Good use of Bokeh interactive tools (pan, zoom, save) for exploration of GWAS
-    data
-  - Clear threshold lines with labels for genome-wide and suggestive significance
-    levels
-  - Appropriate point sizing differentiation between significant and non-significant
-    SNPs
-  - Clean, KISS-compliant code structure with proper reproducibility
+  - Correct Manhattan plot structure with all required features (alternating colors,
+    threshold lines, significant SNP highlighting)
+  - Excellent light-theme rendering with perfect text legibility across all elements
+  - Scientific color palette (Okabe-Ito) applied correctly with intentional visual
+    hierarchy
+  - Clean, publication-ready design with appropriate use of threshold lines to guide
+    viewer focus
+  - Idiomatic Bokeh implementation using ColumnDataSource, Span for threshold lines,
+    and Label for annotations
+  - Proper interactive HoverTool providing chromosome, position, and p-value information
+  - Realistic GWAS data with peaks concentrated in expected chromosomes
   weaknesses:
-  - Missing legend to explain color coding (blue/light blue for chromosomes, yellow
-    for significant)
-  - Could add HoverTool to show SNP details on mouseover, which is a key Bokeh strength
-  image_description: 'The plot displays a Manhattan plot for GWAS data with approximately
-    44,000 SNPs across 22 chromosomes. The x-axis shows genomic position with chromosome
-    numbers (1-22) labeled below. The y-axis shows -log₁₀(p-value) ranging from 0
-    to about 12. Points use alternating blue shades (darker #306998 and lighter #7BA3C9)
-    for adjacent chromosomes, creating visual separation. Significant SNPs above the
-    genome-wide threshold are highlighted in yellow/gold (#FFD43B) and are larger
-    in size. Two horizontal threshold lines are present: a red dashed line at ~7.3
-    for genome-wide significance (p = 5×10⁻⁸) and a teal/green dotted line at 5 for
-    suggestive threshold (p = 1×10⁻⁵). The title "manhattan-gwas · bokeh · pyplots.ai"
-    appears in the top-left. The background is light gray (#FAFAFA). Significant peaks
-    are visible on chromosomes 2, 6, 11, and 17 as specified in the data generation.
-    Bokeh interactive tools are visible in the top-right corner.'
+  - 'Dark theme text legibility critical failure: Y-axis tick labels, threshold labels,
+    chromosome labels, and legend text all use INK_SOFT which lacks sufficient contrast
+    against #1A1A17 background. All secondary text elements are barely readable in
+    dark mode.'
+  - Y-axis major_label_text_color set to INK_SOFT (#B8B7B0) has poor contrast on dark
+    background - should use INK (#F0EFE8) instead
+  - Threshold label colors (lines 151, 156) use INK_SOFT with insufficient dark-theme
+    contrast
+  - Chromosome labels use INK_SOFT and are nearly invisible in dark render
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required
+      Chrome: Title "manhattan-gwas · bokeh · anyplot.ai" in dark text (INK), axis labels "-log₁₀(p-value)" and "Genomic Position" clearly visible, Y-axis tick labels (0, 2, 4, 6...) in dark gray (INK_SOFT), chromosome labels (1-22) centered below plot area
+      Data: Alternating teal (#009E73) and orange (#D55E00) points for odd/even chromosomes; yellow (#F0E442) points highlight significant SNPs above threshold line; threshold labels "p = 5×10⁻⁸" and "p = 1×10⁻⁵" visible on right; legend shows three categories
+      Legibility verdict: PASS - all text is clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required
+      Chrome: Title visible; Y-axis tick labels are barely visible (very faint gray on dark), threshold labels "p = 5×10⁻⁸" and "p = 1×10⁻⁵" are faint, chromosome labels at bottom are difficult to read, legend text is marginally legible
+      Data: Teal and orange colors identical to light render (correct - only chrome should flip); yellow significant SNPs visible and stand out
+      Legibility verdict: FAIL - dark theme has insufficient text contrast. Y-axis ticks, threshold labels, chromosome labels, and legend text all use INK_SOFT (#B8B7B0) which lacks adequate contrast against #1A1A17 background. Text is barely readable, not meeting legibility standards for publication-quality visualization.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable, but some text on the right side
-          is small
+        score: 5
+        max: 8
+        passed: false
+        comment: Light render perfect, dark render has critical legibility issues
+          with Y-axis ticks, threshold labels, chromosome labels, and legend text
+          barely readable
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text readable, no element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Point sizes are appropriate for data density; significant SNPs clearly
-          visible with larger markers
+        comment: Markers clearly visible with appropriate sizing, no overplotting
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/light-blue alternating scheme is colorblind-safe, yellow highlights
-          are distinct
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, minor issue with data concentrated in lower
-          portion
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Genomic Position" and "-log₁₀(p-value)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette used, CVD-safe and high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions and generous margins at 4800×2700
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, but no legend explaining the color scheme for significant
-          vs non-significant SNPs
+        comment: All labels present and descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Colors correct but dark-theme chrome fails legibility test
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean scientific design with intentional color hierarchy and alternating
+          chromosome visualization
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid styling and appropriate legend placement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides attention to significant peaks; threshold
+          lines establish focal points
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Manhattan plot type
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Cumulative genomic position on X, -log10(p-value) on Y
-      - id: SC-03
+        comment: Correct Manhattan plot structure
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has significance thresholds, alternating colors, significant SNP
-          highlighting; missing optional SNP labels
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: alternating colors, threshold lines, significant
+          SNPs highlighted, chromosome labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data including most significant SNPs
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X/Y axes correctly mapped; all 44,000 variants visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend for color coding
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "manhattan-gwas · bokeh · pyplots.ai"'
+        comment: Title correctly formatted; legend properly labeled
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows significant peaks on multiple chromosomes, realistic p-value
-          distribution
+        comment: Comprehensive GWAS structure with realistic peak distribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Simulated GWAS data is a standard, neutral scientific context
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Realistic chromosome sizes, p-values range appropriately
+        comment: Plausible simulated GWAS data with expected peak concentration
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible axis ranges showing background variants and significant
+          hits
     code_quality:
       score: 10
       max: 10
@@ -174,11 +182,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save'
+        comment: Straightforward, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -186,28 +194,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Uses HoverTool for real interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent use of ColumnDataSource, Span, and Label
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, interactive tools (pan, zoom), Span for threshold
-          lines, but could leverage more Bokeh features like HoverTool
-  verdict: APPROVED
+        comment: Custom color mapping and HoverTool with detailed tooltips
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
+  - publication-ready
