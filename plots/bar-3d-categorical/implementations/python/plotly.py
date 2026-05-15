@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 83/100 | Created: 2026-05-15
@@ -29,18 +29,7 @@ base = np.array([85, 60, 45, 55])
 sales = base[:, None] + np.random.randint(-18, 22, size=(n_prod, n_reg))
 z_max = int(sales.max()) + 10
 
-
-def cuboid(xi, yi, h, dw=0.42):
-    x0, x1 = xi - dw / 2, xi + dw / 2
-    y0, y1 = yi - dw / 2, yi + dw / 2
-    vx = [x0, x1, x1, x0, x0, x1, x1, x0]
-    vy = [y0, y0, y1, y1, y0, y0, y1, y1]
-    vz = [0, 0, 0, 0, h, h, h, h]
-    fi = [0, 0, 4, 4, 0, 0, 2, 2, 0, 0, 1, 1]
-    fj = [1, 2, 5, 6, 1, 5, 3, 7, 3, 7, 2, 6]
-    fk = [2, 3, 6, 7, 5, 4, 7, 6, 7, 4, 6, 5]
-    return vx, vy, vz, fi, fj, fk
-
+DW = 0.42
 
 # Plot
 fig = go.Figure()
@@ -50,7 +39,15 @@ for p_idx, prod in enumerate(products):
     ii, jj, kk = [], [], []
 
     for r_idx in range(n_reg):
-        vx, vy, vz, fi, fj, fk = cuboid(p_idx, r_idx, float(sales[p_idx, r_idx]))
+        xi, yi, h = p_idx, r_idx, float(sales[p_idx, r_idx])
+        x0, x1 = xi - DW / 2, xi + DW / 2
+        y0, y1 = yi - DW / 2, yi + DW / 2
+        vx = [x0, x1, x1, x0, x0, x1, x1, x0]
+        vy = [y0, y0, y1, y1, y0, y0, y1, y1]
+        vz = [0, 0, 0, 0, h, h, h, h]
+        fi = [0, 0, 4, 4, 0, 0, 2, 2, 0, 0, 1, 1]
+        fj = [1, 2, 5, 6, 1, 5, 3, 7, 3, 7, 2, 6]
+        fk = [2, 3, 6, 7, 5, 4, 7, 6, 7, 4, 6, 5]
         n = len(xs)
         xs.extend(vx)
         ys.extend(vy)
@@ -88,15 +85,15 @@ for p_idx in range(n_prod):
 
 fig.add_trace(
     go.Scatter3d(
-        x=lx, y=ly, z=lz, mode="text", text=lt, textfont={"size": 12, "color": INK}, showlegend=False, hoverinfo="skip"
+        x=lx, y=ly, z=lz, mode="text", text=lt, textfont={"size": 14, "color": INK}, showlegend=False, hoverinfo="skip"
     )
 )
 
 # Style
 fig.update_layout(
     title={
-        "text": "Regional Product Sales · bar-3d-categorical · plotly · anyplot.ai",
-        "font": {"size": 24, "color": INK},
+        "text": "bar-3d-categorical · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.98,
@@ -106,8 +103,8 @@ fig.update_layout(
         "xaxis": {
             "ticktext": products,
             "tickvals": list(range(n_prod)),
-            "title": {"text": "Product Category", "font": {"size": 18, "color": INK}},
-            "tickfont": {"size": 14, "color": INK_SOFT},
+            "title": {"text": "Product Category", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 18, "color": INK_SOFT},
             "gridcolor": GRID_COLOR,
             "backgroundcolor": PAGE_BG,
             "showbackground": True,
@@ -117,8 +114,8 @@ fig.update_layout(
         "yaxis": {
             "ticktext": regions,
             "tickvals": list(range(n_reg)),
-            "title": {"text": "Sales Region", "font": {"size": 18, "color": INK}},
-            "tickfont": {"size": 14, "color": INK_SOFT},
+            "title": {"text": "Sales Region", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 18, "color": INK_SOFT},
             "gridcolor": GRID_COLOR,
             "backgroundcolor": PAGE_BG,
             "showbackground": True,
@@ -126,8 +123,8 @@ fig.update_layout(
             "showgrid": True,
         },
         "zaxis": {
-            "title": {"text": "Sales ($K)", "font": {"size": 18, "color": INK}},
-            "tickfont": {"size": 14, "color": INK_SOFT},
+            "title": {"text": "Sales ($K)", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 18, "color": INK_SOFT},
             "gridcolor": GRID_COLOR,
             "backgroundcolor": PAGE_BG,
             "showbackground": True,
