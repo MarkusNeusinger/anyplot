@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 circos-basic: Circos Plot
-Library: altair | Python 3.13
-Quality: 90/100 | Updated: 2025-05-15
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-15
 """
 
 import os
