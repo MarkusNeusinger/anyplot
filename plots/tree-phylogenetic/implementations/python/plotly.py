@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
-Library: plotly | Python 3.13
-Quality: pending | Created: 2025-12-31
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-15
 """
 
 import os
