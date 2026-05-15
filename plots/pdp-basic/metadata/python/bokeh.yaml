@@ -1,170 +1,169 @@
 library: bokeh
+language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:37:00Z'
-updated: '2025-12-31T05:50:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612798508
+updated: '2026-05-15T22:41:22Z'
+generated_by: claude-haiku
+workflow_run: 25944635839
 issue: 2922
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - html-export
-  patterns:
-  - columndatasource
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of all spec requirements including confidence band, rug
-    plot, and zero-centering
-  - Uses real ML workflow with sklearn partial_dependence function and GradientBoostingRegressor
-  - Clean, well-structured code with proper reproducibility (random seeds)
-  - Good use of Bokeh Band model for the confidence interval visualization
-  - Appropriate text scaling for the 4800x2700 canvas size
+  - Flawless theme-adaptive styling with identical data colors in both renders
+  - Proper partial dependence visualization with 80% confidence interval and rug plot
+    showing data distribution
+  - 'Clean, reproducible code with GradientBoostingRegressor and realistic Friedman
+    #1 dataset'
+  - 'Correct bokeh patterns: Band, Span, ColumnDataSource, and Selenium screenshot'
+  - All specification requirements met with proper axis scaling and legend labels
   weaknesses:
-  - Legend placement in bottom-right could be improved; top_right or top_left would
-    be safer
-  - Axis labels lack units (though partial dependence is unitless, could add context
-    like standardized units)
-  image_description: 'The plot displays a Partial Dependence Plot with a blue line
-    showing the average partial dependence (centered at zero) across Feature X₀ values
-    ranging from 0 to 1. A light blue shaded band represents the 80% confidence interval
-    around the main line. The curve shows a characteristic sigmoid-like pattern: starting
-    low around -4 to -8 at low feature values, rising steeply through the middle range,
-    and plateauing around +1.5 at higher values. A yellow rug plot at the bottom shows
-    the distribution of training data points. The title "pdp-basic · bokeh · pyplots.ai"
-    appears at the top left. A dashed horizontal reference line at y=0 helps interpret
-    relative effects. The legend in the bottom right shows "80% CI", "Average PD",
-    and "Data Distribution". The background is a light gray (#fafafa) with dashed
-    grid lines.'
+  - Design excellence could be enhanced with visual refinement techniques like spine
+    removal or more sophisticated visual hierarchy
+  - LM-02 score reflects lack of bokeh-specific interactive features like HoverTool
+    or callbacks
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper contrast
+      Chrome: Title (28pt, #1A1A17), axis labels (22pt, #1A1A17), tick labels (18pt, #4A4A44) all clearly visible
+      Data: Confidence band (25% alpha #009E73), PDP line (#009E73), rug plot marks (#D55E00), reference line at y=0
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper contrast
+      Chrome: Title (#F0EFE8), axis labels (#F0EFE8), tick labels (#B8B7B0) all clearly visible; no dark-on-dark failures
+      Data: Identical colors to light render (#009E73 band/line, #D55E00 rug marks) confirming theme-adaptive data color consistency
+      Legibility verdict: PASS — all text readable in both renders, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable with
-          appropriately scaled font sizes for the 4800x2700 canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: 28pt title, 22pt axis labels, 18pt ticks; theme tokens applied; readable
+          in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend positioned cleanly; adequate spacing between elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width and confidence band are well-sized; rug plot marks could
-          be slightly more prominent
+        comment: Confidence band (25% alpha), 5px line, rug marks all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe
+        comment: 'Okabe-Ito #009E73 and #D55E00 are CVD-safe with good contrast'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: 4800×2700 landscape; proper margins; no cut-offs
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Feature X₀ Value", "Partial Dependence (centered)")
-          but lack units
+        comment: Descriptive title and axis labels with context
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend placement in bottom-right corner is partially obscured/cramped
-          and could overlap with data in other scenarios
+        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
+          dark); both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme implementation with 25% alpha opacity and dashed grid; above
+          baseline
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid styling; good legend padding; reference line at y=0
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: centered PDP, confidence band context, rug
+          plot insight'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct PDP line plot implementation
+        comment: Correct partial dependence plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Feature values on X-axis, partial dependence on Y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes confidence band, rug plot for data distribution, and centering
-          at zero as noted in spec
-      - id: SC-04
-        name: Data Range
+        comment: 80% CI, centered PDP, rug plot, all spec requirements
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Proper axis scaling and range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "pdp-basic · bokeh · pyplots.ai"
+        comment: Title includes spec/library/site; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows non-linear relationship well; could benefit from showing a
-          feature with different relationship type
+        comment: Real GradientBoostingRegressor; ICE percentiles; 100-point grid
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Uses sklearn''s Friedman #1 dataset with GradientBoostingRegressor
-          - a real ML interpretability scenario'
+        comment: 'Friedman #1 dataset with realistic ML scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for a regression problem, though feature range
-          [0,1] is somewhat narrow
+        comment: Sensible feature range (0-2.5) and centered PDP values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +171,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → model → plot → save'
+        comment: Straightforward script, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42
+        comment: np.random.seed(42) and model random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; importlib avoids shadowing
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; proper bokeh patterns
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current sklearn and bokeh APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png' correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png and .html output
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: figure(), ColumnDataSource, Band, Span, Selenium per library rules
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of Band for confidence interval and Span for reference line,
-          ColumnDataSource for data management; could leverage more Bokeh-specific
-          features like hover tooltips
+        comment: Band and Span patterns; could explore HoverTool or callbacks
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - publication-ready
