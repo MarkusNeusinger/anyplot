@@ -1,136 +1,200 @@
-""" pyplots.ai
+"""anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-15
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 
 
-# Data - GDP per capita for European countries (realistic economic indicator)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data - Life expectancy by country (years)
 np.random.seed(42)
 
-# European country ISO codes and approximate GDP per capita (USD)
-countries = [
-    "DEU",
-    "FRA",
-    "GBR",
-    "ITA",
-    "ESP",
-    "POL",
-    "NLD",
-    "BEL",
-    "SWE",
-    "AUT",
-    "CHE",
-    "NOR",
-    "DNK",
-    "FIN",
-    "IRL",
-    "PRT",
-    "GRC",
-    "CZE",
-    "ROU",
-    "HUN",
-    "SVK",
-    "BGR",
-    "HRV",
-    "SVN",
-    "EST",
-    "LVA",
-    "LTU",
-    "LUX",
-    "ISL",
-    "SRB",
-]
+countries_data = {
+    "country": [
+        "CHN",
+        "IND",
+        "USA",
+        "IDN",
+        "BRA",
+        "PAK",
+        "NGA",
+        "BGD",
+        "RUS",
+        "MEX",
+        "JPN",
+        "EGY",
+        "PHL",
+        "ETH",
+        "VNM",
+        "TUR",
+        "IRN",
+        "DEU",
+        "THA",
+        "FRA",
+        "GBR",
+        "TZA",
+        "ITA",
+        "KEN",
+        "COL",
+        "ESP",
+        "UKR",
+        "DZA",
+        "IRQ",
+        "AFG",
+        "CAN",
+        "MAR",
+        "AUS",
+        "PER",
+        "ANG",
+        "GHA",
+        "YEM",
+        "NLD",
+        "CHE",
+        "POL",
+        "SWE",
+        "BEL",
+        "CZE",
+        "GRC",
+        "PRT",
+        "AUT",
+        "NOR",
+        "DNK",
+        "FIN",
+        "ISL",
+    ],
+    "life_expectancy": [
+        78.2,
+        70.5,
+        78.9,
+        72.8,
+        76.1,
+        67.3,
+        54.7,
+        72.8,
+        72.5,
+        75.3,
+        84.5,
+        72.6,
+        71.9,
+        67.9,
+        73.8,
+        77.6,
+        77.2,
+        81.3,
+        76.9,
+        82.5,
+        81.5,
+        65.5,
+        82.8,
+        66.3,
+        76.3,
+        83.5,
+        71.4,
+        77.0,
+        70.2,
+        64.8,
+        82.3,
+        77.4,
+        83.2,
+        76.8,
+        60.8,
+        63.1,
+        66.2,
+        81.9,
+        83.6,
+        78.0,
+        84.2,
+        81.8,
+        79.1,
+        81.1,
+        81.7,
+        81.9,
+        84.1,
+        81.2,
+        82.1,
+        82.7,
+    ],
+}
 
-# Realistic GDP per capita values (in thousands USD) - varied distribution
-gdp_values = [
-    52.0,
-    44.0,
-    46.0,
-    35.0,
-    30.0,
-    18.0,
-    58.0,
-    51.0,
-    56.0,
-    53.0,
-    92.0,
-    89.0,
-    68.0,
-    54.0,
-    103.0,
-    24.0,
-    20.0,
-    27.0,
-    15.0,
-    18.0,
-    21.0,
-    12.0,
-    17.0,
-    29.0,
-    28.0,
-    22.0,
-    24.0,
-    125.0,
-    75.0,
-    9.0,
-]
+df = pd.DataFrame(countries_data)
 
-df = pd.DataFrame({"country": countries, "gdp_per_capita": gdp_values})
-
-# Create choropleth map
+# Create choropleth map with world scope
 fig = px.choropleth(
     df,
     locations="country",
-    locationmode="ISO-3",
-    color="gdp_per_capita",
+    color="life_expectancy",
     color_continuous_scale="Viridis",
-    scope="europe",
-    labels={"gdp_per_capita": "GDP per Capita (k USD)"},
+    scope="world",
+    hover_data={"country": True, "life_expectancy": ":.1f"},
+    labels={"life_expectancy": "Life Expectancy (years)"},
 )
 
-# Update layout for large canvas
+# Update colorbar for theme adaptation
 fig.update_layout(
-    title={
-        "text": "GDP per Capita in Europe · choropleth-basic · plotly · pyplots.ai",
-        "font": {"size": 28},
-        "x": 0.5,
-        "xanchor": "center",
-    },
-    geo={
-        "showframe": False,
-        "showcoastlines": True,
-        "coastlinecolor": "gray",
-        "coastlinewidth": 1,
-        "showland": True,
-        "landcolor": "lightgray",
-        "showocean": True,
-        "oceancolor": "aliceblue",
-        "showlakes": True,
-        "lakecolor": "aliceblue",
-        "projection_type": "natural earth",
-        "bgcolor": "white",
-    },
-    coloraxis_colorbar={
-        "title": {"text": "GDP per Capita<br>(k USD)", "font": {"size": 20}},
-        "tickfont": {"size": 16},
-        "len": 0.7,
-        "thickness": 25,
-        "x": 0.95,
-    },
-    template="plotly_white",
-    margin={"l": 20, "r": 80, "t": 80, "b": 20},
+    coloraxis_colorbar=dict(
+        title=dict(text="Life Expectancy<br>(years)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        thickness=28,
+        len=0.75,
+        x=1.02,
+        tickcolor=INK_SOFT,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+    )
 )
 
-# Update traces for better visibility
-fig.update_traces(marker_line_color="darkgray", marker_line_width=0.5)
+# Update layout for theme-adaptive rendering
+fig.update_layout(
+    title=dict(
+        text="choropleth-basic · plotly · anyplot.ai",
+        font=dict(size=28, color=INK, family="sans-serif"),
+        x=0.5,
+        xanchor="center",
+        y=0.98,
+        yanchor="top",
+    ),
+    geo=dict(
+        scope="world",
+        projection_type="natural earth",
+        showland=True,
+        landcolor="rgba(243, 243, 243, 0.5)" if THEME == "light" else "rgba(50, 50, 48, 0.5)",
+        showocean=True,
+        oceancolor="rgba(204, 229, 255, 0.3)" if THEME == "light" else "rgba(100, 140, 180, 0.2)",
+        showcountries=True,
+        countrycolor=INK_SOFT,
+        countrywidth=1.5,
+        showcoastlines=True,
+        coastlinecolor=INK_SOFT,
+        coastlinewidth=1.5,
+        showlakes=True,
+        lakecolor="rgba(200, 220, 255, 0.3)" if THEME == "light" else "rgba(100, 140, 180, 0.2)",
+        bgcolor=PAGE_BG,
+    ),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK, family="sans-serif"),
+    margin=dict(l=40, r=140, t=100, b=40),
+    height=900,
+    width=1600,
+)
 
-# Save as PNG (4800x2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+# Update traces for border visibility
+fig.update_traces(marker_line_width=2.5, marker_line_color=INK_SOFT)
 
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save as PNG (4800x2700 px via scale parameter)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+
+# Save as interactive HTML
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
