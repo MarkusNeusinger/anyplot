@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2025-05-15
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-15
 """
 
 import os
