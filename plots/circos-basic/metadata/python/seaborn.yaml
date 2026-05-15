@@ -1,18 +1,235 @@
 library: seaborn
+language: python
 specification_id: circos-basic
 created: '2025-12-31T11:07:32Z'
-updated: '2025-12-31T11:36:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617630017
+updated: '2026-05-15T09:24:07Z'
+generated_by: claude-haiku
+workflow_run: 25910184733
 issue: 3005
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circos-basic/seaborn/plot.png
-preview_html: null
-quality_score: 82
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Flawless theme adaptation: data colors identical between light/dark renders,
+    chrome perfectly theme-correct in both. No dark-on-dark or light-on-light legibility
+    failures.'
+  - 'Sophisticated visualization design: custom bezier curves for ribbons, proportional
+    encoding (arc size = code volume, bar height = module size, ribbon width = call
+    count) tells a clear story.'
+  - 'Excellent typography: font sizes explicitly set (title 26pt, labels 16pt), all
+    text readable at full resolution, intelligent label rotation avoids overlaps.'
+  - 'Publication-ready composition: balanced square layout (12×12), plot fills 70%
+    of canvas, generous whitespace, polished details throughout.'
+  - 'Real-world data context: software module dependencies is relatable and neutral;
+    proportional relationships are factually plausible.'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct and matches spec requirements
+      Chrome: Title "circos-basic · seaborn · anyplot.ai" is bold, dark text, perfectly readable. Segment labels (Core, Auth, API, Database, Cache, Queue, Logging, Utils, Metrics, Config) are dark text, intelligently rotated around circle, zero overlaps. Legend with light elevated background (#FFFDF6) and dark text explains three visualization layers.
+      Data: Outer ring segments show Okabe-Ito palette cycling through colors, with first series as green (#009E73). Inner track bars show module sizes in semi-transparent form. Ribbons connect dependencies with varying widths. All colors are vibrant and clearly distinguishable from light background.
+      Legibility verdict: PASS — All text is perfectly readable. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct and matches spec requirements
+      Chrome: Title and all segment labels render in light text (#F0EFE8), clearly readable against dark background with no dark-on-dark failures. Legend background shifts to darker elevated color (#242420) with light text. All chrome elements properly inverted for theme.
+      Data: Outer ring segments maintain identical Okabe-Ito colors as light render — green (#009E73) first series, orange, blue, purple, etc. are all preserved. Inner track bars and ribbons maintain identical colors and transparency. Data rendering is pixel-perfect match to light render.
+      Legibility verdict: PASS — All text is clearly readable in light colors against dark background. Theme adaptation is flawless; only chrome flips, data colors remain invariant.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 26pt, labels 16pt). Perfectly
+          readable in both light and dark themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Intelligent label rotation avoids all text collisions. All elements
+          clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Outer ring, inner track, and ribbons all clearly visible and well-adapted
+          to complexity.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. Good contrast between all elements.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect use of square format (12×12). Plot fills ~70% of canvas with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''circos-basic · seaborn · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73. Backgrounds correct (#FAF8F1
+          light / #1A1A17 dark). Theme-adaptive text colors correct in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom bezier curves, thoughtful color-cycling, sophisticated visual
+          hierarchy. Publication-quality composition with intentional design beyond
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom polygon rendering with careful alpha values, no unnecessary
+          elements, polished details throughout.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Strong visual encoding: arc size = code volume, bar height = module
+          size, ribbon width = call count. Visual hierarchy guides viewer through
+          relationships.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct circos plot with all required structure.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: segments on circle, proportional ribbons,
+          distinct colors, concentric inner track.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source→target mapping correct. Values properly encoded to visual
+          dimensions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels clearly explain visualization.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: varying segment sizes, diverse dependency strengths,
+          inner track variation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral software engineering context (module dependencies).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportions are factually plausible (LOC 600–2800, call counts 12–72).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → theme setup → data → plot → save. No unnecessary functions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os, matplotlib.patches, matplotlib.pyplot, numpy,
+          seaborn.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for custom circos. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png with dpi=300.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correctly uses sns.set_theme() and theme tokens. Circos plots inherently
+          require custom drawing (appropriate matplotlib approach).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages matplotlib's strength in custom geometric visualization;
+          uses theme-adaptive token system.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - patches
   - bezier-curves
   - manual-ticks
   patterns:
@@ -22,196 +239,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
-review:
-  strengths:
-  - Excellent circular layout with well-proportioned segments and gaps
-  - Inner data track effectively shows secondary trade volume information
-  - Ribbon bezier curves are smooth and visually appealing with proper transparency
-  - Region labels are well-rotated and positioned for readability
-  - Tab10 color palette provides good visual distinction between segments
-  - Comprehensive legend explaining all visual components
-  weaknesses:
-  - Title format does not strictly follow the required pattern (spec-id should be
-    first, not the descriptive title)
-  - Seaborn is only used for theming and color palette, not for actual plotting functions
-    - this is a limitation of the library for Circos plots
-  - Some ribbons in the center appear quite dense and could benefit from slightly
-    more transparency
-  image_description: 'The plot displays a circular Circos visualization showing global
-    trade flows between 10 world regions. The outer ring consists of colored arc segments
-    representing regions: North America (pink), East Asia (olive/yellow-green), Europe
-    (orange), South Asia (green), Middle East (teal), Southeast Asia (light green),
-    Africa (cyan/teal), Oceania (blue), South America (light purple), and Central
-    Asia (magenta). Each segment''s arc length is proportional to the region''s total
-    trade volume. An inner concentric track shows bar heights representing trade volume
-    for each region. Ribbons connect regions through the center, with widths proportional
-    to trade flow values. The title "Global Trade Flows · circos-basic · seaborn ·
-    pyplots.ai" appears at the top. Labels for each region are positioned outside
-    the ring with appropriate rotation for readability.'
-  criteria_checklist:
-    visual_quality:
-      score: 33
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: All labels are readable, though some smaller regions have slightly
-          cramped text. Title is clear and appropriately sized.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or elements; labels are well-positioned with
-          proper rotation
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Outer ring segments, inner track bars, and ribbons are all visible;
-          ribbon widths show good variation
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses tab10 palette which provides good distinction; adjacent segments
-          have distinct colors
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of square aspect ratio for circular plot; adequate margins
-          for labels
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean white background, legend at bottom explaining visualization
-          components
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Circos plot implementation with circular layout, segments,
-          and connection ribbons
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source/target connections properly mapped, segment sizes proportional
-          to trade volume
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Has outer ring segments, inner data track, and connecting ribbons
-          as specified
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All segments and connections visible and within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly describes outer ring, inner track, and ribbons
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: 'Title format incorrect: shows "Global Trade Flows · circos-basic
-          · seaborn · pyplots.ai" but should be "circos-basic · seaborn · pyplots.ai"
-          as primary title'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows 10 regions with varying segment sizes, 15 connections with
-          different strengths, inner track data
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Global trade flows is an excellent real-world application for Circos
-          plots
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
-        max: 5
-        passed: true
-        comment: Trade values in billions USD are reasonable; segment reordering ensures
-          visual distinction
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Linear script with imports → data → plot → save structure
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used (seaborn, matplotlib, numpy)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses context="poster" which is valid but font_scale=1.3 may cause
-          compatibility notes
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 0
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
-        max: 5
-        passed: false
-        comment: Seaborn is only used for sns.set_theme() and sns.color_palette();
-          no seaborn plotting functions are used. The actual plotting is done entirely
-          with matplotlib. This is a fundamental limitation as Circos plots are not
-          native to seaborn.
-  verdict: APPROVED
+  - publication-ready
