@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-15
@@ -14,8 +14,10 @@ import plotly.graph_objects as go
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+ELEVATED_DARK = "#F5F3ED" if THEME == "light" else "#3A3935"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ACCENT = "#009E73"
 
 # Okabe-Ito palette (first series must be #009E73)
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
@@ -47,6 +49,12 @@ hierarchy["North America"]["value"] = sum(hierarchy[c]["value"] for c in hierarc
 hierarchy["Europe"]["value"] = sum(hierarchy[c]["value"] for c in hierarchy["Europe"]["children"])
 hierarchy["Asia Pacific"]["value"] = sum(hierarchy[c]["value"] for c in hierarchy["Asia Pacific"]["children"])
 hierarchy["Latin America"]["value"] = sum(hierarchy[c]["value"] for c in hierarchy["Latin America"]["children"])
+total_value = sum(hierarchy[c]["value"] for c in hierarchy["All"]["children"])
+
+# Find top region for visual emphasis
+top_region = max(hierarchy["All"]["children"], key=lambda x: hierarchy[x]["value"])
+top_value = hierarchy[top_region]["value"]
+top_percent = 100 * top_value / total_value
 
 # Color mapping using Okabe-Ito (first series is always #009E73 for brand)
 colors = {
@@ -82,60 +90,82 @@ children = hierarchy[current_level]["children"]
 values = [hierarchy[child]["value"] for child in children]
 slice_colors = [colors[child] for child in children]
 
-# Create pie chart
+# Create pie chart with enhanced styling
 fig = go.Figure()
 
 fig.add_trace(
     go.Pie(
         labels=children,
         values=values,
-        hole=0.3,
+        hole=0.35,
         textinfo="label+percent",
         textposition="outside",
-        textfont={"size": 20, "color": INK},
-        hovertemplate="<b>%{label}</b><br>Sales: $%{value:.0f}M<br>Percentage: %{percent}<br><extra>Click to drill</extra>",
-        marker={"colors": slice_colors, "line": {"color": PAGE_BG, "width": 3}},
-        pull=[0.02] * len(children),
+        textfont={"size": 22, "color": INK, "family": "Arial, sans-serif"},
+        hovertemplate="<b style='font-size:16px'>%{label}</b><br>"
+        + "Sales: <b>$%{value:.0f}M</b><br>"
+        + "Share: <b>%{percent}</b><br>"
+        + "<i style='color:#999'>↻ Click to explore</i><extra></extra>",
+        marker={"colors": slice_colors, "line": {"color": PAGE_BG, "width": 4}},
+        pull=[0.08] * len(children),
         sort=False,
     )
 )
 
-# Center annotation
+# Enhanced center annotation with key insight
 fig.add_annotation(
-    text="<b>Global Sales</b><br>by Region",
+    text="<b>Global Sales</b><br><span style='font-size:20px'>by Region</span>",
     x=0.5,
-    y=0.5,
-    font={"size": 24, "color": INK},
+    y=0.52,
+    font={"size": 26, "color": INK, "family": "Arial, sans-serif"},
     showarrow=False,
     xref="paper",
     yref="paper",
 )
 
-# Breadcrumb navigation (repositioned lower to avoid overlap)
+# Top region insight annotation (visual storytelling)
 fig.add_annotation(
-    text="📍 All Regions",
+    text=f"<b>🏆 Leading Region</b><br>{top_region}<br><span style='font-size:18px; color:{ACCENT}'>${top_value:.0f}M ({top_percent:.1f}%)</span>",
+    x=0.5,
+    y=0.35,
+    font={"size": 16, "color": INK},
+    showarrow=False,
+    xref="paper",
+    yref="paper",
+    bgcolor=ELEVATED_DARK,
+    bordercolor=ACCENT,
+    borderwidth=2,
+    borderpad=12,
+    opacity=0.95,
+)
+
+# Enhanced breadcrumb navigation with styling
+fig.add_annotation(
+    text="<b>📍 Navigate</b><br>All Regions",
     x=0.02,
-    y=0.15,
+    y=0.18,
     xanchor="left",
-    yanchor="bottom",
-    font={"size": 20, "color": INK},
+    yanchor="middle",
+    font={"size": 18, "color": INK, "family": "Arial, sans-serif"},
     showarrow=False,
     xref="paper",
     yref="paper",
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
-    borderwidth=1,
-    borderpad=10,
+    borderwidth=2,
+    borderpad=12,
+    align="left",
 )
 
-# Click instruction
+# Improved click instruction with visual emphasis
 fig.add_annotation(
-    text="Click any slice to explore by country",
+    text="<i style='font-size:16px; color:"
+    + INK_SOFT
+    + "'>💡 Click any slice to drill down and explore by country</i>",
     x=0.5,
-    y=0.02,
+    y=0.01,
     xanchor="center",
     yanchor="bottom",
-    font={"size": 18, "color": INK_SOFT},
+    font={"size": 16, "color": INK_SOFT},
     showarrow=False,
     xref="paper",
     yref="paper",
@@ -143,8 +173,8 @@ fig.add_annotation(
 
 fig.update_layout(
     title={
-        "text": "pie-drilldown · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "<b>Global Sales Distribution by Region</b><br><span style='font-size:20px; font-weight: normal'>plotly · anyplot.ai</span>",
+        "font": {"size": 32, "color": INK, "family": "Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -155,16 +185,19 @@ fig.update_layout(
         "y": 0.5,
         "xanchor": "left",
         "x": 1.02,
-        "font": {"size": 18, "color": INK_SOFT},
-        "title": {"text": "Regions", "font": {"size": 20, "color": INK}},
+        "font": {"size": 18, "color": INK_SOFT, "family": "Arial, sans-serif"},
+        "title": {"text": "<b>Sales Regions</b>", "font": {"size": 20, "color": INK}},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "borderwidth": 2,
+        "tracegroupgap": 10,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font={"color": INK},
-    margin={"l": 60, "r": 200, "t": 100, "b": 100},
+    font={"color": INK, "family": "Arial, sans-serif"},
+    margin={"l": 80, "r": 240, "t": 120, "b": 100},
+    height=900,
+    width=1600,
 )
 
 # JavaScript for drilldown (only in HTML)
