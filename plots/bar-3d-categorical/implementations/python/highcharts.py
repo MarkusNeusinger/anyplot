@@ -1,7 +1,7 @@
-"""anyplot.ai
-Quarterly Product Sales · bar-3d-categorical: 3D Bar Chart for Categorical Comparison
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-15
+""" anyplot.ai
+bar-3d-categorical: 3D Bar Chart for Categorical Comparison
+Library: highcharts unknown | Python 3.13.13
+Quality: 78/100 | Created: 2026-05-15
 """
 
 import os
