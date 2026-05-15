@@ -6,7 +6,7 @@ title: Spectrogram Time-Frequency Heatmap
 
 # Specification tracking
 created: 2025-12-31T05:13:04Z
-updated: 2025-12-31T05:13:04Z
+updated: 2026-05-15T07:17:22Z
 issue: 2927
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - spectrogram
     - heatmap
   data_type:
     - timeseries
@@ -24,7 +23,8 @@ tags:
     - general
     - science
     - engineering
+    - signal-processing
   features:
     - basic
+    - spectrogram
     - time-frequency
-    - signal-processing
