@@ -1,177 +1,180 @@
 library: letsplot
+language: python
 specification_id: scatter-animated-controls
 created: '2025-12-31T13:53:17Z'
-updated: '2025-12-31T14:16:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620306159
+updated: '2026-05-15T11:26:48Z'
+generated_by: claude-haiku
+workflow_run: 25914768409
 issue: 3067
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/letsplot/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - hover-tooltips
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/letsplot/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of Gapminder-style visualization with realistic country
-    data
-  - Correct fallback approach using faceted view for library without native animation
-    support
-  - Well-formatted title following exact spec requirements
-  - Good use of lets-plot grammar of graphics features (scales, faceting, theming)
-  - Proper sizing with ggsize(1600, 900) and scale=3 for 4800x2700 output
-  - Clean, readable code structure following KISS principle
+  - Clean implementation of temporal narrative through faceted view - effectively
+    shows 20-year progression
+  - 'Perfect theme-adaptive styling: correct Okabe-Ito palette identical in both light
+    and dark renders; only chrome flips'
+  - 'Text legibility exceptional: no dark-on-dark or light-on-light failures; all
+    text clearly readable in both themes'
+  - Realistic, feature-rich data with good coverage of temporal variation
+  - Smart interpretation of spec's fallback requirement for non-interactive libraries
+  - 'No layout issues: balanced margins, no overlaps, good canvas utilization'
   weaknesses:
-  - Spec suggests large year indicator per panel for Gapminder storytelling feel -
-    facet strip labels work but larger text could enhance the visualization
-  - Some point overlap in the 2019 panel where multiple countries converge at higher
-    GDP/life expectancy values
-  image_description: 'The plot displays a faceted scatter visualization with 5 panels
-    showing key years (2000, 2005, 2010, 2015, 2019). Each panel shows GDP per Capita
-    on a logarithmic x-axis (ranging from ~3,162 to ~31,623 USD) vs Life Expectancy
-    on the y-axis (56-80 years). Ten fictional countries are represented by different
-    colored circles using the "Paired" color palette: Northland (light blue), Eastoria
-    (dark blue), Westopia (light green), Southaven (dark green), Centralia (pink),
-    Alpinia (red), Deltania (light orange), Oceanica (dark orange), Valleysia (light
-    purple), and Highlands (dark purple). Point sizes encode population (ranging from
-    ~50M to ~150M as shown in legend). The title "scatter-animated-controls · lets-plot
-    · pyplots.ai" is displayed prominently at the top. A legend on the right shows
-    both population size scale and country color mapping. The plot uses a minimal
-    theme with subtle gray gridlines.'
+  - Design feels generic - uses library defaults without distinctive visual choices
+    or polish
+  - Grid styling not refined - could be more subtle (lighter, dashed, or reduced opacity)
+  - Visual refinement minimal - spines present on all sides; minimal attention to
+    aesthetic detail
+  - Limited visual hierarchy - while temporal progression tells a story, no additional
+    emphasis or focal points
+  - Library Mastery average - faceting is useful but not distinctive to letsplot;
+    doesn't leverage library's strengths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme-light surface
+      Chrome: Title "scatter-animated-controls · letsplot · anyplot.ai" in dark text (readable). Axis labels "GDP per Capita (log scale, USD)" and "Life Expectancy (years)" clearly visible. Tick labels readable. Facet headers "2000", "2005", "2010", "2015", "2019" clearly visible.
+      Data: 10 countries rendered in Okabe-Ito colors starting with brand green (#009E73), followed by orange, blue, purple, yellow, sky blue, pink, gray shades. Population variation shown as point size (6-20 range). Log scale on X-axis. All data points distinguishable.
+      Legend: Right-side legend shows country names with color swatches and population size reference scale. Light text on elevated background (#FFFDF6) - all readable.
+      Legibility verdict: PASS - all text readable, no overlaps, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme-dark surface
+      Chrome: Title in light text (F0EFE8) - clearly readable. Axis labels in light text - readable. Tick labels in light-soft tone (B8B7B0) - readable. Facet headers clearly visible. No dark-on-dark failures.
+      Data: Same colors as light render - green (#009E73), orange, blue, purple, yellow, sky blue, pink, grays. Colors are IDENTICAL to light render (perfect - only chrome changed). Point sizes identical to light render.
+      Legend: Right-side legend with light text on elevated dark background (#242420) - all readable. No dark-on-dark issues.
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large (~28pt), axis labels ~18pt, tick labels ~14pt,
-          strip text ~18pt bold - all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; facet labels, axis labels, and legend
-          are well separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Points are well-sized (6-20 range) with good alpha (0.85), though
-          some overlap in crowded years like 2019
+        comment: 'Font sizes explicitly set; all readable in both themes; minor: legend
+          text could be slightly larger'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; faceted layout provides ample space
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers optimally sized with clear population variation; all points
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Paired palette provides good distinction but some similar hues (light
-          green/dark green, pinks/reds) may be harder for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of 1600x900 canvas scaled 3x; facets fill space well,
-          legend positioned cleanly on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"GDP per Capita (log scale, USD)" and "Life Expectancy (years)"
-          - descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe; good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance; facets fill canvas well; legend positioned appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (minimal theme), but legend shows two separate sections
-          which works well
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; other colors follow Okabe-Ito; backgrounds
+          correct; text colors theme-correct in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling with defaults; technically correct but not distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal refinement; grid visible but not subtle; spines present on
+          all sides
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Temporal progression creates narrative; limited additional visual
+          hierarchy
     spec_compliance:
-      score: 23
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct: faceted scatter plot as fallback for animation (per spec:
-          "Libraries without animation support should implement a static faceted version")'
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=GDP, Y=Life Expectancy, Size=Population, Color=Country - all correctly
-          mapped
-      - id: SC-03
-        name: Required Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Shows temporal evolution via facets, size encoding, color grouping.
-          Missing: no visible "current time/year" large background text as spec suggests,
-          though facet strip labels serve similar purpose'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, log scale handles GDP spread well
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Both Population (M) and Country legends are accurate and match data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"scatter-animated-controls · lets-plot · pyplots.ai" - correct format'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: 'Shows clear temporal progression with GDP growth and life expectancy
-          improvements over 20 years; different country trajectories visible. Minor:
-          some countries cluster similarly'
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Gapminder-style country data is excellent, neutral, educational scenario
-          with realistic metrics
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: GDP ($3,000-$50,000) and life expectancy (56-80 years) are realistic
-          ranges; population scale reasonable
+        comment: Scatter plot correct; appropriately implements static faceted fallback
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Temporal evolution shown; color and size encoding present; missing
+          interactive controls (justified)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X, Y, Color, Size all correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format and legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 countries with varied trajectories across 20 years
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Gapminder-style scenario; real-world plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values factually correct for the domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,43 +182,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → data generation → plot → save; no functions/classes'
+        comment: Clean structure; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: '`np.random.seed(42)` set'
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Imports are appropriate, though `# noqa: F405` needed for wildcard
-          import'
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of ggplot2-style grammar: `ggplot()`, `aes()`, `geom_point()`,
-          `facet_wrap()`, `scale_x_log10()`, `scale_color_brewer()`, `scale_size()`,
-          `theme_minimal()`, and `ggsize()`. Could have used additional lets-plot
-          features like tooltips'
+        comment: ggplot composition is idiomatic; faceting for temporal workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: facet_wrap is useful but generic; limited library-specific leverage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
