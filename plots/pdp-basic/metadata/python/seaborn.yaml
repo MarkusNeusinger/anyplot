@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:33:10Z'
-updated: '2026-05-15T22:44:18Z'
+updated: '2026-05-15T22:51:34Z'
 generated_by: claude-haiku
 workflow_run: 25944713879
 issue: 2922
@@ -12,40 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Flawless spec compliance with all required features (centered PDP, 95% CI band,
-    rug plot, reference line)
-  - Perfect visual quality across both themes with all text readable and no overlaps
-  - Correct theme adaptation with identical data colors (#009E73) and properly switched
-    chrome (backgrounds, text, grid)
-  - Realistic housing price prediction scenario with expected positive feature-to-prediction
-    relationship
-  - Clean, reproducible code with deterministic seed and proper file output
+  - Perfect visual quality with explicit font sizing, no text overlap, and all elements
+    optimally visible
+  - 'Complete specification compliance: PDP line, 95% confidence interval, rug plot,
+    centered values all present and working'
+  - Excellent theme adaptation with consistent theme tokens across light and dark
+    renders—data colors identical, only chrome flips
+  - Clean, reproducible code with proper seaborn idioms (sns.set_theme, axes-level
+    functions) and sklearn integration
+  - 'Strong visual hierarchy: main PDP line focal point, confidence band provides
+    context, rug plot shows data distribution, reference line aids interpretation'
+  - Realistic housing price prediction scenario with appropriate feature scale and
+    ML model choice (GradientBoostingRegressor)
   weaknesses:
-  - Design sophistication is average—lacks distinctive visual choices beyond seaborn
-    defaults with token overlays
-  - Limited exploration of library-specific capabilities (custom palettes, advanced
-    styling, contextual features)
-  - Visual hierarchy exists but could be strengthened through color contrast, size
-    variation, or deliberate emphasis on key features
+  - Design is competent but not particularly innovative—follows style guide prescriptively
+    rather than adding distinctive aesthetic choices
+  - Could benefit from more visual emphasis or color strategy to enhance data storytelling
+    beyond functional hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct for light theme
-      Chrome: Title "pdp-basic · seaborn · anyplot.ai" in dark text (24pt), axis labels "Square Feet" and "Partial Dependence (centered)" in 20pt dark text, tick labels in secondary gray (INK_SOFT) at 16pt — all readable
-      Data: Green line (#009E73, Okabe-Ito position 1) showing smooth curve from -35 to +33; light green confidence band (25% alpha) surrounding main line; gray rug plot marks at bottom (50% alpha) showing data distribution; dashed reference line at zero
-      Legend: Upper left with light background frame, clearly labeled "95% Confidence Interval" and "Partial Dependence"
-      Overall: Clean L-shaped spines (top/right removed), y-axis grid subtle at 20% opacity
-      Legibility verdict: PASS — all text and elements clearly visible against warm light background
+      Background: Warm off-white (#FAF8F1) with subtle warm tone, not pure white - correct theme color
+      Chrome: Title "pdp-basic · seaborn · anyplot.ai" in dark text (clearly readable); X-axis label "Square Feet" and Y-axis label "Partial Dependence (centered)" in dark text (clearly readable); tick labels in soft dark gray (#4A4A44) - all fully readable with proper contrast
+      Data: Main PDP line in brand green (#009E73) with linewidth=3 showing feature-prediction relationship; confidence band in light green fill (#009E73 with alpha 0.25) providing uncertainty context; rug plot at bottom in soft gray showing training data distribution; reference line at y=0 in dashed soft gray providing interpretation anchor; legend in upper-left with white background and soft gray border
+      Legibility verdict: PASS - All text is clearly visible, data elements are distinctly rendered, no dark-on-light contrast issues, grid is subtle without competing with data
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct for dark theme
-      Chrome: Title, axis labels, and tick labels all use light theme colors (#F0EFE8 for primary INK, #B8B7B0 for secondary INK_SOFT) — all readable against dark background, no dark-on-dark failures
-      Data: Green line identical to light render (#009E73) showing same curve shape and range; confidence band identical to light (same green, same 25% alpha); rug plot marks identical gray; zero reference line properly rendered
-      Legend: Background correctly adapted to #242420, edges in INK_SOFT
-      Overall: Grid lines and spines use light-appropriate colors; theme adaptation is complete and consistent
-      Legibility verdict: PASS — all elements properly contrasted against warm dark background, data colors unchanged from light render (only chrome adapted)
+      Background: Warm near-black (#1A1A17) with subtle warm tone, not pure black - correct theme color
+      Chrome: Title and axis labels in light cream text (#F0EFE8) - clearly readable on dark background; tick labels in soft light gray (#B8B7B0) - clearly readable, NO dark-on-dark failures; legend maintains same styling with light text on dark background - proper theme adaptation
+      Data: Main PDP line in identical brand green (#009E73) as light render - data colors unchanged; confidence band in same light green - visual consistency maintained; rug plot and reference line identical in styling to light render; colors are theme-independent (correct per spec)
+      Legibility verdict: PASS - All text is clearly visible with proper light-on-dark contrast, no dark-on-dark issues, data colors remain identical to light render, full theme adaptation successful across all chrome elements
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,74 +54,82 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt; all readable in both themes
-          with proper color tokens
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt); all text perfectly readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Title, axes, legend, and rug plot all have clear space; no collisions
+        comment: No overlapping text; legend positioned upper-left without obscuring
+          data; axis labels and tick labels properly spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 3 visible; rug marks at 0.03 height; CI band at 0.25 alpha
-          all clear and distinct
+        comment: Main PDP line (linewidth=3) clearly visible; confidence band (alpha=0.25)
+          visible and appropriate; rug plot (alpha=0.5, height=0.03) subtle but informative;
+          reference line visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73; colorblind-safe; adequate contrast; no red-green-only
-          signals'
+        comment: 'Single data color #009E73 (Okabe-Ito brand position 1, colorblind-safe);
+          strong contrast on both light and dark backgrounds'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape; tight layout; balanced proportions; nothing cut off
+        comment: figsize=(16,9) with tight_layout and bbox_inches='tight'; plot fills
+          60-70% of canvas; balanced margins; nothing cut-off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format 'pdp-basic · seaborn · anyplot.ai'; axis labels
-          descriptive with context
+        comment: 'Title format correct: ''pdp-basic · seaborn · anyplot.ai''; X-axis
+          ''Square Feet'' descriptive; Y-axis ''Partial Dependence (centered)'' with
+          context'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
-          chrome properly theme-adapted; both renders correct'
+        comment: 'First series #009E73 ✓; Background #FAF8F1 (light) and #1A1A17 (dark)
+          ✓; Text colors theme-correct in both renders ✓; Data colors identical across
+          themes, only chrome flips ✓'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Theme tokens + legend styling + CI band + centered PDP + rug plot
-          show design thought, but lacks distinctive visual choices beyond seaborn
-          defaults
+        comment: Well-configured standard PDP implementation with proper theming;
+          professional execution but follows style guide prescriptively rather than
+          with innovation; not publication-ready but competent
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Spines removed, subtle grid (alpha=0.2), adequate whitespace; minimal
-          customization beyond standard style
+        comment: 'Deliberate choices visible: subtle grid (alpha=0.2), proper spine
+          removal, intentional legend styling (frameon, edgecolor, facecolor), generous
+          whitespace; above default but not exceptional'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Clear focal point, confidence band hierarchy, rug plot context, zero
-          line; could use stronger visual emphasis
+        comment: 'Clear visual hierarchy: main PDP line focal point (linewidth=3,
+          brand green) > confidence context (light fill) > data distribution (rug
+          plot) > reference anchor (y=0 line); centering choice shows interpretive
+          thought; guides reader but not exceptionally emphasized'
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PDP chart type showing feature-to-prediction relationship
+        comment: Correct partial dependence plot showing feature-prediction relationship
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: feature values, PDP, 95% CI band, rug plot,
-          centered, reference line'
+        comment: 'All spec features present: PDP line, 95% confidence interval, rug
+          plot, centered values for interpretation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: feature_values from sklearn partial_dependence; Y: pd_values_centered;
-          axes span full range'
+        comment: 'X-axis: feature range (Square Feet) correct; Y-axis: centered partial
+          dependence correct; grid_resolution=80 for smooth curve appropriate; all
+          data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend labels match visualization
+        comment: Title format 'pdp-basic · seaborn · anyplot.ai' correct; legend labels
+          'Partial Dependence' and '95% Confidence Interval' descriptive
     data_quality:
       score: 15
       max: 15
@@ -163,22 +171,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all PDP aspects: curve, CI band, data distribution (rug),
-          reference line; ICE concept via CI'
+        comment: Shows full range of feature effects (negative to positive); demonstrates
+          both positive and negative partial dependence values; confidence band shows
+          uncertainty across range; rug plot shows data distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price scenario; square footage realistic; positive correlation
-          expected; neutral domain
+        comment: Housing price prediction scenario (realistic); GradientBoostingRegressor
+          (standard ML model); 500 samples with 5 features (plausible); Square Feet
+          feature with expected relationship (more area → higher price)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 samples reasonable; PDP range -35 to +33 appropriate; scales
-          sensible
+        comment: Feature values ~-3 to +3 (standardized range, sensible); partial
+          dependence -35 to +35 (plausible regression output); confidence interval
+          ±5-10 (appropriate uncertainty bounds)
     code_quality:
       score: 10
       max: 10
@@ -188,54 +199,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct script; straightforward logic
+        comment: 'Linear execution: imports → data generation → model training → PDP
+          calculation → plotting → save; no unnecessary functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; fully deterministic
+        comment: np.random.seed(42) set; GradientBoostingRegressor(random_state=42)
+          set; fully reproducible execution
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, seaborn, sklearn
+          modules; no extraneous imports'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; CI calculation sound; readable
+        comment: Well-structured, readable; uses seaborn idiomatically (sns.set_theme,
+          axes-level functions); no over-engineering; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG;
+          no deprecated functions
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: sns.set_theme(), sns.lineplot(), sns.rugplot(), ax.fill_between()
-          all idiomatic; above default but not exceptional
+        comment: Uses sns.set_theme() with comprehensive rc dict for theme-adaptation
+          (idiomatic); uses axes-level functions sns.lineplot and sns.rugplot (preferred);
+          proper matplotlib integration
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Standard seaborn usage; rug plot is nice but not deeply distinctive;
-          theme-token adaptation is custom but not library-specific
+        comment: Uses sns.rugplot() for data distribution (distinctive to seaborn);
+          uses sns.set_theme() for comprehensive theming (seaborn-specific); integrates
+          with sklearn's partial_dependence; however, these are expected/standard
+          usage for PDP implementations, not particularly innovative
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
-  techniques: []
+  techniques:
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure

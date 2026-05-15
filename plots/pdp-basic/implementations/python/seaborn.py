@@ -1,7 +1,7 @@
 """ anyplot.ai
 pdp-basic: Partial Dependence Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-15
+Quality: 90/100 | Updated: 2026-05-15
 """
 
 import os
