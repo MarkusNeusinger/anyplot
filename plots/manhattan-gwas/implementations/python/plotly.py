@@ -1,13 +1,48 @@
-""" pyplots.ai
+""" anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-15
 """
+
+import os
+import sys
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 
+
+# Remove current directory from path to avoid shadowing plotly package
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir in sys.path:
+    sys.path.remove(current_dir)
+
+import plotly.graph_objects as go  # noqa: E402
+
+
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Okabe-Ito palette
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
+    "#56B4E9",  # sky blue
+    "#F0E442",  # yellow
+]
+
+# Threshold line colors (theme-adaptive)
+THRESHOLD_COLOR = INK_MUTED
+HIGHLIGHT_COLOR = OKABE_ITO[1]  # vermillion for significant SNPs
 
 # Data - Simulated GWAS results
 np.random.seed(42)
@@ -81,23 +116,26 @@ for chrom, length in chr_lengths.items():
 
 df = pd.DataFrame(data)
 
-# Alternating colors for chromosomes (Python Blue and a gray variant)
-colors = {"odd": "#306998", "even": "#7A9FBF"}
+
+# Alternating chromosome colors (Okabe-Ito positions 1 and 2)
+def get_chr_color(chrom_num):
+    return OKABE_ITO[0] if int(chrom_num) % 2 == 1 else OKABE_ITO[1]
+
 
 # Create figure
 fig = go.Figure()
 
 # Add scatter traces for each chromosome
-for i, chrom in enumerate(chr_lengths.keys()):
+for chrom in chr_lengths.keys():
     chr_data = df[df["chromosome"] == chrom]
-    color = colors["odd"] if int(chrom) % 2 == 1 else colors["even"]
+    color = get_chr_color(chrom)
 
     fig.add_trace(
         go.Scatter(
             x=chr_data["cumulative_pos"],
             y=chr_data["neg_log_p"],
             mode="markers",
-            marker=dict(size=5, color=color, opacity=0.7),
+            marker={"size": 5, "color": color, "opacity": 0.7},
             name=f"Chr {chrom}",
             showlegend=False,
             hovertemplate=(
@@ -116,11 +154,11 @@ fig.add_shape(
     xref="paper",
     y0=significance_threshold,
     y1=significance_threshold,
-    line=dict(color="#E53935", width=2, dash="dash"),
+    line={"color": THRESHOLD_COLOR, "width": 2, "dash": "dash"},
 )
 fig.add_annotation(
     text="Genome-wide significance (p = 5×10⁻⁸)",
-    font=dict(size=16, color="#E53935"),
+    font={"size": 16, "color": THRESHOLD_COLOR},
     xref="paper",
     x=0.99,
     xanchor="right",
@@ -139,11 +177,11 @@ fig.add_shape(
     xref="paper",
     y0=suggestive_threshold,
     y1=suggestive_threshold,
-    line=dict(color="#FFD43B", width=2, dash="dot"),
+    line={"color": INK_MUTED, "width": 2, "dash": "dot"},
 )
 fig.add_annotation(
     text="Suggestive threshold (p = 10⁻⁵)",
-    font=dict(size=16, color="#B8860B"),
+    font={"size": 16, "color": INK_MUTED},
     xref="paper",
     x=0.99,
     xanchor="right",
@@ -161,7 +199,7 @@ if len(significant_snps) > 0:
             x=significant_snps["cumulative_pos"],
             y=significant_snps["neg_log_p"],
             mode="markers",
-            marker=dict(size=10, color="#E53935", symbol="diamond", line=dict(color="white", width=1)),
+            marker={"size": 10, "color": HIGHLIGHT_COLOR, "symbol": "diamond", "line": {"color": "white", "width": 1}},
             name="Significant SNPs",
             showlegend=True,
             hovertemplate=(
@@ -180,31 +218,41 @@ chr_labels = list(chr_lengths.keys())
 
 # Layout
 fig.update_layout(
-    title=dict(text="manhattan-gwas · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Chromosome", font=dict(size=24)),
-        tickfont=dict(size=16),
-        tickmode="array",
-        tickvals=chr_positions,
-        ticktext=chr_labels,
-        showgrid=False,
-        zeroline=False,
-    ),
-    yaxis=dict(
-        title=dict(text="-log₁₀(p-value)", font=dict(size=24)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0,0,0,0.1)",
-        gridwidth=1,
-        zeroline=False,
-    ),
-    template="plotly_white",
-    legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, font=dict(size=16), bgcolor="rgba(255,255,255,0.8)"),
-    margin=dict(l=80, r=50, t=80, b=80),
-    plot_bgcolor="white",
+    title={"text": "manhattan-gwas · plotly · pyplots.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={
+        "title": {"text": "Chromosome", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "tickmode": "array",
+        "tickvals": chr_positions,
+        "ticktext": chr_labels,
+        "showgrid": False,
+        "zeroline": False,
+        "linecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": "-log₁₀(p-value)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "zeroline": False,
+        "linecolor": INK_SOFT,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    legend={
+        "yanchor": "top",
+        "y": 0.99,
+        "xanchor": "left",
+        "x": 0.01,
+        "font": {"size": 16, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    margin={"l": 80, "r": 50, "t": 80, "b": 80},
+    hovermode="closest",
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save outputs with theme suffix
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
