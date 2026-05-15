@@ -6,7 +6,7 @@ title: Manhattan Plot for GWAS
 
 # Specification tracking
 created: 2025-12-31T05:13:06Z
-updated: null
+updated: 2026-05-15T03:17:27Z
 issue: 2925
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - manhattan
     - point
   data_type:
     - numeric
