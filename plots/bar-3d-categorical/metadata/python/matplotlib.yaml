@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T09:00:40Z'
-updated: '2026-05-15T09:07:43Z'
+updated: '2026-05-15T09:17:03Z'
 generated_by: claude-sonnet
 workflow_run: 25909112458
 issue: 5248
@@ -26,8 +26,8 @@ review:
   - computed_zorder=False and shade=True show understanding of matplotlib 3D rendering
     subtleties
   weaknesses:
-  - 'Font sizes below guidelines: title 20pt (needs ≥24), axis labels 15pt (needs
-    ≥20), tick labels 13pt (needs ≥16), value labels 10pt too small for 4800px canvas'
+  - 'Font sizes below guidelines: title 20pt (needs >=24), axis labels 15pt (needs
+    >=20), tick labels 13pt (needs >=16), value labels 10pt too small for 4800px canvas'
   - Back-row value labels partially occluded by foreground bars due to 3D perspective
     (positions 115, 87, 49)
   - Dual height+color encoding redundantly encodes the same variable — color could
@@ -38,8 +38,8 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — correct theme surface
       Chrome: Title "Retail Sales by Product & Region · bar-3d-categorical · matplotlib · anyplot.ai" in dark ink, readable. Axis labels "Product Category" and "Region" in dark ink (INK=#1A1A17), z-label "$ thousands" in INK_SOFT. Tick labels (Electronics, Clothing, Home & Garden, Sports; North, South, East, West) in dark ink, readable. Colorbar label and tick values in dark ink on right side.
-      Data: Bars colored with viridis — purple/dark blue for lowest values (~49k), through teal/green to yellow for highest (~142k). All 16 bars (4 products × 4 regions) visible. Value labels (10pt, dark) on top of each bar. First series: Electronics-North tallest at 142 (yellow-green).
-      Legibility verdict: PASS — all text readable, though font sizes are below guidelines (title 20pt vs ≥24, labels 15pt vs ≥20, ticks 13pt vs ≥16). Some back-row value labels (115, 87, 49) partially occluded by foreground bars inherent to 3D perspective.
+      Data: Bars colored with viridis — purple/dark blue for lowest values (~49k), through teal/green to yellow for highest (~142k). All 16 bars (4 products × 4 regions) visible. Value labels (10pt, dark) on top of each bar. Electronics-North tallest at 142 (yellow-green).
+      Legibility verdict: PASS — all text readable, though font sizes are below guidelines (title 20pt vs >=24, labels 15pt vs >=20, ticks 13pt vs >=16). Some back-row value labels (115, 87, 49) partially occluded by foreground bars inherent to 3D perspective.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — correct dark theme surface
@@ -57,7 +57,7 @@ review:
         max: 8
         passed: true
         comment: 'All sizes explicitly set but below guidelines: title 20pt (needs
-          ≥24), labels 15pt (needs ≥20), ticks 13pt (needs ≥16), value labels 10pt
+          >=24), labels 15pt (needs >=20), ticks 13pt (needs >=16), value labels 10pt
           too small'
       - id: VQ-02
         name: No Overlap
@@ -141,14 +141,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Bar spacing, color encoding via viridis, viewing angle 28°/-48°,
-          base grid, value labels on all 16 bars, colorbar — all present
+        comment: Bar spacing, color encoding via viridis, viewing angle 28 deg/-48
+          deg, base grid, value labels on all 16 bars, colorbar — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Product on X, Region on Y, Sales on Z; full 4×4 = 16 bars visible
+        comment: Product on X, Region on Y, Sales on Z; full 4x4 = 16 bars visible
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -165,7 +165,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 4×4 grid, meaningful value variation (49–142k), dual encoding
+        comment: Full 4x4 grid, meaningful value variation (49-142k), dual encoding
           demonstrates color+height
       - id: DQ-02
         name: Realistic Context
@@ -179,7 +179,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values 49–142k USD plausible for retail; Electronics-North highest
+        comment: Values 49-142k USD plausible for retail; Electronics-North highest
           is realistic
     code_quality:
       score: 10
@@ -190,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save; no functions or classes'
+        comment: 'Linear: imports -> data -> plot -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -234,7 +234,7 @@ review:
         passed: true
         comment: computed_zorder=False (3D depth ordering control), xaxis.pane styling
           (3D-only API), shade=True on bar3d — distinctive to matplotlib mpl_toolkits
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
