@@ -1,16 +1,39 @@
-""" pyplots.ai
+"""anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-12-30
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
+import os
+import sys
 
 
-# Load iris dataset from seaborn
+# Handle import shadowing: remove current directory from path to avoid
+# importing local matplotlib.py or seaborn.py instead of the real libraries
+cwd = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if not (p == cwd or p.startswith(cwd + os.sep))]
+
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import seaborn as sns  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+]
+
+# Data
 df = sns.load_dataset("iris")
 
 # Normalize variables to similar scales
@@ -20,15 +43,14 @@ for col in features:
 
 norm_features = [f + "_norm" for f in features]
 
-# Generate t values from -pi to pi
+# Generate t values from -π to π
 t = np.linspace(-np.pi, np.pi, 200)
 
 # Compute Andrews curves for all observations
-# Andrews curve: f(t) = x1/sqrt(2) + x2*sin(t) + x3*cos(t) + x4*sin(2t) + ...
 curves_data = []
 for idx, row in df.iterrows():
     values = row[norm_features].values.astype(float)
-    # Compute Fourier series for this observation
+    # Andrews curve: f(t) = x1/sqrt(2) + x2*sin(t) + x3*cos(t) + x4*sin(2t) + ...
     curve_vals = np.full_like(t, values[0] / np.sqrt(2))
     for i in range(1, len(values)):
         if i % 2 == 1:
@@ -41,12 +63,26 @@ for idx, row in df.iterrows():
 
 curves_df = pd.DataFrame(curves_data)
 
-# Color palette using Python Blue, Yellow, and a third color
-colors = {"setosa": "#306998", "versicolor": "#FFD43B", "virginica": "#E74C3C"}
+# Theme-adaptive seaborn styling
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-# Create plot
+# Plot
 fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
 
 # Plot Andrews curves using lineplot with grouped data
 sns.lineplot(
@@ -54,29 +90,31 @@ sns.lineplot(
     x="t",
     y="f(t)",
     hue="species",
-    palette=colors,
+    palette=OKABE_ITO,
     alpha=0.4,
-    linewidth=1.5,
+    linewidth=2.5,
     units="obs_id",
     estimator=None,
     ax=ax,
 )
 
-# Style the plot
-ax.set_xlabel("t", fontsize=20)
-ax.set_ylabel("f(t)", fontsize=20)
-ax.set_title("andrews-curves · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("t", fontsize=20, color=INK)
+ax.set_ylabel("f(t)", fontsize=20, color=INK)
+ax.set_title("andrews-curves · seaborn · anyplot.ai", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Set x-axis ticks to show pi values
+# Set x-axis ticks to show π values
 ax.set_xticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
 ax.set_xticklabels(["-π", "-π/2", "0", "π/2", "π"], fontsize=16)
 
-# Customize legend
-ax.legend(title="Species", fontsize=16, title_fontsize=18, loc="upper right")
+# Legend
+ax.legend(title="Species", fontsize=16, title_fontsize=18, loc="upper right", framealpha=0.95)
 
-# Subtle grid
-ax.grid(True, alpha=0.3, linestyle="--")
+# Grid (subtle, solid lines)
+ax.grid(True, alpha=0.10, linewidth=0.8, linestyle="-")
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
