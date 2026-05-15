@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:57:05Z'
-updated: '2026-05-15T01:23:06Z'
+updated: '2026-05-15T01:28:51Z'
 generated_by: claude-haiku
 workflow_run: 25894667204
 issue: 3070
@@ -12,105 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phyl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/pygal/plot-dark.html
-quality_score: 71
+quality_score: 65
 review:
   strengths:
-  - Both light and dark renders visually correct with proper backgrounds and theme-adapted
-    text
-  - Tree structure is clear and well-spaced with no overlaps or legibility issues
-  - Species labels and scale bar are properly positioned
-  - Scientific data (primate phylogeny) is realistic and educational
+  - Accurate phylogenetic tree representation with correct evolutionary relationships
+  - Realistic primate dataset with appropriate scale and legible rendering
+  - Proper canvas size (4800×2700) and overall layout proportions
+  - Helpful scale bar for branch length interpretation
+  - Both renders display data completely and visibly
   weaknesses:
-  - 'Title format violation: contains ''Primate Evolution'' and says ''pyplots.ai''
-    instead of ''anyplot.ai'''
-  - 'No theme adaptation in code: does not read ANYPLOT_THEME or adapt Style parameters
-    per pygal.md'
-  - Output filenames hardcoded to 'plot.png' instead of 'plot-light.png'/'plot-dark.png'
-  - Generic design with no visual sophistication or data storytelling emphasis
-  - Manual coordinate-to-pixel conversions are brittle and error-prone
+  - 'Uses custom color palette instead of Okabe-Ito; first series must be #009E73
+    (brand green) not #E63946'
+  - Missing ANYPLOT_THEME environment variable handling - code must read theme and
+    adapt Style object accordingly
+  - Wrong output filenames - saves plot.png instead of plot-{THEME}.png and plot-{THEME}.html
+  - Hardcoded Style colors (foreground=#333, background=white) won't adapt to dark
+    theme in actual workflow execution
+  - 'Code-image mismatch: implementation lacks theme logic yet images show proper
+    theming, suggesting images are from previous version'
+  - Minimal design refinement - no custom spine styling, grid customization, or typography
+    hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "Primate Evolution · tree-phylogenetic · pygal · pyplots.ai" in dark text (#333), X-axis label "Evolutionary Distance (substitutions per site)", tick labels on both axes - all readable
-      Data: Tree branches in teal color, six species with distinct colored markers (green, red, blue, pink, gold, light blue), species labels positioned right of markers, scale bar "0.1 substitutions/site" at bottom left
-      Legibility verdict: PASS - all text readable against light background
+      Background: Warm off-white (#FAF8F1), correctly rendered
+      Chrome: Title "tree-phylogenetic · pygal · anyplot.ai" in dark text, x-axis label "Evolutionary Distance (substitutions per site)" clearly readable, scale bar "0.1 substitutions/site" visible at bottom-left
+      Data: Primate species (Human, Chimpanzee, Gorilla, Orangutan, Gibbon, Macaque) positioned at leaf nodes with colored circular markers; hierarchical tree branches show evolutionary relationships with proportional spacing
+      Legibility verdict: PASS - all text and data elements readable on light surface
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels in light text - all readable against dark background, no dark-on-dark failures
-      Data: Tree branches and species markers identical in color to light render (only chrome adapted), species labels same color as markers
-      Legibility verdict: PASS - all text readable, data colors consistent with light render, no theme-adaptation failures
+      Background: Warm near-black (#1A1A17), correctly rendered
+      Chrome: Title, x-axis label, and scale bar text appear in light colors, adequate contrast and readable
+      Data: Species markers and tree branches visible; data colors appear identical to light render (only chrome inverted, not data colors which is correct per spec)
+      Legibility verdict: PASS for visual output, but CODE does not support this - hardcoded white background and dark foreground would fail. Images likely from previous attempt.
+
+    CRITICAL CODE-IMAGE MISMATCH: Implementation code shows no ANYPLOT_THEME usage or theme-adaptive Style creation, yet both renders show proper theme adaptation. This inconsistency must be resolved.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes
+        comment: Both renders readable but concern about code-image mismatch
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Species labels well-positioned, no collisions
+        comment: Species labels positioned without collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible and distinguishable
+        comment: All markers, branches, labels clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Distinct colors with adequate contrast
+        passed: false
+        comment: Colors distinct but not Okabe-Ito safe palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions and spacing
+        comment: Correct 4800x2700, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled with units
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Title says 'pyplots.ai' not 'anyplot.ai' - branding violation
+        comment: 'CRITICAL: Custom palette #E63946 instead of Okabe-Ito #009E73'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Generic design with no special visual touches
+        comment: Generic styling, no custom palette or design thought
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization
+        comment: No spine customization, minimal refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or emphasis
+        passed: true
+        comment: Clear evolutionary hierarchy shown
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,26 +124,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phylogenetic tree
+        comment: Correct phylogenetic tree visualization
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present, only rectangular layout used
+        comment: Tree structure, branch lengths, species labels, scale bar all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped
+        comment: X-axis shows evolutionary distance correctly
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Title must be 'tree-phylogenetic · pygal · anyplot.ai', not 'Primate
-          Evolution · ... · pyplots.ai'
+        passed: true
+        comment: Title present, legend appropriately omitted for single series
     data_quality:
       score: 15
       max: 15
@@ -147,77 +152,78 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all phylogenetic tree aspects
+        comment: Shows hierarchical relationships and divergence patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Primate phylogeny is realistic
+        comment: Primate mitochondrial DNA is authentic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reasonable values for domain
+        comment: Evolutionary distance values realistic for primates
     code_quality:
-      score: 5
+      score: 2
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: No theme adaptation, manual tree construction is complex
+        passed: true
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic, reproducible
+        comment: Hardcoded data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Coordinate conversions are inelegant
+        comment: Manual coordinate conversion is repetitive
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as 'plot.png' not 'plot-light.png'/'plot-dark.png'
+        comment: 'CRITICAL: Saves plot.png instead of plot-{THEME}.png'
     library_mastery:
       score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: Fails to follow pygal.md theme-adaptation pattern
-      - id: LM-02
-        name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses cairosvg but otherwise generic XY plotting
+        comment: 'CRITICAL: Missing ANYPLOT_THEME environment variable; no theme-adaptive
+          Style'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: XY chart for tree is unconventional, not leveraging library strengths
   verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - html-export
-  - annotations
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
   styling: []
