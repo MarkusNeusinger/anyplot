@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: pie-drilldown
 created: '2025-12-31T14:08:47Z'
-updated: '2026-05-15T17:02:45Z'
+updated: '2026-05-15T17:10:29Z'
 generated_by: claude-haiku
 workflow_run: 25930173306
 issue: 3072
@@ -12,172 +12,154 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-drilldown/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-drilldown/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-drilldown/python/altair/plot-dark.html
-quality_score: 49
+quality_score: 77
 review:
   strengths:
-  - 'Correct use of Okabe-Ito palette for main department categories — Engineering
-    correctly uses #009E73 as first series'
-  - Theme-adaptive colors properly applied with appropriate tokens (PAGE_BG, INK,
-    INK_SOFT) for both light and dark backgrounds
-  - Hierarchical data structure well-represented with clear parent-child relationships
-    between departments and teams
-  - Clean, straightforward code following KISS principle — no unnecessary functions
-    or classes
-  - Realistic and appropriate example data — company department budgets are domain-relevant
-    and neutral
-  - Correct title format (spec-id · library · anyplot.ai) and proper file naming (plot-light.png,
-    plot-dark.png, etc.)
+  - 'Excellent data quality: realistic, neutral budget scenario with clear hierarchical
+    structure'
+  - Perfect color palette compliance (Okabe-Ito) with correct first series (#009E73)
+  - Clean code structure with deterministic reproducibility
+  - Good layout balance and legend placement
+  - Proper pie chart visual definition via white strokes
+  - Interactive selection and tooltips properly coded
   weaknesses:
-  - 'CRITICAL: Pie slice labels severely overlap and are completely unreadable — label
-    positioning algorithm does not account for canvas constraints or text collision'
-  - 'CRITICAL: Missing core spec requirements — no breadcrumb navigation, no back
-    button, no animation, no interactive drill-down in output'
-  - Drilldown mechanism is non-functional in static PNG output — all pie charts are
-    layered and stacked vertically instead of showing one interactive level at a time
-  - Label placement uses fixed radius without collision detection — labels at similar
-    angles stack on top of each other
-  - 'Code duplication: pie/label/center definitions repeated for each department rather
-    than loop-based generation'
-  - Center donut background in dark render could be more visually refined with explicit
-    fill styling
+  - 'Critical: Dark render has unreadable center text (dark-on-dark failure on ''All
+    Departments'' label)'
+  - Missing breadcrumb navigation UI from spec requirement
+  - 'Generic design aesthetics: uses standard defaults without custom visual hierarchy'
+  - No visual storytelling or emphasis techniques
+  - Code has repetitive loop structure for drilldown views
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface.
-      Chrome: Title "pie-drilldown · altair · anyplot.ai" is readable dark text. Center text "All Departments" and "$3.20B" is clear and readable.
-      Data: Pie slices display four main departments (Engineering 54.8%, Marketing 23.1%, Operations 15.2%, HR 6.9%) in distinct colors from Okabe-Ito palette. Engineering (#009E73) is correctly the first series.
-      Labels: CRITICAL FAILURE — Pie slice labels (showing department names, values, and percentages) are severely overlapping and unreadable. Text stacks on top of each other around the circumference, making it impossible to read most labels.
-      Legibility verdict: FAIL — Core data labels are unreadable due to severe overlap.
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "pie-drilldown · altair · anyplot.ai" in dark text - readable. Center displays "All Departments" (gray text, readable) and "$3.20B" (green #009E73, readable).
+      Data: Pie slices in Okabe-Ito colors (green Engineering, orange Marketing, blue Operations, pink HR). White strokes between slices. Legend on right with all category labels.
+      Legibility verdict: PASS - all elements clearly readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title is readable white text. Center text "All Departments" and "$0.22B" appears to be displayed with light text colors.
-      Data: Pie slices display identical colors to light render (data colors are correctly consistent across themes). Engineering slice maintains #009E73, other colors match light render exactly.
-      Labels: Same CRITICAL FAILURE as light render — pie slice labels completely overlap and are unreadable. No improvement in dark theme.
-      Dark-on-dark check: Text appears to be using light colors (INK token) so no dark-on-dark failure, but the overlap issue remains fatal.
-      Legibility verdict: FAIL — Same severe label overlap as light render makes the visualization unreadable in both themes.
-
-    Both renders have identical data colors (correct), theme-adaptive backgrounds (correct), but BOTH are compromised by the critical text overlap issue. The visualization is not suitable for publication in either theme.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title is light-colored and readable. CRITICAL FAILURE - "All Departments" text in center appears dark/nearly black, unreadable on dark background. "$3.20B" in green is visible.
+      Data: Pie slice colors identical to light render (data colors correct). White strokes between slices visible.
+      Legibility verdict: FAIL - "All Departments" center text has dark-on-dark failure; INK token not adapting correctly to dark theme
   criteria_checklist:
     visual_quality:
-      score: 16
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Some text readable (title, center) but pie labels overlap severely
+        comment: Dark render has unreadable center text (dark-on-dark)
       - id: VQ-02
         name: No Overlap
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: 'CRITICAL: Severe text overlap of pie labels, mostly unreadable'
+        passed: true
+        comment: Clean layout, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Pie slices visible but labels unreadable due to overlap
+        passed: true
+        comment: Slices and strokes clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Okabe-Ito palette
+        comment: Okabe-Ito palette is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Reasonable proportions but cramped due to label overlap
+        passed: true
+        comment: Perfect proportions and balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title present and descriptive
+        comment: Title format correct, legend descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Okabe-Ito used for main series correctly, but custom colors used
-          for sub-categories; backgrounds correct
+        comment: Theme-chrome failed in dark render; text color not adapted properly
     design_excellence:
-      score: 6
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic pie chart with no special design thought
+        comment: Well-configured defaults, no custom design thought
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 4
         max: 6
-        passed: false
-        comment: Default styling with minimal customization, overlap destroys refinement
+        passed: true
+        comment: Good details with white strokes; minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or clear insight emphasis
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 9
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct pie chart but drilldown not properly interactive
+        passed: true
+        comment: Correct pie/donut chart structure
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 2
         max: 4
         passed: false
-        comment: 'CRITICAL: Missing breadcrumb, back button, animation, interactive
-          drill-down'
+        comment: Missing breadcrumb navigation; selection and tooltips present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hierarchical data correctly mapped with parent-child relationships
+        comment: Hierarchical parent-child mapping correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, center labels provide context
+        comment: Title format and legend labels correct
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows main departments and some sub-categories, demonstrates hierarchy
+        passed: true
+        comment: Comprehensive hierarchical budget data
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget data is realistic, neutral, and domain-relevant
+        comment: Real company budget scenario, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values realistic and proportionally correct
+        comment: Factually correct proportions
     code_quality:
       score: 9
       max: 10
@@ -187,54 +169,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no unnecessary complexity
+        comment: Clean imports → data → plot → save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static data, deterministic output
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, pandas, altair'
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Acceptable but verbose — repeated pie/label/center code could be
-          loop-based
+        comment: Readable but some repetition in loop
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Correct plot-{THEME}.png/html output
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid use of Chart, encodings, selection_point
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Altair encoding and layering but could be more idiomatic
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Uses selection and conditional opacity but not leveraged effectively
-          for working interactivity
-    score_caps_applied:
-      condition: VQ-02 = 0 (severe overlap)
-      max_score: 49
-      raw_total: 57
-      final_score: 49
+        comment: Uses layer-composition and transform filters; fairly standard implementation
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -246,5 +221,4 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - theme-adaptive
+  styling: []
