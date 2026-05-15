@@ -1,7 +1,7 @@
 """ anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 67/100 | Updated: 2026-05-15
+Quality: 78/100 | Updated: 2026-05-15
 """
 
 import os
