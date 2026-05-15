@@ -89,11 +89,13 @@ class TimelinePoint(BaseModel):
 
 
 class DailyImplPoint(BaseModel):
-    """Implementation updates on a single day (last-30-days timeline).
+    """Implementation updates on a single day (last-28-days timeline).
 
-    Distinct from `debug.DailyImplPoint` (which uses `impls_updated`) — kept
-    separate because the public dashboard's consumer is the stats page bundle,
-    not the admin debug view, and `count` is consistent with `TimelinePoint`.
+    Window matches the visitors chart on the stats page so the two strips
+    read side-by-side. Distinct from `debug.DailyImplPoint` (which uses
+    `impls_updated`) — kept separate because the public dashboard's consumer
+    is the stats page bundle, not the admin debug view, and `count` is
+    consistent with `TimelinePoint`.
     """
 
     date: str  # ISO "YYYY-MM-DD"
