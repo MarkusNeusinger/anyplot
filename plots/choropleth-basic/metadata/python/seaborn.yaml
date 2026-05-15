@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:54:42Z'
-updated: '2026-05-15T05:35:40Z'
+updated: '2026-05-15T05:40:59Z'
 generated_by: claude-haiku
 workflow_run: 25902022783
 issue: 3069
@@ -12,39 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 77
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both themes
-  - Complete spec implementation with all required features (colorbar, regional coloring,
-    missing data handling)
-  - Excellent data quality with realistic US state GDP growth rates and proper missing
-    data examples
-  - Sophisticated handling of missing data with custom gray hatching pattern
-  - Proper theme-adaptive rendering in both light and dark with preserved data colors
+  - Clear, readable visualization with excellent text legibility across all elements
+  - Proper sequential colormap (YlGnBu) that is perceptually uniform and CVD-safe
+  - Good data quality with realistic GDP growth values showing appropriate regional
+    variation
+  - Effective missing-data indication using hatching pattern
+  - Clean, reproducible code structure with seed set
+  - 'All spec-required features present: color legend, region boundaries, sequential
+    palette'
   weaknesses:
-  - Code should save as plot-{THEME}.png and explicitly read ANYPLOT_THEME environment
-    variable per seaborn library rules (currently saves as plot.png)
-  - Limited design sophistication - uses default seaborn heatmap styling without custom
-    design choices (DE-01 = 4/8)
-  - Minimal visual refinement beyond library defaults (DE-02 = 3/6)
-  - YlGnBu colormap is acceptable but style guide recommends viridis/cividis for sequential
-    continuous data
+  - 'Output filename must be theme-specific: currently saves plot.png, should be plot-{THEME}.png'
+  - Missing ANYPLOT_THEME environment variable reading for proper theme adaptation
+    throughout code
+  - 'Title has wrong domain: pyplots.ai should be anyplot.ai'
+  - 'No theme-adaptive token usage: hardcoded text colors (#1a1a1a, #333333) don''t
+    adapt between light/dark renders despite appearing correct in output'
+  - 'Generic design without visual storytelling: data displayed but no emphasis on
+    patterns or insights'
+  - Does not follow seaborn.md best practices for theme-adaptive chrome (rc dict with
+    PAGE_BG, INK, INK_SOFT tokens)
+  - 'Library mastery is basic: only standard sns.heatmap() usage without distinctive
+    seaborn features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface as specified
-      Chrome: Title "choropleth-basic · seaborn · anyplot.ai" in dark text at 26pt, subtitle "US States GDP Growth Rate (%) — Tile Grid Choropleth Map" at 18pt, all clearly readable. State code labels at 20pt, value percentages at 16pt, colorbar label at 20pt. All text has excellent contrast against light background.
-      Data: Heatmap uses YlGnBu continuous colormap for GDP growth rates (0-5% range). States colored from yellow (high ~4.5%) through green to blue (low ~0.4%). White grid lines clearly delineate state cells. Missing data (PR, DC) shown in gray with hatching pattern. All 50 states plus DC represented.
-      Legibility verdict: PASS - All text, grid lines, and data markers are clearly visible with excellent readability
+      Background: Warm off-white, approximately #FAF8F1 ✓
+      Chrome: Title "choropleth-basic · seaborn · anyplot.ai" in 26pt bold is prominent and dark; state abbreviations (20pt bold) and percentages (16pt) all render in dark text on colored tiles; colorbar label "GDP Growth Rate (%)" is clear and dark; legend text readable
+      Data: Tile grid choropleth with YlGnBu sequential colormap (yellow→green→blue), showing GDP growth rates 0.4%–4.5%; white grid lines cleanly separate cells; missing data shown as gray with hatching pattern
+      Legibility verdict: PASS - All text fully readable with excellent contrast; no unreadable elements
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface as specified
-      Chrome: Title, subtitle, state codes, and values all rendered in light text with excellent contrast against dark background. No dark-on-dark text issues. Colorbar label clearly visible. Typography hierarchy maintained.
-      Data: Heatmap colors are identical to light render (data colors unchanged across themes). Yellow-green-blue gradient preserved. White grid lines remain visible. Missing data hatching pattern visible. Data representation perfectly matches light render.
-      Legibility verdict: PASS - All elements readable with proper light-on-dark contrast. Theme adaptation working correctly.
+      Background: Warm near-black, approximately #1A1A17 ✓
+      Chrome: Title text appears light-colored and readable; state codes and percentages visible and readable against colored cell backgrounds; colorbar label readable; legend text adapted for dark surface
+      Data: Identical colors to light render (YlGnBu gradient unchanged, confirming proper data-color preservation across themes); white grid lines visible and subtle against dark background
+      Legibility verdict: PASS - All text appears readable; data colors are identical to light render (only chrome/background changed)
+
+    NOTE: Both renders demonstrate correct theme separation - data colors (Okabe-Ito positions or continuous colormap) must be identical, only non-data elements (background, text, grid, legend box) adapt. This requirement is satisfied in the visual output, though the implementation code lacks proper ANYPLOT_THEME reading and theme-token patterns.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -52,52 +60,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26pt, codes 20pt, values 16pt,
-          labels 20pt, colorbar 20pt); perfectly readable in both themes
+        comment: All text sizes explicitly set (26pt title, 20pt codes, 16pt values);
+          highly readable at 4800×2700px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; state codes and values well-separated on each
-          cell
+        comment: Zero overlapping elements; state codes and values cleanly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible with distinct colors; grid lines
-          visible; missing data pattern clear
+        comment: All tiles, labels, colorbar perfectly visible and appropriately sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: YlGnBu is perceptually uniform; good contrast between colors; CVD-safe
-          sequential colormap
+        comment: YlGnBu is perceptually uniform, CVD-safe sequential palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins; legend and colorbar
-          properly positioned
+        comment: Plot fills ~70% of canvas with balanced margins; legend and colorbar
+          well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and subtitle descriptive; colorbar labeled with units 'GDP
-          Growth Rate (%)'
+        comment: Colorbar labeled with units; subtitle descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Continuous data uses YlGnBu (acceptable sequential colormap); light
-          background #FAF8F1, dark background #1A1A17; text colors properly theme-adapted'
+        passed: false
+        comment: YlGnBu is acceptable sequential colormap (not default viridis but
+          valid); backgrounds correct (#FAF8F1/#1A1A17); data colors identical in
+          both renders; BUT code missing ANYPLOT_THEME reading and hardcoded text
+          colors don't follow theme-token pattern
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -105,24 +111,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses default seaborn styling without custom design choices; well-configured
-          but not exceptional
+        comment: Professional but generic; standard heatmap defaults without custom
+          design or exceptional visual choices
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults; clear grid lines but no distinctive
-          visual refinement
+        comment: Some refinement visible (grid styling, clean layout) but mostly library
+          defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy through color gradient showing geographic economic
-          variation; clear focal points
+        passed: false
+        comment: Data displayed but no visual hierarchy, emphasis on patterns, or
+          narrative about regional variation
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,28 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct tile grid choropleth map implementation
+        comment: 'Correct chart type: tile grid choropleth with regional coloring'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colorbar legend, regional coloring, missing
-          data handling with hatching, clear boundaries'
+        comment: 'All features present: color legend, region boundaries clearly visible,
+          sequential palette, missing data handling'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Data correctly mapped to tile positions and color intensity; all
-          values displayed
+        comment: Geographic data correctly mapped to grid coordinates
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title format correct: ''choropleth-basic · seaborn · anyplot.ai'';
-          legend and colorbar labels descriptive'
+        passed: false
+        comment: 'Title format error: ''pyplots.ai'' should be ''anyplot.ai''; legend
+          labels correct'
     data_quality:
       score: 15
       max: 15
@@ -161,24 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range of values (0.4% to 4.5%), missing data examples,
-          regional variation
+        comment: Shows range 0.4%–4.5%, includes missing data examples, demonstrates
+          variety
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US state GDP growth rates are realistic and neutral; no controversial
-          content
+        comment: Real US state GDP growth data; neutral, non-controversial economic
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: GDP growth values are factually plausible and appropriately scaled
-          for domain
+        comment: GDP growth values factually plausible and proportionally correct
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -186,51 +190,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save; no unnecessary functions'
+        comment: 'Linear structure: imports→data→plot→save; no unnecessary functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.patches, pyplot, numpy, pandas, seaborn'
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code with appropriate complexity; custom patches
-          for missing data well-justified
+        passed: false
+        comment: 'Code is clear but missing ANYPLOT_THEME reading; hardcoded text
+          colors (#1a1a1a, #333333) don''t adapt to theme'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as 'plot.png' instead of f'plot-{THEME}.png'; doesn't read
-          ANYPLOT_THEME per seaborn library rules
+        comment: 'CRITICAL: Saves as plot.png instead of plot-{THEME}.png; should
+          be plot-light.png and plot-dark.png'
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Uses sns.heatmap() with proper parameters; sns.set_theme() for styling;
-          follows seaborn conventions
+        passed: false
+        comment: Correct sns.heatmap() usage; does NOT follow seaborn.md best practices
+          for theme-adaptive rc dict with PAGE_BG/INK/INK_SOFT tokens
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses custom matplotlib patches for missing data; custom text annotations;
-          demonstrates knowledge beyond basic heatmap
+        passed: false
+        comment: Generic sns.heatmap() API usage; no distinctive seaborn features
+          leveraged (no FacetGrid, color_palette customization, statistical overlays,
+          etc.)
+    score_caps:
+      applied: false
+      notes: 'No caps triggered: VQ-02≠0, VQ-03≠0, SC-01≠0, DQ-02≠0, DE conditions
+        not met, CQ-04≠0'
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -244,4 +254,3 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
