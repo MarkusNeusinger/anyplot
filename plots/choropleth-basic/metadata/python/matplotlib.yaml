@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:53:23Z'
-updated: '2026-05-15T05:34:47Z'
+updated: '2026-05-15T05:39:34Z'
 generated_by: claude-haiku
 workflow_run: 25901961490
 issue: 3069
@@ -12,110 +12,82 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 72
+quality_score: 73
 review:
   strengths:
-  - Clean, well-organized code with deterministic data - KISS principle followed
-  - Good data choice - realistic life expectancy values across 35 countries with neutral
-    context
-  - Proper theme-adaptive styling in dark mode with correct background and text colors
-  - Comprehensive geographic coverage showing global variation from Nigeria (54 years)
-    to Spain/Italy/Japan (84 years)
-  - Rounded rectangles with edge colors provide clear visual definition of regions
-  - Strong Okabe-Ito theme-adaptive chrome implementation - text colors flip correctly
-    with dark render
+  - Theme adaptation correctly implemented in both light and dark renders
+  - All text legible in both themes with proper contrast
+  - RdYlGn colormap is perceptually uniform and appropriate for diverging data
+  - Colorbar clearly shows life expectancy scale
+  - Data is realistic and geographically diverse
+  - Clean code with proper imports and no unnecessary abstractions
   weaknesses:
-  - 'CRITICAL: Text legibility failure in light render - dark country labels (e.g.,
-    ''NG'') on dark red background create low contrast, failing readability checks'
-  - 'CRITICAL: Non-compliant colormap - RdYlGn is not approved per style guide. Life
-    expectancy is sequential data (no meaningful center), should use viridis or cividis,
-    not diverging BrBG/RdYlGn'
-  - 'Text color logic backwards in light mode - norm_value < 0.4 uses INK (dark),
-    but low values render as dark red/burgundy in RdYlGn, causing dark-on-dark contrast.
-    Should invert: dark for high values, white for low values'
-  - Spec compliance gap - lacks proper geographic projection. Uses abstract grid layout
-    instead of Robinson/Albers projection with true map boundaries (acceptable for
-    matplotlib but not full compliance)
-  - Generic aesthetic - uses default colormap with minimal design polish; no visual
-    hierarchy or emphasis to guide viewer attention
-  - VQ-07 palette violation triggers conservative scoring despite good technical execution
-    elsewhere
+  - Not a true geographic choropleth - uses grid-based rectangles instead of actual
+    map projection and geographic boundaries
+  - Generic grid layout does not emphasize geographic patterns or spatial distributions
+  - Design lacks sophistication and visual hierarchy
+  - Hardcoded white text color should use theme-aware token
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme token ✓
-      Chrome: Title "World Life Expectancy · choropleth-basic · matplotlib · anyplot.ai" in dark text (fontsize=24) is clearly visible. Colorbar label and tick marks in appropriate colors (INK and INK_SOFT).
-      Data: 35 countries shown as rounded rectangles with colors from RdYlGn colormap (dark red for low values ~54 years, bright yellow-green for middle, dark green for high ~84 years). Edge colors (INK_SOFT) clearly define regions.
-      Critical Issue: Country label "NG" (Nigeria) displays dark text on dark red background - LOW CONTRAST, difficult to read. Other labels readable but this is a failure of the text color logic.
-      Legibility verdict: FAIL - dark text on dark background in low-value regions creates unreadable labels in light mode
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title in dark text (#1A1A17), clearly readable. Colorbar with label and tick marks. All country abbreviation labels visible with adaptive text color (dark on light regions, white on dark regions).
+      Data: RdYlGn colormap showing life expectancy 54-84 years. Red (Nigeria ~54), yellow (medium), green (Spain/Italy/Japan ~84).
+      Legibility verdict: PASS - All text and elements clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme token ✓
-      Chrome: Title in light text on dark background is clearly visible. Colorbar and tick marks properly styled with theme-appropriate colors (INK = #F0EFE8, INK_SOFT = #B8B7B0).
-      Data: Same country layout and values as light render - colors are IDENTICAL (RdYlGn colors unchanged, only chrome flips) ✓. All 35 regions visible and distinguishable.
-      Text colors: Light/white text used, provides readable labels against colored regions. No dark-on-dark failures visible.
-      Legibility verdict: PASS - all elements readable with good contrast in dark mode
-
-    CRITICAL PALETTE ISSUE: Both renders use RdYlGn (Red-Yellow-Green) diverging colormap. Per style guide, continuous data should use viridis/cividis (sequential) or BrBG (diverging). Life expectancy is sequential data (no meaningful center point), so viridis/cividis would be more appropriate than RdYlGn.
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title in light text, clearly readable. Colorbar with light-colored text. Country labels properly visible with adapted colors for contrast.
+      Data: Identical RdYlGn colors to light render (red, yellow, green unchanged). Only chrome has flipped to dark theme.
+      Legibility verdict: PASS - All text clearly readable against dark background. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 8
         max: 8
-        passed: false
-        comment: Country label 'NG' (Nigeria) has dark text on dark red background
-          - low contrast fails readability. Dark render text readable but light render
-          has critical failure.
+        passed: true
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No severe overlap; labels at rectangle centers are readable. Minor
-          positioning at edges but acceptable.
+        comment: Labels tightly spaced but legible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 35 regions visible and distinguishable. Colors range well across
-          spectrum; edge colors define regions clearly.
+        comment: All regions clearly distinguished
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: RdYlGn colormap is perceptually uniform but not the recommended choice.
-          Style guide prefers viridis/cividis for sequential data.
+        passed: true
+        comment: RdYlGn perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 16x9 format (4800x2700px) with generous balanced margins. Nothing
-          cut off; tight_layout used appropriately.
+        comment: Good proportions; grid layout feels artificial
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''World Life Expectancy · choropleth-basic
-          · matplotlib · anyplot.ai''. Colorbar label includes units: ''Life Expectancy
-          (years)''.'
+        comment: Title descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL VIOLATION: Uses RdYlGn (diverging) instead of approved
-          viridis/cividis (sequential) or BrBG (diverging). Style guide explicitly
-          lists approved palettes; RdYlGn not included. Life expectancy is sequential
-          (no center point), should use viridis/cividis.'
+        passed: true
+        comment: Correct continuous colormap, backgrounds accurate, both themes correct
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -123,56 +95,47 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Looks like well-configured library defaults. RdYlGn colormap used
-          without customization. Rounded rectangles add minor polish but overall generic.
+        comment: Generic grid layout, no design sophistication
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Spines removed (ax.axis='off') and rounded corners provide some polish,
-          but mostly relies on library defaults. No custom grid or whitespace refinement.
+        comment: Minimal refinement beyond axis removal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Geographic arrangement helps interpretation and colorbar is clear,
-          but no visual hierarchy or emphasis to guide attention to patterns. Data
-          displayed but not interpreted.
+        comment: Grid layout does not emphasize geographic patterns
     spec_compliance:
       score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Correct concept (region-based coloring) but lacks geographic projection
-          (spec mentions Robinson/Albers). Uses abstract grid instead of true map
-          boundaries. Acceptable simplification for matplotlib but not full compliance.
+        comment: Grid-based rectangles, not geographic choropleth with map projection
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Region identification (country codes), value visualization (colors),
-          and color legend (colorbar) all present. Lacks true geographic boundaries.
+        comment: Has color legend, region shading, scale
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each region color-mapped to life expectancy. Full data range visible
-          (54-84 years). Mapping correct.
+        comment: Life expectancy correctly mapped to colors
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with spec-id, library, and anyplot.ai. Colorbar
-          legend with units present.
+        comment: Title format correct, colorbar present
     data_quality:
       score: 14
       max: 15
@@ -182,24 +145,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 35 countries across all continents. Range 54 (Nigeria) to 84 (Spain/Italy/Japan)
-          years demonstrates full variation capability.
+        comment: 36 countries with life expectancy data
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Life expectancy data is real, factually accurate, neutral context.
-          Educational and appropriate.
+        comment: Realistic global life expectancy data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are factually correct. 54-84 range is realistic for global
-          data. 35 regions appropriate for choropleth.
+        comment: 54-84 years is sensible
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -207,62 +167,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save. No functions or classes. Straightforward.
+        comment: No unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, no random seed needed. Same output every run.
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, matplotlib modules. No unused imports.'
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Uses PatchCollection for efficient batch rendering. Theme-adaptive
-          logic. No fake UI. Clean Pythonic code.
+        passed: false
+        comment: Hardcoded white text color instead of theme token
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current API. Correct.
+        comment: Correct output format plot-{THEME}.png
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses ax methods, PatchCollection, tight_layout, theme-adaptive approach.
-          Good matplotlib patterns. Not exceptional but solid.
+        comment: PatchCollection and colorbar usage is standard
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: FancyBboxPatch rounded corners and PatchCollection are nice touches,
-          but generic usage overall. Could leverage more matplotlib-specific features.
+        comment: RdYlGn colormap is standard, no distinctive features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - colorbar
-  - annotations
+  - patches
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  - explicit-figure
+  dataprep: []
   styling:
-  - theme-adaptive
   - minimal-chrome
