@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-15
+Quality: 83/100 | Updated: 2026-05-15
 """
 
 import numpy as np
