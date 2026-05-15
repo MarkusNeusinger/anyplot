@@ -1,16 +1,39 @@
-""" pyplots.ai
+""" anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-15
 """
 
+import os
+import sys
 import xml.etree.ElementTree as ET
 
-import cairosvg
-import numpy as np
-import pygal
-from pygal.style import Style
 
+# Add site-packages to the beginning of sys.path to avoid local pygal.py conflict
+site_packages = None
+for path in sys.path:
+    if "site-packages" in path:
+        site_packages = path
+        break
+
+if site_packages:
+    sys.path.insert(0, site_packages)
+
+import cairosvg  # noqa: E402
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series is brand green #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00")
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -31,8 +54,8 @@ car_data = np.array(
     ]
 )
 
-# Group colors for cars (colorblind-safe palette)
-face_colors = ["#306998", "#FFD43B", "#4ECDC4", "#FF7043", "#9C88FF"]
+# Okabe-Ito palette for face colors
+face_colors = OKABE_ITO
 
 # SVG namespace
 SVG_NS = "http://www.w3.org/2000/svg"
@@ -40,12 +63,12 @@ ET.register_namespace("", SVG_NS)
 
 # Custom style for pygal
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=tuple(face_colors),
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
+    colors=OKABE_ITO,
     title_font_size=72,
     label_font_size=36,
     major_label_font_size=32,
@@ -129,8 +152,8 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     left_eye.set("cx", str(left_eye_x))
     left_eye.set("cy", str(left_eye_y))
     left_eye.set("r", str(eye_size))
-    left_eye.set("fill", "white")
-    left_eye.set("stroke", "#333")
+    left_eye.set("fill", PAGE_BG)
+    left_eye.set("stroke", INK)
     left_eye.set("stroke-width", str(max(3, 2.5 * scale)))
 
     # Left pupil
@@ -138,7 +161,7 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     left_pupil.set("cx", str(left_eye_x))
     left_pupil.set("cy", str(left_eye_y))
     left_pupil.set("r", str(eye_size * 0.4))
-    left_pupil.set("fill", "#333")
+    left_pupil.set("fill", INK)
 
     # Right eye
     right_eye_x = cx + eye_spacing * 0.5
@@ -147,8 +170,8 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     right_eye.set("cx", str(right_eye_x))
     right_eye.set("cy", str(right_eye_y))
     right_eye.set("r", str(eye_size))
-    right_eye.set("fill", "white")
-    right_eye.set("stroke", "#333")
+    right_eye.set("fill", PAGE_BG)
+    right_eye.set("stroke", INK)
     right_eye.set("stroke-width", str(max(3, 2.5 * scale)))
 
     # Right pupil
@@ -156,7 +179,7 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     right_pupil.set("cx", str(right_eye_x))
     right_pupil.set("cy", str(right_eye_y))
     right_pupil.set("r", str(eye_size * 0.4))
-    right_pupil.set("fill", "#333")
+    right_pupil.set("fill", INK)
 
     # Eyebrows
     brow_length = eye_size * 2.2
@@ -169,7 +192,7 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     left_brow.set("y1", str(left_eye_y - brow_y_offset + slant_offset))
     left_brow.set("x2", str(left_eye_x + brow_length * 0.5))
     left_brow.set("y2", str(left_eye_y - brow_y_offset - slant_offset))
-    left_brow.set("stroke", "#333")
+    left_brow.set("stroke", INK)
     left_brow.set("stroke-width", str(max(5, 4 * scale)))
     left_brow.set("stroke-linecap", "round")
 
@@ -179,7 +202,7 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     right_brow.set("y1", str(right_eye_y - brow_y_offset - slant_offset))
     right_brow.set("x2", str(right_eye_x + brow_length * 0.5))
     right_brow.set("y2", str(right_eye_y - brow_y_offset + slant_offset))
-    right_brow.set("stroke", "#333")
+    right_brow.set("stroke", INK)
     right_brow.set("stroke-width", str(max(5, 4 * scale)))
     right_brow.set("stroke-linecap", "round")
 
@@ -189,7 +212,7 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     nose.set("y1", str(cy - nose_length * 0.3))
     nose.set("x2", str(cx))
     nose.set("y2", str(cy + nose_length * 0.5))
-    nose.set("stroke", "#333")
+    nose.set("stroke", INK)
     nose.set("stroke-width", str(max(4, 3.5 * scale)))
     nose.set("stroke-linecap", "round")
 
@@ -200,7 +223,7 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     mouth = ET.SubElement(face_group, f"{{{SVG_NS}}}path")
     mouth.set("d", mouth_path)
     mouth.set("fill", "none")
-    mouth.set("stroke", "#333")
+    mouth.set("stroke", INK)
     mouth.set("stroke-width", str(max(5, 4 * scale)))
     mouth.set("stroke-linecap", "round")
 
@@ -212,7 +235,7 @@ for i, (name, data, color) in enumerate(zip(car_names, car_data, face_colors, st
     label_elem.set("font-family", "sans-serif")
     label_elem.set("font-size", str(max(36, 28 * scale)))
     label_elem.set("font-weight", "bold")
-    label_elem.set("fill", "#333")
+    label_elem.set("fill", INK)
     label_elem.text = name
 
 # Add title
@@ -223,7 +246,7 @@ title_elem.set("text-anchor", "middle")
 title_elem.set("font-family", "sans-serif")
 title_elem.set("font-size", "72")
 title_elem.set("font-weight", "bold")
-title_elem.set("fill", "#333")
+title_elem.set("fill", INK)
 title_elem.text = "Car Performance Comparison · chernoff-basic · pygal · pyplots.ai"
 
 # Add legend for attributes - positioned closer to faces
@@ -236,7 +259,7 @@ legend_title.set("y", str(legend_y))
 legend_title.set("font-family", "sans-serif")
 legend_title.set("font-size", "44")
 legend_title.set("font-weight", "bold")
-legend_title.set("fill", "#333")
+legend_title.set("fill", INK)
 legend_title.text = "Feature Mappings:"
 
 feature_mappings = [
@@ -258,7 +281,7 @@ for i, mapping in enumerate(feature_mappings):
     text_elem.set("y", str(legend_y + 80 + row * 70))
     text_elem.set("font-family", "sans-serif")
     text_elem.set("font-size", "36")
-    text_elem.set("fill", "#555")
+    text_elem.set("fill", INK_SOFT)
     text_elem.text = mapping
 
 # Add color legend for car identification
@@ -271,7 +294,7 @@ color_title.set("y", str(color_legend_y))
 color_title.set("font-family", "sans-serif")
 color_title.set("font-size", "44")
 color_title.set("font-weight", "bold")
-color_title.set("fill", "#333")
+color_title.set("fill", INK)
 color_title.text = "Cars:"
 
 for i, (name, color) in enumerate(zip(car_names, face_colors, strict=True)):
@@ -290,7 +313,7 @@ for i, (name, color) in enumerate(zip(car_names, face_colors, strict=True)):
     name_elem.set("y", str(color_legend_y))
     name_elem.set("font-family", "sans-serif")
     name_elem.set("font-size", "36")
-    name_elem.set("fill", "#555")
+    name_elem.set("fill", INK_SOFT)
     name_elem.text = name
 
 # Convert back to string
@@ -300,29 +323,29 @@ final_svg = ET.tostring(svg_tree, encoding="unicode")
 final_svg = '<?xml version="1.0" encoding="UTF-8"?>\n' + final_svg
 
 # Save as SVG file
-with open("plot.svg", "w") as f:
+with open(f"plot-{THEME}.svg", "w") as f:
     f.write(final_svg)
 
 # Use cairosvg to convert to PNG
-cairosvg.svg2png(bytestring=final_svg.encode(), write_to="plot.png", output_width=4800, output_height=2700)
+cairosvg.svg2png(bytestring=final_svg.encode(), write_to=f"plot-{THEME}.png", output_width=4800, output_height=2700)
 
 # Save HTML for interactive version
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(
-        """<!DOCTYPE html>
+        f"""<!DOCTYPE html>
 <html>
 <head>
     <title>chernoff-basic · pygal · pyplots.ai</title>
     <style>
-        body { margin: 0; padding: 20px; background: #f5f5f5; font-family: sans-serif; }
-        .container { max-width: 100%; margin: 0 auto; }
-        h1 { text-align: center; color: #333; }
-        object { width: 100%; height: auto; }
+        body {{ margin: 0; padding: 20px; background: {PAGE_BG}; font-family: sans-serif; }}
+        .container {{ max-width: 100%; margin: 0 auto; }}
+        h1 {{ text-align: center; color: {INK}; }}
+        object {{ width: 100%; height: auto; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <object type="image/svg+xml" data="plot.svg">
+        <object type="image/svg+xml" data="plot-{THEME}.svg">
             Chernoff faces visualization not supported
         </object>
     </div>
