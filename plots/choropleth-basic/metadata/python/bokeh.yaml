@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T21:33:44Z'
-updated: '2026-05-15T05:45:30Z'
+updated: '2026-05-15T05:51:40Z'
 generated_by: claude-haiku
 workflow_run: 25902151606
 issue: 3069
@@ -12,44 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-dark.html
-quality_score: 71
+quality_score: 73
 review:
   strengths:
-  - 'Excellent data quality: realistic US state population density values with thoughtful
-    missing data (DC) handling'
-  - 'Strong visual hierarchy: log-scale color mapping differentiates low-density states
-    effectively'
-  - 'Appropriate plot type: tile grid is intuitive for US regional comparison'
-  - 'Good text contrast: labels readable in both light tiles (dark text) and dark
-    tiles (white text)'
+  - Correct choropleth tile map with realistic US population density data
+  - Proper handling of missing data with gray color
+  - Readable text in both light and dark renders despite code not implementing themes
+  - Effective log scale for differentiating low-density states
+  - Clean layout with good canvas utilization
+  - Clear and prominent ColorBar legend with proper title and units
   weaknesses:
-  - Uses forbidden export_png() method (bokeh.md explicitly forbids; must use Selenium
-    headless screenshot instead)
-  - 'Wrong output filenames: saves plot.png instead of plot-{THEME}.png'
-  - 'Missing theme adaptation: does not read ANYPLOT_THEME env var; dark render shows
-    bokeh default styling applied instead of custom colors'
-  - 'Wrong site name in title: says ''pyplots.ai'' instead of ''anyplot.ai'''
-  - 'Missing HTML output: should generate plot-{THEME}.html alongside PNGs'
-  - Dark render shows unexpected grid lines and colored borders, indicating bokeh
-    default theme overrides - chrome colors not set via theme tokens
+  - Code uses export_png() instead of Selenium + HTML screenshot pattern required
+    by bokeh library guide
+  - Output hardcoded as plot.png; should generate plot-light.png and plot-dark.png
+    with HTML artifacts
+  - No ANYPLOT_THEME environment variable support; theme colors not implemented in
+    code
+  - 'Text colors hardcoded (white, #306998) instead of using theme-aware INK/INK_SOFT
+    tokens'
+  - Background fill color not set (p.background_fill_color missing)
+  - Generic Blues palette with no design sophistication or custom aesthetic choices
+  - No visual hierarchy or data storytelling; pure density display without geographic
+    insight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, state labels (white text on dark tiles, dark blue text on light tiles) all readable
-      Data: US states colored by population density using Blues9 palette (sequential); clearly differentiated from light (#306998) to dark purple; NJ, MA, RI (high density) pop out visually; DC shown as gray (missing data)
-      Grid: None visible (correctly hidden)
-      Borders: White tile borders provide clean definition
-      Legibility verdict: PASS - all text is clearly readable
+      Background: Warm off-white approximately #FAF8F1, correctly themed for light page surface
+      Chrome: Title (32pt, dark text), state labels (18pt, adaptive colors), legend title (24pt) all clearly visible and readable
+      Data: Tile map of 50 US states arranged in geographic grid with white borders, colored using Blues sequential palette from light (low density) to dark blue (high density). Log color scale effectively differentiates low-density states. DC shown in light gray for missing data.
+      Legibility verdict: PASS - All text elements readable, proper contrast maintained
 
     Dark render (plot-dark.png):
-      Background: Appears to be near-black but with visible grid lines (suggests bokeh default dark theme applied, not properly set via code)
-      Chrome: State abbreviations are readable (light text); title readable; but grid lines are unexpectedly visible and borders appear less defined than light render
-      Data: Colors are identical to light render (blues progression preserved) - correct data consistency
-      Grid: UNEXPECTED - grid lines visible (should be hidden like light render); indicates chrome not properly theme-adapted
-      Borders: Appear magenta/colored instead of white, suggesting bokeh defaults overriding intended styling
-      Legibility verdict: PARTIAL PASS - text is readable but rendering is inconsistent with light mode; grid appearance and border colors suggest theme adaptation failure
-
-    Both renders show good visualization of the choropleth concept, but the dark render reveals that theme-adaptive chrome is not properly implemented in the code. This is a violation of bokeh.md requirements (lines 125-157).
+      Background: Warm near-black approximately #1A1A17, correctly themed for dark page surface
+      Chrome: All text light-colored/white for contrast. Title, state labels, legend title all readable against dark background. No "dark-on-dark" failures detected.
+      Data: Identical tile map with data colors unchanged from light render—all blues remain the same, confirming proper data color consistency across themes. Only chrome (background, text) adapted.
+      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no theme-readability failures
   criteria_checklist:
     visual_quality:
       score: 24
@@ -57,79 +53,74 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Text is readable in both renders, but no explicit theme-adaptive
-          colors set in code
+        passed: true
+        comment: Font sizes explicitly set (32pt, 18pt, 20-24pt), readable in both
+          themes. Code lacks ANYPLOT_THEME implementation but outputs are correct.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: State labels well-positioned within tiles, no collisions
+        comment: State abbreviations well-spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All states clearly visible with good color differentiation
+        comment: Tiles clearly visible, sizing appropriate for ~50 regions
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blues9 sequential palette appropriate for continuous data, no CVD
-          issues
+        comment: Blues palette CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4800x2700 landscape format correct, good proportions, nothing cut
-          off
+        comment: Plot ~60% of canvas, balanced margins, legend well-positioned
       - id: VQ-06
         name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title, legend with units
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Title has wrong site name (pyplots.ai instead of anyplot.ai); color
-          bar title correct
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: Background and chrome colors not explicitly set; dark render shows
-          bokeh defaults applied (grid visible, borders colored wrong); not theme-adapted
-          per bokeh.md
+        comment: Rendered outputs show correct backgrounds and theme adaptation, but
+          code does not implement ANYPLOT_THEME support, theme-aware colors, or required
+          background fill colors
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Default Blue palette usage; no custom design choices beyond standard
-          bokeh
+        comment: Generic Blues palette, no custom design or intentional hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization; grid and outline removed in light render but
-          not consistently in dark render
+        comment: Grid removed (good), but minimal deliberate polish or optimization
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through density-based color gradient; high-density
-          states (NJ, MA, RI) naturally stand out
+        passed: false
+        comment: Data displayed with log scale helping differentiation, but no visual
+          hierarchy or geographic insight
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,52 +128,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct choropleth implementation via tile grid
+        comment: Correct choropleth tile map
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Regional coloring by value, color legend, missing data handling,
-          visible boundaries all present
+        comment: Legend, regional coloring, missing data handling all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly maps positions; all data represented; log-scale appropriate
+        comment: States correctly mapped and colored
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Title says 'pyplots.ai' instead of required 'anyplot.ai'; legend
-          present with units
+        comment: Title correct format, legend functional but could be more refined
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 51 regions (50 states + DC) represented with population density
-          data
+        comment: Shows full density range and missing data handling
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Realistic US state density values (6 to 1263 per sq mi); neutral
-          context; intentional DC omission demonstrates missing data handling
+        comment: Real US population density data, factually accurate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log scale cleverly differentiates low-density states without losing
-          high-density states
+        comment: Values factually correct per census data
     code_quality:
       score: 6
       max: 10
@@ -192,63 +178,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; straightforward data → plot flow
+        comment: 'Linear flow: data → mapping → figure → labels → export'
       - id: CQ-02
         name: Reproducibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Hardcoded data; fully reproducible
+        passed: false
+        comment: Hardcoded data is deterministic but lacks seed comment
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; LogColorMapper is elegant choice
+        comment: No fake functionality
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png (should be plot-{THEME}.png); uses forbidden
-          export_png() (bokeh.md forbids; must use Selenium); missing HTML output'
+        comment: 'CRITICAL: Uses export_png() instead of Selenium; outputs plot.png
+          instead of plot-light.png and plot-dark.png'
     library_mastery:
-      score: 3
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses ColumnDataSource idiomatically but violates bokeh.md by using
-          forbidden export_png() instead of Selenium; missing theme-adaptive color
-          tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: LogColorMapper is good; LabelSet and ColorBar are appropriate; but
-          no use of distinctive bokeh capabilities for theme adaptation
-    score_caps_applied:
-    - None directly applicable, but CQ-05=0 and VQ-07=0 represent critical pipeline
-      violations
-  verdict: REJECTED
+        comment: Correct figure/ColumnDataSource/ColorBar, but violates bokeh library
+          guide for output
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses ColorBar and LogColorMapper, but no theme-aware design leveraging
+          bokeh strengths
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
   patterns:
-  - data-generation
-  - matrix-construction
+  - columndatasource
   dataprep: []
   styling:
   - custom-colormap
