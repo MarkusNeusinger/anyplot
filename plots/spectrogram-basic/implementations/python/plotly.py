@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 93 | Updated: 2025-05-15
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-15
 """
 
 import os
