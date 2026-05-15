@@ -1,165 +1,182 @@
 library: plotnine
+language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:54:53Z'
-updated: '2025-12-31T15:11:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620325064
+updated: '2026-05-15T05:51:54Z'
+generated_by: claude-haiku
+workflow_run: 25902276133
 issue: 3069
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
 review:
   strengths:
-  - Excellent handling of missing data with gray fill for Czechia as specified
-  - Creative label offset solution prevents text overlap in crowded central Europe
-  - Realistic population density values for European countries
-  - Clean separation of data with values vs missing data using two geom_polygon layers
-  - Good use of sequential Blues colormap which is colorblind-safe
-  - Proper centroid calculation with manual adjustments for readability
+  - Complete spec compliance with all required features present
+  - Excellent data quality with realistic, educational context
+  - Clean, reproducible code with proper structure
+  - Theme-adaptive chromatic elements (backgrounds, text colors, legend styling)
+  - Clear geographic visual narrative (life expectancy patterns by region)
+  - Accurate missing-data handling with distinct visual treatment
   weaknesses:
-  - Country shapes are highly stylized polygons rather than realistic geographic shapes
-  - Legend colorbar could benefit from more tick marks for finer granularity
-  - Some white space at image corners could be better utilized
-  image_description: The plot shows a stylized choropleth map of European countries
-    using simplified polygon shapes. The map displays population density data with
-    a sequential Blues colormap. The Netherlands appears darkest blue (~521 per km²),
-    followed by Belgium and UK in medium-dark blue, while Nordic countries (Norway,
-    Sweden, Finland) appear lightest. Czechia is shown in gray to demonstrate missing
-    data handling. Each country is labeled with bold black text, with labels adjusted
-    to avoid overlap in crowded central Europe. The title "choropleth-basic · plotnine
-    · pyplots.ai" is displayed at the top in large bold text. The legend on the right
-    shows "Population Density (per km²)" with a vertical colorbar ranging from 0 to
-    500. The background is light blue (#f0f5fa) and country boundaries are clearly
-    visible with dark gray outlines.
+  - Design is functional but generic—BrBG colormap and theme are library defaults
+    without custom refinement
+  - Minimal visual refinement (no distinctive styling, grid/spine treatment is basic)
+  - Country labels lack optimal sizing for 4K resolution (7pt is small; 8-9pt would
+    improve readability)
+  - Light-region label contrast in dark theme could be improved (light text on light
+    teal regions is legible but not ideal)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1, correct for light theme
+      Chrome: Title (24pt, dark text), legend (16pt title, 14pt text), country labels all dark and readable against light backgrounds
+      Data: BrBG diverging colormap, brown tones (low values ~78), teal/turquoise tones (high values ~84+), gray for missing data (Czechia)
+      Legibility verdict: PASS—all text clearly readable; minor label proximity (Poland/Czechia) does not obscure readability
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17, correct for dark theme
+      Chrome: Title (24pt, light text), legend (light text on elevated background #242420), country labels all light-colored and readable
+      Data: Colors identical to light render—BrBG colormap unchanged across themes; data color fidelity maintained
+      Legibility verdict: PASS—all text legible; light text on darker regions has good contrast; labels on lighter-colored regions (Finland, high-value areas) have lower contrast but remain readable; no "dark-on-dark" failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title large and readable at 28pt, country labels clearly visible
-          at size 8 with bold weight, legend text appropriately sized
+        comment: All text explicitly sized and readable; country labels at 7pt are
+          small but legible at 4800×2700px
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Label offsets successfully prevent overlap in crowded central Europe
-          region (Netherlands, Belgium, Germany, Denmark)
+        comment: Minimal label proximity (Poland/Czechia close) but all labels remain
+          distinguishable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Polygons are well-sized with good alpha (0.95), boundaries clearly
-          visible with 0.6pt stroke
+        comment: All 16 regions clearly visible and differentiated by color; gradation
+          from brown to teal is crisp
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blues sequential colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of 16:9 canvas, map centered but some empty space at corners
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden as appropriate for map; legend has proper units "(per
-          km²)"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: BrBG is colorblind-safe diverging palette; good luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 16:9 (4800×2700); plot fills 50-70% of canvas with balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend well-placed on right with appropriate sizing; grid removed
-          as appropriate for map type
+        comment: Title includes spec-id, library, and source; no extraneous axis labels
+          needed for choropleth
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BrBG colormap correct for continuous diverging data; backgrounds
+          #FAF8F1/#1A1A17 exact; theme-adaptive chrome applied throughout'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Looks like well-configured library default; BrBG is standard approved
+          choice, no custom enhancement
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; grid removed, border subtle, but spines still
+          visible and no distinctive refinement touches
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data choice (life expectancy) is educational and realistic; geographic
+          pattern is clear (north higher, Poland lower), creates basic visual narrative
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct choropleth map implementation using polygons
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Density values correctly mapped to fill color
-      - id: SC-03
+        comment: Correct choropleth with regions shaded by continuous data
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has color legend, clear boundaries, missing data handling (gray);
-          projection is approximate but acceptable for stylized map
-      - id: SC-04
-        name: Data Range
+        comment: Color legend, region boundaries, missing data handling (gray Czechia),
+          all region labels present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Color scale encompasses all data values (0-550 for max 521)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Life expectancy correctly mapped to fill; coordinates geometrically
+          accurate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Population Density (per km²)"
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format but uses middot (·) instead of standard bullet
+        comment: Title format {spec-id} · {library} · anyplot.ai; legend titled 'Life
+          Expectancy (years)' with units
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows full range from low density (Norway 15) to high density (Netherlands
-          521), includes missing data example (Czechia)
+        comment: Shows high (84+), medium (81–83), low (78), and missing data aspects;
+          demonstrates all plot type features
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real European countries with realistic 2024 population density values
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are accurate for actual country population densities
+        comment: Life expectancy at birth is real, neutral, educational metric; 2023–2024
+          European values are factually plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values (77–84.6 years) are realistic and proportionally accurate
+          for modern Europe
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,42 +184,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Linear: imports → constants → data → plot → save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only os, numpy, pandas, plotnine; all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable; polygon coordinates and missing-data separation
+          are straightforward; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to 'plot.png' correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current plotnine API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_polygon, aes mapping, scale_fill_cmap,
-          coord_fixed, and theme customization; however plotnine doesn't have native
-          geographic support so this is a creative workaround rather than using distinctive
-          features
+        comment: Uses ggplot() + geom_polygon() + scale_fill_cmap() + theme() correctly;
+          follows grammar of graphics; doesn't leverage plotnine-specific patterns
+          beyond basics
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: geom_polygon and layer composition are generic across ggplot2-family
+          libraries; no use of plotnine-exclusive capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
