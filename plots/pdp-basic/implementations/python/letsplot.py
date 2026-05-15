@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2025-05-15
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -13,6 +15,17 @@ from sklearn.inspection import partial_dependence
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito colors
+BRAND = "#009E73"
+ACCENT = "#D55E00"
 
 # Train a model for partial dependence
 np.random.seed(42)
@@ -51,43 +64,53 @@ df_ice = pd.DataFrame(ice_data)
 
 # Get rug data (sample of training feature values for distribution)
 rug_sample = np.random.choice(X[:, feature_idx], size=100, replace=False)
-y_min = avg_pd.min() - (avg_pd.max() - avg_pd.min()) * 0.02
-y_max = avg_pd.min() + (avg_pd.max() - avg_pd.min()) * 0.02
+rug_height = (avg_pd.max() - avg_pd.min()) * 0.08
+y_min = avg_pd.min() - rug_height / 2
+y_max = avg_pd.min() + rug_height / 2
 df_rug = pd.DataFrame(
     {"x": rug_sample, "y_start": np.full(len(rug_sample), y_min), "y_end": np.full(len(rug_sample), y_max)}
+)
+
+# Custom theme
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.2),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24, face="bold"),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=16),
 )
 
 # Create the partial dependence plot
 plot = (
     ggplot()
-    # Confidence band (80% interval from ICE lines)
-    + geom_ribbon(aes(x="feature_value", ymin="lower", ymax="upper"), data=df_pdp, fill="#306998", alpha=0.2)
-    # ICE lines (individual conditional expectations)
+    + geom_ribbon(aes(x="feature_value", ymin="lower", ymax="upper", fill="Confidence Band"), data=df_pdp, alpha=0.25)
     + geom_line(
-        aes(x="feature_value", y="ice_value", group="line_id"), data=df_ice, color="#306998", alpha=0.15, size=0.5
+        aes(x="feature_value", y="ice_value", group="line_id", color="Individual"), data=df_ice, alpha=0.2, size=0.5
     )
-    # Main PDP line
-    + geom_line(aes(x="feature_value", y="partial_dependence"), data=df_pdp, color="#FFD43B", size=2.5)
-    # Rug plot showing data distribution (vertical segments at bottom)
-    + geom_segment(aes(x="x", y="y_start", xend="x", yend="y_end"), data=df_rug, color="#306998", alpha=0.4, size=0.8)
-    # Labels and title
+    + geom_line(aes(x="feature_value", y="partial_dependence", color="Main PDP"), data=df_pdp, size=2.5)
+    + geom_segment(
+        aes(x="x", y="y_start", xend="x", yend="y_end", color="Data Distribution"), data=df_rug, alpha=0.6, size=1.2
+    )
+    + scale_color_manual(values={"Main PDP": BRAND, "Individual": ACCENT, "Data Distribution": ACCENT})
+    + scale_fill_manual(values={"Confidence Band": ACCENT})
     + labs(
         x=f"{feature_name} (standardized)",
         y="Partial Dependence (predicted outcome)",
-        title="pdp-basic · letsplot · pyplots.ai",
+        title="pdp-basic · letsplot · anyplot.ai",
+        color="Elements",
+        fill="",
     )
-    # Theme for readability
-    + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.3),
-        panel_grid_minor=element_blank(),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
+    + theme(legend_position="top", legend_direction="horizontal")
 )
 
 # Save as PNG and HTML
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", w=4800, h=2700, unit="px", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
