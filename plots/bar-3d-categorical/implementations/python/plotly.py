@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 83/100 | Created: 2026-05-15
+Quality: 82/100 | Created: 2026-05-15
 """
 
 import os

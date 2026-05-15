@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T08:50:45Z'
-updated: '2026-05-15T08:57:24Z'
+updated: '2026-05-15T09:07:59Z'
 generated_by: claude-sonnet
 workflow_run: 25908610916
 issue: 5248
@@ -12,96 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotly/plot-dark.html
-quality_score: 83
+quality_score: 82
 review:
   strengths:
-  - Custom Mesh3d cuboid construction with flat shading and proper lighting — expert-level
-    use of Plotlys 3D API (no built-in 3D bar exists)
-  - 'Okabe-Ito palette correctly applied with #009E73 as first series and full theme-adaptive
-    chrome in both renders'
-  - 'All 6 spec requirements met: bar spacing, color encoding, appropriate viewing
-    angle, grid lines, value labels on 20-bar grid, legend'
-  - Realistic and neutral regional product sales scenario with plausible values (29-105
-    $K)
-  - Both light and dark themes render correctly with no dark-on-dark legibility failures
+  - 'Perfect Spec Compliance and Data Quality: all required 3D bar chart features
+    present with realistic neutral business data'
+  - Correct Okabe-Ito palette in canonical order with both themes fully adaptive
+  - All font sizes explicitly set at recommended pixel sizes (28/22/18/16)
+  - Clean well-structured code using idiomatic Plotly Mesh3d approach
+  - Flatshading and custom lighting parameters give professional 3D appearance
+  - Value labels on all 20 bars aid data reading
   weaknesses:
-  - 'Font sizes below style-guide recommendations for pixel-based libraries: title
-    should be 28px (is 24px), axis labels 22px (is 18px), tick labels 18px (is 14px),
-    value labels should be 14px (is 12px)'
-  - 'Title format non-compliant: must be exactly bar-3d-categorical · plotly · anyplot.ai
-    — remove the Regional Product Sales · prefix'
-  - Value label crowding in the central 3D region where bars from multiple categories
-    converge in perspective
-  - cuboid() helper function technically violates KISS no-functions rule — should
-    be inlined in the loop body
+  - 'Axis label crowding at 3D projection base: Product Category and Sales Region
+    labels overlap with tick labels due to 3D perspective'
+  - Grid color uses solid hex values instead of recommended rgba semi-transparent
+    values resulting in slightly harder grid lines
+  - 'DE-03 weak: no visual hierarchy or emphasis — all bars treated equally with no
+    focal point guiding the viewer to an insight'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct theme surface
-      Chrome: Title "Regional Product Sales · bar-3d-categorical · plotly · anyplot.ai" in dark ink — readable. Axis labels "Product Category", "Sales Region", "Sales ($K)" in dark INK at 18px — readable but below the 22px recommendation. Tick labels at 14px in INK_SOFT — readable but below 18px recommendation. Value labels at 12px in dark ink on top of bars — legible at full resolution.
-      Data: 4 products × 5 regions = 20 3D bars. Electronics (#009E73 green) tallest (~74-105), Clothing (#D55E00 orange) second (~50-80), Food (#0072B2 blue) third (~38-66), Sports (#CC79A7 pink) variable (~29-74). Bars are well-spaced with clear depth. Minor label crowding in central perspective region.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme-adaptive surface
+      Chrome: Title "bar-3d-categorical · plotly · anyplot.ai" in dark #1A1A17 — readable. Axis labels "Product Category", "Sales Region", "Sales ($K)" in dark ink. Tick labels in #4A4A44 (INK_SOFT). Legend with border and "Product" heading in dark ink.
+      Data: Electronics=#009E73 (green, tallest bars 95-105K), Clothing=#D55E00 (orange, 50-80K), Food=#0072B2 (blue, 38-66K), Sports=#CC79A7 (pink, 29-74K). All Okabe-Ito positions 1-4 in correct order. Value labels float above bars.
+      Legibility verdict: PASS — all text readable. Minor crowding where 3D projection compresses axis label and tick label text near chart base.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct dark theme surface
-      Chrome: Title visible in light off-white (#F0EFE8 INK in dark mode) — clearly readable. Axis labels in INK (light) and tick labels in INK_SOFT (#B8B7B0) — both readable as mid-grey on dark background. Value labels on bars use INK (#F0EFE8) in dark mode — appear as light text, readable against the dark bars. No dark-on-dark failures detected. Axis plane backgrounds are #1A1A17 (PAGE_BG), grid lines in #2D2D2A — very subtle but present.
-      Data: Identical data colors to light render — Electronics #009E73, Clothing #D55E00, Food #0072B2, Sports #CC79A7. Only chrome (background, text, grid, legend frame) has flipped to dark theme.
-      Legibility verdict: PASS
+      Background: Near-black #1A1A17 — correct dark surface
+      Chrome: Title in light #F0EFE8 — clearly visible. Axis labels in light ink. Tick labels in #B8B7B0. Legend box in #242420. No dark-on-dark failures observed.
+      Data: Colors identical to light render — #009E73, #D55E00, #0072B2, #CC79A7. Value labels rendered in light INK color (#F0EFE8) for dark theme. 3D panel backgrounds correctly use #1A1A17.
+      Legibility verdict: PASS — all text readable against dark background. Same minor axis label crowding as light render but no visibility failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set but below pixel-based recommendations:
-          title 24px (recommended 28px), axis labels 18px (recommended 22px), tick
-          labels 14px (recommended 18px), value labels 12px'
+        comment: All font sizes explicitly set (title=28, axis=22, ticks=18, legend=16-17,
+          value labels=14). Readable in both themes. Minor deduction for angled 3D
+          axis labels.
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal-to-moderate overlap at 3D projection base where axis labels
+          crowd tick labels. Main content readable.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding in the central 3D region where labels from nearby
-          bars cluster in perspective (52/66/52/50 area)
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: All 20 bars clearly visible with distinct Okabe-Ito colors, proper
-          spacing, flat shading gives clean appearance
+        comment: Bars clearly visible with good flatshading. Value labels readable.
+          Minor occlusion of background bars by foreground.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; all four categories distinguishable
-          without relying on hue alone
+        comment: Okabe-Ito CVD-safe palette. Four categories use distinct hues with
+          good luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 3D scene fills canvas well; some corner whitespace is inherent to
-          3D perspective
+        comment: 3D scene fills good portion of canvas. Camera angle appropriate.
+          Small empty band at bottom from projection geometry.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All axes descriptively labeled with units: Sales ($K) on Z axis'
+        comment: Product Category, Sales Region, Sales ($K) — descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order for all 4 categories; backgrounds
-          #FAF8F1 light / #1A1A17 dark; chrome correctly flips'
+        comment: 'Correct Okabe-Ito order starting with #009E73. Backgrounds #FAF8F1/#1A1A17.
+          Theme-adaptive chrome in both renders.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -109,24 +104,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Mesh3d cuboid with flat shading and tuned lighting gives professional
-          look; above configured-default tier but not publication-ready
+        comment: 'Above defaults: Okabe-Ito palette, flatshading with intentional
+          lighting, legend with custom border. Professional but not exceptional.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Theme-adaptive axis plane backgrounds, appropriate 3D grid for depth
-          cues, proper legend styling; good refinement given 3D constraints
+        comment: Subtle grid lines, theme-adaptive 3D panel backgrounds, styled legend.
+          Grid color slightly more opaque than recommended rgba values.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Value labels on all bars immediately reveal Electronics dominance;
-          some natural hierarchy from bar heights but no explicit focal point or emphasis
+        passed: false
+        comment: Value labels help readability. No visual hierarchy or emphasis on
+          insight. All bars equal visual weight.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,28 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D bar chart with bars rising from 2D categorical grid
+        comment: Correct 3D bar chart with bars rising from 2D categorical grid.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bar spacing, color encoding, appropriate viewing angle, grid lines,
-          value labels on 20-bar grid, legend all present
+        comment: Spacing, color encoding, camera angle, grid lines, value labels,
+          legend all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Product Category, Y=Sales Region, Z=Sales ($K); all data visible
+        comment: X=Product Category (4), Y=Sales Region (5), Z=Sales ($K). Correct.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title has extra prefix: ''Regional Product Sales · bar-3d-categorical
-          · plotly · anyplot.ai'' — required format is exactly ''bar-3d-categorical
-          · plotly · anyplot.ai''. Legend labels correct.'
+        passed: true
+        comment: 'Title: bar-3d-categorical · plotly · anyplot.ai. Legend shows all
+          4 products with correct colors.'
     data_quality:
       score: 15
       max: 15
@@ -165,57 +159,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 4x5 grid demonstrated; all 3D bar features (spacing, color,
-          labels, grid, legend) present
+        comment: 4x5=20 bars showing variation across both categorical dimensions.
+          Full feature set demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Regional product sales across Electronics, Clothing, Food, Sports
-          — real, neutral business scenario
+        comment: Sales figures for product categories across geographic regions. Neutral,
+          plausible business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values 29-105 $K are entirely plausible for the domain
+        comment: Values $29K-$105K in sales. Plausible and well-scaled.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: cuboid() helper function technically violates the no-functions KISS
-          rule; could be inlined in the loop body
+        passed: true
+        comment: Imports -> Data -> Plot loop -> Style -> Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used
+        comment: Only os, numpy, plotly.graph_objects imported and all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean structure; no fake UI elements; face-index construction appropriately
-          low-level for Mesh3d
+        comment: Mesh3d vertex/face construction is verbose but unavoidable for 3D
+          bars. Clean code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -225,27 +218,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of go.Mesh3d for 3D bars (no built-in 3D bar in Plotly),
-          go.Scatter3d for text labels, scene-level axis configuration — expert usage
+        comment: Correctly uses go.Mesh3d (proper approach since Plotly lacks go.Bar3d),
+          go.Scatter3d for text labels, and 3D scene configuration.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive 3D scene with lighting/shading configuration and HTML
-          export are distinctively Plotly; mesh geometry construction itself is not
-          uniquely Plotly-exclusive
-  verdict: REJECTED
+        comment: Mesh3d flatshading and custom lighting (ambient/diffuse/specular/roughness),
+          lightposition, interactive 3D scene with HTML export. Distinctly Plotly.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - annotations
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep: []
   styling: []
