@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: seaborn | Python 3.13
-Quality: 91 | Updated: 2025-05-15
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-15
 """
 
 import os
