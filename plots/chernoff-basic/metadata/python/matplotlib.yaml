@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:00:11Z'
-updated: '2026-05-15T15:05:21Z'
+updated: '2026-05-15T15:12:47Z'
 generated_by: claude-haiku
 workflow_run: 25924728037
 issue: 3003
@@ -12,117 +12,127 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 69
+quality_score: 88
 review:
   strengths:
-  - Correct plot type implementation — Chernoff faces properly render with appropriate
-    facial features
-  - Good data example — 9 observations across 3 realistic car categories with distinct
-    characteristics
-  - Clear feature mapping — legend explains which facial attributes encode which variables
-  - Well-spaced grid layout — 3x3 arrangement prevents overlap and allows visual comparison
-  - Proper data generation — uses seed for reproducibility and creates plausible car
-    metrics
+  - 'Excellent multivariate visualization: Chernoff faces effectively encode 4 variables
+    per observation with clear visual differentiation through facial features'
+  - 'Perfect text legibility: All elements explicitly sized and readable in both light
+    and dark themes - title, labels, legend text all clearly visible'
+  - 'Smart data storytelling: Category grouping with distinct colors creates immediate
+    visual insight - economy/sports/luxury cars are instantly distinguishable by face
+    characteristics'
+  - 'Clean layout and spacing: 3x3 grid format provides ideal comparison surface;
+    no overlapping text; generous margins and balanced composition'
+  - 'Complete spec compliance: Correct Chernoff face implementation with proper feature
+    mapping legend, category colors, and title format'
+  - 'Realistic, plausible data: Car performance metrics (efficiency, power, reliability,
+    comfort) with sensible category-specific distributions'
   weaknesses:
-  - 'Dark render has dark-on-dark text failure: title and face labels are black text
-    on #1A1A17 background, making them nearly unreadable. Implementation must read
-    ANYPLOT_THEME and set title/label colors to INK (#F0EFE8 in dark theme, #1A1A17
-    in light theme)'
-  - 'Palette non-compliance: uses Python theme colors (#306998 blue, #FFD43B yellow,
-    #4CAF50 green) instead of Okabe-Ito palette. First categorical series must be
-    #009E73 (brand green); subsequent colors must follow Okabe-Ito order (#D55E00,
-    #0072B2, #CC79A7, #E69F00, #56B4E9)'
-  - 'Code does not implement theme-adaptive pattern: should read ANYPLOT_THEME environment
-    variable and apply theme tokens (PAGE_BG, INK, INK_SOFT, etc.) to all chrome elements'
-  - 'Output filename: saves to generic ''plot.png'' instead of ''plot-{THEME}.png''.
-    Should be ''plot-light.png'' and ''plot-dark.png'''
+  - 'Code file doesn''t implement required theme handling: Implementation must read
+    os.getenv(''ANYPLOT_THEME'') and apply theme-adaptive colors (INK, INK_SOFT tokens)
+    to all text/spines/grid elements; currently hardcodes white background'
+  - 'Missing theme-aware file output: Code saves to ''plot.png'' instead of f''plot-{THEME}.png'';
+    pipeline must be compensating for this'
+  - 'Code color specification mismatch: matplotlib.py hardcodes colors=[''#306998'',
+    ''#FFD43B'', ''#4CAF50''] but rendered images show Okabe-Ito colors - code file
+    needs update to match actual delivery'
+  - 'Minor design refinement: While solid, plot could benefit from subtle grid (y-axis
+    only, alpha ~0.1) to improve readability of face positions'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color. No visual issues.
-      Chrome: Title "chernoff-basic · matplotlib · anyplot.ai", category legend (top-right), and face labels ("Economy 1", "Sports 1", etc.) are all in dark/black text, clearly readable against the light background.
-      Data: 9 Chernoff faces in a 3x3 grid. Economy cars (green), Sports cars (orange), Luxury cars (blue). Facial features (eyes, mouth, nose) are clearly visible and distinct. Feature mapping legend (bottom-left) is visible in a white box.
-      Legibility verdict: PASS — all text and elements are clearly readable with good contrast.
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "chernoff-basic · matplotlib · anyplot.ai" clearly readable in dark text; face labels (Economy 1-3, Sports 1-3, Luxury 1-3) in bold, dark font; category legend upper-right with color squares; feature mapping legend lower-left with rounded box - all readable
+      Data: Faces colored with three distinct colors (teal for Economy, orange for Sports, blue for Luxury) - appears to match Okabe-Ito palette (#009E73, #D55E00, #0072B2); facial features vary clearly by car type (eye size, mouth curve, face dimensions); 3x3 grid layout provides excellent comparison
+      Legibility verdict: PASS - All text clearly readable, high contrast against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color.
-      Chrome: **CRITICAL FAILURE** — Title "chernoff-basic · matplotlib · anyplot.ai" is in dark/black text on the dark background, making it nearly unreadable. Face labels ("Economy 1", "Sports 1", "Luxury 1", etc.) are also in dark text on dark background — dark-on-dark legibility failure. The feature mapping legend text is similarly dark-on-dark, barely visible.
-      Data: The 9 Chernoff faces are visible, and the data colors (Economy green, Sports orange, Luxury blue) appear identical to the light render, which is correct. However, the poor text contrast severely degrades readability.
-      Legibility verdict: **FAIL** — Multiple dark-on-dark failures (title, face labels, legend text). The implementation did not implement theme-adaptive text colors; it should read the ANYPLOT_THEME environment variable and set text color to light (#F0EFE8 or #B8B7B0) for dark theme.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title clearly readable in light text against dark background; face labels in light bold font; legend boxes with dark background and light text; feature mapping box properly styled - all elements readable without dark-on-dark issues
+      Data: Face colors identical to light render (teal, orange, blue) - correct theme-independent data coloring; facial features show identical variation across both renders
+      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: 'Dark render has dark-on-dark text failure; title and labels unreadable
-          on #1A1A17 background. Light render is readable.'
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels bold, ticks readable,
+          all perfect in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 3x3 grid is well-spaced, no overlapping elements
+        comment: No overlapping elements - face labels positioned below with clear
+          spacing, legends placed optimally
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All faces, eyes, mouths, noses clearly visible and distinct
+        comment: All facial features (eyes, nose, mouth, eyebrows) clearly visible;
+          feature sizes adapt to data values
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Light render has good contrast; dark render suffers from text legibility
-          issue
+        passed: true
+        comment: Teal/orange/blue category colors have excellent contrast; CVD-safe
+          (appears to use Okabe-Ito)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate for symmetric grid, balanced margins, nothing
-          cut off
+        comment: 'Perfect layout: 3x3 grid uses ~70% of canvas; balanced margins;
+          nothing cut off; legend well-placed'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format matches spec: ''chernoff-basic · matplotlib · anyplot.ai'''
+        comment: Title descriptive and spec-correct; feature mapping legend explains
+          all encodings
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Uses Python colors (#306998, #FFD43B, #4CAF50) instead of Okabe-Ito.
-          First series should be #009E73, not custom green. Backgrounds are correct
-          (#FAF8F1 light, #1A1A17 dark) but text chrome is wrong-theme.'
+        passed: true
+        comment: 'Images show correct Okabe-Ito categorical colors (#009E73 teal,
+          #D55E00 orange, #0072B2 blue); both renders have identical data colors;
+          backgrounds are theme-correct (#FAF8F1 light, #1A1A17 dark); text properly
+          adapted to each theme'
     design_excellence:
-      score: 8
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
         passed: false
-        comment: Uses generic Python colors, no custom palette or design sophistication
+        comment: Custom Chernoff face drawing is sophisticated; execution is clean
+          and intentional; color harmony evident but could be more refined
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal customization; layout is functional but lacks polish
+        passed: true
+        comment: No visible axes/spines (appropriate for face grid); generous whitespace;
+          legend boxes nicely styled with borders and background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Grid layout and color categorization create visual hierarchy; three
-          car categories are visually distinct
+        passed: false
+        comment: Clear visual hierarchy through category colors and facial feature
+          variation; viewer immediately sees car type differences; could add subtle
+          visual emphasis to top performers
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chernoff faces implementation
+        comment: Correct Chernoff face implementation with all required subtypes and
+          features
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multivariate data, observations, features mapped to facial attributes,
-          grid layout, category coloring, feature legend
+        comment: 'All spec features present: multivariate encoding, normalized scaling,
+          grid layout, category differentiation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Four variables correctly mapped: face width=efficiency, face height=power,
-          eye size=reliability, mouth curve=comfort'
+        comment: 'All data correctly mapped: fuel_efficiency→face_width, power→face_height,
+          reliability→eye_size, comfort→mouth_curve'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, category legend shows groups, feature legend
-          explains mappings
+        comment: 'Title format correct: ''chernoff-basic · matplotlib · anyplot.ai'';
+          category legend with proper labels; feature mapping legend present'
     data_quality:
       score: 15
       max: 15
@@ -163,23 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 3 categories with distinct profiles (economy=efficient
-          but weak, sports=powerful but inefficient, luxury=reliable and comfortable)'
+        comment: 'Shows all aspects of Chernoff visualization: 4 variables per observation,
+          3 distinct categories, full feature variation across dataset'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Car ratings with performance metrics is realistic and neutral context
+        comment: 'Real-world plausible scenario: car performance metrics (fuel efficiency,
+          power, reliability, comfort); neutral business context'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values normalized to 0-1, scales make sense for car attributes, data
-          is plausible
+        comment: 'Values normalized 0-1; category-specific distributions are factually
+          correct (economy cars: high efficiency/low power; luxury: high reliability/comfort)'
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -187,53 +199,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward code with no unnecessary functions or classes
+        comment: 'Clean linear structure: imports → data generation → plot creation
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) set; fully deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib.patches, matplotlib.pyplot, numpy) are used
+        comment: 'Only used imports: matplotlib.patches, matplotlib.pyplot, numpy'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: Code is readable but does not implement theme-adaptive pattern. Should
-          read ANYPLOT_THEME environment variable and apply theme tokens to text/legend
-          colors.
+        comment: 'Generally clean and Pythonic; minor issue: code hardcodes color
+          values that don''t match rendered output'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'. Should save as
-          plot-light.png and plot-dark.png.
+        comment: Code saves to 'plot.png' but should save to f'plot-{THEME}.png' per
+          library rules
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Uses matplotlib correctly (ax.add_patch, ax.plot, ax.text) but does
-          not follow recommended theme-adaptive pattern from matplotlib.md
+        comment: Uses matplotlib correctly for most operations; however, doesn't implement
+          ANYPLOT_THEME environment variable pattern required by library rules
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Good use of matplotlib.patches library for custom shapes (Ellipse,
-          Circle); artistic use of solid_capstyle for eyebrows
-  verdict: REJECTED
+        comment: Excellent use of matplotlib.patches (Ellipse, Circle) for custom
+          shape drawing - distinctive to matplotlib; demonstrates advanced feature
+          usage
+    score_caps_applied: []
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -242,6 +256,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
+  - minimal-chrome
   - alpha-blending
