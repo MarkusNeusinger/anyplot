@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: plotly 5.24.1 | Python 3.13.11
+Quality: 91/100 | Updated: 2025-12-31
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from sklearn.datasets import load_iris
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - use Iris dataset with 4 measurements per flower
 np.random.seed(42)
@@ -18,7 +31,6 @@ feature_names = iris.feature_names
 target_names = iris.target_names
 
 # Select subset for clear visualization (5 samples per species = 15 faces)
-# Choose samples with maximum variation within species by selecting spread across range
 indices = []
 for species in range(3):
     species_mask = y == species
@@ -44,9 +56,6 @@ y_subset = y[indices]
 # Normalize data to 0-1 range
 X_norm = (X_subset - X_subset.min(axis=0)) / (X_subset.max(axis=0) - X_subset.min(axis=0))
 
-# Colors for each species
-colors = ["#306998", "#FFD43B", "#2CA02C"]  # Python Blue, Python Yellow, Green
-
 # Create figure
 fig = go.Figure()
 
@@ -66,7 +75,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
     cx = col * spacing + spacing / 2
     cy = (n_rows - 1 - row) * spacing + spacing / 2
 
-    color = colors[species]
+    color = OKABE_ITO[species]
 
     # Feature mapping with increased variation:
     #   - sepal_length (data[0]) -> face width
@@ -90,7 +99,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
             type="path",
             path="M " + " L ".join([f"{x},{y}" for x, y in zip(face_x, face_y)]) + " Z",
             fillcolor=color,
-            line=dict(color="#333333", width=2),
+            line=dict(color=INK_SOFT, width=2),
             opacity=0.35,
         )
     )
@@ -108,8 +117,8 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
         dict(
             type="path",
             path="M " + " L ".join([f"{x},{y}" for x, y in zip(left_eye_x, left_eye_y)]) + " Z",
-            fillcolor="white",
-            line=dict(color="#333333", width=2),
+            fillcolor=ELEVATED_BG,
+            line=dict(color=INK_SOFT, width=2),
         )
     )
 
@@ -121,8 +130,8 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
         dict(
             type="path",
             path="M " + " L ".join([f"{x},{y}" for x, y in zip(pupil_x, pupil_y)]) + " Z",
-            fillcolor="#333333",
-            line=dict(color="#333333", width=1),
+            fillcolor=INK,
+            line=dict(color=INK, width=1),
         )
     )
 
@@ -133,8 +142,8 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
         dict(
             type="path",
             path="M " + " L ".join([f"{x},{y}" for x, y in zip(right_eye_x, right_eye_y)]) + " Z",
-            fillcolor="white",
-            line=dict(color="#333333", width=2),
+            fillcolor=ELEVATED_BG,
+            line=dict(color=INK_SOFT, width=2),
         )
     )
 
@@ -145,8 +154,8 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
         dict(
             type="path",
             path="M " + " L ".join([f"{x},{y}" for x, y in zip(pupil_x, pupil_y)]) + " Z",
-            fillcolor="#333333",
-            line=dict(color="#333333", width=1),
+            fillcolor=INK,
+            line=dict(color=INK, width=1),
         )
     )
 
@@ -155,9 +164,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
     nose_w = face_w * 0.1
     nose_y_center = cy
     nose_path = f"M {cx},{nose_y_center + nose_h * 0.5} L {cx - nose_w},{nose_y_center - nose_h * 0.5} L {cx + nose_w},{nose_y_center - nose_h * 0.5} Z"
-    all_shapes.append(
-        dict(type="path", path=nose_path, fillcolor="#333333", line=dict(color="#333333", width=1), opacity=0.5)
-    )
+    all_shapes.append(dict(type="path", path=nose_path, fillcolor=INK, line=dict(color=INK, width=1), opacity=0.5))
 
     # Mouth (curved line with much more variation)
     mouth_y_base = cy - face_h * 0.35
@@ -167,7 +174,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
     # Parabolic curve: positive = smile, negative = frown
     mouth_y_vals = mouth_y_base + mouth_curve * (1 - ((mouth_x_vals - cx) / mouth_width) ** 2) * radius * 0.5
     mouth_path = "M " + " L ".join([f"{x},{y}" for x, y in zip(mouth_x_vals, mouth_y_vals)])
-    all_shapes.append(dict(type="path", path=mouth_path, line=dict(color="#333333", width=3)))
+    all_shapes.append(dict(type="path", path=mouth_path, line=dict(color=INK, width=3)))
 
     # Eyebrows (angled based on face width feature)
     brow_offset_y = eye_offset_y + eye_r + face_h * 0.1
@@ -182,7 +189,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
             y0=cy + brow_offset_y - brow_angle * radius,
             x1=cx - eye_offset_x + brow_width,
             y1=cy + brow_offset_y + brow_angle * radius,
-            line=dict(color="#333333", width=3),
+            line=dict(color=INK, width=3),
         )
     )
 
@@ -194,7 +201,7 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
             y0=cy + brow_offset_y + brow_angle * radius,
             x1=cx + eye_offset_x + brow_width,
             y1=cy + brow_offset_y - brow_angle * radius,
-            line=dict(color="#333333", width=3),
+            line=dict(color=INK, width=3),
         )
     )
 
@@ -202,13 +209,13 @@ for i, (data, species) in enumerate(zip(X_norm, y_subset)):
 fig.add_trace(go.Scatter(x=[0], y=[0], mode="markers", marker=dict(opacity=0), showlegend=False))
 
 # Add legend entries for species
-for i, (name, color) in enumerate(zip(target_names, colors)):
+for i, (name, color) in enumerate(zip(target_names, OKABE_ITO)):
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
-            marker=dict(size=20, color=color, opacity=0.5, line=dict(color="#333333", width=2)),
+            marker=dict(size=20, color=color, opacity=0.5, line=dict(color=INK_SOFT, width=2)),
             name=name.capitalize(),
             showlegend=True,
         )
@@ -222,7 +229,7 @@ for i, name in enumerate(target_names):
         y=row_y,
         text=f"<b>{name.capitalize()}</b>",
         showarrow=False,
-        font=dict(size=18, color="#333333"),
+        font=dict(size=18, color=INK),
         xanchor="right",
     )
 
@@ -230,11 +237,7 @@ for i, name in enumerate(target_names):
 for col in range(n_cols):
     col_x = col * spacing + spacing / 2
     fig.add_annotation(
-        x=col_x,
-        y=n_rows * spacing + 0.2,
-        text=f"Sample {col + 1}",
-        showarrow=False,
-        font=dict(size=16, color="#666666"),
+        x=col_x, y=n_rows * spacing + 0.2, text=f"Sample {col + 1}", showarrow=False, font=dict(size=16, color=INK_SOFT)
     )
 
 # Feature mapping legend
@@ -250,20 +253,18 @@ fig.add_annotation(
     y=n_rows * spacing / 2,
     text=mapping_text,
     showarrow=False,
-    font=dict(size=14, color="#333333"),
+    font=dict(size=14, color=INK_SOFT),
     align="left",
     xanchor="left",
-    bgcolor="rgba(255,255,255,0.9)",
-    bordercolor="#cccccc",
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=1,
     borderpad=10,
 )
 
 # Update layout - optimized for better space utilization
 fig.update_layout(
-    title=dict(
-        text="chernoff-basic · plotly · pyplots.ai", font=dict(size=28, color="#333333"), x=0.5, xanchor="center"
-    ),
+    title=dict(text="chernoff-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     shapes=all_shapes,
     xaxis=dict(range=[-1.2, n_cols * spacing + 3.0], showgrid=False, zeroline=False, showticklabels=False, title=""),
     yaxis=dict(
@@ -275,23 +276,24 @@ fig.update_layout(
         scaleanchor="x",
         scaleratio=1,
     ),
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
     legend=dict(
-        title=dict(text="<b>Species</b>", font=dict(size=18)),
-        font=dict(size=16),
+        title=dict(text="<b>Species</b>", font=dict(size=18, color=INK)),
+        font=dict(size=16, color=INK_SOFT),
         x=1.02,
         y=0.98,
         xanchor="left",
-        bgcolor="rgba(255,255,255,0.9)",
-        bordercolor="#cccccc",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
     margin=dict(l=100, r=180, t=80, b=40),
-    plot_bgcolor="white",
 )
 
 # Save as PNG
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
