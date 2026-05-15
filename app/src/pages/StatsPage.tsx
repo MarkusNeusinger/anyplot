@@ -59,6 +59,20 @@ interface TimelinePoint {
   count: number;
 }
 
+interface DailyImplPoint {
+  date: string; // ISO YYYY-MM-DD
+  count: number;
+}
+
+interface VisitorPoint {
+  date: string; // ISO YYYY-MM-DD
+  visitors: number;
+}
+
+interface VisitorsResponse {
+  points: VisitorPoint[];
+}
+
 interface DashboardData {
   total_specs: number;
   total_implementations: number;
@@ -72,6 +86,7 @@ interface DashboardData {
   tag_distribution: Record<string, Record<string, number>>;
   score_distribution: Record<string, number>;
   timeline: TimelinePoint[];
+  daily_impls: DailyImplPoint[];
 }
 
 function scoreColor(score: number | null): string {
@@ -92,6 +107,7 @@ export function StatsPage() {
   const { trackPageview, trackEvent } = useAnalytics();
   const { isDark } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [visitors, setVisitors] = useState<VisitorPoint[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,6 +123,15 @@ export function StatsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Visitors load separately so a Plausible outage / missing API key never
+  // blocks the rest of the dashboard from rendering.
+  useEffect(() => {
+    fetch(`${API_URL}/insights/visitors`)
+      .then(r => (r.ok ? r.json() : null))
+      .then((res: VisitorsResponse | null) => setVisitors(res?.points ?? []))
+      .catch(() => setVisitors([]));
+  }, []);
+
   if (loading) return (
     <Box sx={{ py: 4, textAlign: 'center' }}>
       <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}>loading stats...</Typography>
@@ -119,7 +144,12 @@ export function StatsPage() {
     </Box>
   );
 
-  const maxTimeline = Math.max(...data.timeline.map(t => t.count), 1);
+  const dailyImpls = data.daily_impls ?? [];
+  const maxDaily = Math.max(...dailyImpls.map(d => d.count), 1);
+  const visitorPoints = visitors ?? [];
+  const maxVisitors = Math.max(...visitorPoints.map(v => v.visitors), 1);
+  const totalVisitors = visitorPoints.reduce((sum, v) => sum + v.visitors, 0);
+  const totalDailyImpls = dailyImpls.reduce((sum, d) => sum + d.count, 0);
 
   return (
     <>
@@ -150,13 +180,64 @@ export function StatsPage() {
             </Box>
           ))}
         </Box>
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, textAlign: 'center', mt: -2, mb: 3 }}>
-          visitor analytics at{' '}
-          <Link href="https://plausible.io/anyplot.ai" target="_blank" rel="noopener noreferrer"
-            onClick={() => trackEvent('external_link', { destination: 'plausible' })}
-            sx={{ color: semanticColors.mutedText, textDecoration: 'none', '&:hover': { color: colors.primaryDark } }}
-          >plausible.io/anyplot.ai</Link>
-        </Typography>
+        {/* Unique visitors (last 28 days) — sourced from the Plausible Stats API.
+            The 28-day window matches Plausible's own default "Last 28 days"
+            report so totals here align with the dashboard at plausible.io/anyplot.ai.
+            `plausible.view()` lives in the section-header link slot, matching
+            the `libraries.all()` / `map.explore()` style used across the site. */}
+        <Box sx={{ mt: 4 }}>
+          <SectionHeader
+            prompt="❯"
+            title={<em>visitors</em>}
+            linkText="plausible.view()"
+            linkHref="https://plausible.io/anyplot.ai"
+          />
+        </Box>
+        <Box sx={{ mt: 1, mb: 3 }}>
+          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
+            unique visitors · last 28 days{visitors !== null && visitorPoints.length > 0 ? ` · ${formatNum(totalVisitors)} total` : ''}
+          </Typography>
+          {visitors === null ? (
+            <Box sx={{ height: 70, display: 'flex', alignItems: 'center' }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+                loading visitor data...
+              </Typography>
+            </Box>
+          ) : visitorPoints.length === 0 ? (
+            <Box sx={{ height: 70, display: 'flex', alignItems: 'center' }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+                visitor data unavailable — see plausible.io/anyplot.ai
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}>
+                {visitorPoints.map(point => (
+                  <Tooltip key={point.date} title={`${point.date}: ${point.visitors} visitors`} arrow>
+                    <Box sx={{
+                      flex: 1,
+                      height: `${Math.max((point.visitors / maxVisitors) * 100, 3)}%`,
+                      bgcolor: colors.primaryDark,
+                      opacity: 0.5,
+                      borderRadius: '2px 2px 0 0',
+                      minHeight: 2,
+                      '&:hover': { opacity: 0.8 },
+                      transition: 'opacity 0.15s ease',
+                    }} />
+                  </Tooltip>
+                ))}
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
+                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+                  {visitorPoints[0]?.date}
+                </Typography>
+                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+                  {visitorPoints[visitorPoints.length - 1]?.date}
+                </Typography>
+              </Box>
+            </>
+          )}
+        </Box>
 
         {/* Library Stats — dual mini histograms per library */}
         <Box sx={{ mt: 4 }}>
@@ -273,18 +354,23 @@ export function StatsPage() {
           <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>more</Typography>
         </Box>
 
-        {/* Timeline */}
-        {data.timeline.length > 0 && (
+        {/* Timeline — daily implementation updates over the last 28 days.
+            Window matches the visitors chart above so the two bar strips
+            read side-by-side. */}
+        {dailyImpls.length > 0 && (
           <>
             <Box sx={{ mt: 4 }}>
               <SectionHeader prompt="❯" title={<em>timeline</em>} />
             </Box>
+            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
+              implementations updated · last 28 days · {totalDailyImpls} total
+            </Typography>
             <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}>
-              {data.timeline.slice(-24).map(point => (
-                <Tooltip key={point.month} title={`${point.month}: ${point.count} new`} arrow>
+              {dailyImpls.map(point => (
+                <Tooltip key={point.date} title={`${point.date}: ${point.count} updated`} arrow>
                   <Box sx={{
                     flex: 1,
-                    height: `${Math.max((point.count / maxTimeline) * 100, 3)}%`,
+                    height: `${Math.max((point.count / maxDaily) * 100, 3)}%`,
                     bgcolor: colors.primaryDark,
                     opacity: 0.5,
                     borderRadius: '2px 2px 0 0',
@@ -297,10 +383,10 @@ export function StatsPage() {
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
               <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
-                {data.timeline.slice(-24)[0]?.month ?? data.timeline[0]?.month}
+                {dailyImpls[0]?.date}
               </Typography>
               <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
-                {data.timeline[data.timeline.length - 1]?.month}
+                {dailyImpls[dailyImpls.length - 1]?.date}
               </Typography>
             </Box>
           </>

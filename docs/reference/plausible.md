@@ -576,6 +576,30 @@ poor              # Exceeds poor threshold
 
 ---
 
+## Reading Stats — Backend → Plausible Stats API
+
+In addition to *sending* events, the backend reads aggregate visitor data
+from Plausible to render the unique-visitors chart at the top of the
+public stats page.
+
+- **Endpoint**: `GET /insights/visitors` (in `api/routers/insights.py`)
+- **Upstream call**: `POST https://plausible.io/api/v2/query` with body
+  `{"site_id": "anyplot.ai", "metrics": ["visitors"], "date_range": "28d", "dimensions": ["time:day"]}`
+  (28d matches Plausible's own default "Last 28 days" report so totals here
+  align with the dashboard at plausible.io/anyplot.ai)
+- **Auth**: `Authorization: Bearer ${PLAUSIBLE_API_KEY}` (Stats API key
+  created in Plausible → Account Settings → API Keys, then mirrored to
+  GCP Secret Manager as `PLAUSIBLE_API_KEY` for Cloud Run)
+- **Caching**: 1h stale-while-revalidate via `get_or_set_cache` so
+  traffic spikes stay well under Plausible's 600-req/h rate limit.
+- **Graceful degradation**: When `PLAUSIBLE_API_KEY` is unset or the
+  upstream call fails, the endpoint returns `points: []` (empty list).
+  The frontend distinguishes this from "real zeros" — an empty list
+  triggers the "visitor data unavailable" placeholder, while a non-empty
+  list with low/zero values renders the normal 30-bar chart. The
+  dashboard endpoint is unaffected because visitors load on a separate
+  fetch.
+
 ## Code Locations
 
 - **Plausible setup**: `app/index.html` (lines 59-68)
@@ -583,6 +607,7 @@ poor              # Exceeds poor threshold
 - **Pageview building**: `buildPlausibleUrl()` in useAnalytics.ts
 - **Core Web Vitals**: `app/src/analytics/reportWebVitals.ts`
 - **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
+- **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
 
 ## Testing
 

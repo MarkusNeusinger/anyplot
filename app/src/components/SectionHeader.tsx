@@ -8,13 +8,26 @@ interface SectionHeaderProps {
   prompt?: string;
   title: React.ReactNode;
   linkText?: string;
+  /** Internal route (React Router). Mutually exclusive with `linkHref`. */
   linkTo?: string;
+  /** External URL — opens in a new tab. Mutually exclusive with `linkTo`. */
+  linkHref?: string;
 }
 
 const titleFontSize = { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' };
 
-export function SectionHeader({ prompt, title, linkText, linkTo }: SectionHeaderProps) {
+export function SectionHeader({ prompt, title, linkText, linkTo, linkHref }: SectionHeaderProps) {
   const { trackEvent } = useAnalytics();
+  const linkSx = {
+    fontFamily: typography.mono,
+    fontSize: '12px',
+    color: 'var(--ink-soft)',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'color 0.2s',
+    '&:hover': { color: colors.primary },
+  } as const;
   return (
     <Box sx={{
       display: 'grid',
@@ -58,16 +71,19 @@ export function SectionHeader({ prompt, title, linkText, linkTo }: SectionHeader
           component={Link}
           to={linkTo}
           onClick={() => trackEvent('nav_click', { source: 'section_header', target: linkTo })}
-          sx={{
-            fontFamily: typography.mono,
-            fontSize: '12px',
-            color: 'var(--ink-soft)',
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            transition: 'color 0.2s',
-            '&:hover': { color: colors.primary },
-          }}
+          sx={linkSx}
+        >
+          {linkText}
+        </Box>
+      )}
+      {linkText && linkHref && !linkTo && (
+        <Box
+          component="a"
+          href={linkHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackEvent('external_link', { source: 'section_header', destination: linkHref })}
+          sx={linkSx}
         >
           {linkText}
         </Box>
