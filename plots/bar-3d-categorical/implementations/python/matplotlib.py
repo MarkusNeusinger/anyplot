@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-3d-categorical: 3D Bar Chart for Categorical Comparison
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-05-15
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 80/100 | Created: 2026-05-15
 """
 
 import os
