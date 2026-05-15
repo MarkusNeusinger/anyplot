@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-animated-controls: Animated Scatter Plot with Play Controls
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2025-05-15
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Created: 2026-05-15
 """
 
 import os
