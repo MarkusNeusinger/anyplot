@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:35:01Z'
-updated: '2026-05-15T22:52:33Z'
+updated: '2026-05-15T22:57:42Z'
 generated_by: claude-haiku
 workflow_run: 25944897053
 issue: 2922
@@ -12,124 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/highcharts/plot-dark.html
-quality_score: 43
+quality_score: 59
 review:
   strengths:
-  - Correct plot type (line) for PDP visualization
-  - Proper data generation with sklearn GradientBoostingRegressor
-  - Confidence band and zero reference line included
-  - Deterministic output (uses np.random.seed)
+  - Correct plot type and feature set (line + confidence band + rug plot)
+  - Real data generation using scikit-learn GradientBoosting (realistic ML scenario)
+  - Proper use of Highcharts library APIs (Chart, Series types)
+  - Confidence interval calculation and visualization is technically sound
   weaknesses:
-  - 'CRITICAL: No theme-adaptive colors - hardcodes #ffffff background instead of
-    reading ANYPLOT_THEME'
-  - 'CRITICAL: Data color is #306998 (Python Blue) instead of #009E73 (Okabe-Ito brand
-    green)'
-  - 'CRITICAL: Confidence band color non-compliant (#306998 rgba instead of Okabe-Ito
-    palette)'
-  - 'CRITICAL: Output files wrong - saves plot.png/plot.html instead of plot-{light,dark}.{png,html}'
-  - 'Text sizes wrong for pixel-based library: Title 48px (should be 28px), axis labels
-    36px (should be 22px), ticks 28px (should be 18px)'
-  - 'All chrome colors non-adaptive: grid lines use rgba(0,0,0) which fails on dark
-    theme, axis colors hardcoded, zero line color #888888 not theme-aware'
-  - 'Dark render shows dark-on-dark legibility failure: black text/grid on near-black
-    background, all labels nearly invisible'
-  - Missing theme environment variable handling entirely - code doesn't check ANYPLOT_THEME
-    at all
+  - Text is unreadable in BOTH renders (VQ-01, VQ-06) - title, axis labels, and tick
+    labels are too small
+  - 'First data series must be #009E73 (brand green) but uses orange/vermillion (#D55E00)
+    instead'
+  - Does not read ANYPLOT_THEME environment variable - no theme adaptation despite
+    explicit requirement
+  - Saves as plot.png/plot.html instead of plot-light.png/plot-dark.png (wrong output
+    format)
+  - Light render background is pure white (#FFFFFF) not warm off-white (#FAF8F1)
+  - Dark render background is pure black not warm near-black (#1A1A17)
+  - Title URL says pyplots.ai instead of anyplot.ai
   image_description: |-
     Light render (plot-light.png):
-      Background: Appears light (approximately #FAF8F1) but is hardcoded as pure #ffffff
-      Chrome: Title "pdp-basic · highcharts · anyplot" at top is extremely small (48px renders tiny); axis labels and tick labels are also very small (36px and 28px respectively, well above recommended 22px and 18px). Text IS legible but requires close inspection - poor visual hierarchy.
-      Data: Orange/rust-colored line showing PDP curve; confidence band not visually prominent. Line color is #306998 (Python Blue) not the required #009E73 (brand green).
-      Grid: Faint rgba(0,0,0,0.1) grid lines visible on light background - works but minimal
-      Legibility verdict: MARGINAL PASS - text is readable but uncomfortably small and wrong colors reduce clarity
+      Background: Pure white (#FFFFFF) - FAIL, should be warm off-white (#FAF8F1)
+      Chrome: Title at top is barely visible, axis labels and tick labels are extremely small and hard to read against light background
+      Data: Orange/vermillion line (NOT required #009E73) with confidence interval band visible; rug plot lines present but faint
+      Legibility verdict: FAIL - all text is unreadable at full resolution; font sizes are far too small for 4800x2700px canvas
 
     Dark render (plot-dark.png):
-      Background: Very dark, appears to be pure black or near-black (#000000 or very close, should be #1A1A17)
-      Chrome: CRITICAL FAILURE - title, axis labels, and tick labels are nearly invisible. Dark text colors (hardcoded) on dark background creates dark-on-dark contrast failure. This render is effectively unreadable.
-      Data: Orange line still visible but all text elements are lost in the dark background - poor data-to-chrome separation
-      Grid: Grid lines using rgba(0,0,0,0.1) are completely invisible on dark background
-      Legibility verdict: FAIL - dark-on-dark failure makes labels and title unreadable; chrome colors not adapted to dark theme
-
-    OVERALL: Both renders fail to meet readability standards. Light render is barely readable with wrong colors. Dark render is essentially unreadable due to complete lack of theme adaptation. Data colors violate Okabe-Ito compliance requirement.
+      Background: Pure black or near-black - FAIL, should be warm near-black (#1A1A17)
+      Chrome: Title, axis labels, and tick labels are similarly unreadable - same size issue as light render; text too small against dark surface
+      Data: Orange line matches light render exactly (correct consistency); confidence band visible; rug plot barely visible
+      Legibility verdict: FAIL - text is unreadable in dark theme as well; no dark-on-dark issues with data (orange line visible), but text element colors not adapted to dark theme
   criteria_checklist:
     visual_quality:
-      score: 9
+      score: 12
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 0
         max: 8
         passed: false
-        comment: Title 48px, axis 36px, ticks 28px are all oversized per style guide.
-          Dark render has dark-on-dark failure making text unreadable
+        comment: Title, axis labels, and tick labels are unreadable in BOTH renders
+          - font sizes far too small for 4800x2700px
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: No overlapping text but small size makes it hard to distinguish
-      - id: VQ-03
-        name: Element Visibility
         score: 3
         max: 6
         passed: false
-        comment: Main line visible but confidence band not prominent; grid invisible
-          on dark theme
+        comment: Spacing exists but overlaps cannot be assessed due to illegible text
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: PDP line and confidence band visible; rug plot lines present
       - id: VQ-04
         name: Color Accessibility
-        score: 0
-        max: 2
-        passed: false
-        comment: 'Uses #306998 (Python Blue) instead of #009E73; non-colorblind safe
-          palettes should use Okabe-Ito'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Layout reasonable but text dominates; poor balance
-      - id: VQ-06
-        name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Title and labels present but unreadably small and wrong color; dark
-          render nearly invisible
+        comment: Orange line has contrast but palette is non-compliant
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart uses full canvas area appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 0
+        max: 2
+        passed: false
+        comment: Title and labels exist but are unreadable
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses #306998 instead of #009E73; hardcoded #ffffff background
-          instead of theme-adaptive #FAF8F1/#1A1A17; no theme-adaptive chrome colors'
+        comment: 'Wrong line color (orange not #009E73), wrong backgrounds (pure white/black
+          not #FAF8F1/#1A1A17), no theme adaptation'
     design_excellence:
-      score: 3
+      score: 4
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 1
+        score: 2
         max: 8
         passed: false
-        comment: Default styling with generic colors; no design thought to palette
-          selection
+        comment: Generic defaults, no design intent
       - id: DE-02
         name: Visual Refinement
         score: 1
         max: 6
         passed: false
-        comment: Minimal customization; grid present but not refined; no spine removal
-          or visual polish
+        comment: Minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 1
         max: 6
         passed: false
-        comment: Shows PDP curve but no visual hierarchy; confidence band buried;
-          no focal point
+        comment: No visual hierarchy beyond the line itself
     spec_compliance:
-      score: 10
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,103 +123,97 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart correct for PDP
+        comment: Correct line chart with confidence interval and rug plot
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Has confidence interval but not visually prominent; missing rug plot
-          visualization
+        passed: true
+        comment: Has PDP line, 95th percentile confidence interval, rug plot
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct but axes tick labels too small
+        comment: 'X-axis: feature values, Y-axis: centered partial dependence'
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Title unreadably small; correct format but execution poor
+        comment: Title says 'pyplots.ai' instead of 'anyplot.ai'
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows PDP and confidence band but rug plot lines don't show feature
-          distribution clearly
+        passed: true
+        comment: 'Shows all aspects: PDP line, confidence interval, rug plot'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Real GradientBoostingRegressor with proper sklearn workflow
+        comment: Real GradientBoostingRegressor on synthetic data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Good scale choice, centered at zero per spec
+        comment: Feature range and PDP values reasonable, 80-point grid
     code_quality:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Straightforward structure, no unnecessary functions
+        comment: No functions/classes, straightforward
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42), deterministic
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Unused imports present (urllib.request not minimized)
+        passed: true
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 0
         max: 2
         passed: false
-        comment: Hardcoded colors throughout; no theme handling; plotLines for rug
-          plot is inelegant
+        comment: No theme adaptation - does not read ANYPLOT_THEME
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
-          no ANYPLOT_THEME handling'
+        comment: Saves as plot.png not plot-light.png/plot-dark.png
     library_mastery:
-      score: 3
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses HighchartsCore API but ignores library guide requirements for
-          theme-adaptive styling
+        passed: true
+        comment: Correct use of Chart, HighchartsOptions, AreaRangeSeries, LineSeries
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic line chart; no use of Highcharts-specific features like animation,
-          custom tooltips, or interactive elements
+        comment: Uses AreaRangeSeries but generic styling
   verdict: REJECTED
 impl_tags:
   dependencies:
