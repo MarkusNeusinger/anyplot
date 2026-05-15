@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-15
 """
+
+import os
 
 import pandas as pd
 from lets_plot import *  # noqa: F403
@@ -11,6 +13,15 @@ from lets_plot.geo_data import geocode_countries
 
 
 LetsPlot.setup_html()  # noqa: F405
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+NA_COLOR = "#D0CFC8" if THEME == "light" else "#5A5953"
+BORDER_COLOR = "#3A3934" if THEME == "light" else "#D8D7D0"
 
 # Data: GDP per capita by European countries (in thousands USD)
 data = {
@@ -87,32 +98,31 @@ plot = (
         data=df,
         map=df_geo,
         map_join=["country", "found name"],
-        color="#404040",
-        size=0.6,
-        alpha=0.95,
+        color=BORDER_COLOR,
+        size=1.0,
+        alpha=1.0,
     )
-    + scale_fill_gradient(  # noqa: F405
-        low="#FFD43B", high="#306998", name="GDP per Capita\n(thousands USD)", na_value="#E0E0E0"
-    )
-    + labs(title="European GDP per Capita · choropleth-basic · letsplot · pyplots.ai")  # noqa: F405
+    + scale_fill_viridis(name="GDP per Capita\n(thousands USD)", na_value=NA_COLOR)  # noqa: F405
+    + labs(title="choropleth-basic · letsplot · anyplot.ai")  # noqa: F405
     + coord_cartesian(xlim=[-12, 32], ylim=[35, 71])  # noqa: F405
     + ggsize(1600, 900)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        plot_title=element_text(size=26, face="bold"),  # noqa: F405
-        legend_title=element_text(size=18),  # noqa: F405
-        legend_text=element_text(size=16),  # noqa: F405
-        legend_position=[0.88, 0.35],
+        plot_title=element_text(size=24, color=INK),  # noqa: F405
+        legend_title=element_text(size=18, color=INK),  # noqa: F405
+        legend_text=element_text(size=18, color=INK_SOFT),  # noqa: F405
+        legend_position=[0.82, 0.25],
         axis_title=element_blank(),  # noqa: F405
         axis_text=element_blank(),  # noqa: F405
         axis_ticks=element_blank(),  # noqa: F405
         panel_grid=element_blank(),  # noqa: F405
-        plot_background=element_rect(fill="white"),  # noqa: F405
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
     )
 )
 
 # Save as PNG (scale 3x for 4800 × 2700 px)
-export_ggsave(plot, "plot.png", path=".", scale=3)
+export_ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save interactive HTML
-export_ggsave(plot, "plot.html", path=".")
+export_ggsave(plot, f"plot-{THEME}.html", path=".")
