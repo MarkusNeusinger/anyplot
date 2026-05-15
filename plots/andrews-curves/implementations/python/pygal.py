@@ -1,14 +1,25 @@
-""" anyplot.ai
+"""anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-15
 """
 
 import os
+import sys
 
-import numpy as np
-import pygal
-from pygal.style import Style
+
+# Remove current directory from sys.path to avoid shadowing the pygal module
+_cwd = sys.path[0] if sys.path[0] else "."
+if _cwd in sys.path:
+    sys.path.remove(_cwd)
+
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Restore current directory
+sys.path.insert(0, _cwd)
 
 
 # Theme configuration
