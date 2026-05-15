@@ -1,66 +1,79 @@
-""" pyplots.ai
+""" anyplot.ai
 circos-basic: Circos Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-15
 """
 
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.path import Path
+import os
+import sys
 
 
-# Data: Software module dependencies
-np.random.seed(42)
+# Remove current directory from path to avoid name collision with this script
+sys.path = [p for p in sys.path if p != ""]
 
-# Define segments (software modules)
-segments = ["Core", "API", "Database", "Auth", "Cache", "Queue", "Logger", "Config"]
-n_segments = len(segments)
+import matplotlib.patches as mpatches  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+from matplotlib.path import Path  # noqa: E402
 
-# Segment sizes (relative importance/size of each module)
-segment_sizes = np.array([25, 20, 18, 15, 12, 10, 8, 6])
-segment_sizes = segment_sizes / segment_sizes.sum() * 360  # Convert to degrees
 
-# Connection matrix (dependencies between modules)
-connections = [
-    ("Core", "API", 15),
-    ("Core", "Database", 12),
-    ("Core", "Logger", 8),
-    ("API", "Auth", 10),
-    ("API", "Cache", 8),
-    ("Database", "Cache", 6),
-    ("Database", "Logger", 5),
-    ("Auth", "Logger", 4),
-    ("Queue", "Logger", 7),
-    ("Queue", "Database", 5),
-    ("Config", "Core", 9),
-    ("Config", "Logger", 3),
-    ("Cache", "Logger", 4),
-    ("API", "Queue", 6),
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1-7, plus position 8 for neutral)
+OKABE_ITO = [
+    "#009E73",  # 1: bluish green (brand)
+    "#D55E00",  # 2: vermillion
+    "#0072B2",  # 3: blue
+    "#CC79A7",  # 4: reddish purple
+    "#E69F00",  # 5: orange
+    "#56B4E9",  # 6: sky blue
+    "#F0E442",  # 7: yellow
 ]
 
-# Colors for each segment (colorblind-safe palette)
-colors = [
-    "#306998",  # Python Blue
-    "#FFD43B",  # Python Yellow
-    "#2E8B57",  # Sea Green
-    "#DC143C",  # Crimson
-    "#9370DB",  # Medium Purple
-    "#20B2AA",  # Light Sea Green
-    "#FF8C00",  # Dark Orange
-    "#708090",  # Slate Gray
+# Data: Genomic chromosome interactions
+np.random.seed(42)
+
+# Define chromosomes
+chromosomes = ["chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8"]
+n_chroms = len(chromosomes)
+
+# Chromosome sizes (relative size on outer ring)
+chrom_sizes = np.array([200, 180, 160, 140, 120, 100, 80, 60])
+chrom_sizes = chrom_sizes / chrom_sizes.sum() * 360  # Convert to degrees
+
+# Inter-chromosomal connections (synteny blocks)
+connections = [
+    ("chr1", "chr2", 25),
+    ("chr1", "chr3", 18),
+    ("chr1", "chr4", 12),
+    ("chr2", "chr3", 22),
+    ("chr2", "chr5", 15),
+    ("chr3", "chr4", 20),
+    ("chr3", "chr6", 10),
+    ("chr4", "chr5", 16),
+    ("chr4", "chr7", 8),
+    ("chr5", "chr6", 14),
+    ("chr6", "chr7", 12),
+    ("chr7", "chr8", 9),
+    ("chr1", "chr8", 11),
+    ("chr2", "chr8", 7),
 ]
 
 # Create figure (square for circular plot)
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
 ax.set_aspect("equal")
 ax.axis("off")
 
 # Calculate segment positions
 gap = 2  # Gap between segments in degrees
-total_gap = gap * n_segments
+total_gap = gap * n_chroms
 available = 360 - total_gap
-segment_angles = segment_sizes / 360 * available
+segment_angles = chrom_sizes / 360 * available
 
 # Calculate start and end angles for each segment
 starts = []
@@ -72,14 +85,14 @@ for angle in segment_angles:
     ends.append(current - angle)
     current = current - angle - gap
 
-segment_dict = {name: i for i, name in enumerate(segments)}
+chrom_dict = {name: i for i, name in enumerate(chromosomes)}
 
 # Draw outer ring segments
 r_outer = 1.0
 r_inner = 0.85
 n_arc_points = 50
 
-for i in range(n_segments):
+for i in range(n_chroms):
     start, end = starts[i], ends[i]
     theta1_rad = np.radians(end)
     theta2_rad = np.radians(start)
@@ -94,21 +107,23 @@ for i in range(n_segments):
     # Combine into closed polygon
     x = np.concatenate([x_outer, x_inner])
     y = np.concatenate([y_outer, y_inner])
-    ax.fill(x, y, color=colors[i], alpha=0.9, edgecolor="white", linewidth=1)
+
+    color_idx = i % len(OKABE_ITO)
+    ax.fill(x, y, color=OKABE_ITO[color_idx], alpha=0.85, edgecolor=PAGE_BG, linewidth=1.5)
 
     # Add segment label
     mid_angle = np.radians((start + end) / 2)
-    label_r = r_outer + 0.08
+    label_r = r_outer + 0.12
     lx = label_r * np.cos(mid_angle)
     ly = label_r * np.sin(mid_angle)
-    ax.text(lx, ly, segments[i], fontsize=18, fontweight="bold", ha="center", va="center", color=colors[i])
+    ax.text(lx, ly, chromosomes[i], fontsize=16, fontweight="bold", ha="center", va="center", color=INK)
 
-# Draw inner data track (simulated importance values)
-track_data = np.random.uniform(0.3, 1.0, n_segments)
+# Draw inner data track (simulated expression values)
+track_data = np.random.uniform(0.4, 0.95, n_chroms)
 r_track_outer = 0.82
 r_track_inner = 0.70
 
-for i in range(n_segments):
+for i in range(n_chroms):
     start, end = starts[i], ends[i]
     track_height = (r_track_outer - r_track_inner) * track_data[i]
     theta1_rad = np.radians(end)
@@ -121,22 +136,24 @@ for i in range(n_segments):
     y_inner = r_track_inner * np.sin(theta[::-1])
     x = np.concatenate([x_outer, x_inner])
     y = np.concatenate([y_outer, y_inner])
-    ax.fill(x, y, color=colors[i], alpha=0.6, edgecolor="none")
 
-# Draw connections (ribbons)
+    color_idx = i % len(OKABE_ITO)
+    ax.fill(x, y, color=OKABE_ITO[color_idx], alpha=0.5, edgecolor="none")
+
+# Draw connections (ribbons for synteny blocks)
 max_value = max(c[2] for c in connections)
 r_ribbon = r_inner - 0.02
 
 for source, target, value in connections:
-    idx1 = segment_dict[source]
-    idx2 = segment_dict[target]
+    idx1 = chrom_dict[source]
+    idx2 = chrom_dict[target]
 
     # Calculate positions within segments
     mid1 = np.radians((starts[idx1] + ends[idx1]) / 2)
     mid2 = np.radians((starts[idx2] + ends[idx2]) / 2)
 
     # Ribbon width proportional to value
-    width_factor = value / max_value * 0.15
+    width_factor = value / max_value * 0.12
 
     # Points for segment 1
     angle1_start = mid1 - width_factor
@@ -174,30 +191,41 @@ for source, target, value in connections:
     codes = [Path.MOVETO, Path.CURVE3, Path.CURVE3, Path.LINETO, Path.CURVE3, Path.CURVE3, Path.CLOSEPOLY]
 
     path = Path(verts, codes)
-    patch = mpatches.PathPatch(path, facecolor=colors[idx1], alpha=0.5, edgecolor="none")
+    color_idx = idx1 % len(OKABE_ITO)
+    patch = mpatches.PathPatch(path, facecolor=OKABE_ITO[color_idx], alpha=0.4, edgecolor="none")
     ax.add_patch(patch)
 
 # Title
-ax.set_title("circos-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+ax.set_title("circos-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 
 # Set limits with padding
 ax.set_xlim(-1.4, 1.4)
 ax.set_ylim(-1.4, 1.4)
 
 # Legend (outside the plot)
-legend_elements = [mpatches.Patch(facecolor=colors[i], label=segments[i], alpha=0.9) for i in range(n_segments)]
-ax.legend(
+legend_elements = [
+    mpatches.Patch(facecolor=OKABE_ITO[i % len(OKABE_ITO)], label=chromosomes[i], alpha=0.85) for i in range(n_chroms)
+]
+leg = ax.legend(
     handles=legend_elements,
     loc="lower right",
     fontsize=14,
     frameon=True,
-    fancybox=True,
-    framealpha=0.9,
+    fancybox=False,
+    framealpha=0.95,
     ncol=1,
-    bbox_to_anchor=(1.35, 0.0),
-    title="Modules",
-    title_fontsize=16,
+    bbox_to_anchor=(1.32, 0.0),
+    title="Chromosomes",
+    title_fontsize=15,
 )
 
+# Style legend
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(0.8)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
+    plt.setp(leg.get_title(), color=INK)
+
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
