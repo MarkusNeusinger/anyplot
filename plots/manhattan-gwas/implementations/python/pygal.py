@@ -1,18 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 82/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-15
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Seed for reproducibility
 np.random.seed(42)
 
-# Chromosome lengths (simplified, in Mb scale)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Chromosome lengths (simplified, in Mb)
 chrom_lengths = {
     "1": 249,
     "2": 243,
@@ -85,26 +94,19 @@ neg_log_pvalues = -np.log10(np.array(all_pvalues))
 genome_wide_sig = -np.log10(5e-8)  # ~7.3
 suggestive_sig = 5.0  # -log10(1e-5)
 
-# Custom style with explicit colors for threshold lines
+# Custom style with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=(
-        "#306998",  # Blue - odd chromosomes
-        "#888888",  # Gray - even chromosomes
-        "#D62728",  # Red - significant points above threshold
-        "#D62728",  # Red - genome-wide threshold line
-        "#FF7F0E",  # Orange - suggestive threshold line
-    ),
-    title_font_size=56,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=32,
-    value_font_size=20,
-    font_family="sans-serif",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
 )
 
 # Create XY scatter chart
@@ -112,15 +114,15 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="manhattan-gwas · pygal · pyplots.ai",
+    title="manhattan-gwas · pygal · anyplot.ai",
     x_title="Chromosome",
     y_title="-log₁₀(p-value)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
-    legend_box_size=24,
+    legend_box_size=16,
     stroke=False,
-    dots_size=5,
+    dots_size=4,
     show_x_guides=False,
     show_y_guides=True,
     truncate_label=-1,
@@ -128,50 +130,41 @@ chart = pygal.XY(
     x_label_rotation=0,
     range=(0, 16),
     xrange=(0, cumulative_offset),
-    tooltip_border_radius=10,
+    tooltip_border_radius=5,
     explicit_size=True,
-    spacing=30,
-    margin=60,
-    margin_bottom=200,
-    margin_top=100,
+    spacing=20,
+    margin=50,
+    margin_bottom=150,
+    margin_top=80,
 )
 
-# Create x_labels with chromosome numbers at midpoints
-# Use string labels for chromosomes 1-22
-chart.x_labels = [str(i + 1) for i in range(len(chromosomes))]
-chart.x_labels_major_count = len(chromosomes)
-
-# Map positions to display label indices
-# We need to normalize x values to show chromosome labels
-# Pygal XY chart needs numeric x_labels for scatter, so we'll use custom formatter
-label_positions = chrom_midpoints.copy()
+# Set x-axis labels at chromosome midpoints
+chart.x_labels = chrom_midpoints
 
 
 def format_x_label(x_val):
     """Find closest chromosome midpoint and return chromosome number."""
-    if not label_positions:
+    if not chrom_midpoints:
         return ""
     min_dist = float("inf")
     closest_idx = 0
-    for i, pos in enumerate(label_positions):
+    for i, pos in enumerate(chrom_midpoints):
         dist = abs(x_val - pos)
         if dist < min_dist:
             min_dist = dist
             closest_idx = i
-    # Only return label if close to midpoint (within half chromosome width)
+    # Only return label if close to midpoint
     if min_dist < 50:
         return str(closest_idx + 1)
     return ""
 
 
-# Set numeric x_labels at chromosome midpoints
-chart.x_labels = chrom_midpoints
-chart.x_value_formatter = lambda x: format_x_label(x) if x in chrom_midpoints else ""
+chart.x_value_formatter = lambda x: format_x_label(x)
 
 # Prepare data by chromosome with alternating colors
 odd_chrom_points = []
 even_chrom_points = []
-significant_points = []  # Points above genome-wide significance
+significant_points = []
 
 for idx, chrom in enumerate(chromosomes):
     chrom_mask = [c == chrom for c in all_chroms]
@@ -187,26 +180,21 @@ for idx, chrom in enumerate(chromosomes):
         else:
             even_chrom_points.append(point)
 
-# Add chromosome data series (blue for odd, gray for even)
+# Add data series
 chart.add("Odd chromosomes", odd_chrom_points, stroke=False, show_dots=True)
 chart.add("Even chromosomes", even_chrom_points, stroke=False, show_dots=True)
-
-# Add significant points as separate series (highlighted)
 chart.add("Significant (p<5×10⁻⁸)", significant_points, stroke=False, show_dots=True)
 
-# Add threshold lines as dense scatter points (works better in PNG than stroke)
-# Using many small dots to create visible line effect
+# Add threshold lines
 n_line_points = 200
 threshold_x = np.linspace(10, cumulative_offset - 10, n_line_points)
 
-# Genome-wide significance threshold line (y ≈ 7.3)
 gw_line_points = [
     {"value": (x, genome_wide_sig), "label": f"Genome-wide threshold: -log₁₀(5×10⁻⁸) = {genome_wide_sig:.1f}"}
     for x in threshold_x
 ]
 chart.add("p = 5×10⁻⁸ threshold", gw_line_points, stroke=True, show_dots=True, dots_size=2)
 
-# Suggestive threshold line (y = 5)
 sugg_line_points = [
     {"value": (x, suggestive_sig), "label": f"Suggestive threshold: -log₁₀(1×10⁻⁵) = {suggestive_sig:.1f}"}
     for x in threshold_x
@@ -214,5 +202,5 @@ sugg_line_points = [
 chart.add("p = 1×10⁻⁵ threshold", sugg_line_points, stroke=True, show_dots=True, dots_size=2)
 
 # Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
