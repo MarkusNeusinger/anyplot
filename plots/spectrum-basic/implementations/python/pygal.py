@@ -1,13 +1,26 @@
-""" pyplots.ai
+""" anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-14
 """
 
+import os
+import sys
+
 import numpy as np
+
+
+sys.path.pop(0)
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Generate synthetic signal with multiple frequency components
 np.random.seed(42)
@@ -47,21 +60,21 @@ step = 2
 frequencies = frequencies[::step]
 amplitude_db = amplitude_db[::step]
 
-# Create custom style for large canvas
+# Create custom style for large canvas with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),  # Python Blue
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=40,
-    legend_font_size=40,
-    value_font_size=32,
-    stroke_width=4,
-    opacity=0.9,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BRAND,),
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
+    opacity=0.85,
     opacity_hover=1.0,
 )
 
@@ -70,19 +83,19 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="spectrum-basic · pygal · pyplots.ai",
+    title="spectrum-basic · pygal · anyplot.ai",
     x_title="Frequency (Hz)",
     y_title="Amplitude (dB)",
     show_dots=False,
     fill=True,
-    stroke_style={"width": 4},
+    stroke_style={"width": 3},
     show_x_guides=True,
     show_y_guides=True,
     x_label_rotation=0,
     show_legend=False,
     range=(-60, 20),  # dB range
     dots_size=0,
-    margin=60,
+    margin=80,
     spacing=40,
 )
 
@@ -90,6 +103,7 @@ chart = pygal.XY(
 xy_data = [(float(f), float(a)) for f, a in zip(frequencies, amplitude_db, strict=True)]
 chart.add("Amplitude", xy_data)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save as PNG and HTML with theme suffix
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

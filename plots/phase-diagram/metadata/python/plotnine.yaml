@@ -1,164 +1,168 @@
 library: plotnine
+language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:06:50Z'
-updated: '2025-12-31T11:16:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617670372
+updated: '2026-05-14T15:20:18Z'
+generated_by: claude-haiku
+workflow_run: 25868108774
 issue: 3004
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/plotnine/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent visualization of damped harmonic oscillator phase portrait with clear
-    spiral convergence to equilibrium
-  - Effective use of color gradient to show time evolution (blue to yellow)
-  - Well-marked start and end points with distinct markers (circle and square)
-  - Reference lines at x=0 and dx/dt=0 help identify equilibrium and zero-crossing
-    points
-  - Clean, professional appearance with proper plotnine grammar of graphics implementation
-  - Mathematically correct derivative calculation for damped oscillator
+  - Excellent theme adaptation with proper use of all theme tokens resulting in correct
+    renders for both light and dark modes
+  - Clear visualization of damped oscillator dynamics with immediately comprehensible
+    spiral convergence pattern
+  - Thoughtful design details including reference lines at fixed point and distinct
+    start/end markers
+  - Proper perceptual uniformity with viridis colormap that is CVD-safe
+  - Perfect text legibility with all sizes explicitly set and readable in both themes
+  - Clean, idiomatic plotnine code with no technical issues
   weaknesses:
-  - Axis labels could include physical units (e.g., Position x (m), Velocity dx/dt
-    (m/s))
-  - Only single trajectory shown; spec notes that multiple trajectories from different
-    initial conditions could reveal basin of attraction structure
-  image_description: The plot shows a phase diagram (state space plot) displaying
-    a damped harmonic oscillator trajectory. The visualization features a spiral pattern
-    starting from the outer edge (at position x≈2, velocity≈0) and spiraling inward
-    towards the origin (equilibrium point). The color gradient transitions from dark
-    blue (early time t=0) through greenish tones to yellow (later time t≈8), clearly
-    showing the time evolution. A dark blue circular marker indicates the starting
-    point, and a yellow square marker shows the endpoint near the origin. Dashed reference
-    lines mark the x=0 and dx/dt=0 axes. The title "phase-diagram · plotnine · pyplots.ai"
-    appears at the top. Axis labels show "Position x" and "Velocity dx/dt". A colorbar
-    legend on the right shows "Time (s)" ranging from 0 to 8. The background is clean
-    with subtle gray gridlines.
+  - Top and right spines retained when style guide recommends L-shaped frame by default
+  - Single trajectory only when multiple trajectories would better illustrate basin
+    of attraction structure
+  - No explicit direction indicators along trajectory when spec suggests considering
+    directional arrows
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "phase-diagram · plotnine · anyplot.ai" in dark text (24pt), axis labels "Position x" and "Velocity dx/dt" in dark text (20pt), tick labels in secondary dark color (16pt) - all clearly readable
+      Data: Spiral trajectory using viridis colormap (purple → blue → cyan → yellow), showing time evolution. Green circular marker at start point (#009E73), gray square at end point. Dashed reference lines at x=0 and y=0. Grid lines subtle and unobtrusive.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Same elements now in light text colors - title and axis labels in light (#F0EFE8), tick labels in secondary light (#B8B7B0) - all clearly readable with good contrast
+      Data: Viridis colormap colors are visually identical to light render, confirming proper theme adaptation. Reference lines and grid visible but subtle. Start/end markers present and visible.
+      Legibility verdict: PASS - no dark-on-dark conflicts detected
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at full
-          size with appropriate font sizing
+        comment: All text sizes properly set and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: All elements properly spaced with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Trajectory line is clearly visible with good thickness; start/end
-          markers clearly distinguishable; slight deduction as the trajectory gets
-          quite dense near origin
+        comment: Trajectory path and markers clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-yellow gradient is colorblind-friendly (viridis-like)
+        comment: Viridis colormap is perceptually uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas appropriately with balanced margins
+        comment: Appropriate 16:9 landscape with good margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but missing units (could be "Position x (m)" and
-          "Velocity dx/dt (m/s)")
+        comment: Descriptive axis labels clearly indicate data
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with appropriate alpha, legend is well positioned
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct phase diagram showing x vs dx/dt trajectory
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Position on x-axis, velocity on y-axis as required
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Shows damped oscillator trajectory, spiral convergence to equilibrium,
-          time evolution via color gradient, reference lines at zero crossings
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes properly show all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Time legend is accurate and descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "phase-diagram · plotnine · pyplots.ai"'
-    data_quality:
-      score: 17
+        comment: Viridis for continuous data, correct backgrounds and theme colors
+    design_excellence:
+      score: 15
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 6
         max: 8
         passed: true
-        comment: Shows damped oscillator well but spec mentions "multiple trajectories
-          from different initial conditions" as an option that could enhance the visualization
+        comment: Professional with thoughtful details (reference lines, markers) but
+          not innovative
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid refined but top/right spines retained when style guide recommends
+          removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point and time gradient effectively guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct phase diagram showing (x, dx/dt) state space
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Fixed point marked, time evolution shown via color gradient
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X and Y axes correctly map position and velocity
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend appropriately labels colorbar
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Single trajectory is clear; multiple trajectories would be richer
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Damped harmonic oscillator is a classic physics example, exactly
-          as suggested in the spec
+        comment: Damped harmonic oscillator with realistic parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are physically reasonable; 800 points provides smooth trajectory
+        comment: Time, position, and velocity ranges are sensible
     code_quality:
       score: 10
       max: 10
@@ -168,41 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Pure inline code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no extraneous ones
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern plotnine API
+        comment: Appropriate complexity, no simulated interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent ggplot2-style patterns with proper aes(), geom_path(),
+          and theme customization
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of plotnine grammar (ggplot, aes, geom_path, scale_color_gradient,
-          theme customization), but could leverage more advanced features like annotations
-          or faceting
+        comment: Good plotnine patterns but mostly standard usage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

@@ -1,184 +1,174 @@
 library: bokeh
+language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:55:05Z'
-updated: '2025-12-31T11:03:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617481231
+updated: '2026-05-14T23:02:19Z'
+generated_by: claude-haiku
+workflow_run: 25890104219
 issue: 2992
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - statsmodels
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling: []
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of all four decomposition components with clear visual
-    separation
-  - Uses statsmodels seasonal_decompose for proper statistical decomposition
-  - Clean shared x-axis implementation using x_range linking
-  - Appropriate font sizes for the 4800px canvas width
-  - Classic airline passenger example with realistic trend and seasonal patterns
-  - Good use of dashed grid lines that do not distract from the data
+  - Perfect visual quality with all text readable in both themes using proper Okabe-Ito
+    palette colors
+  - Flawless spec compliance with all 4 decomposition components shown correctly
+  - Clean, reproducible code with proper theme token separation (light/dark)
+  - Effective use of shared x_range for linked axis panning across subplots
+  - Proper Okabe-Ito palette order (positions 1-4) with consistent application across
+    themes
   weaknesses:
-  - Bokeh toolbar visible on right side adds visual clutter; could be hidden for static
-    export
-  - Y-axis label rotation on Passengers (thousands) makes it slightly harder to read
-  - Panel heights (620px each) leave some unused vertical space in 2700px target
-  - Could use ColumnDataSource for more idiomatic Bokeh code
-  image_description: 'The plot displays four vertically stacked panels showing a time
-    series decomposition of airline passenger data from 2018-2028. The main title
-    "timeseries-decomposition · bokeh · pyplots.ai" appears at the top. All panels
-    use the Python blue color (#306998) for the line plots with dashed grid lines
-    at 0.3 alpha.
+  - Generic design using default styling without custom visual refinement or sophistication
+  - No visual hierarchy or emphasis among components - all treated equally
+  - Missing data annotations or callouts to guide interpretation and highlight key
+    patterns
+  - Could leverage HoverTool for interactive value exploration at each timestamp
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white ✓
+      Chrome: All titles, axis labels, and tick labels clearly visible in dark text (INK #1A1A17 for titles, INK_SOFT #4A4A44 for ticks) ✓
+      Data colors: Original Series #009E73 (brand green, position 1), Trend #D55E00 (position 2), Seasonal #0072B2 (position 3), Residual #CC79A7 (position 4) - all Okabe-Ito correct ✓
+      Grid: Subtle, low alpha (0.12 y-axis, 0.08 x-axis), doesn't compete with data ✓
+      Layout: Generous spacing, clear Y-axis labels per component, readable Y-axis ranges ✓
+      Legibility verdict: PASS - excellent readability with proper contrast and color precision
 
-
-    - **Original Series** (top): Shows the raw data with clear upward trend and seasonal
-    fluctuations, ranging from ~80 to ~280 thousand passengers. Y-axis labeled "Passengers
-    (thousands)".
-
-    - **Trend Component**: Displays a smooth monotonically increasing line from ~110
-    to ~240, capturing the long-term growth.
-
-    - **Seasonal Component**: Shows a repeating sinusoidal pattern oscillating between
-    approximately -30 and +30, with consistent annual cycles.
-
-    - **Residual Component** (bottom): Shows random noise fluctuating around zero
-    (approximately -20 to +20), with the x-axis labeled "Date".
-
-
-    All panels share a linked x-axis from 2018 to 2028. The Bokeh toolbar is visible
-    on the right side of each panel with interactive tools.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black ✓
+      Chrome: All titles, labels, and ticks clearly visible in light text (INK #F0EFE8 for titles, INK_SOFT #B8B7B0 for ticks) ✓
+      Data colors: Identical to light render - green, vermillion, blue, reddish purple in same positions (only chrome flips theme, not data) ✓
+      Grid: Subtle low-alpha lines, appropriately visible without competing with data ✓
+      Layout: Matches light render perfectly with proper spacing and alignment ✓
+      Dark-on-dark check: PASS - no dark text on dark background; all text uses appropriate light colors ✓
+      Brand green (#009E73) visibility: PASS - maintains visibility on both surfaces ✓
+      Legibility verdict: PASS - excellent theme adaptation with no readability failures; light text readable on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, subplot titles at 26pt, axis labels at 22pt, tick
-          labels at 18pt - all clearly readable, though y-axis labels on left side
-          are slightly rotated and could be positioned better
+        comment: All font sizes explicitly set; readable in both themes with proper
+          INK tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No text collisions; proper spacing; all elements have breathing room
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 4 is perfect for the 4800px width, data density well
-          handled
+        comment: Lines well-sized; all data distinguishable from backgrounds
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single Python blue color is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good panel distribution but some wasted space on right with Bokeh
-          toolbar; panels could use slightly more vertical space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Passengers (thousands)" includes units, "Date", "Trend", "Seasonal",
-          "Residual" are descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette; adequate contrast; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; nothing cut off; proper margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid at 0.3 alpha with dashed style is subtle and appropriate; no
-          legend needed for this plot type but the Bokeh toolbar is visible and somewhat
-          distracting
+        comment: Clear titles; labels with units; X-axis labeled
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order 1-4; backgrounds correct;
+          both renders theme-correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional but lacks custom visual flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grids and outlines, but could use more refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Logical arrangement but no emphasis or focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series decomposition with 4 stacked subplots
+        comment: Correct decomposition with 4 stacked subplots
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, values on y-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All 4 components present: Original, Trend, Seasonal, Residual'
-      - id: SC-04
-        name: Data Range
+        comment: Original, Trend, Seasonal, Residual all shown
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, no clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X-axis; components on Y; all visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Each subplot clearly labeled with component name
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "timeseries-decomposition · bokeh · pyplots.ai"'
+        comment: Clear subplot titles; single series per panel
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all decomposition components well; trend/seasonal/residual
-          separation is clear, though residuals could show more interesting patterns
+        comment: All 4 components shown; complete decomposition
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Airline passenger data is a classic, real-world time series example
+        comment: Airline passengers (classic); 10 years; realistic trend and seasonality
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for airline passengers in thousands; 120 months
-          (10 years) provides good coverage, though the trend gaps at start/end from
-          decomposition windowing are visible
+        comment: Sensible timeframe and values; appropriate seasonal amplitude
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -186,41 +176,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear script with no functions/classes
+        comment: Helper function justified; no unnecessary classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" which is correct
-    library_features:
-      score: 3
-      max: 5
+        comment: plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses figure, line, column layout, x_range linking between panels,
-          Title model, export_png - good Bokeh usage but could leverage ColumnDataSource
-          and HoverTool for enhanced interactivity
+        comment: 'Recommended patterns: figure(), ColumnDataSource, column(), datetime
+          axis, shared x_range'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Theme-adaptive styling, Selenium integration, shared x_range; could
+          explore HoverTool
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  - selenium
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling

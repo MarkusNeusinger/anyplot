@@ -1,46 +1,232 @@
 library: pygal
+language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:12:39Z'
-updated: '2025-12-31T11:20:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617709332
+updated: '2026-05-14T15:32:10Z'
+generated_by: claude-haiku
+workflow_run: 25868085686
 issue: 3004
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/pygal/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - Exceptional visual quality in both light and dark renders with perfect theme adaptation
+  - Clear physics demonstration effectively showing damped vs undamped oscillator
+    dynamics through visual contrast
+  - Perfect legibility in both themes with no accessibility issues or dark-on-dark
+    failures
+  - Clean, well-commented code with deterministic seeding and proper physics equations
+  - Excellent layout with balanced margins and appropriately sized data elements
+  - Realistic, educational example data showing real-world harmonic oscillator behavior
+  weaknesses:
+  - 'Title contains typo: ''pyplots.ai'' instead of ''anyplot.ai'''
+  - Code doesn't implement theme-aware pattern using ANYPLOT_THEME environment variable
+    - hard-codes white background
+  - Output file naming doesn't follow required pattern (should be plot-{THEME}.png/html,
+    not plot.png/html)
+  - 'Palette specification in Style object (#306998, #FFD43B, #FF6B6B) doesn''t match
+    Okabe-Ito requirements, though rendered output appears correct'
+  - Font sizes are larger than pixel-based library guidelines (Title 28px recommended,
+    code uses 60px)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "phase-diagram · pygal · anyplot.ai" clearly visible in dark text; axis labels "Position x" and "Velocity dx/dt" readable; tick labels sharp and visible; legend shows three series with readable dark text
+      Data: Teal/green spiral (damped oscillator) converging to origin; orange loop (undamped/limit cycle) showing sustained periodic motion; small blue dot at equilibrium; colors appear to match Okabe-Ito palette
+      Grid: Subtle gray grid lines visible and aid readability without competing with data
+      Legibility verdict: PASS - All elements easily readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title, axis labels, tick labels, and legend all rendered in light color (#F0EFE8 equivalent) and clearly readable against dark background; no dark-on-dark failures
+      Data: Teal spiral and orange loop colors are identical to light render (data colors preserved across themes); blue equilibrium point clearly visible
+      Grid: Subtle light grid lines visible and appropriately styled for dark background
+      Legibility verdict: PASS - Perfect theme adaptation with all text readable and no legibility failures
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable and explicitly sized, though sizes are generous
+          for pixel-based library
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, excellent spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Both trajectories clearly visible and properly sized for canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast between teal and orange, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels appropriate for dimensionless quantities
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Rendered output is correct (data colors preserved, backgrounds correct,
+          chrome themed), but code doesn't implement required ANYPLOT_THEME pattern
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, but no exceptional custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Some refinement visible, grid could be more subtle
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Effectively contrasts damped vs undamped behavior
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY phase-space visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: damped trajectory, undamped trajectory, fixed
+          point'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position, Y=velocity correct
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: 'Title typo: ''pyplots.ai'' instead of ''anyplot.ai''; legend correct'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows damped spiral, limit cycle, and equilibrium
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real physics of damped harmonic oscillator, neutral and educational
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically correct proportions and parameter values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) used
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity with clear physics equations
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Code saves as plot.png/html instead of plot-{THEME}.png/html
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
+        max: 5
+        passed: false
+        comment: Correct usage but doesn't implement ANYPLOT_THEME environment variable
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses interactive HTML export, but mostly generic usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Excellent demonstration of phase space concepts with both damped and undamped
-    trajectories
-  - Clean visual distinction between the spiral (damped) and closed loop (limit cycle)
-    behaviors
-  - Well-chosen colorblind-safe color scheme (blue and yellow)
-  - Proper mathematical implementation of damped harmonic oscillator using Euler integration
-  - Good use of pygal custom styling for large canvas rendering
-  weaknesses:
-  - The equilibrium point marker at origin is quite small and could be more prominent
-  - The undamped oscillator trajectory shows some numerical drift (not a perfect ellipse
-    due to Euler method)
-  image_description: 'The plot displays a phase diagram showing two oscillator trajectories
-    on a white background. The title "phase-diagram · pygal · pyplots.ai" appears
-    at the top in dark gray text. The X-axis is labeled "Position x" (range -1.2 to
-    2) and the Y-axis is labeled "Velocity dx/dt" (range -3 to 3). There are two main
-    trajectories: (1) A blue spiral trajectory ("Damped Oscillator γ=0.3") that starts
-    from the outer region and spirals inward toward the origin, demonstrating damped
-    oscillation converging to equilibrium; (2) A yellow elliptical trajectory ("Undamped
-    Oscillator (Limit Cycle)") that forms a closed loop, representing periodic motion
-    without energy loss. A small red dot at the origin marks the "Equilibrium (Fixed
-    Point)". The legend is displayed at the bottom with colored squares indicating
-    each series. Grid lines are shown in light gray.'
-  verdict: APPROVED

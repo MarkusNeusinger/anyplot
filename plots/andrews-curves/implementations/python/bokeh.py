@@ -1,18 +1,33 @@
-""" pyplots.ai
+""" anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-15
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Legend
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Legend
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler
 
 
-# Load and prepare data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Data
 iris = load_iris()
 X = iris.data
 y = iris.target
@@ -22,77 +37,106 @@ species_names = ["Setosa", "Versicolor", "Virginica"]
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-
-# Andrews curve function: f(t) = x1/sqrt(2) + x2*sin(t) + x3*cos(t) + x4*sin(2t) + ...
-def andrews_curve(coeffs, t):
-    n = len(coeffs)
-    result = coeffs[0] / np.sqrt(2)
-    for i in range(1, n):
-        if i % 2 == 1:
-            result += coeffs[i] * np.sin((i // 2 + 1) * t)
-        else:
-            result += coeffs[i] * np.cos((i // 2) * t)
-    return result
-
-
 # Generate t values from -π to π
 t_values = np.linspace(-np.pi, np.pi, 200)
-
-# Colors for each species (Python Blue, Python Yellow, and a colorblind-safe teal)
-colors = ["#306998", "#FFD43B", "#2AA198"]
 
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="andrews-curves · bokeh · pyplots.ai",
+    title="andrews-curves · bokeh · anyplot.ai",
     x_axis_label="t (radians)",
     y_axis_label="f(t)",
+    background_fill_color=PAGE_BG,
+    border_fill_color=PAGE_BG,
 )
+
+# Style text
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_color = INK_SOFT
+
+# Style axes and grid
+p.outline_line_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
 # Store legend items
 legend_items = []
 
-# Plot curves for each species
+# Plot curves for each species using vectorized Andrews curves
 for species_idx in range(3):
     species_mask = y == species_idx
     X_species = X_scaled[species_mask]
 
-    # Track first line for legend
     first_line = None
 
     for coeffs in X_species:
-        curve_values = andrews_curve(coeffs, t_values)
+        # Vectorized Andrews curve: f(t) = x1/sqrt(2) + x2*sin(t) + x3*cos(t) + x4*sin(2t) + ...
+        n = len(coeffs)
+        curve_values = coeffs[0] / np.sqrt(2)
+        for i in range(1, n):
+            if i % 2 == 1:
+                curve_values += coeffs[i] * np.sin((i // 2 + 1) * t_values)
+            else:
+                curve_values += coeffs[i] * np.cos((i // 2) * t_values)
 
-        source = ColumnDataSource(data={"x": t_values, "y": curve_values})
+        source = ColumnDataSource(
+            data={"x": t_values, "y": curve_values, "species": [species_names[species_idx]] * len(t_values)}
+        )
 
-        line = p.line(x="x", y="y", source=source, line_color=colors[species_idx], line_alpha=0.4, line_width=2)
+        line = p.line(x="x", y="y", source=source, line_color=OKABE_ITO[species_idx], line_alpha=0.4, line_width=3)
 
         if first_line is None:
             first_line = line
 
     legend_items.append((species_names[species_idx], [first_line]))
 
+# Add hover tool
+hover = HoverTool(tooltips=[("t", "@x{0.00}"), ("f(t)", "@y{0.00}"), ("Species", "@species")])
+p.add_tools(hover)
+
 # Create and add legend
 legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "20pt"
-legend.background_fill_alpha = 0.8
+legend.label_text_font_size = "18pt"
+legend.label_text_color = INK_SOFT
+legend.background_fill_color = ELEVATED_BG
+legend.background_fill_alpha = 0.95
+legend.border_line_color = INK_SOFT
 p.add_layout(legend, "right")
 
-# Style the plot
-p.title.text_font_size = "28pt"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-
-# Grid styling
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_dash = "dashed"
-
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-output_file("plot.html", title="Andrews Curves - Bokeh")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome via Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

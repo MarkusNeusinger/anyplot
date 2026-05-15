@@ -6,7 +6,7 @@ title: Mosaic Subplot Layout with Varying Sizes
 
 # Specification tracking
 created: 2025-12-31T10:44:42Z
-updated: null
+updated: 2026-05-14T16:47:36Z
 issue: 3002
 suggested: MarkusNeusinger
 
@@ -14,9 +14,7 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - subplot
     - mosaic
-    - multi-panel
   data_type:
     - numeric
     - categorical
@@ -27,5 +25,4 @@ tags:
   features:
     - layout
     - multi
-    - dashboard
     - asymmetric

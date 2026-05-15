@@ -1,171 +1,184 @@
 library: plotnine
+language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:53:27Z'
-updated: '2025-12-31T14:15:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620335890
+updated: '2026-05-15T01:20:36Z'
+generated_by: claude-haiku
+workflow_run: 25894607391
 issue: 3070
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/plotnine/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layering of geom_segment
-    for tree branches
-  - Well-designed clade color scheme that effectively differentiates evolutionary
-    groups
-  - Scale bar with proper units (substitutions/site) as required by specification
-  - Clean, publication-quality layout using theme_void appropriate for tree diagrams
-  - Scientifically accurate primate phylogeny based on real evolutionary relationships
+  - Excellent theme adaptation with correct palette usage in both light and dark renders
+  - All text elements perfectly readable in both themes — no contrast or visibility
+    issues
+  - Proper phylogenetic tree structure with clear hierarchical organization and species
+    relationships
+  - Professional scale bar annotation with correct units
+  - Clean, deterministic code with proper seed for reproducibility
+  - All species labels properly positioned without overlap
+  - 'Correct Okabe-Ito palette implementation with first series as #009E73'
   weaknesses:
-  - Title format includes extra text ("Primate Phylogeny") before the spec-id; should
-    be just "tree-phylogenetic · plotnine · pyplots.ai"
-  - Some clade colors (Homininae, Gorillini, Hominini) are identical yellow, making
-    it hard to distinguish these clades in the legend
-  image_description: 'The plot displays a phylogenetic tree diagram showing primate
-    evolutionary relationships. The tree uses a rectangular/cladogram layout with
-    horizontal and vertical line segments. Eight species are shown as leaf nodes:
-    Lemur (top), Baboon, Macaque, Gibbon, Orangutan, Gorilla, Chimpanzee, and Human
-    (bottom). Branch colors indicate different clades: brown for Strepsirrhini (Lemur),
-    blue for Haplorrhini/Catarrhini/Hominoidea, red/crimson for Cercopithecidae (Old
-    World monkeys), green for Hylobatidae (Gibbon), orange for Ponginae (Orangutan),
-    and yellow for Homininae/Gorillini/Hominini (African apes + humans). Blue dots
-    mark leaf nodes, with species names in dark gray text to the right. A scale bar
-    at the bottom left shows "0.1 substitutions/site". A legend on the right lists
-    all 11 clades with their colors. The title "Primate Phylogeny · tree-phylogenetic
-    · plotnine · pyplots.ai" is bold and centered at the top.'
+  - 'Design Excellence could be elevated: consider unique clade visualization techniques
+    (gradient fills, edge cases, or symbolic emphasis)'
+  - 'Library Mastery: minimal use of distinctive plotnine features — uses standard
+    geoms without advanced customization'
+  - 'VQ-06: X-axis label defined in labs() but hidden by theme_void() — consider alternative
+    for distance encoding'
+  - Aesthetic could benefit from more sophisticated visual hierarchy beyond color
+    differentiation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) matching the style guide specification perfectly.
+      Chrome: Title "tree-phylogenetic · plotnine · anyplot.ai" rendered in dark ink (#1A1A17), clearly readable. All species labels (Lemur, Human, Chimpanzee, Gorilla, Orangutan, Gibbon, Macaque, Baboon) positioned right of their leaf nodes with left-aligned text and nudge_x=0.02 for clarity. Scale bar annotation "0.1 substitutions/site" in secondary text color (#4A4A44). Legend box positioned upper right, showing all 11 clades with their assigned colors.
+      Data: Phylogenetic tree with horizontal branch segments color-coded by clade using Okabe-Ito palette. First series (Strepsirrhini) is #009E73 (brand green) ✓. Green leaf markers (size=5) at species endpoints. Multiple evolutionary distances shown: Root (0.0) to leaves (0.45-0.65), proportionally rendered.
+      Legibility verdict: PASS - All text fully readable against light background, no dark-on-light issues, excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) matching specification.
+      Chrome: Title remains readable in light text. All species labels visible in light ink (#F0EFE8). Scale bar label readable in secondary text (#B8B7B0). Legend text (legend title and clade labels) all clearly visible in light tones against dark background.
+      Data: Identical tree structure and colors to light render (Okabe-Ito positions 1-7 remain constant across themes). Branch colors unchanged: #009E73 (Strepsirrhini), #D55E00 (Haplorrhini), #0072B2 (Catarrhini), etc. Leaf markers maintain #009E73 color. No dark-on-dark failures detected — all text is light, all data colors are saturated and distinct.
+      Legibility verdict: PASS - Excellent theme adaptation. All elements readable. No contrast issues. Data colors identical to light render, confirming proper theme-adaptive chrome implementation.
+
+    Both renders verified: colors consistent, legibility excellent in both themes, scale bar appropriately scaled, all species visible and labeled.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is 24pt bold, species labels are readable at size 14, scale
-          bar text is clear. Slightly smaller than optimal for species names.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text anywhere, all labels clearly separated
+        comment: Title 24pt, labels 14pt, legend 12-14pt — all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Species labels nudged left (nudge_x=0.02), no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tree branches are well-sized (2.5), leaf points visible (size 5).
-          Good overall but could be slightly larger.
+        comment: 8 species tree — appropriate density, all markers and branches visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color differentiation between clades, though some yellows (Homininae,
-          Gorillini, Hominini) are very similar
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, tree is well-proportioned with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Scale bar provides units but no axis labels (appropriate for tree
-          diagram using theme_void)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate for tree), legend well-placed with white background
+        comment: Okabe-Ito palette used throughout, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, xlim/ylim set appropriately, scale bar and all
+          species fit
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Title correct. X-axis label defined in labs() but hidden by theme_void()
+          — not visible in render
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order maintained, backgrounds #FAF8F1/#1A1A17
+          correct, both renders theme-adaptive'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional clade-based color scheme, intentional hierarchy, above
+          generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void() used effectively, clean legend, professional scale bar
+          — could have subtle enhancements
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hierarchical structure, color-coded clades provide visual organization,
+          functional but somewhat conventional
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct phylogenetic tree visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Branch lengths proportional to evolutionary distance as specified
-      - id: SC-03
+        comment: Correct phylogenetic tree diagram format
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has scale bar, clade coloring, rectangular layout. Missing: no circular/radial
-          option shown'
-      - id: SC-04
-        name: Data Range
+        comment: Hierarchical structure, branch lengths proportional, leaf labels,
+          scale bar all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All species visible, full tree displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis shows evolutionary distance, Y-axis shows species arrangement,
+          tree structure preserved
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps clade names to colors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title is "Primate Phylogeny · tree-phylogenetic · plotnine · pyplots.ai"
-          - includes spec-id and library but has extra descriptive text
+        comment: Title format correct, legend shows all clades
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchical relationships, multiple clades, varying branch
-          lengths. Good diversity of primates from lemurs to humans.
+        comment: 'All phylogenetic tree aspects shown: hierarchy, distances, species
+          diversity, clade differentiation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Primate phylogeny based on mitochondrial DNA is a real, scientifically
-          accurate scenario
+        comment: Realistic primate phylogenetic tree based on mitochondrial DNA, educational
+          value
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Branch lengths are reasonable evolutionary distances (0.1-0.65 substitutions/site)
+        comment: 8 species is readable, branch lengths 0.15-0.65 sensible for evolutionary
+          distances
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,33 +186,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, follows imports → data → plot → save
+        comment: No functions/classes, straightforward procedural code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only necessary imports: os, numpy, pandas, plotnine'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate plotnine idioms
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
         passed: true
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 4
-      max: 5
-      items: []
+        comment: Proper ggplot() paradigm, correct geom selection (geom_segment, geom_point,
+          geom_text), good understanding of grammar of graphics
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses theme_void() and scale_color_manual well, but no advanced plotnine-specific
+          customization (e.g., custom stat layers, coordinate system overrides)
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome

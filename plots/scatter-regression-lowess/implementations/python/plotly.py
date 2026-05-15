@@ -1,67 +1,37 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-regression-lowess: Scatter Plot with LOWESS Regression
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-14
 """
 
+import os
 import numpy as np
 import plotly.graph_objects as go
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
+# Theme tokens
+THEME       = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID        = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND       = "#009E73"  # Okabe-Ito position 1
+ACCENT      = "#D55E00"  # Okabe-Ito position 2
 
-# Data - Generate non-linear relationship with varying patterns
+# Data - Enzyme kinetics: realistic biological dose-response relationship
+# Different structure than seaborn: exponential saturation curve with noise
 np.random.seed(42)
-n_points = 200
-x = np.linspace(0, 10, n_points)
-# Complex non-linear relationship: combination of sinusoidal and polynomial
-y = 2 * np.sin(x) + 0.3 * x**2 - x + np.random.normal(0, 1.5, n_points)
+n_points = 150
+# Substrate concentration (biological domain)
+x = np.linspace(0.1, 50, n_points)
+# Michaelis-Menten style response: complex saturation with local variations
+y = (100 * x) / (10 + x) + np.random.normal(0, 3, n_points) + 5 * np.sin(x / 5)
 
-# LOWESS smoothing (Locally Weighted Scatterplot Smoothing)
-frac = 0.3
-n = len(x)
-k = int(np.ceil(frac * n))  # Number of neighbors to use
-
-# Sort data by x for processing
-sorted_idx = np.argsort(x)
-x_sorted = x[sorted_idx]
-y_sorted = y[sorted_idx]
-y_smooth = np.zeros(n)
-
-# Calculate smoothed values for each point
-for i in range(n):
-    # Distances from current point to all points
-    distances = np.abs(x_sorted - x_sorted[i])
-
-    # Find k nearest neighbors
-    neighbor_idx = np.argsort(distances)[:k]
-    max_dist = distances[neighbor_idx[-1]]
-
-    # Tricube weight function: w = (1 - (d/max_d)^3)^3
-    if max_dist > 0:
-        u = distances[neighbor_idx] / max_dist
-        weights = (1 - u**3) ** 3
-    else:
-        weights = np.ones(k)
-
-    # Weighted least squares regression
-    x_neighbors = x_sorted[neighbor_idx]
-    y_neighbors = y_sorted[neighbor_idx]
-
-    sum_w = np.sum(weights)
-    sum_wx = np.sum(weights * x_neighbors)
-    sum_wy = np.sum(weights * y_neighbors)
-    sum_wxx = np.sum(weights * x_neighbors**2)
-    sum_wxy = np.sum(weights * x_neighbors * y_neighbors)
-
-    denom = sum_w * sum_wxx - sum_wx**2
-    if np.abs(denom) > 1e-10:
-        b = (sum_w * sum_wxy - sum_wx * sum_wy) / denom
-        a = (sum_wy - b * sum_wx) / sum_w
-        y_smooth[i] = a + b * x_sorted[i]
-    else:
-        y_smooth[i] = sum_wy / sum_w if sum_w > 0 else y_sorted[i]
-
-x_lowess = x_sorted
-y_lowess = y_smooth
+# Apply LOWESS smoothing using statsmodels
+lowess_result = lowess(y, x, frac=0.35, it=3)
+x_lowess = lowess_result[:, 0]
+y_lowess = lowess_result[:, 1]
 
 # Create figure
 fig = go.Figure()
@@ -72,11 +42,12 @@ fig.add_trace(
         x=x,
         y=y,
         mode="markers",
-        name="Data Points",
+        name="Measured Values",
         marker=dict(
-            size=10,
-            color="#306998",  # Python Blue
+            size=11,
+            color=BRAND,
             opacity=0.6,
+            line=dict(color=PAGE_BG, width=0.5),
         ),
     )
 )
@@ -87,30 +58,55 @@ fig.add_trace(
         x=x_lowess,
         y=y_lowess,
         mode="lines",
-        name="LOWESS Curve",
+        name="LOWESS Smooth",
         line=dict(
-            color="#FFD43B",  # Python Yellow
+            color=ACCENT,
             width=4,
         ),
     )
 )
 
-# Update layout for large canvas
+# Update layout for large canvas with theme-adaptive styling
 fig.update_layout(
-    title=dict(text="scatter-regression-lowess · plotly · pyplots.ai", font=dict(size=28), x=0.5, xanchor="center"),
+    title=dict(
+        text="scatter-regression-lowess · plotly · anyplot.ai",
+        font=dict(size=28, color=INK),
+        x=0.5,
+        xanchor="center",
+    ),
     xaxis=dict(
-        title=dict(text="X Value", font=dict(size=22)), tickfont=dict(size=18), gridcolor="rgba(0,0,0,0.1)", gridwidth=1
+        title=dict(text="Substrate Concentration (µM)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Y Value", font=dict(size=22)), tickfont=dict(size=18), gridcolor="rgba(0,0,0,0.1)", gridwidth=1
+        title=dict(text="Enzyme Activity (V/V_max)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
-    template="plotly_white",
-    legend=dict(font=dict(size=18), x=0.02, y=0.98, xanchor="left", yanchor="top", bgcolor="rgba(255,255,255,0.8)"),
-    margin=dict(l=80, r=40, t=80, b=80),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    legend=dict(
+        font=dict(size=18, color=INK_SOFT),
+        x=0.02,
+        y=0.98,
+        xanchor="left",
+        yanchor="top",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+    ),
+    margin=dict(l=100, r=60, t=100, b=100),
+    showlegend=True,
 )
 
 # Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save as HTML for interactivity
-fig.write_html("plot.html")
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

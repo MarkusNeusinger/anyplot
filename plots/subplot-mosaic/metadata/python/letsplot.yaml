@@ -1,178 +1,183 @@
 library: letsplot
+language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T11:01:31Z'
-updated: '2025-12-31T11:23:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617513258
+updated: '2026-05-14T17:21:11Z'
+generated_by: claude-haiku
+workflow_run: 25873844269
 issue: 3002
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent demonstration of ggbunch() for complex mosaic layouts with precise region
-    control
-  - Consistent visual theme with harmonious blue/yellow color palette across all 6
-    panels
-  - Diverse plot types (area, bar, scatter, histogram, line, heatmap) showcase versatility
-  - Clear visual hierarchy with appropriately sized panels matching their data importance
-  - Realistic business dashboard context with coherent related metrics
-  - Clean code structure following KISS principles with reproducible random seed
+  - 'Perfect visual quality: all text legible in both light and dark modes, no overlap,
+    proper theming, correct color palette'
+  - 'Strong spec compliance: mosaic layout correctly implemented with clear hierarchy
+    and six distinct plot types'
+  - 'Clean code: simple, reproducible, well-organized implementation with proper imports
+    and current API usage'
+  - 'Effective data hierarchy: layout creates clear overview → details → metrics narrative
+    flow'
+  - 'Comprehensive feature coverage: six plot types demonstrate mosaic subplot versatility'
+  - 'Proper theme adaptation: both light and dark renders fully functional with correct
+    colors and background consistency'
   weaknesses:
-  - Main title appears at top-left corner rather than centered prominently over entire
-    figure
-  - Does not demonstrate empty cell capability (using "." placeholder) mentioned in
-    spec notes
-  image_description: 'The plot displays a complex 6-panel mosaic layout with varying
-    subplot sizes. At the top, a full-width area chart shows "Daily Revenue Overview"
-    with a blue line (#306998) and semi-transparent blue fill over 100 days. The middle
-    row has a bar chart "Sales by Product" spanning 2/3 width showing 5 product categories
-    in yellow bars with blue borders, and a scatter plot "Effort vs Output" in the
-    remaining 1/3 with blue points and a yellow regression line. The bottom row contains
-    three equal-width panels: a blue histogram "Score Distribution" showing a bimodal
-    distribution, a yellow line chart "Monthly Growth" with blue points, and a heatmap
-    "Regional Performance" using a yellow-to-blue gradient with white text values.
-    The title "subplot-mosaic · letsplot · pyplots.ai" appears at the top left.'
+  - 'Generic design excellence: styling relies heavily on defaults, no exceptional
+    visual polish or custom refinements beyond required palette'
+  - 'Limited distinctive library features: implementation uses standard ggplot2 patterns
+    rather than showcasing advanced letsplot-specific capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct theme surface
+      Chrome: Title "subplot-mosaic · letsplot · anyplot.ai" bold and prominent at top; all panel titles, axis labels, and tick labels in dark text (#1A1A17), clearly readable against light background
+      Data: Panel A (area chart) green (#009E73) with subtle fill; Panel B (bar chart) green bars with rotated x-labels preventing overlap; Panel C (scatter) green points with orange regression line (#D55E00); Panel D (histogram) green bars; Panel E (line chart) green line with points; Panel F (heatmap) viridis colormap with numeric labels. All colors consistent with Okabe-Ito palette.
+      Layout: Six-panel mosaic with clear hierarchy—Panel A spans full width at top (overview), Panels B-C in middle row (details), Panels D-E-F in bottom row (metrics). Spacing is generous and consistent.
+      Legibility verdict: PASS - All text readable, no collisions, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct theme surface
+      Chrome: Title at top in light text (#F0EFE8), all axis labels and tick labels in appropriate light color (#B8B7B0 for secondary), clearly readable against dark background. No dark-on-dark failures.
+      Data: Data colors identical to light render—green (#009E73), orange (#D55E00), viridis colormap unchanged. Only chrome elements (text, background, grid, legend frame) have flipped to dark theme tokens.
+      Layout: Same six-panel mosaic arrangement with consistent spacing as light render. Visual hierarchy maintained.
+      Legibility verdict: PASS - All text readable in light color, data colors match light render exactly, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'All text is readable; subplot titles are bold and clear, axis labels
-          and tick marks are appropriately sized. Minor: some axis text could be slightly
-          larger.'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; bar chart x-axis labels are angled at 45° to
-          avoid collision.
+        comment: Font sizes follow letsplot guide; all text readable in both themes
+          with clear hierarchy
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; rotated category labels prevent x-axis overlap;
+          ample panel spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All elements are clearly visible; scatter points, bars, histogram
-          bins, and heatmap tiles are well-sized. The scatter points could be slightly
-          larger for the data density.
+        comment: All markers, lines, bars, histogram bins clearly visible with appropriate
+          alpha values
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Consistent blue/yellow color scheme is colorblind-safe and provides
-          good contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good mosaic arrangement demonstrating the spec's purpose. The layout
-          effectively shows varying sizes with clear visual hierarchy.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Revenue ($)", "Effort (hours)",
-          "Output (units)", "Growth Rate (%)".'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: All colors from Okabe-Ito palette; CVD-safe greens and oranges; viridis
+          colormap perceptually uniform
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 4800x2700px; landscape aspect ratio appropriate; all elements
+          fit with generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Subtle grids present on most panels. The heatmap legend is appropriately
-          hidden. Minor: grid styling could be more consistent across panels.'
+        comment: All panels have descriptive axis labels with units; main title follows
+          format requirement
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; secondary #D55E00; viridis for continuous;
+          backgrounds correct for both themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful hierarchy (overview → details → metrics) and multi-type
+          variety, but styling mostly defaults—generic composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal spine customization; adequate grid styling; clean but not
+          particularly refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy and narrative flow through layout; could be
+          more dramatic with emphasis techniques
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements mosaic subplot layout with varying panel sizes.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y mappings are correct across all 6 subplot types.
-      - id: SC-03
+        comment: Correct mosaic subplot layout via ggbunch with region coordinates
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Demonstrates mosaic pattern (AAA/BBC/DEF), multiple plot types (area,
-          bar, scatter, histogram, line, heatmap), and varying sizes. Minor: no demonstration
-          of empty cells/gaps mentioned in spec.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: mosaic patterns, asymmetric arrangement, spacing,
+          hierarchy, six distinct plot types'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes display complete data ranges appropriately.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct x/y mappings; axes show all data; appropriate color encoding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legends are accurate where present; appropriately hidden on heatmap.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title "subplot-mosaic · letsplot · pyplots.ai" is present but appears
-          as ggbunch title rather than prominently centered.
+        comment: Format requirement met; panel titles and legends present
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 6 different plot types with various mosaic sizes (full-width,
-          2/3 width, 1/3 width). The bimodal histogram and scatter with regression
-          demonstrate data variation.
+        comment: Six distinct plot types showcase mosaic versatility comprehensively
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Business dashboard scenario with revenue, sales, effort/output correlation,
-          score distribution, growth metrics, and regional performance is coherent
-          and professional.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'All values are realistic: revenue ~1000-1500$, sales 290-520 units,
-          growth rates 2-5%, performance scores 60-100.'
+        comment: All synthetic data plausible and neutral; realistic domain ranges
+          throughout
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values within sensible domain ranges; no scale distortions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,42 +185,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plots → combine → save structure.
+        comment: Straightforward, readable code with clear logical flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning.
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (os, numpy, pandas, lets_plot).
+        comment: Only used imports; no bloat
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using `size` parameter in some geoms; lets-plot prefers `stroke`
-          for outline widths.
+        comment: Well-organized with proper pandas/ggplot2 usage; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html correctly.
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct output files and current API usage
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Effectively uses ggbunch() for mosaic layout with explicit regions,
-          theme_minimal(), geom_smooth with method="lm", scale_fill_gradient for heatmap.
-          Good use of lets-plot grammar of graphics.
+        comment: Proper ggplot2 grammar and idiomatic letsplot patterns throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses ggbunch and theme control correctly, but mostly standard patterns
+          rather than pushing distinctive capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling

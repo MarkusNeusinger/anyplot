@@ -1,0 +1,236 @@
+library: plotly
+language: python
+specification_id: network-bipartite
+created: '2026-05-14T21:10:30Z'
+updated: '2026-05-14T21:28:26Z'
+generated_by: claude-sonnet
+workflow_run: 25885513056
+issue: 5247
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Full spec compliance — all required bipartite features implemented (two node sets,
+    degree-based sizing, weight-encoded edge widths, set-colored nodes)
+  - Clean dual-theme adaptation with correct background colors and all chrome tokens
+    properly applied in both renders
+  - Effective data storytelling via node size and edge width dual encoding
+  - Perfect code quality — seed, clean imports, flat script, correct output files
+  weaknesses:
+  - Node labels at 16px are below the 18px minimum for pixel-based libraries at the
+    4800x2700px canvas; increase textfont size to 18px for student and course labels
+  - The edge weight encoding is visually present but not self-documenting; consider
+    adding a small reference key showing thin/medium/thick edge = weight 2/3/4
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Student-Course Enrollment · network-bipartite · plotly · anyplot.ai" in dark #1A1A17 at 28px — clearly readable. Column headers "Students" and "Courses" at 22px in respective data colors (green/orange) — readable. Node labels (student/course names) at 16px in #1A1A17 — readable but slightly small for 4800x2700px canvas. Legend text at 16px — readable.
+      Data: Students = #009E73 (Okabe-Ito position 1), Courses = #D55E00 (position 2). Node sizes vary by degree (Alice largest at 5 courses). Edge widths vary by weight (2-4), semi-transparent grey edges.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light #F0EFE8 — clearly readable against dark background. Column headers in data colors (green/orange) — readable. Node labels in light text — readable, no dark-on-dark failures. Legend text in light color — readable.
+      Data: Student green (#009E73) and course orange (#D55E00) are identical to light render — only chrome tokens flipped. Node sizes and edge widths unchanged.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title (28px) and headers (22px) well-sized; node labels at 16px slightly
+          below 18px minimum for pixel-based libraries
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Bipartite layout prevents overlap; edge crossings are expected and
+          handled well
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes and variable-width edges clearly visible; degree-based sizing
+          effective
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1 and 2; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions and margins; vertical separator adds structure
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; column headers serve as effective axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Students=#009E73, Courses=#D55E00; backgrounds #FAF8F1/#1A1A17;
+          both themes correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Node sizing by degree, variable edge widths by weight, colored column
+          headers, vertical separator — intentional design above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes completely suppressed, no grid, clean whitespace, separator
+          adds structure
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Node size encodes degree (hubs visible), edge width encodes weight;
+          bipartite layout makes cross-category relationships clear
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bipartite network layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Two node sets in columns, color by set, degree-based node size, weight-encoded
+          edge widths
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Students on left (x=0), Courses on right (x=1); all edges correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend identifies both node sets
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Bipartite structure, hub nodes, degree variation, edge weight all
+          demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Student-course enrollment is realistic, neutral, and domain-appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 students, 8 courses, 37 edges — appropriate size
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: defaultdict for edge grouping is clean; linear sizing is readable
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot-{THEME}.png and plot-{THEME}.html both generated
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper go.Figure with multiple go.Scatter traces; add_annotation
+          and add_shape for extras; customdata for hover
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses hovertemplate with customdata, write_html, grouped traces for
+          edge weights; solid but not exceptional use of plotly-specific features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
+  - alpha-blending

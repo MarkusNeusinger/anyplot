@@ -1,0 +1,243 @@
+library: altair
+language: python
+specification_id: bar-3d-categorical
+created: '2026-05-15T08:51:41Z'
+updated: '2026-05-15T09:07:56Z'
+generated_by: claude-sonnet
+workflow_run: 25908295059
+issue: 5248
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - 'Perfect code quality: clean, reproducible, correct output API'
+  - Full theme-adaptive chrome with correct design tokens in both renders
+  - Correct Okabe-Ito palette order (#009E73 first) across all series
+  - Both light and dark renders fully legible with no dark-on-dark failures
+  - Realistic neutral survey data with meaningful cross-dimensional variation
+  - Idiomatic Altair 5+ xOffset grouped-bar encoding
+  weaknesses:
+  - 'Code-image mismatch: rendered images show subtitle, dashed reference line, and
+    value labels not present in current code'
+  - 'Missing y-axis scale notation: title should be Satisfaction Score (0-100) not
+    just Satisfaction Score'
+  - Height 860 produces non-standard 4800x2580px output; prefer height=900 for standard
+    4800x2700 landscape
+  - 'DE-03 storytelling absent from code: no subtitle, no reference line, no value
+    labels in implementation'
+  - Spec requires true 3D bar chart but Altair cannot render 3D projections natively
+    (library ceiling)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "bar-3d-categorical · altair · anyplot.ai" in dark ink (readable); subtitle visible; x-axis "Age Group" and y-axis "Satisfaction Score (0-100)" labels clearly readable; tick labels readable; legend top-right with elevated box
+      Data: 4 grouped bars per age group in Okabe-Ito order: #009E73 (High School), #D55E00 (Bachelor's), #0072B2 (Master's), #CC79A7 (Doctorate); dashed reference line at ~y=75; value labels on bars
+      Note: Subtitle, reference line, and value labels appear in images but are NOT in current code
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light-colored text (#F0EFE8 / #B8B7B0 range) - clearly readable against dark background; no dark-on-dark failures observed; legend uses elevated dark box (#242420)
+      Data: Colors identical to light render - #009E73, #D55E00, #0072B2, #CC79A7 all unchanged between themes; only chrome flips
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, axis 22px, ticks 18px,
+          legend 16-18px); both themes readable; minor deduction for missing (0-100)
+          in y-axis title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-spaced via xOffset; no overlap issues
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly visible; colors well-differentiated
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 4800x2580px (height=860x3); minor deviation from standard
+          4800x2700
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Satisfaction Score'' without (0-100) range notation; descriptive
+          but no units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          full theme-adaptive chrome'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: corner radius on bars, Okabe-Ito, legend padding/fill.
+          Not exceptional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: gridOpacity=0.10 subtle; stroke=None removes frame; legend padding=10.
+          Good but not perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Code shows plain grouped bar chart; subtitle and reference line visible
+          in images are absent from code
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Spec requires 3D bar chart; Altair cannot render 3D natively; grouped-bar
+          xOffset is best feasible approximation
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Both categorical dims shown; color encoding; bar spacing. Missing:
+          value labels (not in code); base-plane grid (3D concept)'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Age Group, Y=Satisfaction Score, color=Education Level; all data
+          plotted correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches {spec-id} · altair · anyplot.ai; legend title Education
+          Level with correct labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Both categorical dimensions with variation (62-85 range); 20 bars
+          within spec range. Minor: no 3D depth perception.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Survey satisfaction by age/education: real-world plausible, neutral,
+          non-controversial'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores 62-85 on 0-100 scale; educational gradient aligns with real-world
+          patterns
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> data -> chart -> save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Altair grammar chain; no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and .html; scale_factor=3.0
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics; correct encoding types N/Q; configure_*
+          chain; xOffset idiomatic Altair 5+
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: xOffset grouped bars (Altair 5+-distinctive), tooltips for interactivity,
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
