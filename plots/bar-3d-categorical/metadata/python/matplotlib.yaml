@@ -1,0 +1,254 @@
+library: matplotlib
+language: python
+specification_id: bar-3d-categorical
+created: '2026-05-15T09:00:40Z'
+updated: '2026-05-15T09:17:03Z'
+generated_by: claude-sonnet
+workflow_run: 25909112458
+issue: 5248
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
+review:
+  strengths:
+  - 'Perfect spec compliance: all spec features present (spacing, viewing angle, value
+    labels, colorbar, grid, color encoding)'
+  - Realistic retail business scenario with meaningful variation across product/region
+    combinations
+  - Clean KISS structure, deterministic data, proper imports
+  - Correct viridis colormap for continuous value encoding (spec-appropriate and guideline-compliant)
+  - 'Thorough theme-adaptive chrome: pane edges, colorbar label/ticks/outline, value
+    labels, and axis labels all use theme tokens correctly in both renders'
+  - computed_zorder=False and shade=True show understanding of matplotlib 3D rendering
+    subtleties
+  weaknesses:
+  - 'Font sizes below guidelines: title 20pt (needs >=24), axis labels 15pt (needs
+    >=20), tick labels 13pt (needs >=16), value labels 10pt too small for 4800px canvas'
+  - Back-row value labels partially occluded by foreground bars due to 3D perspective
+    (positions 115, 87, 49)
+  - Dual height+color encoding redundantly encodes the same variable — color could
+    encode a different dimension for added analytical depth
+  - 'No visual storytelling: no focal point or emphasis on peak/trough bars (Electronics-North
+    142k, Home & Garden-West 49k)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — correct theme surface
+      Chrome: Title "Retail Sales by Product & Region · bar-3d-categorical · matplotlib · anyplot.ai" in dark ink, readable. Axis labels "Product Category" and "Region" in dark ink (INK=#1A1A17), z-label "$ thousands" in INK_SOFT. Tick labels (Electronics, Clothing, Home & Garden, Sports; North, South, East, West) in dark ink, readable. Colorbar label and tick values in dark ink on right side.
+      Data: Bars colored with viridis — purple/dark blue for lowest values (~49k), through teal/green to yellow for highest (~142k). All 16 bars (4 products × 4 regions) visible. Value labels (10pt, dark) on top of each bar. Electronics-North tallest at 142 (yellow-green).
+      Legibility verdict: PASS — all text readable, though font sizes are below guidelines (title 20pt vs >=24, labels 15pt vs >=20, ticks 13pt vs >=16). Some back-row value labels (115, 87, 49) partially occluded by foreground bars inherent to 3D perspective.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — correct dark theme surface
+      Chrome: Title text appears light cream (#F0EFE8), readable against dark background. Axis labels "Product Category" and "Region" in light INK color (#F0EFE8), visible. Tick labels in light INK_SOFT (#B8B7B0), readable. Colorbar label and tick values in light colors. No dark-on-dark failures detected.
+      Data: Viridis colormap colors are identical to the light render — purple for low values, yellow for high values. Value labels on bars appear in light cream color (#F0EFE8), readable against bar surfaces. Data encoding unchanged between themes; only chrome flips.
+      Legibility verdict: PASS — all text readable in dark mode. Same font size limitations apply. Same partial occlusion of back-row value labels as in light render.
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set but below guidelines: title 20pt (needs
+          >=24), labels 15pt (needs >=20), ticks 13pt (needs >=16), value labels 10pt
+          too small'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Some back-row value labels partially occluded by foreground bars
+          (inherent 3D depth: positions 115, 87, 49)'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars well-sized (width/depth 0.55), shade=True adds realism, alpha=0.88
+          appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually-uniform and CVD-safe; value labels provide
+          per-bar precision
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout; colorbar well-placed via add_axes; some empty foreground
+          space due to 3D perspective
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Product Category, Region, $ thousands, colorbar Sales ($ thousands)
+          — all descriptive with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous sequential data; backgrounds #FAF8F1/#1A1A17;
+          all chrome theme-adaptive in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured 3D chart with thoughtful pane styling and colorbar,
+          but doesn't exceed a polished library default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Pane fill disabled, grid at alpha=0.10, deliberate colorbar placement
+          via add_axes — good 3D-appropriate refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Dual encoding height+color both encode same value — no focal point,
+          no narrative, no visual hierarchy guiding viewer to insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D bar chart with bars rising from 2D categorical grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bar spacing, color encoding via viridis, viewing angle 28 deg/-48
+          deg, base grid, value labels on all 16 bars, colorbar — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Product on X, Region on Y, Sales on Z; full 4x4 = 16 bars visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id, library, anyplot.ai; colorbar serves as legend
+          with clear Sales ($ thousands) label
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 4x4 grid, meaningful value variation (49-142k), dual encoding
+          demonstrates color+height
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Retail sales by product and region — realistic, neutral business
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 49-142k USD plausible for retail; Electronics-North highest
+          is realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> data -> plot -> save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded sales array; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; Axes3D side-effect import with noqa is standard
+          3D matplotlib pattern
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean nested loop, proper norm/cmap pattern, no fake UI, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; API usage current
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of projection=3d, computed_zorder=False, ax.bar3d(),
+          ax.view_init(), fig.add_axes() for colorbar
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: computed_zorder=False (3D depth ordering control), xaxis.pane styling
+          (3D-only API), shade=True on bar3d — distinctive to matplotlib mpl_toolkits
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling

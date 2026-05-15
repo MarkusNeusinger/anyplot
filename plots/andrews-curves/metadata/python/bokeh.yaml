@@ -1,213 +1,236 @@
 library: bokeh
+language: python
 specification_id: andrews-curves
 created: '2025-12-30T23:57:27Z'
-updated: '2025-12-31T00:04:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608492713
+updated: '2026-05-15T13:02:06Z'
+generated_by: claude-haiku
+workflow_run: 25918928390
 issue: 2859
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - custom-legend
-  - html-export
-  patterns:
-  - dataset-loading
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of the Andrews curves mathematical transformation with
-    correct Fourier expansion
-  - Perfect use of the Iris dataset as a canonical multivariate example demonstrating
-    clear cluster separation
-  - Good application of StandardScaler for normalization as recommended in the specification
-  - Appropriate transparency (alpha=0.4) reveals density patterns where curves overlap
-  - Colorblind-safe palette with good distinction between species
-  - Correct title format following pyplots.ai conventions
-  - Both PNG and HTML outputs generated, leveraging Bokeh dual output capability
+  - Complete implementation of Andrews curves with proper Fourier series mathematics
+  - Excellent theme adaptation with no dark-on-dark or light-on-light failures
+  - Proper use of transparency (alpha=0.4) to reveal density patterns in overlapping
+    curves
+  - Clean, readable code with appropriate vectorization and data structures
+  - Correct Okabe-Ito palette with first series as brand green (#009E73)
+  - Both interactive HTML and static PNG outputs generated correctly
+  - Iris dataset provides authentic multivariate example with clear cluster separation
   weaknesses:
-  - Contains a helper function (andrews_curve) which deviates from strict KISS structure;
-    the Fourier computation could be vectorized inline
-  - Legend background could have slightly higher opacity for better readability
-  - Does not leverage Bokeh interactive features like hover tooltips which would enhance
-    the visualization
-  image_description: The plot displays Andrews curves for the Iris dataset with 150
-    observations across three species. Blue curves (#306998) represent one group,
-    yellow curves (#FFD43B) another, and teal curves (#2AA198) the third. The x-axis
-    shows "t (radians)" ranging from -π to π, and the y-axis shows "f(t)" ranging
-    approximately from -4 to 6. The title "andrews-curves · bokeh · pyplots.ai" appears
-    at the top left. A legend on the right identifies Setosa, Versicolor, and Virginica
-    species. All curves show smooth Fourier transformations with appropriate transparency
-    (alpha=0.4) to reveal density patterns. Dashed grid lines provide subtle reference
-    without being distracting.
+  - Design excellence is competent but not exceptional—could explore more visual sophistication
+    beyond standard template styling
+  - Could showcase additional Bokeh interactive features (callbacks, linked selection)
+    to demonstrate library mastery more distinctively
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) providing clean, neutral surface
+      Chrome: Title (28pt dark ink), axis labels (22pt dark ink), tick labels (18pt soft gray) all clearly visible and readable
+      Data: Three species color-coded with Okabe-Ito palette—Setosa (#009E73 green), Versicolor (#D55E00 orange), Virginica (#0072B2 blue). Curves rendered with alpha=0.4 transparency; density patterns visible while individual curves remain distinguishable. Legend with elevated background (#FFFDF6) is readable with dark text. Grid at 10% opacity provides reference without competing with data.
+      Legibility verdict: PASS - All text and data elements clearly readable; no overlaps or contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) providing appropriate dark surface
+      Chrome: Title and axis labels in light ink (#F0EFE8), tick labels in soft light gray (#B8B7B0). Critical check: NO dark-on-dark failures. All text is readable against dark background. Legend background adapted to elevated dark surface (#242420).
+      Data: Colors are IDENTICAL to light render—#009E73 green, #D55E00 orange, #0072B2 blue. Only chrome (background, grid, text) has flipped; data colors remain theme-independent as required.
+      Legibility verdict: PASS - All text and data elements clearly readable; proper theme adaptation; no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are readable, font sizes appropriately
-          scaled for 4800x2700
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title (28pt), axis labels (22pt), tick labels (18pt) all explicitly
+          set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; curves clearly distinguishable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Curves are visible with good line_width=2 and alpha=0.4; slight density
-          in overlapping regions
+        comment: All curve patterns visible; alpha=0.4 provides appropriate transparency
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and teal are colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, plot fills canvas well, legend positioned on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "t (radians)" and "f(t)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe; colors differ sufficiently
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 format appropriate; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed style and alpha=0.3; legend well placed
-          but could have better background contrast
+        comment: Title matches spec format; axes descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order followed, backgrounds correct,
+          both renders theme-adapted'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Okabe-Ito palette applied; theme-adaptive styling; legend properly
+          styled. Competent but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (10% opacity), generous whitespace, proper typography
+          hierarchy
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding creates visual separation; curve patterns communicate
+          cluster differences
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Andrews curves using Fourier series transformation
+        comment: Correct Andrews curves implementation with Fourier series
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly transformed to Fourier coefficients
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: normalization, transparency, color by
-          category, t from -π to π'
-      - id: SC-04
-        name: Data Range
+        comment: Multivariate transformation, category coloring, normalization all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all curves without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (t from -π to π) and Y-axis (f(t)) correctly plotted
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "andrews-curves · bokeh · pyplots.ai"'
+        comment: Title format correct; legend labels match species names
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cluster separation well; Setosa clearly distinct, Versicolor/Virginica
-          show expected overlap
+        comment: Iris dataset with 4 dimensions, 150 observations, 3 categories
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses canonical Iris dataset, perfect real-world botanical example
+        comment: Iris is canonical real-world dataset; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: StandardScaler applied correctly; values are realistic for normalized
-          data
+        comment: Data normalized; Fourier parameter t correct; curve density appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Has one helper function (andrews_curve) which breaks strict KISS;
-          could be inline
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses sklearn.datasets.load_iris() which is deterministic
+        comment: Pure procedural code; clear calculation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses deterministic load_iris() and StandardScaler
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Vectorized calculation; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure, Legend properly; could leverage hover
-          tools for interactivity
+        comment: Uses figure(), ColumnDataSource, HoverTool, Legend appropriately
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool for interactivity, custom legend, Selenium screenshot,
+          HTML export
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  - selenium
+  techniques:
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  - columndatasource
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - theme-adaptive

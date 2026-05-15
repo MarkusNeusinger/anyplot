@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-15
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_line,
+    element_rect,
     element_text,
     geom_line,
     ggplot,
@@ -25,6 +29,20 @@ from sklearn.preprocessing import StandardScaler
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Set seed for reproducibility
+np.random.seed(42)
 
 # Load and prepare data
 iris = load_iris()
@@ -63,8 +81,12 @@ for idx, row in df_features.iterrows():
 
 df_curves = pd.DataFrame(curves_data)
 
-# Define colors for species - Python blue, yellow, and a third color
-species_colors = {"setosa": "#306998", "versicolor": "#FFD43B", "virginica": "#DC2626"}
+# Map species to Okabe-Ito colors
+species_colors = {
+    target_names[0]: OKABE_ITO[0],  # setosa: #009E73 (brand green)
+    target_names[1]: OKABE_ITO[1],  # versicolor: #D55E00 (vermillion)
+    target_names[2]: OKABE_ITO[2],  # virginica: #0072B2 (blue)
+}
 
 # Create plot
 plot = (
@@ -75,23 +97,28 @@ plot = (
     + labs(
         x="Parameter t (radians)",
         y="Fourier Function Value",
-        title="andrews-curves · letsplot · pyplots.ai",
+        title="andrews-curves · letsplot · anyplot.ai",
         color="Species",
     )
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=RULE, size=0.3),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
         legend_position="right",
     )
     + ggsize(1600, 900)
 )
 
 # Save PNG (scale 3x to get 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")

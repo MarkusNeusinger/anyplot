@@ -64,7 +64,11 @@ steps:
       - "--port=8000"
       - "--allow-unauthenticated"
       - "--add-cloudsql-instances=anyplot:europe-west4:anyplot-db"
-      - "--set-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest"
+      # PLAUSIBLE_API_KEY: bearer token for the Plausible Stats API (powers
+       #   /insights/visitors on the public stats page). The Secret Manager
+       #   entry must exist before the first deploy that includes this line —
+       #   create it with: gcloud secrets create PLAUSIBLE_API_KEY --data-file=-
+      - "--set-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest"
       - "--execution-environment=gen2"
       # ^|^ alt delimiter: values contain @ (emails) and may contain , (multi-email lists)
       - "--set-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"

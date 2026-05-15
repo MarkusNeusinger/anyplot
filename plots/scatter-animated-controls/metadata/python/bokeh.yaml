@@ -1,218 +1,237 @@
 library: bokeh
+language: python
 specification_id: scatter-animated-controls
 created: '2025-12-31T13:53:51Z'
-updated: '2025-12-31T14:49:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620303226
+updated: '2026-05-15T11:08:00Z'
+generated_by: claude-haiku
+workflow_run: 25914375536
 issue: 3067
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-animated-controls/python/bokeh/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of Gapminder-style animated visualization with all required
-    interactive controls
-  - Text sizing is well-calibrated for the 4800x2700 canvas with clear hierarchy
-  - Color palette is distinctive and colorblind-friendly with good contrast
-  - Year watermark provides clear temporal context without obscuring data
-  - Smooth animation implementation using CustomJS with proper play/pause toggle
-  - Hover tooltips provide detailed information for each country
-  - PNG snapshot shows middle frame (2014) as representative static view
-  weaknesses:
-  - Legend glyph sizes (60px) appear small compared to actual bubble sizes in the
-    plot, making it harder to associate legend entries with data points
-  - Grid styling with dashed lines could be slightly more subtle (alpha 0.2 instead
-    of 0.3)
-  image_description: 'The plot displays a Gapminder-style animated scatter plot showing
-    country development data for the year 2014 (middle frame). The visualization features
-    15 data points (countries) plotted with GDP per Capita (USD) on the x-axis (ranging
-    0-80,000) and Life Expectancy (Years) on the y-axis (ranging 40-95). Points are
-    color-coded by region using a 5-color palette: blue (North), yellow (South), coral/salmon
-    (East), teal (West), and green (Central). Point sizes vary based on population,
-    with larger bubbles indicating higher populations. A large watermark "2014" appears
-    in light gray in the lower-right portion of the plot. The legend is positioned
-    in the top-left corner with clear region labels. The title follows the required
-    format: "scatter-animated-controls · bokeh · pyplots.ai". The background is a
-    subtle off-white (#fafafa) with dashed grid lines at low opacity.'
+  - Perfect palette compliance with Okabe-Ito ordering and brand green (#009E73) as
+    first series
+  - Excellent theme-adaptive chrome throughout - all text colors, grid colors, and
+    backgrounds properly adapt to light/dark while data colors remain identical
+  - 'Comprehensive interactivity fully implemented: play/pause button, timeline slider
+    with smooth 500ms animation, and hover tooltips with formatted metrics'
+  - 'Idiomatic bokeh usage showcasing mastery: ColumnDataSource pattern, CustomJS
+    callbacks for reactive updates, HoverTool with semantic formatting'
+  - Both light and dark renders equally readable with no legibility issues - no dark-on-dark
+    or light-on-light failures detected
+  - Clean, reproducible code with proper Selenium screenshot approach per bokeh.md
+    guidelines, deterministic data generation, and no fake UI elements
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "scatter-animated-controls · bokeh · anyplot.ai" in dark ink (#1A1A17), axis labels "GDP per Capita (USD)" and "Life Expectancy (Years)" clearly visible, tick labels in secondary ink (#4A4A44), legend with light elevated background (#FFFDF6)
+      Data: 15 scatter points in Okabe-Ito colors - #009E73 (green, North region dominant), #D55E00 (orange), #0072B2 (blue), #CC79A7 (pink), #E69F00 (yellow). Bubble sizes vary from small to large representing population. Grid lines subtle at 10% opacity.
+      Year label: "2004" in lower-right corner at light gray with 15% opacity
+      Legibility verdict: PASS - all text, labels, and data elements fully readable on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title and axis labels in light ink (#F0EFE8), tick labels in secondary light ink (#B8B7B0), legend with dark elevated background (#242420). All text readable against dark background.
+      Data: Identical Okabe-Ito colors to light render - data consistency confirmed. Bubble sizes maintain proportional visibility. Grid lines subtle and visible.
+      Year label: "2004" visible in lower-right corner at reduced opacity, appropriate for background element
+      Legibility verdict: PASS - all text readable in dark theme, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 48pt, axis labels at 36pt, tick labels at 28pt - all perfectly
-          readable at 4800x2700
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend well-positioned, year watermark
-          doesn't interfere
+        comment: All text clearly readable in both light and dark themes with proper
+          theme-adaptive colors
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter points well-separated with no colliding labels; tooltip layout
+          clean
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bubble sizes well-scaled with population encoding, alpha=0.7 appropriate
-          for 15 points, white outlines help distinguish overlapping bubbles
+        comment: All 15 data points clearly visible with good size variation; no obscurement
+          despite overlapping positions
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Five distinct, colorblind-friendly colors (blue, yellow, coral, teal,
-          green) with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, adequate margins, legend inside plot area
-          works well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "GDP per Capita (USD)" and "Life
-          Expectancy (Years)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe; adequate contrast between markers
+          and background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with generous margins (120px left/right, 100px
+          top/bottom); nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines and alpha=0.3, but legend glyph
-          circles are too small relative to the actual bubble sizes in the plot
+        comment: Title follows spec format; axes descriptive with units (USD, Years)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order maintained, correct backgrounds,
+          both themes correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Okabe-Ito palette used thoughtfully with clear visual hierarchy;
+          professional appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend styled with theme-adaptive colors, proper spacing; grid subtle
+          at 10% opacity
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Animation concept tells temporal story; year label provides context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct animated scatter plot with bubble sizing
+        comment: Correct scatter plot with size and color encodings
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=GDP, Y=Life Expectancy, Size=Population, Color=Region - all correctly
-          mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Play/pause button, timeline slider, year display, color coding, size
-          encoding all present
-      - id: SC-04
-        name: Data Range
+        comment: Play/pause, slider, year display, hover tooltips all implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full range of data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=GDP, Y=life expectancy, size=population, color=region correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 5 regions with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-animated-controls · bokeh · pyplots.ai"'
+        comment: Proper title format and legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in GDP, life expectancy, and population across regions;
-          good spread of data points demonstrating the Gapminder concept
+        comment: 15 entities across 20 years with multiple encodings
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Simulated country development data with plausible GDP ranges (5K-60K),
-          life expectancy (58-78 years), and regional groupings
+        comment: Gapminder-inspired data; plausible values; neutral framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for country-level metrics, though some GDP values
-          on the higher end
+        comment: All ranges sensible for domain (GDP, life expectancy, population)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code is mostly linear but has some complexity with data generation
-          loops; acceptable for animation requirements
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data
+        comment: No unnecessary abstractions; linear procedural flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used appropriately
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh 3.x API
+        comment: Appropriate complexity; idiomatic CustomJS; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format with both HTML and PNG
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, CustomJS callbacks for interactivity,
-          factor_cmap for categorical coloring, HoverTool. Could leverage more Bokeh-specific
-          animation features.
+        comment: ColumnDataSource, factor_cmap, CustomJS callbacks, Selenium screenshot
+          per bokeh.md
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Full interactive model: HoverTool, Slider, Button with JavaScript
+          integration'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending

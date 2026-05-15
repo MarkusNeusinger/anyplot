@@ -215,7 +215,7 @@ jobs:
 
       - name: Setup Chrome for Highcharts
         if: steps.inputs.outputs.library == 'highcharts'
-        uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded  # v2
+        uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd  # v2
         with:
           chrome-version: stable
 
@@ -337,7 +337,7 @@ jobs:
         id: claude
         continue-on-error: true
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
+        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
@@ -356,7 +356,7 @@ jobs:
         if: steps.claude.outcome == 'failure'
         id: claude_retry
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
+        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
