@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-animated-controls: Animated Scatter Plot with Play Controls
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-15
@@ -91,10 +91,10 @@ g = sns.relplot(
     y="Life Expectancy (years)",
     hue="Country",
     col="Year",
-    col_wrap=5,
+    col_wrap=3,
     palette=COLORS,
-    height=3.6,
-    aspect=1.0,
+    height=4.3,
+    aspect=1.05,
     s=150,
     alpha=0.8,
     edgecolor="face",
