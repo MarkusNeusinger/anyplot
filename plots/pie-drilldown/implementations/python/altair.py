@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-drilldown: Drilldown Pie Chart with Click Navigation
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-05-15
@@ -77,6 +77,14 @@ df["display_label"] = df.apply(
 
 selection = alt.selection_point(fields=["id"], empty=True, name="drill")
 
+breadcrumb_df = pd.DataFrame([{"breadcrumb": "All Departments"}])
+breadcrumb = (
+    alt.Chart(breadcrumb_df)
+    .mark_text(fontSize=16, align="center", color=INK_SOFT)
+    .encode(text="breadcrumb:N")
+    .properties(width=600, height=30)
+)
+
 root_view = df[df["parent"] == "root"]
 main_pie = (
     alt.Chart(root_view)
@@ -104,23 +112,17 @@ main_labels = (
 
 main_center_df = pd.DataFrame([{"line1": "All Departments", "line2": "$3.20B"}])
 main_center = alt.layer(
+    alt.Chart(main_center_df).mark_text(fontSize=22, fontWeight="bold", dy=-20, color=INK).encode(text="line1:N"),
     alt.Chart(main_center_df)
-    .mark_text(fontSize=22, fontWeight="bold", dy=-20)
-    .encode(text="line1:N", color=alt.value(INK)),
-    alt.Chart(main_center_df)
-    .mark_text(fontSize=32, fontWeight="bold", dy=15)
-    .encode(text="line2:N", color=alt.value(OKABE_ITO[0])),
+    .mark_text(fontSize=32, fontWeight="bold", dy=15, color=OKABE_ITO[0])
+    .encode(text="line2:N"),
 )
 
-main_view = alt.layer(main_pie, main_labels, main_center).properties(width=600, height=600)
+main_pie_chart = alt.layer(main_pie, main_labels, main_center).properties(width=600, height=600)
 
 drilldown_views = []
-for parent_id, parent_name in [
-    ("engineering", "Engineering"),
-    ("marketing", "Marketing"),
-    ("operations", "Operations"),
-    ("hr", "HR"),
-]:
+dept_configs = [("engineering", "Engineering"), ("marketing", "Marketing"), ("operations", "Operations"), ("hr", "HR")]
+for parent_id, parent_name in dept_configs:
     dept_view = df[df["parent"] == parent_id]
     if len(dept_view) == 0:
         continue
@@ -146,19 +148,19 @@ for parent_id, parent_name in [
 
     dept_labels = (
         alt.Chart(dept_view)
-        .mark_text(radius=350, fontSize=18, fontWeight="bold", align="center", baseline="middle")
-        .encode(theta=alt.Theta("value:Q", stack=True), text=alt.Text("display_label:N"), color=alt.value(INK))
+        .mark_text(radius=350, fontSize=18, fontWeight="bold", align="center", baseline="middle", color=INK)
+        .encode(theta=alt.Theta("value:Q", stack=True), text=alt.Text("display_label:N"))
         .transform_filter(alt.datum.parent == parent_id)
     )
 
     dept_center_df = pd.DataFrame([{"line1": f"← {parent_name}", "line2": f"${dept_total / 1e6:.2f}B"}])
     dept_center = alt.layer(
         alt.Chart(dept_center_df)
-        .mark_text(fontSize=20, fontWeight="bold", dy=-15)
-        .encode(text="line1:N", color=alt.value(INK_SOFT)),
+        .mark_text(fontSize=20, fontWeight="bold", dy=-15, color=INK_SOFT)
+        .encode(text="line1:N"),
         alt.Chart(dept_center_df)
-        .mark_text(fontSize=28, fontWeight="bold", dy=15)
-        .encode(text="line2:N", color=alt.value(color_map[parent_name])),
+        .mark_text(fontSize=28, fontWeight="bold", dy=15, color=color_map[parent_name])
+        .encode(text="line2:N"),
     )
 
     dept_combined = (
@@ -169,10 +171,10 @@ for parent_id, parent_name in [
     )
     drilldown_views.append(dept_combined)
 
-final_layer = alt.layer(main_view, *drilldown_views)
+final_layer = alt.layer(main_pie_chart, *drilldown_views)
 
 final_chart = (
-    alt.vconcat(final_layer, spacing=20)
+    alt.vconcat(breadcrumb, final_layer, spacing=20)
     .properties(
         title=alt.TitleParams(text="pie-drilldown · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
         background=PAGE_BG,
