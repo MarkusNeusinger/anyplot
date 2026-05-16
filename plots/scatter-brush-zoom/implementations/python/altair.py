@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-brush-zoom: Interactive Scatter Plot with Brush Selection and Zoom
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-16
+Quality: 94/100 | Updated: 2026-05-16
 """
 
 import os
