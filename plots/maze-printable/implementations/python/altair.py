@@ -1,13 +1,32 @@
-""" pyplots.ai
+"""anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-07
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-16
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+if "" in sys.path:
+    sys.path.remove("")
+if "." in sys.path:
+    sys.path.remove(".")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir in sys.path:
+    sys.path.remove(current_dir)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Maze parameters
 np.random.seed(42)
@@ -53,43 +72,45 @@ for row in range(maze.shape[0]):
 
 df_walls = pd.DataFrame(rectangles)
 
-# Create markers for Start and Goal
-# Position markers at the entrance/exit openings
+# Create markers for Start and Goal (positioned closer to entrances)
 markers = pd.DataFrame(
     [
-        {"x": -1.5, "y": 1.5, "label": "S"},  # Start marker outside left entrance
-        {"x": WIDTH * 2 + 2.5, "y": HEIGHT * 2 - 0.5, "label": "G"},  # Goal marker outside right exit
+        {"x": -0.5, "y": 1.5, "label": "S"},  # Start marker at entrance
+        {"x": WIDTH * 2 + 0.5, "y": HEIGHT * 2 - 0.5, "label": "G"},  # Goal marker at exit
     ]
 )
 
 # Create the maze walls using mark_rect
 maze_chart = (
     alt.Chart(df_walls)
-    .mark_rect(color="black")
+    .mark_rect(color=INK)
     .encode(x=alt.X("x:Q", axis=None), x2="x2:Q", y=alt.Y("y:Q", axis=None, scale=alt.Scale(reverse=True)), y2="y2:Q")
 )
 
 # Create start/goal markers
 marker_chart = (
     alt.Chart(markers)
-    .mark_text(fontSize=56, fontWeight="bold", color="#306998")
+    .mark_text(fontSize=56, fontWeight="bold", color=BRAND)
     .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None, scale=alt.Scale(reverse=True)), text="label:N")
 )
 
 # Create title text
-title_df = pd.DataFrame([{"x": (WIDTH * 2 + 1) / 2, "y": -3, "text": "maze-printable · altair · pyplots.ai"}])
+title_df = pd.DataFrame([{"x": (WIDTH * 2 + 1) / 2, "y": -3, "text": "maze-printable · altair · anyplot.ai"}])
 
 title_chart = (
     alt.Chart(title_df)
-    .mark_text(fontSize=32, fontWeight="bold", color="black")
+    .mark_text(fontSize=32, fontWeight="bold", color=INK)
     .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None, scale=alt.Scale(reverse=True)), text="text:N")
 )
 
 # Combine layers
 chart = (
-    alt.layer(maze_chart, marker_chart, title_chart).properties(width=1600, height=1600).configure_view(strokeWidth=0)
+    alt.layer(maze_chart, marker_chart, title_chart)
+    .properties(width=1600, height=1600, background=PAGE_BG)
+    .configure_view(strokeWidth=0)
 )
 
-# Save
-chart.save("plot.png", scale_factor=2.25)
-chart.save("plot.html")
+# Save with theme-suffixed filenames
+output_dir = os.path.dirname(os.path.abspath(__file__))
+chart.save(os.path.join(output_dir, f"plot-{THEME}.png"), scale_factor=3.0)
+chart.save(os.path.join(output_dir, f"plot-{THEME}.html"))
