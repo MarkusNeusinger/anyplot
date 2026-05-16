@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: candlestick-volume
 created: '2025-12-31T13:54:24Z'
-updated: '2026-05-16T05:24:06Z'
+updated: '2026-05-16T05:30:42Z'
 generated_by: claude-haiku
 workflow_run: 25953682621
 issue: 3068
@@ -15,32 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlesti
 quality_score: 88
 review:
   strengths:
-  - Perfect technical execution across all visual quality and spec compliance criteria
-  - Excellent theme adaptation with no legibility issues in either light or dark render
-  - 'Correct Okabe-Ito palette with proper color usage (#009E73 and #D55E00)'
-  - Professional code structure with clean KISS pattern and proper seeding
-  - Thoughtful use of plotly's specialized Candlestick trace and crosshair features
-  - Dual-pane synchronized layout clearly shows price-volume correlation
+  - 'Perfect visual quality: all text readable in both light and dark themes, proper
+    font sizing, no overlaps'
+  - 'Complete spec compliance: dual-pane layout with correct proportions, candlestick
+    and volume bars with matching colors, shared axes, crosshair cursor'
+  - 'Realistic data generation: stock trading scenario with random walk, volume correlated
+    to price movement, business day dates'
+  - 'Proper theme implementation: all chrome tokens (page_bg, ink, ink_soft, grid)
+    correctly applied for both light and dark modes'
+  - 'Clean code structure: simple, linear, reproducible with seed, proper plotly patterns
+    (make_subplots, go.Candlestick, go.Bar)'
+  - 'Idiomatic plotly usage: appropriate use of candlestick built-in, subplots with
+    shared axes, interactive crosshair cursor, dual HTML+PNG output'
   weaknesses:
-  - Design relies on standard plotly defaults + theme tokens rather than distinctive
-    aesthetic sophistication
-  - Visual refinement is good but minimal customization beyond theme implementation
-  - Data is displayed clearly but lacks visual storytelling - no visual hierarchy
-    or emphasis techniques to guide viewer toward insights
-  - Standard Candlestick implementation rather than creatively distinctive plotly
-    features
+  - 'Design Excellence is standard: implementation follows library defaults without
+    exceptional aesthetic choices—professional but not distinctive. Consider custom
+    refinements like trend lines or volume-weighted coloring on next iteration'
+  - 'Data storytelling relies on chart type: the candlestick-volume combination inherently
+    conveys price/volume correlation, but implementation adds no additional visual
+    emphasis or hierarchy'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), perfectly matching style guide
-      Chrome: Title "candlestick-volume · plotly · anyplot.ai" in dark text (28px); axis labels "Price ($)", "Volume", "Date" in dark text (22px); tick labels in soft gray-brown text (18px) - all fully readable against light background
-      Data: Green candlesticks (#009E73) for up days, orange candlesticks (#D55E00) for down days; corresponding green and orange volume bars; wicks clearly visible; grid lines subtle (10% opacity gray); crosshair spikes visible
-      Legibility verdict: PASS - all elements clearly visible and readable
+      Background: Warm off-white (#FAF8F1) as specified.
+      Chrome: Title "candlestick-volume · plotly · anyplot.ai" is centered, clear, and readable in dark ink. Axis labels "Price ($)" and "Volume" are clearly visible with units. Tick labels show dates (Jan 14, Jan 28, Feb 11, Feb 25, Mar 10, Mar 24) and price/volume values in soft ink color—all readable. Grid lines are subtle and light.
+      Data: Candlesticks use brand green (#009E73) for up days and vermillion (#D55E00) for down days (Okabe-Ito positions 1 and 2). Volume bars below use the same color scheme. Candlestick bodies and wicks are clearly distinguishable. The downtrend is visually apparent.
+      Layout: Dual-pane with ~75% price pane and ~25% volume pane, sharing x-axis. Proper spacing prevents overlap. Crosshair cursor guides (showspikes) visible on hover.
+      Legibility verdict: PASS — all text is clearly readable against the light background. No contrast issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), perfectly matching style guide
-      Chrome: Title in light cream text; axis labels in light gray-cream text (22px); tick labels in light text (18px) - all fully readable against dark background; NO dark-on-dark contrast failures
-      Data: Green candlesticks (#009E73) IDENTICAL to light render, orange candlesticks (#D55E00) IDENTICAL to light render; volume bars matching; grid lines subtle with light coloring (10% opacity); crosshair spikes in soft light color
-      Legibility verdict: PASS - all elements clearly visible and readable; data colors unchanged across themes confirming proper theme adaptation
+      Background: Warm near-black (#1A1A17) as specified.
+      Chrome: Title is rendered in light ink (#F0EFE8), centered and readable. Axis labels are light and clearly visible. Tick labels are rendered in soft light gray (#B8B7B0), readable against the dark background. No "dark-on-dark" failures. Grid lines are visible as subtle light-gray lines.
+      Data: Candlesticks show the exact same colors as the light render—green (#009E73) for up, orange (#D55E00) for down. Volume bars match. All data elements are visually distinguished from the dark background.
+      Layout: Same dual-pane structure as light render. Proper alignment and spacing maintained.
+      Legibility verdict: PASS — all text is clearly readable and properly themed for dark mode. No readability issues.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,49 +58,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes'
+        comment: All fonts explicitly set; readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; dates and values spaced appropriately
+        comment: Dual-pane layout prevents text collisions; clear spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candlesticks, wicks, and volume bars optimally sized; all elements
-          clearly distinguishable
+        comment: Candlesticks and volume bars clearly visible; proper line widths
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides excellent contrast and CVD safety
+        comment: Okabe-Ito palette (green/orange) CVD-safe and well-contrasted
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 75/25 pane split, generous margins, balanced whitespace
+        comment: 75/25 split well-balanced; generous margins; 60-70% canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Price ($), Volume, Date'
+        comment: Title format correct; labels descriptive with units (Price ($), Volume,
+          Date)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette correct; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); theme-adaptive chrome in both renders; data colors identical across
-          themes'
+        comment: 'First series #009E73; second #D55E00 (Okabe-Ito); backgrounds #FAF8F1/#1A1A17;
+          theme chrome correct'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -101,22 +106,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured professional design using Okabe-Ito and theme tokens;
-          standard best-practice setup rather than distinctive creative choices
+        comment: Professional implementation but standard defaults—no exceptional
+          design choices
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Good refinement with subtle grid and generous margins; minimal customization
-          beyond theme implementation
+        comment: Proper token usage and subtle grid; modest refinement beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but lacks visual hierarchy or emphasis techniques
-          to guide viewer toward insights
+        comment: Candlestick-volume inherently tells price/volume story, but no added
+          visual emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -126,20 +130,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with dual-pane layout
+        comment: Correct candlestick chart with volume dual-pane layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: OHLC candlesticks, volume bars, synchronized axes, date formatting,
-          color scheme, crosshair cursor all present
+        comment: OHLC, volume bars, shared axis, color scheme, proportions, crosshair,
+          grid—all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly assigned; all data visible
+        comment: 'X: dates; Y price: OHLC; Y volume: volume—correct mapping'
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -155,22 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bullish candles, bearish candles, intraday ranges, volume variation,
-          full trading pattern
+        comment: Shows up/down candlesticks, OHLC ranges, volume correlation—all aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price data ($120–$165), realistic 60-day period, plausible
-          volume, neutral scenario
+        comment: Stock trading scenario; random walk; volume correlation; business
+          dates; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually plausible; OHLC relationships correct; data logically
-          consistent
+        comment: Realistic price ($120-165), volume (0-6M), 60 trading days—all proportional
     code_quality:
       score: 10
       max: 10
@@ -180,33 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no unnecessary functions'
+        comment: 'Linear: imports→data→plot→save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42); deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports utilized; no dead code
+        comment: Only used imports (os, numpy, pandas, plotly)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; uses high-level plotly API
+        comment: Clean, Pythonic, no over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Correct output (plot-{THEME}.png, plot-{THEME}.html); current API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -214,16 +216,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of Candlestick trace, make_subplots, hovermode, and spike
-          crosshairs
+        comment: make_subplots, go.Candlestick, go.Bar, update_* patterns—plotly best
+          practices
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses plotly-specific features; standard best-practice for candlestick
-          plots rather than creatively distinctive
-  verdict: REJECTED
+        comment: Uses candlestick built-in, crosshair cursor, subplots—good library-specific
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -231,7 +233,6 @@ impl_tags:
   - hover-tooltips
   patterns:
   - data-generation
+  dataprep:
   - time-series
-  dataprep: []
-  styling:
-  - publication-ready
+  styling: []
