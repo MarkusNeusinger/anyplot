@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: seaborn | Python 3.13
-Quality: pending | Updated: 2026-05-16
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-16
 """
 
 import os
