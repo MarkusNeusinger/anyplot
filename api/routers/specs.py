@@ -196,12 +196,7 @@ async def get_spec(spec_id: str, db: AsyncSession = Depends(require_db)):
 
 
 @router.get("/specs/{spec_id}/{library}/code")
-async def get_impl_code(
-    spec_id: str,
-    library: str,
-    language: str = "python",
-    db: AsyncSession = Depends(require_db),
-):
+async def get_impl_code(spec_id: str, library: str, language: str = "python", db: AsyncSession = Depends(require_db)):
     """Get implementation code for a specific spec + library + language.
 
     Code field is deferred in the main `/specs/{id}` query so it must be

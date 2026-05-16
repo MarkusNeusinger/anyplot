@@ -45,9 +45,7 @@ async def get_stats(db: AsyncSession | None = Depends(optional_db)):
     Returns counts of specs, implementations (plots), libraries, and languages.
     """
     if db is None:
-        return StatsResponse(
-            specs=0, plots=0, libraries=len(LIBRARIES_METADATA), languages=len(LANGUAGES_METADATA)
-        )
+        return StatsResponse(specs=0, plots=0, libraries=len(LIBRARIES_METADATA), languages=len(LANGUAGES_METADATA))
 
     async def _fetch() -> StatsResponse:
         spec_repo = SpecRepository(db)
