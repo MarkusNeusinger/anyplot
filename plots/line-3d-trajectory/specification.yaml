@@ -6,7 +6,7 @@ title: 3D Line Plot for Trajectory Visualization
 
 # Specification tracking
 created: 2026-01-07T16:13:43Z
-updated: null
+updated: 2026-05-16T00:35:00Z
 issue: 3182
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - trajectory
   data_type:
     - numeric
     - continuous
