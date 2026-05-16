@@ -131,14 +131,16 @@ export function SpecPage() {
     return specData.implementations.find((impl) => impl.library_id === selectedLibrary) || null;
   }, [specData, selectedLibrary]);
 
-  // Prefetch code in background when impl detail page opens
+  // Prefetch code in background when impl detail page opens. Pass urlLanguage
+  // so R impls (ggplot2 today) hit the right DB row — the API defaults to
+  // python and would 404 on an R artifact otherwise.
   useEffect(() => {
     if (specId && selectedLibrary) {
-      fetchCode(specId, selectedLibrary);
+      fetchCode(specId, selectedLibrary, urlLanguage);
     }
-  }, [specId, selectedLibrary, fetchCode]);
+  }, [specId, selectedLibrary, urlLanguage, fetchCode]);
 
-  const currentCode = specId && selectedLibrary ? getCode(specId, selectedLibrary) : null;
+  const currentCode = specId && selectedLibrary ? getCode(specId, selectedLibrary, urlLanguage) : null;
 
   // Handle library switch (in detail mode)
   const handleLibrarySelect = useCallback(
@@ -213,7 +215,7 @@ export function SpecPage() {
   const handleCopyCode = useCallback(
     async (impl: Implementation) => {
       try {
-        const code = impl.code || (specId ? await fetchCode(specId, impl.library_id) : null);
+        const code = impl.code || (specId ? await fetchCode(specId, impl.library_id, impl.language) : null);
         if (!code) return;
         await navigator.clipboard.writeText(code);
         setCodeCopied(impl.library_id);

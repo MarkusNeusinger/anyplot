@@ -9,27 +9,31 @@ import { useState, useCallback, useRef } from 'react';
 import { API_URL } from '../constants';
 
 interface CodeCache {
-  [key: string]: string | null; // key: `${spec_id}:${library}`
+  [key: string]: string | null; // key: `${spec_id}:${language}:${library}`
 }
 
 interface UseCodeFetchReturn {
-  fetchCode: (specId: string, library: string) => Promise<string | null>;
-  getCode: (specId: string, library: string) => string | null;
+  fetchCode: (specId: string, library: string, language?: string) => Promise<string | null>;
+  getCode: (specId: string, library: string, language?: string) => string | null;
   isLoading: boolean;
 }
+
+// Default language matches the API's own default so old call sites — and the
+// majority of (Python) impls — keep producing the same URL and cache key.
+const cacheKey = (specId: string, library: string, language: string) =>
+  `${specId}:${language}:${library}`;
 
 export function useCodeFetch(): UseCodeFetchReturn {
   const [isLoading, setIsLoading] = useState(false);
   const cacheRef = useRef<CodeCache>({});
   const pendingRef = useRef<Map<string, Promise<string | null>>>(new Map());
 
-  const getCode = useCallback((specId: string, library: string): string | null => {
-    const key = `${specId}:${library}`;
-    return cacheRef.current[key] ?? null;
+  const getCode = useCallback((specId: string, library: string, language: string = 'python'): string | null => {
+    return cacheRef.current[cacheKey(specId, library, language)] ?? null;
   }, []);
 
-  const fetchCode = useCallback(async (specId: string, library: string): Promise<string | null> => {
-    const key = `${specId}:${library}`;
+  const fetchCode = useCallback(async (specId: string, library: string, language: string = 'python'): Promise<string | null> => {
+    const key = cacheKey(specId, library, language);
 
     // Check cache first
     if (key in cacheRef.current) {
@@ -42,11 +46,16 @@ export function useCodeFetch(): UseCodeFetchReturn {
       return pending;
     }
 
-    // Fetch from lightweight code endpoint
+    // Only append the language query param when it diverges from the API
+    // default — keeps URLs for the common Python case unchanged.
+    const url = language === 'python'
+      ? `${API_URL}/specs/${specId}/${library}/code`
+      : `${API_URL}/specs/${specId}/${library}/code?language=${encodeURIComponent(language)}`;
+
     setIsLoading(true);
     const promise = (async () => {
       try {
-        const response = await fetch(`${API_URL}/specs/${specId}/${library}/code`);
+        const response = await fetch(url);
         if (!response.ok) {
           cacheRef.current[key] = null;
           return null;

@@ -117,14 +117,14 @@ async def _build_spec_detail(db: AsyncSession, spec_id: str) -> SpecDetailRespon
     )
 
 
-async def _build_impl_code(db: AsyncSession, spec_id: str, library: str) -> dict:
+async def _build_impl_code(db: AsyncSession, spec_id: str, library: str, language: str = "python") -> dict:
     repo = ImplRepository(db)
-    impl = await repo.get_code(spec_id, library)
+    impl = await repo.get_code(spec_id, library, language)
 
     if not impl or not impl.code:
-        raise_not_found("Implementation code", f"{spec_id}/{library}")
+        raise_not_found("Implementation code", f"{spec_id}/{language}/{library}")
 
-    return {"spec_id": spec_id, "library": library, "code": strip_noqa_comments(impl.code)}
+    return {"spec_id": spec_id, "library": library, "language": language, "code": strip_noqa_comments(impl.code)}
 
 
 async def _build_spec_images(db: AsyncSession, spec_id: str) -> dict:
@@ -196,18 +196,25 @@ async def get_spec(spec_id: str, db: AsyncSession = Depends(require_db)):
 
 
 @router.get("/specs/{spec_id}/{library}/code")
-async def get_impl_code(spec_id: str, library: str, db: AsyncSession = Depends(require_db)):
-    """Get implementation code for a specific spec + library (code field deferred in main query)."""
+async def get_impl_code(spec_id: str, library: str, language: str = "python", db: AsyncSession = Depends(require_db)):
+    """Get implementation code for a specific spec + library + language.
+
+    Code field is deferred in the main `/specs/{id}` query so it must be
+    fetched here on-demand. `language` disambiguates when the same library_id
+    could exist for multiple languages (today only ggplot2 is R; everything
+    else is Python). Defaults to python for backwards compat with older
+    clients that don't send the param.
+    """
 
     async def _fetch() -> dict:
-        return await _build_impl_code(db, spec_id, library)
+        return await _build_impl_code(db, spec_id, library, language)
 
     async def _refresh() -> dict:
         async with get_db_context() as fresh_db:
-            return await _build_impl_code(fresh_db, spec_id, library)
+            return await _build_impl_code(fresh_db, spec_id, library, language)
 
     return await get_or_set_cache(
-        cache_key("impl_code", spec_id, library),
+        cache_key("impl_code", spec_id, language, library),
         _fetch,
         refresh_after=settings.cache_refresh_after,
         refresh_factory=_refresh,

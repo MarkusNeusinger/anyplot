@@ -1,151 +1,173 @@
 library: letsplot
+language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:34:36Z'
-updated: '2026-01-07T16:44:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788395814
+updated: '2026-05-16T22:45:57Z'
+generated_by: claude-haiku
+workflow_run: 25974733360
 issue: 3188
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/letsplot/plot.html
-quality_score: 100
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and line elements
-  - Perfect implementation of the spec with all required features (historical line,
-    forecast line, vertical marker, nested confidence bands)
-  - Growing uncertainty over forecast horizon is realistic and well-visualized
-  - Good use of lets-plot ggplot grammar with multiple geom layers
-  - Informative caption explaining the confidence bands
-  - Clean color scheme distinguishing historical (blue) from forecast (red/orange)
-  weaknesses: []
-  image_description: 'The plot displays a time series visualization of product demand
-    with historical data and forecast projection. The historical period (36 months
-    from January 2023 to December 2025) is shown as a solid blue line with clear trend
-    and seasonal patterns. The forecast period (12 months from January 2026 to December
-    2026) is displayed as a red line. A vertical dotted gray line clearly marks the
-    transition point between historical and forecast data at January 2026. Two nested
-    confidence bands surround the forecast: a darker orange band representing the
-    80% confidence interval and a lighter yellow band for the 95% confidence interval.
-    The uncertainty appropriately widens as the forecast horizon extends. The title
-    "timeseries-forecast-uncertainty · letsplot · pyplots.ai" appears at the top.
-    The Y-axis is labeled "Product Demand (Units)" ranging from 90 to 210, and the
-    X-axis shows "Date" with monthly labels. A legend on the right identifies "Historical"
-    (blue) and "Forecast" (red) series. A caption at the bottom explains the shaded
-    bands.'
+  - Proper theme-adaptive implementation with correct chrome flipping in both light
+    and dark renders
+  - Accurate Okabe-Ito palette usage with correct brand color (#009E73) for historical
+    series
+  - Effective nested confidence bands with well-chosen alpha transparency (0.35 for
+    80%, 0.2 for 95%)
+  - Clean, reproducible code with realistic synthetic data and proper seeding
+  - All spec requirements met with visual clarity and correct styling
+  weaknesses:
+  - 'Generic design defaults: could benefit from explicit spine removal (top/right)
+    per style guide'
+  - Grid styling uses defaults; could be refined to y-axis-only with lower opacity
+  - Legend frame styling and positioning could be more refined for stronger visual
+    hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct color, not pure white
+      Chrome: Title, axis labels, tick labels all rendered in dark ink (#1A1A17) - fully readable against light background
+      Data: Green solid line (#009E73) for historical, orange dashed line (#E69F00) for forecast, two nested orange bands (alpha 0.35 and 0.2)
+      Elements: Vertical dotted line at forecast start, legend on right identifying series
+      Legibility verdict: PASS - All text clear and readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct color, not pure black
+      Chrome: Title, axis labels, tick labels rendered in light tones (#F0EFE8 for title, #B8B7B0 for ticks) - fully readable against dark background
+      Data: Green (#009E73) and orange (#E69F00) - identical to light render, confirming chrome-only adaptation
+      Elements: Vertical dotted line clear, legend readable
+      Legibility verdict: PASS - All text clear and readable, no dark-on-dark failures, axis text has proper contrast
   criteria_checklist:
     visual_quality:
-      score: 40
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks all clearly readable at appropriate
-          font sizes
+        comment: All text readable in both themes; font sizes appropriately scaled
+          for 4800×2700 canvas
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: Date labels well-spaced, legend positioned without collision
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are thick enough to be clearly visible, bands have appropriate
-          alpha
+        comment: Lines sized appropriately (1.5pt), bands transparent enough to see
+          through
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red/orange/yellow scheme is colorblind-safe
+        comment: Okabe-Ito palette is colorblind-safe; green/orange have adequate
+          contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Good proportions, nothing cut off, generous margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Product Demand (Units) includes units, Date is descriptive
+        comment: Descriptive labels with units, correct title format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid from minimal theme, legend well positioned on right
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds correct
+          for both themes'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Follows style guide defaults; professional but generic styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Standard letsplot defaults; minimal spine customization or grid refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Nested bands create visual hierarchy; distinct line styles and vertical
+          marker guide viewer effectively
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series with forecast and confidence bands
+        comment: Correct time series with confidence bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Historical line, forecast line, vertical marker, 80% CI, 95% CI,
-          legend all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All elements present: historical line, forecast, bands, marker,
+          legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date axis spans both periods, stock price axis shows all values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Historical and Forecast series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Exact format: timeseries-forecast-uncertainty · letsplot · pyplots.ai'
+        comment: Title correct format, legend identifies series
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, and growing uncertainty over forecast horizon
+        comment: 'Shows all aspects: historical, forecast, both CIs, horizon marker'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product demand forecasting is a realistic business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 90-210 units are sensible for product demand
+        comment: Stock price scenario is neutral and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values plausible for stock price; uncertainty grows with horizon
     code_quality:
       score: 10
       max: 10
@@ -155,44 +177,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure with no functions/classes
+        comment: Simple, straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible data
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, pandas, lets_plot) are used
+        comment: Only imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of ggplot grammar: geom_ribbon for bands, geom_line
-          for series, geom_vline for marker, scale_color_manual for custom colors,
-          theme_minimal with custom element_text, labs with caption, ggsave with scale
-          parameter'
+        comment: ggplot-style API correctly used; proper aes() and manual scales
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses letsplot-specific ggsize() and ggsave(scale=); LetsPlot.setup_html();
+          not extraordinary
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -201,7 +227,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - explicit-figure
+  dataprep:
   - time-series
-  dataprep: []
   styling:
   - alpha-blending

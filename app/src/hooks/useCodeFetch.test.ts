@@ -159,5 +159,44 @@ describe('useCodeFetch', () => {
       expect(snsResult).toContain('seaborn');
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     });
+
+    it('appends ?language= for non-python languages', async () => {
+      const ggCode = 'library(ggplot2)';
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ code: ggCode }),
+      });
+
+      const { result } = renderHook(() => useCodeFetch());
+      let code: string | null = null;
+      await act(async () => {
+        code = await result.current.fetchCode('scatter-basic', 'ggplot2', 'r');
+      });
+
+      expect(code).toBe(ggCode);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/specs/scatter-basic/ggplot2/code?language=r')
+      );
+    });
+
+    it('caches python and r impls under separate keys for the same library_id', async () => {
+      const pyCode = 'import matplotlib';
+      const rCode = 'library(matplotlib)';
+      globalThis.fetch = vi.fn()
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ code: pyCode }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ code: rCode }) });
+
+      const { result } = renderHook(() => useCodeFetch());
+      let py: string | null = null;
+      let r: string | null = null;
+      await act(async () => {
+        py = await result.current.fetchCode('hypothetical', 'matplotlib');
+        r = await result.current.fetchCode('hypothetical', 'matplotlib', 'r');
+      });
+
+      expect(py).toBe(pyCode);
+      expect(r).toBe(rCode);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    });
   });
 });
