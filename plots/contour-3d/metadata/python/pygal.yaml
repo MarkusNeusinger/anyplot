@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:48:50Z'
-updated: '2026-05-16T12:51:39Z'
+updated: '2026-05-16T18:30:54Z'
 generated_by: claude-haiku
 workflow_run: 25962238195
 issue: 3230
@@ -15,111 +15,119 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3
 quality_score: 40
 review:
   strengths:
-  - 'Theme adaptation: proper light/dark token implementation with correct backgrounds
-    (#FAF8F1 light, #1A1A17 dark) and text colors'
-  - 'Code quality: clean, reproducible with deterministic seed, minimal imports, proper
-    Style object usage'
-  - 'Color compliance: Okabe-Ito palette correctly applied with brand green #009E73
-    as first color'
-  - 'Visual readability: text legible in both themes with no contrast failures or
-    dark-on-dark issues'
+  - 'Correct theme-adaptive chrome: backgrounds (#FAF8F1 light / #1A1A17 dark), text
+    tokens, and Style object applied properly'
+  - Clean KISS code structure with seed set and only used imports
+  - Title format correct ('contour-3d · pygal · anyplot.ai'), outputs all required
+    files (PNG, SVG, HTML)
+  - Gaussian function data is mathematically sound and grid dimensions (45x45) match
+    spec guidance
   weaknesses:
-  - 'Library-specification mismatch: spec requires 3D contour plot with surface geometry;
-    pygal is 2D-only and cannot render 3D'
-  - 'Plot type fundamental mismatch: implementation is 2D scatter plot with level
-    coloring, not 3D contour visualization'
-  - 'Missing 3D features: no surface geometry, no contour bands on 3D surface, no
-    proper isolines'
-  - 'Design minimalism: no visual hierarchy, focal points, or distinctive visual choices
-    beyond palette compliance'
+  - NOT a 3D contour plot — pygal.XY scatter is a fundamentally wrong chart type for
+    a 3D contour spec; SC-01=0 caps score at 40
+  - Connecting lines in pygal.XY create a chaotic horizontal-line web across 14,000+
+    points — severe overlap makes contour structure impossible to read
+  - Uses categorical Okabe-Ito palette for continuous Z data — spec and style guide
+    require a perceptually-uniform continuous colormap (viridis/cividis) for contour
+    levels
+  - No contour lines, no 3D surface geometry, no colorbar — all key spec features
+    missing
+  - Visualization fails to communicate any contour structure or surface topology;
+    viewer cannot identify isolines or the Gaussian shape
+  - Generic pygal defaults with no design sophistication or visual hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct color and tone
-      Chrome: Title "contour-3d · pygal · anyplot.ai" is prominent and dark; X/Y axis labels clearly visible; tick labels readable
-      Data: 45×45 grid of colored dots binned into 7 levels using Okabe-Ito palette (green, orange, blue, purple, orange, sky-blue, yellow); first level correctly uses #009E73
-      Legibility verdict: PASS - all text readable, good contrast, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "contour-3d · pygal · anyplot.ai" visible at top. X/Y axis labels ("X", "Y") present. Tick labels (-3 to 3) readable in dark ink against light background. Small legend in top-left with 7 colored entries (Level 1–7). All text is readable against the light background. Legibility verdict: PASS
+      Data: Dense 45x45 grid of colored scatter points connected by horizontal line segments within each series. Seven Okabe-Ito color bands (#009E73 green through #F0E442 yellow). The center of the plot shows color mixing from the Gaussian peak, but the overall visualization is an extremely chaotic web of connected dots — not a contour plot. Individual band boundaries are indistinguishable.
+      Legibility verdict: PASS (text is readable, but visualization is fundamentally unreadable as a contour representation)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct color and tone
-      Chrome: Title, axis labels, tick labels all in light text with excellent visibility against dark surface; no dark-on-dark failures
-      Data: Identical colors to light render (Okabe-Ito colors preserved); proper theme-only chrome inversion
-      Legibility verdict: PASS - all text readable, no dark-on-dark issues, consistent data colors between themes
-
-    Both renders pass legibility checks. However, both fail the specification requirement for a 3D contour plot - they show a 2D scatter plot with level coloring instead.
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title, axis labels, and tick labels rendered in light ink (#F0EFE8). All text is readable against the dark background. No dark-on-dark failures detected. Legend in top-left with same 7 colored entries.
+      Data: Colors are identical to the light render (Okabe-Ito positions 1–7 unchanged) — only chrome flipped. Same chaotic horizontal-line-web pattern.
+      Legibility verdict: PASS (text readable, but same fundamental visualization failure as light render)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 15
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All text clearly readable in both themes with proper font sizing
-          for canvas
+        comment: Font sizes explicitly set (title=28, label=22, major_label=18, legend=16).
+          All text readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 1
         max: 6
-        passed: true
-        comment: No colliding text or elements; clear visual separation
+        passed: false
+        comment: Severe overlap — 14,000+ connected points create chaotic horizontal-line
+          web. Contour band boundaries completely indistinguishable.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Dots visible but numerous; visual density at full resolution
+        passed: false
+        comment: Dots are visible but connecting lines cause a chaotic web. Contour
+          structure not discernible. No contour lines or surface geometry.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito palette ensures colorblind safety
+        passed: false
+        comment: Okabe-Ito is CVD-safe, but dense overlap makes color discrimination
+          nearly impossible. Yellow (Level 7) has low contrast on light background.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions; nothing cut off; appropriate margins
+        comment: 4800x2700 used well. Legend is small but positioned. Margins reasonable.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title format correct; axes clearly labeled
+        passed: false
+        comment: Title correct format. X/Y labels present but generic (no units or
+          descriptive context for the mathematical function).
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Correct backgrounds (#FAF8F1 light, #1A1A17 dark); first color #009E73;
-          proper theme adaptation'
+        passed: false
+        comment: 'Backgrounds correct, text theme-adaptive, first series #009E73.
+          BUT categorical Okabe-Ito used for continuous Z data — spec and style guide
+          require viridis/cividis for continuous contour levels.'
     design_excellence:
-      score: 7
+      score: 5
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 2
         max: 8
         passed: false
-        comment: Uses correct palette but no distinctive visual choices; straightforward
-          level binning
+        comment: Generic pygal XY scatter with chaotic visual output. No aesthetic
+          sophistication. Visualization is visually broken.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Default styling; minimal customization beyond theme tokens
+        comment: Grid disabled (show_x/y_guides=False) is a positive. Otherwise library
+          defaults with dense chaotic scatter.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 1
         max: 6
         passed: false
-        comment: Displays levels but no clear visual hierarchy or focal point
+        comment: No visual hierarchy. The chaotic point cloud does not guide the viewer
+          to any insight about the Gaussian surface or contour structure.
     spec_compliance:
-      score: 7
+      score: 5
       max: 15
       items:
       - id: SC-01
@@ -127,51 +135,57 @@ review:
         score: 0
         max: 5
         passed: false
-        comment: 'CRITICAL: Not a 3D contour plot. Spec requires 3D visualization
-          preserving surface geometry. This is 2D scatter with level coloring. Pygal
-          cannot render 3D surfaces.'
+        comment: NOT a 3D contour plot. The implementation is a 2D XY scatter grouped
+          by Z-value bands. No 3D projection, no surface geometry, no iso-lines.
       - id: SC-02
         name: Required Features
         score: 1
         max: 4
         passed: false
-        comment: Shows contour levels via binning but lacks 3D surface geometry, proper
-          contour lines on surface, and projections
+        comment: 'Only Z-banding attempted. Missing: contour lines, 3D surface/perspective,
+          colorbar, base-plane projection.'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: X/Y values correctly mapped; Z-values binned and color-coded appropriately
+        comment: X and Y correctly mapped to axes. Z encoded as color bands — a reasonable
+          approximation for a 2D library.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title follows format; legend labels clear
+        comment: Title format correct ('contour-3d · pygal · anyplot.ai'). Legend
+          labels 'Level 1–7' present but lack value ranges; a colorbar with numeric
+          scale would be better.
     data_quality:
-      score: 11
+      score: 9
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Shows contour levels but misses 3D surface concept and elevation
-          bands
+        comment: Only Z-level groupings shown. Surface geometry, contour line structure,
+          gradient transitions not visible. Misses the core visualization features
+          of a contour plot.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Mathematically generated (Gaussian + sinusoid); physically plausible
+        comment: Gaussian function is a plausible mathematical surface. Labels 'Level
+          1–7' are somewhat abstract — could be more descriptive (e.g., function value
+          ranges).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid -3 to 3; Z-range ~0 to 1.3; sensible values
+        comment: 45x45 grid within spec range (30–50). X/Y range [-3, 3] appropriate
+          for Gaussian. Z values mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -181,31 +195,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; clean one-shot generation
+        comment: 'Flat script: imports → data → chart config → data add → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); deterministic output
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, os, sys; all used
+        comment: Only used imports (os, sys, numpy, pygal, Style).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code; proper theme token handling
+        comment: Clean and Pythonic. List comprehension for points. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-light/dark.png and .html
+        comment: Saves plot-{THEME}.png, .svg, and .html. Correct naming convention.
     library_mastery:
       score: 4
       max: 10
@@ -215,19 +229,22 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: XY chart API used correctly; proper Style object setup
+        comment: Uses pygal.XY with Style object correctly. Idiomatic pygal patterns.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No use of pygal-specific interactive features or advanced styling
+        comment: Generates HTML interactive output (pygal's distinctive feature),
+          but otherwise generic usage with basic chart.add() calls.
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - binning
   styling: []
