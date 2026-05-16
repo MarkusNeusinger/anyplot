@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: maze-printable
 created: '2026-01-07T20:21:47Z'
-updated: '2026-05-16T14:51:35Z'
+updated: '2026-05-16T14:57:16Z'
 generated_by: claude-haiku
 workflow_run: 25964755764
 issue: 3232
@@ -12,117 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 69
 review:
   strengths:
-  - 'Perfect spec compliance: DFS maze generation with guaranteed single solution,
-    START/GOAL markers with arrows at entrance/exit'
-  - 'Flawless theme-adaptive rendering: backgrounds (#FAF8F1 light, #1A1A17 dark)
-    and chrome correctly adapt with no contrast issues in either theme'
-  - 'Correct palette compliance: brand green (#009E73) properly used for emphasis,
-    Okabe-Ito approved color maintains visibility in both themes'
-  - 'Clean printable design: minimalist aesthetic is intentional and appropriate for
-    the use case of educational puzzle sheets'
-  - 'High code quality: simple, readable, reproducible implementation with proper
-    seeding and no unnecessary complexity'
+  - Perfect light theme with excellent black-on-white contrast suitable for printing
+  - Correct maze generation algorithm guarantees exactly one solution path
+  - Clear START/GOAL markers with directional arrows guide the solver effectively
+  - Appropriate square canvas format (3600x3600) for symmetric maze visualization
+  - Reproducible implementation with deterministic seed-based generation
+  - Clean, readable code structure without unnecessary complexity
   weaknesses:
-  - 'Design Excellence is minimal: the visual treatment, while appropriate for printability,
-    doesn''t include refinements like custom arrow styling or enhanced typography'
-  - 'Limited use of plotly-distinctive features: implementation relies on basic shapes
-    and annotations rather than exploring plotly''s more advanced capabilities'
+  - 'Dark theme readability failure: passages are dark/black on dark background (#1A1A17),
+    making maze structure invisible — dark-on-dark contrast failure violates VQ-03
+    and VQ-07'
+  - 'Theme inversion strategy is flawed: inverting wall colors to INK_SOFT in dark
+    mode creates the unreadable condition rather than solving it'
+  - 'Limited design sophistication: generic Plotly rectangle shapes with minimal visual
+    refinement or customization'
+  - 'Fundamental design conflict: printable maze concept is inherently light-theme
+    — dark mode translation breaks the core specification intent'
+  - 'Weak library mastery: basic Plotly usage without leveraging distinctive features
+    or elegant geometry handling'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1, RGB 250, 248, 241) — matches spec exactly
-      Chrome: Title "maze-printable · plotly · anyplot.ai" in dark text (#1A1A17) at top center, clearly visible and readable
-      Data: Black maze walls (#1A1A17) on light background creating sharp contrast; START and GOAL labels in brand green (#009E73) with arrows pointing to entrance/exit
-      Legibility verdict: PASS — all text readable, theme colors correct, high contrast between walls and background
+      Background: Warm off-white (#FAF8F1), appropriate for printable design
+      Chrome: Title "maze-printable · plotly · anyplot.ai" in black text (#1A1A17) is clearly readable. START label with green downward arrow is prominently placed above maze entrance. GOAL label with green upward arrow is prominently placed below maze exit. All text is bold and uses brand green (#009E73) for markers.
+      Data: Maze walls are pure black on white background with excellent contrast. Passages are white/empty. The 25x25 grid structure is crisp and clear. Walls are thick enough for pen/pencil marking.
+      Legibility verdict: PASS — Light theme is excellent. Black-white contrast is optimal for printing and puzzle solving.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17, RGB 26, 26, 23) — matches spec exactly
-      Chrome: Title in light text (#B8B7B0) clearly visible against dark background; axis grid hidden as intended
-      Data: Light maze walls (#B8B7B0) provide good contrast against dark background; START and GOAL labels in identical brand green (#009E73 — data colors unchanged between themes) with arrows clearly visible
-      Legibility verdict: PASS — no dark-on-dark issues, colors correctly theme-adapted, brand green maintains visibility and consistency across both renders
+      Background: Warm near-black (#1A1A17), theme-correct
+      Chrome: Title is readable in light text. START and GOAL labels remain visible with green markers.
+      Data: CRITICAL ISSUE — Maze walls are rendered in INK_SOFT light gray (#B8B7B0), and passages appear dark/black. The passages blend into the dark background (#1A1A17), making the maze structure invisible. The grid structure cannot be clearly distinguished.
+      Legibility verdict: FAIL — Dark render has dark-on-dark failure. The passages are dark/near-black on a dark background, creating insufficient contrast. The puzzle is unsolvable in dark mode. The theme-inversion strategy (light walls in dark mode) inverts the visual relationship but fails to maintain readability because the background and passages become indistinguishable.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: Title font 36px, colors adapted per theme (INK in light, INK_SOFT
-          in dark), brand green maintains legibility in both renders
+        passed: false
+        comment: 'Light theme: title and labels readable. Dark theme: title readable
+          but maze structure unreadable due to dark passages on dark background'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: START positioned above maze, GOAL below, adequate margins prevent
-          overlap
+        comment: 'START/GOAL annotations positioned clearly without overlapping maze.
+          Minor: dark theme readability reduces visual separation'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Maze walls clearly visible, START/GOAL labels with arrows in 32px
-          font, good contrast in both themes
+        passed: false
+        comment: 'Light: maze walls and passages perfectly visible. Dark: passages
+          invisible due to dark-on-dark contrast failure'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) is Okabe-Ito position 1, CVD-safe, no red-green
-          contrast as sole signal
+        comment: Okabe-Ito brand green (#009E73) used appropriately. Adequate contrast
+          in light theme
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 appropriate for symmetric maze, margins l:60 r:60
-          t:100 b:60, nothing cut off
+        comment: Square format (3600x3600) appropriate for maze. Margins adequate.
+          Nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'maze-printable · plotly · anyplot.ai' follows exact format,
-          no axes needed
+        comment: Title clear and properly formatted. No axes needed for maze
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Backgrounds #FAF8F1 light/#1A1A17 dark exact match, brand green
-          #009E73 for annotations, both renders theme-correct'
+        passed: false
+        comment: 'Background colors technically correct (#FAF8F1 light, #1A1A17 dark).
+          However, dark theme fails theme-readability: passages dark on dark background
+          creates unreadable maze'
     design_excellence:
-      score: 11
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Functional minimalist design appropriate for printable puzzle, clean
-          algorithm implementation, intentionally utilitarian
+        passed: false
+        comment: Generic Plotly rectangles with no custom styling. Theme adaptation
+          strategy is simplistic and fails in dark mode
       - id: DE-02
         name: Visual Refinement
+        score: 1
+        max: 6
+        passed: false
+        comment: Minimal customization beyond basic shapes and colors. No special
+          visual polish
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Basic rectangle shapes, no custom styling, appropriate for use case
-          but limited refinement
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: START/GOAL markers with arrows guide viewer, clear visual hierarchy
-          for puzzle entry/exit points
+        comment: START/GOAL markers provide some hierarchy, but dark theme fails to
+          tell the story — maze structure invisible
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -130,53 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct maze puzzle visualization with DFS generation algorithm
+        comment: Correct printable maze puzzle visualization using DFS algorithm
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Maze generation, START/GOAL markers with arrows, seed for reproducibility,
-          black-white printable design
+        passed: false
+        comment: START/GOAL positions marked with arrows. 25x25 grid within spec range.
+          Black-white design works in light theme but fails in dark theme. Print-friendly
+          in light, not in dark
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates properly mapped, maze grid fully visible, no clipping
+        comment: Maze correctly generated. Grid dimensions appropriate. Reproducible
+          with seed
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format exact, no legend needed for single-element plot
+        comment: Title format correct. No legend needed
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 25x25 grid (within 15-40 recommendation), guaranteed single solution
-          path, marked entrance/exit
+        comment: All maze features present in light theme. Dark theme degrades readability
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Educational puzzle use case is real-world applicable, difficulty
-          level appropriate
+        comment: Appropriate for puzzle solving. Suitable for printable activity sheets
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3600x3600 suitable for printing, cell/wall thickness appropriate
-          for pen marking
+        comment: Grid size reasonable. Wall thickness consistent. Canvas size appropriate
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -184,58 +186,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear straightforward code, well-organized
+        comment: No functions or classes. Clear, straightforward implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures consistent output
+        comment: Seed set to 42. DFS algorithm is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly imported - all used
+        comment: Only necessary imports. No unused code
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI, no unnecessary complexity, clear and readable
+        passed: false
+        comment: Clear maze generation logic. However, theme adaptation strategy is
+          flawed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html using current API
+        comment: 'Correct file naming: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Uses go.Figure(), add_annotation(), update_layout() idiomatically,
-          theme-token approach is standard
+        comment: Uses go.Figure() and shapes parameter idiomatically. Could use more
+          sophisticated geometry handling
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Basic annotation and shape usage, doesn't leverage advanced plotly
-          features like custom shape objects
-  verdict: APPROVED
+        comment: Basic use of annotations for markers. Doesn't leverage distinctive
+          Plotly features for elegance
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling:
-  - minimal-chrome
+  styling: []
