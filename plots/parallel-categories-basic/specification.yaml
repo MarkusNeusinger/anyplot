@@ -6,7 +6,7 @@ title: Basic Parallel Categories Plot
 
 # Specification tracking
 created: 2025-12-29T23:55:26Z
-updated: null
+updated: 2026-05-13T16:54:10Z
 issue: 2501
 suggested: MarkusNeusinger
 
@@ -15,11 +15,10 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - parallel-categories
-    - flow
-    - categorical
   data_type:
     - categorical
     - frequency
+    - multivariate
   domain:
     - general
     - business
@@ -27,4 +26,4 @@ tags:
   features:
     - basic
     - proportional
-    - multi-dimensional
+    - flow
