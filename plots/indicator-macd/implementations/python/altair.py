@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-16
+Quality: 89/100 | Updated: 2026-05-16
 """
 
 import importlib.util
