@@ -6,7 +6,7 @@ title: RSI Technical Indicator Chart
 
 # Specification tracking
 created: 2026-01-07T20:05:43Z
-updated: null
+updated: 2026-05-16T16:25:14Z
 issue: 3229
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - indicator
   data_type:
     - timeseries
     - numeric
