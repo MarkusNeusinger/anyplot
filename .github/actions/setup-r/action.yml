@@ -49,6 +49,12 @@ runs:
       # reproducible without needing a fully-populated lockfile. The `noble` URL
       # matches the current ubuntu-latest runner image — update if GitHub moves
       # the runner OS, and bump the snapshot date deliberately.
+      #
+      # dependencies is restricted to required types (Depends/Imports/LinkingTo);
+      # the default `NA` is identical but explicit is clearer. `TRUE` would also
+      # pull in Suggests (sf, Hmisc, maps, quantreg, ...) — none of which the
+      # implementations need, and several of which require apt packages we
+      # don't install.
       shell: bash
       run: |
         Rscript -e '
@@ -60,7 +66,7 @@ runs:
             c("ggplot2", "ragg", "tidyr", "dplyr", "viridis",
               "palmerpenguins", "gapminder", "tibble", "scales",
               "systemfonts", "textshaping"),
-            dependencies = TRUE
+            dependencies = c("Depends", "Imports", "LinkingTo")
           )
         '
 
