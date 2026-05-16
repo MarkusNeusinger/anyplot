@@ -461,7 +461,11 @@ jobs:
           # the right language label, so we never mislabel R as "Python".
           PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
           if [ "$LANGUAGE" = "r" ]; then
-            LANGUAGE_VERSION=$(Rscript -e 'cat(as.character(getRversion()))' 2>/dev/null || echo "unknown")
+            # renv's "out-of-sync" notice prints on stdout from .Rprofile, so 2>/dev/null
+            # leaves it in the captured value. RENV_CONFIG_STARTUP_QUIET silences it; the
+            # tail -n1 belt keeps a single clean line if anything else ever leaks in.
+            LANGUAGE_VERSION=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e 'cat(as.character(getRversion()))' 2>/dev/null | tail -n1)
+            LANGUAGE_VERSION=${LANGUAGE_VERSION:-unknown}
           else
             LANGUAGE_VERSION="$PYTHON_VERSION"
           fi
@@ -473,7 +477,7 @@ jobs:
             .venv/bin/pip show "$1" 2>/dev/null | grep -i "^Version:" | awk '{print $2}'
           }
           get_r_version() {
-            Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null
+            RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1
           }
 
           if [ "$LANGUAGE" = "r" ]; then
