@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:56:13Z'
-updated: '2026-05-16T01:07:45Z'
+updated: '2026-05-16T01:14:15Z'
 generated_by: claude-haiku
 workflow_run: 25948607298
 issue: 2997
@@ -12,88 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-anno
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-dark.html
-quality_score: 49
+quality_score: 55
 review:
   strengths:
-  - Clean event marker positioning with no overlaps
-  - Correct chart type structure with line and vertical event annotations
-  - Appropriate data scale and realistic product launch scenario
-  - Clear descriptive title and axis labels with units
-  - Both renders show adequate visual clarity for legibility
+  - Event markers positioned effectively to avoid overlap with data
+  - Clear upward trend visualization
+  - Proper use of Span and Label layout elements
+  - Deterministic data generation with seed
   weaknesses:
-  - 'Main data line color is #306998 instead of required #009E73 (Okabe-Ito brand
-    green) — hard palette rule violation'
-  - 'Code hardcodes light-theme colors (#fafafa, #ffffff, #333333) without ANYPLOT_THEME
-    environment variable adaptation'
-  - Saves as plot.png instead of theme-aware plot-light.png and plot-dark.png filenames
-  - Uses deprecated export_png API instead of Selenium + headless Chrome screenshotting
-    documented in bokeh.md
-  - Event label text color (#333333) not adapted for dark theme, creates dark-on-dark
-    legibility risk
+  - Dark render has unreadable event labels (dark text on dark background violates
+    dark-theme readability)
+  - 'Main line uses wrong color (#306998 instead of #009E73 brand green)'
+  - 'Event label text is not theme-adaptive (hardcoded #333333 instead of INK token)'
+  - 'Background colors not exact (#fafafa instead of #FAF8F1 light, border_fill_color
+    wrong)'
+  - Uses deprecated export_png instead of Selenium per bokeh.md guidelines
+  - Saves as plot.png instead of plot-{THEME}.png (wrong output filename format)
+  - Title contains typo (pyplots.ai instead of anyplot.ai)
+  - Missing implementation of theme-adaptive chrome tokens (ANYPLOT_THEME not read)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 or similar). PASS.
-      Chrome: Title "line-annotated-events · bokeh · anyplot.ai", axis labels "Date" and "Active Users (thousands)", tick labels on both axes all clearly visible in dark text against light background. PASS.
-      Data: Main line is teal (#306998), not the required Okabe-Ito #009E73 brand green. Five vertical dashed yellow (#FFD43B) event marker lines. Event labels in dark gray positioned without overlap. Legend "Daily Active Users" visible top-left. Grid is dashed and subtle. FAIL on color palette.
-      Legibility verdict: PASS for readability, but FAIL for spec compliance (wrong data color).
+      Background: Warm off-white surface (approximately #FAF8F1)
+      Chrome: Title "line-annotated-events · bokeh · anyplot.ai", axis labels "Date" and "Active Users (thousands)", tick marks and gridlines all clearly visible in dark text
+      Data: Main line rendered in teal/cyan color (approximately #0072B2 Okabe-Ito position 3, should be #009E73 position 1 brand green) trending upward 100k→185k. Five yellow dashed vertical lines at event dates with labels positioned at alternating heights (Product Launch, Feature Update, Server Upgrade, API v2 Release, Mobile App Launch). Legend shows "Daily Active Users" at bottom right.
+      Legibility verdict: PASS - all text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Dark (appears near-black or very dark gray), should be warm near-black #1A1A17. Code shows hardcoded light-theme values (#fafafa, #ffffff), so render appears to be either manually adjusted or from different code version.
-      Chrome: Title and axis labels visible. Tick labels readable. Event labels visible. All text appears readable, suggesting either light text (code shows hardcoded dark) or adequate contrast despite potential issues.
-      Data: Data line color identical to light render (same teal #306998). Event marker lines (yellow) still visible. Event labels readable. Colors are identical between light and dark (correct behavior for Okabe-Ito data colors).
-      Legibility verdict: PASS for visual readability. However, code analysis shows text colors not adapted to dark theme (hardcoded #333333), which should cause dark-on-dark failures. Disconnect between code (hardcoded light) and rendered image (functional dark render) suggests implementation issue.
-
-    Both renders show adequate visibility, but implementation code fails theme-adaptation requirements.
+      Background: Dark near-black surface (should be #1A1A17)
+      Chrome: Title and axis labels readable in light text. Y-axis gridlines visible as dotted lines (different style than light render - only chrome should change, not grid style).
+      Data: Main line color identical to light render (correct - Okabe-Ito positions 1-7 must be identical between themes). Yellow event marker lines visible and unchanged.
+      CRITICAL ISSUE: Event label text is dark gray (#333333) on the dark near-black background, making labels completely unreadable. This is a "dark-on-dark" failure — the most common theme-adaptation mistake.
+      Legibility verdict: FAIL - event label text invisible due to insufficient contrast with dark background
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 16
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 0
         max: 8
         passed: false
-        comment: Title and axis labels readable, but event label colors not theme-adapted
+        comment: 'Event labels unreadable in dark render (dark #333333 on dark #1A1A17
+          background)'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Event labels positioned cleanly without collision
+        comment: Event labels well-positioned with minimal collision
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All elements visible; minor refinement opportunity
+        comment: All elements visible, but event labels fail dark-theme readability
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Yellow event markers marginal (position 7, for thick elements only)
+        comment: 'Main line is #0072B2 (Okabe-Ito pos 3) instead of #009E73 (pos 1
+          brand green)'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Good proportions and whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with library and source, clear axis labels
+        comment: 'Title and axis labels present (though title has typo: pyplots.ai)'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Data line #306998 not #009E73; no theme adaptation; hardcoded
-          light theme colors'
+        comment: Main line wrong color; event labels not theme-adaptive; backgrounds
+          not exact spec colors
     design_excellence:
-      score: 5
+      score: 4
       max: 20
       items:
       - id: DE-01
@@ -101,21 +102,21 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic styling with wrong data color, no design refinement
+        comment: Generic Python defaults, no intentional palette design
       - id: DE-02
         name: Visual Refinement
         score: 1
         max: 6
         passed: false
-        comment: Minimal customization beyond basic plot
+        comment: Minimal customization beyond basic API
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 1
         max: 6
         passed: false
-        comment: Event markers provide structure but no visual hierarchy
+        comment: Simple trend visualization with no visual hierarchy
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -123,27 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with event markers
+        comment: Correct line plot with event annotations
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Has line, event dates, labels; event categories not visually distinct
+        comment: Event markers and labels present but not theme-correct
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped
+        comment: Date/value axes correct, full range displayed
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct, legend present
+        passed: false
+        comment: 'Title has typo: pyplots.ai instead of anyplot.ai'
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -151,19 +152,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Time series with events; event categories not distinct
+        comment: Time series and event markers demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Plausible product launch scenario
+        comment: Plausible active users scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible user count range over one year
+        comment: Values (100-185k) sensible for user metrics
     code_quality:
       score: 7
       max: 10
@@ -173,7 +174,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward script
+        comment: Straightforward implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -185,35 +186,36 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: export_png discouraged per bokeh.md
+        comment: export_png is deprecated per bokeh.md
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Hardcoded colors, no theme-adaptive logic
+        comment: Uses export_png instead of recommended Selenium approach
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png, should be plot-light.png/plot-dark.png with Selenium
+        comment: Saves as plot.png instead of plot-{THEME}.png
     library_mastery:
-      score: 4
+      score: 2
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: ColumnDataSource correct, but export_png is deprecated
+        comment: Uses ColumnDataSource and basic API but doesn't follow bokeh.md theme-adaptation
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 0
         max: 5
         passed: false
-        comment: Uses Span and Label, but doesn't leverage interactive capabilities
+        comment: No exploitation of bokeh-specific features
   verdict: REJECTED
 impl_tags:
   dependencies: []
