@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:48:50Z'
-updated: '2026-05-16T18:48:52Z'
+updated: '2026-05-16T19:08:50Z'
 generated_by: claude-haiku
 workflow_run: 25962238195
 issue: 3230
@@ -12,39 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/pygal/plot-dark.html
-quality_score: 40
+quality_score: 66
 review:
   strengths:
-  - 'Correct theme-adaptive chrome: background (#FAF8F1 / #1A1A17), foreground tokens,
-    and data colors all properly wired to ANYPLOT_THEME'
-  - Data colors are identical between light and dark renders — only chrome flips,
-    as required by the style guide
-  - Correct canvas size (4800x2700), correct output files (SVG + PNG + HTML)
-  - Correct title format 'contour-3d · pygal · anyplot.ai'
-  - Clean reproducible code structure with np.random.seed(42) set
+  - 'Perfect code quality: clean flat structure, reproducible seed, all imports used,
+    creative matplotlib-backend pattern for contour path extraction'
+  - 'Correct palette compliance: viridis is the right choice for sequential continuous
+    data; both themes have correct #FAF8F1 / #1A1A17 backgrounds'
+  - Title format exactly matches spec requirement ('contour-3d · pygal · anyplot.ai');
+    legend labels are meaningful z-level values
+  - Segment filtering logic (keeping longest segment per level) avoids visual jump-line
+    artifacts cleanly
+  - Full HTML output generated correctly for this interactive library; SVG + PNG +
+    HTML all saved
   weaknesses:
-  - 'Fundamental AR-06 issue: pygal cannot render 3D surfaces — produces a 2D scatter
-    approximation, not a 3D contour plot; this is the canonical Not Feasible example
-    in the quality criteria'
-  - 'Wrong colormap type: Okabe-Ito categorical palette used for continuous z-value
-    contour data; must use viridis (sequential) for continuous/contour data'
-  - 'Missing colorbar: spec explicitly requires one to indicate the z-value scale'
-  - Generic axis labels ('X', 'Y') with no domain context or units
-  - Legend shows abstract 'Level 1–7' labels instead of actual z-value ranges
-  - '# noqa: E402 lint-disable comments present — should use proper import ordering
-    instead'
+  - Text sizes render too small at 4800x2700 despite explicit font sizes — title_font_size=36
+    is insufficient; needs ~60px; legend text is barely legible at full resolution
+  - 'Dark viridis colors (lowest 2 z-levels, z=-0.20 and z=0.00, approximately #440154-#482878)
+    are nearly invisible on the #1A1A17 dark background — viridis range should be
+    clipped to start at ~0.10 brightness'
+  - Missing colorbar — spec explicitly requires one; legend shows level labels but
+    no proper color scale
+  - Axis labels are generic single letters 'x' and 'y' rather than descriptive labels
+    (e.g., 'X Coordinate', 'Y Coordinate')
+  - No 3D aspect (unavoidable pygal limitation) — the 2D fallback lacks depth cues
+    that characterize the spec
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "contour-3d · pygal · anyplot.ai" visible at top center (small but readable); axis labels "X" and "Y" present; tick labels visible; legend on left with "Level 1" through "Level 7" labels with color markers
-      Data: Multiple concentric contour-like curves via dense scatter points; colors progress dark blue/purple (outermost, lowest z) through teal, green to yellow (innermost, highest z); uses Okabe-Ito palette (non-compliant for continuous data — should be viridis)
-      Legibility verdict: PASS (all text readable against light background; no light-on-light failures)
+      Background: Warm off-white #FAF8F1 — correct theme background
+      Chrome: Title "contour-3d · pygal · anyplot.ai" visible at top center but very small relative to canvas; legend labels (z = -0.20 through z = 1.00) in top-left stacked column, extremely small; axis labels "x" and "y" visible; tick labels small but readable
+      Data: 8 contour isolines using viridis colormap — dark purple for lowest z levels transitioning to teal and yellow-green for highest; lines are stroke_width=4 and clearly visible against the light background; an interesting asymmetric topology with a main peak region and secondary features visible
+      Legibility verdict: PASS (marginally) — all text is technically visible but font sizes are too small for comfortable reading at 4800x2700 resolution; specifically the legend text and title are undersized
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and axis labels render with light-colored text on dark background; legend labels readable; no dark-on-dark text failures observed; tick labels visible with appropriate light color
-      Data: Identical colors to light render (purple→blue→teal→green→yellow progression) — data colors preserved between themes; only chrome flips
-      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark failures)
+      Background: Near-black #1A1A17 — correct dark theme background
+      Chrome: Title and legend rendered in light text (#F0EFE8), readable; axis labels and tick labels appear in light color; no dark-on-dark text failure detected; chrome adapts correctly to dark theme
+      Data: Same 8 contour isolines with identical viridis colors (data colors unchanged between light and dark, only chrome flipped — correct); however, lowest 2 z-levels (z=-0.20 and z=0.00) use dark purple (~#440154-#482878) which has near-zero contrast against the #1A1A17 near-black background — these lines are nearly invisible in the dark render; mid-to-high z levels (teal through yellow-green) are clearly visible
+      Legibility verdict: FAIL — the dark purple viridis colors for the lowest contour levels (z=-0.20, z=0.00) are nearly invisible against the dark background; this is a data-on-dark-background visibility failure, not a chrome failure
   criteria_checklist:
     visual_quality:
       score: 19
@@ -52,133 +56,135 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 3
         max: 8
-        passed: true
-        comment: Font sizes explicitly set (title=28, label=22, major_label=18) but
-          text appears modest at full 4800x2700 resolution
+        passed: false
+        comment: Font sizes explicitly set (36/28/24/20px) but render too small at
+          4800x2700; title and legend text barely legible
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor legend crowding with 7 items; no significant overlap
+        comment: No text or element overlaps detected in either render
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Contour curves (dense scatter points) visible and form smooth lines;
-          could be more distinct
+        passed: false
+        comment: 'Lowest 2 viridis levels (dark purple ~#440154) nearly invisible
+          on #1A1A17 dark background; all lines visible in light render'
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe but is a categorical palette applied to continuous
-          data; wrong palette type
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Reasonable canvas utilization; legend is small on the left margin
+        passed: false
+        comment: Plot fills ~50-60% of canvas; some wasted space; legend compressed
+          in top-left corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
-        passed: true
-        comment: Title format correct; axis labels 'X' and 'Y' are generic with no
-          units or domain context
+        passed: false
+        comment: Title format correct; axis labels are generic single letters 'x'
+          and 'y' with no units or description
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-compliant: Okabe-Ito categorical palette used for continuous
-          z-value contour data; must use viridis (sequential) per style guide'
+        passed: true
+        comment: 'Viridis used correctly for sequential continuous data; correct #FAF8F1
+          light and #1A1A17 dark backgrounds; chrome adapts correctly'
     design_excellence:
-      score: 7
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Custom theming correct but scatter-point contour approach looks rough;
-          no intentional hierarchy
+        comment: Well-configured above defaults; viridis intentional choice; no filled
+          contours or annotations; not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: No grid (good), correct backgrounds, but minimal additional refinement
+        comment: Grid guides disabled; show_dots=False; clean presentation; legend
+          in top-left is not ideal placement; some refinement but not polished
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Contour structure visible but no context about what the function
-          represents or what levels mean
+        comment: Data displayed without interpretation; no focal point, no annotations,
+          no visual hierarchy guiding viewer to peak or notable features
     spec_compliance:
-      score: 5
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 3
         max: 5
         passed: false
-        comment: 'Wrong plot type: spec requires 3D contour plot; implementation is
-          a 2D scatter-based approximation. Pygal cannot do 3D — AR-06 Not Feasible
-          case.'
+        comment: Correct base type (contour isolines) but missing 3D surface/projection;
+          pygal cannot render 3D so 2D is best approximation
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 2
         max: 4
         passed: false
-        comment: 'Missing: 3D perspective/surface, colorbar with z-value scale, projection
-          onto base plane. Only 2D contour lines approximated.'
+        comment: Has contour lines at regular intervals and sequential colormap; missing
+          colorbar (spec requires it), no 3D surface, no projection onto base plane
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped; Z encoded in color but not in 3D space
+        comment: X/Y axes correctly assigned; Z-value encoded via viridis color; all
+          data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format 'contour-3d · pygal · anyplot.ai' correct; legend labels
-          'Level 1-7' are generic rather than showing z-value ranges
+        comment: Title format 'contour-3d · pygal · anyplot.ai' is correct; legend
+          labels are meaningful z-level values
     data_quality:
-      score: 10
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Gaussian+sinusoidal function creates varied contour shapes; missing
-          3D surface view and colorbar scale
+        passed: true
+        comment: Shows 8 distinct contour levels with varied shapes; function has
+          interesting asymmetric topology with main peak and secondary features
       - id: DQ-02
         name: Realistic Context
         score: 3
         max: 5
-        passed: true
-        comment: Mathematical function is plausible but axis labels 'X'/'Y' give no
-          domain context
+        passed: false
+        comment: Abstract mathematical function with no domain context; axis labels
+          are just 'x' and 'y'; plausible but generic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and 45x45 grid resolution are appropriate for the function
+        comment: linspace(-3, 3, 60) appropriate; Z range ~-0.20 to 1.00 consistent
+          with the function; 60x60 grid slightly exceeds spec max of 50x50 but acceptable
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -186,55 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> data -> chart -> save'
+        comment: 'Flat script: theme setup -> data -> matplotlib backend contour extraction
+          -> pygal chart -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; function is deterministic anyway
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Multiple # noqa: E402 lint-disable comments present; project policy
-          requires proper fixes'
+        passed: true
+        comment: All imports used; matplotlib.cm, matplotlib.colors, matplotlib.pyplot,
+          numpy, pygal, pygal.style, os, sys all needed
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean Pythonic code
+        comment: Creative use of matplotlib as computational backend for contour path
+          extraction; max-by-length segment selection is clean; strict=False in zip
+          is correct
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png, plot-{THEME}.svg, plot-{THEME}.html correctly
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses pygal.XY with style tokens correctly; scatter-point contour
-          workaround is a reasonable adaptation
+        passed: false
+        comment: Uses pygal.XY with Style object correctly; HTML export is idiomatic;
+          however matplotlib is the actual visualization engine — pygal is a rendering
+          layer only
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No pygal-distinctive features leveraged (interactive JS tooltips
-          showing z-values, SVG-native capabilities)
-  verdict: REJECTED
+        comment: Interactive HTML output is pygal-specific; but contour computation
+          in matplotlib; creative workaround but distinctive pygal features minimally
+          leveraged
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - matplotlib
   techniques:
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
