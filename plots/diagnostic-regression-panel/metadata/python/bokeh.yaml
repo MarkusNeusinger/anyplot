@@ -1,0 +1,269 @@
+library: bokeh
+language: python
+specification_id: diagnostic-regression-panel
+created: '2026-05-13T16:02:48Z'
+updated: '2026-05-13T16:24:22Z'
+generated_by: claude-sonnet
+workflow_run: 25809990015
+issue: 5242
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/bokeh/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - 'Fully complete spec implementation: all four diagnostic panels (Residuals vs
+    Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage) with all required overlays
+    (LOWESS, Q-Q reference line, Cook''s D contours at 0.5 and 1.0) and top-3 influential
+    point labels in every panel'
+  - Engineered synthetic data that clearly demonstrates multiple regression assumption
+    violations — pedagogically effective diagnostic display
+  - 'Precise theme-adaptive chrome: all INK/INK_SOFT/PAGE_BG tokens correctly threaded
+    through every figure element in both light and dark renders'
+  - 'Rigorous statistical implementation: hat matrix computed from first principles,
+    studentized residuals, Cook''s distance formula, Q-Q via scipy.stats.probplot'
+  - Three-color Okabe-Ito coding (green scatter, orange smoothers, blue Cook's thresholds)
+    creates clear visual hierarchy guiding the viewer through each panel
+  weaknesses:
+  - Subplot titles use 22pt and axis labels 18pt, below the 28pt/22pt full-canvas
+    recommendation; tick labels at 15pt are small relative to the 4800px canvas —
+    increase subplot titles to 26pt and tick labels to 17-18pt
+  - All four panels retain a full box outline (outline_line_color=INK_SOFT) — style
+    guide mandates removing top and right spines (L-shaped frame default); set outline_line_color=None
+    and use axis line styling
+  - No ColumnDataSource used; bokeh library guide explicitly recommends it for flexibility
+    — wrap scatter data in ColumnDataSource(data={...}) and use source= parameter
+  - No HoverTool despite Bokeh being an interactive library — Cook's distance or residual
+    values on hover would be a distinctive Bokeh feature leveraging the interactive
+    HTML output
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 across all four panels and the title header area — correct theme surface.
+      Chrome: Top header "diagnostic-regression-panel · bokeh · anyplot.ai" in dark #1A1A17 text, clearly readable. Each panel subplot title (22pt bold) and axis labels (18pt) rendered in dark INK tokens. Tick labels in muted INK_SOFT (#4A4A44). All text clearly readable against the light background.
+      Data: Scatter points in #009E73 (Okabe-Ito pos 1 teal-green), LOWESS/reference lines in #D55E00 (pos 2 orange), Cook's distance contours in #0072B2 (pos 3 blue). Observation labels "0", "1", "71" visible near influential points in each panel. Panel 4 legend has styled background (ELEVATED_BG #FFFDF6).
+      Legibility verdict: PASS — no light-on-light failures, all elements distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 across all panels and header — correct dark theme surface.
+      Chrome: Header text rendered in light color (INK token = #F0EFE8 in dark theme), clearly readable. Panel titles, axis labels in light INK tokens. Tick labels in lighter INK_SOFT (#B8B7B0). Legend background uses ELEVATED_BG #242420 with light label text. No dark-on-dark failures detected anywhere in the render.
+      Data: Scatter points remain #009E73 (identical to light render), LOWESS/reference lines remain #D55E00, Cook's contours remain #0072B2 — confirming Okabe-Ito positions 1-7 are theme-invariant as required.
+      Legibility verdict: PASS — all text readable against dark background, no chrome inversion failures.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All sizes explicitly set. Subplot titles 22pt and axis labels 18pt
+          appropriate for 2400px panels but below 28pt/22pt full-canvas standard;
+          tick labels 15pt slightly small for 4800px canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Observation labels use x_offset/y_offset to avoid marker collisions;
+          no tick label overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: size=9, alpha=0.65 works well for 200 points; slight visual crowding
+          in panel center but data is readable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three Okabe-Ito colors (green/orange/blue) are colorblind-safe with
+          adequate luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 2x2 grid utilizes canvas well; minor gaps at panel borders and bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All panels have descriptive labels: Fitted values, Theoretical quantiles,
+          sqrt|Standardized residuals|, Leverage.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; LOWESS uses #D55E00 (pos 2); Cook''s contours
+          use #0072B2 (pos 3); backgrounds #FAF8F1/#1A1A17; chrome theme-correct in
+          both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Professional regression panel aesthetic mirroring R plot.lm convention.
+          Clean, well-organized, themed. No exceptional design thinking beyond correct
+          token application.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Toolbar removed, grid alpha=0.10 subtle, fonts explicitly sized.
+          However outline_line_color=INK_SOFT retains full box frame; style guide
+          recommends removing top and right spines (L-shaped frame).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three-color coding (green data, orange smoothers, blue Cook's thresholds)
+          creates clear visual hierarchy. Influential-point labels across all four
+          panels provide clear focal points.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: All four standard diagnostic panels in correct 2x2 arrangement.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Panel 1: scatter+zero reference+LOWESS; Panel 2: Q-Q+45° reference;
+          Panel 3: sqrt-abs-std+LOWESS; Panel 4: leverage scatter+zero reference+Cook''s
+          D contours at 0.5 and 1.0; top-3 labels in each panel.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All axis assignments match spec exactly across all four panels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: diagnostic-regression-panel · bokeh · anyplot.ai; Panel 4
+          legend: Cook''s D = 0.5 / Cook''s D = 1.0.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows: high-leverage influential point (obs 0, Cook''s D > 0.5),
+          moderate-leverage outlier (obs 1), low-leverage residual outlier (obs 70),
+          Q-Q tail deviations, heteroscedasticity signal in Scale-Location.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Drug-response pharmacological study with standardised log-dose, BMI,
+          and patient age predictors. Real-world scenario, politically neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Response ~50 units, noise SD=4, fitted range ~25-80, leverage and
+          Cook's D values physically consistent with 3-predictor OLS on n=200.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports -> data generation -> four panels -> assemble
+          -> export. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI elements, appropriate complexity for a 4-panel
+          diagnostic tool.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png using current Bokeh 3.x
+          API with Selenium screenshot pattern.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Good Bokeh usage: figure(), gridplot, Div/column layout, Span, Label,
+          Range1d. Misses ColumnDataSource pattern recommended in library guide (passes
+          arrays directly).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Bokeh gridplot layout manager, Span model for reference lines,
+          Range1d for constrained y-axis, and interactive HTML export. No HoverTool
+          or callbacks despite being an interactive library.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - sklearn
+  - statsmodels
+  - selenium
+  techniques:
+  - subplots
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting

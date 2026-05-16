@@ -1,0 +1,261 @@
+library: bokeh
+language: python
+specification_id: heatmap-polar
+created: '2026-05-13T19:57:39Z'
+updated: '2026-05-13T20:16:37Z'
+generated_by: claude-sonnet
+workflow_run: 25822030511
+issue: 5244
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/bokeh/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Correct use of annular_wedge — the ideal Bokeh primitive for polar heatmap segments,
+    handles inner/outer radii and angular ranges natively
+  - 'Full spec compliance: angular/radial axes, Viridis colormap, colorbar, hour labels,
+    cell gaps — all implemented correctly'
+  - Realistic and engaging dataset (website traffic with plausible weekday/weekend
+    patterns)
+  - Clean flat code structure with consistent theme-adaptive chrome tokens throughout
+  - Proper Viridis256 colormap for continuous traffic data — perceptually uniform
+    and CVD-safe
+  weaknesses:
+  - Title uses text_font_style=normal instead of bold; increase font size to 32-34px
+    for stronger hierarchy at 3600x3600
+  - Day labels hardcoded to text_color=white instead of a theme-adaptive token; works
+    in practice but is inconsistent with the rest of the chrome
+  - Spoke lines use line_color=PAGE_BG making them nearly invisible in dark render
+    (near-black on dark Viridis cells); use a neutral rgba line for theme-independent
+    visibility
+  - 'No visual storytelling: weekday double-peaks and weekend single-peak are discoverable
+    but not emphasized; a title subtitle or ring highlight would improve DE-03'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the entire canvas — PASS
+      Chrome: Title "Website Traffic · heatmap-polar · bokeh · anyplot.ai" centered at top, readable in dark ink (28px); hour labels at 12am, 3am, 6am, 9am, 12pm, 3pm, 6pm, 9pm placed outside the ring in INK_SOFT grey; day labels (Mon–Sun) in white bold inside ring cells near midnight position; colorbar on right with "Hourly Visits" title and Viridis scale — all readable
+      Data: 7 concentric annular rings × 24 angular wedges. Viridis colormap from deep purple (low ~80 visits/hr) to bright yellow-green (peak ~900 visits/hr). Weekday rings (Mon–Fri) show two bright peaks at ~9am and ~8pm. Weekend rings show single afternoon peak around ~2pm. Spoke lines at 3-hour boundaries separate the hourly cells. Inner hole of warm off-white provides clean center anchor.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the entire canvas — PASS
+      Chrome: Title in light text (#F0EFE8), readable; hour labels in light grey (#B8B7B0) — readable; day labels remain hardcoded white — still visible on dark-purple Viridis cells; colorbar background blends into dark canvas seamlessly; spoke lines use PAGE_BG (#1A1A17) making them nearly invisible on dark Viridis cells — hour boundaries unclear in dark render
+      Data: Viridis data colors are identical to light render — same yellow-green peaks at weekday 9am and 8pm, same purple lows. Only chrome flips. Inner hole is now near-black.
+      Legibility verdict: PASS overall — no dark-on-dark text failures; minor issue: spoke lines invisible in dark render reduces hour-boundary visibility but does not affect text readability
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set: title 28px, hour labels 24px, day labels
+          20px, colorbar 22px/20px. Readable in both themes. Day labels use hardcoded
+          white instead of theme token.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap. Hour labels spaced at 3-hour intervals outside ring;
+          day labels at single angular position per ring.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All 168 wedge cells clearly visible; Viridis provides strong value
+          differentiation. Spoke lines invisible in dark render.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis256 is perceptually uniform and CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3600x3600 square appropriate for circular plot. Chart fills ~65%
+          of canvas. Corner whitespace inherent to circular format.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar titled Hourly Visits; hour positions labeled with 12-hour
+          clock format; title descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis256 correct for continuous data; backgrounds #FAF8F1/#1A1A17
+          correct; chrome is theme-adaptive throughout.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default. Polar heatmap with Viridis and spoke separators
+          is competent but no distinguishing design choices. Title normal weight,
+          no visual flourishes.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Axes fully hidden, grid removed, outline removed, backgrounds correct,
+          spoke lines add hour structure. Good refinement. Spoke lines invisible in
+          dark render.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Weekday double-peaks vs. weekend afternoon plateau visible through
+          color contrast. No annotations, no subtitle, no focal-point emphasis to
+          guide the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap using annular_wedge; angular axis for hours,
+          radial axis for days.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Angular (hours 0-23), radial (Mon-Sun rings), value color-encoded
+          via Viridis, colorbar, hour labels every 3 hours, cell gaps, sequential
+          colormap — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angular = cyclic hours (12am at top, clockwise); radial = day-of-week
+          rings outward; color = traffic value.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains all required components (spec-id, library, anyplot.ai);
+          colorbar labeled Hourly Visits.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All three dimensions shown; weekday vs. weekend variation across
+          full 7x24 grid. Could show more within-day anomalies.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic by hour and day is a real, neutral scenario. Morning/evening
+          commute peaks on weekdays, afternoon weekend plateau — plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Traffic values ~80-900 visits/hour realistic for a moderate website;
+          7x24 grid within spec range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: data generation -> polar geometry -> figure setup ->
+          save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. bk_transform alias intentional.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Manual polar geometry appropriate since Bokeh has
+          no native polar heatmap.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium as required
+          for Bokeh.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: annular_wedge with ColumnDataSource, LinearColorMapper + bk_transform,
+          ColorBar.add_layout, Label.add_layout — idiomatic Bokeh patterns throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: annular_wedge is a distinctive Bokeh primitive; LinearColorMapper
+          + bk_transform is Bokeh-specific color mapping; HTML output with Selenium
+          is a genuine Bokeh strength.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome

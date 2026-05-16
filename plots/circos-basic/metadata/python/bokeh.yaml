@@ -1,172 +1,190 @@
 library: bokeh
+language: python
 specification_id: circos-basic
 created: '2025-12-31T11:12:52Z'
-updated: '2025-12-31T11:28:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617695887
+updated: '2026-05-15T09:36:55Z'
+generated_by: claude-haiku
+workflow_run: 25910352749
 issue: 3005
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circos-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/circos-basic/bokeh/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-    - bezier-curves
-    - html-export
-    - columndatasource
-  patterns:
-    - data-generation
-    - matrix-construction
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/bokeh/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent circular layout with proper segment sizing proportional to total trade
-    volume
-  - Well-implemented bezier ribbons connecting regions with appropriate transparency
-  - Good use of inner track to display additional GDP growth data
-  - Realistic trade flow scenario with sensible numeric values
-  - Clean legend placement and region labeling with proper text rotation
-  - Both PNG and HTML outputs generated for static and interactive viewing
+  - 'Perfect visual quality: all text explicitly sized and readable in both light
+    and dark themes'
+  - 'Complete spec compliance: all circos features (segments, gaps, proportional ribbons,
+    tracks) correctly implemented'
+  - Excellent theme-adaptive design with Okabe-Ito palette applied flawlessly across
+    both renders
+  - Complex geometric calculations correctly implemented (Bezier curves for smooth
+    ribbons, proper angle calculations)
+  - Clean, reproducible code with deterministic seed and KISS structure
+  - Realistic trade flow data with appropriate scale and factual correctness
+  - Professional Bokeh API usage with ColumnDataSource patterns and idiomatic library
+    patterns
   weaknesses:
-  - Inner track annotation positioned at bottom-left is quite small and easy to miss
-  - Title font at 48pt appears relatively small for the 3600x3600 canvas size
-  - Some ribbon colors could use slightly more differentiation when many overlap in
-    the center
-  image_description: 'The plot displays a Circos diagram showing trade flows between
-    six global economic regions (Asia, Europe, N. America, S. America, Africa, Oceania).
-    The circular layout features an outer ring with colored segments representing
-    each region - blue for Asia, yellow for Europe, red-coral for N. America, green
-    for S. America, purple for Africa, and orange for Oceania. Region labels are positioned
-    outside the circle, properly rotated for readability. Inside the outer ring is
-    a secondary track showing GDP growth rates as lighter-colored bars of varying
-    heights. The center contains semi-transparent ribbons connecting regions, with
-    ribbon width proportional to trade flow volume. The ribbons use quadratic bezier
-    curves passing through the center. A legend is positioned on the right side with
-    colored boxes and region labels. The title "circos-basic · bokeh · pyplots.ai"
-    appears at the top center. At the bottom-left corner, there is small text noting
-    "Inner track: GDP Growth (%)".'
+  - 'Design Excellence could be higher: well-executed but lacks exceptional aesthetic
+    polish or unique visual flourishes to reach publication-ready status'
+  - Data storytelling is functional but doesn't highlight a particular insight or
+    create visual emphasis that guides viewer attention
+  - 'Library Mastery: geometric computation is generic; more Bokeh-distinctive features
+    (callbacks, glyphs, or interactive elements in HTML) would elevate the score'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title "circos-basic · bokeh · anyplot.ai" in 36pt dark text clearly visible at top; region labels (Asia, Europe, N. America, S. America, Africa, Oceania) in 20pt dark text positioned radially around circle - all fully readable; legend on right with 16pt labels clearly readable; inner track annotation "Inner track: GDP Growth (%)" in 18pt secondary text readable at bottom
+      Data: Six segments in Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 pink, #E69F00 yellow, #56B4E9 sky blue) in canonical order; flowing ribbons with proportional widths connecting regions; inner concentric track with variable heights; subtle reference circle; all colors vibrant and distinct
+      Legibility verdict: PASS - all text is dark on light background, excellent contrast, no legibility issues in any element
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark surface color
+      Chrome: Title in light text (#F0EFE8) clearly visible; region labels in light gray (#B8B7B0) fully readable around circle; legend labels light-colored and clear; inner track annotation adapted to light gray text - all readable without any dark-on-dark failures
+      Data: All Okabe-Ito data colors (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9) remain perfectly identical to light render - confirming only chrome flipped; segments, ribbons, and track maintain excellent contrast against dark background
+      Legibility verdict: PASS - all text is light on dark background with no visibility issues; data colors identical to light render; perfect theme adaptation with no "dark-on-dark" failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and region labels are readable, legend text is clear; inner
-          track label at bottom-left is somewhat small
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, labels well-positioned
+        comment: All font sizes explicitly set (36pt title, 20pt labels, 18pt annotation,
+          16pt legend); perfectly readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Region labels radially positioned with proper spacing; legend isolated
+          to right side; no overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Outer segments and ribbons are visible, though some ribbons overlap
-          each other due to transparency
+        comment: Segments, track bars, and ribbons excellently visible; alpha values
+          (0.85, 0.4, 0.45, 0.2) optimally adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Distinct colors for each region, colorblind-friendly palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Circular plot is well-centered, good use of canvas; legend placement
-          is good
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: N/A for circular plots, but track label present (partial)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed with clear labels, reference circle subtle
+        comment: Okabe-Ito palette is colorblind-safe; excellent contrast; no red-green
+          as sole distinguishing signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3600×3600 square format ideal for circular plot; plot fills 60-70%
+          of canvas; balanced margins throughout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format (circos-basic · bokeh · anyplot.ai); descriptive
+          region labels; annotation includes units (%)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; Okabe-Ito positions 1-6 in canonical
+          order; backgrounds #FAF8F1/#1A1A17 correct; text colors theme-correct in
+          both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful circos design with custom angle calculations, proportional
+          ribbons, proper gap sizing, intentional alpha blending. Professional execution
+          but lacks exceptional aesthetic flourishes for publication-ready status.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Axes hidden, grid removed, generous whitespace, subtle reference
+          lines, refined segment borders; excellent attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative of global trade flows; color coding makes relationships
+          easy to follow; visual hierarchy through scale and color, but no particular
+          emphasis highlighting a specific insight
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Circos plot with circular segments and connecting ribbons
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Source/target regions and values correctly mapped to ribbons
-      - id: SC-03
+        comment: Correct circos chart type with all variants (segments, tracks, ribbons)
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has outer segments, ribbons, and inner track; ribbons show relationships
-          well
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: segments with gaps, proportional ribbon widths,
+          distinct colors, 1-3 concentric tracks'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All regions visible with proportional sizing
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Regions → segments; flow values → ribbon widths; track values → bar
+          heights; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all six regions
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but title font could be larger
+        comment: Correct title format; legend labels match regions exactly
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows connections, segment sizing, inner track; demonstrates various
-          ribbon widths
+        comment: 'Shows all circos aspects: outer segments, multiple connections,
+          proportional ribbons, inner track with variation, threshold filtering'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Regional trade flows is a compelling real-world scenario
+        comment: Global trade flows between real regions; plausible magnitudes; realistic
+          GDP growth percentages; neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Trade values in billions USD are realistic; GDP growth percentages
-          are plausible
+        comment: Trade values (3-52) appropriate for magnitude; GDP growth (1.5-4.2%)
+          factually plausible; proportions logically sound
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,40 +192,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Linear flow: imports → data generation → plot → save; no functions,
+          no classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: sys, Path, os, time, numpy, bokeh modules, selenium;
+          no dead imports'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses export_png which is current
+        comment: Clean, Pythonic; complexity appropriate for circos visualization;
+          correct Bezier math; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of patches, ColumnDataSource, and bezier curves; exports
-          both PNG and HTML
+        comment: 'Expert Bokeh usage: figure(), patches() with custom coordinates,
+          line(), text(), rect(), ColumnDataSource; follows recommended patterns'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses patches() with custom polygons, Bezier curves, manual geometric
+          layout. Mostly generic geometric computation adaptable to other libraries;
+          could leverage more Bokeh-distinctive features (callbacks, glyphs, interactive
+          HTML features)
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - patches
+  - html-export
+  - bezier-curves
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

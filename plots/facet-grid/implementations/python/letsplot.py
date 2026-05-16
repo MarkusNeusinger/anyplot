@@ -1,14 +1,19 @@
-""" pyplots.ai
+""" anyplot.ai
 facet-grid: Faceted Grid Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-13
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
+    element_line,
+    element_rect,
     element_text,
     facet_grid,
     geom_point,
@@ -25,50 +30,76 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Data - create dataset with two categorical faceting variables
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (categorical)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Data - sales analysis by category and region
 np.random.seed(42)
 
-# Product categories and regions for a sales analysis scenario
 categories = ["Electronics", "Clothing", "Home"]
 regions = ["North", "South", "East", "West"]
 
-data = []
+# Generate all combinations of categories and regions
+category_list = []
+region_list = []
+price_list = []
+units_list = []
+
 for cat in categories:
     for region in regions:
         n_points = 25
-        # Base relationship varies by category and region
         base_price = {"Electronics": 200, "Clothing": 50, "Home": 100}[cat]
         region_factor = {"North": 1.2, "South": 0.9, "East": 1.0, "West": 1.1}[region]
 
         price = np.random.uniform(base_price * 0.5, base_price * 1.5, n_points)
-        # Sales units inversely related to price with some noise
         units = (base_price * 100 / price) * region_factor + np.random.randn(n_points) * 10
+        units = np.maximum(units, 0)
 
-        for p, u in zip(price, units, strict=True):
-            data.append({"Category": cat, "Region": region, "Price": p, "Units Sold": max(0, u)})
+        category_list.extend([cat] * n_points)
+        region_list.extend([region] * n_points)
+        price_list.extend(price)
+        units_list.extend(units)
 
-df = pd.DataFrame(data)
+df = pd.DataFrame({"Category": category_list, "Region": region_list, "Price": price_list, "Units Sold": units_list})
 
-# Plot - faceted grid with scatter and smooth trend
+# Theme-adaptive styling
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=RULE, size=0.3),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=18),
+    strip_text=element_text(color=INK, size=16),
+    strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+)
+
+# Plot
 plot = (
     ggplot(df, aes(x="Price", y="Units Sold", color="Category"))
     + geom_point(size=3, alpha=0.7)
     + geom_smooth(method="lm", se=False, size=1.5)
     + facet_grid(x="Region", y="Category")
-    + scale_color_manual(values=["#306998", "#FFD43B", "#DC2626"])
-    + labs(title="facet-grid \u00b7 letsplot \u00b7 pyplots.ai", x="Unit Price ($)", y="Units Sold")
+    + scale_color_manual(values=OKABE_ITO)
+    + labs(title="facet-grid · letsplot · anyplot.ai", x="Unit Price ($)", y="Units Sold")
     + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=14),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        strip_text=element_text(size=16),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
-# Save PNG and HTML
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save PNG and HTML with theme-suffixed names
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")

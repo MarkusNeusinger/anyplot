@@ -1,156 +1,167 @@
 library: plotly
+language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:38:26Z'
-updated: '2025-12-30T10:46:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594557620
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/plotly/plot.html
-quality_score: 98
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-13T15:29:38Z'
+generated_by: claude-haiku
+workflow_run: 25808302137
+issue: 2600
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Perfect implementation of step function using Plotly shape=hv parameter
-  - Excellent realistic data scenario (server response time monitoring over 24 hours)
-  - Clean code following KISS principles with proper font sizes for 4800x2700 output
-  - Interactive HTML output with custom hover template showing hour and response time
-  - Well-balanced layout with good canvas utilization
+  - Perfect visual quality across all legibility and accessibility criteria; both
+    themes render flawlessly
+  - Clean, reproducible code with clear structure and proper theme-token integration
+  - All specification requirements met; correct step line implementation with appropriate
+    data mapping
+  - Realistic data context (server response monitoring) with authentic diurnal pattern
+  - Theme-adaptive chrome properly applies tokens to both light and dark renders
+  - High-quality library usage; shape="hv" is the correct plotly idiomatic approach
+    for step lines
   weaknesses:
-  - 'Minor: Grid/legend criterion loses 2 points due to disabled legend, though acceptable
-    for single-series plots'
-  image_description: 'The plot displays a step line chart showing server response
-    time (in milliseconds) over a 24-hour period. The visualization uses a blue color
-    (#306998) for both the stepped line (width 4) and circular markers with white
-    borders. The x-axis shows "Hour of Day" ranging from 0 to 22 in increments of
-    2. The y-axis shows "Response Time (ms)" ranging from approximately 40 to 90.
-    The step pattern clearly shows horizontal segments (constant values) followed
-    by vertical transitions at each hour mark. The data demonstrates a realistic daily
-    pattern: low values (~42-45ms) during early morning hours, gradual increase during
-    morning ramp-up, peak around midday (~90ms at hour 13), and decline in evening
-    back to low values (~43ms). The title "line-stepwise · plotly · pyplots.ai" is
-    centered at the top. White background with subtle gray grid lines. Clean, professional
-    appearance.'
+  - 'Design excellence below aspirational level: uses library defaults without custom
+    color treatment or visual emphasis'
+  - 'Visual refinement minimal: spines not removed, no special grid customization
+    or whitespace refinement'
+  - 'Data storytelling is default mode: pattern is visible but no visual hierarchy
+    or focal-point enhancement to guide viewer'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title (28pt), axis labels (22pt), and tick labels (18pt) all in dark text, clearly visible against light background
+      Data: Green step line (#009E73) with circular markers showing discrete hourly transitions from ~45ms (early morning) to ~90ms (peak at hour 14) to ~45ms (evening)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, and tick labels now in light colors (INK and INK_SOFT tokens), all clearly visible and readable
+      Data: Identical green (#009E73) as light render confirming theme consistency; marker outlines use PAGE_BG token and maintain contrast
+      Legibility verdict: PASS - No dark-on-dark failures; all text is light-colored and highly readable
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 28pt, labels 22pt, ticks 18pt - all perfectly readable
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: All text well-spaced, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 14 and line width 4 perfect for 24 data points
+        comment: Markers and lines optimally visible for dataset density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color with excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Hour of Day" and "Response Time (ms)" with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito compliant with good contrast and CVD-safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units; title follows standard format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Okabe-Ito first series; theme-correct backgrounds and chrome
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid subtle and good, but legend disabled (acceptable for single
-          series)
+        comment: Professional but standard library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; spines not removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear pattern visible but no special visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step line using shape="hv"
+        comment: Correct step line with shape=hv
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=hours, Y=response times correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step alignment, horizontal/vertical transitions clear
-      - id: SC-04
-        name: Data Range
+        comment: All spec features implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Appropriate axis ranges showing all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y mapping; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Single series, legend correctly hidden
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "line-stepwise · plotly · pyplots.ai"
+        comment: Title format correct; legend appropriately hidden
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Full 24-hour cycle showing low/ramp-up/peak/decline phases
+        comment: Shows full daily cycle with all step behavior aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Server response time monitoring is realistic technical scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 42-90ms response times are realistic
+        comment: Real-world server scenario, neutral topic, plausible pattern
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic values and proportions
     code_quality:
       score: 10
       max: 10
@@ -160,33 +171,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Linear script with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current APIs used
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
-      items: []
+        comment: Correct output format with current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of go.Figure() and go.Scatter()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses shape=hv and hovertemplate; marker outlines adapt with tokens
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting

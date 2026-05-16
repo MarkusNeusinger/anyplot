@@ -1,170 +1,183 @@
 library: altair
+language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:34:14Z'
-updated: '2025-12-31T05:45:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612790460
+updated: '2026-05-15T03:44:41Z'
+generated_by: claude-haiku
+workflow_run: 25898690249
 issue: 2925
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - manual-ticks
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent Manhattan plot with clear alternating chromosome colors (blue/gray)
-    for visual distinction
-  - Both genome-wide (red dashed) and suggestive (orange dashed) threshold lines correctly
-    positioned at -log10(5e-8) and -log10(1e-5)
-  - Smart use of conditional sizing - significant hits above threshold are larger
-    (100px) vs non-significant (30px)
-  - Chromosome labels clearly positioned below the plot with proper centering
-  - 'Good use of Altair features: layered charts, declarative encoding, tooltips for
-    interactivity'
-  - 'Title follows exact format specification: manhattan-gwas · altair · pyplots.ai'
+  - Excellent legibility in both light and dark themes with proper theme token usage
+  - Realistic, well-structured GWAS data generation with appropriate chromosome distribution
+  - Clean, reproducible code with deterministic seeding and proper Okabe-Ito palette
+    application
+  - Proper use of Altair layer composition and conditional encoding for interactive
+    highlights
+  - Threshold lines effectively highlight significance levels and guide visual focus
+  - Interactive tooltips enhance usability without compromising the static output
+    quality
   weaknesses:
-  - Y-axis label uses subscript notation (-log₁₀) which displays well, but some tick
-    labels on the right side of smaller chromosomes (19-22) appear slightly cramped
-  image_description: 'The plot displays a Manhattan plot for GWAS data with all 22
-    chromosomes arranged along the x-axis. Points are colored in alternating blue
-    (#306998) and gray (#7F7F7F) for adjacent chromosomes, creating clear visual separation.
-    The y-axis shows -log₁₀(p-value) ranging from 0 to ~11. Two horizontal dashed
-    threshold lines are visible: a red line at approximately 7.3 (genome-wide significance,
-    p < 5×10⁻⁸) and an orange line at 5.0 (suggestive threshold, p < 1×10⁻⁵). Significant
-    peaks are visible above the genome-wide threshold on chromosomes 2, 6, 8, and
-    15, with these points displayed larger than non-significant ones. Suggestive signals
-    appear on chromosomes 3, 11, and 19. Chromosome labels (1-22) are centered below
-    their respective regions. The title "manhattan-gwas · altair · pyplots.ai" appears
-    at the top.'
+  - Title format deviates from required spec-id/library/anyplot.ai format
+  - Design excellence could be higher with additional visual refinement or annotations
+    on significant peaks
+  - Limited use of Altair advanced features beyond basic layer composition
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and professional
+      Chrome: Title, subtitle, axis labels (-log₁₀(p-value) on y-axis, Genomic Position on x-axis), and chromosome labels (1-22) all clearly readable in dark INK color (#1A1A17)
+      Data: Thousands of SNP points with alternating Okabe-Ito colors starting with #009E73 (green); points colored by chromosome with size variation (60-100px) based on significance; dashed threshold lines at y=7.3 (genome-wide) and y=5 (suggestive)
+      Grid: Subtle y-axis grid at 10% opacity, does not compete with data
+      Legibility verdict: PASS - all elements readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), properly inverted from light theme
+      Chrome: Title, subtitle, axis labels, and chromosome labels all clearly readable in light INK text (#F0EFE8); secondary text in INK_SOFT (#B8B7B0); NO dark-on-dark failures
+      Data: Okabe-Ito colors remain IDENTICAL to light render (only chrome inverted); point sizes, threshold lines, and layout match light render exactly
+      Grid: Subtle grid lines visible at 10% opacity on dark surface
+      Legibility verdict: PASS - excellent theme adaptation with no readability issues in either render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title clear at 28pt, axis labels at 22pt, tick labels at 16pt - all
-          readable, slight crowding in smaller chromosomes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, chromosome labels well-spaced
+        comment: Title 28px, axis labels 22px, tick labels 18px; all readable in both
+          themes with proper INK tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with no collisions; chromosome labels positioned below
+          with spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points well-sized with appropriate alpha (0.7), significant hits
-          larger (100px vs 30px), very slight overplotting in dense regions
+        comment: Points clearly visible with opacity=0.7 and size variation (60-100px);
+          no occlusion issues
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/gray alternating scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with vconcat for labels, slight excess whitespace at
-          right edge
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label "-log₁₀(p-value)", X-axis labeled "Chromosome"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette (CVD-safe); first series #009E73; adequate contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; generous spacing; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at 0.3 opacity, no legend needed (colors self-explanatory)
+        comment: Descriptive title and subtitle; axis labels clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; alternating chromosomes follow Okabe-Ito;
+          backgrounds correct; both renders theme-compliant'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional design using standard Okabe-Ito without additional refinement;
+          could benefit from custom styling or emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean grid and threshold lines; spines handled subtly; could improve
+          with refined line weights
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Size variation creates hierarchy; threshold lines guide focus; could
+          strengthen with annotations on peaks
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Manhattan plot type
+        comment: Correct Manhattan plot; cumulative genomic position on x-axis; -log10(p-value)
+          on y-axis; alternating chromosome colors
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Cumulative genomic position on X, -log10(p-value) on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Alternating colors, genome-wide threshold (7.3), suggestive threshold
-          (5.0), chromosome labels centered
-      - id: SC-04
-        name: Data Range
+        comment: Alternating colors, threshold lines at 7.3 and 5, point size reduction
+          for density
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y scale extends to max+1
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis shows cumulative genomic position; y-axis shows -log10(p-value);
+          all data visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: No legend needed, colors distinguish chromosomes
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"manhattan-gwas · altair · pyplots.ai" exact format'
+        max: 3
+        passed: false
+        comment: Title is descriptive but missing required format (manhattan-gwas
+          · altair · anyplot.ai); legend appropriately omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows significant peaks (chr 2,6,8,15), suggestive hits (chr 3,11,19),
-          and background noise - demonstrates full GWAS pattern
+        comment: Realistic GWAS dataset with baseline noise, suggestive hits, and
+          significant peaks across chromosomes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Simulated GWAS data with realistic chromosome lengths and p-value
-          distributions
+        comment: Simulated data is plausible; realistic chromosome lengths; appropriate
+          SNP density; neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: ~60K SNPs across 22 chromosomes, p-values range appropriately, chromosome
-          sizes proportional to human genome
+        comment: Y-axis scale sensible for p-value magnitudes; x-axis spans full genome;
+          thresholds at meaningful values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,42 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data generation → chart building
-          → save'
+        comment: No unnecessary functions; straightforward linear structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: Only necessary imports (os, altair, numpy, pandas); all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper high-level API; layer composition; conditional encoding for
+          size; theme-adaptive configuration
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Good use of layered charts, conditional encoding for point size,
-          tooltips for interactivity, vconcat for layout - solid Altair usage but
-          could leverage more declarative features
+        passed: false
+        comment: Layer composition and tooltips well-executed; could leverage more
+          Altair transforms
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

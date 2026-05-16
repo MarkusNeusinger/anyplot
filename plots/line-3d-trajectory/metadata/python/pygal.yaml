@@ -1,0 +1,259 @@
+library: pygal
+language: python
+specification_id: line-3d-trajectory
+created: '2026-05-16T08:58:18Z'
+updated: '2026-05-16T09:08:32Z'
+generated_by: claude-haiku
+workflow_run: 25957853507
+issue: 3182
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent visual quality with both renders fully readable in light and dark themes
+  - Mathematically rich Lorenz attractor data choice effectively demonstrates 3D trajectory
+    visualization
+  - 'Proper theme-adaptive styling using correct background colors (#FAF8F1 light,
+    #1A1A17 dark) with consistent typography'
+  - Clean code structure with high reproducibility—proper use of seed and deterministic
+    data generation
+  - Idiomatic pygal usage with custom Style object and proper theme token threading
+  weaknesses:
+  - Design Excellence is moderate—could enhance visual refinement by explicitly removing
+    top/right spines and refining aesthetic sophistication beyond default Style
+  - Legend shows generic 'Segment N' labels rather than a more descriptive color-progression
+    indicator or narrative
+  - Library Mastery LM-02 is basic—matplotlib colormap integration is functional but
+    not distinctively sophisticated
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-3d-trajectory · pygal · anyplot.ai" in dark text; axis labels "X (Projected)" and "Y (Projected)" clearly visible; tick labels and legend readable; grid subtle and well-balanced
+      Data: 30 colored trajectory segments showing Lorenz attractor butterfly shape; colors progress via viridis (blue → teal → yellow → orange → red); smooth connected lines form nested loops; no visible overlap or collision
+      Legibility verdict: PASS — all text is clear and dark against light surface; data colors have strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light text; axis labels and tick labels visible in off-white/light gray; grid subtle; legend readable
+      Data: Identical color progression to light render (viridis colors unchanged); trajectory shape and segments match light version exactly; only chrome/background has flipped, data colors are theme-independent as required
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements readable in light text; data colors distinguish clearly from dark background
+
+    Both renders meet theme-readability requirements with correct background colors, readable typography, and consistent data visualization across themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          all text readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title positioned at top with clear separation; axis labels and legend
+          on left side with good spacing; no collisions detected
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Trajectory segments clearly visible with strong color contrast via
+          viridis; line width 2.5 is adequate; overlapping curves distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis colormap is perceptually uniform and colorblind-safe; strong
+          contrast between data colors and backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas size 4800×2700 is correct per style guide; proportions well-balanced;
+          margins generous; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows spec format 'line-3d-trajectory · pygal · anyplot.ai';
+          axis labels 'X (Projected)' and 'Y (Projected)' are descriptive and indicate
+          coordinate transformation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark); continuous
+          data uses viridis per style guide; theme chrome properly adapted; both renders
+          theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom Style object with explicit typography hierarchy and professional
+          rendering, but uses built-in viridis rather than custom palette; design
+          is functional but not particularly sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid is subtle (via foreground_subtle), whitespace is generous, but
+          top/right spines not explicitly removed; minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Trajectory is clear focal point; color progression effectively shows
+          evolution through trajectory; nested loop structure of Lorenz attractor
+          is visually apparent
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct trajectory visualization using XY scatter with connected
+          lines; pygal lacks native 3D, so 2D projection is valid approach
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Points connected sequentially with smooth lines; color gradient shows
+          progression via viridis; trajectory path clearly visualized; all spec requirements
+          met within library constraints
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: normalized x coordinates; Y-axis: normalized y coordinates;
+          Z dimension encoded via color; all data visible across full trajectory'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches spec format; legend shows segment labels with corresponding
+          colors; labels are clear though generic
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Lorenz attractor is classic trajectory example; demonstrates characteristic
+          butterfly-wing shape; 3000 points normalized into 30 segments
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor is real-world applicable (physics, weather modeling,
+          chaos theory); standard parameters (sigma=10, rho=28, beta=8/3); not controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinates normalized to [-1,1] for visualization; 3000 points with
+          30 segments is appropriate; good canvas coverage
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single function (lorenz_attractor) for data generation; main code
+          straightforward; no unnecessary classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures reproducibility; Lorenz attractor is deterministic
+          with fixed parameters
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os (THEME), matplotlib (colormap), numpy (data),
+          pygal (charting), matplotlib.colors (Normalize), pygal.style (Style)'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI or simulated interactivity; Lorenz
+          function well-structured; color logic clear
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current pygal
+          API (render_to_png, render)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of pygal.XY chart; custom Style object follows pygal patterns;
+          correct add() method usage; theme handling via Style is idiomatic; standard
+          PNG and HTML export
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses matplotlib.colors.Normalize with viridis colormap integration;
+          segment-based coloring is functional workaround for pygal's limited colormap
+          support, but not distinctively sophisticated
+    score_caps_applied: []
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - matplotlib
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

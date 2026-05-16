@@ -1,34 +1,223 @@
 library: pygal
+language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:48:43Z'
-updated: '2025-12-30T18:17:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602451830
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T07:42:51Z'
+generated_by: claude-haiku
+workflow_run: 25784991106
+issue: 2781
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/pygal/plot.html
-quality_score: 88
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Clear visualization of asymmetric error bars using pygal XY chart creatively
-  - Well-labeled axes with units (MPa for strength, Material for x-axis)
-  - Realistic engineering context (material tensile strength testing)
-  - Good demonstration of asymmetric errors with varied patterns across materials
-  - Clean code structure following KISS principles
-  - Proper title format and legend explaining what the percentile ranges represent
+  - Perfect text legibility with explicitly sized fonts across all themes
+  - Correct implementation of asymmetric error bars with visible caps
+  - 'Proper theme-adaptive colors and backgrounds (#FAF8F1 light, #1A1A17 dark)'
+  - Realistic data context (material strength testing with non-symmetric confidence
+    intervals)
+  - 'All required features present: central values, error bounds, legend, proper title
+    format'
   weaknesses:
-  - Legend symbols do not perfectly match the plot elements (squares in legend vs
-    lines/dots in plot)
-  - Layout has some unused whitespace on the sides
-  - Error bar caps could be more visually prominent
+  - Error bar implementation uses multiple chart.add(None, ...) calls which is functional
+    but slightly inelegant
+  - Design could be elevated with more visual hierarchy or refinement to legend styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "errorbar-asymmetric · pygal · anyplot.ai" in dark text, axis labels "Material" and "Tensile Strength (MPa)" clearly readable, material names and tick values (100-600 MPa) all visible
+      Data: Green data points (#009E73 brand color) with asymmetric error bars extending above and below, horizontal caps at error bounds, legend shows "Median (10th-90th percentile)"
+      Legibility verdict: PASS - all text is readable and properly sized for the 4800×2700 canvas
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and axis labels in light text (INK #F0EFE8), all text clearly visible against dark background, no dark-on-dark failures
+      Data: Green data points are identical to light render (#009E73), error bars and caps are visible and properly rendered
+      Legibility verdict: PASS - excellent readability in dark theme, proper theme adaptation with no text legibility issues
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized (title=28, labels=22, major=18, legend=16,
+          value=14), readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements, proper spacing throughout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Error bars, caps, dots, grid lines all visible and appropriately
+          sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito green #009E73 is CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, generous margins (80px), nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format, axis labels include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds correct, theme adaptation flawless'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional clean style with custom theme tokens, but straightforward
+          without visual flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean grid and generous spacing, but minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Asymmetric error bars tell story of different material properties,
+          meaningful data choice
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct asymmetric error bar plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: bars, caps, central values, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis materials, Y-axis strength, error bounds correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend explains plot
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all aspects of asymmetric error bars
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Material strength testing is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MPa values appropriate for tensile strength
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, straightforward
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed data arrays, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os and pygal imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Multiple chart.add(None, ...) calls for error bars functional but
+          inelegant
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses pygal.XY and Style correctly, but error bar approach could be
+          more elegant
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Interactive HTML export used, but mostly straightforward
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

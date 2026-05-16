@@ -1,25 +1,36 @@
-""" pyplots.ai
+""" anyplot.ai
 contour-3d: 3D Contour Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-16
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - Create a surface with interesting features for visualization
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data - Terrain elevation data with realistic features
 np.random.seed(42)
-x = np.linspace(-3, 3, 40)
-y = np.linspace(-3, 3, 40)
+x = np.linspace(0, 10, 40)
+y = np.linspace(0, 10, 40)
 X, Y = np.meshgrid(x, y)
 
-# Create a surface combining peaks and valleys (simulates terrain or potential field)
-Z = (1 - X / 2 + X**5 + Y**3) * np.exp(-(X**2) - Y**2) * 3
+# Create realistic terrain with peaks and valleys (elevation in meters)
+Z = 100 + 30 * np.sin(X / 2) * np.cos(Y / 2) + 20 * np.exp(-((X - 5) ** 2 + (Y - 5) ** 2) / 8)
 
 # Create figure with 3D axes
-fig = plt.figure(figsize=(16, 9))
-ax = fig.add_subplot(111, projection="3d")
+fig = plt.figure(figsize=(16, 9), facecolor=PAGE_BG)
+ax = fig.add_subplot(111, projection="3d", facecolor=PAGE_BG)
+ax.xaxis.pane.set_facecolor(PAGE_BG)
+ax.yaxis.pane.set_facecolor(PAGE_BG)
+ax.zaxis.pane.set_facecolor(PAGE_BG)
 
 # Plot surface with semi-transparency
 surf = ax.plot_surface(X, Y, Z, cmap="viridis", alpha=0.6, edgecolor="none", antialiased=True)
@@ -28,25 +39,35 @@ surf = ax.plot_surface(X, Y, Z, cmap="viridis", alpha=0.6, edgecolor="none", ant
 contours = ax.contour(X, Y, Z, levels=12, cmap="viridis", linewidths=2)
 
 # Project contours onto the base plane (z = min)
-z_offset = Z.min() - 0.3
+z_offset = Z.min() - 5
 ax.contour(X, Y, Z, levels=12, zdir="z", offset=z_offset, cmap="viridis", linewidths=1.5)
 
-# Styling
-ax.set_xlabel("X Position", fontsize=18, labelpad=15)
-ax.set_ylabel("Y Position", fontsize=18, labelpad=15)
-ax.set_zlabel("Amplitude", fontsize=18, labelpad=15)
-ax.set_title("contour-3d \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, pad=20)
+# Styling - theme-adaptive chrome
+ax.set_xlabel("Distance East (km)", fontsize=20, color=INK, labelpad=15)
+ax.set_ylabel("Distance North (km)", fontsize=20, color=INK, labelpad=15)
+ax.set_zlabel("Elevation (m)", fontsize=20, color=INK, labelpad=15)
+ax.set_title("contour-3d · matplotlib · anyplot.ai", fontsize=24, color=INK, pad=20)
 
-# Tick params
-ax.tick_params(axis="both", labelsize=14)
+# Tick params with theme-adaptive colors
+ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
+ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+ax.tick_params(axis="z", labelsize=16, colors=INK_SOFT)
+
+# Set pane edge colors
+ax.xaxis.pane.set_edgecolor(INK_SOFT)
+ax.yaxis.pane.set_edgecolor(INK_SOFT)
+ax.zaxis.pane.set_edgecolor(INK_SOFT)
+ax.xaxis.pane.set_alpha(0.1)
+ax.yaxis.pane.set_alpha(0.1)
+ax.zaxis.pane.set_alpha(0.1)
 
 # Set view angle
 ax.view_init(elev=30, azim=45)
 
-# Add colorbar
+# Add colorbar with theme-adaptive colors
 cbar = fig.colorbar(surf, ax=ax, shrink=0.6, aspect=15, pad=0.1)
-cbar.set_label("Amplitude", fontsize=16)
-cbar.ax.tick_params(labelsize=14)
+cbar.set_label("Elevation (m)", fontsize=16, color=INK)
+cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

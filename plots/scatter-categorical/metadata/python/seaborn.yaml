@@ -1,165 +1,168 @@
 library: seaborn
+language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:38:26Z'
-updated: '2025-12-30T10:46:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594554074
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T13:10:33Z'
+generated_by: claude-haiku
+workflow_run: 25735828626
+issue: 2597
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/seaborn/plot.png
-preview_html: null
-quality_score: 95
-impl_tags:
-  dependencies: []
-  techniques:
-  - alpha-blending
-  - edge-highlighting
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent use of the Iris flower dataset context - classic, well-understood scientific
-    scenario
-  - Perfect text sizing with 24pt title, 20pt labels, 16pt ticks - all highly readable
-  - Custom colorblind-safe palette with good color contrast between categories
-  - Clean KISS code structure with proper seed for reproducibility
-  - Good marker sizing (s=200) and transparency (alpha=0.7) for 150 data points
-  - White edge borders on markers improve visibility and separation
-  - Three distinct clusters clearly demonstrate categorical grouping
+  - Perfect theme-adaptive implementation with matching data colors and flipped chrome
+  - Explicit font sizing throughout ensures readability at large canvas size
+  - Excellent palette compliance (Okabe-Ito first series, proper ordering, correct
+    backgrounds)
+  - High-quality synthetic data with realistic domain context
+  - Proper use of alpha blending for overlapping point visualization
+  - Clean, maintainable code following KISS principles
   weaknesses:
-  - Grid uses dashed linestyle which is slightly more distracting than solid with
-    low alpha
-  - Does not utilize seaborn's style parameter to vary marker shapes by category as
-    suggested in spec
-  - Could use seaborn's built-in 'colorblind' palette instead of custom colors
-  image_description: 'The plot shows a categorical scatter plot with Iris-like flower
-    measurement data. Three species (Setosa, Versicolor, Virginica) are displayed
-    using distinct colors: blue (#306998) for Setosa, yellow (#FFD43B) for Versicolor,
-    and green (#6A9F58) for Virginica. The X-axis shows "Petal Length (cm)" ranging
-    from 1-8, and the Y-axis shows "Petal Width (cm)" ranging from 0-3. The title
-    "scatter-categorical · seaborn · pyplots.ai" is displayed at the top in bold.
-    A legend in the upper-left corner identifies the three species. The Setosa cluster
-    appears tightly grouped in the bottom-left (small petals), Versicolor spans the
-    middle region, and Virginica occupies the upper-right (larger petals). A subtle
-    dashed grid is present. Points have white edge borders and slight transparency.'
+  - Limited visual refinement beyond library defaults (no custom palette, standard
+    spine removal)
+  - No visual hierarchy or emphasis—data displayed clearly but lacks storytelling
+  - Design feels competent but not exceptional
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), perfect for light theme
+      Chrome: Title "scatter-categorical · seaborn · anyplot.ai" in bold dark text (24pt), axis labels "Ambient Value" and "Sensor Output" in dark text (20pt), tick labels in secondary ink color (16pt). All text fully readable.
+      Data: Three sensor types color-coded: Temperature in brand green (#009E73), Pressure in vermillion (#D55E00), Humidity in blue (#0072B2). Marker size s=200 with alpha=0.7 creates clear visibility of overlapping points.
+      Legend: "Sensor Type" positioned upper left with three entries matching data colors
+      Grid: Y-axis grid only with subtle styling (alpha=0.10)
+      Legibility verdict: PASS - All elements perfectly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), perfect for dark theme
+      Chrome: Title in light color (#F0EFE8), axis labels in light color, tick labels in secondary light (#B8B7B0). All text perfectly readable against dark background with no dark-on-dark issues.
+      Data: Identical sensor type colors to light render - green, vermillion, blue unchanged (proving correct theme-adaptive implementation). Legend background in elevated dark (#242420).
+      Grid: Y-axis grid in appropriately inverted opacity
+      Legibility verdict: PASS - All elements fully readable, no dark-on-dark failures, colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt bold, axis labels 20pt, tick labels 16pt - all perfectly
-          readable
+        comment: All sizes explicitly set, perfect readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Zero overlap, all text elements fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size s=200 with alpha=0.7 is appropriate for 150 data points
+        comment: 150 points with s=200 and alpha=0.7 optimally adapted to density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Petal Length (cm)", "Petal Width
-          (cm)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance, plot fills 60% of canvas with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito ordering, correct backgrounds, perfect
+          chrome adaptation'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha=0.3), but dashed linestyle is slightly distracting
-          compared to solid
+        comment: Well-configured defaults with theme-aware styling, but lacks custom
+          refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only, spines removed, legend styled appropriately
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with categorical coloring
+        comment: Correct categorical scatter plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y continuous variables correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct colors per category, legend present, alpha transparency
-          for overlap
-      - id: SC-04
-        name: Data Range
+        comment: X/Y variables, categorical coloring, legend present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Mapping logical and clear
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps colors to species names
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "scatter-categorical · seaborn · pyplots.ai"'
+        comment: Correct format and labels
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters with different spreads, but spec suggests
-          varying marker shapes could add distinction
+        comment: Shows all aspects with multiple categories and clustering
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic Iris flower dataset scenario - excellent scientific context
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Petal measurements in realistic cm ranges
+        comment: IoT sensor scenario realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values factually accurate
     code_quality:
       score: 10
       max: 10
@@ -169,41 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of seaborn high-level API
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses seaborn's scatterplot with hue parameter correctly, but doesn't
-          leverage advanced features like style parameter for marker shapes or seaborn's
-          built-in colorblind palette
+        comment: Standard rather than distinctive usage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

@@ -1,214 +1,251 @@
 library: bokeh
+language: python
 specification_id: contour-3d
 created: '2026-01-07T20:25:01Z'
-updated: '2026-01-07T20:51:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795211097
+updated: '2026-05-16T12:48:03Z'
+generated_by: claude-haiku
+workflow_run: 25962117268
 issue: 3230
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-3d/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-3d/bokeh/plot.html
-quality_score: 88
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Creative 3D projection implementation using painter's algorithm for depth sorting
-  - Excellent use of Bokeh's ColorBar, HoverTool, and HTML export features
-  - Clean isometric projection with custom axis arrows
-  - Base plane contour projection provides good reference per spec requirements
-  - Viridis colormap is accessible and perceptually uniform
+  - Sophisticated 3D projection implementation with proper depth sorting and isometric
+    transformation
+  - Perfect theme adaptation - data colors identical in both renders, chrome properly
+    inverted with excellent contrast
+  - 'All specification requirements met: sequential colormap, regular contour intervals,
+    base plane projection, 3D axes, colorbar with units'
+  - Excellent visual hierarchy through contour styling (dashed on base, solid on surface,
+    different alphas)
+  - Clean, deterministic code with explicit font sizing and proper theme handling
+  - Professional presentation with generous whitespace and balanced layout
   weaknesses:
-  - Text elements (title, axis labels, colorbar) appear small relative to the high-resolution
-    output
-  - Uses deprecated matplotlib allsegs API; should use get_paths() for future compatibility
-  - Axis labels lack descriptive context (just X, Y, Z instead of meaningful variable
-    names with units)
-  - Layout leaves significant white space at the bottom of the canvas
-  image_description: The plot displays a 3D contour surface visualization using an
-    isometric projection technique. The surface shows two Gaussian peaks - a primary
-    peak near the center-back and a smaller secondary peak offset to the upper right.
-    The surface is colored using the Viridis colormap (purple/dark blue at low values
-    transitioning through green to yellow at peaks). Dark contour lines are drawn
-    directly on the 3D surface at regular intervals, clearly showing the isolines.
-    Dashed contour lines are projected onto the base plane beneath the surface for
-    reference. Three custom axis arrows point in the X, Y, and Z directions from the
-    back-left corner. A colorbar on the right displays "Height (Z)" ranging from approximately
-    0.2 to 1.0. The title "contour-3d · bokeh · pyplots.ai" appears at the top left.
+  - Library Mastery limited due to Bokeh's lack of native 3D - implementation relies
+    on manual projection rather than distinctive Bokeh features (interactivity, callbacks
+    could be better showcased)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "contour-3d · bokeh · anyplot.ai" is dark text and clearly readable; colorbar has "Amplitude (a.u.)" label in appropriate size; 3D axes with arrows are visible and properly styled in neutral ink-soft color (#4A4A44)
+      Data: Surface rendered with viridis colormap (purple at low values to yellow at high values); contour lines on base plane shown dashed at 65% alpha; contour lines on surface shown solid at 80% alpha; smooth gradient shows clear color encoding
+      Legibility verdict: PASS - All text is readable against the light background; no color-on-color conflicts; contrast is excellent
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title remains dark-themed with light text (#F0EFE8) and is clearly visible against dark background; colorbar labels and title are light and readable; 3D axes with arrows maintain visibility with appropriate light styling (#B8B7B0)
+      Data: Viridis colormap is identical to light render (purple to yellow gradient unchanged) - only chrome has flipped as required; surface, base contours, and surface contours all render correctly with the same color encoding
+      Legibility verdict: PASS - All text is light-colored on dark background with excellent contrast; no dark-on-dark failures; axes and labels are fully readable; color gradients are equally vibrant against dark surface
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and axis labels readable but relatively small for 4800x2700
-          output
+        comment: All font sizes explicitly set; title 28pt, colorbar labels 32-40pt;
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels positioned clearly
+        comment: All text elements properly positioned; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Surface quads, contour lines, and base plane contours all clearly
-          visible
+        comment: Surface, contours, axes all clearly visible and well-adapted to visualization
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe with excellent perceptual uniformity
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Plot well-centered but significant white space at bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels show X, Y, Z but lack descriptive context with units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid lines, colorbar well-placed on right
+        comment: Viridis is colorblind-safe; excellent contrast and luminance differentiation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape format; plot fills 60-70% of canvas with balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; colorbar labeled with units (Amplitude a.u.)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous data; backgrounds #FAF8F1 light/#1A1A17
+          dark; chrome properly theme-adaptive; data colors identical between renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Professional design with sophisticated 3D projection, intentional
+          visual hierarchy through contour styling (dashed vs solid lines, varied
+          alphas)
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle gridlines (10% alpha), refined surface edges (30% alpha),
+          generous whitespace, excellent attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with viridis gradient guiding viewer; surface
+          is focal point; base contours provide context in subdued manner; effectively
+          communicates both geometry and level curves
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct 3D contour plot with surface and isolines
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X, Y, Z correctly assigned; proper meshgrid structure
-      - id: SC-03
+        comment: Correct 3D contour plot with all subtypes present
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has surface contours, base plane projection, colorbar; rotation not
-          applicable for static PNG
-      - id: SC-04
-        name: Data Range
+        comment: Sequential colormap, contour lines at 10 regular intervals, base
+          plane projection, 3D axes, colorbar all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the projected view
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y uniformly spaced (-3 to 3), Z is mathematical function, all data
+          visible in projection
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly shows amplitude scale
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Format correct but title text appears too small in final render
+        comment: 'Title format correct: ''contour-3d · bokeh · anyplot.ai''; colorbar
+          serves as legend for continuous data'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple peaks with different heights, clear contour gradients
+        comment: 'Shows all aspects of 3D contour visualization: surface geometry,
+          multiple contour levels, base plane projection, full data range'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Generic amplitude surface suitable for many domains
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Normalized 0-1 amplitude scale is appropriate; grid points (40x40)
-          provide clear detail
+        comment: Plausible scientific data (sum of two Gaussians); represents realistic
+          scenario like optimization landscape or field distribution; neutral and
+          well-chosen
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40x40 grid within recommended range; 10 contour levels well-distributed;
+          scale proportional and sensible
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code is linear but uses loops for projection; necessarily complex
-          for 3D simulation
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set correctly
+        comment: Linear script structure; no functions or classes; clear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42); fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; matplotlib only for contour extraction
+        comment: All imports used; no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses contour_set.allsegs which is deprecated in matplotlib 3.8+
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for 3D projection task; no over-engineering
+          or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-light/dark.png and .html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Implements HoverTool, ColorBar, LinearColorMapper, export_png, interactive
-          HTML export with CDN resources
+        comment: Uses Bokeh high-level API correctly (figure, line, patch, ColorBar);
+          adapts well to Bokeh's 2D limitations
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Manual 3D projection is adaptive but not distinctive to Bokeh; doesn't
+          fully leverage Bokeh's distinctive features like interactivity or custom
+          callbacks
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - matplotlib
+  - selenium
   techniques:
-  - colorbar
   - 3d-projection
-  - hover-tooltips
+  - colorbar
+  - layer-composition
   - html-export
-  - patches
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - custom-colormap
+  - publication-ready
   - alpha-blending
-  - grid-styling
+  - custom-colormap

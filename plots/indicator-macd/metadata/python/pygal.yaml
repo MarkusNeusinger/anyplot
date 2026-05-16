@@ -1,166 +1,174 @@
 library: pygal
+language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:29:07Z'
-updated: '2026-01-07T17:00:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788388725
+updated: '2026-05-16T10:59:16Z'
+generated_by: claude-haiku
+workflow_run: 25959991377
 issue: 3181
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/pygal/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/pygal/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent implementation of MACD chart using pygal capabilities creatively
-  - Proper use of filled areas to represent histogram (green for positive, red for
-    negative)
-  - 'Clear color coding: blue MACD, orange Signal, green/red histogram, gray dashed
-    zero line'
-  - Good font sizing scaled appropriately for 4800x2700 canvas
-  - Correct title format and axis labeling
-  - Clean code structure with proper random seed for reproducibility
+  - Excellent text legibility in both themes with properly scaled fonts
+  - Clear data representation with all MACD components visible
+  - Proper theme-adaptive chrome (backgrounds, text colors) in both renders
+  - Clean, reproducible code with deterministic seeding
+  - Accurate MACD technical indicator calculation
+  - Well-structured layout with appropriate margins and spacing
   weaknesses:
-  - Histogram representation using filled area rather than discrete bars (library
-    limitation workaround)
-  - Layout could utilize more vertical canvas space
-  image_description: The plot displays a MACD (Moving Average Convergence Divergence)
-    technical indicator chart rendered in pygal. The chart features a title "indicator-macd
-    · pygal · pyplots.ai" at the top in dark gray text. The MACD Line (blue) is a
-    continuous line showing the MACD values (12-day EMA minus 26-day EMA), oscillating
-    between approximately -3.5 and +1.5. The Signal Line (orange) is a smoother line
-    showing the 9-day EMA of MACD, tracking the MACD line. The Histogram (+) (green
-    filled area) displays positive histogram values as filled areas above the zero
-    line, while the Histogram (−) (red filled area) shows negative histogram values
-    as filled areas below the zero line. A dashed gray horizontal Zero Reference Line
-    sits at y=0. The X-axis is labeled "Date" with dates from Feb 20 through May 20,
-    showing every 20th date at 45-degree rotation. The Y-axis is labeled "MACD Value"
-    ranging from approximately -3.5 to +1.5. The legend is positioned at the bottom
-    showing all 5 series (MACD, Signal, Histogram +/-, Zero). The layout uses a white
-    background with subtle gray grid lines on the Y-axis.
+  - 'Palette compliance violation: positions 3 & 4 use matplotlib default colors (#2CA02C,
+    #D62728) instead of canonical Okabe-Ito sequence (#0072B2, #CC79A7) - critical
+    hard requirement'
+  - Minimal aesthetic sophistication; relies on library defaults rather than intentional
+    design refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title and axis labels render in dark text (#1A1A17), clearly readable against light background. Tick labels are secondary text color (#4A4A44), visible and distinct.
+      Data: Green histogram bars above zero (positive bars - #009E73), orange below (negative - #D55E00), light blue line (MACD), pink/salmon line (Signal), gray dashed zero reference line
+      Legibility verdict: PASS - all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and axis labels render in light text (#F0EFE8), clearly readable against dark background. Tick labels are secondary light color (#B8B7B0), visible and distinct.
+      Data: Green histogram bars and orange bars identical to light render (confirming proper color constants). Blue and pink lines maintain exact same hues from light render. Dashed zero line is slightly lighter gray (#B8B7B0) to remain visible.
+      Data colors match light render exactly: green (#009E73), orange (#D55E00), blue (appears to be #2CA02C - non-canonical), pink (appears to be #D62728 - non-canonical)
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, but palette non-compliance confirmed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, legend, and tick marks are all clearly readable
-          at the canvas size with appropriately scaled fonts
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: X-axis date labels are properly spaced (every 20th shown), no overlapping
-          text elements
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all elements clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: 'MACD and Signal lines are visible with appropriate stroke width;
-          histogram areas are clearly visible. Minor deduction: line thickness could
-          be slightly more prominent in busy areas'
+        comment: Data markers and lines optimally sized; histogram bars and lines
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Green/red histogram with blue MACD and orange signal provides good
-          distinction; colorblind users can differentiate by line style and filled
-          vs unfilled
+        comment: Good contrast; data colors visually distinct; CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills reasonable canvas space but could utilize more vertical
-          space; margins are balanced
+        comment: Perfect proportions; plot uses ~60% of canvas; generous balanced
+          margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels: Date and MACD Value'
+        comment: Descriptive labels with correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 2
+        name: Palette Compliance
+        score: 0
         max: 2
-        passed: true
-        comment: Subtle Y-axis guides, legend well-positioned at bottom
+        passed: false
+        comment: 'CRITICAL: Positions 3 & 4 use matplotlib defaults (#2CA02C, #D62728)
+          instead of Okabe-Ito (#0072B2, #CC79A7)'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Custom Style object but color palette relies on non-canonical defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid styling appropriate but minimal customization; library defaults
+          dominate
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Plot displays components clearly but lacks visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements MACD chart with line chart for MACD/Signal and
-          filled areas for histogram
+        comment: Correct MACD line chart with histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, MACD values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: MACD line, signal line, histogram with
-          green/red colors, zero reference line'
-      - id: SC-04
-        name: Data Range
+        comment: 'All components present: MACD line, Signal line, histogram (positive
+          & negative), zero reference'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all 150 trading days visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all series with MACD parameters (12,26)
-          and Signal (9)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: indicator-macd · pygal · pyplots.ai'
+        comment: Title format correct; legend labels match data series
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bullish and bearish periods, crossovers between MACD and signal,
-          histogram expansion/contraction
+        comment: 'Shows all MACD features: positive/negative histogram, line crossovers,
+          realistic volatility'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Simulated stock price data is plausible but generic
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: MACD values in reasonable range (-3.5 to +1.5) appropriate for stock
-          price movements
+        comment: Stock price simulation with realistic daily returns; correct EMA
+          formulas (12, 26, 9)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MACD values realistic for 150-day trading period; scale is proportional
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,49 +176,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → chart creation → save'
+        comment: 'Linear flow: imports → data generation → calculation → plotting
+          → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, pygal, Style)
+        comment: Only numpy, pandas, pygal (all necessary)
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Using stroke_style parameter which works but is less common pattern
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; theme-aware via environment variable
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves correctly to plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses pygal Style customization and Line chart with fill option for
-          histogram visualization. Creative use of filled areas for histogram representation
-  verdict: APPROVED
+        passed: false
+        comment: Uses pygal Style and standard API correctly but misses theme-adaptive
+          color management opportunity
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; no interactive features beyond basic HTML export
+    total:
+      score: 80
+      max: 100
+  verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
-  - time-series
   dataprep:
   - rolling-window
   styling: []

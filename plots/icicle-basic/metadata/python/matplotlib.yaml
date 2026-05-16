@@ -1,170 +1,173 @@
 library: matplotlib
+language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:03:34Z'
-updated: '2025-12-30T00:21:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585399330
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-05-13T22:51:34Z'
+generated_by: claude-haiku
+workflow_run: 25830329763
+issue: 2497
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
 review:
   strengths:
-  - Excellent hierarchical visualization with clear parent-child relationships through
-    spatial adjacency
-  - Smart label truncation prevents overlap while keeping labels readable where space
-    permits
-  - Colorblind-safe palette with appropriate contrast (black text on yellow, white
-    on others)
-  - Good use of file system metaphor as realistic, neutral example data
-  - Clean code structure following KISS principle with inline data processing
-  - Level labels on right side provide helpful context for hierarchy depth
+  - Correct hierarchical icicle chart showing file system structure clearly
+  - Excellent layout balance and canvas utilization (~85% filled)
+  - No overlapping text; labels appropriately truncated for small nodes
+  - Realistic, neutral example data showing multiple hierarchy levels
+  - Clean code following KISS principles; fully reproducible and deterministic
+  - Theme adaptation works in final renders (light and dark backgrounds correct)
+  - All spec requirements met (plot type, features, data mapping, title)
   weaknesses:
-  - Item-level (depth 3) labels are heavily truncated to 1-2 characters, making them
-    difficult to identify
-  - No random seed statement (though data is deterministic, adding np.random.seed(42)
-    comment would clarify intent)
-  - Could use matplotlib colormap instead of manual color list for better scalability
-  image_description: 'The plot displays a horizontal icicle chart representing a file
-    system hierarchy with 4 depth levels. The root level (blue, #306998) spans the
-    full width with "Root" label. The category level (yellow, #FFD43B) shows three
-    main folders: "Documents", "Pictures", and "Music" with proportional widths. The
-    subcategory level (teal, #4ECDC4) contains folders like "Reports", "Letters" (truncated
-    to "Lett.."), "Spreadsheets" (truncated), "Photos", "Screenshots" ("Sc.."), "Icons"
-    ("I.."), "Albums", "Playlists" ("P.."), and "Podcasts" ("Podca.."). The item level
-    (coral, #FF6B6B) shows individual files with heavily truncated labels. Level hierarchy
-    labels (Root, Category, Subcategory, Item) appear on the right side. Title is
-    correctly formatted as "icicle-basic · matplotlib · pyplots.ai".'
+  - 'Palette Non-Compliance: Using custom depth-based colors instead of Okabe-Ito
+    categorical palette; first series must be #009E73 (brand green), not #306998 (Python
+    Blue)'
+  - 'Output Filename: Code saves to plot.png instead of theme-aware plot-light.png
+    / plot-dark.png'
+  - 'Code Theme-Handling: Implementation doesn''t read ANYPLOT_THEME environment variable
+    or use theme tokens; relying on pipeline post-processing rather than code-level
+    theme support'
+  - 'Generic Design: Aesthetic sophistication and library mastery at default levels;
+    no distinctive use of matplotlib features beyond patches.Rectangle and ax.text()'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) - correct theme color
+      Chrome: Title "icicle-basic · matplotlib · anyplot.ai" is dark, bold, clearly readable. Right-side level labels (Root, Category, Subcategory, Item) in dark gray (#333333), visible against light background. All text is readable and appropriately sized.
+      Data: Root in teal (#4ECDC4), Category nodes in orange (#FFD43B) with black labels, Subcategory in blue (#0072B2) with white labels, Items in reddish-purple. White rectangle edges provide definition. Layout clearly shows hierarchy.
+      Legibility verdict: PASS - No light-on-light failures; all text readable at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) - correct theme color
+      Chrome: Title is light/white, clearly readable. Right-side level labels appear in light gray, readable against dark background (theme-adapted correctly in render). No dark-on-dark text failures detected.
+      Data: All rectangle colors identical to light render (teal, orange, blue, reddish-purple) - only chrome has flipped to light colors. White rectangle edges maintained. Labels visible with appropriate contrast.
+      Legibility verdict: PASS - Both renders theme-correct, data colors consistent across themes, all text readable in both.
+
+    Both paragraphs confirm proper theme-adaptive rendering with readable text in both light and dark modes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 24pt is excellent, main labels readable, but item-level
-          labels are heavily truncated making some unreadable
+        score: 4
+        max: 8
+        passed: false
+        comment: 'Most text explicit, but level labels hardcoded #333333 not theme-aware'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; truncation prevents overlap effectively
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangles well-sized, clear gaps between rows, good visual hierarchy
+        comment: All rectangles and labels clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with good contrast; yellow uses black text
-          appropriately
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though right-side level labels create slight
-          asymmetry
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: No traditional axes (appropriate for icicle chart), but level labels
-          serve similar purpose
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed; level labels on right serve as effective legend
+        comment: Good contrast and CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent layout utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format, descriptive level labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Non-Okabe-Ito palette; first series #306998 not #009E73'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Some refinement (axes off, edges highlight) but minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color-coded hierarchy guides understanding; clear hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct icicle chart with horizontal top-to-bottom layout
+        comment: Correct icicle chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchy correctly represented with proportional widths
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows parent-child relationships, proportional sizing, colored by
-          depth
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All hierarchy levels visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct horizontal and depth mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Level labels accurately describe hierarchy
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "icicle-basic · matplotlib · pyplots.ai"'
+        comment: Title format correct
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 hierarchy levels with varying node sizes; could show more
-          variation in leaf values
+        comment: Multiple hierarchy levels, varied sizes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: File system hierarchy is a perfect, neutral real-world example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: File sizes in reasonable ranges (15-75 units)
+        comment: Realistic file system example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible proportions
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -172,40 +175,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure, no functions/classes
+        comment: Simple inline tree building
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed, but data is deterministic so effectively reproducible
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and matplotlib.patches used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean and appropriate complexity
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves to plot.png instead of plot-light.png / plot-dark.png
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Good use of patches.Rectangle and manual positioning, but could leverage
-          more matplotlib features like colormap
+        passed: false
+        comment: Low-level API usage (patches, text) rather than high-level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; could be any library
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

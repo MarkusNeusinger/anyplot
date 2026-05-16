@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 100/100 | Updated: 2026-05-15
 """
+
+import os
 
 import altair as alt
 import numpy as np
@@ -11,6 +13,14 @@ from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.inspection import partial_dependence
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data - Train a model and compute partial dependence
 np.random.seed(42)
@@ -43,9 +53,10 @@ bootstrap_pds = np.array(bootstrap_pds)
 ci_lower = np.percentile(bootstrap_pds, 2.5, axis=0)
 ci_upper = np.percentile(bootstrap_pds, 97.5, axis=0)
 
-# Create DataFrame for main line and confidence band
+# Create DataFrame for main line
 df_line = pd.DataFrame({"Feature Value": feature_values, "Partial Dependence": pd_values})
 
+# Create DataFrame for confidence band
 df_band = pd.DataFrame({"Feature Value": feature_values, "CI Lower": ci_lower, "CI Upper": ci_upper})
 
 # Create rug plot data (sample of training data distribution)
@@ -57,7 +68,7 @@ df_rug = pd.DataFrame(
 # Confidence band
 band = (
     alt.Chart(df_band)
-    .mark_area(opacity=0.3, color="#306998")
+    .mark_area(opacity=0.2, color=BRAND)
     .encode(
         x=alt.X("Feature Value:Q", title=f"{feature_names[feature_idx]} (standardized units)"),
         y=alt.Y("CI Lower:Q", title="Partial Dependence (predicted outcome)"),
@@ -68,7 +79,7 @@ band = (
 # Main PDP line
 line = (
     alt.Chart(df_line)
-    .mark_line(strokeWidth=4, color="#306998")
+    .mark_line(strokeWidth=4, color=BRAND)
     .encode(
         x=alt.X("Feature Value:Q"),
         y=alt.Y("Partial Dependence:Q"),
@@ -77,18 +88,32 @@ line = (
 )
 
 # Rug plot for data distribution
-rug = alt.Chart(df_rug).mark_tick(thickness=2, size=20, color="#306998", opacity=0.5).encode(x=alt.X("Feature Value:Q"))
+rug = alt.Chart(df_rug).mark_tick(thickness=2, size=20, color=BRAND, opacity=0.4).encode(x=alt.X("Feature Value:Q"))
 
 # Combine layers
 chart = (
     alt.layer(band, line, rug)
     .properties(
-        width=1600, height=900, title=alt.Title(text="pdp-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        title=alt.Title(text="pdp-basic · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3, gridDash=[4, 4])
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=18,
+        titleFontSize=22,
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

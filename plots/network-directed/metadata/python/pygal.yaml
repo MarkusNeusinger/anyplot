@@ -1,0 +1,224 @@
+library: pygal
+language: python
+specification_id: network-directed
+created: '2026-05-14T03:39:02Z'
+updated: '2026-05-14T03:52:38Z'
+generated_by: claude-haiku
+workflow_run: 25840121104
+issue: 2858
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/pygal/plot-dark.html
+quality_score: 73
+review:
+  strengths:
+  - Perfect theme-adaptive chrome in both light and dark renders
+  - Excellent text legibility with explicitly-sized fonts throughout
+  - Clean force-directed layout algorithm provides good node spacing and avoids overlap
+  - Realistic data demonstrates practical software dependency scenario
+  - Proper data structure with no code defects or fake functionality
+  weaknesses:
+  - Missing directional arrows to show edge directionality (critical spec requirement)
+  - Blank axis labels reduce label completeness
+  - Generic styling from library defaults with minimal customization
+  - pygal not ideally suited for network visualization
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Correct warm off-white (#FAF8F1), not pure white
+      Chrome: Title, legend (node names), axis labels and ticks all readable in dark text (#1A1A17)
+      Data: Colored node circles using Okabe-Ito palette (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9); edges as muted lines (#6B6A63, 0.4 opacity)
+      Layout: 11 nodes with balanced spacing from force-directed layout; no overlapping elements
+      Legibility verdict: PASS - all elements crisp and readable
+
+    Dark render (plot-dark.png):
+      Background: Correct warm near-black (#1A1A17), not pure black
+      Chrome: Title, legend, axis text all in light color (#F0EFE8); clearly readable on dark background
+      Data: Node colors identical to light render (Okabe-Ito palette preserved); edge colors unchanged
+      Layout: Identical positioning and spacing as light render
+      Legibility verdict: PASS - no dark-on-dark failures, excellent contrast throughout
+
+    Both renders pass theme-readability checks. Data colors are consistent across themes (only chrome adapts). Primary limitation: edges are lines without directional arrows, limiting visual communication of directionality in this directed network graph.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (28px title, 18px labels); all readable
+          at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Nodes (20px dots) and edges clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Title correct; x/y labels blank
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Okabe-Ito colors correct but missing directional arrows
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but generic
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy
+    spec_compliance:
+      score: 11
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: false
+        comment: Directed network present but missing arrows
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Nodes and edges present; arrows missing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Node positions and edge mappings correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title and legend labels correct
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows realistic dependency patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software dependencies are real and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 11 nodes with sensible spacing
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png output
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct pygal API but constrained by library design
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; pygal not designed for networks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling: []

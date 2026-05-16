@@ -1,13 +1,43 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-12
 """
 
-import numpy as np
-import pandas as pd
-from plotnine import aes, element_text, geom_point, ggplot, labs, scale_color_manual, theme, theme_minimal
+import os
+import pathlib
+import sys
 
+
+# Remove current directory from path to avoid circular import
+current_dir = str(pathlib.Path(__file__).parent)
+sys.path = [p for p in sys.path if p != current_dir and p != ""]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_point,
+    ggplot,
+    labs,
+    scale_color_manual,
+    theme,
+    theme_minimal,
+)
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (canonical order)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data
 np.random.seed(42)
@@ -39,24 +69,30 @@ df = pd.DataFrame(
 plot = (
     ggplot(df, aes(x="Temperature (°C)", y="Growth Rate (cm/week)", color="Plant Species"))
     + geom_point(size=4, alpha=0.7)
-    + scale_color_manual(values=["#306998", "#FFD43B", "#4ECDC4"])
+    + scale_color_manual(values=OKABE_ITO)
     + labs(
         x="Temperature (°C)",
         y="Growth Rate (cm/week)",
-        title="scatter-categorical · plotnine · pyplots.ai",
+        title="scatter-categorical · plotnine · anyplot.ai",
         color="Plant Species",
     )
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+output_dir = pathlib.Path(__file__).parent
+plot.save(str(output_dir / f"plot-{THEME}.png"), dpi=300, verbose=False)

@@ -1,159 +1,184 @@
 library: plotnine
+language: python
 specification_id: violin-box
 created: '2025-12-30T11:27:24Z'
-updated: '2025-12-30T11:36:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595340834
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-box/plotnine/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-12T15:30:39Z'
+generated_by: claude-haiku
+workflow_run: 25743924568
+issue: 2646
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent data design showing four distinct distribution types (normal, right-skewed
-    with outliers, bimodal, uniform)
-  - Clean layering of geom_violin and geom_boxplot demonstrating plotnine grammar
-    of graphics
-  - Good color palette with Python-themed colors that are colorblind-accessible
-  - Perfect title format and professional appearance
-  - Outliers visible in Product B demonstrating complete statistical representation
+  - 'Excellent visual quality: text legibility, palette compliance, and theme-adaptive
+    chrome are flawless in both renders'
+  - 'Perfect spec compliance: all required features present and correctly implemented
+    with violin and box plot properly integrated'
+  - Clean, reproducible code with proper structure and explicit font sizing at all
+    hierarchy levels
+  - 'Strong data quality: diverse distribution shapes (normal, skewed, bimodal, uniform)
+    demonstrating all aspects of the plot type'
+  - 'Correct Okabe-Ito palette usage with first series at #009E73 and perfect theme-adaptive
+    chrome in both light and dark renders'
   weaknesses:
-  - Does not showcase plotnine-specific features beyond basic geoms (could use faceting,
-    stat_summary, or position adjustments)
-  - Axis labels lack units (e.g., Score (points) or Score (0-100))
-  image_description: The plot displays a violin plot with embedded box plots for four
-    product categories (A, B, C, D). Colors used are Python Blue (#306998) for Product
-    A, Yellow (#FFD43B) for Product B, Light Blue (#6A9BC9) for Product C, and Muted
-    Gold (#D4A84B) for Product D. Each violin shows the distribution shape with white
-    box plots centered inside showing median (horizontal line), quartiles (box), and
-    whiskers. Product B shows outlier points above the upper whisker. The title "violin-box
-    · plotnine · pyplots.ai" is at the top, x-axis is labeled "Product Category",
-    and y-axis is labeled "Customer Satisfaction Score" with values ranging from ~30
-    to ~85. The plot has a minimal theme with subtle grid lines.
+  - 'Design Excellence limited: plot follows library defaults rather than introducing
+    custom visual enhancements beyond standard configuration'
+  - 'No data storytelling: four distributions displayed equally without visual hierarchy,
+    emphasis, or narrative focus to guide viewer insights'
+  - 'Library usage is idiomatic but standard: theming pattern could be replicated
+    in other libraries; lacks distinctive plotnine-specific techniques that would
+    differentiate this implementation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, tick labels all dark (#1A1A17) and readable with excellent contrast
+      Data: Four Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 pink) clearly visible
+      Violin shapes and embedded box plots all clearly visible with no overlap
+      Grid lines subtle and appropriate
+      Legend at top shows correct product labels
+      Legibility verdict: PASS - all text readable, all elements visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, tick labels all light (#F0EFE8) and readable with excellent contrast
+      Data colors: Identical to light render - all four Okabe-Ito colors display exactly the same (#009E73, #D55E00, #0072B2, #CC79A7)
+      Violin shapes and box plots fully visible and distinct from background
+      Grid lines maintain subtle visibility with appropriate opacity
+      No dark-on-dark failures - text is light colored and readable
+      Brand green (#009E73) is clearly visible and prominent
+      Legibility verdict: PASS - all text readable, perfect theme-adaptation of chrome only (data colors identical)
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          target resolution
+        comment: Title=24pt, labels=20pt, ticks=16pt all explicitly set and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Zero overlap, all text fully readable, legend properly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violins and box plots are well-sized and clearly visible
+        comment: Violin shapes, box plots, outliers all clearly visible and optimally
+          sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Four distinct colors that are colorblind-friendly (blue, yellow,
-          light blue, gold)
+        comment: Okabe-Ito palette colorblind-safe with adequate contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space with balanced margins
+        comment: 4800×2700px figure with balanced margins, 50-70% canvas utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (satisfaction scores could use "points"
-          or similar)
+        comment: 'X: Product Category, Y: Satisfaction Score (points) - descriptive
+          with units'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend correctly removed since x-axis shows categories
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          theme-chrome correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional but follows library defaults without custom enhancements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good refinement with subtle grid and balanced whitespace but standard
+          library patterns
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but without visual hierarchy or narrative
+          emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct violin plot with embedded box plot
+        comment: 'Correct: violin plot with embedded box plot'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Groups on x-axis, values on y-axis as expected
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows KDE shape, median, quartiles, whiskers, and outliers
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: violin KDE, box median/quartiles/whiskers,
+          outliers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Group, Y=Value correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately hidden (categories on x-axis)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses `violin-box · plotnine · pyplots.ai`
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: normal (A), right-skewed with outliers (B), bimodal
-          (C), uniform (D)'
+        comment: 'Shows all plot aspects: normal, skewed, bimodal, uniform distributions
+          plus outliers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer satisfaction scores for products is a neutral, realistic
-          business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Satisfaction scores in 30-85 range are realistic
+        comment: Satisfaction Score across product categories is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 30-85 realistic and proportional for satisfaction scores
     code_quality:
       score: 10
       max: 10
@@ -163,40 +188,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: 'Clean linear structure: imports, theme, data, plot, save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only numpy, pandas, plotnine imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Pythonic, appropriate complexity, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png`
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi=300
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot() + geom_*() pattern with scale_fill_manual and custom
+          theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Uses plotnine's grammar of graphics correctly but doesn't showcase
-          unique features like `stat_*` functions or faceting
+        comment: Uses plotnine theming system but pattern is generic and replicable
+          in other libraries
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

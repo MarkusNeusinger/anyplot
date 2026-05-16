@@ -13,20 +13,10 @@ A violin plot with an embedded box plot inside, combining the distribution shape
 
 ## Data
 
-The visualization requires:
-- **Numeric variable**: Values to show distribution
-- **Categorical variable**: Groups to compare
-
-Example structure:
-```
-Value | Group
-------|-------
-45.2  | A
-52.1  | A
-38.7  | B
-41.3  | B
-...
-```
+- `value` (numeric) - Values to visualize the distribution
+- `group` (categorical) - Groups or categories to compare
+- Size: 50–1000 points recommended (10+ per group for meaningful visualizations)
+- Example: Height measurements across 3+ demographic groups, or test scores by experimental condition
 
 ## Notes
 

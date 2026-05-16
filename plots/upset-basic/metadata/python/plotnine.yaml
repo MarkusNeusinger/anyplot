@@ -1,0 +1,248 @@
+library: plotnine
+language: python
+specification_id: upset-basic
+created: '2026-05-13T20:51:40Z'
+updated: '2026-05-13T21:14:51Z'
+generated_by: claude-sonnet
+workflow_run: 25825187184
+issue: 5250
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Complete and correct UpSet plot with all three required components (intersection
+    bars, dot matrix, set size bars)
+  - 'Fully theme-adaptive chrome: both light and dark renders pass readability with
+    no dark-on-dark or light-on-light failures'
+  - 'Excellent spec compliance and data quality: realistic genomic domain (RNA-seq,
+    ChIP-seq, ATAC-seq, Proteomics), correct descending sort, full feature coverage'
+  - 'Perfect code quality: deterministic seed, clean imports, KISS structure, appropriate
+    complexity'
+  - 'Brand green #009E73 used consistently for all data elements; backgrounds match
+    required warm off-white/near-black tokens'
+  weaknesses:
+  - Title font size (20pt) is below the required >=24pt minimum — increase plot_title
+    size to 24
+  - Noticeable vertical gap between intersection bar section and dot matrix section
+    (BAR_BASE offset of 2.0 units is too large) — reduce to ~1.2 to tighten layout
+  - 'LM-02 is low: implementation doesn''t exploit any distinctively plotnine-specific
+    capability; consider degree-based color fill variation on bars using scale_fill_manual'
+  - DE-01 could be raised by visually emphasizing the top 1-2 intersections (e.g.,
+    slightly different fill or border on tallest bar)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correct, not pure white
+      Chrome: Title "upset-basic · plotnine · anyplot.ai" in dark ink — clearly readable. Count labels, section header "Intersection Size", set name labels, and set size numbers all in dark/muted ink tones — all readable against light background.
+      Data: 14 vertical bars in brand green #009E73 sorted descending (88 to 16). Dot matrix with active dots in #009E73 and inactive dots in warm light gray. Connecting lines in brand green.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correct, not pure black
+      Chrome: Title, count labels, section header, set names, set size numbers all in light/white tones (#F0EFE8 / #B8B7B0 range) — clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Data colors identical to light render — bars and active dots remain #009E73. Inactive dots shift to dark warm gray (#3D3D38), providing subtle contrast without disappearing. Set size bars adapt to medium gray.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text explicitly sized; title at 20pt below 24pt minimum; compact
+          labels (8.5-10.5pt) readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; set labels clear dot matrix columns
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, active dots (5.5), dim dots (4.0), connecting lines (2.2) all
+          well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, active vs inactive dots distinguishable
+          via hue and brightness
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; 2-unit vertical gap between bar chart and
+          dot matrix is noticeable
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format; Intersection Size header and set name labels
+          provide full context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bars/active dots use #009E73; backgrounds #FAF8F1 light / #1A1A17
+          dark; chrome adapts correctly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean UpSet layout with consistent brand green; good typographic
+          hierarchy; not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void() correct choice; alpha differentiation thoughtful; gap
+          between sections reduces polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending sort and count annotations communicate dominant intersection;
+          could emphasize top intersections more strongly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Complete UpSet plot: intersection bars, dot matrix, set size bars'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Descending sort, connected dots, visible connecting lines, color
+          differentiation active/inactive
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Columns=intersections, rows=sets; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; dot matrix serves as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows singletons, multi-set intersections, natural distribution from
+          88 to 16
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Genomic experiment data (RNA-seq A/B, ChIP-seq, ATAC-seq, Proteomics)
+          — canonical UpSet use case
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 600 genes, 5 experiments, realistic membership probabilities; set
+          sizes and intersections plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: Imports -> Data -> Layout coords -> Component DataFrames
+          -> Plot -> Save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; sys path manipulation is necessary
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality; manual coordinate geometry unavoidable
+          for UpSet in plotnine
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; current plotnine API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot()+geom_*() layer composition, theme_void(), aes() mappings;
+          manual coordinate computation unavoidable
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layer composition used well but implementation is largely translatable
+          to matplotlib; no uniquely plotnine-distinctive feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

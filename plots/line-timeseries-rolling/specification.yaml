@@ -6,7 +6,7 @@ title: Time Series with Rolling Average Overlay
 
 # Specification tracking
 created: 2025-12-30T17:31:12Z
-updated: null
+updated: 2026-05-13T12:54:14Z
 issue: 2786
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - timeseries
   data_type:
     - timeseries
     - numeric
@@ -27,5 +26,5 @@ tags:
   features:
     - smoothing
     - rolling-average
-    - trend-analysis
+    - trend
     - overlay

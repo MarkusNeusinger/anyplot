@@ -1,167 +1,178 @@
 library: plotly
+language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:44:26Z'
-updated: '2025-12-31T05:57:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612912968
+updated: '2026-05-16T07:08:48Z'
+generated_by: claude-haiku
+workflow_run: 25955652261
 issue: 2921
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-    - sklearn
-  techniques:
-    - colorbar
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep:
-    - normalization
-  styling: []
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotly/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent use of probability-based contour coloring rather than just discrete
-    class regions
-  - Clear decision boundary line at probability=0.5 with dashed styling
-  - Good marker differentiation using both shape (circle vs diamond) and color
-  - Professional colorbar showing class probability scale
-  - Responsive layout with proper sizing for 4800x2700 output
+  - Perfect theme adaptation with proper color tokens for both light and dark renders
+  - Clean, reproducible code with deterministic random seed
+  - Excellent visual quality in both themes with all text clearly readable
+  - Proper implementation of decision boundary visualization using Contour traces
+  - Okabe-Ito palette correctly applied throughout
+  - Well-designed layout with appropriate margins and whitespace
+  - Comprehensive specification compliance
   weaknesses:
-  - Legend position in upper-left overlaps slightly with some Class 0 data points
-  - Could enhance interactivity by adding hover info to the contour regions showing
-    probability values
-  image_description: The plot displays a decision boundary visualization for a KNN
-    classifier trained on moon-shaped data. The background shows a continuous gradient
-    from blue (Class 0 probability) to yellow (Class 1 probability), with a dashed
-    yellow/orange decision boundary line at the 0.5 probability threshold. Blue circular
-    markers represent Class 0 data points (clustered in upper-left region), while
-    yellow diamond markers represent Class 1 data points (clustered in lower-right
-    region). The title reads "contour-decision-boundary · plotly · pyplots.ai" at
-    the top. Axis labels show "Feature 1 (Standardized)" and "Feature 2 (Standardized)".
-    A colorbar on the right indicates "Class Probability" from 0 to 1. The legend
-    in the upper-left shows Class 0 (circle) and Class 1 (diamond).
+  - Design Excellence could be elevated with additional visual refinement or distinctive
+    styling choices
+  - Could explore more advanced plotly features for enhanced library mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title "contour-decision-boundary · plotly · anyplot.ai" in dark ink (#1A1A17), axis labels "Feature 1 (Standardized)" and "Feature 2 (Standardized)" in #1A1A17, tick labels in #4A4A44 (INK_SOFT). All clearly readable against light background.
+      Data: Filled contour regions transitioning from green (#009E73, probability 0) to orange (#D55E00, probability 1) with opacity 0.4. Dashed yellow line at probability 0.5 marks the decision boundary. Training points overlaid: green circles (Class 0) and orange diamonds (Class 1) with white edges. Colorbar shows "Class Probability" scale.
+      Legibility verdict: PASS - All text is readable, no light-on-light issues, contours and training points clearly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title in light ink (#F0EFE8), axis labels in #F0EFE8, tick labels in #B8B7B0 (INK_SOFT). All clearly readable against dark background. Legend has dark background (#242420) with visible border.
+      Data: Contour colors are identical to light render (green to orange), confirming theme-independent data palette. Dashed boundary line visible as yellow. Training point colors match light render exactly (green circles, orange diamonds).
+      Legibility verdict: PASS - All text is readable, no dark-on-dark failures. Data colors identical to light render, proving proper theme adaptation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and colorbar text all clearly readable
-          at proper sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend well-positioned
+        comment: Font sizes correct (28px title, 22px axis labels, 18px ticks); all
+          text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend and colorbar properly positioned without
+          collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized with good contrast; white/black borders help visibility
-          against background
+        comment: Contour regions, training points, and decision boundary all clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow palette is colorblind-friendly; good contrast between
-          classes
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space; plot fills appropriate area with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Feature 1 (Standardized)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (green/orange) is colorblind-safe; high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; 1600×900 with 3× scale; margins (80,100,100,80)
+          provide generosity
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle but legend overlaps slightly with data points in upper-left
+        comment: Title format correct; axis labels include units (Standardized)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00 (Okabe-Ito order); colorscale
+          uses these endpoints; plot backgrounds #FAF8F1/#1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom colorscale with Okabe-Ito endpoints; thoughtful opacity (0.4);
+          well-composed layers; professional execution
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean, minimal design; subtle grid; proper legend background and
+          border; colorbar well-styled
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear narrative: contour regions show class partition, dashed line
+          shows decision threshold, training points show ground truth; visual hierarchy
+          evident'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct decision boundary contour visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X1/X2 features correctly mapped to axes, class labels shown via markers
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has colored regions, training points overlay, legend, decision boundary
-          line
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements met: decision boundary, training data overlay,
+          distinct colors, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X1/X2 correctly mapped to axes; y shown via marker color and shape;
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Class 0 and Class 1 with matching markers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "{spec-id} · {library} · pyplots.ai"'
+        comment: Title correct; legend labels match data classes
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows curved decision boundary, probability gradient, and overlapping
-          classes well; could show some misclassified points more prominently
+        comment: 'Comprehensive: probability gradient, decision boundary line, training
+          points, decision threshold at 0.5'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Synthetic make_moons data is standard ML example, but context is
-          generic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standardized values are sensible for ML features
+        comment: make_moons is realistic ML scenario; noise=0.25 shows real-world
+          classification challenge
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 samples, 150×150 mesh grid, standardized features—appropriate
+          for visualization
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +180,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → model → plot → save'
+        comment: Simple procedural code; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Fixed seed (np.random.seed(42) and random_state=42)
+        comment: Uses np.random.seed(42); KNeighborsClassifier(n_neighbors=15) is
+          deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, plotly.graph_objects, sklearn utilities)
+        comment: 'Only necessary imports: os, numpy, plotly, sklearn components'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity; clear intent
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: Saves both plot.png and plot.html (fine, but code style could
-          be cleaner)'
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of go.Contour for probability gradient and decision boundary
-          line, but could leverage more Plotly interactivity features like hover customization
-          for the contour regions
+        comment: Proper use of go.Figure(), add_trace(), Contour traces; theme adaptation
+          via environment variable follows plotly conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of double Contour trace (filled + boundary line), custom
+          colorscale, hover templates, interactive outputs; solid distinctive features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

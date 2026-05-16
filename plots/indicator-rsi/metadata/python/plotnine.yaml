@@ -1,158 +1,180 @@
 library: plotnine
+language: python
 specification_id: indicator-rsi
 created: '2026-01-07T20:19:41Z'
-updated: '2026-01-07T20:26:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795211246
+updated: '2026-05-16T16:44:24Z'
+generated_by: claude-haiku
+workflow_run: 25967246591
 issue: 3229
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/plotnine/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - Excellent implementation of RSI technical indicator with all required visual elements
-  - Clean grammar-of-graphics approach using proper layer composition
-  - Good color choices for overbought/oversold zones with appropriate alpha transparency
-  - Correct title format and professional axis labeling with 14-period notation
-  - RSI calculation is correctly implemented inline without helper functions
+  - Perfect theme adaptation - both light and dark renders flawless with correct color
+    tokens applied to all chrome elements
+  - Complete spec compliance - all required features present (threshold lines at 70/30/50,
+    overbought/oversold zones with shading, fixed 0-100 Y-axis)
+  - Professional code quality - clean plotnine API usage, deterministic data generation
+    with proper seed, clear structure with no unnecessary abstractions
+  - Excellent visual clarity - reference zones and dashed/dotted lines effectively
+    guide viewer to understand RSI momentum and threshold conditions
   weaknesses:
-  - panel_grid_major_y uses element_text() instead of element_line() which may not
-    render grid as intended
-  - Data could show RSI values reaching into the overbought zone (>70) more clearly
-    to demonstrate full feature coverage
-  image_description: 'The plot displays an RSI (Relative Strength Index) technical
-    indicator chart with a blue line showing RSI values over 120 trading days from
-    January 2024 to June 2024. The Y-axis is fixed from 0 to 100 with tick marks every
-    10 units. The chart includes a light red/pink shaded zone (70-100) indicating
-    the overbought region, a light teal/green shaded zone (0-30) indicating the oversold
-    region, a dashed red horizontal line at 70 (overbought threshold), a dashed teal
-    horizontal line at 30 (oversold threshold), and a dotted gray centerline at 50.
-    The RSI line clearly shows oscillations between approximately 15-70, entering
-    both oversold territory (multiple times around January and May 2024) and approaching
-    overbought levels (around April and June 2024). The title follows the correct
-    format: "indicator-rsi · plotnine · pyplots.ai". X-axis is labeled "Date" with
-    monthly labels, Y-axis is labeled "RSI (14-period)".'
+  - 'Zone shading colors (#FF6B6B for overbought, #4ECDC4 for oversold) are not theme-adaptive
+    and fall outside Okabe-Ito palette - while visually acceptable with alpha=0.2,
+    consider theme-aware zone colors for consistency'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with clean appearance
+      Chrome: Title "indicator-rsi · plotnine · anyplot.ai" in bold black at top, X-axis label "Date" (Jan-Jun 2024), Y-axis label "RSI (14-period)" with 0-100 scale. All text readable with good contrast against light background.
+      Data: Brand green RSI line (#009E73) clearly visible showing momentum oscillations. Overbought zone (70-100) has light red shading (#FF6B6B, alpha=0.2), oversold zone (0-30) has light teal shading (#4ECDC4, alpha=0.2). Red dashed line at 70, teal dashed at 30, gray dotted at 50 serve as visual guides.
+      Legibility verdict: PASS - all elements readable, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper theme adaptation
+      Chrome: Title in white, clearly visible. Axis labels and ticks in light gray (INK_SOFT token), all readable. Grid lines subtle and visible.
+      Data: RSI line maintains identical green (#009E73) from light render. Zone shading colors are identical to light render (#FF6B6B, #4ECDC4), remaining visible despite dark background due to alpha transparency. Reference lines clearly distinguishable.
+      Legibility verdict: PASS - no dark-on-dark failures, all text readable, data colors match light render confirming proper theme-adaptive chrome implementation
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large (~24pt), axis labels are appropriately sized
-          (~20pt), tick labels are readable (~16pt)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, date labels well-spaced
+        comment: All text (title 24pt, axis labels 20pt, ticks 16pt) readable in both
+          themes with proper color tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Date labels (Jan 2024, Feb 2024, etc.) well-spaced, Y-ticks (0,10,...,100)
+          evenly distributed, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: RSI line is clearly visible with good thickness (size=1.5), zones
-          well differentiated with alpha
+        comment: RSI line (size=1.5) clear, reference lines visible, zone shading
+          (alpha=0.2) visible without obscuring data
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Good color choices: blue line contrasts well, red/teal zones are
-          colorblind-distinguishable'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, no wasted space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes context RSI (14-period), X-axis labeled Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'RSI uses #009E73 (Okabe-Ito), zone colors accessible, no red-green
+          as sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 ratio appropriate for time series, nothing cut off, generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: panel_grid_major_y uses element_text instead of element_line which
-          may not render grid as intended
+        passed: true
+        comment: Title format correct, axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses #009E73, backgrounds correct (#FAF8F1 light, #1A1A17
+          dark), theme-adaptive chrome via INK/INK_SOFT tokens'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean minimal design with theme tokens, thoughtful color choices
+          (brand green + semantic zone colors), professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, grid subtle (alpha=0.08), generous whitespace,
+          panel border removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point (RSI line), zone shading guides understanding of
+          overbought/oversold, reference lines create hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct RSI momentum oscillator line chart
+        comment: Correct RSI technical indicator chart with line format
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, RSI values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required: Y-axis 0-100, threshold lines at 30/70, centerline
-          at 50, shaded zones'
-      - id: SC-04
-        name: Data Range
+        comment: All required (Y-axis 0-100, lines at 70/30, zones) and optional (centerline
+          at 50, shading) features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis fixed 0-100 as specified
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis date (Jan-Jun 2024), Y-axis RSI 0-100, 120 trading days, all
+          data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series RSI
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format indicator-rsi · plotnine · pyplots.ai
+        comment: Title 'indicator-rsi · plotnine · anyplot.ai' correct format, no
+          legend needed (single series)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: RSI shows good variation entering both oversold and approaching overbought,
-          could show more extreme overbought entry
+        comment: RSI line, zones, thresholds, date range all present - demonstrates
+          full plot type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic trading scenario with 120 business days, 14-period lookback
-          as standard
+        comment: 120 trading days (realistic), 14-period lookback standard, synthetic
+          data from realistic price changes, neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: RSI values are realistic (oscillating 15-70 range), synthetic data
-          could show more extreme values
+        comment: Y-axis 0-100 correct for RSI, X-axis 6 months appropriate, values
+          realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,52 +182,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data generation → plot → save'
+        comment: No functions/classes, straightforward procedural code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42), deterministic date_range
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: 'Only imports: os, numpy, pandas, plotnine (all used)'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity, proper plotnine API
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current plotnine API used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: panel_grid_major_y uses element_text instead of element_line
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png with dpi=300, 16x9
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot() + geom layers, theme_minimal base, theme() customization,
+          scale_x_datetime for dates - excellent idiomatic plotnine
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Good use of plotnine grammar: ggplot + geom layers, annotate for
-          rectangles, theme_minimal, scale functions'
+        comment: Uses annotate('rect') for zones, element-based theming, theme tokens
+          - good plotnine-specific features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
-  - grid-styling
+  dataprep: []
+  styling: []

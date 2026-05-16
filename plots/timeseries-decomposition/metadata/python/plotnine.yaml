@@ -1,178 +1,172 @@
 library: plotnine
+language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:56:56Z'
-updated: '2025-12-31T11:15:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617482775
+updated: '2026-05-14T22:54:21Z'
+generated_by: claude-haiku
+workflow_run: 25889844907
 issue: 2992
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-  - statsmodels
-  techniques:
-  - faceting
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent use of plotnine facet_wrap for creating the four-panel decomposition
-    layout
-  - Clean implementation using statsmodels seasonal_decompose for proper time series
-    analysis
-  - Good color choice (#306998) that is accessible and professional
-  - Proper handling of NaN values from decomposition edges
-  - Correct categorical ordering of components using pd.Categorical
-  - Title follows the exact required format
-  - 12 years of monthly data provides meaningful decomposition
+  - Perfect spec compliance — all four decomposition components correctly displayed
+    in proper order with appropriate scaling
+  - Excellent theme adaptation — both light and dark renders properly readable with
+    correct theme tokens throughout
+  - Proper statistical visualization — seasonal_decompose used appropriately with
+    additive model
+  - Idiomatic plotnine code — excellent ggplot2 grammar with faceting and theme element
+    constructors
+  - Reproducible implementation — seed set with realistic synthetic data containing
+    trend and seasonality
+  - Clear visual hierarchy — vertical stacking naturally guides interpretation through
+    decomposition sequence
   weaknesses:
-  - Y-axis tick labels in the Original panel appear slightly crowded with multiple
-    values stacked
-  - Panel spacing could be reduced to make better use of vertical canvas space
-  - Grid alpha at 0.5 could be more subtle (0.3 would be better)
-  image_description: 'The plot displays a time series decomposition with four vertically
-    stacked faceted panels on a 16:9 landscape layout. The main title "timeseries-decomposition
-    · plotnine · pyplots.ai" appears at the top in bold black text. Each panel has
-    a gray strip header showing the component name with numbering: "1. Original",
-    "2. Trend", "3. Seasonal", and "4. Residual". All panels use a consistent blue
-    (#306998) line color. The x-axis shows dates from 2012 to 2024 with 2-year intervals,
-    and a shared "Date" label appears at the bottom. A shared "Value" label appears
-    on the left y-axis. The Original panel shows time series data ranging from ~200
-    to ~600 with clear upward trend and seasonal oscillation. The Trend panel shows
-    a smooth increasing line from ~260 to ~540. The Seasonal panel shows a repeating
-    sinusoidal pattern oscillating between approximately -25 and +25. The Residual
-    panel shows random noise fluctuating roughly between -30 and +30. Light gray grid
-    lines are visible in all panels. The background is minimal/white with subtle gray
-    panel backgrounds.'
+  - Limited design sophistication — relies on theme_minimal() without additional visual
+    refinement or emphasis techniques
+  - No advanced visual techniques — straightforward line-only visualization without
+    weight variation or other visual indicators
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title, axis labels (Date, Passengers), tick marks all clearly visible in dark text (INK token); facet headers show component names clearly
+      Data: All lines in brand green (#009E73); four subplots stacked vertically (Original, Trend, Seasonal, Residual); grid subtle but aids value reading
+      Legibility verdict: PASS — all text readable, no overlaps, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, axis labels, tick marks all clearly visible in light text (INK/INK_SOFT tokens); facet headers readable; no dark-on-dark failures
+      Data: Lines identical green (#009E73) to light render — confirming proper theme-adaptive rendering where only chrome inverts
+      Legibility verdict: PASS — all elements clearly visible in both themes, proper chrome inversion, zero readability failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is clear at 24pt, axis labels at 20pt, strip text at 16pt bold.
-          Y-axis tick labels in the first panel are slightly compressed/overlapping
-          due to many values.
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; strip headers, axis labels, and tick
-          marks are all clearly separated.
+        comment: Clear spacing between subplots; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 1.2 is well-suited for the data density; all four time
-          series are clearly visible.
+        comment: Lines clearly visible with appropriate thickness
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with good contrast against white background;
-          no colorblind concerns.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space with four panels; however, the panels are
-          quite short vertically leaving significant white space between them.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Value" are descriptive axis labels.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green maintains CVD safety and contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions; nothing cut off; generous panel spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha 0.5, but no legend is needed for this single-series
-          plot. However, the grid could be slightly more subtle.
+        comment: Descriptive labels with proper title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green used; correct backgrounds; theme-adaptive chrome verified
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean faceting with clear hierarchy; minimal embellishment appropriate
+          for technical context
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and whitespace; modest customization via theme_minimal()
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Vertical stacking guides interpretation; facet labels aid understanding
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series decomposition with four stacked subplots.
+        comment: Four vertically stacked subplots in correct order
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, values on Y-axis with free_y scales for each component.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All four components present: Original, Trend, Seasonal, Residual
-          with clear labels.'
-      - id: SC-04
-        name: Data Range
+        comment: All components displayed; consistent axis; clear labeling; seasonal_decompose
+          used
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data is visible within axes ranges.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y mapping with proper free_y scaling
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed, components labeled via facet strips).
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "timeseries-decomposition · plotnine · pyplots.ai"'
+        comment: Title format correct; facet headers serve as labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear trend, seasonal pattern, and residual noise; demonstrates
-          additive decomposition well. Could show slightly more variation in seasonal
-          amplitude.
+        comment: All decomposition aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Airline passenger data context is realistic and commonly used for
-          time series examples.
+        comment: Classic airline data; realistic synthetic generation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in reasonable range for passenger data (200-600); 12-year
-          span with monthly data provides good granularity.
+        comment: Sensible values; free_y optimal for each component
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,43 +174,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → decomposition → plotting
-          → save.'
+        comment: Single script; no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic results.
+        comment: Seed set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used; statsmodels for decomposition is appropriate.
+        comment: All imports used; no dead code
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear, readable; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but uses both positional (dpi=300) and keyword
-          arguments; minor issue.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ggplot grammar with facet_wrap, theme customization,
-          and scale_x_datetime. Could leverage more plotnine-specific features like
-          annotate or custom scales.
+        comment: Excellent ggplot2 syntax with faceting and theme elements
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: facet_wrap is plotnine-characteristic; straightforward usage
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - faceting
+  - subplots
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - time-series
+  styling: []

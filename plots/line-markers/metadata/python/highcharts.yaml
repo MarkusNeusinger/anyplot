@@ -1,15 +1,217 @@
 library: highcharts
+language: python
 specification_id: line-markers
 created: '2025-12-30T10:39:26Z'
-updated: '2025-12-30T10:49:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594559334
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T03:52:10Z'
+generated_by: claude-haiku
+workflow_run: 25711641436
+issue: 2599
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-markers/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-markers/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Perfect spec compliance — correct plot type, all features, proper data mapping
+  - Excellent visual quality — all text readable in both themes, proper Okabe-Ito
+    palette, correct sizing
+  - Clean reproducible code with good structure
+  - Proper theme adaptation with backgrounds and chrome correctly adapting between
+    light/dark
+  - Distinct marker shapes provide clear series differentiation
+  weaknesses:
+  - Generic design with minimal visual refinement (spines not customized, basic legend
+    styling)
+  - Limited showcase of distinctive highcharts features beyond basic chart setup
+  - Color/marker strategy could be optimized for even stronger visual emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "line-markers · highcharts · anyplot.ai" in 28px dark text; X-axis "Day" and Y-axis "Price ($)" in 22px dark text; tick labels in 18px dark text; legend on right with 16px text. All clearly readable.
+      Data: Three series with distinct markers — Stock A (green #009E73 circles), Stock B (orange #D55E00 diamonds), Stock C (blue #0072B2 triangles). Lines are 3px wide, markers are 8px radius with 2px borders. Data clearly visible and distinguishable from background.
+      Grid: Subtle horizontal and vertical gridlines visible but not dominant
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title and axis labels in light text (light off-white), clearly readable against dark background. No dark-on-dark failures. Legend text properly visible.
+      Data: All data colors identical to light render (same green, orange, blue). Markers and lines clearly distinguishable from dark background.
+      Grid: Subtle gridlines visible
+      Theme adaptation: Only chrome flips between themes; data colors remain constant across both renders
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text sizes properly scaled and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Generous spacing throughout, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Distinct marker shapes clearly visible at 4800×2700
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette, colorblind-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct backgrounds, both themes adapted'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Thoughtful palette and markers, but generic legend styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Good whitespace and grid, but spines not customized
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Three patterns create hierarchy, could emphasize differences more
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line plot with markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, all points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Format correct, all series shown
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three distinct patterns demonstrate plot type well
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Stock price context is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 60 days and $90-$130 price range sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, proper error handling
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format and current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Proper chart config and series structure
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Distinct markers shown, but limited distinctive features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -17,197 +219,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent visual clarity with well-sized markers and line thickness for the high-resolution
-    output
-  - Perfect colorblind-safe color scheme using Python signature blue and yellow
-  - Realistic and engaging temperature data scenario that demonstrates the plot type
-    effectively
-  - Clean title format following spec requirements exactly
-  - Two distinct marker shapes (circle vs diamond) as recommended by the specification
-  - Interactive HTML version also saved alongside PNG
-  weaknesses:
-  - 'Grid lines could be more subtle (current gridLineWidth: 1 could be reduced or
-    alpha lowered)'
-  - The chart height in the rendered image (2561px) does not match the specified 2700px,
-    suggesting potential cropping or rendering issue
-  image_description: 'The plot displays a line chart with markers showing monthly
-    temperature readings at two weather stations over 12 months (Jan-Dec). There are
-    two series: "Station A (Coastal)" in dark blue (#306998) with circular markers,
-    and "Station B (Inland)" in golden yellow (#FFD43B) with diamond markers. Both
-    lines show clear seasonal temperature patterns - rising from winter lows (~2-6°C
-    in January) to summer peaks (~24-27°C in July/August), then declining. The title
-    "line-markers · highcharts · pyplots.ai" appears at the top with a subtitle "Monthly
-    Temperature Readings at Two Weather Stations". The Y-axis shows "Temperature (°C)"
-    ranging from 0-29, and the X-axis shows "Month" with all 12 month abbreviations.
-    The legend is positioned in the top-right corner. Grid lines are subtle gray.
-    The markers are clearly visible at each data point on both lines.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; all labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Markers are large (radius 14) and clearly visible; lines have good
-          thickness (5px)
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe; excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; legend positioned appropriately though
-          slightly far from the data
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Y-axis has "Temperature (°C)" with units; X-axis has "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend is well-placed but the grid could be more subtle (currently
-          slightly prominent)
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line plot with markers
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months (categorical), Y=temperature values correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Lines with visible markers, multiple series with different marker
-          shapes (circle vs diamond)
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data points visible within axis range (0-29°C covers all values)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend labels match series names accurately
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-markers · highcharts · pyplots.ai"'
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows two series with different marker shapes, seasonal variation,
-          and clear distinction between coastal/inland patterns
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature readings at weather stations is a relatable,
-          neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature values are realistic for temperate climate (2-27°C annual
-          range)
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code is mostly linear but could be more streamlined (many configuration
-          blocks)
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42) for reproducible data
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current highcharts_core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png (correct) but aspect ratio is 4800x2700 in code
-          while actual image appears to be 4800x2561
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Highcharts series configuration, marker customization, and interactive
-          HTML export; could leverage more advanced Highcharts features like tooltips
-          or hover states
-  verdict: APPROVED
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready

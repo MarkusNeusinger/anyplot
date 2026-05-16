@@ -1,218 +1,253 @@
 library: pygal
+language: python
 specification_id: contour-density
 created: '2026-01-01T21:29:18Z'
-updated: '2026-01-01T21:31:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20645830405
+updated: '2026-05-16T04:09:08Z'
+generated_by: claude-haiku
+workflow_run: 25951615286
 issue: 2552
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-density/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-density/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.html
+quality_score: 60
 review:
   strengths:
-  - 'Excellent creative solution: implements KDE-based contour density using custom
-    SVG injection into pygal, working around pygal''s lack of native contour support'
-  - High-quality visual output with smooth density gradient and clear contour lines
-    using marching squares algorithm
-  - Realistic weather sensor data scenario with three distinct clusters showing morning,
-    midday, and evening readings
-  - Proper colorbar with density scale values in scientific notation
-  - Scatter point overlay provides context as suggested in the specification
-  - Correct title format and well-labeled axes with units
+  - Light render perfect with correct theme adaptation
+  - Excellent data quality showing realistic real estate market segments
+  - Full spec compliance across all requirements
+  - Clean reproducible code with explicit font sizing
+  - 'Thoughtful design: Greens colormap, scatter overlay for context, subtle grid,
+    proper colorbar'
   weaknesses:
-  - Grid lines are not displayed, which could help with reading values
-  - Scatter overlay points lack a legend entry explaining what they represent
-  - Helper function used for color interpolation deviates slightly from pure KISS
-    structure
-  image_description: 'The plot displays a density contour visualization on a white
-    background with the title "contour-density · pygal · pyplots.ai" at the top. The
-    X-axis shows "Temperature (°C)" ranging from 6 to 39, and the Y-axis shows "Humidity
-    (%)" ranging from 13 to 111. The visualization uses a sequential blue color gradient
-    (light blue to dark blue) to represent density values. Contour lines are overlaid
-    on filled density regions, showing three distinct clusters: a high-density cluster
-    around (15°C, 75% humidity), another high-density cluster around (28°C, 45% humidity),
-    and a medium-density area around (22°C, 60% humidity). A vertical colorbar on
-    the right displays density values from 0.0000 to 0.0021. Semi-transparent yellow/gold
-    scatter points are sparsely overlaid to provide context for the underlying data
-    distribution.'
+  - 'CRITICAL: Dark mode render has unreadable text — plot background appears light
+    instead of #1A1A17, creating light-on-light contrast. Code correctly sets PAGE_BG
+    based on ANYPLOT_THEME, so failure is in rendering/SVG injection to PNG.'
+  - Library mastery limited — relies on manual SVG workarounds rather than idiomatic
+    pygal, though necessary due to library constraints
+  - Design excellence adequate but not exceptional — follows configured defaults rather
+    than pushing aesthetic boundaries
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels ("Square Footage", "Price ($)"), and tick labels all dark (INK #1A1A17) and clearly visible
+      Data: Green contours from light to dark green (Greens colormap), brand-green scatter points (#009E73) with white stroke, multiple contour levels showing density gradient
+      Colorbar: Dark text labels on light background, "Density" title visible
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: CRITICAL FAILURE — appears to be light/off-white instead of warm near-black (#1A1A17)
+      Chrome: Title, axis labels, and tick labels are light colors (INK #F0EFE8, INK_SOFT #B8B7B0) but rendered on light background creating light-on-light contrast. Text is hard to read.
+      Data: Green contours appear identical to light render (correct), brand-green scatter points same (correct)
+      Colorbar: Light text on light background — not readable
+      Legibility verdict: FAIL ✗ — Dark theme background not rendering correctly, making all text unreadable due to light-on-light contrast
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 16
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          target resolution
+        score: 0
+        max: 8
+        passed: false
+        comment: Light render fully readable with explicit font sizes (28px title,
+          22px labels, 18px ticks), but dark render has severe legibility failure
+          with unreadable text due to wrong-theme background
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: All text properly spaced with adequate margins, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density gradient and contour lines are clearly visible; scatter overlay
-          points could be slightly larger
+        comment: Contour cells, scatter points, and colorbar all properly visible
+          and appropriately sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue sequential colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas appropriately with balanced margins; colorbar well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Temperature (°C)"
-          and "Humidity (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Good contrast in light render; Greens colormap perceptually uniform;
+          brand green #009E73 colorblind-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape well-utilized with balanced margins; plot area
+          fills canvas appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No grid lines shown; colorbar serves as legend but no traditional
-          legend for scatter overlay
+        comment: X-axis 'Square Footage' and Y-axis 'Price ($)' descriptive with units;
+          title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Dark render plot background wrong-theme (light instead of #1A1A17),
+          creating light-on-light text failure'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful Greens colormap choice; custom SVG rendering with marching
+          squares shows creativity; colorbar and grid demonstrate deliberate choices.
+          Above default but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid at 10% opacity; proper axis frame; generous margins.
+          Some refinement but relies on library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Contour plot reveals three distinct property-market clusters; density
+          gradient emphasizes concentration areas. Adequate but no exceptional emphasis
+          technique.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements density contour plot with KDE-based contours
+        comment: Correct 2D KDE density contour plot with multiple contour levels
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (Temperature) and Y (Humidity) correctly assigned as continuous
-          variables
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: contour lines, density gradient, scatter
-          overlay for context'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: contour lines, filled cells, multiple levels,
+          scatter overlay'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
+        comment: X/Y correctly mapped; continuous-continuous mapping via gaussian_kde
+          correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar present but scatter overlay points lack legend explanation
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "contour-density · pygal · pyplots.ai"'
+        comment: Title format correct; colorbar appropriate legend for continuous
+          data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple clusters with varying densities, demonstrating the
-          full capability of density contour visualization
+        comment: 'Shows all aspects: three clusters, full density gradient, scatter
+          context'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Weather sensor readings (temperature vs humidity) is a neutral, scientifically
-          plausible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature range (6-39°C) and humidity range (13-111%) are realistic
-          for weather data
+        comment: Realistic property prices/sqft reflecting actual market segments;
+          neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values factually correct; price-per-sqft ratios consistent; no
+          impossible data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code uses helper function (interpolate_color) which slightly deviates
-          from pure KISS, but necessary for the complex visualization
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set
+        comment: 'Linear: imports → setup → data → KDE → SVG → render. No unnecessary
+          functions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, sys, pathlib, cairosvg, numpy, pygal, matplotlib,
+          scipy'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Appropriate complexity for custom contour; manual SVG necessary;
+          no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Creatively uses pygal's XY chart as a base and injects custom SVG
-          for contour rendering. This is an innovative workaround since pygal does
-          not natively support contour plots, but the heavy reliance on raw SVG manipulation
-          means limited use of pygal's actual features.
-  verdict: APPROVED
+        passed: false
+        comment: Correctly uses pygal.XY and Style; heavily relies on manual SVG injection
+          due to pygal lack of native contour support (necessary workaround)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: 'Uses distinctive approaches: marching squares algorithm, SVG injection,
+          matplotlib colormap integration, custom colorbar. Creative but mostly workarounds.'
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - kde
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending

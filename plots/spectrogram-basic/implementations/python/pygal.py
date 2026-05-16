@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-15
 """
 
+import os
 import sys
 
 import numpy as np
@@ -21,6 +22,13 @@ from pygal.style import Style  # noqa: E402
 
 # Restore path
 sys.path.insert(0, _cwd)
+
+# Theme tokens (from default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 
 class SpectrogramHeatmap(Graph):
@@ -45,6 +53,8 @@ class SpectrogramHeatmap(Graph):
                 "#fde725",
             ],
         )
+        self.ink_color = kwargs.pop("ink_color", INK)
+        self.grid_color_rgb = kwargs.pop("grid_color_rgb", GRID_COLOR)
         super().__init__(*args, **kwargs)
 
     def _interpolate_color(self, value, min_val, max_val):
@@ -121,7 +131,7 @@ class SpectrogramHeatmap(Graph):
                 rect.set("stroke", "none")
 
         # Draw subtle grid lines to help read values
-        grid_alpha = 0.25
+        grid_alpha = 0.10
         n_grid_x = 6
         n_grid_y = 6
 
@@ -131,8 +141,8 @@ class SpectrogramHeatmap(Graph):
             grid_line = self.svg.node(
                 spec_group, "line", x1=grid_x, y1=y_offset, x2=grid_x, y2=y_offset + available_height
             )
-            grid_line.set("stroke", "#ffffff")
-            grid_line.set("stroke-width", "2")
+            grid_line.set("stroke", self.ink_color)
+            grid_line.set("stroke-width", "1")
             grid_line.set("opacity", str(grid_alpha))
 
         # Horizontal grid lines
@@ -141,8 +151,8 @@ class SpectrogramHeatmap(Graph):
             grid_line = self.svg.node(
                 spec_group, "line", x1=x_offset, y1=grid_y, x2=x_offset + available_width, y2=grid_y
             )
-            grid_line.set("stroke", "#ffffff")
-            grid_line.set("stroke-width", "2")
+            grid_line.set("stroke", self.ink_color)
+            grid_line.set("stroke-width", "1")
             grid_line.set("opacity", str(grid_alpha))
 
         # Draw axes border
@@ -150,7 +160,7 @@ class SpectrogramHeatmap(Graph):
             spec_group, "rect", x=x_offset, y=y_offset, width=available_width, height=available_height
         )
         border.set("fill", "none")
-        border.set("stroke", "#333333")
+        border.set("stroke", self.ink_color)
         border.set("stroke-width", "3")
 
         # Draw x-axis label (Time)
@@ -159,7 +169,7 @@ class SpectrogramHeatmap(Graph):
         x_label_y = y_offset + available_height + 150
         text_node = self.svg.node(spec_group, "text", x=x_label_x, y=x_label_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
+        text_node.set("fill", self.ink_color)
         text_node.set("style", f"font-size:{x_label_size}px;font-weight:bold;font-family:sans-serif")
         text_node.text = "Time (s)"
 
@@ -171,7 +181,7 @@ class SpectrogramHeatmap(Graph):
             spec_group, "text", x=y_label_x, y=y_label_y, transform=f"rotate(-90, {y_label_x}, {y_label_y})"
         )
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
+        text_node.set("fill", self.ink_color)
         text_node.set("style", f"font-size:{y_label_size}px;font-weight:bold;font-family:sans-serif")
         text_node.text = "Frequency (Hz)"
 
@@ -184,14 +194,14 @@ class SpectrogramHeatmap(Graph):
 
             # Tick line
             line = self.svg.node(spec_group, "line", x1=tick_x, y1=tick_y, x2=tick_x, y2=tick_y + 15)
-            line.set("stroke", "#333333")
+            line.set("stroke", self.ink_color)
             line.set("stroke-width", "2")
 
             # Tick label
             time_val = self.time_bins[int(i / (n_x_ticks - 1) * (len(self.time_bins) - 1))]
             text_node = self.svg.node(spec_group, "text", x=tick_x, y=tick_y + 55)
             text_node.set("text-anchor", "middle")
-            text_node.set("fill", "#333333")
+            text_node.set("fill", self.ink_color)
             text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
             text_node.text = f"{time_val:.1f}"
 
@@ -203,7 +213,7 @@ class SpectrogramHeatmap(Graph):
 
             # Tick line
             line = self.svg.node(spec_group, "line", x1=tick_x - 15, y1=tick_y, x2=tick_x, y2=tick_y)
-            line.set("stroke", "#333333")
+            line.set("stroke", self.ink_color)
             line.set("stroke-width", "2")
 
             # Tick label (frequency decreases from top to bottom)
@@ -211,7 +221,7 @@ class SpectrogramHeatmap(Graph):
             freq_val = self.freq_bins[freq_idx]
             text_node = self.svg.node(spec_group, "text", x=tick_x - 25, y=tick_y + 12)
             text_node.set("text-anchor", "end")
-            text_node.set("fill", "#333333")
+            text_node.set("fill", self.ink_color)
             text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
             text_node.text = f"{freq_val:.0f}"
 
@@ -248,7 +258,7 @@ class SpectrogramHeatmap(Graph):
             width=colorbar_width,
             height=colorbar_height,
             fill="none",
-            stroke="#333333",
+            stroke=self.ink_color,
         )
 
         # Colorbar labels - 6 tick marks for more granular scale
@@ -267,10 +277,10 @@ class SpectrogramHeatmap(Graph):
                 x2=colorbar_x + colorbar_width + 10,
                 y2=colorbar_y + pos * colorbar_height,
             )
-            tick_line.set("stroke", "#333333")
+            tick_line.set("stroke", self.ink_color)
             tick_line.set("stroke-width", "2")
             text_node = self.svg.node(spec_group, "text", x=colorbar_x + colorbar_width + 20, y=text_y)
-            text_node.set("fill", "#333333")
+            text_node.set("fill", self.ink_color)
             text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
             text_node.text = f"{val:.0f}"
 
@@ -280,7 +290,7 @@ class SpectrogramHeatmap(Graph):
         cb_title_y = colorbar_y - 30
         text_node = self.svg.node(spec_group, "text", x=cb_title_x, y=cb_title_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
+        text_node.set("fill", self.ink_color)
         text_node.set("style", f"font-size:{cb_title_size}px;font-weight:bold;font-family:sans-serif")
         text_node.text = "Power (dB)"
 
@@ -330,14 +340,14 @@ freq_subset = frequencies[::freq_step]
 time_subset = times[::time_step]
 Sxx_subset = Sxx_db[::freq_step, ::time_step]
 
-# Custom style
+# Custom style (theme-adaptive)
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
+    colors=("#009E73",),
     title_font_size=72,
     legend_font_size=48,
     label_font_size=42,
@@ -364,11 +374,13 @@ chart = SpectrogramHeatmap(
     width=4800,
     height=2700,
     style=custom_style,
-    title="spectrogram-basic · pygal · pyplots.ai",
+    title="spectrogram-basic · pygal · anyplot.ai",
     spectrogram_data=Sxx_subset.tolist(),
     time_bins=time_subset.tolist(),
     freq_bins=freq_subset.tolist(),
     colormap=viridis_colormap,
+    ink_color=INK,
+    grid_color_rgb=GRID_COLOR,
     show_legend=False,
     margin=120,
     margin_top=200,
@@ -380,9 +392,9 @@ chart = SpectrogramHeatmap(
 # Add a dummy series to trigger _plot
 chart.add("", [0])
 
-# Save output
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+# Save output with theme-suffixed filenames
+chart.render_to_file(f"plot-{THEME}.svg")
+chart.render_to_png(f"plot-{THEME}.png")
 
 # Also save HTML for interactivity
 html_content = f"""<!DOCTYPE html>
@@ -391,7 +403,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <title>spectrogram-basic - pygal</title>
     <style>
-        body {{ margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; }}
+        body {{ margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: {PAGE_BG}; }}
         .chart {{ max-width: 100%; height: auto; }}
     </style>
 </head>
@@ -403,5 +415,5 @@ html_content = f"""<!DOCTYPE html>
 </html>
 """
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)

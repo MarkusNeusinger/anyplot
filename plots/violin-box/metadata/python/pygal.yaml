@@ -1,171 +1,182 @@
 library: pygal
+language: python
 specification_id: violin-box
 created: '2025-12-30T11:28:49Z'
-updated: '2025-12-30T11:54:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595341267
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T15:35:59Z'
+generated_by: claude-haiku
+workflow_run: 25744042199
+issue: 2646
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-box/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-box/pygal/plot.html
-quality_score: 88
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent manual KDE implementation using Gaussian kernel with Silverman's rule
-    for bandwidth selection
-  - Creative approach using XY chart to draw custom violin shapes since pygal lacks
-    native violin support
-  - Good visual distinction between categories with colorblind-safe palette
-  - 'Complete box plot components: median, quartiles, whiskers, and outliers all present'
-  - Proper legend entries distinguish between categories and statistical components
+  - Perfect palette compliance with Okabe-Ito colors and correct brand green
+  - Flawless theme adaptation - both light and dark renders properly legible with
+    correct backgrounds and text colors
+  - Complete feature implementation - violins, embedded boxes, whiskers, medians,
+    outliers all present and working
+  - Clean data presentation showing realistic department performance distributions
+    with meaningful variation
+  - Excellent text legibility with explicitly set font sizes at full resolution
   weaknesses:
-  - Y-axis range extends to 140 despite data being clipped to 0-100, wasting vertical
-    space
-  - Legend mixes category names with box plot element names, creating visual complexity
-  image_description: 'The plot displays four violin plots representing Performance
-    Scores (0-100 scale) across four departments: Engineering (blue, #306998), Marketing
-    (yellow, #FFD43B), Sales (green, #4CAF50), and Operations (orange, #FF5722). Each
-    violin shows the KDE distribution shape with an embedded white box plot showing
-    the IQR (Q1-Q3). Gray horizontal lines indicate medians, and vertical whiskers
-    extend to the data bounds. Black dots represent outliers (visible for Engineering
-    at ~53, ~115, ~118 and Marketing at ~14, ~143). The title "violin-box · pygal
-    · pyplots.ai" is at the top. X-axis shows "Department" with labels, Y-axis shows
-    "Performance Score (0-100 scale)" ranging from 0 to 140. A legend appears on the
-    left side listing Engineering, IQR Box, Whiskers, Median Line, Outliers, Marketing,
-    Sales, and Operations with corresponding color markers.'
+  - Design excellence is competent but not exceptional - uses well-configured defaults
+    rather than distinctive visual choices
+  - Minimal visual storytelling through design elements (hierarchy, emphasis, layout
+    refinement) beyond the core visualization
+  - Library mastery could be elevated with more distinctive pygal-specific features
+    or advanced styling techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "violin-box · pygal · anyplot.ai" in dark text at top; Y-axis label "Performance Score (0-100)" with units; X-axis label "Department"; all tick labels dark and clearly visible; subtle Y-axis gridlines
+      Data: Four violin plots arranged horizontally for Engineering (brand green #009E73), Marketing (#D55E00), Sales (#0072B2), and Operations (#CC79A7) - all Okabe-Ito colors in correct order. Each violin contains an embedded box plot showing quartiles (brown boxes), median line (dark line), whiskers (vertical lines with caps), and outliers as small dots. Distributions show Engineering with higher median scores and tighter spread, Operations with lower median. Outliers visible as cyan dot (Engineering) and orange dot (Marketing).
+      Legibility verdict: PASS - all elements readable, no overlaps, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title in light text, clearly visible; Y-axis label "Performance Score (0-100)" in light text; X-axis label "Department" in light text; all tick labels light and clearly visible against dark background; subtle gridlines
+      Data: Identical color mapping to light render - Engineering (#009E73), Marketing (#D55E00), Sales (#0072B2), Operations (#CC79A7). Same violin distributions with embedded boxes, whiskers, medians, and outliers. Data colors remain constant between renders (only chrome adapts to theme). Outliers visible as colored dots.
+      Legibility verdict: PASS - all elements readable, strong contrast, no dark-on-dark failures, brand green maintains visibility
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are clearly readable at full resolution.
-          Font sizes are well-scaled for the 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. X-axis labels are well-spaced, legend
-          doesn't overlap data.
+        comment: Font sizes explicitly set; all text perfectly readable at 4800×2700
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; department labels, axis labels, and
+          tick labels all clearly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violins, boxes, whiskers, medians, and outliers are all clearly visible.
-          Outlier dots are sized appropriately (18px).
+        comment: All violins, boxes, whiskers, medians, and outliers perfectly visible
+          and well-sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, orange palette is colorblind-friendly with good
-          contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good central placement, but the legend on the left side is somewhat
-          cluttered with many entries. Plot fills canvas adequately.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units "Performance Score (0-100
-          scale)", X-axis labeled "Department".
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures CVD safety; good contrast between data
+          and background; no red-green only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas; balanced margins (80px); excellent whitespace
+          utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Y-axis includes units '(0-100)'; X-axis label 'Department' is descriptive;
+          title matches format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; multi-series in correct Okabe-Ito order;
+          backgrounds #FAF8F1/#1A1A17; theme chrome perfect in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend is cluttered with too many entries (some labeled "None" entries
-          may appear). The legend organization could be cleaner.
+        comment: Well-configured library defaults with proper palette; professional
+          but not distinctive design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Y-axis grid present; clean layout; some visual refinement but limited
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Data shows clear performance variation across departments; visual
+          hierarchy through color and spacing
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct violin plot with embedded box plot implementation.
+        comment: Correct violin plot with embedded box plot; all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categorical groups on X-axis, numeric values on Y-axis correctly
-          mapped.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: KDE violin shape, box showing Q1-Q3,
-          whiskers, median line, outliers shown as points.'
-      - id: SC-04
-        name: Data Range
+        comment: Box centered in violin, median line, quartiles, whiskers, outliers
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range (0-140) appropriately shows all data including outliers.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend shows multiple entries per category due to the series-based
-          approach. Some entries appear redundant.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: 'Y-axis: performance scores (0-100); X-axis: departments; all data
+          visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Correctly uses "violin-box · pygal · pyplots.ai" format.
+        comment: Title format correct; legend appropriately hidden for 4-color categorical
+          data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes across departments (Engineering
-          tight, Sales wide), includes outliers demonstrating feature coverage. Operations
-          shows narrower distribution.
+        comment: 'All violin features shown: shape variation, box stats, medians,
+          whiskers, outliers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: '"Performance scores by department" is a realistic, neutral business
-          scenario.'
+        comment: Department performance scores is realistic, neutral business context;
+          plausible distributions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scores mostly in 0-100 range as expected, though some outliers exceed
-          100 due to Y-axis range extending to 140.
+        comment: Values correctly clipped to 0-100; proportions realistic; variance
+          meaningful
     code_quality:
       score: 10
       max: 10
@@ -175,42 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Code follows imports → data → plot → save structure. Uses a loop
-          but no functions/classes.
+        comment: 'Linear flow: setup → data → computation → plot → save; no unnecessary
+          abstraction'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data.
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style are imported; all are used.
+        comment: Only numpy, pygal, os, sys imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Manual KDE justified for visualization control; no fake functionality;
+          clear implementation
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png and .html; current API usage'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses pygal's XY chart with custom Style, fill and stroke options,
-          legend positioning. Manual KDE implementation is necessary but not a library
-          distinctive feature.
+        passed: false
+        comment: Correct pygal XY usage with Style objects; could leverage more advanced
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Manual KDE + custom stroke styles somewhat distinctive; mostly implements
+          core functionality
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - publication-ready

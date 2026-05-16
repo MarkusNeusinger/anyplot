@@ -1,207 +1,240 @@
 library: highcharts
+language: python
 specification_id: contour-3d
 created: '2026-01-07T20:21:14Z'
-updated: '2026-01-07T20:30:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795216370
+updated: '2026-05-16T12:57:05Z'
+generated_by: claude-haiku
+workflow_run: 25962352432
 issue: 3230
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-3d/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-3d/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of 3D contour visualization using Highcharts 3D capabilities
-  - Custom marching squares algorithm for contour extraction is well-implemented
-  - Dual output (PNG + interactive HTML) provides flexibility
-  - Colorbar with contour level indicators is a nice touch
-  - Good use of viridis-like colormap for accessibility
-  - Contour projection on base plane enhances understanding
+  - Excellent theme adaptation with proper chrome color changes between light/dark
+    while data colors remain constant
+  - Sophisticated multi-layer visualization combining surface, contours, wireframe,
+    and base projections for clear 3D understanding
+  - High code quality with correct marching squares algorithm for contour path extraction
+    and deterministic output
+  - All text elements use proper theme tokens (INK, INK_SOFT) with correct pixel sizes
+    ensuring readability at 4800×2700px
+  - Viridis colormap is colorblind-safe, perceptually uniform, and meets accessibility
+    standards
+  - Polished colorbar implementation with proper labels, positioning, and theme-adapted
+    styling
   weaknesses:
-  - Code structure includes functions (get_color, extract_contour_paths) which deviates
-    from KISS principle
-  - Dense point cloud in some areas creates slight visual clutter
-  - Subtitle extends beyond the standard title format
-  image_description: 'The plot displays a 3D contour visualization with a surface
-    rendered as a wireframe mesh of colored points and lines. The surface shows multiple
-    Gaussian peaks and a valley, with the height (Z) represented both spatially and
-    through a viridis-like color gradient (dark purple for low values ~-0.42, through
-    teal, to yellow for high values ~1.17). White contour lines with black shadows
-    are drawn on the surface at regular height intervals. Dashed colored contour projections
-    appear on the base plane (at the bottom). The title reads "contour-3d · highcharts
-    · pyplots.ai" with subtitle "Surface with Contour Lines and Base Projections".
-    Axes are labeled: "X Position (units)", "Z Height (amplitude)" for the vertical
-    axis, and "Y Position (units)" for depth. A colorbar on the right shows the Z
-    Height scale with tick marks indicating contour levels.'
+  - Design composition could benefit from intentional visual hierarchy — consider
+    varying wireframe opacity by Z value or emphasizing key contour levels
+  - Secondary visual layers (wireframe and base projections) could create more visual
+    depth through opacity gradients or selective highlighting
+  - Could leverage more Highcharts-specific 3D features such as custom frame styles,
+    rotation hooks, or interactive perspective controls for more distinctive presentation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface color
+      Chrome: Title, axis labels (X Position, Z Height, Y Position), and colorbar labels rendered in dark ink (#1A1A17) and secondary text (#4A4A44) with 28px, 22px, and 18px sizing respectively - all clearly readable against light background
+      Data: 3D surface rendered as colored point cloud using viridis colormap (purple→blue→green→yellow gradient); contour lines drawn in matching viridis colors on surface and dashed on base plane; wireframe mesh in subtle gray (opacity 0.4) overlaid for reference
+      Legibility verdict: PASS - all text elements have proper contrast and visibility; no light-on-light failures; proper sizing for 4800×2700px canvas
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface color
+      Chrome: Title, axis labels, and colorbar labels now rendered in light colors (INK #F0EFE8, INK_SOFT #B8B7B0) with excellent contrast against dark surface - all clearly readable; no dark-on-dark failures detected
+      Data: Viridis colormap colors are identical to light render (purple→blue→green→yellow gradient preserved), confirming data-color consistency across themes; wireframe now rendered in lighter gray appropriate for dark background; contour lines maintain color identity
+      Legibility verdict: PASS - all text readable with proper theme-adapted colors; zero dark-on-dark failures; wireframe and base projections visible and distinct from background; theme adaptation properly implemented throughout
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and colorbar labels are all clearly
-          readable at full size with appropriate font sizing
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are well-separated
+        comment: Title (28px), axis labels (22px), tick labels (18px) all readable
+          in both themes with proper INK tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Surface, contours, wireframe, colorbar, axis labels occupy distinct
+          space with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Surface points and wireframe lines are visible; contour lines stand
-          out with white/black combination. Minor: dense point cloud slightly cluttered
-          in some areas'
+        comment: 3D surface points, contour lines, wireframe mesh (opacity 0.4), base
+          projections all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis-like colormap is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space with proper margins; colorbar is well-positioned.
-          Minor: slightly more whitespace on right side'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: X Position (units), Z Height (amplitude),
-          Y Position (units)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Viridis is perceptually uniform and colorblind-safe; no red-green
+          signal; strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned; balanced margins; colorbar clearly positioned;
+          no cut-off elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Subtle grid lines present; colorbar serves as legend with contour
-          level indicators. Minor: no traditional legend but appropriate for this
-          plot type'
+        comment: Title 'contour-3d · highcharts · anyplot.ai' correct format; axis
+          labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis applied correctly; backgrounds #FAF8F1/#1A1A17 correct;
+          theme-adaptive chrome; data colors constant across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Viridis professionally applied; sophisticated multi-layer composition;
+          smooth color interpolation throughout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Wireframe opacity well-chosen (0.4); frame subtle; could enhance
+          secondary layers with opacity gradients
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Mathematical function clearly depicted; viridis guides eye to extrema;
+          contours establish hierarchy; base projections provide spatial reference
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct 3D contour plot implementation showing surface with contour
-          lines
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X, Y grid mapped correctly to surface; Z values properly represented
-          as height and color
-      - id: SC-03
+        comment: Correct 3D contour plot with surface and level curves
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has contour lines on surface, base plane projections, colorbar,
-          3D structure. Missing: rotation interaction in static PNG (available in
-          HTML)'
-      - id: SC-04
-        name: Data Range
+        comment: Contour lines on surface, base plane projections, colorbar, viridis
+          color mapping all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges with small padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X axis: X Position (−π to π); Y axis: Z Height; Z axis: Y Position
+          (−π to π); all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately represents Z height scale with tick labels
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but subtitle adds extra information
+        comment: Title format correct; colorbar serves as continuous legend; single-series
+          legend correctly disabled
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple peaks and a valley demonstrating contour behavior;
-          contours on surface and base plane. Could show more varied terrain features
+        comment: 45×45 grid with 12 contour levels; wireframe and base projections
+          provide multi-perspective view
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Mathematical surface (Gaussian mixture) is appropriate for demonstrating
-          3D contours; represents response surface or terrain
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values range from ~-0.42 to ~1.17, sensible for amplitude data
+        comment: Mathematical function (sin(X)·cos(Y) + 0.3·sin(2X)·cos(2Y)) realistic
+          for optimization/terrain/field applications; neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 45×45 grid provides clear detail; colorbar range min–max appropriate;
+          axis ranges (−π to π) standard
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code has helper functions (get_color, extract_contour_paths) which
-          adds complexity, though justified for marching squares algorithm
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Helper functions (get_color, extract_contour_paths) justified by
+          complexity; marching squares algorithm necessary
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no dead code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: No simulated interactivity; legitimate Highcharts 3D features; proper
+          selenium export
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct file naming (plot-{THEME}.png/html); current API usage
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts 3D module, scatter3d series for wireframe
-          rendering, custom renderer for colorbar, and produces interactive HTML version
+        comment: Proper scatter3d series type; correct options3d configuration; well-structured
+          options; proper selenium pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses 3D scatter plot (unique); custom colorbar via renderer (advanced);
+          could explore more Highcharts 3D-specific features
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -213,8 +246,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
-  - alpha-blending
+  - publication-ready

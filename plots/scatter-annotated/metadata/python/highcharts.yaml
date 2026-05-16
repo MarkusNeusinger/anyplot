@@ -1,15 +1,224 @@
 library: highcharts
+language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:58:18Z'
-updated: '2025-12-30T18:06:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602455906
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T11:25:30Z'
+generated_by: claude-haiku
+workflow_run: 25795551373
+issue: 2790
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/highcharts/plot-dark.html
 quality_score: 91
+review:
+  strengths:
+  - Excellent theme-readability with full legibility in both light and dark renders
+  - Clean, well-organized code with proper random seeding and minimal dependencies
+  - Correct Okabe-Ito brand color (#009E73) and theme-adaptive chrome throughout
+  - 'All annotations visible and readable with collision prevention via allowOverlap:
+    False'
+  - Proper output artifacts with correct naming convention
+  - Comprehensive margin and spacing configuration
+  weaknesses:
+  - 'Design excellence is modest: standard marker styling without distinctive visual
+    treatment'
+  - Label placement is mechanical (uniform -30 offset) rather than adaptive to point
+    density
+  - No visual storytelling techniques; plot shows data accurately but lacks emphasis
+    and focal point guidance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 ✓
+      Chrome: Title, axis labels, and tick labels clearly visible in dark text (#1A1A17); descriptive axis labels with units
+      Data: 15 company names displayed as light-colored labels above green markers (#009E73) with proper offset; all readable with excellent contrast
+      Grid: Subtle, visible but not dominant
+      Legibility verdict: PASS - all text readable, no light-on-light issues, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 ✓
+      Chrome: Title, axis labels, and tick labels clearly visible in light text (#F0EFE8); no dark-on-dark failures; proper theme adaptation
+      Data: Company names in light text with proper contrast; green markers (#009E73) identical to light render (only chrome adapted)
+      Grid: Subtle, visible but not dominant
+      Legibility verdict: PASS - all text readable, proper contrast, no visibility issues, consistent data colors across themes
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Label positioning with -30 offset and allowOverlap: False prevents
+          collisions'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 15 markers and labels fully visible; appropriately sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito brand color is CVD-safe; good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper 4800×2700; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches spec format; labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73; correct backgrounds; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean, professional design; text outline styling adapted to theme
+          shows intentional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean layout with subtle grid; generous whitespace; minimal but effective
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Shows relationships clearly but lacks visual hierarchy; mechanical
+          label placement
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: scatter + text annotations + overlap handling'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct axes; full data range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; legend appropriately disabled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 annotated points fully demonstrate scatter-annotated features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible tech company revenue/growth data; neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ranges; appropriate tick intervals
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Direct, straightforward; no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extraneous dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct naming (plot-{THEME}.png/html); current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Highcharts dictionary config pattern; correct option structure; proper
+          theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Good use of dataLabels, text outline adaptation, allowOverlap; fairly
+          standard otherwise
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -19,197 +228,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - 'Excellent use of Highcharts dataLabels with allowOverlap: false to prevent label
-    collisions'
-  - Clean, professional appearance with appropriate color choice and transparency
-  - 'Good text outline (textOutline: 3px white) ensures label readability over grid
-    lines'
-  - Realistic tech company business context that demonstrates the annotation use case
-    well
-  - Proper title format following spec requirements
-  weaknesses:
-  - Uses raw JSON dict configuration instead of highcharts-core Python classes as
-    shown in library rules
-  - Grid lines could be slightly more visible (alpha 0.15 is quite faint)
-  - Some labels could benefit from smart positioning (e.g., labels near axis edges
-    like DataFlow appear slightly cramped)
-  image_description: The plot displays a scatter chart with 15 data points representing
-    tech companies. Each point is a semi-transparent blue circle (rgba blue ~#306998
-    with alpha 0.7) with company name labels positioned above each point. The title
-    "scatter-annotated · highcharts · pyplots.ai" appears at the top in bold. The
-    X-axis shows "Annual Revenue ($ millions)" ranging from 0 to 500+, and the Y-axis
-    shows "Year-over-Year Growth (%)" ranging from approximately -14 to 96. Companies
-    like PrimeData (high growth ~89%), SyncLabs (~67%), and QuantumIO (negative growth
-    ~-8%) are clearly labeled. The background is white with subtle gray grid lines.
-    Labels have white text outlines for readability.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are clearly readable. Data labels
-          are legible with good text outline. Slightly smaller than optimal for 4800px
-          canvas.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: 'No overlapping text thanks to `allowOverlap: false` setting. All
-          labels are fully readable.'
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Markers are well-sized (radius 20) with good alpha (0.7). Could be
-          slightly larger for this data density (15 points).
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is colorblind-safe. No problematic color
-          combinations.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good margins and plot fills canvas well. Minor asymmetry with some
-          empty space in upper-left quadrant.
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive with units: "Annual Revenue ($ millions)" and "Year-over-Year
-          Growth (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle (alpha 0.15). Legend disabled which is appropriate
-          for single series, but grid could be slightly more visible.
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped (revenue vs growth)
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Text annotations present via dataLabels, points have alpha transparency
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend appropriately disabled for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-annotated · highcharts · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: 'Shows variety: high performers (PrimeData), low performers (QuantumIO
-          with negative growth), mid-range companies. Good spread across revenue range.'
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Tech companies with revenue and growth metrics is a realistic, neutral
-          business scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Revenue 50-500M and growth -10% to 90% are plausible. Some growth
-          values (89%) are on the high end but acceptable for tech.
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data → config → render → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `np.random.seed(42)`
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses raw dict config instead of highcharts-core Python library (not
-          deprecated, but doesn't follow library rules pattern)
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Highcharts dataLabels feature for annotations with text outline.
-          Could leverage more Highcharts-specific features like hover tooltips configuration
-          or animation settings.
-  verdict: APPROVED
+  styling:
+  - publication-ready

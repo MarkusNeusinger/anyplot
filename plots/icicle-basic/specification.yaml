@@ -6,7 +6,7 @@ title: Basic Icicle Chart
 
 # Specification tracking
 created: 2025-12-29T23:55:18Z
-updated: 2025-12-29T23:55:18Z
+updated: 2026-05-13T00:00:00Z
 issue: 2497
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - icicle
-    - hierarchical
   data_type:
     - hierarchical
     - categorical
@@ -25,5 +24,4 @@ tags:
     - technology
   features:
     - basic
-    - hierarchical
     - proportional

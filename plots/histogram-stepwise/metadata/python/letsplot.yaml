@@ -1,169 +1,167 @@
 library: letsplot
+language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:24:54Z'
-updated: '2025-12-30T11:36:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595340386
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-12T09:38:31Z'
+generated_by: claude-haiku
+workflow_run: 25725659036
+issue: 2645
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/letsplot/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of step histogram concept using manual bin calculation
-    and geom_line
-  - Two overlaid distributions clearly demonstrate the key use case of comparing distributions
-    without visual overlap
-  - Strong color contrast between blue and yellow that is colorblind-accessible
-  - Proper use of ggplot grammar with clean, readable code structure
-  - Realistic temperature comparison scenario that makes immediate sense
-  - Text sizing and layout are publication-quality
+  - Perfect visual quality across both themes — text sizing, legibility, and layout
+    are flawless
+  - Excellent theme adaptation — data colors stay identical; only chrome flips appropriately
+  - Spec-perfect compliance — correct plot type with all required features
+  - Clean, reproducible code with proper theme tokens and color management
+  - Professional example data (temperature distributions) that's realistic and neutral
   weaknesses:
-  - Could leverage lets-plot interactive tooltip features for the HTML output
-  - Legend title is slightly generic compared to a more descriptive label
-  image_description: The plot displays two step histogram distributions comparing
-    morning and afternoon temperature readings. The morning distribution (dark blue/navy
-    line) is centered around 18°C with a peak frequency near 58, while the afternoon
-    distribution (golden yellow line) is centered around 26°C with a peak frequency
-    near 52. Both distributions are rendered as connected step lines (outline only,
-    no fill) creating a classic step function appearance. The x-axis shows "Temperature
-    (°C)" ranging from 4 to 40, and the y-axis shows "Frequency" ranging from 0 to
-    60. A legend on the right identifies "Morning" and "Afternoon" under "Time Period".
-    The title reads "histogram-stepwise · letsplot · pyplots.ai". The background uses
-    a minimal theme with subtle gray gridlines.
+  - Design lacks sophistication — well-executed defaults but no aesthetic vision beyond
+    library configuration
+  - No visual storytelling — data is displayed clearly but doesn't guide the viewer
+    through an insight or create visual hierarchy
+  - Limited library distinctiveness — uses letsplot idiomatically but without exploring
+    its unique capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "histogram-stepwise · letsplot · anyplot.ai" is prominent and readable in dark text; X-axis label "Temperature (°C)" and Y-axis label "Frequency" are clearly visible; tick labels and axis text are all readable against the light background
+      Data: Two step histograms — Morning (bluish-green #009E73) centered around 18°C with peak ~57, Afternoon (vermillion #D55E00) centered around 26°C with peak ~51; step lines clearly visible with optimal thickness; subtle gray grid enhances readability
+      Legibility verdict: PASS — all elements are fully readable and properly sized
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title and axis labels rendered in light text and fully readable against dark background; tick labels are light gray (#B8B7B0) on dark surface with excellent contrast; legend background is elevated dark color (#242420); no dark-on-dark failures detected
+      Data: Morning and Afternoon distributions maintain identical colors to light render (#009E73 and #D55E00); step lines equally clear; grid lines remain subtle and visible
+      Legibility verdict: PASS — all text is readable; no theme-adaptation failures; excellent dark mode rendering
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend text are all clearly readable
-          at the output resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: All font sizes explicitly set; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; clean separation of axes, legend, data
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step lines are well-sized (size=2.5) and clearly visible; minor deduction
-          as line width could be slightly thicker for even better visibility
+        comment: Step lines clearly visible with optimal thickness
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe (not red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, plot fills appropriate area with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Temperature (°C)"
-          and "Frequency"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette provides CVD safety and good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Labels include units; title follows required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette correct; backgrounds #FAF8F1/#1A1A17; theme chrome
+          perfect'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle and appropriate, but legend title shows "Time Period"
-          which is slightly generic; legend placement is good
+        comment: Well-configured default but no exceptional design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some customization visible but mostly relies on defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but lacks visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step histogram with outline-only lines (no fill)
+        comment: Correct step histogram without fill
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous temperature values correctly binned and displayed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step lines, no fill, multiple overlaid distributions for comparison
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: outline only, horizontal/vertical segments'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show complete data range from ~4°C to ~40°C
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Morning and Afternoon distributions
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "histogram-stepwise · letsplot · pyplots.ai"'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two overlaid distributions demonstrating the key use case;
-          distributions overlap in the middle showing comparison benefit; minor deduction
-          for not showing more extreme distribution shapes
+        comment: Both distributions show full characteristics
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature readings comparing morning vs afternoon is a real, neutral,
-          comprehensible scientific scenario
+        comment: Realistic, neutral, scientifically plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature values are realistic (morning ~18°C, afternoon ~26°C);
-          minor deduction as the spread could show more realistic weather variation
+        comment: Values factually correct; proportions align with real-world
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +169,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script structure: imports → data → plot → save'
+        comment: Linear flow; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html correctly, but uses path="." parameter
-          style
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and current API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: false
-        comment: Uses ggplot grammar correctly with geom_line, scale_color_manual,
-          theme_minimal, and custom theme elements; however, doesn't leverage lets-plot's
-          interactive tooltips or other distinctive features beyond basic ggplot grammar
+        comment: Correct ggplot2-style patterns but standard boilerplate
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses letsplot basics generically; could leverage advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling: []

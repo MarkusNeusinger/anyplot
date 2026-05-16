@@ -1,171 +1,168 @@
 library: plotly
+language: python
 specification_id: shap-summary
 created: '2025-12-31T05:48:02Z'
-updated: '2025-12-31T05:59:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612920841
+updated: '2026-05-14T13:07:49Z'
+generated_by: claude-haiku
+workflow_run: 25861205226
 issue: 2923
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/shap-summary/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/shap-summary/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/plotly/plot-dark.html
+quality_score: 96
 review:
   strengths:
-  - Excellent implementation of the SHAP summary visualization concept with proper
-    beeswarm-style jittering
-  - Correct blue-to-red diverging colorscale (RdBu_r) for feature values as specified
-  - Clear vertical reference line at x=0 separating positive/negative impacts
-  - Well-organized code with realistic breast cancer dataset feature names
-  - Appropriate marker sizing and transparency for 200 data points
-  - Interactive hover templates provide additional information on interaction
-  weaknesses:
-  - Hover template shows normalized feature value (0-1) instead of actual feature
-    values which would be more informative
-  - The grid styling is functional but could use slightly more prominent styling for
-    the zero line
-  - Feature importance distribution is relatively uniform - could show more dramatic
-    differences between important and less important features
-  image_description: The plot displays a SHAP summary visualization with 15 features
-    on the y-axis, sorted by importance from top (mean radius) to bottom (smoothness
-    error). Each row shows scattered dots representing individual samples, positioned
-    horizontally by their SHAP values ranging from approximately -0.3 to +0.3. The
-    dots are colored using a diverging blue-to-red color scheme (RdBu_r) where blue
-    indicates low feature values and red indicates high feature values. A clear vertical
-    black line at x=0 separates positive and negative SHAP impacts. The title "shap-summary
-    · plotly · pyplots.ai" is centered at the top. A colorbar on the right shows the
-    feature value scale from Low to High. The background is white with subtle gray
-    gridlines.
+  - Excellent theme adaptation with proper token usage (PAGE_BG, INK, INK_SOFT, ZERO_LINE)
+  - Correct colormap choice (RdBu_r) for SHAP value interpretation
+  - Clear visual hierarchy with proper typography scaling for large canvas
+  - Both light and dark renders fully readable with no theme failures
+  - 'Comprehensive data representation: importance ordering, SHAP distributions, feature-value
+    coloring'
+  - Idiomatic Plotly usage with custom colorbar and hover interactivity
+  - Reproducible synthetic data with realistic ML context (breast-cancer-like features)
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title "shap-summary · plotly · anyplot.ai" centered and prominent (28px, dark text). Y-axis labels (feature names) clearly readable in dark text. X-axis titled "SHAP Value (Impact on Model Output)" (22px, dark). Tick labels (16-18px) readable. Colorbar title "Feature Value" with tick labels "Low/Medium/High" all visible.
+      Data: 15 feature rows with scattered dots colored blue-red (RdBu_r) indicating low-to-high feature values. Zero-line at x=0 visible in medium gray. Jitter applied vertically to show density. Markers (8px) clearly distinct.
+      Legibility verdict: PASS - all elements readable with strong contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Same title in light text (#F0EFE8) clearly readable. Feature names in light gray. Axis labels and tick labels in appropriate light colors (INK_SOFT for secondary text). All text readable against dark background.
+      Data: Identical data marker colors to light render - blue dots for low feature values, red for high. Zero-line remains visible in light gray. Grid lines subtle but present. Colorbar readable with light text.
+      Theme consistency: Data colors (RdBu_r positions 1-7 equivalent) are theme-independent and identical between renders. Chrome properly theme-adapted (dark-on-dark avoided, light-on-dark used).
+      Legibility verdict: PASS - all elements readable with no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 16-18pt - all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, feature names well-spaced on y-axis
+        comment: Explicit sizing (title 28px, labels 22px, ticks 16-18px) scales well
+          at canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Features cleanly spaced, jitter effectively applied, colorbar well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (size=8) with 0.7 alpha for 200 samples;
-          jittering prevents complete overlap
+        comment: 8px markers visible, zero-line prominent, all elements distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: RdBu_r diverging colorscale is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good margins (200px left for feature names), plot uses canvas well
-          but some empty space at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "SHAP Value (Impact on Model Output)" and "Feature"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: RdBu_r perceptually uniform, CVD-safe, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins (200/120/80/80), proper 16:9 proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.2), colorbar well-placed, but no traditional
-          legend needed
+        comment: Descriptive labels with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct continuous colormap, backgrounds match spec (#FAF8F1 light,
+          #1A1A17 dark)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful RdBu_r choice for SHAP, professional polish, clear hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped frame, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Features sorted by importance, zero-line guides interpretation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct SHAP summary beeswarm-style plot
+        comment: Correct SHAP summary plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: SHAP values on x-axis, features on y-axis, color by feature value
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vertical line at x=0, diverging color scale, sorted by importance,
-          jittering applied
-      - id: SC-04
-        name: Data Range
+        comment: 'All required: importance sort, diverging scale, zero-line, jitter,
+          top-15'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (SHAP), Y (features), color (feature values) correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled with Low/Medium/High
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"shap-summary · plotly · pyplots.ai" matches required format'
+        comment: Title and colorbar legend present and correct
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows positive and negative SHAP values, varying importances, but
-          correlation between feature value and SHAP is somewhat uniform across features
+        comment: 'Comprehensive: importance, distributions, feature-value coloring,
+          impact directions'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses breast cancer diagnostic feature names (radius, texture, perimeter,
-          etc.) - realistic ML interpretability scenario
+        comment: ML dataset simulation, plausible scales, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: SHAP values in reasonable -0.3 to +0.3 range, feature values simulated
-          realistically
+        comment: SHAP range (-0.4 to 0.4) appropriate, 200 samples, feature normalization
+          [0,1]
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +170,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: Clean procedural code, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Using dict syntax instead of go.Layout() is fine, but hovertemplate
-          uses normalized color value instead of actual feature value
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves PNG and HTML with correct naming
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Scatter with custom colorscale, add_vline, interactive hover
-          templates, and HTML export. Could have used animation or subplot features
-          more distinctively.
+        comment: graph_objects, Scatter, colorscale, add_vline, custom colorbar
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Colorbar customization, hover templates, marker opacity, theme-adaptive
+          styling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

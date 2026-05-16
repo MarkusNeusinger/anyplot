@@ -1,54 +1,72 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-12
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - using first 3 colors in canonical order
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Response times (ms) for three different server regions
 np.random.seed(42)
 
-# Generate data for three server regions with different distributions
-us_east = np.random.normal(loc=45, scale=12, size=200)  # Fast region
-europe = np.random.normal(loc=65, scale=15, size=180)  # Medium region
-asia = np.random.normal(loc=80, scale=20, size=150)  # Slower region
+us_east = np.random.normal(loc=45, scale=12, size=200)
+europe = np.random.normal(loc=65, scale=15, size=180)
+asia = np.random.normal(loc=80, scale=20, size=150)
 
-# Clip to realistic values
 us_east = np.clip(us_east, 10, 120)
 europe = np.clip(europe, 15, 140)
 asia = np.clip(asia, 20, 160)
 
-# Colors - Python Blue first, then Yellow, then complementary
-colors = ["#306998", "#FFD43B", "#5BA85B"]
 labels = ["US-East", "Europe", "Asia-Pacific"]
 
-# Create plot (4800x2700 px at 300 DPI = 16x9 inches)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Create stacked histogram
 ax.hist(
     [us_east, europe, asia],
     bins=20,
     stacked=True,
-    color=colors,
+    color=OKABE_ITO,
     label=labels,
-    edgecolor="white",
-    linewidth=0.8,
+    edgecolor=PAGE_BG,
+    linewidth=0.5,
     alpha=0.9,
 )
 
-# Labels and styling (scaled font sizes for 4800x2700)
-ax.set_xlabel("Response Time (ms)", fontsize=20)
-ax.set_ylabel("Number of Requests", fontsize=20)
-ax.set_title("histogram-stacked · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
+# Style
+ax.set_xlabel("Response Time (ms)", fontsize=20, color=INK)
+ax.set_ylabel("Number of Requests", fontsize=20, color=INK)
+ax.set_title("histogram-stacked · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Legend
-ax.legend(fontsize=16, loc="upper right", framealpha=0.9)
+for s in ("top", "right"):
+    ax.spines[s].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+
+leg = ax.legend(fontsize=16, loc="upper right", frameon=True)
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(0.8)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

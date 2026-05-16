@@ -1,19 +1,33 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-animated-controls: Animated Scatter Plot with Play Controls
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-15
 """
 
+import http.server
 import json
+import os
+import socketserver
 import tempfile
+import threading
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Simulated country data over 20 years (Gapminder-style)
 np.random.seed(42)
@@ -48,12 +62,7 @@ countries = [
 # Region assignment for color coding
 regions = ["Region 1", "Region 2", "Region 3", "Region 4"]
 country_regions = [regions[i % 4] for i in range(n_countries)]
-region_colors = {
-    "Region 1": "#306998",  # Python Blue
-    "Region 2": "#FFD43B",  # Python Yellow
-    "Region 3": "#9467BD",  # Purple
-    "Region 4": "#17BECF",  # Cyan
-}
+region_colors = {regions[i]: OKABE_ITO[i % len(OKABE_ITO)] for i in range(len(regions))}
 
 # Generate time-series data for each country
 # GDP per capita (x): starts between 1000-50000, grows with some noise
@@ -85,66 +94,24 @@ for year_idx, year in enumerate(years):
         )
     data_by_year[year] = year_data
 
-# Build series data for Highcharts motion chart
-# Format: each series is a region, data points have x, y, z (bubble size), name
-series_config = []
-for region in regions:
-    series_data = []
-    for c_idx in range(n_countries):
-        if country_regions[c_idx] == region:
-            # Create data sequence for this country over all years
-            country_sequence = []
-            for year in years:
-                yd = data_by_year[year][c_idx]
-                country_sequence.append(
-                    {
-                        "x": yd["gdp"],
-                        "y": yd["life_exp"],
-                        "z": yd["population"] / 1e6,  # Population in millions for sizing
-                        "name": yd["country"],
-                    }
-                )
-            series_data.append({"name": countries[c_idx], "data": country_sequence})
-    series_config.append({"name": region, "color": region_colors[region], "data": series_data})
+# Find data bounds for axis scaling
+all_gdps = []
+all_life_exps = []
+for year in years:
+    for point in data_by_year[year]:
+        all_gdps.append(point["gdp"])
+        all_life_exps.append(point["life_exp"])
 
-# Build the motion data structure for Highcharts
-# Motion module expects data in specific format with sequence key
-motion_data_js = []
-for region in regions:
-    region_points = []
-    for c_idx in range(n_countries):
-        if country_regions[c_idx] == region:
-            sequences = []
-            for year in years:
-                yd = data_by_year[year][c_idx]
-                sequences.append([yd["gdp"], yd["life_exp"], yd["population"] / 1e6])
-            region_points.append({"name": countries[c_idx], "sequence": sequences})
-    motion_data_js.append({"name": region, "color": region_colors[region], "data": region_points})
+gdp_min, gdp_max = min(all_gdps), max(all_gdps)
+life_min, life_max = min(all_life_exps), max(all_life_exps)
 
-# Download Highcharts JS files
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Add 10% padding for better layout
+gdp_min = max(0, gdp_min - 0.1 * (gdp_max - gdp_min))
+gdp_max = gdp_max + 0.1 * (gdp_max - gdp_min)
+life_min = life_min - 0.1 * (life_max - life_min)
+life_max = life_max + 0.1 * (life_max - life_min)
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
-
-# Build custom JavaScript for animated bubble chart with controls
-# Since Highcharts doesn't have built-in motion module in core, we'll implement animation manually
-initial_year_idx = 0
-initial_data = []
-for region in regions:
-    region_points = []
-    for c_idx in range(n_countries):
-        if country_regions[c_idx] == region:
-            yd = data_by_year[years[0]][c_idx]
-            region_points.append(
-                {"x": yd["gdp"], "y": yd["life_exp"], "z": yd["population"] / 1e6, "name": countries[c_idx]}
-            )
-    initial_data.append(region_points)
-
-# Convert Python data to JSON-like JS string
+# Convert Python data to JSON
 all_data_json = json.dumps(
     {
         str(year): [
@@ -168,7 +135,16 @@ years_json = json.dumps(years)
 regions_json = json.dumps(regions)
 colors_json = json.dumps([region_colors[r] for r in regions])
 
+# Custom JavaScript for animated bubble chart with controls
 chart_js = f"""
+document.addEventListener('DOMContentLoaded', function() {{
+    if (!window.Highcharts) {{
+        console.error('Highcharts not loaded!');
+        return;
+    }}
+    console.log('Highcharts loaded successfully');
+}});
+
 (function() {{
     var allData = {all_data_json};
     var years = {years_json};
@@ -245,99 +221,110 @@ chart_js = f"""
         }});
     }}
 
+    console.log('Creating chart...');
     chart = Highcharts.chart('container', {{
         chart: {{
             type: 'bubble',
             width: 4800,
             height: 2700,
-            backgroundColor: '#ffffff',
-            marginBottom: 350,
-            marginTop: 200,
-            marginLeft: 200,
-            marginRight: 100,
+            backgroundColor: '{PAGE_BG}',
+            marginBottom: 300,
+            marginTop: 180,
+            marginLeft: 180,
+            marginRight: 120,
             events: {{
                 load: function() {{
-                    // Initial state
                     updateChart(0);
                 }}
             }}
         }},
         title: {{
-            text: 'scatter-animated-controls · highcharts · pyplots.ai',
+            text: 'scatter-animated-controls · highcharts · anyplot.ai',
             style: {{
-                fontSize: '56px',
-                fontWeight: 'bold'
+                fontSize: '28px',
+                fontWeight: 'bold',
+                color: '{INK}'
             }},
-            y: 60
+            y: 40
         }},
         subtitle: {{
-            text: 'Year: {years[0]}',
+            text: 'Year: ' + years[0],
             style: {{
-                fontSize: '84px',
+                fontSize: '56px',
                 fontWeight: 'bold',
-                color: '#444444'
+                color: '{INK}'
             }},
-            y: 140
+            y: 100
         }},
         xAxis: {{
             title: {{
                 text: 'GDP per Capita (USD)',
                 style: {{
-                    fontSize: '40px'
+                    fontSize: '22px',
+                    color: '{INK}'
                 }},
                 y: 20
             }},
             labels: {{
                 style: {{
-                    fontSize: '32px'
+                    fontSize: '18px',
+                    color: '{INK_SOFT}'
                 }},
-                format: '${{value:,.0f}}',
-                step: 2
+                format: '${{value:,.0f}}'
             }},
-            min: 0,
-            max: 100000,
-            tickInterval: 20000,
-            gridLineWidth: 1,
-            gridLineColor: 'rgba(0,0,0,0.1)'
+            min: {gdp_min},
+            max: {gdp_max},
+            lineColor: '{INK_SOFT}',
+            tickColor: '{INK_SOFT}',
+            gridLineColor: '{GRID}'
         }},
         yAxis: {{
             title: {{
                 text: 'Life Expectancy (Years)',
                 style: {{
-                    fontSize: '40px'
+                    fontSize: '22px',
+                    color: '{INK}'
                 }},
                 x: -15
             }},
             labels: {{
                 style: {{
-                    fontSize: '32px'
+                    fontSize: '18px',
+                    color: '{INK_SOFT}'
                 }}
             }},
-            min: 40,
-            max: 90,
-            tickInterval: 5,
-            gridLineColor: 'rgba(0,0,0,0.1)'
+            min: {life_min},
+            max: {life_max},
+            lineColor: '{INK_SOFT}',
+            tickColor: '{INK_SOFT}',
+            gridLineColor: '{GRID}'
         }},
         legend: {{
             enabled: true,
             layout: 'horizontal',
             align: 'center',
             verticalAlign: 'top',
-            y: 160,
+            y: 120,
             itemStyle: {{
-                fontSize: '32px'
+                fontSize: '18px',
+                color: '{INK_SOFT}'
             }},
             symbolRadius: 12,
             symbolHeight: 24,
             symbolWidth: 24,
-            itemDistance: 60
+            itemDistance: 50,
+            backgroundColor: '{ELEVATED_BG}',
+            borderColor: '{INK_SOFT}',
+            borderWidth: 1
         }},
         tooltip: {{
             useHTML: true,
-            headerFormat: '<span style="font-size: 28px; font-weight: bold;">{{point.key}}</span><br/>',
-            pointFormat: '<span style="font-size: 24px;">GDP: ${{point.x:,.0f}}<br/>Life Exp: {{point.y:.1f}} years<br/>Pop: {{point.z:.1f}}M</span>',
+            headerFormat: '<span style="font-size: 18px; font-weight: bold;">{{point.key}}</span><br/>',
+            pointFormat: '<span style="font-size: 16px;">GDP: ${{point.x:,.0f}}<br/>Life Exp: {{point.y:.1f}} years<br/>Pop: {{point.z:.1f}}M</span>',
+            backgroundColor: '{ELEVATED_BG}',
             style: {{
-                fontSize: '24px'
+                fontSize: '16px',
+                color: '{INK}'
             }}
         }},
         plotOptions: {{
@@ -347,8 +334,8 @@ chart_js = f"""
                 opacity: 0.8,
                 marker: {{
                     fillOpacity: 0.75,
-                    lineWidth: 3,
-                    lineColor: 'rgba(0,0,0,0.3)'
+                    lineWidth: 2,
+                    lineColor: '{PAGE_BG}'
                 }},
                 dataLabels: {{
                     enabled: false
@@ -358,23 +345,23 @@ chart_js = f"""
         series: series
     }});
 
-    // Expose functions to global scope for button handlers
     window.togglePlay = togglePlay;
     window.onSliderChange = onSliderChange;
 }})();
 """
 
-# Generate HTML with play controls
+# Generate HTML with CDN scripts (using jsDelivr as it's accessible)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <script>{highcharts_js}</script>
-    <script>{highcharts_more_js}</script>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts@11.0.0/highcharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts@11.0.0/highcharts-more.js"></script>
     <style>
         body {{
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: {PAGE_BG};
             overflow: hidden;
         }}
         #container {{
@@ -389,41 +376,42 @@ html_content = f"""<!DOCTYPE html>
             display: flex;
             align-items: center;
             gap: 50px;
-            background: rgba(255,255,255,0.98);
+            background-color: {ELEVATED_BG};
             padding: 35px 80px;
-            border-radius: 25px;
-            box-shadow: 0 6px 30px rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid {INK_SOFT};
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
             z-index: 1000;
         }}
         #playBtn {{
-            font-size: 42px;
-            padding: 25px 60px;
+            font-size: 18px;
+            padding: 16px 40px;
             cursor: pointer;
-            background: #306998;
-            color: white;
+            background-color: {INK};
+            color: {PAGE_BG};
             border: none;
-            border-radius: 15px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: opacity 0.2s;
         }}
         #playBtn:hover {{
-            background: #254b73;
+            opacity: 0.85;
         }}
         #yearSlider {{
-            width: 800px;
-            height: 25px;
+            width: 600px;
+            height: 12px;
             cursor: pointer;
-            accent-color: #306998;
         }}
         #yearDisplay {{
-            font-size: 56px;
+            font-size: 28px;
             font-weight: bold;
-            color: #306998;
-            min-width: 150px;
+            color: {INK};
+            min-width: 120px;
             text-align: center;
         }}
         .control-label {{
-            font-size: 36px;
-            color: #555;
+            font-size: 18px;
+            color: {INK_SOFT};
             font-weight: 500;
         }}
     </style>
@@ -441,29 +429,73 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
-with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
-    f.write(html_content)
-    temp_path = f.name
-
-# Also save the interactive HTML version
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save interactive HTML (theme-suffixed)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+# Use local HTTP server to serve HTML (allows CDN scripts to load)
+with tempfile.TemporaryDirectory() as temp_dir:
+    html_path = Path(temp_dir) / "index.html"
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
 
-driver = webdriver.Chrome(options=chrome_options)
-driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
+    # Start HTTP server in a background thread
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=temp_dir, **kwargs)
 
-# Set exact viewport size to capture full chart including controls
-driver.set_window_size(4800, 2900)
-driver.save_screenshot("plot.png")
-driver.quit()
+        def log_message(self, format, *args):
+            pass  # Suppress logging
 
-Path(temp_path).unlink()  # Clean up temp file
+    with socketserver.TCPServer(("127.0.0.1", 0), Handler) as httpd:
+        port = httpd.server_address[1]  # Get the assigned port
+        server_thread = threading.Thread(target=httpd.serve_forever)
+        server_thread.daemon = True
+        server_thread.start()
+
+        time.sleep(1)  # Give server time to start
+
+        # Take screenshot
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=4800,2700")
+
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.get(f"http://127.0.0.1:{port}/")
+
+        # Wait for page to load and Highcharts to initialize
+        for _ in range(40):
+            try:
+                # Check if Highcharts is loaded and chart exists
+                result = driver.execute_script("""
+                    if (window.Highcharts && Highcharts.charts && Highcharts.charts[0]) {
+                        return {loaded: true, chartExists: true};
+                    }
+                    return {loaded: !!window.Highcharts, chartExists: false};
+                """)
+                if result.get("chartExists"):
+                    break
+            except Exception:
+                pass
+            time.sleep(0.5)
+
+        # Additional wait and take screenshot
+        time.sleep(2)
+        driver.save_screenshot(f"plot-{THEME}.png")
+
+        # Try to get console logs for debugging
+        try:
+            logs = driver.get_log("browser")
+            # Print any errors or important messages
+            for log in logs:
+                if log["level"] in ("SEVERE", "WARNING"):
+                    pass  # Silently skip logging
+        except Exception:
+            pass
+
+        driver.quit()
+
+        httpd.shutdown()

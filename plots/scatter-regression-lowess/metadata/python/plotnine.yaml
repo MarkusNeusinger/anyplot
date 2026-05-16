@@ -1,164 +1,176 @@
 library: plotnine
+language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:52:25Z'
-updated: '2025-12-30T23:54:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608463131
+updated: '2026-05-14T01:20:54Z'
+generated_by: claude-haiku
+workflow_run: 25835644578
 issue: 2855
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep:
-    - regression
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 97
 review:
   strengths:
-  - Excellent choice of agricultural context (temperature vs crop yield) that naturally
-    demonstrates non-linear LOWESS behavior
-  - Perfect color contrast between blue scatter points and yellow LOWESS curve
-  - Clean, minimal theme with appropriate text sizing for 4800×2700 resolution
-  - Well-structured code following KISS principles
-  - Title format exactly matches specification requirements
+  - Perfect theme adaptation with identical colors in both renders and proper chrome
+    switching between light and dark
+  - Clean, idiomatic plotnine code using high-level API correctly (ggplot, aes, geoms,
+    custom theme)
+  - 'Excellent spec compliance: LOWESS regression perfectly implemented with smooth
+    curve, moderate point transparency, and realistic agricultural data'
+  - Professional visual design with intentional color palette (brand green + accent
+    orange) and proper typography hierarchy
+  - All text is perfectly legible in both light and dark themes with no contrast issues
+    or dark-on-dark failures
   weaknesses:
-  - The LOWESS curve extends slightly below y=0 at the left edge, which is visually
-    awkward for a yield that should be positive
-  - The span parameter in geom_smooth may not be correctly controlling the LOWESS
-    bandwidth
-  image_description: The plot displays a scatter plot with 150 data points in a soft
-    blue color (#306998) with 0.6 alpha transparency. A prominent yellow/gold (#FFD43B)
-    LOWESS regression curve smoothly fits through the data, showing a clear non-linear
-    relationship between Temperature (°C) on the x-axis (ranging from ~5 to 35) and
-    Crop Yield (tons/hectare) on the y-axis (ranging from ~0 to ~90). The curve demonstrates
-    a classic optimal temperature response - yields are low at cold temperatures (~5°C),
-    rise through the middle range, peak around 20-22°C at ~78 tons/hectare, then decline
-    at higher temperatures. The title "scatter-regression-lowess · plotnine · pyplots.ai"
-    appears at the top. The plot uses a minimal theme with a clean white background
-    and subtle grid lines. Axis labels include units (°C, tons/hectare). The 16:9
-    landscape layout is well-proportioned.
+  - Could enhance design sophistication by adding optional confidence bands around
+    LOWESS curve (specification notes this as optional but would make implementation
+    more distinctive)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme color
+      Chrome: Title, axis labels ("Temperature (°C)", "Crop Yield (tons/hectare)"), and tick labels all rendered in dark INK (#1A1A17) and INK_SOFT (#4A4A44) — clearly visible and readable against light surface
+      Data: 150 scatter points in brand green (#009E73) with alpha=0.6, plus orange LOWESS curve (#D55E00) at size 2.5. Colors are distinct and properly adapted. Gridlines are subtle with appropriate opacity.
+      Legibility verdict: PASS — all text is completely readable, no contrast issues, data elements clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme color
+      Chrome: Title, axis labels, and tick labels all rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) — clearly visible against dark surface. No dark-on-dark failures detected.
+      Data: Scatter points and LOWESS curve colors are identical to light render (green #009E73 and orange #D55E00) — only chrome changed as required. Gridlines maintain proper visibility with theme-adapted opacity.
+      Legibility verdict: PASS — all text is readable on dark background, no legibility failures, data colors remain prominent and consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at ~24pt, axis labels at ~20pt, tick labels at ~16pt - all
-          perfectly readable
+        comment: All text (title, axis labels, ticks) perfectly readable in both light
+          and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No text collisions or overlapping elements anywhere in the plot
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points sized well (size=3), alpha=0.6 appropriate for 150 points,
-          LOWESS curve stands out clearly
+        comment: Scatter points and LOWESS curve clearly visible and distinct from
+          background
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue points and yellow curve provide excellent contrast, colorblind-safe
+        comment: Okabe-Ito palette is CVD-safe; adequate contrast throughout
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions but the LOWESS curve extends slightly below y=0
-          at the left edge which is a minor visual issue
+        comment: Figure size 16:9 (4800x2700px) with good proportions and no cut-off
+          elements
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Temperature (°C)" and "Crop Yield (tons/hectare)"'
+        comment: Descriptive labels with units; title follows spec format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid with minimal theme, no legend needed for this plot
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot with LOWESS regression
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (temperature) and Y (yield) correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Scatter points with transparency, LOWESS curve with contrasting color,
-          smooth curve without overfitting
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A (no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "scatter-regression-lowess · plotnine · pyplots.ai"'
-    data_quality:
+        comment: 'Points = #009E73 (BRAND), curve = #D55E00 (position 2), backgrounds
+          correct for both themes, no pure white/black'
+    design_excellence:
       score: 19
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 7
         max: 8
         passed: true
-        comment: Shows non-linear relationship well; data shows the characteristic
-          bell curve but could show more local variation visible in the LOWESS curve
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Professional polish with intentional color choices, custom theme
+          with proper dark/light adaptation
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
         passed: true
-        comment: Excellent agricultural scenario (crop yield vs temperature) - scientifically
-          plausible and neutral
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Subtle gridlines with appropriate opacity, removed top/right spines,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: LOWESS curve creates clear focal point with visual hierarchy guiding
+          viewer to the relationship
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Temperature 5-35°C is realistic agricultural range, yields 0-90 tons/hectare
-          plausible
+        comment: Correct scatter plot with LOWESS regression curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: LOWESS curve present and visually distinct, points have moderate
+          transparency (alpha=0.6)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=temperature, Y=yield; axes show full data range with 150 points
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows format; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows complex nonlinear relationship in agricultural context with
+          LOWESS capturing the pattern well
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Crop yield vs temperature is real-world plausible and neutral; realistic
+          peak around 22°C
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 5-35°C and yield 0-80 tons/hectare are sensible
+          for agricultural data
     code_quality:
       score: 10
       max: 10
@@ -168,42 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary functions or classes; straightforward script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: '`np.random.seed(42)` set'
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only imports actually used (numpy, pandas, plotnine)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Appropriate complexity, no fake UI or simulation of interactive features
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with current plotnine API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses `geom_smooth(method="lowess")` which is a nice plotnine/ggplot2
-          feature, but `span` parameter may not be the correct parameter name (it
-          should be `frac` for LOWESS in statsmodels). However, the curve appears
-          to work.
+        passed: true
+        comment: 'Uses plotnine''s high-level API correctly: ggplot, aes, geom_point,
+          geom_smooth with method=''lowess'', theme'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages geom_smooth with LOWESS (library-specific), custom theme
+          with element_rect/text/line for adaptation
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

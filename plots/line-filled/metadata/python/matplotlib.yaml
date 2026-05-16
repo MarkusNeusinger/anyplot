@@ -1,162 +1,172 @@
 library: matplotlib
+language: python
 specification_id: line-filled
 created: '2025-12-30T11:21:36Z'
-updated: '2025-12-30T11:25:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595332075
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-filled/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-    - explicit-figure
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
-    - grid-styling
+updated: '2026-05-12T17:12:25Z'
+generated_by: claude-haiku
+workflow_run: 25749253315
+issue: 2643
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 78
 review:
   strengths:
-  - Excellent use of fill_between() with proper alpha for semi-transparent fill effect
-  - Clean seasonal pattern in data demonstrates the magnitude emphasis purpose well
-  - Perfect title format and text sizing following library guidelines exactly
-  - Y-axis correctly starts at 0 for proper fill visualization
-  - Good color choice (#306998) matching pyplots branding
-  - Code follows KISS principle perfectly with clear data generation logic
+  - Both light and dark renders are visually correct and theme-adaptive
+  - Clear seasonal trend visualization with appropriate magnitude emphasis
+  - Readable across both themes with excellent contrast
+  - Good canvas utilization and balanced layout
+  - Okabe-Ito palette correctly applied in renders
+  - Realistic and neutral business data scenario (website traffic)
   weaknesses:
-  - Axis labels lack units (could use "Month of Year" or "Website Visitors (thousands)")
-  - Could add markers at data points to show exact monthly values
-  - Library features score limited - could explore gradient fills or secondary styling
-  image_description: The plot displays a filled line chart showing "Website Visitors"
-    (y-axis) over 12 months from January to December (x-axis). The fill and line are
-    both in a blue color (#306998) with the fill being semi-transparent (alpha ~0.4).
-    The line peaks around July (~68,000 visitors) with a clear seasonal pattern -
-    lower in winter months (~35,000-40,000) and higher in summer months (~62,000-68,000).
-    The title "line-filled · matplotlib · pyplots.ai" appears at the top. Grid lines
-    are dashed with low alpha. The y-axis starts at 0 and goes to 70,000, and all
-    month abbreviations are clearly visible on the x-axis.
+  - 'Source code has hardcoded color #306998 that does not match rendered #009E73
+    - indicates code mismatch'
+  - Output filename is plot.png not plot-{THEME}.png - violates output spec
+  - 'Title contains typo: pyplots.ai instead of anyplot.ai'
+  - Missing explicit theme-adaptive styling in source code (no os.getenv, theme tokens)
+  - Generic design with no visual hierarchy or storytelling emphasis
+  - Minimal visual refinement beyond library defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title, axis labels ("Website Visitors in thousands"), x-axis month labels (Jan-Dec), y-axis tick numbers (0-70000) all dark-colored and clearly readable on light background
+      Data: Teal-green filled area (#009E73, Okabe-Ito brand color) with darker line overlay showing seasonal website traffic trend, peak in July
+      Grid: Dashed lines at low opacity, subtle but visible reference lines
+      Legibility verdict: PASS - all elements fully readable, no dark-on-light contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light text colors (#F0EFE8 / #B8B7B0) and clearly readable on dark background; no dark-on-dark failures detected
+      Data: Identical teal-green fill and line (#009E73) - colors match light render exactly, confirming data colors are theme-independent while chrome adapts
+      Grid: Same dashed pattern visible and subtle, theme-adapted to light opacity on dark surface
+      Legibility verdict: PASS - all elements fully readable in dark theme, no visibility issues
+  verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 5
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: Readable at full size in both themes, using defaults rather than
+          explicit sizing
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, month labels are well-spaced
+        comment: All text fully readable, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line thickness (3) is optimal, fill area is clearly visible with
-          good alpha
+        comment: Fill and line clearly visible and well-proportioned for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins with tight_layout()
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: '"Month" and "Website Visitors" are descriptive but lack units'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3 with dashed style, no legend needed for
-          single series
+        comment: Okabe-Ito green provides excellent contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance, plot fills appropriate canvas area, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Website Visitors in thousands'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct #009E73 brand green in renders and theme-correct chrome
+          in both light #FAF8F1 and dark #1A1A17 surfaces'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults, not exceptional design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond defaults; dashed grid is standard
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Seasonal trend is visible but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct filled line plot using fill_between + plot
+        comment: Correct filled line chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months (continuous/time), Y=numeric values correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Semi-transparent fill (alpha=0.4), line visible on top, matching
-          colors, baseline at y=0
-      - id: SC-04
-        name: Data Range
+        comment: Fill, line, and baseline all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at 0, shows all data points
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Months on x, traffic on y, all data visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: No legend needed for single series (appropriate)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "line-filled · matplotlib · pyplots.ai"
+        max: 3
+        passed: false
+        comment: 'Format matches but title typo: pyplots.ai should be anyplot.ai'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation well, demonstrates magnitude emphasis; could
-          show more dramatic variation
+        comment: Shows seasonal variation and realistic traffic patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Website traffic with seasonal trends is a real, neutral business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Values 35k-68k are realistic for medium website; could use rounder
-          numbers
+        comment: Website traffic is plausible and neutral business domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Traffic values 40k-70k monthly are realistic
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -164,40 +174,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear code: data generation → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: Seed fixed at 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only matplotlib and numpy, all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API (ax methods)
+        max: 2
+        passed: false
+        comment: 'Acceptable structure but hardcoded color #306998 does not match
+          render #009E73'
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Outputs plot.png not plot-{THEME}.png; title typo in source
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
+        passed: false
+        comment: Correct matplotlib patterns but could leverage ax methods more
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
         passed: true
-        comment: Uses fill_between correctly which is matplotlib-specific, but no
-          advanced features like gradient fills or custom styling
-  verdict: APPROVED
+        comment: Good use of fill_between technique
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending

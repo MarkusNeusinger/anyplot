@@ -1,0 +1,258 @@
+library: pygal
+language: python
+specification_id: dendrogram-radial
+created: '2026-05-14T09:29:58Z'
+updated: '2026-05-14T09:50:29Z'
+generated_by: claude-sonnet
+workflow_run: 25852004387
+issue: 5245
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/pygal/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - Radial dendrogram correctly rendered with Ward linkage and proportional branch
+    lengths
+  - 'All 6 taxonomic groups color-coded with Okabe-Ito palette in correct order (Marine
+    Mammals = #009E73 first)'
+  - 'Both light and dark themes correctly applied with proper background colors (#FAF8F1
+    and #1A1A17)'
+  - Leaf labels are radially oriented and match group colors for visual coherence
+  - Interactive HTML output uses pygal XY chart with hover tooltips for species names
+  - 'Spec fully complied with: scipy linkage, leaf ordering, angular positioning,
+    legend, and title format'
+  weaknesses:
+  - Design excellence is moderate — the SVG-rendered dendrogram is functional but
+    lacks visual polish (e.g., subtle shadow on legend, more generous label padding,
+    slightly thicker branch lines for hierarchy emphasis)
+  - The dendrogram circle occupies only ~35% of the canvas area, leaving excessive
+    blank space especially on the right side — the radius R=900 against canvas 4800x2700
+    could be increased
+  - Leaf label font size (28px) is on the small side for a 4800px-wide canvas; the
+    style guide recommends 18px for tick labels which would be ~26px at standard scaling,
+    but given the density of 24 labels at circumference the sizing may need care
+  - 'LM-01 partially penalized: the actual dendrogram PNG rendering bypasses pygal
+    entirely (raw SVG) — pygal is used only for Style and HTML output, which is a
+    somewhat indirect use of the library''s capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "dendrogram-radial · pygal · anyplot.ai" centered at top in dark ink, clearly readable. Legend top-left with "Taxonomic Groups" header and 6 color-coded circle entries — all legend text readable in dark ink against light background. No light-on-light text issues.
+      Data: Radial dendrogram with 24 leaf nodes arranged around circumference. Six taxonomic groups color-coded: Marine Mammals (#009E73 teal-green), Canines (#D55E00 vermillion), Felines (#0072B2 blue), Raptors (#CC79A7 pink), Amphibians (#E69F00 orange), Fish (#56B4E9 sky blue). Cross-cluster branches rendered in dark gray (INK_SOFT). Leaf labels radially oriented and colored to match group. Species names readable around the circle.
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title visible in light text (#F0EFE8) against dark background — readable. Legend text in light color — readable. No dark-on-dark failures observed; labels use the colored group hex values which are bright enough against the near-black background.
+      Data: Data colors are identical to light render — same Okabe-Ito palette (positions 1-6). Cross-cluster branches appear in a lighter gray (#B8B7B0 INK_SOFT dark variant). The teal-green (#009E73) for Marine Mammals remains clearly visible on the dark surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and legend clearly readable in both themes; leaf labels at
+          28px are slightly small for 4800px canvas but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 24 leaves at equal angular spacing with no significant collisions;
+          a few labels near top are close but readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All branches, leaf dots, and labels clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe; no red-green as sole distinguishing
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Well-centered dendrogram; legend fits top-left; dendrogram circle
+          occupies ~35% of canvas leaving notable right-side whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''dendrogram-radial · pygal · anyplot.ai'';
+          no axis labels needed for radial layout'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First group (Marine Mammals) = #009E73; Okabe-Ito positions 1-6
+          in order; backgrounds #FAF8F1 light / #1A1A17 dark correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette with intentional group-color hierarchy;
+          clean SVG construction; above default but lacks fine-grained polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: No traditional axes/spines (appropriate for radial); opacity on branches
+          subtle; minimal chrome; above default
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Color-coding by taxonomic group creates visual hierarchy; branch
+          lengths encode distance quantitatively; functional but no strong focal point
+          emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radial dendrogram with root at center, leaves at circumference
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Linkage matrix via scipy, labels around circumference, cluster_colors
+          coding branches, proportional branch lengths
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Radial distances proportional to Ward merge distances; angular positions
+          based on leaf ordering
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend shows all 6 taxonomic groups
+          with color circles
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows hierarchical clustering, radial layout, proportional branch
+          lengths, color-coded groups; 24 leaves is adequate though not large
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 24 animal species clustered by ecological traits is biologically
+          plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24 leaves within the 20-500 recommended range; trait values realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Has a polar_xy helper function — necessary for repeated coordinate
+          conversion but technically violates no-functions guidance
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used; importlib workaround is necessary to avoid
+          naming collision
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean SVG generation loop; importlib workaround for naming collision
+          is clever and necessary
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Pygal Style system used properly for theming; XY chart for HTML is
+          idiomatic; but main PNG bypasses pygal entirely via raw SVG
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages pygal's JS rendering pipeline for interactive HTML with
+          hover tooltips; Style object for consistent theme tokens
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - cairosvg
+  techniques:
+  - html-export
+  - hover-tooltips
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - alpha-blending
+  - minimal-chrome

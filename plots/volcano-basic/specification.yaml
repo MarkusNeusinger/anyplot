@@ -6,7 +6,7 @@ title: Volcano Plot for Statistical Significance
 
 # Specification tracking
 created: 2025-12-31T05:12:47Z
-updated: null
+updated: 2026-05-14T10:53:54Z
 issue: 2924
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - volcano
     - scatter
   data_type:
     - numeric

@@ -1,17 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-07
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
 # Generate sample stock data and calculate RSI
 np.random.seed(42)
-dates = pd.date_range("2024-01-01", periods=120, freq="D")
+dates = pd.date_range("2024-01-01", periods=120, freq="D").strftime("%Y-%m-%d")
 
 # Simulate price movement with trends
 returns = np.random.randn(120) * 0.015
@@ -48,7 +59,7 @@ fig.add_trace(
         fill="tonexty",
         mode="lines",
         line={"width": 0},
-        fillcolor="rgba(255, 99, 71, 0.2)",
+        fillcolor="rgba(213, 94, 0, 0.15)",
         name="Overbought Zone (70-100)",
     )
 )
@@ -66,18 +77,18 @@ fig.add_trace(
         fill="tonexty",
         mode="lines",
         line={"width": 0},
-        fillcolor="rgba(50, 205, 50, 0.2)",
+        fillcolor="rgba(0, 158, 115, 0.15)",
         name="Oversold Zone (0-30)",
     )
 )
 
 # RSI line
-fig.add_trace(go.Scatter(x=dates, y=rsi, mode="lines", name="RSI (14)", line={"color": "#306998", "width": 3}))
+fig.add_trace(go.Scatter(x=dates, y=rsi, mode="lines", name="RSI (14)", line={"color": BRAND, "width": 3}))
 
 # Add reference lines
-fig.add_hline(y=70, line_dash="dash", line_color="#FF6347", line_width=2)
-fig.add_hline(y=50, line_dash="dot", line_color="#888888", line_width=1.5)
-fig.add_hline(y=30, line_dash="dash", line_color="#32CD32", line_width=2)
+fig.add_hline(y=70, line_dash="dash", line_color="#D55E00", line_width=2)
+fig.add_hline(y=50, line_dash="dot", line_color=INK_SOFT, line_width=1.5)
+fig.add_hline(y=30, line_dash="dash", line_color="#0072B2", line_width=2)
 
 # Annotations for threshold lines
 fig.add_annotation(
@@ -87,7 +98,7 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=10,
-    font={"size": 16, "color": "#FF6347"},
+    font={"size": 16, "color": "#D55E00"},
 )
 fig.add_annotation(
     x=dates[-1],
@@ -96,7 +107,7 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=10,
-    font={"size": 14, "color": "#888888"},
+    font={"size": 14, "color": INK_SOFT},
 )
 fig.add_annotation(
     x=dates[-1],
@@ -105,31 +116,47 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=10,
-    font={"size": 16, "color": "#32CD32"},
+    font={"size": 16, "color": "#0072B2"},
 )
 
 # Layout
 fig.update_layout(
-    title={"text": "indicator-rsi · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "indicator-rsi · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Date", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Date", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": True,
-        "gridcolor": "rgba(128, 128, 128, 0.2)",
+        "gridcolor": GRID,
     },
     yaxis={
-        "title": {"text": "RSI Value", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "RSI Value", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "range": [0, 100],
         "showgrid": True,
-        "gridcolor": "rgba(128, 128, 128, 0.2)",
+        "gridcolor": GRID,
         "dtick": 10,
     },
-    template="plotly_white",
-    legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "center", "x": 0.5, "font": {"size": 16}},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    legend={
+        "orientation": "h",
+        "yanchor": "bottom",
+        "y": 1.02,
+        "xanchor": "center",
+        "x": 0.5,
+        "font": {"size": 16, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
     margin={"l": 80, "r": 120, "t": 100, "b": 80},
 )
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

@@ -6,7 +6,7 @@ title: Andrews Curves for Multivariate Data
 
 # Specification tracking
 created: 2025-12-30T23:43:19Z
-updated: 2025-12-30T23:43:19Z
+updated: 2026-05-15T12:46:26Z
 issue: 2859
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - curve
   data_type:
     - numeric
     - multivariate

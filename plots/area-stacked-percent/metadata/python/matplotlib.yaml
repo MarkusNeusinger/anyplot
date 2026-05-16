@@ -1,171 +1,174 @@
 library: matplotlib
+language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:21:39Z'
-updated: '2025-12-30T11:25:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595336263
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-05-12T11:03:41Z'
+generated_by: claude-haiku
+workflow_run: 25730003968
+issue: 2647
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent use of the 100% stacked area visualization matching spec requirements
-    perfectly
-  - Clean, readable code following KISS principles with proper reproducibility
-  - Colorblind-friendly color palette with good contrast between adjacent areas
-  - White edge lines between areas enhance visual clarity
-  - Realistic market share scenario with meaningful trends showing composition changes
-  - Perfect title format and appropriate font sizes throughout
+  - 'Flawless theme adaptation: both light and dark renders pass legibility checks
+    with perfect text contrast'
+  - Correct Okabe-Ito palette order (Solar → Wind → Hydro → Natural Gas → Coal)
+  - 'Clean data narrative: renewable growth vs. fossil fuel decline is visually obvious'
+  - Well-proportioned layout with generous whitespace and proper legend placement
+  - Proper use of matplotlib's high-level stackplot API
+  - Grid styling is subtle and supports rather than competes with data
   weaknesses:
-  - Legend slightly overlaps the data area at the top right - could be positioned
-    outside the plot area
-  - X-axis label Year is generic - could be more descriptive like Year (2015-2024)
-  - Library features could be enhanced with annotations showing key percentages or
-    trend indicators
-  image_description: The plot displays a 100% stacked area chart showing market share
-    evolution for four companies (A, B, C, D) from 2015 to 2024. The color scheme
-    uses dark blue (#306998) for Company A at the bottom, golden yellow (#FFD43B)
-    for Company B, light blue (#4B8BBE) for Company C, and pale yellow (#FFE873) for
-    Company D at the top. The Y-axis shows "Market Share (%)" with tick marks at 0%,
-    25%, 50%, 75%, and 100%. The X-axis shows "Year" with all years from 2015-2024
-    labeled. A legend is positioned in the upper right corner with a semi-transparent
-    background. Horizontal dashed grid lines appear at 25% intervals. The title reads
-    "area-stacked-percent · matplotlib · pyplots.ai". The visualization clearly shows
-    Company A declining from ~45% to ~24%, Company B growing from ~30% to ~41%, Company
-    C steadily increasing from ~15% to ~24%, and Company D remaining stable around
-    10-11%.
+  - Design excellence is competent but not exceptional—follows template conventions
+    without adding custom visual sophistication
+  - Library Mastery could showcase more distinctive matplotlib techniques (not required
+    for this spec, but opportunity exists)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "area-stacked-percent · matplotlib · anyplot.ai", axis labels "Year (2014–2024)" and "Electricity Generation (%)", and all tick labels (2014-2024, 0%-100%) are clearly readable in dark text (#1A1A17 and #4A4A44)
+      Data: Okabe-Ito palette with Solar (#009E73 at bottom), Wind (#D55E00), Hydro (#0072B2), Natural Gas (#CC79A7), Coal (#E69F00 at top). All areas clearly distinguishable.
+      Legibility verdict: PASS - all text is readable, no overlaps, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title, axis labels, and all tick labels clearly visible in light text (#F0EFE8 and #B8B7B0) against dark background. No dark-on-dark failures observed.
+      Data: Colors identical to light render - Solar (#009E73), Wind (#D55E00), Hydro (#0072B2), Natural Gas (#CC79A7), Coal (#E69F00). Theme separation confirmed (only chrome flips).
+      Legibility verdict: PASS - all text is readable with excellent contrast, proper theme adaptation demonstrated
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text perfectly readable: title at 24pt, axis labels at 20pt,
-          tick labels at 16pt'
+        comment: All font sizes explicitly set (title=24, labels=20, ticks=16). Readable
+          in both light and dark themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere, all labels clear
+        comment: Legend positioned outside plot area. No colliding elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas clearly visible with good alpha (0.85), white edge lines separate
-          layers nicely
+        comment: All stacked areas clearly distinguishable by color.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Color scheme uses blue/yellow palette which is colorblind-friendly,
-          good contrast between adjacent areas
+        comment: Okabe-Ito palette is colorblind-safe. Good contrast.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with proper margins, balanced whitespace
+        comment: 16:9 aspect ratio, tight_layout, nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (%), but X-axis "Year" could be more descriptive
+        comment: Correct title format with spec-id, library, anyplot.ai. Descriptive
+          axis labels with units.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed, y-only), legend well placed but
-          slightly overlaps the topmost area
+        comment: 'First series is #009E73 (brand green). Okabe-Ito order respected.
+          Backgrounds correct (#FAF8F1 light / #1A1A17 dark).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-executed Okabe-Ito palette with clean styling. Data domain is
+          relevant. Professional but not highly custom.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed. Subtle y-axis-only grid. Generous whitespace.
+          Legend frame styled appropriately.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear narrative: renewable growth vs. fossil fuel decline. Visual
+          hierarchy present through area ordering.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked area chart
+        comment: 100% stacked area chart correctly implemented.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is time (years), Y variables are categories stacked correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows percentage contribution, always totals 100%, demonstrates proportional
-          changes over time
-      - id: SC-04
-        name: Data Range
+        comment: All areas stack to 100%, proportional changes shown, appropriate
+          categorical data.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-100%, X-axis shows full data range 2015-2024
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: time (years 2014-2024), Y-axis: percentage (0-100%), categories
+          correctly stacked.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data series correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title format correct. Legend labels match data.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple trends (decline, growth, steady growth, stable), but
-          could show more dramatic composition shifts
+        comment: Shows all aspects of 100% stacked area with multiple categories and
+          clear proportional representation.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Market share evolution is a perfect real-world application mentioned
-          in spec, uses neutral business context
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Market share percentages (10-45%) are realistic for a competitive
-          market
+        comment: Renewable energy data 2014-2024 with plausible values. Realistic
+          energy mix evolution. Neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values span 0-100% (mandatory). Individual percentages realistic
+          for electricity generation.
     code_quality:
       score: 10
       max: 10
@@ -175,41 +178,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions or classes. Straightforward linear implementation.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42), though data is deterministic anyway
+        comment: Fixed numpy arrays, deterministic, reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only os, matplotlib.pyplot, numpy. All used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API (stackplot, ax methods)
+        comment: Appropriate complexity. No fake UI. Idiomatic matplotlib.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct naming.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ax.stackplot() correctly (proper high-level API). Theme tokens
+          properly applied. Spine removal standard practice.
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses standard stackplot, which is correct but not distinctive. Could
-          use annotations, fill_between customization, or other matplotlib-specific
-          features
+        comment: Theme-adaptive implementation is competent but follows boilerplate.
+          No distinctive matplotlib features leveraged.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling

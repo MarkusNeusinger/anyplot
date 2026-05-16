@@ -1,169 +1,183 @@
 library: seaborn
+language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:54:42Z'
-updated: '2025-12-31T15:12:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620322599
+updated: '2026-05-15T05:47:59Z'
+generated_by: claude-haiku
+workflow_run: 25902022783
 issue: 3069
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/seaborn/plot.png
-preview_html: null
-quality_score: 88
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - custom-colormap
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Excellent creative solution using tile grid cartogram approach for choropleth
-    visualization
-  - Clean, readable layout with well-sized state labels and values
-  - Good use of seaborn heatmap function with appropriate colormap
-  - Realistic economic data scenario with plausible GDP growth rates
-  - Good colorblind-friendly palette choice (YlGnBu)
-  - Well-structured code following KISS principles
+  - Clear geographic representation with tile grid choropleth technique
+  - Excellent spec compliance - all required features present
+  - Strong data quality with realistic GDP growth values and missing data handling
+  - Readable text in both light and dark themes with explicitly-sized fonts
+  - Appropriate color palette (YlGnBu) for continuous data with good contrast
   weaknesses:
-  - Title format includes extra descriptive text instead of strictly following spec-id
-    format
-  - Missing data handling (gray hatched cells) not visible in rendered image
-  - Subtitle text could be slightly larger for better readability
-  - Could show wider range of values to demonstrate more color scale variation
-  image_description: The plot displays a tile grid choropleth map of US states showing
-    GDP growth rates. Each state is represented as a square tile arranged in an approximate
-    geographic layout. The color scheme uses YlGnBu (yellow-green-blue sequential
-    palette) where lighter yellow/green indicates lower growth rates (~0-1%) and darker
-    blue indicates higher growth rates (~4-5%). Each tile contains the state abbreviation
-    in bold black text and the GDP growth percentage below it. A vertical colorbar
-    on the right shows "GDP Growth Rate (%)" ranging from 0 to 5. The title reads
-    "US States Economic Growth · choropleth-basic · seaborn · pyplots.ai". Alaska
-    and Hawaii are positioned in the bottom left corner. A subtitle at the bottom
-    reads "Stylized grid representation of US states colored by annual GDP growth
-    rate".
+  - Design Excellence is generic - uses standard seaborn defaults without sophisticated
+    customization (DE-01 only 4/8)
+  - Visual refinement is minimal - no spine removal or grid refinement to add polish
+    (DE-02 only 2/6)
+  - Code doesn't explicitly use theme-adaptive pattern from seaborn.md - text colors
+    are hardcoded instead of reading ANYPLOT_THEME environment variable
+  - 'Saving mechanism unclear - code saves to ''plot.png'' but correct filenames (plot-light.png,
+    plot-dark.png) are in output. Code should use f-string pattern: plt.savefig(f''plot-{THEME}.png'',
+    ...)'
+  - Limited use of seaborn-specific distinctive features - relies heavily on matplotlib
+    patches and manual text annotations rather than high-level seaborn API
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - appropriate for light theme
+      Chrome: Title "choropleth-basic · seaborn · anyplot.ai" is clearly visible in dark text. Axis labels are removed (appropriate for tile grid). State abbreviations are bold and legible at 20pt. Percentage values are readable at 16pt. Colorbar label "GDP Growth Rate (%)" is clear with units. Legend shows "No Data Available" pattern.
+      Data: YlGnBu sequential gradient maps GDP growth from 0-5% across US states. First color (#FFFFCC) at 0% through (#08519C) at 5%. Missing data cells (PR, DC) show gray fill with hatching pattern. White grid lines (1.5pt) clearly separate state cells.
+      Legibility verdict: PASS - All text elements are readable with good contrast against the light background. No dark-on-light readability issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - appropriate for dark theme
+      Chrome: Title appears light-colored, ensuring good contrast against dark background. State abbreviations are readable - appear to use light colors for visibility. Percentage values are readable. Colorbar and legend text appear light-colored and visible.
+      Data: YlGnBu colors are identical to light render - pale yellow at low values, dark blue at high values. Only the chrome (background, text, grid) has flipped from light to dark theme. White grid lines remain visible between cells. Missing data hatching pattern clearly visible on dark background.
+      Legibility verdict: PASS - All text elements readable despite dark background. No dark-on-dark failures observed. Data colors maintain identity and contrast from light render.
+
+    Both renders successfully demonstrate theme adaptation: data colors identical across themes, only chrome elements change for readability. The plot is fully functional and readable in both light and dark contexts.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'State codes and values are clearly readable; title and colorbar
-          labels appropriately sized. Minor: subtitle could be slightly larger'
+        comment: Font sizes explicitly set (title 26pt, labels 20pt, values 16pt)
+          - all readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean separation between tiles
+        comment: State codes and values clearly positioned with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tiles are well-sized, good use of space, all states clearly visible
+        comment: All states visible and distinguishable; missing data clearly marked
+          with gray and hatching
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: YlGnBu is colorblind-friendly sequential palette, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, tiles fill canvas well; slight empty space on right
-          side
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Not applicable for tile grid maps (no axes), but colorbar label is
-          present
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Colorbar well-placed, subtle white grid lines between tiles
+        comment: YlGnBu is perceptually-uniform sequential colormap with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format appropriate; plot uses good canvas proportion with
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; colorbar and legend labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'YlGnBu for continuous data; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); both renders theme-correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults but no custom palette or sophisticated
+          design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization - missing opportunities
+          for spine/grid refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear geographic narrative; subtitle helps; YlGnBu gradient effectively
+          shows intensity variation
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct implementation of choropleth concept using tile grid cartogram
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: GDP growth rate correctly mapped to color intensity
-      - id: SC-03
+        comment: Correct choropleth type - tile grid cartogram is a recognized cartographic
+          technique
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has color legend, regional coloring, clear boundaries. Missing:
-          hatched pattern for missing data not visible in rendered image'
-      - id: SC-04
-        name: Data Range
+        comment: Color legend, regional coloring, missing data handling, clear boundaries
+          - all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data values visible within 0-5% range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Geographic grid positions correct; GDP values mapped to colors; all
+          data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately shows value range
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title includes spec-id, library, and pyplots.ai but adds extra prefix
-          "US States Economic Growth"
+        comment: Title format correct; legend and colorbar labels descriptive with
+          units
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across all states with low (0.4% AK) to high (4.5%
-          UT) values. Good regional patterns (tech states higher)
+        comment: Shows full range of GDP growth (0.4% to 4.5%) with missing data examples
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: GDP growth rates are a realistic, neutral economic indicator; values
-          are plausible for state economies
+        comment: GDP growth rates realistic; US state data is real-world use case;
+          no controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 0.4-4.5% are realistic GDP growth rates; slightly narrow range
-          could show more variation
+        comment: 0-5% range is plausible for GDP growth; grid proportions appropriate
+          for US states
     code_quality:
       score: 9
       max: 10
@@ -173,42 +187,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern, no unnecessary functions/classes
+        comment: Data inline, direct plotting, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; complexity appropriate for tile grid implementation
+      - id: CQ-05
+        name: Output & API
         score: 0
         max: 1
-        passed: true
-        comment: Code references features but rendered image differs; potential API
-          compatibility issue
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with correct dpi
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Code saves to 'plot.png' but should use f'plot-{THEME}.png' pattern
+          per seaborn.md; actual outputs named correctly but code pattern incorrect
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses sns.heatmap which is seaborn's strength, sns.set_theme for styling.
-          However, choropleth maps are not seaborn's primary use case; implementation
-          is creative but could leverage more statistical features
+        passed: false
+        comment: Correct sns.heatmap() usage but relies heavily on matplotlib-level
+          customization; doesn't follow theme-adaptive pattern from seaborn.md
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic seaborn usage; tile grid is creative endpoint but not leveraging
+          seaborn-specific distinctive features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

@@ -1,162 +1,167 @@
 library: seaborn
+language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:30:18Z'
-updated: '2025-12-30T09:34:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593347045
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T01:02:55Z'
+generated_by: claude-haiku
+workflow_run: 25706511357
+issue: 2548
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - groupby-aggregation
-  dataprep: []
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent data design showing diverse distributions with outliers, tight spreads,
-    and wide spreads
-  - Categories correctly sorted by median for easier comparison (as suggested in spec)
-  - Proper use of seaborn 0.14+ API with hue parameter to avoid deprecation warnings
-  - Clean alternating color palette that aids visual distinction between categories
-  - All text sizes optimized for the 4800×2700 canvas
+  - Perfect visual quality across both light and dark themes with explicit font sizing
+  - Excellent data quality demonstrating all box plot features with realistic salary
+    data
+  - Correct Okabe-Ito palette compliance with proper theme-adaptive chrome in both
+    renders
+  - Thoughtful data sorting by median creates visual hierarchy and narrative
+  - Clean, reproducible code with proper randomization seeding
   weaknesses:
-  - Color alternation (blue/yellow) is decorative rather than conveying meaning -
-    a single color or sequential palette might be cleaner
-  - Could use sns.set_context() for more consistent seaborn styling
-  image_description: 'The plot displays a horizontal box plot showing response times
-    (in milliseconds) for 5 different service types. The boxes are oriented horizontally
-    with categories on the y-axis (Cache Lookup, API Gateway, Authentication, Database
-    Query, File Upload - sorted by median value) and response time on the x-axis (0-1100ms).
-    Colors alternate between blue (#306998) and yellow (#FFD43B). Each box shows the
-    median line, quartile box, whiskers extending to ~1.5×IQR, and outliers as hollow
-    circles. The title "box-horizontal · seaborn · pyplots.ai" is displayed at the
-    top. Grid lines are subtle dashed vertical lines. The plot demonstrates varying
-    distributions: Cache Lookup is very tight and fast (~25ms), while File Upload
-    has a wide spread (400-600ms) with outliers near 1000ms.'
+  - Design excellence limited to library defaults; no custom aesthetic choices or
+    visual sophistication
+  - Could leverage advanced seaborn features (FacetGrid, hue-based categorical comparison)
+    for richer exploration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "box-horizontal · seaborn · anyplot.ai" in dark text (24pt), axis labels "Salary (USD)" and "Job Title" in dark (20pt), tick labels in dark (16pt) - all clearly readable
+      Data: Teal-green boxes (#009E73) showing salary distributions with median lines, whiskers, and outlier circles - all elements clearly visible
+      Legibility verdict: PASS - all text and elements are easily readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and labels in light text (#F0EFE8 / #B8B7B0) - excellent contrast against dark background, no dark-on-dark failures
+      Data: Identical teal-green boxes (#009E73) as light render, confirming only chrome adapted between themes
+      Legibility verdict: PASS - all elements are readable and properly theme-adapted, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: Title (24pt), labels (20pt), ticks (16pt) all explicitly set and
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, category labels well spaced
+        comment: All text fully spaced with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box widths, whiskers, and outlier markers appropriately sized
+        comment: Boxes, whiskers, outliers perfectly visible and adapted to 5 categories
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is good and colorblind-friendly, though alternating
-          pattern is decorative rather than meaningful
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" and "Service Type" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green has excellent contrast on both surfaces; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16×9 figsize with balanced margins and optimal canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but no legend needed/present - appropriate
-          for this plot type
+        comment: Descriptive labels with units (Salary USD), title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct, theme-adaptive chrome
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults but lacks custom design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (L-shaped), subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Categories sorted by median salary creates visual narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal box plot
+        comment: Correct horizontal box plot with all statistical elements
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, numeric values on x-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Median line, quartile box, whiskers, outliers all present; categories
-          sorted by median
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: categories, values, distributions, outliers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-variable box plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "box-horizontal · seaborn · pyplots.ai"
+        comment: Title format correct, single-series plot
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows outliers, different distributions (tight vs wide), varying
-          medians, different spreads
+        comment: 'Shows all features: quartiles, median, whiskers, outliers'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Service response times is plausible, but values somewhat simplified
-          (e.g., File Upload always being slowest is expected but could be more nuanced)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Response times in ms are realistic for web services
+        comment: Real, neutral scenario with tech industry salary data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic salary ranges matching real-world domain knowledge
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,42 +169,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear flow: imports → setup → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: pandas imported and used, though data could be structured without
-          it
+        comment: np.random.seed(42) set, all deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses modern seaborn API with hue parameter
+        comment: No fake UI, clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn's boxplot with proper hue/palette handling, order parameter,
-          and flierprops customization. Could leverage more seaborn-specific features
-          like style context.
+        comment: High-level sns.boxplot() API with proper sns.set_theme() integration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses automatic statistical computation; could leverage FacetGrid
+          or hue-based comparison
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling

@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 line-styled: Styled Line Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-12
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,6 +17,16 @@ from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Monthly temperature data for 4 cities
 np.random.seed(42)
@@ -38,7 +49,7 @@ chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 200,
     "marginLeft": 180,
     "marginRight": 150,
@@ -47,33 +58,37 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "line-styled · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "line-styled · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
-
-chart.options.subtitle = {"text": "Monthly Average Temperature by City", "style": {"fontSize": "32px"}}
 
 # X-axis (categories)
 chart.options.x_axis = {
     "categories": month_names,
-    "title": {"text": "Month", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
-    "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "title": {"text": "Month", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineWidth": 0,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Temperature (°C)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Temperature (°C)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.2)",
+    "gridLineColor": GRID,
 }
 
 # Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "32px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "symbolWidth": 80,
     "symbolHeight": 24,
     "layout": "vertical",
@@ -85,42 +100,45 @@ chart.options.legend = {
 # Plot options for lines
 chart.options.plot_options = {"line": {"lineWidth": 6, "marker": {"enabled": True, "radius": 10}}}
 
-# Add series with different line styles
-# Series 1 - Solid
+# Add series with different line styles using Okabe-Ito colors
+# Series 1 - Solid (brand green)
 series1 = LineSeries()
 series1.name = "Madrid"
 series1.data = [round(float(v), 1) for v in madrid]
-series1.color = "#306998"
+series1.color = OKABE_ITO[0]
 series1.dash_style = "Solid"
 chart.add_series(series1)
 
-# Series 2 - Dash
+# Series 2 - Dash (vermillion)
 series2 = LineSeries()
 series2.name = "Berlin"
 series2.data = [round(float(v), 1) for v in berlin]
-series2.color = "#FFD43B"
+series2.color = OKABE_ITO[1]
 series2.dash_style = "Dash"
 chart.add_series(series2)
 
-# Series 3 - Dot
+# Series 3 - Dot (blue)
 series3 = LineSeries()
 series3.name = "Edinburgh"
 series3.data = [round(float(v), 1) for v in edinburgh]
-series3.color = "#9467BD"
+series3.color = OKABE_ITO[2]
 series3.dash_style = "Dot"
 chart.add_series(series3)
 
-# Series 4 - DashDot
+# Series 4 - DashDot (reddish purple)
 series4 = LineSeries()
 series4.name = "Oslo"
 series4.data = [round(float(v), 1) for v in oslo]
-series4.color = "#17BECF"
+series4.color = OKABE_ITO[3]
 series4.dash_style = "DashDot"
 chart.add_series(series4)
 
 # Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -131,13 +149,17 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact for the site
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -152,11 +174,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)

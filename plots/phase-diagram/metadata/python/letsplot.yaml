@@ -1,15 +1,240 @@
 library: letsplot
+language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:15:33Z'
-updated: '2025-12-31T11:22:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617713571
+updated: '2026-05-14T15:26:07Z'
+generated_by: claude-haiku
+workflow_run: 25868304185
 issue: 3004
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/letsplot/plot.html
-quality_score: 93
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/letsplot/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect theme-adaptive implementation with both light and dark renders fully readable
+    and properly themed
+  - All specification requirements met with clear visualization of trajectories, fixed
+    points, and convergence behavior
+  - 'Correct Okabe-Ito palette usage with first series as #009E73 (brand green)'
+  - Clean, reproducible code with np.random.seed(42) and straightforward linear structure
+  - 'Excellent data quality: realistic damped harmonic oscillator with sensible parameters
+    (ω=1.5, γ=0.5)'
+  - 'Effective use of visual elements: trajectory lines, starting point markers, and
+    fixed point marker guide the viewer'
+  weaknesses:
+  - 'Design Excellence: Uses standard theme_minimal() without distinctive visual refinements
+    or customizations beyond the theme system'
+  - 'Time progression: No directional arrows or color gradients along trajectories
+    to explicitly show temporal evolution'
+  - 'Library Mastery: Could leverage more advanced lets_plot features (e.g., custom
+    callbacks, interactive elements)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly as specified — not pure white, provides excellent contrast without harshness.
+      Chrome: Title "phase-diagram · letsplot · anyplot.ai" is clear and prominent (24pt, dark text). Axis labels "Position (x)" and "Velocity (dx/dt)" are clearly visible (20pt). Tick labels (16pt) are readable in dark text. Grid lines are subtle and visible without competing with data. Legend title and labels are well-positioned on the right side, readable in appropriate font sizes (14-16pt).
+      Data: Three trajectories in Okabe-Ito colors — first series in #009E73 (green), second #D55E00 (orange), third #0072B2 (blue). All spirals are clearly distinguishable and smooth. Starting point markers (hollow circles, size 7) are prominent. Fixed point marker (X at origin) is visible and clearly marks the equilibrium.
+      Legibility verdict: PASS — all text readable, excellent contrast, no legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly as specified — not pure black, maintains theme harmony.
+      Chrome: Title clearly visible in light text (24pt, #F0EFE8). Axis labels visible (20pt, #F0EFE8). Tick labels visible (16pt, #B8B7B0). Grid lines are subtle but perceptible on dark background. Legend is well-integrated, readable in light text.
+      Data: All three trajectory colors are identical to light render (#009E73, #D55E00, #0072B2) — only chrome flipped between themes. Starting point markers are clearly visible. Fixed point marker is visible and distinguishable.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable, data clearly visible, proper theme adaptation throughout.
+
+    Both renders pass theme-readability checks: data colors identical between renders, only chrome adapts, backgrounds and text colors correctly theme-adapted, no legibility defects in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized (title 24pt, axis labels 20pt, ticks 16pt,
+          legend 14pt) and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, axis labels, legend all well-spaced; no collision issues
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spiral trajectories clear, starting point markers visible (size 7),
+          fixed point marker distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette with good contrast; CVD-safe; no red-green-only
+          signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 scaled 3x to 4800x2700; good proportions; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Position (x)'', Y: ''Velocity (dx/dt)'' — descriptive with
+          units; title includes spec-id, library, source'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, order #009E73→#D55E00→#0072B2; backgrounds
+          #FAF8F1 (light) and #1A1A17 (dark); identical data colors across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional Polish with theme-adaptive chrome; uses Okabe-Ito palette;
+          however, relies on theme_minimal() defaults without distinctive customization
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed (theme_minimal), grid subtle (size 0.3, INK_SOFT),
+          whitespace generous; straightforward but not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Fixed point provides focal point, starting markers guide eye, spirals
+          show convergence; good hierarchy but no directional arrows or time gradients
+          to enhance narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct phase diagram showing x vs dx/dt; multiple trajectories from
+          different initial conditions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Three trajectories present; fixed point marked at origin; starting
+          points marked; convergence behavior visible
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: Position (x), Y-axis: Velocity (dx/dt); all data visible;
+          trajectories complete and properly scaled'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''phase-diagram · letsplot · anyplot.ai''; Legend with ''Initial
+          Condition'' and three labeled trajectories'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows trajectories, fixed point, convergence, basin of attraction,
+          damped oscillation behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped harmonic oscillator (real physics); sensible parameters ω=1.5,
+          γ=0.5; realistic initial conditions; neutral data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Position range ±3, velocity range ±3 appropriate; 400 points per
+          trajectory for smooth spirals; 12-unit time span sufficient for convergence
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; linear flow; simple Euler integration loop
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42); fixed parameters; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, numpy, pandas, lets_plot all used; no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Euler integration is standard; no fake UI or simulated functionality;
+          appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper ggplot2-style grammar: ggplot + geom_path + geom_point +
+          scale_color_manual + custom theme; high-level API'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses LetsPlot.setup_html(), ggsize(), theme system; standard features,
+          not particularly advanced or distinctive library-specific capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,198 +245,3 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Excellent visualization of damped harmonic oscillator phase space with clear spiral
-    convergence to equilibrium
-  - Multiple trajectories from different initial conditions effectively demonstrate
-    basin of attraction concept
-  - Fixed point clearly marked with distinctive red X marker
-  - Starting points clearly marked with hollow circles with stroke, making trajectory
-    origins easy to identify
-  - Clean, professional styling with appropriate color palette and readable text at
-    all sizes
-  - Proper use of lets-plot grammar of graphics (ggplot, geom_path, aes mappings)
-  weaknesses:
-  - Legend entries show raw initial condition tuples; more descriptive labels would
-    improve readability
-  - Inner spiral loops become slightly dense near equilibrium; direction arrows could
-    show time evolution more clearly
-  image_description: The plot displays a phase diagram (state space plot) showing
-    four spiral trajectories converging to a fixed point at the origin. The trajectories
-    are colored in blue, yellow, green, and purple, each starting from different initial
-    conditions marked with hollow circle markers. The fixed point (equilibrium) at
-    the origin is marked with a bold red "X". The x-axis is labeled "Position (x)"
-    ranging from approximately -2.5 to 3, and the y-axis is labeled "Velocity (dx/dt)"
-    ranging from approximately -6 to 5. The title "phase-diagram · letsplot · pyplots.ai"
-    appears at the top. A legend on the right side shows "Starting Condition" with
-    four entries corresponding to each trajectory's initial (x, v) values. The plot
-    has a clean minimal theme with subtle gray grid lines.
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend text are all clearly readable
-          at appropriate sizes
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; all labels and legend entries are clearly
-          separated
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Trajectory lines are well-sized with good alpha (0.8), starting points
-          clearly marked; minor deduction as some inner spiral loops are slightly
-          dense
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses blue, yellow, green, purple palette which is colorblind-friendly;
-          good contrast between all colors
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; legend positioned appropriately
-          on right
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with proper notation: "Position (x)" and "Velocity
-          (dx/dt)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid is visible and subtle, but legend title "Starting Condition"
-          is slightly generic; legend entries could be more descriptive
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct phase diagram showing x vs dx/dt trajectories
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Position correctly mapped to x-axis, velocity (derivative) to y-axis
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Shows multiple trajectories, fixed point marked, spiral convergence
-          visible, direction of time evolution implied by path
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data points visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies each trajectory by initial condition
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "phase-diagram · letsplot · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows spiral convergence (damped system), multiple initial conditions,
-          equilibrium point; could show a limit cycle or undamped case for contrast
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Damped harmonic oscillator is a classic physics example; neutral
-          scientific context
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are physically reasonable for a normalized oscillator; omega=2,
-          gamma=0.3 produce sensible dynamics
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data generation → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set (though not actually used since data is deterministic)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used (numpy, pandas, lets_plot)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses lets-plot features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ggplot grammar, geom_path for trajectories, geom_point with
-          shape/stroke for markers, scale_color_manual, theme_minimal with customization;
-          could leverage more lets-plot specific interactive features
-  verdict: APPROVED
