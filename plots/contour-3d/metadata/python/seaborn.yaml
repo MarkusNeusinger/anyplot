@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:42:07Z'
-updated: '2026-05-16T18:30:48Z'
+updated: '2026-05-16T18:48:17Z'
 generated_by: claude-haiku
 workflow_run: 25962126037
 issue: 3230
@@ -15,39 +15,39 @@ preview_html_dark: null
 quality_score: 75
 review:
   strengths:
-  - Perfect spec compliance — all required features (3D surface, contour lines, base-plane
-    projection, colorbar) implemented
-  - Both theme renders pass legibility checks — chrome adapts correctly between light
-    and dark
-  - viridis colormap appropriate for continuous sequential data and CVD-safe
-  - Viewing angle, transparent panes, and subtle grid show genuine visual refinement
-    for a 3D plot
+  - Correct 3D contour plot type with all three required layers (surface, on-surface
+    contours, projected contours)
+  - Full spec compliance — colorbar, title format, viewing angle all correct
+  - Theme-adaptive chrome works correctly in both light and dark renders; no dark-on-dark
+    failures
+  - Viridis colormap is the right choice for this continuous data
+  - Peak annotation elevates the storytelling and creates a clear focal point
   weaknesses:
-  - No seaborn API used — seaborn is not even imported; the implementation is pure
-    matplotlib. Must add sns.set_theme() with theme-adaptive rc params per seaborn
-    library guide.
-  - Generic axis labels X/Y/Z and colorbar label Value — should reframe as named real-world
-    scenario with units-bearing labels
-  - No data storytelling — prominent peak and oscillating troughs not highlighted;
-    no visual emphasis or annotation
-  - sys.path mutation hack (lines 15-22) plus noqa lint-disable comment — inelegant
-    code pattern
-  - Colorbar tick labels at 14pt, 1pt below the 16pt guideline
+  - No seaborn usage at all — the implementation imports and calls zero seaborn functions;
+    this is a matplotlib implementation mislabeled as seaborn (LM-01/LM-02 both 1/5)
+  - Committed code does not match rendered images — the PR branch has generic labels
+    (X, Y, Z, Value) while the rendered output shows physical units and a peak annotation;
+    the repair must be committed
+  - Projected base-plane contours are too faint (especially on dark render) — increase
+    alpha or linewidth for better visibility
+  - sys.path manipulation block is a code smell; consider a simpler import strategy
+  - DE-01 could reach 6-7 with more intentional typography hierarchy and colorbar
+    styling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface
-      Chrome: Title "contour-3d · seaborn · anyplot.ai" in dark ink at top, clearly visible. Axis labels X, Y, Z in dark ink. Tick labels in soft dark ink (INK_SOFT). Colorbar label "Value" and ticks in dark tones. All readable.
-      Data: 3D surface using viridis colormap showing Gaussian-modulated cosine-sine function. Main peak ~0.65 (yellow), troughs ~-0.6 (purple). Contour lines overlay the surface in muted dark color (alpha=0.4). Projected base-plane contours in viridis (alpha=0.3). Colorbar on the right.
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface.
+      Chrome: Title "contour-3d · seaborn · anyplot.ai" in dark text clearly readable. Axis labels "x Position (cm)" and "y Position (cm)" readable. Colorbar labeled "Displacement (μm)" readable. Tick labels readable. All chrome is dark-on-light. Annotation "Peak: 6.9 μm" in a light box with dark text — readable.
+      Data: 3D surface rendered in viridis (purple/teal to yellow). On-surface contour lines visible. Projected contours at base plane faint but present. First and only series uses continuous viridis colormap — correct for continuous data.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct dark theme surface
-      Chrome: Title and axis labels rendered in light ink (INK token = #F0EFE8). Tick labels in lighter soft color (INK_SOFT = #B8B7B0). Colorbar label and ticks in light tones. No dark-on-dark failures detected.
-      Data: viridis colormap colors are identical to light render — surface topology, peak (yellow) and troughs (purple) are at exactly the same positions. Only chrome flips. Contour lines and projected contours visible.
+      Background: Near-black consistent with #1A1A17 — correct dark theme surface.
+      Chrome: Title, axis labels, colorbar label, and tick labels all rendered in light text — readable against dark background. No dark-on-dark failures detected. Grid lines on pane walls are white/light — subtle and visible. Annotation box retains light fill with dark text — readable.
+      Data: Viridis surface colors are IDENTICAL to light render — only chrome flips. Peak and valley regions match light render exactly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -55,74 +55,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt explicitly set; colorbar
-          ticks at 14pt (1pt below 16pt guideline)
+        comment: Font sizes explicitly set (24pt title, 20pt axes, 16pt ticks); all
+          text readable in both themes. Minor deduction for 3D tick label crowding
+          near axis intersections.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All text elements well-separated; colorbar does not overlap 3D axes
+        comment: Clean layout with no text collisions. Minor deduction for inherent
+          3D label crowding.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Surface clearly visible; contours on surface and projected contours
-          both distinguishable
+        comment: Surface and on-surface contours clearly visible; projected base-plane
+          contours are faint but present.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe
+        comment: Viridis is perceptually uniform and CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills most of canvas; some whitespace imbalance in upper-left
-          quadrant typical of 3D axes
+        comment: Good canvas utilization; some wasted space in 3D corners is typical
+          for this plot type.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title format correct; axis labels are single letters X/Y/Z and colorbar
-          label Value — generic, not descriptive with units
+        passed: true
+        comment: Labels include physical units ('x Position (cm)', 'Displacement (um)');
+          title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses viridis (correct sequential); backgrounds #FAF8F1/#1A1A17;
-          chrome is theme-adaptive in both renders'
+        comment: 'Viridis for continuous data; background #FAF8F1 light / #1A1A17
+          dark; identical data colors across themes.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Dual contour approach (surface + projected), transparent panes, good
-          viewing angle — exceeds bare defaults but stops short of publication-level
-          polish
+        passed: true
+        comment: Physical science context, meaningful annotation, clean pane styling,
+          and a well-chosen viewing angle lift this above a generic default. Not yet
+          FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Transparent panes (fill=False), subtle grid (alpha=0.1), colorbar
-          with custom formatting — genuine refinement for a 3D plot
+        passed: true
+        comment: Empty pane faces (edges only), subtle grid, clean color tokens throughout.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed but not interpreted; interesting topology (peak, troughs)
-          visible but no emphasis or hierarchy guides the viewer
+        passed: true
+        comment: 'The ''Peak: 6.9 um'' annotation creates a clear focal point and
+          immediately communicates the key insight.'
     spec_compliance:
       score: 15
       max: 15
@@ -132,89 +133,90 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 3D surface with contour lines and base-plane projection correctly
-          implemented
+        comment: 3D contour plot with surface + on-surface contour lines + base-plane
+          projected contours. All three elements present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sequential colormap (viridis), 12 contour levels, projected base
-          contours, colorbar — all present
+        comment: Surface, 3D contours, projected contours, colorbar — all spec requirements
+          met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid correctly mapped; Z height correctly represented
+        comment: X/Y grid mapped correctly; Z encoded via colormap and colorbar.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'contour-3d · seaborn · anyplot.ai'; colorbar serves
-          legend role for continuous data
+        comment: Title 'contour-3d · seaborn · anyplot.ai' correct; no legend needed
+          for single-series continuous surface.
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all spec aspects: 3D surface geometry, contour lines on surface,
-          projected contours, colorbar'
+        comment: Shows surface peaks, valleys, on-surface isolines, and projected
+          contours. Covers most aspects of the plot type.
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Mathematically plausible Gaussian-damped oscillation function, but
-          labels are abstract single letters with no real-world scenario context
+        passed: true
+        comment: Physical displacement measurement context is neutral and plausible.
+          The peak annotation adds realism.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Z range [-0.6, 0.7] correct for function; X/Y range [-5, 5] shows
-          full oscillation; 40x40 grid within spec 30-50 range
+        comment: Centimeter positions and micrometer displacement are consistent units,
+          but the data-generation function is not grounded in a documented scenario.
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Follows setup→data→plot→save; sys.path mutation block (lines 15-22)
-          to avoid local matplotlib.py collision is inelegant
+        passed: true
+        comment: Logical Imports->Data->Plot->Save flow, but the sys.path manipulation
+          block adds noise.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical function; no random seed needed
+        comment: Data is deterministic (no stochastic elements; no seed needed).
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used; no unused packages
+        passed: false
+        comment: No import seaborn statement and no seaborn functions called in a
+          seaborn implementation.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: sys.path hack plus noqa lint-disable comment are non-idiomatic; otherwise
-          clean code
+        comment: sys.path manipulation is a workaround code smell. Committed code
+          labels are generic (X, Y, Z) while images show polished labels.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via Path(__file__).parent correctly
+        comment: Saves as plot-{THEME}.png with correct facecolor.
     library_mastery:
       score: 2
       max: 10
@@ -224,21 +226,22 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: No seaborn API used at all — no import seaborn, no sns.* calls, no
-          sns.set_theme(). Pure matplotlib implementation.
+        comment: No seaborn functions are called anywhere. Not even sns.set_theme()
+          is used. The implementation is pure matplotlib.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Zero seaborn-distinctive features. 3D rendering is entirely matplotlib
-          mpl_toolkits.mplot3d. Identical to a matplotlib implementation.
+        comment: No seaborn-specific features present. Could be copied verbatim into
+          a matplotlib file.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
@@ -246,4 +249,3 @@ impl_tags:
   styling:
   - alpha-blending
   - custom-colormap
-  - grid-styling
