@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-density: Density Contour Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 61/100 | Updated: 2026-05-16
+Quality: 63/100 | Updated: 2026-05-16
 """
 
 import os

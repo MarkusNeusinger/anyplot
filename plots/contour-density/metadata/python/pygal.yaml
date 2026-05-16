@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: contour-density
 created: '2026-01-01T21:29:18Z'
-updated: '2026-05-16T03:50:23Z'
+updated: '2026-05-16T03:55:56Z'
 generated_by: claude-haiku
 workflow_run: 25951615286
 issue: 2552
@@ -12,112 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.html
-quality_score: 61
+quality_score: 63
 review:
   strengths:
-  - Accurate KDE computation with proper data normalization
-  - Three-cluster structure is visually apparent and reflects realistic house price
-    distribution
-  - Scatter overlay provides context without introducing clutter
-  - Colorbar with density scale enhances interpretability
-  - Theme-adaptive colors correctly applied (backgrounds, grid, text)
-  - Proper use of cairosvg for high-quality PNG rendering
+  - Clear, information-rich density contour visualization showing bivariate distribution
+    patterns
+  - Proper kernel density estimation (KDE) computation using scipy.stats
+  - Realistic and neutral real estate data with three market segments
+  - Effective color gradient (Greens colormap) for continuous density scale
+  - Helpful colorbar for density interpretation
+  - Scatter point overlay provides context without overplotting
+  - Correct axis labels with units and formatting
+  - Deterministic output with random seed
   weaknesses:
-  - 'CRITICAL: Rendered output title shows ''matplotlib'' instead of ''pygal'' — code
-    and image mismatch blocks approval'
-  - Custom SVG injection (marching squares) bypasses pygal's native API, suggesting
-    poor library fit
-  - No distinctive visual design — relies on generic defaults
-  - Scatter points are somewhat faint on dark background
-  - Colorbar labels display full precision floats (e.g. '7.5432') rather than rounded
-    values
+  - 'CRITICAL: Dark theme text legibility failure - title and labels barely readable
+    (dark-on-dark contrast)'
+  - 'CRITICAL: Dark theme background colors not properly applied - backgrounds don''t
+    adapt to #1A1A17'
+  - Non-idiomatic pygal usage (SVG injection) reduces library mastery
+  - Minimal design sophistication and no visual hierarchy
+  - Text contrast inadequate in dark render across all elements
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "contour-density · matplotlib · anyplot.ai" (ERROR: should say pygal), axis labels "Square Footage" and "Price ($)" in dark ink, tick labels readable, grid subtle
-      Data: Green filled density cells showing three clusters (starter ~1200 sq ft/$250k, mid-range ~2000 sq ft/$450k, premium ~3200 sq ft/$750k), semi-transparent green scatter points overlay, contour lines in soft gray, colorbar with density scale 0-8
-      Legibility verdict: PASS (text readable, but title shows wrong library)
+      Background: Warm off-white (#FAF8F1) provides clean surface for visualization
+      Chrome: Title "contour-density · pygal · anyplot.ai" visible at top; X-axis labeled "Square Footage" with tick labels; Y-axis labeled "Price ($)" with values formatted as thousands; all text is dark and clearly readable
+      Data: Green gradient contours from light (low density) to dark green (high density); scatter points overlay in semi-transparent #009E73; colorbar shows density scale
+      Legibility verdict: PASS - All text is readable at full size; strong contrast between dark text and light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title "contour-density · matplotlib · anyplot.ai" (ERROR: should say pygal), axis labels and tick labels in light text, grid lines subtle and visible, colorbar labels clear
-      Data: Green colormap identical to light render, scatter points visible as semi-transparent green, contour lines in lighter gray for contrast, density scale clearly marked
-      Legibility verdict: PASS (no dark-on-dark failures, all text readable; but title shows wrong library)
-
-    CRITICAL FINDING: Both renders display "matplotlib" in the title instead of "pygal". The code (line 111) specifies the correct pygal title, but the rendered output is incorrect. This indicates either stale images, missed code execution, or a rendering override. This is a blocking issue for approval.
+      Background: Should be warm near-black (#1A1A17) but appears incorrect - outer area looks pure black or nearly black instead of warm tone
+      Chrome: Title is barely visible - light text on very dark background fails contrast requirement; axis labels and tick labels difficult to read (dark-on-dark); colorbar labels also hard to see
+      Data: Contours and density colors match light render (only chrome should flip) - this aspect is correct
+      Legibility verdict: FAIL - Critical text contrast failures; title and labels are barely readable. Dark mode is unsuitable for publication. All text elements need color token adjustment to ensure adequate contrast.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 18
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 2
         max: 8
         passed: false
-        comment: All text readable in both themes, but title shows incorrect library
-          name
+        comment: Dark render has severe text contrast failures - title and labels
+          barely readable
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clean layout with no text collisions
+        comment: Elements well-spaced, no overlapping text
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Contours, scatter points, and colorbar all clearly visible
+        comment: Contours clear, density visualization effective
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Greens colormap is perceptually uniform and colorblind-safe
+        comment: Greens colormap is perceptually uniform
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Well-proportioned with generous margins
+        comment: Good proportions and element placement
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive labels with units
-      - id: VQ-07
-        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Colormap appropriate, backgrounds correct, but title shows wrong
-          library
+        comment: Title unreadable in dark mode
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: Dark backgrounds not theme-adapted; text colors lack contrast
     design_excellence:
-      score: 13
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Functional but uses generic defaults; no custom visual refinement
+        comment: Generic defaults, standard colormap
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clean composition; scatter overlay adds context effectively
+        passed: false
+        comment: Minimal customization, functional only
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Three clusters visible; density gradient guides attention
+        passed: false
+        comment: No visual hierarchy or emphasis
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -125,49 +123,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D density contour plot
+        comment: Correct contour density plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE contours, density visualization, scatter overlay
+        comment: Has contours, density shading, scatter overlay
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped
+        comment: X/Y mapping correct, axes display full range
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: 'CRITICAL: Title shows ''matplotlib'' instead of ''pygal'''
+        passed: true
+        comment: Title format correct
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows distribution shape, clusters, density gradients
+        comment: Comprehensive contour visualization with context
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: House price data is realistic and neutral
+        comment: Realistic real estate market data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 points with sensible ranges
+        comment: Sensible value ranges
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -175,56 +173,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single script, deterministic flow
+        comment: Straightforward, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Has random seed for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Marching squares is sophisticated but custom SVG injection suggests
-          pygal limitations
+        comment: SVG injection not idiomatic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves PNG/HTML with theme suffix
+        comment: Correct file naming
     library_mastery:
-      score: 5
+      score: 1
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses pygal.XY but works around via raw SVG injection
+        comment: SVG injection sidesteps pygal rendering pipeline
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 0
         max: 5
         passed: false
-        comment: Custom SVG shows knowledge but is non-idiomatic
+        comment: Generic usage only
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
-  - annotations
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
@@ -232,5 +229,3 @@ impl_tags:
   - kde
   styling:
   - custom-colormap
-  - alpha-blending
-  - edge-highlighting
