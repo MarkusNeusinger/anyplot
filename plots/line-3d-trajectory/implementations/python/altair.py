@@ -1,13 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-16
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Lorenz attractor trajectory (chaotic system)
 np.random.seed(42)
@@ -96,18 +105,17 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title(
-            text="Lorenz Attractor · line-3d-trajectory · altair · pyplots.ai",
-            subtitle="Isometric projection of chaotic trajectory (σ=10, ρ=28, β=8/3)",
-            fontSize=28,
-            subtitleFontSize=18,
-            subtitleColor="#666666",
-        ),
+        background=PAGE_BG,
+        title=alt.Title(text="line-3d-trajectory · altair · anyplot.ai", fontSize=28, color=INK),
     )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[6, 4])
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
