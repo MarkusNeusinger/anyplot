@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Updated: 2026-05-16
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-16
 """
 
 import os
