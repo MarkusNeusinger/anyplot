@@ -1,13 +1,13 @@
-""" pyplots.ai
+"""anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2025-05-16
 """
 
 import json
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -16,6 +16,17 @@ from selenium.webdriver.chrome.options import Options
 from sklearn.datasets import make_moons
 from sklearn.neighbors import KNeighborsClassifier
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Position 1 - always first series
+SERIES_2 = "#D55E00"
 
 # Data: Generate moon-shaped classification dataset
 np.random.seed(42)
@@ -51,22 +62,17 @@ for i in range(resolution):
 class_0_points = [[round(float(X[i, 0]), 4), round(float(X[i, 1]), 4)] for i in range(len(y)) if y[i] == 0]
 class_1_points = [[round(float(X[i, 0]), 4), round(float(X[i, 1]), 4)] for i in range(len(y)) if y[i] == 1]
 
-# Download Highcharts JS and heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
-
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-with urllib.request.urlopen(heatmap_url, timeout=30) as response:
-    heatmap_js = response.read().decode("utf-8")
+# Load Highcharts JS from npm
+HC_NPM = Path("/tmp/hc-tmp/node_modules/highcharts")
+highcharts_js = (HC_NPM / "highcharts.js").read_text(encoding="utf-8")
+heatmap_js = (HC_NPM / "modules/heatmap.js").read_text(encoding="utf-8")
 
 # Build complete options as dict
 options_dict = {
     "chart": {
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginBottom": 320,
         "marginLeft": 260,
         "marginRight": 440,
@@ -74,88 +80,79 @@ options_dict = {
         "spacingBottom": 40,
     },
     "title": {
-        "text": "contour-decision-boundary · highcharts · pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold"},
+        "text": "contour-decision-boundary · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
     },
-    "subtitle": {"text": "KNN Classifier Decision Boundary on Moon-shaped Data", "style": {"fontSize": "38px"}},
+    "subtitle": {"text": "KNN Classifier Decision Boundary", "style": {"fontSize": "22px", "color": INK_SOFT}},
     "xAxis": {
         "min": x_min,
         "max": x_max,
-        "title": {
-            "text": "Feature X1",
-            "style": {"fontSize": "46px", "fontWeight": "bold"},
-            "margin": 30,
-            "enabled": True,
-        },
-        "labels": {"style": {"fontSize": "34px"}, "format": "{value:.1f}"},
+        "title": {"text": "Feature X1", "style": {"fontSize": "22px", "color": INK}, "margin": 30, "enabled": True},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value:.1f}"},
         "tickInterval": 0.5,
-        "gridLineWidth": 1,
-        "gridLineColor": "#cccccc",
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
         "offset": 0,
     },
     "yAxis": {
         "min": y_min,
         "max": y_max,
-        "title": {
-            "text": "Feature X2",
-            "style": {"fontSize": "46px", "fontWeight": "bold"},
-            "margin": 40,
-            "enabled": True,
-        },
-        "labels": {"style": {"fontSize": "34px"}, "format": "{value:.1f}"},
+        "title": {"text": "Feature X2", "style": {"fontSize": "22px", "color": INK}, "margin": 40, "enabled": True},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value:.1f}"},
         "tickInterval": 0.5,
-        "gridLineWidth": 1,
-        "gridLineColor": "#cccccc",
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
     },
     "colorAxis": {
         "min": 0,
         "max": 1,
-        "stops": [[0, "#306998"], [0.5, "#E8E8E8"], [1, "#FFD43B"]],
-        "labels": {"style": {"fontSize": "34px"}, "format": "{value:.1f}"},
+        "stops": [[0, "#440154"], [0.5, "#21908C"], [1, "#FDE725"]],
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value:.1f}"},
     },
     "legend": {
         "enabled": True,
         "align": "right",
         "verticalAlign": "top",
         "layout": "vertical",
-        "itemStyle": {"fontSize": "38px", "fontWeight": "normal"},
-        "symbolRadius": 16,
-        "symbolHeight": 40,
-        "symbolWidth": 40,
-        "itemMarginBottom": 40,
+        "itemStyle": {"fontSize": "16px", "color": INK_SOFT},
+        "symbolRadius": 8,
+        "symbolHeight": 20,
+        "symbolWidth": 20,
+        "itemMarginBottom": 20,
         "x": -50,
-        "y": 120,
-        "width": 380,
-        "padding": 25,
-        "backgroundColor": "rgba(255, 255, 255, 0.95)",
-        "borderWidth": 2,
-        "borderColor": "#999999",
-        "title": {"text": "Training Data", "style": {"fontSize": "40px", "fontWeight": "bold"}},
+        "y": 60,
+        "padding": 15,
+        "backgroundColor": PAGE_BG,
+        "borderWidth": 1,
+        "borderColor": INK_SOFT,
+        "title": {"text": "Training Data", "style": {"fontSize": "18px", "color": INK}},
     },
     "plotOptions": {
-        "heatmap": {"borderWidth": 0, "colsize": x_step, "rowsize": y_step, "nullColor": "#E8E8E8"},
+        "heatmap": {"borderWidth": 0, "colsize": x_step, "rowsize": y_step},
         "scatter": {
-            "marker": {"radius": 22, "lineWidth": 5, "lineColor": "#222222"},
-            "states": {"hover": {"enabled": True, "lineWidth": 0}},
+            "marker": {"radius": 8, "lineWidth": 2, "lineColor": PAGE_BG},
+            "states": {"hover": {"enabled": True}},
         },
     },
-    "tooltip": {"enabled": True, "style": {"fontSize": "24px"}},
+    "tooltip": {"enabled": True, "style": {"fontSize": "16px", "color": INK}},
     "series": [
         {"type": "heatmap", "name": "Decision Region", "data": heatmap_data, "showInLegend": False},
         {
             "type": "scatter",
-            "name": "Class 0 (Moon A)",
+            "name": "Class 0",
             "data": class_0_points,
-            "color": "#306998",
-            "marker": {"symbol": "circle", "fillColor": "#306998"},
+            "color": BRAND,
+            "marker": {"symbol": "circle", "fillColor": BRAND},
             "showInLegend": True,
         },
         {
             "type": "scatter",
-            "name": "Class 1 (Moon B)",
+            "name": "Class 1",
             "data": class_1_points,
-            "color": "#FFD43B",
-            "marker": {"symbol": "diamond", "fillColor": "#FFD43B"},
+            "color": SERIES_2,
+            "marker": {"symbol": "diamond", "fillColor": SERIES_2},
             "showInLegend": True,
         },
     ],
@@ -179,8 +176,8 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML for debugging
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Write temp HTML and take screenshot
@@ -198,7 +195,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
