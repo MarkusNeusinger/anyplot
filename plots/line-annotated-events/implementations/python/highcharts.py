@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2025-12-31
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -18,6 +19,16 @@ from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1 — first series always
+ACCENT = "#D55E00"  # Okabe-Ito position 2 — event markers
 
 # Data - Simulated daily product metrics over 6 months with event annotations
 np.random.seed(42)
@@ -63,20 +74,20 @@ chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "style": {"fontFamily": "Arial, sans-serif"},
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "Arial, sans-serif", "color": INK},
 }
 
 # Title
 chart.options.title = {
-    "text": "line-annotated-events · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold", "color": "#333333"},
+    "text": "line-annotated-events · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
 }
 
 # Subtitle
 chart.options.subtitle = {
     "text": "Daily Active Users with Key Milestones",
-    "style": {"fontSize": "32px", "color": "#666666"},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
 # Build plot lines for events with alternating label positions
@@ -85,14 +96,14 @@ for i, (ts, label) in enumerate(zip(event_timestamps, event_labels, strict=False
     plot_lines.append(
         {
             "value": ts,
-            "color": "#FFD43B",
-            "width": 5,
+            "color": ACCENT,
+            "width": 3,
             "dashStyle": "Dash",
             "zIndex": 5,
             "label": {
                 "text": label,
                 "rotation": 0,
-                "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#333333"},
+                "style": {"fontSize": "18px", "fontWeight": "medium", "color": INK},
                 "y": 25 if i % 2 == 0 else 70,
                 "x": 12,
                 "align": "left",
@@ -103,43 +114,50 @@ for i, (ts, label) in enumerate(zip(event_timestamps, event_labels, strict=False
 # X-axis (datetime)
 chart.options.x_axis = {
     "type": "datetime",
-    "title": {"text": "Date", "style": {"fontSize": "40px", "color": "#333333"}},
-    "labels": {"style": {"fontSize": "32px", "color": "#333333"}},
+    "title": {"text": "Date", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "dateTimeLabelFormats": {"day": "%e %b", "week": "%e %b", "month": "%b '%y", "year": "%Y"},
     "plotLines": plot_lines,
-    "lineColor": "#333333",
-    "lineWidth": 2,
-    "tickColor": "#333333",
+    "lineColor": INK_SOFT,
+    "lineWidth": 1,
+    "tickColor": INK_SOFT,
     "tickInterval": 30 * 24 * 3600 * 1000,  # Monthly ticks
+    "gridLineColor": GRID,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Daily Active Users", "style": {"fontSize": "40px", "color": "#333333"}},
-    "labels": {"style": {"fontSize": "32px", "color": "#333333"}},
+    "title": {"text": "Daily Active Users", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "#E0E0E0",
-    "gridLineDashStyle": "Dash",
-    "lineColor": "#333333",
-    "lineWidth": 2,
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "lineWidth": 1,
+    "tickColor": INK_SOFT,
 }
 
 # Legend configuration
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "32px", "color": "#333333"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
     "align": "center",
     "verticalAlign": "bottom",
     "y": 30,
     "symbolRadius": 6,
     "symbolWidth": 24,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
 }
 
 # Plot options for styling
 chart.options.plot_options = {
-    "line": {"lineWidth": 5, "marker": {"enabled": False}},
-    "scatter": {"marker": {"symbol": "circle", "radius": 16, "lineWidth": 4, "lineColor": "#333333"}},
+    "line": {"lineWidth": 3, "marker": {"enabled": False}},
+    "scatter": {"marker": {"symbol": "circle", "radius": 8, "lineWidth": 2, "lineColor": INK_SOFT}},
 }
+
+# Colors
+chart.options.colors = [BRAND, ACCENT]
 
 # Credits
 chart.options.credits = {"enabled": False}
@@ -148,8 +166,8 @@ chart.options.credits = {"enabled": False}
 line_series = LineSeries()
 line_series.name = "Daily Active Users"
 line_series.data = [[ts, round(val)] for ts, val in zip(timestamps, values, strict=False)]
-line_series.color = "#306998"
-line_series.line_width = 5
+line_series.color = BRAND
+line_series.line_width = 3
 line_series.marker = {"enabled": False}
 
 chart.add_series(line_series)
@@ -160,22 +178,34 @@ event_series.name = "Key Events"
 event_series.data = [
     {"x": ts, "y": yval} for ts, yval in zip(event_timestamps, event_y_values, strict=False) if yval is not None
 ]
-event_series.color = "#FFD43B"
-event_series.marker = {"symbol": "circle", "radius": 18, "lineWidth": 4, "lineColor": "#333333", "fillColor": "#FFD43B"}
+event_series.color = ACCENT
+event_series.marker = {"symbol": "circle", "radius": 8, "lineWidth": 2, "lineColor": INK_SOFT, "fillColor": ACCENT}
 event_series.z_index = 10
 
 chart.add_series(event_series)
 
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+highcharts_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js",
+    "https://code.highcharts.com/highcharts.js",
+]
+
+highcharts_js = None
+for url in highcharts_urls:
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+            break
+    except Exception:
+        continue
+
+if not highcharts_js:
+    raise RuntimeError("Unable to download Highcharts JS from any CDN")
 
 # Generate chart JS code
 chart_js = chart.to_js_literal()
 
-# Build HTML with inline scripts - use string concatenation to avoid f-string issues
-# with JavaScript template literals containing braces
+# Build HTML with inline scripts
 html_parts = [
     "<!DOCTYPE html>",
     "<html>",
@@ -183,7 +213,7 @@ html_parts = [
     '    <meta charset="utf-8">',
     "    <style>",
     "        * { margin: 0; padding: 0; }",
-    "        body { background: #ffffff; }",
+    f"        body {{ background: {PAGE_BG}; }}",
     "        #container { width: 4800px; height: 2700px; }",
     "    </style>",
     "    <script>",
@@ -200,14 +230,14 @@ html_parts = [
 ]
 html_content = "\n".join(html_parts)
 
+# Save HTML file for interactive version
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 # Write temp HTML
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Save HTML file for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 # Take screenshot with headless Chrome
 chrome_options = Options()
@@ -215,17 +245,12 @@ chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=5000,3000")
-chrome_options.add_argument("--force-device-scale-factor=1")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(5000, 3000)
 driver.get(f"file://{temp_path}")
-time.sleep(6)  # Wait for chart to render
-
-# Find the chart container and take screenshot of it
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+time.sleep(5)  # Wait for chart to render
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Clean up temp file
