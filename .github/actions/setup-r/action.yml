@@ -2,17 +2,14 @@ name: "Setup R + ggplot2"
 description: >-
   Installs R, the system libraries needed for headless plot rendering, and the
   package set used by anyplot's R implementations (ggplot2 + tidyverse helpers
-  + ragg device + dataset packages). Packages are restored from renv.lock at
-  the repository root so versions stay pinned.
+  + ragg device + dataset packages). Packages are installed from a pinned
+  Posit Package Manager snapshot for reproducibility; transitive dependencies
+  are resolved by R's installer so the package set stays self-consistent.
 inputs:
   r-version:
     description: "R version to install"
     required: false
     default: "4.4.1"
-  working-directory:
-    description: "Directory containing renv.lock (defaults to the repo root)"
-    required: false
-    default: "."
 
 runs:
   using: "composite"
@@ -45,17 +42,27 @@ runs:
           libharfbuzz-dev \
           libfribidi-dev
 
-    - name: Install R packages from renv.lock
-      uses: r-lib/actions/setup-renv@v2
-      with:
-        working-directory: ${{ inputs.working-directory }}
-      env:
-        # renv refuses to restore when per-package `Hash` fields are missing.
-        # The lockfile here is hand-written and intentionally omits hashes —
-        # reproducibility comes from the pinned Posit RSPM snapshot URL in
-        # renv.lock instead. Once a successful CI run populates hashes via
-        # renv::snapshot(), this flag can be dropped.
-        RENV_CONFIG_INSTALL_HASHES: "FALSE"
+    - name: Install R packages
+      # install.packages auto-resolves transitive dependencies that a hand-written
+      # renv.lock used to miss (munsell, gtable, colorspace, R6, RColorBrewer, ...).
+      # Pinning to a dated Posit Package Manager snapshot keeps versions
+      # reproducible without needing a fully-populated lockfile. The `noble` URL
+      # matches the current ubuntu-latest runner image — update if GitHub moves
+      # the runner OS, and bump the snapshot date deliberately.
+      shell: bash
+      run: |
+        Rscript -e '
+          options(
+            repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/2025-01-15"),
+            Ncpus = parallel::detectCores()
+          )
+          install.packages(
+            c("ggplot2", "ragg", "tidyr", "dplyr", "viridis",
+              "palmerpenguins", "gapminder", "tibble", "scales",
+              "systemfonts", "textshaping"),
+            dependencies = TRUE
+          )
+        '
 
     - name: Smoke-test ggplot2 renders a PNG
       shell: bash
