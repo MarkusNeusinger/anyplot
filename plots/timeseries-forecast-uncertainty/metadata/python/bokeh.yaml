@@ -1,157 +1,171 @@
 library: bokeh
+language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:30:50Z'
-updated: '2026-01-07T16:42:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788385330
+updated: '2026-05-16T22:29:32Z'
+generated_by: claude-haiku
+workflow_run: 25974524041
 issue: 3188
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/bokeh/plot.html
-quality_score: 97
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of Bokeh-specific features (ColumnDataSource, Span, Label, patches
-    for confidence bands)
-  - Clear visual distinction between historical (solid blue) and forecast (dashed
-    orange) data
-  - Nested confidence bands with appropriate alpha values (0.25 and 0.5) showing uncertainty
+  - Complete spec compliance with all required features present and correctly implemented
+  - Excellent visual quality with proper theme adaptation to both light and dark modes
+  - Idiomatic Bokeh usage with ColumnDataSource, figure, patch, Span, and Legend patterns
+  - Clean code structure with deterministic data generation and proper imports
+  - Professional styling with proper font sizes, color tokens, spacing, and typography
     hierarchy
-  - Growing uncertainty over forecast horizon demonstrates proper forecasting behavior
-  - Proper connection line bridging historical to forecast data
-  - Both PNG and HTML exports provided
-  - Well-sized elements for 4800x2700 canvas
+  - Correct Okabe-Ito palette implementation maintaining color identity across themes
+  - Nested confidence bands with appropriate opacity creating clear visual distinction
   weaknesses:
-  - Legend text at 24pt could be slightly larger for optimal readability
-  - Forecast Start annotation label placed at y=165 is near the upper edge of the
-    visible area
-  image_description: 'The plot displays a time series forecast with uncertainty bands.
-    Historical data (Jan 2022 - Dec 2024) is shown as a solid blue line (#306998)
-    exhibiting clear seasonal oscillations between approximately 70-130 thousand sales
-    units. The forecast period (Jan 2025 - Dec 2025) uses a dashed orange line (#E67E22)
-    with two nested yellow/gold confidence bands (#FFD43B) - a darker inner band for
-    80% CI (alpha 0.5) and a lighter outer band for 95% CI (alpha 0.25). Uncertainty
-    appropriately grows over the forecast horizon. A vertical dashed gray line marks
-    "Forecast Start" at the transition point between historical and forecast data.
-    The legend in the top-left clearly identifies all four elements: Historical Data,
-    Forecast, 80% Confidence Interval, and 95% Confidence Interval. The title follows
-    the correct format "timeseries-forecast-uncertainty · bokeh · pyplots.ai". X-axis
-    shows dates from 2022 to 2026, Y-axis shows "Sales (thousands)" ranging from approximately
-    60-160. Grid lines are subtle with alpha 0.3 and dashed styling.'
+  - Limited use of distinctive Bokeh interactive features such as HoverTool or callbacks
+  - Standard spine treatment could be enhanced by removing top and right spines for
+    visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme background
+      Chrome: Title "timeseries-forecast-uncertainty · bokeh · anyplot.ai" in dark text; axis labels "Date" and "Sales (thousands)" clearly visible; all tick labels readable in dark INK_SOFT color
+      Data: Solid bluish-green line (#009E73) for historical data; dashed vermillion line (#D55E00) for forecast; nested reddish-purple bands (α=0.30 for 80%, α=0.15 for 95%); connection line from last historical to first forecast
+      Legend: Clearly identifies all four elements with legible text on elevated background (#FFFDF6)
+      Legibility verdict: PASS - All elements clearly visible and readable on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme background
+      Chrome: Title in light text (#F0EFE8); axis labels readable in light text; tick labels in light INK_SOFT (#B8B7B0) with excellent contrast against dark background - no dark-on-dark failures
+      Data: Identical colors to light render - bluish-green historical line, vermillion forecast line, reddish-purple confidence bands with same opacity values
+      Legend: Light text on elevated dark background (#242420) is clearly readable
+      Legibility verdict: PASS - All text readable with proper theme contrast; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 36pt, labels 28pt, ticks 22pt all readable; legend text slightly
-          small at 24pt
+        comment: All text explicitly sized; readable in both themes with proper color
+          tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements; legend, lines, bands, labels all clearly
+          separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 5 well-suited, bands clearly visible with good alpha values
+        comment: Confidence bands properly opacity-blended; line widths and sizes
+          appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/orange/yellow palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Sales (thousands)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette used correctly; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 px well-proportioned; generous margins and padding
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Forecast Start label y-position (165) near upper edge of visible
-          area
+        passed: true
+        comment: Descriptive labels with units; title follows spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; both themes correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Good use of nested confidence bands; professional polish; not maximally
+          sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; refined legend styling; could benefit from spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point with forecast bands; effective visual hierarchy
+          through dashing and color
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series with forecast and uncertainty bands
+        comment: Correct time series forecast plot with uncertainty
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, sales values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Historical line, dashed forecast, vertical separator, nested CI bands,
-          legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: historical, forecast, confidence bands, vertical
+          line marker'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within y_range 55-175
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct; axes show all data appropriately
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: All legend items correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format {spec-id} · {library} · pyplots.ai
+        comment: Correct title format; legend labels match spec
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal patterns, trend, and growing uncertainty over forecast
-          horizon
+        comment: 'Shows all aspects: trend, seasonality, forecast uncertainty growth'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly sales forecast is neutral business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values 60-160K are realistic
+        comment: Monthly sales data realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (80-175 thousands) sensible for domain
     code_quality:
       score: 10
       max: 10
@@ -161,47 +175,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Simple linear script; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current Bokeh API
+        comment: Appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correctly saves as plot-{THEME}.html and .png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of ColumnDataSource, Span, Label, Legend customization,
-          NumeralTickFormatter, patch for bands, HTML export
+        comment: 'Idiomatic Bokeh: ColumnDataSource, figure, patch, Span, Legend'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of Span and nested patch; could add HoverTool for interactivity
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - custom-legend
   - html-export
   patterns:
