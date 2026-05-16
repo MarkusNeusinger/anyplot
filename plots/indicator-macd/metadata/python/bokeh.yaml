@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:29:34Z'
-updated: '2026-05-16T10:50:59Z'
+updated: '2026-05-16T10:57:16Z'
 generated_by: claude-haiku
 workflow_run: 25959949413
 issue: 3181
@@ -12,38 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - All spec requirements met (MACD line, signal line, histogram with correct colors,
-    zero reference line)
-  - Excellent visual quality with proper theme-adaptive styling in both light and
-    dark modes
-  - Comprehensive legend with all four components clearly labeled with parameters
-  - Idiomatic Bokeh usage with ColumnDataSource, proper API methods, and interactive
-    HoverTool
-  - Data quality is strong with realistic price movement and correct MACD calculations
-  - Clean, deterministic code with proper imports and no unnecessary complexity
+  - Flawless palette compliance and theme adaptation across both renders
+  - Perfect technical implementation of MACD calculations with correct parameters
+  - Excellent text legibility and visual hierarchy in both light and dark themes
+  - Clean, idiomatic Bokeh code using ColumnDataSource and interactive features
+  - Well-structured data with all required components (MACD line, signal line, histogram)
+  - Zero reference line effectively highlights crossover signals
   weaknesses:
-  - Design could be more sophisticated - all four plot spines are present when top/right
-    could be removed
-  - Visual hierarchy could be stronger - no particular emphasis or focal point guides
-    the viewer
-  - Could leverage more distinctive Bokeh features beyond basic HoverTool (e.g., callbacks,
-    CustomJS for enhanced interactivity)
-  - Whitespace and margins could be more generous for a more refined layout
+  - Design could emphasize key insights (visual hierarchy highlighting significant
+    crossovers or divergences)
+  - No custom visual refinements beyond configured defaults
+  - Limited use of distinctive Bokeh features beyond standard plotting functions
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface - correct and professional
-      Chrome: Title reads "indicator-macd · bokeh · anyplot.ai" in large dark text (28pt). X-axis label "Date" and y-axis label "MACD Value" clearly visible in dark text (22pt). Tick labels on both axes are readable in darker gray (18pt). All text has excellent contrast against the light background.
-      Data: Histogram bars use Okabe-Ito green (#009E73) for positive values and vermillion (#D55E00) for negative values. MACD line in blue (#0072B2) and signal line in orange/yellow (#E69F00) are distinct and easily distinguished. Zero reference line shown as subtle dashed line. Legend in top-left with light cream background shows all four components with parameters noted.
-      Legibility verdict: PASS - all elements clearly readable
+      Background: Warm off-white (#FAF8F1) - correct page surface color
+      Chrome: Title "indicator-macd · bokeh · anyplot.ai" clearly visible in dark ink; axis labels "Date" and "MACD Value" readable; tick labels in secondary ink color (#4A4A44); legend in top-left with elevated background (#FFFDF6)
+      Data: Green histogram bars (#009E73) for positive values, orange bars (#D55E00) for negative values, blue MACD line (#0072B2), orange signal line (#E69F00) - all colors from Okabe-Ito palette
+      Legibility verdict: PASS - All text highly readable, excellent contrast against light background, grid subtle at 10% alpha
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface - correct and professional
-      Chrome: Title, axis labels, and tick labels are now in light colors with excellent contrast against the dark background. All text remains clearly readable. No dark-on-dark issues detected.
-      Data: Histogram bars maintain identical Okabe-Ito colors (#009E73 green, #D55E00 orange) to light render - only chrome (background, text, grid) has adapted to dark theme. MACD and signal lines remain their original colors (blue and orange). Zero reference line visible.
-      Legibility verdict: PASS - all elements clearly readable, perfect theme adaptation
+      Background: Warm near-black (#1A1A17) - correct dark surface color
+      Chrome: Title and axis labels clearly visible in light ink (#F0EFE8); tick labels in soft ink (#B8B7B0); legend with dark elevated background (#242420). No dark-on-dark failures observed.
+      Data: Green (#009E73), orange (#D55E00), blue (#0072B2), and orange (#E69F00) colors IDENTICAL to light render - perfect theme independence for data colors
+      Legibility verdict: PASS - All text readable against dark background, excellent contrast, zero reference line visible, no theme-adaptation issues
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,52 +48,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 28pt, axis labels 22pt, tick labels
-          18pt), readable in both light and dark themes
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, date labels have adequate spacing, legend
-          positioned effectively
+        comment: No overlapping text; legend placement clean
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars clearly visible with good contrast, lines thick (4px
-          width), all elements distinguishable
+        comment: Bars and lines optimally sized; all elements clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses colorblind-safe Okabe-Ito palette, no red-green as sole signal,
-          adequate contrast
+        comment: Okabe-Ito palette; good contrast; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, histogram bars well-positioned
-          relative to zero line
+        comment: Plot fills 70-80% of canvas; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id, library, and site. Axis labels are descriptive
-          and appropriate.
+        comment: Correct format; descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series green (#009E73), follows Okabe-Ito positions 1/2/3/5,
-          backgrounds correct (#FAF8F1 light/#1A1A17 dark), both renders theme-correct
+        comment: 'First series #009E73; multi-series in order; backgrounds correct;
+          chrome perfectly theme-adaptive'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -107,22 +96,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses Okabe-Ito palette (good), but overall styling is standard/generic.
-          No custom design refinement beyond requirements.
+        comment: Well-configured defaults; clean styling; not particularly distinctive
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: All four spines present (could remove top/right), grid present but
-          minimal styling customization
+        passed: true
+        comment: Good grid styling (subtle alpha), spines retained appropriately,
+          zero reference line adds value
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Plot shows components clearly but lacks strong visual hierarchy or
-          emphasis. No focal point to guide the viewer.
+        comment: Data patterns clearly visible but lacks emphasis on insights
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +119,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MACD technical indicator chart with all required components
+        comment: Correct MACD technical indicator with all three components
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: MACD line, signal line, green positive histogram, orange negative
-          histogram, zero reference line all present
+        comment: MACD line, signal line, histogram (positive/negative), zero line,
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, MACD values on y-axis, 115 trading periods, all data
-          visible and properly scaled
+        comment: Date on X-axis, MACD values on Y-axis; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend includes all four components with parameters
-          (12, 26, 9)
+        comment: Title format correct; legend labels informative
     data_quality:
       score: 15
       max: 15
@@ -163,22 +148,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all MACD aspects - momentum indicator, crossover signals, divergence
-          via histogram
+        comment: 'Shows all MACD aspects: line, signal, histogram (+/-), crossovers,
+          divergences'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price with trend and volatility, standard MACD parameters
-          documented, neutral domain
+        comment: Realistic stock price simulation; proper EMA calculations
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MACD values from -3 to +2 are sensible for an oscillator, scales
-          reveal meaningful patterns
+        comment: Values and proportions mathematically correct for MACD definition
     code_quality:
       score: 10
       max: 10
@@ -188,63 +171,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward script, no unnecessary functions or classes
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Sets np.random.seed(42) for deterministic data generation
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used, no extraneous dependencies
+        comment: All imports used; no clutter
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or over-engineering
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-light.png/html and plot-dark.png/html, uses current
-          Bokeh API, proper output file naming
+        comment: Saves as plot-{THEME}.png and .html; current APIs
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure API, named plot methods, theme-adaptive
-          styling, Legend class, HoverTool, saves via output_file/save (not export_png).
-          Solid idiomatic Bokeh.
+        comment: Expert use of ColumnDataSource, figure(), vbar(), line(), HoverTool,
+          Legend
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses HoverTool for basic interactivity, but doesn't showcase distinctive
-          Bokeh capabilities like callbacks, CustomJS, streaming, or dashboards
+        comment: Uses ColumnDataSource pattern, HoverTool, Span; could leverage more
+          Bokeh-specific features
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - custom-legend
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
+  - time-series
   - columndatasource
   dataprep:
-  - time-series
+  - rolling-window
   styling:
+  - publication-ready
+  - alpha-blending
   - grid-styling
