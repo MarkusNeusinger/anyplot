@@ -1,154 +1,176 @@
 library: bokeh
+language: python
 specification_id: scatter-brush-zoom
 created: '2026-01-08T16:09:13Z'
-updated: '2026-01-08T16:14:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823132653
+updated: '2026-05-16T23:31:43Z'
+generated_by: claude-haiku
+workflow_run: 25975722491
 issue: 3295
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/bokeh/plot.html
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/bokeh/plot-dark.html
 quality_score: 92
 review:
   strengths:
-  - Excellent use of Bokeh interactive features (BoxSelectTool, WheelZoomTool, selection
-    styling)
-  - Well-implemented selection visual feedback (selected points highlighted, non-selected
-    dimmed to alpha 0.2)
-  - Clean four-cluster dataset that effectively demonstrates brush selection capability
-  - Proper use of ColumnDataSource and factor_cmap
-  - WebGL backend enabled for better performance
-  - Both PNG and HTML outputs provided for static and interactive viewing
-  - Good canvas utilization with appropriate margins
+  - 'Full compliance with specification: all interactive features present and functional'
+  - 'Excellent theme adaptation: both light and dark renders readable with proper
+    color tokens'
+  - 'Strong selection state visualization: nonselection opacity and selection line
+    styling clearly demonstrate brush capability'
+  - 'Proper palette usage: Okabe-Ito order maintained, brand green first'
+  - Clean, idiomatic Bokeh code with good structure
+  - All text explicitly sized for large canvas (28pt title, 22pt labels, 18pt ticks)
+  - Reproducible data generation with seed
   weaknesses:
-  - Axis labels lack units (generic X Value, Y Value)
-  - Selection count display not implemented (spec suggests showing count of selected
-    points)
-  - Legend text could be slightly larger for the 4800x2700 canvas
+  - 'Design Excellence could be improved: top and right spines should be removed for
+    more minimal appearance'
+  - 'Data storytelling is passive: clusters are shown but there''s no visual emphasis
+    or narrative focus'
+  - Could add additional Bokeh-specific features like CustomJS callbacks for selection
+    state feedback
   image_description: |-
-    The plot displays a scatter plot with 300 data points organized into 4 distinct clusters. The title "scatter-brush-zoom · bokeh · pyplots.ai" is centered at the top. Four clusters are visible:
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title "scatter-brush-zoom · bokeh · anyplot.ai" (28pt, dark text), axis labels "Measurement X" and "Measurement Y" (22pt), tick labels (18pt, INK_SOFT color) - all clearly readable against light background
+      Data: Four clusters in Okabe-Ito colors - Cluster A (green #009E73), Cluster B (blue #0072B2), Cluster C (orange #D55E00), Cluster D (reddish-purple #CC79A7). Markers have white edges for definition. Selection state shown via opacity changes (nonselection_alpha=0.2)
+      Legend: Top-right corner with all four cluster labels, correct colors, ELEVATED_BG background
+      Legibility verdict: PASS - all text readable with proper contrast
 
-    - Cluster A (blue, #306998): Located in the lower-left quadrant, centered around (20, 30)
-    - Cluster B (yellow, #FFD43B): Located in the upper-right area, centered around (60, 70)
-    - Cluster C (red/coral, #E74C3C): Located in the upper-left area, centered around (25, 75)
-    - Cluster D (green, #2ECC71): Located in the lower-right area, centered around (70, 25)
-
-    The legend is positioned in the top-right corner showing all four cluster labels. The X-axis is labeled "X Value" (range 0-100), and the Y-axis is labeled "Y Value" (range 0-90+). A subtle dashed grid is visible in the background. Points have white borders and good alpha transparency (0.8). The plot utilizes the full canvas well with balanced margins.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Title and axis labels in light text (INK #F0EFE8), tick labels in secondary light text (INK_SOFT #B8B7B0) - all clearly readable against dark background. No dark-on-dark issues detected
+      Data: Identical Okabe-Ito colors to light render (brand green, blue, orange, reddish-purple). Marker edges adapt to dark theme. Selection states preserved
+      Legend: Top-right corner with light text on ELEVATED_BG (#242420) - clearly visible
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, visual hierarchy preserved
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48pt, axis labels at 36pt, tick labels at 28pt - all perfectly
-          readable
+        comment: Title (28pt), axis labels (22pt), tick labels (18pt) all readable
+          in both themes with proper INK tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clusters are well-separated
+        comment: Generous margins (min_border_left=100, etc.), legend clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized at 25 with good alpha (0.8), appropriate for 300 points
+        comment: Marker size 15px appropriate for 4800x2700, all clusters visually
+          distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors with good contrast and white borders
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but lack units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid subtle at alpha 0.3, legend well-placed but slightly small
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot with interactive tools
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned from clustered data
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has BoxSelectTool, WheelZoomTool, PanTool, ResetTool, HoverTool with
-          selection styling. Missing selection count display
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, axes auto-scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly shows all four clusters
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Okabe-Ito CVD-safe palette with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 4800x2700 landscape, balanced, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format with spec-id · library · pyplots.ai
-    data_quality:
-      score: 18
+        comment: Correct title format with spec-id, library, anyplot.ai
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct backgrounds, both
+          renders theme-correct'
+    design_excellence:
+      score: 13
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: Shows 4 distinct clusters suitable for demonstrating brush selection
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Simulated clustered data is plausible for demonstrating selection
-          functionality
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Thoughtful selection state visualization, white marker edges, proper
+          legend styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good grid and whitespace, but top/right spines should be removed
+          for cleaner look
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clusters visually separated but lack emphasis or narrative focus
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values in 0-100 range are sensible for generic numeric data
+        comment: Correct interactive scatter plot with brush, zoom, pan, reset
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: brush selection, zoom, reset, hover tooltips'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y properly mapped, full range shown, categorical coloring
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend shows all clusters
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All scatter, brush, zoom, pan, reset, hover demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 300 points realistic, normal distribution, sensible value ranges
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and sizing appropriate for domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,55 +178,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: No functions/classes, straightforward direct plotting
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no cruft
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic Bokeh, no fake interactive features
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png AND plot.html - both correct for interactive spec
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct plot-{THEME}.png and .html output
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of ColumnDataSource, BoxSelectTool, selection styling,
-          factor_cmap, WebGL backend, HTML export
+        comment: High-level API, ColumnDataSource, factor_cmap, tool configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: WebGL backend, selection state system, hover tooltips, custom legend
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   - custom-legend
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
