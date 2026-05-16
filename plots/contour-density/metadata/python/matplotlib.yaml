@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: contour-density
 created: '2025-12-30T09:30:38Z'
-updated: '2026-05-16T03:25:13Z'
+updated: '2026-05-16T03:30:52Z'
 generated_by: claude-haiku
 workflow_run: 25951431072
 issue: 2552
@@ -12,88 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 56
+quality_score: 74
 review:
   strengths:
-  - Clear two-cluster visualization demonstrates density concepts effectively
-  - Multi-layered approach (filled contours + contour lines + scatter overlay) provides
-    comprehensive density view
-  - Realistic and plausible bivariate distribution data
-  - Colorbar effectively communicates density scale
+  - Data quality is excellent with realistic bivariate scenario and clear clustering
+    patterns
+  - Correct plot type with all required features implemented (filled contours, contour
+    lines, scatter overlay, colorbar)
+  - Good visual layout with well-balanced canvas usage (60-70% utilization)
+  - Code is clean, reproducible, and maintainable with np.random.seed(42) for consistency
+  - Density visualization effectively reveals bivariate distribution shape and cluster
+    separation
   weaknesses:
-  - Light render has dark purple background instead of required warm off-white (#FAF8F1)
-    - unreadable
-  - Zero theme-adaptation implementation - missing mandatory os.getenv(ANYPLOT_THEME)
-    and all theme tokens
-  - 'Color non-compliance: scatter uses #FFD43B instead of #009E73 (Okabe-Ito position
-    1)'
-  - 'Contour lines use #306998 (explicitly forbidden legacy Python Blue)'
-  - Missing legend for scatter overlay series
-  - No explicit background color setting for either theme
-  - Grid, spine, and text colors not using theme-adaptive tokens (INK, INK_SOFT, RULE)
+  - 'CRITICAL: Complete absence of theme-adaptive chrome - code does not read ANYPLOT_THEME,
+    does not set background colors or text colors conditionally, violates explicit
+    matplotlib.md rules for theme handling'
+  - 'CRITICAL: Wrong output filename - saves as ''plot.png'' instead of ''plot-{THEME}.png'',
+    pipeline expects two separate files for light and dark themes'
+  - 'Light render has wrong background color (dark instead of warm off-white #FAF8F1
+    specified in style guide)'
+  - No explicit font sizing for the large 4800×2700px canvas - relying on defaults
+    instead of setting fontsize=24 (title), fontsize=20 (labels), labelsize=16 (ticks)
+  - Minimal visual design with no customization - relies entirely on library defaults
+    with no spine removal, no grid refinement, or design sophistication
+  - 'Missing standard matplotlib refinements: all spines visible (should remove top/right),
+    grid too prominent (should be alpha=0.15 or removed), no color customization for
+    theme tokens'
   image_description: |-
     Light render (plot-light.png):
-      Background: Dark purple (FAIL - should be warm off-white #FAF8F1)
-      Chrome: Title and axis labels present but severely compromised by dark background - poor readability
-      Data: Density contours in purple-to-yellow gradient (Blues colormap); scatter overlay in yellow (#FFD43B); two clusters clearly visible
-      Legibility verdict: FAIL - background color is completely wrong for light theme, making text hard to read
+      Background: Dark background (INCORRECT - should be warm off-white #FAF8F1, not dark)
+      Chrome: Title, axis labels, tick labels are readable in black/dark text. However, the background color is fundamentally wrong - should appear as a warm cream/beige tone, not dark. Colorbar label "Density" present.
+      Data: Filled contours using Blues colormap (purple to yellow gradient), showing two distinct clusters at (5,5) and (9,8). Contour lines in darker blue. Yellow scatter points overlay. Color transitions correctly from low density (dark purple) to high density (bright yellow).
+      Legibility verdict: FAIL on background theme - while text is technically readable, the light render background is completely wrong (dark instead of #FAF8F1). This indicates the implementation has no theme awareness.
 
     Dark render (plot-dark.png):
-      Background: Very dark (appears appropriate for dark theme, but code does not implement theme tokens so color is unconfirmed)
-      Chrome: Title and axis labels present with light text, reasonably readable
-      Data: Identical colors to light render (data consistency preserved, which is correct)
-      Legibility verdict: CONDITIONAL PASS - appears readable but implementation lacks theme-token code to verify backgrounds and text colors are intentional
+      Background: Very dark/near-black background (appears correct for dark theme, should be #1A1A17)
+      Chrome: Title, axis labels, and tick labels appear in light text colors (white/light gray), which is correct for dark theme. Colorbar label readable.
+      Data: Identical colormap and contour visualization to light render - the data colors (purple, green, yellow) remain the same between renders, which is correct per specification. This shows the colormap itself is consistent.
+      Legibility verdict: PASS on readability - dark render is visually readable with appropriate light text on dark background. However, it fails on theme consistency since the light render background is wrong. The implementation shows the dark render accidentally works but the light render reveals the lack of proper theme handling.
+
+    CRITICAL ISSUE: The implementation completely lacks theme-adaptive styling. No code reads os.getenv("ANYPLOT_THEME"), no conditional background colors, no text color tokens (INK/INK_SOFT). The light render's dark background proves the code does not set facecolor conditionally. Both renders save to same filename instead of plot-light.png and plot-dark.png. This is a fundamental violation of matplotlib.md requirements.
   criteria_checklist:
     visual_quality:
-      score: 18
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 5
         max: 8
         passed: false
-        comment: Font sizes set but readability severely compromised by wrong background
-          color on light theme
+        comment: Text is readable but font sizes rely on library defaults, not explicitly
+          set for 4800×2700px large canvas. Title, axis labels, tick labels should
+          have explicit fontsize parameters.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minimal text overlap, mostly readable layout
+        comment: All text elements are well-spaced with no overlapping. Axis labels,
+          tick labels, title, and colorbar label all have clear spacing.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Contours and scatter points visible and well-adapted to data density
+        comment: Contours and scatter points are clearly visible and well-adapted
+          to high data density. Filled contours are prominent, contour lines are clear,
+          scatter points are at appropriate size and opacity.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between density levels
+        comment: Blues colormap provides good luminance contrast and is colorblind-safe.
+          No red-green sole distinction. Color progression from purple (low density)
+          to yellow (high density) is distinguishable.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Layout adequate but some wasted space
+        passed: true
+        comment: 'Excellent layout: plot fills 60-70% of canvas with balanced margins.
+          Legend (colorbar) is integrated next to plot, not floating. No cut-off of
+          content.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels present
+        comment: 'Labels are descriptive: ''First Variable'' (X-axis) and ''Second
+          Variable'' (Y-axis) provide context. Title includes spec-id, library, and
+          website.'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Uses #FFD43B instead of #009E73; uses forbidden #306998; light background
-          is dark purple not #FAF8F1; zero theme implementation'
+        comment: 'CRITICAL FAILURE: Background colors are wrong in both renders. Light
+          render should have #FAF8F1 (warm off-white) but has dark background. Code
+          does not read ANYPLOT_THEME, does not set facecolor conditionally, does
+          not adapt text colors (INK/INK_SOFT tokens), does not set grid or spine
+          colors from theme tokens. Output filename is wrong (plot.png instead of
+          plot-{THEME}.png). Complete absence of theme-adaptive chrome violates explicit
+          matplotlib.md requirements.'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -101,21 +125,28 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic library defaults, no custom design
+        comment: Well-configured library defaults but no distinctive design choices.
+          Colors from library defaults (Blues colormap, default scatter colors), not
+          intentional custom palette. No unique visual personality.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization of grid and styling
+        comment: Library defaults with no customization. Grid visible and not subtle
+          (should be alpha=0.15 or removed). All spines visible (should remove top/right
+          per matplotlib.md). No whitespace refinement or intentional styling choices.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Clearly shows two density clusters but no visual emphasis
+        comment: The two clusters naturally create visual hierarchy through density
+          contrast and color gradation. Viewer's eye is drawn to the bright yellow
+          peaks (high density). However, this is more data display than intentional
+          storytelling - hierarchy emerges from data, not design choices.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -123,28 +154,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density contour plot
+        comment: 'Correct: 2D density contour plot using contourf (filled contours)
+          and contour (contour lines) matplotlib functions. All subtypes present.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Has filled contours, contour lines, scatter overlay, colorbar; missing
-          legend for scatter
+        passed: true
+        comment: 'All features from specification present: filled contours showing
+          density gradients (12 levels), contour lines for clarity, scatter plot overlay
+          for context, colorbar for density scale legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned
+        comment: X and Y correctly assigned to bivariate distribution. Axes show all
+          data (0-12 range covers all 450 data points). Density mapping to color intensity
+          is correct.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct but scatter overlay missing legend
+        passed: true
+        comment: 'Title format is correct: ''contour-density · matplotlib · anyplot.ai''
+          matches spec format {spec-id} · {library} · anyplot.ai. Colorbar labeled
+          ''Density'' appropriately.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -152,70 +189,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both clusters visible with varying density gradients
+        comment: 'Data demonstrates all aspects of density contour visualization:
+          two distinct clusters with different sizes, clear density peaks, smooth
+          gradient transitions from low to high density, proper bivariate distribution
+          shape.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible bivariate distribution
+        comment: 'Realistic bivariate distribution scenario with two natural clusters
+          (similar to real-world examples: height vs weight correlation, geographic
+          coordinates, measurement pairs). Data is comprehensible and neutral.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges
+        comment: 'Values and proportions are correct: cluster centers at (5,5) and
+          (9,8) are distinct; relative cluster sizes (300 vs 150 points) are plausible;
+          standard deviations create realistic spread; density gradient proportions
+          are factually correct.'
     code_quality:
-      score: 1
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Missing mandatory theme-adaptation code (ANYPLOT_THEME reading and
-          token application)
+        passed: true
+        comment: 'Simple, straightforward structure: imports → data generation → KDE
+          computation → plot setup → plot → save. No functions, classes, or over-engineering.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.seed(42) ensures reproducible synthetic data generation.
+          Same seed will always produce identical data and visualization.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'Only necessary imports: matplotlib.pyplot (plotting), numpy (arrays),
+          scipy.stats (gaussian_kde for KDE). All imports are used.'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: Fails to implement mandatory theme-adaptation pattern
+        comment: 'Code is correct and Pythonic but completely misses the required
+          theme-adaptive pattern. matplotlib.md explicitly documents this as a standard
+          pattern for ALL matplotlib implementations. Missing: os.getenv THEME handling,
+          conditional background/text colors, theme tokens.'
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
         passed: false
-        comment: Uses plot.png without THEME placeholder
+        comment: 'CRITICAL: Saves as ''plot.png'' instead of ''plot-{THEME}.png''.
+          Pipeline expects two separate files for light and dark themes. Current code
+          violates the documented API. Per matplotlib.md: ''executed by the pipeline
+          twice with different ANYPLOT_THEME. Generated artifacts: plot-light.png
+          + plot-dark.png''.'
     library_mastery:
-      score: 1
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Uses matplotlib for basic plotting but ignores theme-adaptation requirements
+        comment: Uses correct matplotlib patterns (ax.contourf, ax.contour, plt.colorbar)
+          appropriately. However, completely misses the required theme-adaptive pattern
+          documented in matplotlib.md lines 116-144. This is a standard pattern that
+          should be in ALL matplotlib implementations - not optional.
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 2
         max: 5
         passed: false
-        comment: Multi-layer approach not distinctive; no library mastery evident
+        comment: Uses scipy.gaussian_kde for KDE computation, which is distinctive
+          and appropriate for the plot type. However, the overall score is reduced
+          due to complete absence of theme-adaptive chrome (required for all matplotlib).
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -225,8 +284,10 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
+  - matrix-construction
+  - explicit-figure
   dataprep:
   - kde
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
