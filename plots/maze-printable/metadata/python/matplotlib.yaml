@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: maze-printable
 created: '2026-01-07T21:09:19Z'
-updated: '2026-05-16T14:41:45Z'
+updated: '2026-05-16T14:46:10Z'
 generated_by: claude-haiku
 workflow_run: 25964599184
 issue: 3232
@@ -12,102 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 42
 review:
   strengths:
-  - Perfect theme adaptation with full readability in both light and dark renders
-  - Clean, functional minimalist design appropriate for printable puzzle specification
-  - Correct DFS maze generation with guaranteed single solution path
-  - Excellent visual contrast for print-readiness
-  - Code is simple, reproducible, deterministic, and well-structured
-  - All specification requirements met completely
-  - Theme-adaptive backgrounds and text colors properly implemented
+  - Maze algorithm correctly generates unique-path puzzle with DFS
+  - Square format (12×12 inch canvas) appropriate for printable maze
+  - 'Theme background colors correctly set to (#FAF8F1 light, #1A1A17 dark)'
+  - Maze structure visualization clear with proper wall/passage contrast
+  - Title properly formatted with attribution
   weaknesses:
-  - Start/goal markers (S/G) could be more visually prominent for printability emphasis
+  - 'Critical: S and G marker text not readable in either theme due to color assignment
+    failure'
+  - 'Light render: Marker text appears white instead of dark (#1A1A17)'
+  - 'Dark render: Marker text appears dark instead of light (#F0EFE8)'
+  - 'VQ-01 (Text Legibility) failure: markers are essential spec elements but cannot
+    be read'
+  - Theme-adaptive coloring for markers not working despite correct INK variable definition
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and not pure white
-      Chrome: Title in dark text (#1A1A17) at 24pt is clearly readable. S/G markers at 28pt are readable.
-      Data: Black walls on white passages with excellent contrast for printability
-      Legibility verdict: PASS — all text fully readable
+      Background: Warm off-white (#FAF8F1), correct page surface
+      Maze: Well-formed 25×25 grid with clear black walls and white passages, proper contrast
+      Title: "maze-printable · matplotlib · anyplot.ai" clearly visible in dark text at top
+      S marker (top-left): BARELY VISIBLE — text appears white/very light, nearly invisible against both white passages and black walls, fails readability
+      G marker (bottom-right): BARELY VISIBLE — same issue as S marker, appears white/light instead of dark
+      Legibility verdict: FAIL — S and G markers are not adequately readable; they should be dark (#1A1A17) but appear light/white
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct and not pure black
-      Chrome: Title in light text (#F0EFE8) is clearly readable. S/G markers in light text are readable.
-      Data: White walls on black passages (correctly inverted to maintain contrast); identical pattern to light render
-      Legibility verdict: PASS — all text fully readable, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17), correct page surface
+      Maze: Well-formed with white walls and black passages, proper inversion
+      Title: "maze-printable · matplotlib · anyplot.ai" clearly visible in light text at top
+      S marker (top-left): POORLY VISIBLE — text appears dark/black instead of light (#F0EFE8); creates dark-on-black contrast failure on passage areas
+      G marker (bottom-right): POORLY VISIBLE — same color issue as S marker
+      Data colors: Maze rendering correctly inverted from light to dark
+      Legibility verdict: FAIL — S and G markers are not in the correct light color for dark theme; text contrast is inadequate
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 12
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        passed: false
+        comment: S and G markers not readable in either theme; color mismatch in renders
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Maze structure clear; title positioned above maze
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: All maze elements and markers clearly visible
+        comment: Maze walls and passages clearly visible; markers fail visibility
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High contrast, print-optimized
+        comment: Black and white maze is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: Perfect square format with balanced margins
+        comment: Square format appropriate; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Correct title format
+        passed: false
+        comment: Title present but descriptive content (start/goal markers) not readable
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Theme-correct backgrounds; text uses INK tokens; both renders properly
-          adapted
+        passed: false
+        comment: Background colors correct but INK color not applied properly to markers
     design_excellence:
-      score: 10
+      score: 4
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
-        passed: true
-        comment: Minimalist design well-executed and appropriate for spec
+        passed: false
+        comment: Functional but minimal design; printable aesthetic appropriate
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Clean with spines removed and generous whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: Puzzle display is clear; storytelling not applicable
+        comment: Minimal chrome; clean layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 0
+        max: 6
+        passed: false
+        comment: No visual hierarchy or emphasis; markers should guide solver but
+          not readable
     spec_compliance:
-      score: 15
+      score: 9
       max: 15
       items:
       - id: SC-01
@@ -115,49 +124,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct maze visualization
+        comment: Correct maze puzzle type
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: DFS generation, start/goal marked, printable design
+        passed: false
+        comment: Maze complete but start/goal markers not readable as required
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Grid correctly positioned
+        comment: 25×25 grid correct; start and goal positions placed (but not visible)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Correct format
+        passed: false
+        comment: Title correct but markers fail spec requirement of 'clearly marked'
+          positions
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows complete solvable path
+        comment: Maze structure complete; markers missing visual impact
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Realistic printable puzzle use case
+        comment: 25×25 printable maze is realistic puzzle
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25x25 complexity appropriate
+        comment: Grid size appropriate for difficulty and printable format
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -165,33 +175,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: No unnecessary functions; straightforward DFS algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for determinism
+        comment: Fixed seed ensures consistent maze generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No over-engineering
+        passed: false
+        comment: Color assignment logic correct but not executing as intended in render
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Correct output format
+        passed: false
+        comment: Missing plot-dark.html; PNG output correct but markers not rendering
+          properly
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -199,14 +210,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Axes API with theme tokens
+        comment: Standard matplotlib API for figure creation, imshow, text, styling
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Standard matplotlib features
-  verdict: APPROVED
+        passed: true
+        comment: Uses imshow for grid rendering; text positioning somewhat distinctive
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
