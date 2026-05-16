@@ -1,14 +1,26 @@
-""" pyplots.ai
+""" anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+COLOR_UP = "#009E73"  # Okabe-Ito position 1 (brand green)
+COLOR_DOWN = "#D55E00"  # Okabe-Ito position 2 (vermillion)
 
 # Data - Generate 60 trading days of realistic OHLC + volume data
 np.random.seed(42)
@@ -38,7 +50,7 @@ volume = volume.astype(int)
 
 # Determine up/down days for coloring
 is_up = close >= open_prices
-colors = ["#306998" if up else "#FFD43B" for up in is_up]
+colors = [COLOR_UP if up else COLOR_DOWN for up in is_up]
 
 # Create subplot with shared x-axis
 # Price pane: 75% height, Volume pane: 25% height
@@ -52,8 +64,8 @@ fig.add_trace(
         high=high,
         low=low,
         close=close,
-        increasing={"line": {"color": "#306998", "width": 2}, "fillcolor": "#306998"},
-        decreasing={"line": {"color": "#FFD43B", "width": 2}, "fillcolor": "#FFD43B"},
+        increasing={"line": {"color": COLOR_UP, "width": 2}, "fillcolor": COLOR_UP},
+        decreasing={"line": {"color": COLOR_DOWN, "width": 2}, "fillcolor": COLOR_DOWN},
         name="Price",
         showlegend=False,
     ),
@@ -70,15 +82,22 @@ fig.add_trace(
 
 # Update layout for professional appearance
 fig.update_layout(
-    title={"text": "candlestick-volume · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
-    template="plotly_white",
+    title={
+        "text": "candlestick-volume · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     hovermode="x unified",
     # Add crosshair cursor
     xaxis={
         "showspikes": True,
         "spikemode": "across",
         "spikesnap": "cursor",
-        "spikecolor": "#888888",
+        "spikecolor": INK_SOFT,
         "spikethickness": 1,
         "spikedash": "solid",
     },
@@ -86,7 +105,7 @@ fig.update_layout(
         "showspikes": True,
         "spikemode": "across",
         "spikesnap": "cursor",
-        "spikecolor": "#888888",
+        "spikecolor": INK_SOFT,
         "spikethickness": 1,
         "spikedash": "solid",
     },
@@ -94,7 +113,7 @@ fig.update_layout(
         "showspikes": True,
         "spikemode": "across",
         "spikesnap": "cursor",
-        "spikecolor": "#888888",
+        "spikecolor": INK_SOFT,
         "spikethickness": 1,
         "spikedash": "solid",
     },
@@ -102,7 +121,7 @@ fig.update_layout(
         "showspikes": True,
         "spikemode": "across",
         "spikesnap": "cursor",
-        "spikecolor": "#888888",
+        "spikecolor": INK_SOFT,
         "spikethickness": 1,
         "spikedash": "solid",
     },
@@ -114,30 +133,36 @@ fig.update_layout(
 
 # Update axes styling
 fig.update_xaxes(
-    title={"text": "Date", "font": {"size": 22}},
-    tickfont={"size": 18},
-    gridcolor="rgba(128,128,128,0.2)",
+    title={"text": "Date", "font": {"size": 22, "color": INK}},
+    tickfont={"size": 18, "color": INK_SOFT},
+    gridcolor=GRID,
     gridwidth=1,
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
     row=2,
     col=1,
 )
 
 fig.update_yaxes(
-    title={"text": "Price ($)", "font": {"size": 22}},
-    tickfont={"size": 18},
+    title={"text": "Price ($)", "font": {"size": 22, "color": INK}},
+    tickfont={"size": 18, "color": INK_SOFT},
     tickformat="$.0f",
-    gridcolor="rgba(128,128,128,0.2)",
+    gridcolor=GRID,
     gridwidth=1,
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
     row=1,
     col=1,
 )
 
 fig.update_yaxes(
-    title={"text": "Volume", "font": {"size": 22}},
-    tickfont={"size": 18},
+    title={"text": "Volume", "font": {"size": 22, "color": INK}},
+    tickfont={"size": 18, "color": INK_SOFT},
     tickformat=".2s",
-    gridcolor="rgba(128,128,128,0.2)",
+    gridcolor=GRID,
     gridwidth=1,
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
     row=2,
     col=1,
 )
@@ -145,8 +170,6 @@ fig.update_yaxes(
 # Hide x-axis title on price pane
 fig.update_xaxes(title=None, row=1, col=1)
 
-# Save as PNG (4800 x 2700 pixels)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG and HTML
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
