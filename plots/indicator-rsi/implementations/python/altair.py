@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-05-16
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-16
 """
 
 import os
