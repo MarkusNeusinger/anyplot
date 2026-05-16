@@ -460,12 +460,21 @@ jobs:
           # Python libs, the R version for ggplot2. The frontend renders language_version with
           # the right language label, so we never mislabel R as "Python".
           PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+          # R/Python versions are always dot-separated digits. Anything else
+          # captured from Rscript (renv leaks, error fragments, status messages)
+          # would poison metadata and break the downstream Python heredoc, so
+          # we reject and let the existing "unknown" fallback take over.
+          is_version() {
+            [[ "$1" =~ ^[0-9]+(\.[0-9]+)*$ ]]
+          }
+
           if [ "$LANGUAGE" = "r" ]; then
             # renv's "out-of-sync" notice prints on stdout from .Rprofile, so 2>/dev/null
-            # leaves it in the captured value. RENV_CONFIG_STARTUP_QUIET silences it; the
-            # tail -n1 belt keeps a single clean line if anything else ever leaks in.
+            # leaves it in the captured value. RENV_CONFIG_STARTUP_QUIET silences renv;
+            # tail -n1 + is_version reject anything else that might leak in or land if
+            # Rscript exits non-zero after partial stdout.
             LANGUAGE_VERSION=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e 'cat(as.character(getRversion()))' 2>/dev/null | tail -n1)
-            LANGUAGE_VERSION=${LANGUAGE_VERSION:-unknown}
+            is_version "$LANGUAGE_VERSION" || LANGUAGE_VERSION="unknown"
           else
             LANGUAGE_VERSION="$PYTHON_VERSION"
           fi
@@ -477,7 +486,9 @@ jobs:
             .venv/bin/pip show "$1" 2>/dev/null | grep -i "^Version:" | awk '{print $2}'
           }
           get_r_version() {
-            RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1
+            local v
+            v=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1)
+            is_version "$v" && printf '%s' "$v"
           }
 
           if [ "$LANGUAGE" = "r" ]; then
