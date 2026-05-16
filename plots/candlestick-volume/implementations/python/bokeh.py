@@ -1,16 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2025-05-16
 """
+
+import os
+import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, CrosshairTool, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, CrosshairTool, HoverTool, NumeralTickFormatter
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for up/down
+COLOR_UP = "#009E73"  # Green (Okabe-Ito position 1)
+COLOR_DOWN = "#D55E00"  # Orange (Okabe-Ito position 2)
 
 # Data - Generate 60 trading days of OHLC with volume
 np.random.seed(42)
@@ -39,7 +56,7 @@ volume = volume.astype(int)
 
 # Determine up/down days
 is_up = close_prices >= open_prices
-colors = ["#306998" if up else "#FFD43B" for up in is_up]  # Python Blue for up, Yellow for down
+colors = [COLOR_UP if up else COLOR_DOWN for up in is_up]
 
 # Create DataFrame
 df = pd.DataFrame(
@@ -63,7 +80,7 @@ p_candle = figure(
     width=4800,
     height=1890,  # 70% of 2700
     x_range=dates_str,
-    title="candlestick-volume · bokeh · pyplots.ai",
+    title="candlestick-volume · bokeh · anyplot.ai",
     tools="pan,wheel_zoom,box_zoom,reset,save",
 )
 
@@ -83,16 +100,46 @@ p_candle.vbar(
     line_width=1,
 )
 
-# Style candlestick chart
-p_candle.title.text_font_size = "36pt"
+# Add hover tool to candlestick
+hover_candle = HoverTool(
+    tooltips=[
+        ("Date", "@date"),
+        ("Open", "$@open{0.00}"),
+        ("High", "$@high{0.00}"),
+        ("Low", "$@low{0.00}"),
+        ("Close", "$@close{0.00}"),
+    ]
+)
+p_candle.add_tools(hover_candle)
+
+# Style candlestick chart - theme-adaptive
+p_candle.background_fill_color = PAGE_BG
+p_candle.border_fill_color = PAGE_BG
+p_candle.outline_line_color = INK_SOFT
+
+p_candle.title.text_font_size = "28pt"
+p_candle.title.text_color = INK
+
 p_candle.yaxis.axis_label = "Price ($)"
-p_candle.yaxis.axis_label_text_font_size = "28pt"
-p_candle.yaxis.major_label_text_font_size = "22pt"
+p_candle.yaxis.axis_label_text_font_size = "22pt"
+p_candle.yaxis.axis_label_text_color = INK
+p_candle.yaxis.major_label_text_font_size = "18pt"
+p_candle.yaxis.major_label_text_color = INK_SOFT
+p_candle.yaxis.axis_line_color = INK_SOFT
+p_candle.yaxis.major_tick_line_color = INK_SOFT
+
 p_candle.xaxis.major_label_text_font_size = "18pt"
+p_candle.xaxis.major_label_text_color = INK_SOFT
+p_candle.xaxis.axis_line_color = INK_SOFT
+p_candle.xaxis.major_tick_line_color = INK_SOFT
 p_candle.xaxis.major_label_orientation = 0.8
 p_candle.xaxis.visible = False  # Hide x-axis on top chart (shared with volume)
-p_candle.grid.grid_line_alpha = 0.3
-p_candle.grid.grid_line_dash = [4, 4]
+
+p_candle.xgrid.grid_line_color = INK
+p_candle.ygrid.grid_line_color = INK
+p_candle.xgrid.grid_line_alpha = 0.10
+p_candle.ygrid.grid_line_alpha = 0.10
+
 p_candle.min_border_left = 120
 p_candle.min_border_right = 60
 
@@ -112,20 +159,41 @@ p_volume.vbar(
     source=source,
     fill_color="color",
     line_color="color",
-    fill_alpha=0.7,
+    fill_alpha=1.0,
     line_width=1,
 )
 
-# Style volume chart
+# Add hover tool to volume
+hover_volume = HoverTool(tooltips=[("Date", "@date"), ("Volume", "@volume{0,0}")])
+p_volume.add_tools(hover_volume)
+
+# Style volume chart - theme-adaptive
+p_volume.background_fill_color = PAGE_BG
+p_volume.border_fill_color = PAGE_BG
+p_volume.outline_line_color = INK_SOFT
+
 p_volume.yaxis.axis_label = "Volume"
-p_volume.yaxis.axis_label_text_font_size = "28pt"
-p_volume.yaxis.major_label_text_font_size = "22pt"
+p_volume.yaxis.axis_label_text_font_size = "22pt"
+p_volume.yaxis.axis_label_text_color = INK
+p_volume.yaxis.major_label_text_font_size = "18pt"
+p_volume.yaxis.major_label_text_color = INK_SOFT
+p_volume.yaxis.axis_line_color = INK_SOFT
+p_volume.yaxis.major_tick_line_color = INK_SOFT
+
 p_volume.xaxis.axis_label = "Date"
-p_volume.xaxis.axis_label_text_font_size = "28pt"
+p_volume.xaxis.axis_label_text_font_size = "22pt"
+p_volume.xaxis.axis_label_text_color = INK
 p_volume.xaxis.major_label_text_font_size = "18pt"
+p_volume.xaxis.major_label_text_color = INK_SOFT
+p_volume.xaxis.axis_line_color = INK_SOFT
+p_volume.xaxis.major_tick_line_color = INK_SOFT
 p_volume.xaxis.major_label_orientation = 0.8
-p_volume.grid.grid_line_alpha = 0.3
-p_volume.grid.grid_line_dash = [4, 4]
+
+p_volume.xgrid.grid_line_color = INK
+p_volume.ygrid.grid_line_color = INK
+p_volume.xgrid.grid_line_alpha = 0.10
+p_volume.ygrid.grid_line_alpha = 0.10
+
 p_volume.min_border_left = 120
 p_volume.min_border_right = 60
 
@@ -133,17 +201,33 @@ p_volume.min_border_right = 60
 p_volume.yaxis.formatter = NumeralTickFormatter(format="0.0a")
 
 # Add linked crosshair tool to both charts
-crosshair_candle = CrosshairTool(dimensions="both", line_color="gray", line_alpha=0.5, line_width=2)
-crosshair_volume = CrosshairTool(dimensions="both", line_color="gray", line_alpha=0.5, line_width=2)
+crosshair_candle = CrosshairTool(dimensions="both", line_color=INK_SOFT, line_alpha=0.5, line_width=2)
+crosshair_volume = CrosshairTool(dimensions="both", line_color=INK_SOFT, line_alpha=0.5, line_width=2)
 p_candle.add_tools(crosshair_candle)
 p_volume.add_tools(crosshair_volume)
 
 # Combine charts in vertical layout
 layout = column(p_candle, p_volume)
 
-# Save as PNG
-export_png(layout, filename="plot.png")
-
-# Save as HTML for interactive version
-output_file("plot.html")
+# Save as HTML
+output_file(f"plot-{THEME}.html")
 save(layout)
+
+# Screenshot with headless Chrome using Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
