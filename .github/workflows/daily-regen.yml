@@ -284,7 +284,7 @@ jobs:
           MODEL: ${{ inputs.model || 'haiku' }}
           CHANGE_REQUESTS: ${{ steps.collect.outputs.change_requests }}
         run: |
-          echo "::notice::Dispatching bulk-generate for ${SPEC_ID} (all 9 libs, model=${MODEL})"
+          echo "::notice::Dispatching bulk-generate for ${SPEC_ID} (all libs, model=${MODEL})"
           gh workflow run bulk-generate.yml \
             --repo "${{ github.repository }}" \
             -f specification_id="${SPEC_ID}" \
