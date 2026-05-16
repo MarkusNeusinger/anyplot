@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:29:07Z'
-updated: '2026-05-16T10:53:27Z'
+updated: '2026-05-16T10:59:16Z'
 generated_by: claude-haiku
 workflow_run: 25959991377
 issue: 3181
@@ -12,29 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 80
 review:
   strengths:
-  - Excellent theme adaptation with perfect light/dark rendering
-  - All required MACD components correctly implemented
-  - Clear, readable typography with explicit font sizing
-  - Strong data quality showing realistic MACD patterns
-  - Clean code structure with proper seed for reproducibility
+  - Excellent text legibility in both themes with properly scaled fonts
+  - Clear data representation with all MACD components visible
+  - Proper theme-adaptive chrome (backgrounds, text colors) in both renders
+  - Clean, reproducible code with deterministic seeding
+  - Accurate MACD technical indicator calculation
+  - Well-structured layout with appropriate margins and spacing
   weaknesses:
-  - 'Palette compliance failure: MACD and Signal lines use non-Okabe-Ito colors (#2CA02C,
-    #D62728) instead of Okabe-Ito positions 3-4 (#0072B2, #CC79A7)'
+  - 'Palette compliance violation: positions 3 & 4 use matplotlib default colors (#2CA02C,
+    #D62728) instead of canonical Okabe-Ito sequence (#0072B2, #CC79A7) - critical
+    hard requirement'
+  - Minimal aesthetic sophistication; relies on library defaults rather than intentional
+    design refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 - correct
-      Chrome: Title "indicator-macd · pygal · anyplot.ai" clearly readable; axis labels "Date" and "MACD Value" readable; tick labels dark and visible
-      Data: Green histogram bars (positive), orange histogram bars (negative), green MACD line, reddish Signal line, gray dashed zero line - all clearly distinguishable
-      Legibility verdict: PASS - All text readable against light background
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title and axis labels render in dark text (#1A1A17), clearly readable against light background. Tick labels are secondary text color (#4A4A44), visible and distinct.
+      Data: Green histogram bars above zero (positive bars - #009E73), orange below (negative - #D55E00), light blue line (MACD), pink/salmon line (Signal), gray dashed zero reference line
+      Legibility verdict: PASS - all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 - correct
-      Chrome: Title, axis labels, and ticks now light-colored and fully readable; no dark-on-dark failures
-      Data: Data colors (greens, orange, red) identical to light render; only chrome flipped to dark theme which is correct
-      Legibility verdict: PASS - All text readable against dark background; data colors consistent between themes
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and axis labels render in light text (#F0EFE8), clearly readable against dark background. Tick labels are secondary light color (#B8B7B0), visible and distinct.
+      Data: Green histogram bars and orange bars identical to light render (confirming proper color constants). Blue and pink lines maintain exact same hues from light render. Dashed zero line is slightly lighter gray (#B8B7B0) to remain visible.
+      Data colors match light render exactly: green (#009E73), orange (#D55E00), blue (appears to be #2CA02C - non-canonical), pink (appears to be #D62728 - non-canonical)
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, but palette non-compliance confirmed
   criteria_checklist:
     visual_quality:
       score: 28
@@ -45,67 +50,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and perfectly readable in both light
-          and dark themes
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or legend elements
+        comment: No overlapping text; all elements clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All histogram bars and lines optimally sized and visible
+        comment: Data markers and lines optimally sized; histogram bars and lines
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between elements
+        comment: Good contrast; data colors visually distinct; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance with generous margins
+        comment: Perfect proportions; plot uses ~60% of canvas; generous balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with correct format
+        comment: Descriptive labels with correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: MACD and Signal lines use non-Okabe-Ito colors (#2CA02C,
-          #D62728) instead of Okabe-Ito positions 3-4 (#0072B2, #CC79A7)'
+        comment: 'CRITICAL: Positions 3 & 4 use matplotlib defaults (#2CA02C, #D62728)
+          instead of Okabe-Ito (#0072B2, #CC79A7)'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured defaults, professional but not exceptional
+        passed: false
+        comment: Custom Style object but color palette relies on non-canonical defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good grid styling and balanced whitespace
+        passed: false
+        comment: Grid styling appropriate but minimal customization; library defaults
+          dominate
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Data displayed clearly but minimal visual hierarchy
+        passed: false
+        comment: Plot displays components clearly but lacks visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -115,25 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with histogram overlay
+        comment: Correct MACD line chart with histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All MACD components present
+        comment: 'All components present: MACD line, Signal line, histogram (positive
+          & negative), zero reference'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly assigned
+        comment: X/Y correctly assigned; all 150 trading days visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and labels
+        comment: Title format correct; legend labels match data series
     data_quality:
       score: 15
       max: 15
@@ -143,19 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all MACD aspects
+        comment: 'Shows all MACD features: positive/negative histogram, line crossovers,
+          realistic volatility'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock momentum data
+        comment: Stock price simulation with realistic daily returns; correct EMA
+          formulas (12, 26, 9)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct MACD values
+        comment: MACD values realistic for 150-day trading period; scale is proportional
     code_quality:
       score: 10
       max: 10
@@ -165,31 +176,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure
+        comment: 'Linear flow: imports → data generation → calculation → plotting
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set correctly
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only numpy, pandas, pygal (all necessary)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic
+        comment: Appropriate complexity; theme-aware via environment variable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file format
+        comment: Saves correctly to plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 4
       max: 10
@@ -198,21 +210,25 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Correct usage but doesn't leverage advanced features
+        passed: false
+        comment: Uses pygal Style and standard API correctly but misses theme-adaptive
+          color management opportunity
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage of Style system
+        comment: Generic usage; no interactive features beyond basic HTML export
+    total:
+      score: 80
+      max: 100
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
-  - time-series
   dataprep:
   - rolling-window
   styling: []
