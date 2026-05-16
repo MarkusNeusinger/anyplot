@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: highcharts unknown | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-07
+Library: highcharts unknown | Python 3.13.13
+Quality: 67/100 | Updated: 2026-05-16
 """
 
 import tempfile
