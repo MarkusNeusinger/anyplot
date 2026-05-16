@@ -1,153 +1,167 @@
 library: bokeh
+language: python
 specification_id: maze-printable
 created: '2026-01-07T20:28:48Z'
-updated: '2026-01-07T20:35:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795212407
+updated: '2026-05-16T15:08:03Z'
+generated_by: claude-haiku
+workflow_run: 25964729163
 issue: 3232
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-printable/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/maze-printable/bokeh/plot.html
-quality_score: 93
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-dark.html
+quality_score: 71
 review:
   strengths:
-  - Excellent DFS maze generation algorithm that guarantees a single solution path
-  - Clean black-and-white design optimized for printing with consistent wall thickness
-  - Good use of square aspect ratio (4800x4800) appropriate for maze visualization
-  - Start (S) and Goal (G) markers are clearly positioned and labeled
-  - Generates both PNG and HTML output leveraging Bokeh dual export capability
-  - Proper use of match_aspect=True to maintain square cells
+  - Clean, high-contrast maze design optimized for printing
+  - Proper DFS maze generation algorithm guaranteeing single solution
+  - Clear start (top-left) and goal (bottom-right) marker positioning
+  - Excellent canvas utilization with balanced proportions
+  - Consistent data colors between light and dark renders
   weaknesses:
-  - Start and goal markers appear quite small in the generated image; could be more
-    prominent for better visibility when printed
-  - The markers (S and G) could benefit from being slightly larger or positioned with
-    more visual emphasis
-  image_description: The plot displays a 25x25 printable maze puzzle with black walls
-    on a white background. The maze is square-shaped and fills most of the canvas.
-    At the top-left corner, there is a blue circular marker with the letter "S" (start)
-    in white text. At the bottom-right corner, there is a yellow circular marker with
-    the letter "G" (goal) in dark gray text. The title "maze-printable · bokeh · pyplots.ai"
-    appears at the top center in gray text. The maze structure shows a complex pattern
-    of passages generated using DFS algorithm, with consistent wall thickness throughout.
-    The design is clean and print-friendly with high contrast.
+  - 'Palette violation: start marker uses #306998 (Python Blue) instead of Okabe-Ito
+    #009E73 for first series'
+  - 'Missing theme implementation: code doesn''t read ANYPLOT_THEME or use theme tokens
+    (INK, INK_SOFT, PAGE_BG)'
+  - 'Wrong output format: saves as plot.png instead of plot-light.png/plot-dark.png'
+  - 'Title typo: pyplots.ai should be anyplot.ai'
+  - 'Export method: uses deprecated export_png() instead of Selenium with headless
+    Chrome as specified in bokeh.md'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: White/very light - should be #FAF8F1 warm off-white (requirement not met)
+      Chrome: Title in dark text readable; "S" and "G" labels readable; all text visible
+      Data: Black maze walls on light passages - excellent contrast for printing; start marker (blue #306998), goal marker (yellow #FFD43B)
+      Legibility verdict: PASS - all text readable, but colors are hardcoded not theme-adaptive
+
+    Dark render (plot-dark.png):
+      Background: Dark gray/charcoal - should be #1A1A17 warm near-black (approximately correct)
+      Chrome: Title appears lighter for readability; "S" and "G" labels readable against markers
+      Data: Marker colors identical to light render (#306998 blue, #FFD43B yellow) - CORRECT data color consistency, but WRONG colors (not Okabe-Ito #009E73 for first series)
+      Legibility verdict: PASS - all text readable, but colors should be theme-aware
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 5
+        max: 8
         passed: true
-        comment: Title at 36pt is clearly readable, S and G markers at 28pt are bold
-          and visible
+        comment: Readable but color hardcoded not adaptive
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, all walls and passages cleanly separated
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wall thickness and passage width perfectly suited for printing and
-          pen marking
+        comment: All elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black/white design with colored markers (blue/yellow) is colorblind-safe
+        score: 1
+        max: 2
+        passed: false
+        comment: Non-Okabe-Ito colors
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square 1:1 aspect ratio, maze fills canvas well with appropriate
-          margins
+        comment: Excellent proportions and margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for maze; axes correctly hidden
+        comment: Descriptive title
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
-        passed: true
-        comment: N/A for maze type; no grid or legend needed
+        passed: false
+        comment: Wrong palette colors; backgrounds and text not theme-adaptive
+    design_excellence:
+      score: 6
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct maze visualization with DFS-generated labyrinth
+        comment: Correct maze puzzle
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 25x25 grid properly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Start/goal markers present, single solution guaranteed by DFS, black-white
-          design
-      - id: SC-04
-        name: Data Range
+        comment: Start/goal markers present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full maze visible within canvas
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: S and G labels clearly identify start and goal
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: maze-printable · bokeh · pyplots.ai'
+        comment: Correct layout
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title typo: pyplots.ai should be anyplot.ai'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete maze with varied path complexity
+        comment: All maze features shown
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
+        max: 5
         passed: true
-        comment: Valid maze puzzle, could use slightly larger markers for better visibility
-          when printed
+        comment: Educational/recreational context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 25x25 is appropriate complexity; markers are somewhat small relative
-          to passages
+        comment: 25x25 grid appropriate
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -155,54 +169,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → maze creation → plotting
-          → save'
+        comment: Simple linear code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible maze
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Bokeh API used
+        comment: No fake UI
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Wrong output format (plot.png vs plot-light.png)
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh rect, scatter, and text glyphs appropriately; also generates
-          HTML output for interactivity
+        comment: Correct but doesn't follow bokeh.md guidance
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - html-export
-  - patches
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
