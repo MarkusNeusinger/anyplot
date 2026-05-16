@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
 Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-07
+Quality: 92/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,8 @@ from plotnine import (
     aes,
     annotate,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_hline,
     geom_line,
@@ -22,6 +26,14 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
 # Data - Generate RSI values for 120 trading days
 np.random.seed(42)
 n_days = 120
@@ -30,7 +42,7 @@ period = 14
 # Generate synthetic price changes to calculate RSI
 price_changes = np.random.normal(0, 1.5, n_days + period)
 
-# Calculate RSI using 14-period lookback (inline calculation)
+# Calculate RSI using 14-period lookback
 rsi_values = []
 for i in range(period, len(price_changes)):
     window = price_changes[i - period : i]
@@ -61,26 +73,30 @@ plot = (
     # Threshold lines
     + geom_hline(yintercept=70, color="#D62828", size=1, linetype="dashed", alpha=0.8)
     + geom_hline(yintercept=30, color="#2A9D8F", size=1, linetype="dashed", alpha=0.8)
-    + geom_hline(yintercept=50, color="#6C757D", size=0.8, linetype="dotted", alpha=0.6)
-    # RSI line
-    + geom_line(color="#306998", size=1.5, alpha=0.9)
+    + geom_hline(yintercept=50, color=INK_SOFT, size=0.8, linetype="dotted", alpha=0.6)
+    # RSI line in brand color
+    + geom_line(color=BRAND, size=1.5, alpha=0.9)
     # Axis settings
     + scale_y_continuous(limits=(0, 100), breaks=range(0, 101, 10))
     + scale_x_datetime(date_breaks="1 month", date_labels="%b %Y")
     # Labels
-    + labs(title="indicator-rsi · plotnine · pyplots.ai", x="Date", y="RSI (14-period)")
-    # Theme
+    + labs(title="indicator-rsi · plotnine · anyplot.ai", x="Date", y="RSI (14-period)")
+    # Base theme
     + theme_minimal()
+    # Theme-adaptive styling
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_x=element_text(angle=0, ha="center"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.08),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_text(color="#E0E0E0"),
+        panel_border=element_blank(),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        plot_title=element_text(size=24, weight="bold", color=INK),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
