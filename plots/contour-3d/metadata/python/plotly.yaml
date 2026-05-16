@@ -1,158 +1,169 @@
 library: plotly
+language: python
 specification_id: contour-3d
 created: '2026-01-07T20:19:46Z'
-updated: '2026-01-07T20:28:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795207416
+updated: '2026-05-16T12:44:54Z'
+generated_by: claude-haiku
+workflow_run: 25962076692
 issue: 3230
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-3d/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-3d/plotly/plot.html
-quality_score: 91
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent use of Plotly Surface trace with contour projection to base plane
-  - Viridis colormap provides excellent perceptual uniformity and colorblind accessibility
-  - Good camera angle that reveals the 3D topology clearly
-  - HTML export enables interactive rotation as specified
-  - Clean minimal code structure
-  - Proper title format exactly as specified
+  - Excellent text legibility with explicit font sizing across all themes
+  - Elegant 3D surface visualization with contour projection that directly addresses
+    the spec
+  - 'Perfect theme-aware chrome handling: backgrounds, text colors, and grid all properly
+    adapted'
+  - Thoughtful colorbar design with appropriate styling and sizing
+  - Clean, maintainable code following KISS principles with proper deterministic data
+    generation
+  - Leverages plotly's distinctive 3D and interactive features effectively
+  - All visual elements perfectly readable in both light and dark themes
   weaknesses:
-  - The seed is set but no random data is actually generated (seed is superfluous)
-  - Contour lines on the surface could be more prominent for better visibility
-  - Could utilize Plotly hover tooltips more effectively to show exact values
-  image_description: The plot displays a 3D contour surface visualization with a blue-to-yellow
-    Viridis colormap. The surface spans X and Y coordinates from -3 to 3, with height
-    (z) values ranging from approximately -0.5 to 1.5. A prominent peak reaches ~1.5
-    at coordinates around (1,1) shown in bright yellow, a secondary smaller peak exists
-    near (-1,-1) in teal, and a valley (depression) appears near (-1,1) in dark purple/blue.
-    White-highlighted contour lines are drawn on the surface itself, and contour projections
-    are visible on the base (XY) plane at z≈-0.5. The title "contour-3d · plotly ·
-    pyplots.ai" appears centered at the top in blue. Axis labels read "X Coordinate",
-    "Y Coordinate", and "Height (z)". A vertical colorbar on the right indicates the
-    height scale with "Height (z)" label. The 3D scene has light gray background panels
-    with subtle grid lines. The camera angle provides a good view of the surface topology
-    from a 45-degree elevated perspective.
+  - Design excellence could be elevated with more sophisticated color harmony or intentional
+    visual hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and readable
+      Chrome: Title "contour-3d · plotly · anyplot.ai" (28px dark text), axis labels "X Coordinate", "Y Coordinate", "Height (z)" (22px), tick labels (18px) - all clearly readable
+      Data: 3D surface with contour lines and base projection, viridis colormap (purple to yellow), shows two peaks and a valley with smooth gradients, colorbar titled "Height (z)"
+      Legibility verdict: PASS - All text perfectly readable, surface geometry clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and readable
+      Chrome: Title and labels rendered in light text with perfect contrast against dark background, subtle gray grid lines visible but not intrusive
+      Data: Identical viridis colors to light render, surface structure equally clear, contour projection visible
+      Legibility verdict: PASS - No dark-on-dark failures, all text highly readable, no contrast issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 18pt, tick labels at 14pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, axis labels well-positioned
+        comment: 'All fonts explicitly set: Title 28px, labels 22px, ticks 18px, all
+          perfectly readable'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Surface and contours clearly visible, contour lines could be slightly
-          more prominent
+        comment: 3D surface, contours, colorbar optimally sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe with good perceptual uniformity
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight imbalance with colorbar placement creating
-          extra whitespace on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with unit indication: X Coordinate, Y Coordinate,
-          Height (z)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Viridis colormap perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-balanced margins with appropriate asymmetry for colorbar
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at 0.1 alpha, colorbar well-placed but could have slightly
-          better integration
+        comment: Descriptive labels with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct, backgrounds #FAF8F1/#1A1A17, theme chrome properly
+          adapted'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful colorbar design and elegant contour projection, follows
+          standard patterns
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Excellent refinement with subtle grid and generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data displays features but lacks explicit visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 3D contour plot with surface and contour lines
+        comment: Correct 3D contour plot with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, Z correctly mapped to grid and height values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has contour lines on surface, base plane projection, colorbar, rotation-enabled
-          HTML
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: surface, contour lines, projection, colorbar'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/Z correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly shows height values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exactly contour-3d · plotly · pyplots.ai
+        comment: Title format correct, colorbar labeled
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows peaks and valley, but could demonstrate more diverse contour
-          interval spacing
+        comment: Shows peaks, valleys, saddle points
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Mathematical surface (Gaussian peaks + saddle) - plausible for optimization
-          landscape
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values -0.5 to 1.5 are sensible for normalized function output
+        comment: Realistic mathematical/scientific scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value ranges and proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,53 +171,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility
+        comment: Deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant, Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Seed is superfluous as no random data is actually generated
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Surface with contour projection, HTML export, but doesn't
-          leverage advanced Plotly features like hover customization
+        comment: Proper go.Surface, scene config, camera control
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Leverages 3D surfaces, contour projections, interactive rotation,
+          custom colorbar
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - 3d-projection
-  - html-export
+  - colorbar
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
-  - grid-styling

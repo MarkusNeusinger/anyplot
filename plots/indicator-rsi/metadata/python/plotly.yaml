@@ -1,156 +1,181 @@
 library: plotly
+language: python
 specification_id: indicator-rsi
 created: '2026-01-07T20:20:14Z'
-updated: '2026-01-07T20:28:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795205388
+updated: '2026-05-16T16:44:38Z'
+generated_by: claude-haiku
+workflow_run: 25967108527
 issue: 3229
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/plotly/plot.html
-quality_score: 94
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent shaded zones implementation using fill="tonexty" pattern
-  - Proper use of add_hline and add_annotation for reference lines and labels
-  - Clean RSI calculation using pandas rolling windows
-  - Horizontal legend placement above plot maximizes chart area
-  - Interactive HTML output alongside PNG
-  - Data shows full range of RSI behavior (overbought, oversold, neutral)
+  - 'Perfect Specification Compliance: All required features implemented (thresholds,
+    zones, centerline, fixed axis, 14-period indicator)'
+  - 'Flawless Theme Implementation: Both renders equally readable. Data colors identical
+    across themes; chrome adapts perfectly. No legibility failures'
+  - 'Polished Code: Clean, deterministic, idiomatic Plotly. Every import is active.
+    KISS principle followed'
+  - 'Excellent Visual Quality: Font sizes explicit, no overlap, elements optimally
+    sized. All text clearly readable'
+  - 'Good Data Design: Realistic stock simulation showing bull run, bear decline,
+    and recovery'
   weaknesses:
-  - 'Grid/legend scoring: legend position is good but styling could be slightly more
-    refined'
-  image_description: 'The plot displays an RSI (Relative Strength Index) technical
-    indicator chart spanning January to May 2024. A blue line (labeled "RSI (14)")
-    shows the oscillating RSI values ranging from approximately 10 to 90. The overbought
-    zone (70-100) is shaded in light red/salmon color, while the oversold zone (0-30)
-    is shaded in light green. Three horizontal reference lines are clearly visible:
-    a red dashed line at 70 (overbought), a gray dotted line at 50 (neutral), and
-    a green dashed line at 30 (oversold). Right-side annotations label each threshold.
-    The Y-axis is fixed from 0 to 100 with tick marks every 10 units, labeled "RSI
-    Value". The X-axis shows dates labeled "Date". The title "indicator-rsi · plotly
-    · pyplots.ai" is centered at the top. A horizontal legend above the plot identifies
-    all three visual elements. The data shows multiple overbought and oversold excursions,
-    demonstrating the full range of RSI behavior.'
+  - 'Design Excellence Ceiling: Design lacks distinctive elements elevating to publication-ready
+    level. Zone shading and reference lines are standard Plotly patterns'
+  - 'Limited Data Storytelling: Visualization displays momentum clearly but doesn''t
+    emphasize specific narrative or create visual focal point highlighting instructive
+    patterns'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "indicator-rsi · plotly · anyplot.ai" clearly readable at 28px. X-axis label "Date" (22px) and Y-axis label "RSI Value" (22px) are readable. Tick labels (18px) in dark color (#4A4A44) are fully legible. All annotations ("Overbought (70)", "Neutral (50)", "Oversold (30)") at right side are clear.
+      Data: RSI line in brand green (#009E73) is prominent and visible. Overbought zone (70-100) shaded in light orange (rgba(213, 94, 0, 0.15)), oversold zone (0-30) in light green (rgba(0, 158, 115, 0.15)). Reference lines: 70 dashed orange (#D55E00), 50 dotted gray (#4A4A44), 30 dashed blue (#0072B2). Grid is subtle (10% opacity).
+      Legibility verdict: PASS - All text is readable against light background. No contrast issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, and tick labels are all light-colored and clearly visible against dark background. Annotations are readable. No "dark-on-dark" failures detected.
+      Data: RSI line remains identical in color (#009E73) to light render—data color consistency is perfect. Overbought zone becomes darker orange/brown shade (same RGBA colors still visible), oversold zone becomes darker teal. Reference lines: 70 orange (#D55E00) identical to light, 50 cyan/teal (theme-adapted, still visible), 30 blue (#0072B2) identical to light. All elements clearly distinguishable.
+      Legibility verdict: PASS - All text is readable against dark background. Theme-adaptive chrome works perfectly.
+
+    Both renders pass legibility checks. Data colors are identical between themes, with only chrome (background, text, lines) adapting appropriately.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and annotations all clearly readable
-          at full size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend, annotations, and labels well
-          separated
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
+          Perfectly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping elements. All text fully readable.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: RSI line has good width (3px), clearly visible; minor deduction for
-          line being slightly thin relative to canvas
+        comment: RSI line optimally sized (width=3). Zones and reference lines clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue line, red/green zones use distinct colors; the red/green shading
-          is subtle (0.2 alpha) so colorblind users can still read the chart
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space; plot fills majority of area with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: RSI Value and Date are descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green has excellent luminance; reference line colors are distinct
+          and CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions. Plot fills 60-70% of canvas with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with proper title format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'RSI line is #009E73 (Okabe-Ito pos 1). Reference lines use pos 2
+          & 3. Backgrounds and chrome correct in both themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional design with clean Okabe-Ito palette. Zone shading adds
+          visual interest. Standard Plotly configuration, lacks exceptional polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (10% opacity), generous whitespace, well-positioned legend.
+          Solid refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Grid is subtle, but legend styling could be slightly more refined
+        comment: Displays momentum clearly but lacks visual hierarchy or narrative
+          emphasis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct RSI momentum oscillator line chart
+        comment: Correct RSI technical indicator chart with 0-100 scale.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on X-axis, RSI values (0-100) on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: Y-axis 0-100, horizontal lines at 30/70,
-          centerline at 50, shaded zones, 14-period lookback noted'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: Y-axis 0-100, thresholds at 30 & 70, centerline at
+          50, RSI line visible, zones shaded.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full 0-100 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis dates, Y-axis RSI 0-100. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies RSI line and both zones
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct {spec-id} · {library} · pyplots.ai format
+        comment: Title follows format. Legend labels correct.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Data shows overbought excursions (above 70), oversold excursions
-          (below 30), and neutral periods; demonstrates bull runs and bear periods
+        comment: Shows bullish extremes, bearish extremes, neutral zone, recovery
+          phase. Excellent variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Stock price simulation is plausible but generic; could be more domain-specific
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: RSI values properly bounded 0-100; 120 trading days appropriate
+        comment: Simulated stock data with realistic volatility and momentum patterns.
+          Neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: RSI bounded 0-100. Price returns proportionate and realistic.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,44 +183,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure; no functions or classes
+        comment: Imports → Data → Plot → Save. No functions/classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.graph_objects used
+        comment: All imports active. No unused imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity, no fake functionality.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png correctly, but also saves HTML which is actually
-          a feature for Plotly
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Plotly features: fill=tonexty for shaded zones,
-          add_hline for reference lines, add_annotation for labels, write_html for
-          interactive output'
+        comment: 'Expert Plotly usage: go.Figure(), go.Scatter(), fill=''tonexty'',
+          add_hline(), add_annotation().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses fill='tonexty' for zones, add_hline()/add_annotation() combination,
+          interactive HTML export.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -205,8 +235,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - rolling-window
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []

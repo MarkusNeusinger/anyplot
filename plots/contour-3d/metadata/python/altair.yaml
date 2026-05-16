@@ -1,0 +1,233 @@
+library: altair
+language: python
+specification_id: contour-3d
+created: '2026-05-16T12:42:59Z'
+updated: '2026-05-16T12:57:45Z'
+generated_by: claude-haiku
+workflow_run: 25962155797
+issue: 3230
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - Perfect theme adaptation with both renders readable and correct color/chrome adaptation
+  - 'Correct palette choice: brownbluegreen diverging colormap for continuous elevation
+    data'
+  - Clean, simple code with proper imports and output files (PNG + HTML)
+  - Multi-modal Gaussian surface effectively demonstrates contour structure
+  - 'Theme token mastery: all chrome elements correctly use INK/INK_SOFT/PAGE_BG/ELEVATED_BG
+    tokens'
+  weaknesses:
+  - True 3D visualization not possible with Altair (2D-only library); uses 2D heatmap
+    adaptation instead
+  - Contours represented as point scatter with grey color rather than actual contour
+    lines/curves with visual variety
+  - All contour levels rendered identically without size variation, line weight, or
+    color coding emphasis
+  - Minimal use of distinctive Altair features (no selections, transforms, or advanced
+    interactions)
+  - Generic heatmap + overlay styling without custom visual polish or design refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "contour-3d · altair · anyplot.ai" in dark text (INK token), axis labels "X Coordinate" and "Y Coordinate", tick labels from -6 to 6 - all readable in dark text
+      Data: Brownbluegreen diverging colormap showing 3D surface elevation; grey contour point overlay at levels 10, 30, 50, 70, 90, 110, 130, 150; "Elevation Contour" legend on right; multi-modal Gaussian peaks visible
+      Legibility verdict: PASS - all text legible, colors distinct, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light text (INK token for dark), axis labels readable, tick labels readable, legend background uses elevated dark token (#242420)
+      Data: Brownbluegreen colors identical to light render (data colors theme-independent), grey contour points preserved, colormap and contours appear identical to light render
+      Legibility verdict: PASS - all text legible, no dark-on-dark failures, proper theme adaptation confirmed
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; font sizes appropriate (title 28px,
+          labels 22px, ticks 18px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; clean layout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap and contour overlay clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brownbluegreen is colorblind-safe diverging colormap
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with coordinates
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brownbluegreen diverging correct; backgrounds #FAF8F1/#1A1A17 correct;
+          theme tokens properly applied'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Default score; standard heatmap + contour overlay without distinctive
+          visual polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Default score; minimal customization beyond required theme tokens
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear surface hierarchy with contour reference; could enhance with
+          color-coded groups or emphasis
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Specification requires true 3D; Altair is 2D-only. 2D heatmap adaptation
+          is reasonable approximation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Contour levels, surface elevation, colorbar/legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z mapping correct; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title and legend labels correct format
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Multi-modal Gaussian demonstrates contours well; 50x50 grid adequate
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Gaussian mixture data is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible scale for surface structure demonstration
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, sys, numpy, pandas, altair; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct PNG/HTML output files
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Altair idioms used correctly; theme token structure standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Default score; no selections, transforms, or advanced interactions
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
