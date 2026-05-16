@@ -1,169 +1,182 @@
 library: bokeh
+language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:56:13Z'
-updated: '2025-12-31T11:02:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617491118
+updated: '2026-05-16T01:27:24Z'
+generated_by: claude-haiku
+workflow_run: 25948607298
 issue: 2997
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - columndatasource
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance with all required features (vertical lines, event labels,
-    distinct styling)
-  - Clean alternating height pattern for event labels prevents text overlap
-  - Good color scheme with Python blue and yellow that is colorblind-safe
-  - Realistic tech product scenario with meaningful event labels
-  - Proper use of Bokeh Span and Label models for annotations
-  - Dual output (PNG + HTML) showcases Bokeh capabilities
+  - Excellent theme adaptation with proper token-based color system for both light
+    and dark renders
+  - All text elements explicitly sized for high-resolution output with perfect legibility
+    in both themes
+  - Clean, idiomatic Bokeh code following recommended patterns (ColumnDataSource,
+    Span, Label)
+  - Event annotation approach effectively highlights key moments in the time series
+  - Proper data generation with seed and realistic active-user growth scenario
   weaknesses:
-  - Event labels at 16pt are slightly small compared to other text elements at 4800x2700
-    canvas size
-  - Legend is positioned far from the data in bottom-right corner
-  - HTML output could leverage Bokeh hover tools for enhanced interactivity
-  image_description: 'The plot displays a time series line chart showing "Active Users
-    (thousands)" over the course of 2024 (January 2024 to January 2025). The main
-    data line is blue (#306998) with a line width of 4, showing a clear upward trend
-    from ~100 to ~185 with realistic noise and subtle seasonal variation. Five vertical
-    dashed yellow (#FFD43B) lines mark important events at different dates: "Product
-    Launch" (Feb 15), "Feature Update" (May 1), "Server Upgrade" (Jul 20), "API v2
-    Release" (Sep 10), and "Mobile App Launch" (Nov 25). Event labels are positioned
-    at alternating heights (0.92 and 0.84) to avoid overlap. The title "line-annotated-events
-    · bokeh · pyplots.ai" appears at the top left. Axis labels show "Date" on x-axis
-    and "Active Users (thousands)" on y-axis. A legend showing "Daily Active Users"
-    is positioned in the bottom right with a semi-transparent background. The background
-    is a subtle off-white (#fafafa) with dashed grid lines at 0.3 alpha.'
+  - Event marker color (#FFD43B) does not match Okabe-Ito palette position 7 (#F0E442)
+  - Limited visual hierarchy and data storytelling - plot displays data but doesn't
+    guide viewer to key insights
+  - Design falls within well-configured defaults rather than distinctive aesthetic
+    choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels ("Date", "Active Users (thousands)"), tick labels all clearly visible in dark ink - excellent legibility
+      Data: Green line (#009E73, Okabe-Ito position 1) shows upward trend from ~100 to ~190 thousand users with seasonal variation. Five yellow dashed vertical lines mark events with labels positioned at varying heights to avoid overlap. Event labels: "Product Launch", "Feature Update", "Server Upgrade", "API v2 Release", "Mobile App Launch" - all readable
+      Legibility verdict: PASS - no readability issues, excellent contrast, all elements visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all clearly visible in light ink (#F0EFE8/#B8B7B0) against dark background - excellent legibility, no dark-on-dark failures
+      Data: Same green line (#009E73) identical to light render, confirming perfect color consistency. Same event markers and labels rendered in light colors with excellent contrast. No text legibility issues.
+      Legibility verdict: PASS - no dark-on-dark failures, all text readable, grid visible but subtle
+
+    Both renders pass theme readability checks completely. Data colors are identical between themes; only chrome adapts. All text elements maintain proper contrast and legibility in both rendering contexts.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title 28pt, axis labels 22pt, tick labels 18pt - all clearly readable,
-          event labels at 16pt are slightly small but still legible
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; alternating event label heights prevent collisions
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          all perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Event labels positioned at varying heights; all text fully readable
+          with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 4 is good; vertical event lines are clearly visible with
-          dashed style
+        comment: Line thickness and event marker sizing optimal for data density;
+          all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe; good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; legend position could be better (isolated
-          in corner with significant gap from data)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Active Users (thousands)" includes units; "Date" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette used; colorblind-safe with good contrast between
+          data and event markers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot utilizes 50-70% of canvas with balanced margins; legend positioned
+          naturally
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed), but legend is far from the main
-          data area
+        comment: Title format correct; axis labels descriptive with units ('Active
+          Users (thousands)')
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Primary data (#009E73) correct, but event yellow (#FFD43B) should
+          be #F0E442 (Okabe-Ito position 7). Theme chrome perfect in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured design with clean layout; professional but conventional
+          - not groundbreaking
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and legend styling present; could be more polished with
+          additional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Shows growth trend with events marked; limited interpretive emphasis
+          and visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: line plot with event annotations'
+        comment: Correct annotated line plot with vertical event markers
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis (datetime), values on y-axis (numeric)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has vertical lines (Span), event markers, text labels, distinct colors
-          for events vs data
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: line series, 5 event markers with labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes auto-scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (datetime) and Y-axis (numeric) correctly assigned; all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: '"Daily Active Users" correctly describes the line'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-annotated-events · bokeh · pyplots.ai"'
+        comment: Title format correct; legend label matches spec
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows upward trend, noise, seasonal variation, 5 distinct events
-          with varied timing; could show events correlating with data changes
+        comment: Complete time-series with trend, seasonal patterns, and distributed
+          events
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech product metrics scenario is realistic and neutral (daily active
-          users with product milestones)
+        comment: Realistic product platform scenario with plausible event labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: User counts in thousands (100-185k) are realistic; 365 data points
-          appropriate
+        comment: User values (100-200K) and time span (365 days) proportional and
+          sensible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → source → figure → styling → save'
+        comment: Simple linear structure with no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, bokeh components)
+        comment: All imports used; no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using strict=True in zip is good Python, but could avoid it for broader
-          compatibility
+        comment: Clean Pythonic code; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Bokeh-specific Span and Label models, ColumnDataSource, and
-          exports both PNG and HTML; could leverage hover tools or additional interactivity
-          in HTML output
+        comment: Expert use of figure(), ColumnDataSource, line(), Span, Label with
+          proper theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Good use of Bokeh-specific Span and Label; Selenium integration appropriate;
+          strong overall but could leverage more distinctive patterns
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
+  - alpha-blending
