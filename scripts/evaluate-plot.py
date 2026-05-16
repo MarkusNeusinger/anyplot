@@ -137,9 +137,12 @@ def get_plot_paths(spec_id: str, library: str, language: str = "python") -> dict
     """Get all relevant paths for a plot implementation."""
     plots_dir = PROJECT_ROOT / "plots" / spec_id
     impl_dir = plots_dir / "implementations" / language
+    # File extension follows the implementation language. ggplot2 is the only
+    # non-Python entry today; extend this when more languages join.
+    ext = ".R" if language == "r" else ".py"
     return {
         "spec": plots_dir / "specification.md",
-        "impl": impl_dir / f"{library}.py",
+        "impl": impl_dir / f"{library}{ext}",
         "metadata": plots_dir / "metadata" / language / f"{library}.yaml",
         "image": impl_dir / "plot.png",
         "image_light": impl_dir / "plot-light.png",
@@ -584,6 +587,15 @@ def main():
         print(f"\n{'='*60}")
         print(f"Evaluating: {args.spec_id} / {library}")
         print("="*60)
+
+        # Local evaluator currently only supports Python implementations
+        # (AR-01 parses Python AST, AR-02 runs `python script.py`). For R
+        # implementations (ggplot2), use the CI workflow instead:
+        #   gh workflow run impl-generate.yml -f specification_id=<spec> -f library=ggplot2
+        if library == "ggplot2":
+            print("⚠ Skipping ggplot2: this local evaluator is Python-only.")
+            print("  Use the CI workflow for R: gh workflow run impl-generate.yml -f library=ggplot2 -f specification_id=" + args.spec_id)
+            continue
 
         paths = get_plot_paths(args.spec_id, library)
 

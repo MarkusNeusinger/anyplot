@@ -6,7 +6,9 @@ This document contains comprehensive project documentation for AI agents working
 
 **anyplot** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
 
-**Supported Libraries** (9 total):
+**Supported Libraries** (10 total):
+
+*Python (9):*
 - **matplotlib** - The classic standard, maximum flexibility
 - **seaborn** - Statistical visualizations, beautiful defaults
 - **plotly** - Interactive web plots, dashboards, 3D
@@ -16,6 +18,9 @@ This document contains comprehensive project documentation for AI agents working
 - **pygal** - Minimalistic SVG charts
 - **highcharts** - Interactive web charts, stock charts (requires license for commercial use)
 - **lets-plot** - ggplot2 grammar of graphics by JetBrains, interactive
+
+*R (1):*
+- **ggplot2** - The de facto standard for R; grammar of graphics, layered chart composition
 
 **Core Principle**: Community proposes plot ideas via GitHub Issues -> AI generates code -> AI quality review -> Deployed.
 
@@ -139,7 +144,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 
 **Key benefits of per-library metadata:**
 - No merge conflicts (each library updates only its own file)
-- Partial implementations OK (6/9 done = fine)
+- Partial implementations OK (e.g. 6/10 done = fine)
 - Each library runs independently
 
 ### Spec ID Naming Convention
@@ -169,7 +174,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
   - `implementations/python/{library}.py`: Library-specific implementations
 - **`prompts/`**: AI agent prompts for code generation, quality evaluation, and tagging
   - `templates/`: Spec and metadata templates
-  - `library/`: Library-specific generation rules (9 files)
+  - `library/`: Library-specific generation rules (10 files)
 - **`core/`**: Shared business logic (database, repositories, config, utils, images)
   - **`core/database/types.py`**: Custom SQLAlchemy types (PostgreSQL + SQLite compatibility)
   - **`core/database/repositories.py`**: Data access layer
@@ -440,7 +445,7 @@ The `prompts/` directory contains AI agent prompts for code generation, quality 
 |------|---------|
 | `plot-generator.md` | Base rules for all plot implementations |
 | `default-style-guide.md` | Default visual style rules (colors, typography, layout) |
-| `library/*.md` | Library-specific rules (9 files) |
+| `library/*.md` | Library-specific rules (10 files) |
 | `quality-criteria.md` | Definition of code/visual quality |
 | `quality-evaluator.md` | AI quality evaluation prompt |
 | `spec-id-generator.md` | Assigns unique spec IDs |
@@ -685,7 +690,7 @@ uv run python -m automation.scripts.label_manager list
 ### Implementation Labels (on specification issue)
 
 - **`generate:{library}`** - Trigger single library generation (e.g., `generate:matplotlib`)
-- **`generate:all`** - Trigger all 9 libraries via bulk-generate
+- **`generate:all`** - Trigger all 10 libraries via bulk-generate
 - **`impl:{library}:pending`** - Generation in progress
 - **`impl:{library}:done`** - Implementation merged to main
 - **`impl:{library}:failed`** - Max retries exhausted (3 attempts)

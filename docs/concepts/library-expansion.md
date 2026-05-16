@@ -14,7 +14,8 @@ priority order.
 
 ## 1. Current state
 
-anyplot currently ships **9 Python libraries** and zero non-Python libraries.
+anyplot currently ships **9 Python libraries** and **1 R library** (ggplot2 —
+the first non-Python entry; landed as Phase 3 of the rollout below).
 
 | # | Library    | Native     | In anyplot as | Most-used variant | Notes                                       |
 |---|------------|------------|---------------|-------------------|---------------------------------------------|
@@ -296,14 +297,14 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 
 ## 8. Suggested phased rollout
 
-| Phase | Adds                                | New languages | Cumulative library count |
-|-------|-------------------------------------|---------------|--------------------------|
-| 0 (today) | —                               | Python        |  9                       |
-| 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 12                       |
-| 2     | Highcharts (replaces Python entry)  | —             | 12                       |
-| 3     | ggplot2                             | + R           | 13                       |
-| 4     | Recharts, Observable Plot           | —             | 15                       |
-| 5     | Makie.jl, ApexCharts                | + Julia       | 17                       |
+| Phase | Adds                                | New languages | Cumulative library count | Status   |
+|-------|-------------------------------------|---------------|--------------------------|----------|
+| 0     | —                                   | Python        |  9                       | shipped  |
+| 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 12                       | planned  |
+| 2     | Highcharts (replaces Python entry)  | —             | 12                       | planned  |
+| 3     | **ggplot2**                         | **+ R**       | **10**                   | **shipped** (Phase 3 was implemented before Phases 1+2; net total is 10 not 13 until JS lands) |
+| 4     | Recharts, Observable Plot           | —             | TBD                      | planned  |
+| 5     | Makie.jl, ApexCharts                | + Julia       | TBD                      | planned  |
 
 > **Why Phase 2 ≠ Tier 2 #4 from §7.** §7 ranks ggplot2 (Tier 2 #4) above
 > Highcharts (Tier 2 #5) by reach; §8 still ships Highcharts first because

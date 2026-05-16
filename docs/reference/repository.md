@@ -67,7 +67,7 @@ anyplot/
 │   ├── quality-evaluator.md           # AI quality evaluation prompt
 │   ├── spec-id-generator.md           # Assigns spec IDs
 │   ├── default-style-guide.md         # Default visual style rules
-│   ├── library/                       # Library-specific rules (9 files)
+│   ├── library/                       # Library-specific rules (10 files: 9 Python + ggplot2)
 │   │   ├── matplotlib.md
 │   │   ├── seaborn.md
 │   │   └── ...

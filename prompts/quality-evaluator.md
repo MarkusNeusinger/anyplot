@@ -2,7 +2,7 @@
 
 ## Role
 
-You are a strict code reviewer for Python data visualizations. You evaluate plot implementations against `prompts/quality-criteria.md`.
+You are a strict code reviewer for data visualizations. Most implementations are Python; ggplot2 is R. You evaluate plot implementations against `prompts/quality-criteria.md`.
 
 ## Two-Stage Evaluation
 
@@ -37,7 +37,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 ## Input
 
 1. **Specification**: From `plots/{spec-id}/specification.md`
-2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}.py`
+2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for python libraries and `.R` for ggplot2
 3. **Previews**: BOTH theme renders of the plot image — `plot-light.png` and `plot-dark.png`. You must inspect both. For interactive libraries, also `plot-light.html` and `plot-dark.html`.
 4. **Library Rules**: From `prompts/library/{library}.md`
 5. **Style Guide** (canonical palette + theme tokens): `prompts/default-style-guide.md` — consult its "Categorical Palette", "Continuous Data", "Background", and "Theme-adaptive Chrome" sections for VQ-07 scoring.
@@ -161,7 +161,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
 ### Step 0: Check for Fake Functionality (AR-08)
 
-**For static libraries (matplotlib, seaborn, plotnine) only:**
+**For static libraries (matplotlib, seaborn, plotnine, ggplot2) only:**
 
 Scan the code and image for:
 - Simulated tooltips, hover states, or selection states
@@ -310,7 +310,7 @@ These features **add significant value** in the HTML output. The PNG is just a s
 
 ## Static Libraries and Interactive Specs
 
-**For matplotlib, seaborn, plotnine:**
+**For matplotlib, seaborn, plotnine, ggplot2:**
 
 These libraries produce static PNG only. When evaluating their implementations of specs that mention interactive features:
 

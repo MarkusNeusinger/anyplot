@@ -355,7 +355,7 @@ export function SpecPage() {
           '@type': 'SoftwareSourceCode',
           name: `${specData.title} (${selectedLibrary})`,
           description: specData.description,
-          programmingLanguage: urlLanguage === 'python' ? 'Python' : urlLanguage,
+          programmingLanguage: { python: 'Python', r: 'R' }[urlLanguage ?? ''] ?? urlLanguage,
           codeSampleType: 'code snippet',
           codeRepository: 'https://github.com/MarkusNeusinger/anyplot',
           url: canonical,

@@ -17,7 +17,7 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 - Note all required features
 
 ### 2. Read the Implementation
-`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py`
+`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` â€” `${EXT}` is `.py` for python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot) and `.R` for ggplot2
 
 ### 3. Read Library-Specific Rules
 `prompts/library/${LIBRARY}.md`
@@ -67,7 +67,7 @@ A plot that's perfect in one theme but unreadable in the other still **fails** â
 
 ### 6. Check for Auto-Reject (AR-08)
 
-**For static libraries (matplotlib, seaborn, plotnine) only:**
+**For static libraries (matplotlib, seaborn, plotnine, ggplot2) only:**
 
 Before scoring, check if the implementation fakes interactive features:
 - Simulated tooltips (annotation boxes styled as hover tooltips)
