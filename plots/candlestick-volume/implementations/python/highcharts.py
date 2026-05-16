@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-01
+Library: highcharts | Python 3.13
+Quality: 90 | Updated: 2026-05-16
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,6 +16,14 @@ import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme-adaptive tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data - Generate 60 trading days of OHLC data
 np.random.seed(42)
@@ -28,10 +37,10 @@ while len(dates) < 60:
         dates.append(current_date)
     current_date += timedelta(days=1)
 
-# Generate realistic stock price movements
+# Generate realistic stock price movements with varied volatility
 n_days = 60
 initial_price = 150.0
-returns = np.random.normal(0.001, 0.02, n_days)  # Daily returns with slight upward bias
+returns = np.random.normal(0.0005, 0.018, n_days)  # Reduced bias, smaller volatility
 close_prices = initial_price * np.cumprod(1 + returns)
 
 # Generate OHLC from close prices
@@ -44,17 +53,17 @@ open_prices[0] = initial_price
 for i in range(n_days):
     if i > 0:
         # Open is close of previous day with small gap
-        gap = np.random.normal(0, close_prices[i - 1] * 0.005)
+        gap = np.random.normal(0, close_prices[i - 1] * 0.004)
         open_prices[i] = close_prices[i - 1] + gap
 
     # High and low based on volatility
-    volatility = abs(close_prices[i] - open_prices[i]) + np.random.uniform(0.5, 2.0)
+    volatility = abs(close_prices[i] - open_prices[i]) + np.random.uniform(0.3, 1.5)
     if close_prices[i] >= open_prices[i]:  # Bullish candle
-        high_prices[i] = max(open_prices[i], close_prices[i]) + np.random.uniform(0.3, volatility)
-        low_prices[i] = min(open_prices[i], close_prices[i]) - np.random.uniform(0.2, volatility * 0.7)
+        high_prices[i] = max(open_prices[i], close_prices[i]) + np.random.uniform(0.2, volatility)
+        low_prices[i] = min(open_prices[i], close_prices[i]) - np.random.uniform(0.1, volatility * 0.6)
     else:  # Bearish candle
-        high_prices[i] = max(open_prices[i], close_prices[i]) + np.random.uniform(0.2, volatility * 0.7)
-        low_prices[i] = min(open_prices[i], close_prices[i]) - np.random.uniform(0.3, volatility)
+        high_prices[i] = max(open_prices[i], close_prices[i]) + np.random.uniform(0.1, volatility * 0.6)
+        low_prices[i] = min(open_prices[i], close_prices[i]) - np.random.uniform(0.2, volatility)
 
     # Ensure high >= max(open, close) and low <= min(open, close)
     high_prices[i] = max(high_prices[i], open_prices[i], close_prices[i])
@@ -62,8 +71,8 @@ for i in range(n_days):
 
     # Volume: higher on days with larger price moves
     base_volume = 5_000_000
-    move_factor = 1 + abs(close_prices[i] - open_prices[i]) / open_prices[i] * 20
-    volumes[i] = int(base_volume * move_factor * np.random.uniform(0.6, 1.4))
+    move_factor = 1 + abs(close_prices[i] - open_prices[i]) / open_prices[i] * 15
+    volumes[i] = int(base_volume * move_factor * np.random.uniform(0.7, 1.3))
 
 # Convert dates to JavaScript timestamps (milliseconds since epoch)
 timestamps = [int(d.timestamp() * 1000) for d in dates]
@@ -71,6 +80,10 @@ timestamps = [int(d.timestamp() * 1000) for d in dates]
 # Prepare data for Highcharts
 ohlc_data = []
 volume_data = []
+
+# Colorblind-friendly colors: blue for up, orange for down
+UP_COLOR = "#0072B2"  # Blue (Okabe-Ito position 3)
+DOWN_COLOR = "#E69F00"  # Orange (Okabe-Ito position 5)
 
 for i in range(n_days):
     ohlc_data.append(
@@ -83,7 +96,7 @@ for i in range(n_days):
         ]
     )
     # Volume color matches candle direction
-    color = "#306998" if close_prices[i] >= open_prices[i] else "#E74C3C"
+    color = UP_COLOR if close_prices[i] >= open_prices[i] else DOWN_COLOR
     volume_data.append({"x": timestamps[i], "y": int(volumes[i]), "color": color})
 
 # Convert to JSON for JavaScript
@@ -91,142 +104,169 @@ ohlc_json = json.dumps(ohlc_data)
 volume_json = json.dumps(volume_data)
 
 # Chart configuration using Highstock (for synchronized charts)
-chart_js = """
-Highcharts.stockChart('container', {
-    chart: {
+chart_js = f"""
+Highcharts.stockChart('container', {{
+    chart: {{
         width: 4800,
         height: 2700,
-        backgroundColor: '#ffffff',
-        spacingBottom: 100,
-        style: {
-            fontFamily: 'Arial, sans-serif'
-        }
-    },
+        backgroundColor: '{PAGE_BG}',
+        spacingBottom: 120,
+        style: {{
+            fontFamily: 'Arial, sans-serif',
+            color: '{INK}'
+        }}
+    }},
 
-    title: {
-        text: 'candlestick-volume \\u00b7 highcharts \\u00b7 pyplots.ai',
-        style: {
-            fontSize: '48px',
-            fontWeight: 'bold'
-        }
-    },
+    title: {{
+        text: 'candlestick-volume · highcharts · anyplot.ai',
+        style: {{
+            fontSize: '28px',
+            fontWeight: 'bold',
+            color: '{INK}'
+        }}
+    }},
 
-    rangeSelector: {
+    rangeSelector: {{
         enabled: false
-    },
+    }},
 
-    navigator: {
+    navigator: {{
         enabled: false
-    },
+    }},
 
-    scrollbar: {
+    scrollbar: {{
         enabled: false
-    },
+    }},
 
-    credits: {
+    credits: {{
         enabled: false
-    },
+    }},
 
-    yAxis: [{
-        labels: {
+    yAxis: [{{
+        labels: {{
             align: 'right',
             x: -10,
-            style: {
-                fontSize: '24px'
-            },
-            formatter: function() {
+            style: {{
+                fontSize: '18px',
+                color: '{INK_SOFT}'
+            }},
+            formatter: function() {{
                 return '$' + this.value.toFixed(0);
-            }
-        },
-        title: {
+            }}
+        }},
+        title: {{
             text: 'Price (USD)',
-            style: {
-                fontSize: '28px'
-            }
-        },
+            style: {{
+                fontSize: '22px',
+                color: '{INK}'
+            }}
+        }},
         height: '70%',
         lineWidth: 2,
-        resize: {
+        lineColor: '{INK_SOFT}',
+        resize: {{
             enabled: false
-        },
+        }},
         gridLineWidth: 1,
-        gridLineColor: '#E0E0E0'
-    }, {
-        labels: {
+        gridLineColor: '{GRID}'
+    }}, {{
+        labels: {{
             align: 'right',
             x: -10,
-            style: {
-                fontSize: '24px'
-            },
-            formatter: function() {
+            style: {{
+                fontSize: '18px',
+                color: '{INK_SOFT}'
+            }},
+            formatter: function() {{
                 return (this.value / 1000000).toFixed(1) + 'M';
-            }
-        },
-        title: {
+            }}
+        }},
+        title: {{
             text: 'Volume',
-            style: {
-                fontSize: '28px'
-            }
-        },
+            style: {{
+                fontSize: '22px',
+                color: '{INK}'
+            }}
+        }},
         top: '72%',
         height: '22%',
         offset: 0,
         lineWidth: 2,
+        lineColor: '{INK_SOFT}',
         gridLineWidth: 1,
-        gridLineColor: '#E0E0E0'
-    }],
+        gridLineColor: '{GRID}'
+    }}],
 
-    xAxis: {
+    xAxis: {{
         type: 'datetime',
-        labels: {
-            style: {
-                fontSize: '28px'
-            },
-            format: '{value:%b %d}',
-            y: 40
-        },
-        crosshair: {
-            width: 2,
-            color: '#888888',
-            snap: false
-        },
+        labels: {{
+            style: {{
+                fontSize: '18px',
+                color: '{INK_SOFT}'
+            }},
+            format: '{{value:%b %d}}',
+            y: 50
+        }},
+        lineWidth: 2,
+        lineColor: '{INK_SOFT}',
+        tickColor: '{INK_SOFT}',
         gridLineWidth: 1,
-        gridLineColor: '#E0E0E0',
-        lineWidth: 2
-    },
+        gridLineColor: '{GRID}',
+        crosshair: {{
+            width: 2,
+            color: '{INK_SOFT}',
+            snap: false
+        }}
+    }},
 
-    tooltip: {
+    tooltip: {{
         split: true,
-        style: {
-            fontSize: '20px'
-        }
-    },
+        style: {{
+            fontSize: '18px',
+            color: '{INK}'
+        }}
+    }},
 
-    plotOptions: {
-        candlestick: {
-            color: '#E74C3C',
-            upColor: '#306998',
-            lineColor: '#E74C3C',
-            upLineColor: '#306998',
+    legend: {{
+        enabled: true,
+        align: 'right',
+        verticalAlign: 'top',
+        layout: 'vertical',
+        x: -100,
+        y: 80,
+        itemStyle: {{
+            color: '{INK}'
+        }},
+        backgroundColor: '{ELEVATED_BG}',
+        borderColor: '{INK_SOFT}',
+        borderWidth: 1
+    }},
+
+    plotOptions: {{
+        candlestick: {{
+            color: '{DOWN_COLOR}',
+            upColor: '{UP_COLOR}',
+            lineColor: '{DOWN_COLOR}',
+            upLineColor: '{UP_COLOR}',
             lineWidth: 2
-        },
-        column: {
+        }},
+        column: {{
             borderWidth: 0
-        }
-    },
+        }}
+    }},
 
-    series: [{
+    series: [{{
         type: 'candlestick',
         name: 'Stock Price',
         data: OHLC_DATA_PLACEHOLDER,
         yAxis: 0
-    }, {
+    }}, {{
         type: 'column',
         name: 'Volume',
         data: VOLUME_DATA_PLACEHOLDER,
         yAxis: 1
-    }]
-});
+    }}]
+}});
 """
 
 # Replace data placeholders
@@ -235,8 +275,22 @@ chart_js = chart_js.replace("VOLUME_DATA_PLACEHOLDER", volume_json)
 
 # Download Highcharts and Highstock JS
 highcharts_url = "https://code.highcharts.com/stock/highstock.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+req = urllib.request.Request(highcharts_url)
+req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+try:
+    with urllib.request.urlopen(req, timeout=30) as response:
+        highcharts_js = response.read().decode("utf-8")
+except urllib.error.HTTPError as e:
+    # If we get a 403, try alternative CDN
+    if e.code == 403:
+        print("CDN blocked (403), trying jsDelivr CDN...")
+        alt_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highstock.js"
+        req = urllib.request.Request(alt_url)
+        req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+        with urllib.request.urlopen(req, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+    else:
+        raise
 
 # Generate HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
@@ -245,7 +299,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
     {chart_js}
@@ -258,8 +312,8 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
+# Also save HTML for interactive version with theme suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Take screenshot using Selenium
@@ -273,7 +327,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(8)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Clean up temp file
