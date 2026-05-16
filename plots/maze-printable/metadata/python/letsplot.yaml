@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: maze-printable
 created: '2026-01-07T20:25:50Z'
-updated: '2026-05-16T15:04:03Z'
+updated: '2026-05-16T15:10:48Z'
 generated_by: claude-haiku
 workflow_run: 25964947995
 issue: 3232
@@ -12,117 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-dark.html
-quality_score: 72
+quality_score: 73
 review:
   strengths:
-  - Well-implemented DFS maze generation with proper seeding for reproducibility
-  - Clean theme-adaptive implementation with correct color tokens
-  - 'Excellent visual clarity: black walls provide high contrast in both light and
-    dark themes'
-  - Appropriate use of letsplot's ggplot + geom_rect + theme_void pattern
-  - Clear start/goal markers positioned correctly
-  - Proper code structure with linear flow (no unnecessary abstractions)
-  - Correct output format (PNG and HTML for both themes)
+  - Algorithmically correct DFS maze generation with guaranteed single solution
+  - Clean, print-optimized design for light mode with high wall-to-passage contrast
+  - Proper entrance/exit openings and clear start/goal marker positioning
+  - Good code structure using KISS principles with deterministic random seeding
+  - Light render perfectly suitable for printing and puzzle solving
   weaknesses:
-  - 'CRITICAL: Generated images show ''seaborn'' in title instead of ''letsplot''
-    - title must be corrected and images regenerated'
-  - Title metadata discrepancy between code (says 'letsplot') and images (say 'seaborn')
-    suggests images not generated from current code
-  - 'Limited visual sophistication: default black/white scheme lacks design polish'
-  - No distinctive letsplot features leveraged - uses basic ggplot patterns
+  - 'Maze walls hardcoded to black, not theme-adaptive — creates dark-on-dark contrast
+    failure in dark mode, making maze structure invisible against #1A1A17 background'
+  - Marker label size (10pt) is small for visibility at full 3600×3600 resolution
+  - No visual refinement or design sophistication beyond functional defaults
+  - Theme adaptation incomplete — INK token not used for maze wall colors
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified ✓
-      Title: Shows "maze-printable · seaborn · anyplot.ai" - CRITICAL ERROR: says "seaborn" instead of "letsplot"
-      Chrome: Title readable, margins appropriate, clean layout
-      Data: Black maze walls on light background provide excellent contrast and clarity
-      Markers: S (start) and G (goal) labels clearly visible
-      Legibility verdict: PASS for content, but FAIL for title correctness
+      Background: Warm off-white (#FAF8F1) — correct, print-friendly
+      Chrome: Title "maze-printable · letsplot · anyplot.ai" is clearly visible at 24pt, centered. Start "S" and Goal "G" labels at top-left and bottom-right are visible in dark bold text.
+      Data: Black maze walls on white background with high contrast. 25×25 cell maze with clear passages and entrance/exit openings. Structure is crisp, readable, and print-ready.
+      Legibility verdict: PASS — all elements clearly readable and optimized for printing
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified ✓
-      Title: Shows "maze-printable · seaborn · anyplot.ai" - CRITICAL ERROR: says "seaborn" instead of "letsplot"
-      Chrome: Title readable in light text, good contrast on dark background
-      Data: Black maze walls on dark background are visible with adequate contrast (black #000000 on #1A1A17 has sufficient luminance difference)
-      Markers: S and G labels clearly visible
-      Both renders: Data colors are identical between light and dark (maze is consistently black)
-      Legibility verdict: PASS for content, but FAIL for title correctness
-
-    BLOCKER: Both renders show "seaborn" in the title instead of "letsplot". Code on line 97 correctly specifies "letsplot", but generated images don't reflect this. Images must be regenerated.
+      Background: Warm near-black (#1A1A17) — correct theme color
+      Chrome: Title is clearly visible in light text. Start "S" and Goal "G" labels are visible in light text against dark background.
+      Data: Black maze walls on #1A1A17 background have extremely low contrast, making the maze structure barely distinguishable. Walls appear as near-black on near-black, creating a dark-on-dark failure. The viewer must carefully examine to discern paths.
+      Data color consistency: Title and labels adapt properly. However, maze walls are NOT adapted to theme and fail the contrast requirement.
+      Legibility verdict: FAIL — dark-on-dark walls on dark background compromise maze visibility. The visualization is functionally unreadable for its intended purpose in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 6
         max: 8
-        passed: false
-        comment: Text is readable but title shows wrong library name (seaborn vs letsplot)
+        passed: true
+        comment: Font sizes explicit (24pt title, 10pt labels), readable in light;
+          labels could be larger
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements properly spaced, no overlaps
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Maze walls clearly visible in light render, adequate contrast in
-          dark render despite black-on-dark
+        passed: false
+        comment: 'Maze walls barely visible in dark mode due to contrast with #1A1A17
+          background'
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: High contrast black/white design is colorblind-safe
+        passed: false
+        comment: Good contrast in light mode; poor contrast in dark mode (black on
+          dark background)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills appropriate portion of canvas with balanced margins
+        comment: Excellent canvas utilization with proper margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title format correct but shows wrong library name
+        passed: true
+        comment: Title is descriptive and well-formatted
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Backgrounds correct, but title discrepancy affects compliance score
+        comment: 'Dark-on-dark failure: black walls on #1A1A17 background lack sufficient
+          contrast for readability'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Functional black-and-white design is appropriate for puzzle but lacks
-          visual polish
+        comment: Clean black-and-white aesthetic appropriate for puzzles, but generic
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Uses theme_void() effectively, good margins, minimal chrome
+        passed: false
+        comment: Library defaults with minimal customization
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual narrative of maze puzzle with marked start/goal, but
-          basic execution
+        passed: false
+        comment: Functional data display without visual hierarchy or emphasis
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,25 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: printable maze puzzle'
+        comment: Correct maze puzzle visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: maze structure, start/goal markers'
+        comment: 'All features present: maze generation, entrance, exit, start/goal
+          labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates correct, all elements properly positioned
+        comment: Spatial layout correct, all maze cells properly mapped
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Title shows 'seaborn' instead of 'letsplot' - CRITICAL ERROR
+        passed: true
+        comment: Title format correct with clear markers
     data_quality:
       score: 15
       max: 15
@@ -158,19 +151,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Maze shows all features: passages, walls, variety of configurations'
+        comment: Demonstrates full maze complexity with entrance/exit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Actual maze generated algorithmically, real-world use case
+        comment: Real, practical use case for printable puzzles
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25x25 grid is reasonable complexity
+        comment: Appropriate 25×25 grid size
     code_quality:
       score: 10
       max: 10
@@ -180,33 +173,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → generation → plotting → save'
+        comment: Clean imports→data→plot→save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible maze
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports present
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: DFS implementation is clear, no over-engineering
+        comment: Clean, appropriate complexity with proper DFS algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png and .html'
+        comment: Correct output format (plot-{THEME}.png and .html)
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -214,23 +207,20 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct ggplot pattern with geom_rect, but relies on standard approaches
+        comment: Correct letsplot usage (ggplot, geom_rect, theme_void)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses coord_fixed() and theme_void(), but no distinctive letsplot
-          features leveraged
-  verdict: REJECTED
+        comment: Generic visualization, could be implemented in any library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - manual-ticks
+  techniques: []
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
