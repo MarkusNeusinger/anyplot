@@ -1,162 +1,184 @@
 library: altair
+language: python
 specification_id: scatter-brush-zoom
 created: '2026-01-08T16:09:18Z'
-updated: '2026-01-08T16:15:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823152413
+updated: '2026-05-16T23:41:18Z'
+generated_by: claude-haiku
+workflow_run: 25975758973
 issue: 3295
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/altair/plot-dark.html
 quality_score: 94
 review:
   strengths:
-  - Excellent implementation of linked views showing selection counts in a bar chart
-  - Clean use of Altair's declarative selection and conditional encoding
-  - Helpful subtitle explaining interaction controls
-  - Good use of tooltips showing detailed point information
-  - Clever legend_layer technique to maintain consistent legend despite selection
-    filtering
-  weaknesses:
-  - Marker size (200) is slightly large for 200 points, could be reduced to ~100-150
-    for cleaner appearance
-  - Bar chart x-axis labels appear rotated/crowded - consider increasing space or
-    adjusting label angle
-  image_description: 'The plot displays an interactive scatter plot with 200 data
-    points organized into 4 visible clusters (Sensor A, B, C, D) using distinct colors:
-    blue (#306998) for Sensor A in the top-right region, yellow (#FFD43B) for Sensor
-    B in the bottom-left region, green (#4CAF50) for Sensor C in the center, and pink/magenta
-    (#E91E63) for Sensor D scattered across the plot. The X-axis shows "Efficiency
-    Score (%)" ranging 0-100, and the Y-axis shows "Reliability Index" ranging 0-100.
-    The title "scatter-brush-zoom · altair · pyplots.ai" appears at the top with a
-    helpful subtitle "Click and drag to select a region | Scroll to zoom | Shift+drag
-    to pan". Below the main scatter plot is a linked bar chart titled "Selected Points
-    by Category" showing the count of points per category (50, 50, 60, 40 respectively).
-    The current view shows all points selected (full colors), demonstrating the selection
-    state propagating to the linked bar chart. Grid lines are subtle. The layout is
-    clean with good proportions between the scatter plot and the linked bar chart.'
+  - 'Perfect palette compliance: Okabe-Ito colors identical across light and dark
+    renders with flawless theme-adaptive chrome'
+  - Expertly implemented brush selection with alt.selection_interval() and conditional
+    encoding creating responsive visualization
+  - Dual visualization (scatter + bar chart) demonstrates strong design intent beyond
+    basic scatter plot, telling a coherent story about selection
+  - 'All text legible in both themes: explicit font sizes (Title 28px, Labels 20px,
+    Ticks 16px) properly scale to large canvas'
+  - Authentic interactive features (brush, zoom, pan) leveraging altair's distinctive
+    capabilities rather than static alternatives
+  - Realistic sensor performance data with proper clustering demonstrating all aspects
+    of exploratory scatter plot analysis
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme-light surface
+      Chrome: Title and subtitle clearly visible in dark text (INK tokens); axis labels "Efficiency Score (%)" and "Reliability Index" with proper hierarchy; tick labels at 16px font size; all fully readable
+      Data: 200 points in 4 categories - Sensor A (green #009E73 - brand), Sensor B (orange #D55E00), Sensor C (blue #0072B2), Sensor D (purple #CC79A7); unselected points muted gray (INK_SOFT) at 0.3 opacity; selected points show full color with 0.85 opacity and stroke; bar chart below with identical color scheme and responsive counts
+      Legibility verdict: PASS - all elements readable with excellent contrast; marker strokes add definition to overlapping points; color coding is clear and distinct
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme-dark surface
+      Chrome: Title and subtitle visible in light text (F0EFE8); axis labels and tick labels in appropriate light gray (B8B7B0); all fully readable against dark background - NO dark-on-dark failures
+      Data: All data colors **identical** to light render - Sensor A #009E73, Sensor B #D55E00, Sensor C #0072B2, Sensor D #CC79A7; unselected points rendered as lighter gray for visibility; selected points maintain full color and stroke; bar chart shows same colors with proper dark-theme contrast
+      Legibility verdict: PASS - perfect theme adaptation; both renders equally readable; only chrome flipped, data identity preserved
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at fontSize=28, subtitle at 18, axis labels at 16-20. All text
-          perfectly readable at full resolution.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Markers are well-spaced with no severe
-          overlap.
+        comment: 'All font sizes explicitly set: Title 28px, Labels 20px, Ticks 16px;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable with no collisions; stroke on markers helps
+          distinguish overlapping points
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Marker size=200 with alpha=0.85 for 200 points. Slightly large for
-          this density, but still effective.
+        comment: 200 points with optimal marker sizing; opacity adaptation (0.3/0.85)
+          handles density; colors distinct in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Four distinct colors (blue, yellow, green, pink) that are colorblind-friendly
-          and easily distinguishable.
+        comment: Okabe-Ito palette is colorblind-safe; contrast between selected/unselected
+          clear; no red-green dependency
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent use of canvas with 1600x900 main scatter and 1600x200 linked
-          bar chart. Well-proportioned.
+        comment: Plot fills ~70% of canvas; balanced margins; generous whitespace;
+          legend well-positioned
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Efficiency Score (%) and Reliability
-          Index.'
+        comment: 'Descriptive with units: ''Efficiency Score (%)'' and ''Reliability
+          Index'''
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid at alpha=0.5 is subtle, legend is well-placed and clearly shows
-          all 4 categories.
+        comment: 'First series #009E73; follows Okabe-Ito order (#D55E00, #0072B2,
+          #CC79A7); backgrounds #FAF8F1/#1A1A17; theme tokens applied correctly; both
+          renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: dual visualization with scatter and responsive bar
+          chart shows intentional hierarchy; Okabe-Ito palette used effectively; not
+          quite publication-ready but clearly above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid (0.10 opacity), marker strokes add
+          definition, legend styling with ELEVATED_BG, generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: color encoding guides category identification;
+          dual chart creates narrative about selection; focal point clear (interactive
+          selection feature)'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct interactive scatter plot with brush selection capability.
+        comment: Correct scatter plot with brush selection and zoom; all interaction
+          patterns present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped to numeric axes with proper scaling.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: brush selection, visual highlighting,
-          zoom, pan, linked view.'
-      - id: SC-04
-        name: Data Range
+        comment: Brush selection (interval), visible rectangle, selected point highlighting,
+          zoom/pan, reset capability, selection count display
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show 0-100 range, all data visible within bounds.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Efficiency Score %; Y: Reliability Index; Color: Category; axes
+          [0,100] show all data correctly'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 sensor categories with matching
-          colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: scatter-brush-zoom · altair · pyplots.ai'
+        comment: 'Title: ''scatter-brush-zoom · altair · anyplot.ai''; legend labels
+          match data (Sensor A/B/C/D)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 distinct clusters plus scattered outliers, demonstrating
-          various selection scenarios.
+        comment: 'Four distinct clusters demonstrate all aspects: high-performance
+          (A), low-performance (B), moderate (C), scattered outliers (D)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plausible sensor performance analysis scenario with Efficiency Score
-          and Reliability Index.
+        comment: Realistic sensor performance scenario; neutral domain; 4 sensor types
+          with logical distributions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Percentage scale (0-100) is appropriate; some cluster centers could
-          be more distinctly positioned.
+        comment: Efficiency Score 0-100% and Reliability Index 0-100 are standard
+          metrics; values plausible for sensor data
     code_quality:
       score: 10
       max: 10
@@ -166,56 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data generation → chart creation →
-          save.'
+        comment: 'Linear: Imports → Data → Tokens → Chart → Save; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas.'
+        comment: 'All imports used: os, sys (for path), altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API (selection_interval, add_params).
+        comment: Clean, Pythonic, no over-engineering, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API (altair
+          6.1.0)
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative selection system, conditional encoding,
-          transform_filter for linked views, and vconcat. Good but could showcase
-          more advanced features.
+        comment: 'Expert altair patterns: selection_interval(), alt.condition(), .transform_filter(),
+          .interactive(), .vconcat(), resolve_scale()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Leverages altair-specific: selection_interval with conditional encoding,
+          reactive dual visualization, theme-aware os.getenv() rendering, resolve_scale()
+          - features not easily replicated in static libraries'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
+  - custom-legend
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
