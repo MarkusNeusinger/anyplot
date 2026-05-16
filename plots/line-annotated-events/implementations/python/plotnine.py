@@ -1,14 +1,17 @@
-""" pyplots.ai
+""" anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_line,
     geom_point,
@@ -21,6 +24,13 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Simulated website traffic with product release events
 np.random.seed(42)
@@ -51,33 +61,37 @@ events["y_pos"] = y_min + events["y_offset"] * y_range
 # Create the plot
 plot = (
     ggplot(df, aes(x="date", y="value"))
-    + geom_line(color="#306998", size=1.2, alpha=0.9)
-    + geom_vline(aes(xintercept="event_date"), data=events, color="#FFD43B", linetype="dashed", size=1.0, alpha=0.8)
-    + geom_point(aes(x="event_date", y="y_pos"), data=events, color="#FFD43B", size=4, shape="D")
+    + geom_line(color="#009E73", size=1.2, alpha=0.9)
+    + geom_vline(aes(xintercept="event_date"), data=events, color="#D55E00", linetype="dashed", size=1.0, alpha=0.8)
+    + geom_point(aes(x="event_date", y="y_pos"), data=events, color="#D55E00", size=4, shape="D")
     + geom_text(
         aes(x="event_date", y="y_pos", label="event_label"),
         data=events,
-        color="#333333",
+        color=INK,
         size=10,
         ha="center",
         va="bottom",
         nudge_y=1000,
         fontweight="bold",
     )
-    + labs(x="Date", y="Daily Visitors", title="line-annotated-events · plotnine · pyplots.ai")
+    + labs(x="Date", y="Daily Visitors (count)", title="line-annotated-events · plotnine · anyplot.ai")
     + scale_x_datetime(date_breaks="2 months", date_labels="%b %Y")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        text=element_text(size=14, color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
         axis_text_x=element_text(angle=45, ha="right"),
-        plot_title=element_text(size=24, weight="bold"),
-        panel_grid_major=element_line(color="#cccccc", size=0.3, alpha=0.3),
-        panel_grid_minor=element_line(color="#eeeeee", size=0.2, alpha=0.2),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=24, weight="bold", color=INK),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
