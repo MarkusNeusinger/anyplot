@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
-Library: highcharts | Python 3.13
-Quality: 90 | Updated: 2026-05-16
+Library: highcharts unknown | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-16
 """
 
 import json
