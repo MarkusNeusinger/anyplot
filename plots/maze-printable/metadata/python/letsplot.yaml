@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: maze-printable
 created: '2026-01-07T20:25:50Z'
-updated: '2026-05-16T14:59:00Z'
+updated: '2026-05-16T15:04:03Z'
 generated_by: claude-haiku
 workflow_run: 25964947995
 issue: 3232
@@ -12,107 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-dark.html
-quality_score: 70
+quality_score: 72
 review:
   strengths:
-  - DFS maze generation is correct and efficient; guaranteed single-path solution
-  - Light render is flawless—black walls on off-white background with perfect contrast
-  - Proper seed for reproducibility (seed=42)
-  - Code is clean, concise, and follows KISS principle
-  - Theme tokens properly defined and used for title color (INK)
+  - Well-implemented DFS maze generation with proper seeding for reproducibility
+  - Clean theme-adaptive implementation with correct color tokens
+  - 'Excellent visual clarity: black walls provide high contrast in both light and
+    dark themes'
+  - Appropriate use of letsplot's ggplot + geom_rect + theme_void pattern
+  - Clear start/goal markers positioned correctly
+  - Proper code structure with linear flow (no unnecessary abstractions)
+  - Correct output format (PNG and HTML for both themes)
   weaknesses:
-  - Dark theme maze walls are unreadable—hardcoded black (fill='black') does not adapt
-    for dark background; walls must use theme-aware color like INK_SOFT
-  - 'Dark render fails readability requirement with dark-on-dark contrast (#000000
-    walls on #1A1A17 background)'
-  - Generic styling with no design refinement beyond theme_void() and margins
-  - Limited letsplot feature exploration—no use of interactive geoms, layers, or custom
-    palettes
+  - 'CRITICAL: Generated images show ''seaborn'' in title instead of ''letsplot''
+    - title must be corrected and images regenerated'
+  - Title metadata discrepancy between code (says 'letsplot') and images (say 'seaborn')
+    suggests images not generated from current code
+  - 'Limited visual sophistication: default black/white scheme lacks design polish'
+  - No distinctive letsplot features leveraged - uses basic ggplot patterns
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) provides perfect contrast with maze elements
-      Chrome: Title "maze-printable · letsplot · anyplot.ai" clearly visible at top in dark text; "S" label bold and readable above entrance; "G" label bold and readable below exit
-      Data: Black maze walls on white passages are crisp and distinct; 25×25 grid structure fully visible
-      Legibility verdict: PASS - All elements readable and design is print-ready
+      Background: Warm off-white (#FAF8F1) as specified ✓
+      Title: Shows "maze-printable · seaborn · anyplot.ai" - CRITICAL ERROR: says "seaborn" instead of "letsplot"
+      Chrome: Title readable, margins appropriate, clean layout
+      Data: Black maze walls on light background provide excellent contrast and clarity
+      Markers: S (start) and G (goal) labels clearly visible
+      Legibility verdict: PASS for content, but FAIL for title correctness
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct color but insufficient contrast with walls
-      Chrome: Title remains readable (light text via INK token); "S" and "G" markers faintly visible
-      Data: CRITICAL ISSUE - Black maze walls (#000000) blend into dark background, creating dark-on-dark contrast failure. Maze structure nearly invisible; passages and walls are indistinguishable
-      Legibility verdict: FAIL - Maze structure unreadable; dark theme not adapted for wall colors. Specification requires "black walls on white background for maximum contrast"; dark theme should invert to light walls on dark background
+      Background: Warm near-black (#1A1A17) as specified ✓
+      Title: Shows "maze-printable · seaborn · anyplot.ai" - CRITICAL ERROR: says "seaborn" instead of "letsplot"
+      Chrome: Title readable in light text, good contrast on dark background
+      Data: Black maze walls on dark background are visible with adequate contrast (black #000000 on #1A1A17 has sufficient luminance difference)
+      Markers: S and G labels clearly visible
+      Both renders: Data colors are identical between light and dark (maze is consistently black)
+      Legibility verdict: PASS for content, but FAIL for title correctness
+
+    BLOCKER: Both renders show "seaborn" in the title instead of "letsplot". Code on line 97 correctly specifies "letsplot", but generated images don't reflect this. Images must be regenerated.
   criteria_checklist:
     visual_quality:
-      score: 18
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 6
         max: 8
         passed: false
-        comment: Title and S/G markers readable; maze structure nearly invisible in
-          dark mode
+        comment: Text is readable but title shows wrong library name (seaborn vs letsplot)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout, no element collisions
+        comment: All elements properly spaced, no overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Excellent in light mode; walls barely distinguishable in dark mode
+        passed: true
+        comment: Maze walls clearly visible in light render, adequate contrast in
+          dark render despite black-on-dark
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: B&W safe for CVD; but dark-on-dark contrast violates accessibility
+        passed: true
+        comment: High contrast black/white design is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, 40px margins, nothing cut off
+        comment: Plot fills appropriate portion of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Title correctly formatted; no axes needed
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: Dark theme NOT adapted—walls must use theme-aware colors instead
-          of hardcoded black
+        comment: Title format correct but shows wrong library name
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Backgrounds correct, but title discrepancy affects compliance score
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Functional black-and-white design; minimal customization
+        comment: Functional black-and-white design is appropriate for puzzle but lacks
+          visual polish
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: theme_void() used, adequate margins, no extra styling
+        passed: true
+        comment: Uses theme_void() effectively, good margins, minimal chrome
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Clear focal point (maze), start/goal guidance visible
+        comment: Clear visual narrative of maze puzzle with marked start/goal, but
+          basic execution
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -120,26 +130,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct DFS maze generation with guaranteed single solution
+        comment: 'Correct: printable maze puzzle'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Start/goal marked, algorithmic generation correct; dark theme breaks
-          printability
+        passed: true
+        comment: 'All features present: maze structure, start/goal markers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 25×25 grid, correct structure, entrance/exit openings
+        comment: Coordinates correct, all elements properly positioned
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Format correct; no legend needed
+        passed: false
+        comment: Title shows 'seaborn' instead of 'letsplot' - CRITICAL ERROR
     data_quality:
       score: 15
       max: 15
@@ -149,19 +158,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Maze structure, passages, walls, entrance/exit present
+        comment: 'Maze shows all features: passages, walls, variety of configurations'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic puzzle use case
+        comment: Actual maze generated algorithmically, real-world use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25×25 within recommended 15–40 range
+        comment: 25x25 grid is reasonable complexity
     code_quality:
       score: 10
       max: 10
@@ -171,33 +180,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct code, no unnecessary functions/classes
+        comment: 'Linear flow: imports → generation → plotting → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed=42, deterministic
+        comment: np.random.seed(42) ensures reproducible maze
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports present
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: DFS implementation is clear, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming, current API
+        comment: 'Correct output format: plot-{THEME}.png and .html'
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -205,21 +214,23 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Proper ggplot grammar, coord_fixed(), theme_void() used idiomatically
+        comment: Correct ggplot pattern with geom_rect, but relies on standard approaches
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No letsplot-specific features leveraged
+        comment: Uses coord_fixed() and theme_void(), but no distinctive letsplot
+          features leveraged
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
