@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-density: Density Contour Plot
-Library: letsplot | Python 3.13
-Quality: 92/100 | Created: 2025-12-30
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-16
 """
 
 import os
