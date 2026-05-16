@@ -101,7 +101,17 @@ def load_variants(path: Path, names: list[str]) -> list[Variant]:
     if not path.is_file():
         sys.exit(f"Variants file not found: {path}")
     data = yaml.safe_load(path.read_text())
+    if not isinstance(data, dict):
+        sys.exit(
+            f"Variants file is empty or not a YAML mapping: {path} "
+            f"(got {type(data).__name__})"
+        )
     catalog = data.get("variants") or {}
+    if not isinstance(catalog, dict):
+        sys.exit(
+            f"'variants' key in {path} must be a mapping "
+            f"(got {type(catalog).__name__})"
+        )
     missing = [n for n in names if n not in catalog]
     if missing:
         sys.exit(
@@ -139,8 +149,10 @@ def _restore_all() -> None:
         try:
             path.write_text(original)
         except Exception as exc:
-            print(f"[style-experiment] WARNING: failed to restore {path}: {exc}",
+            print(f"[style-experiment] WARNING: failed to restore {path}: {exc}; "
+                  f"will retry on next cleanup hook",
                   file=sys.stderr)
+            continue
         _pending_restores.pop(path, None)
 
 
