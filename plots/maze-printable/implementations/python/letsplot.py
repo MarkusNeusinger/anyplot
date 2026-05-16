@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: letsplot | Python 3.13
-Quality: 91/100 | Updated: 2026-05-16
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 70/100 | Updated: 2026-05-16
 """
 
 import os
