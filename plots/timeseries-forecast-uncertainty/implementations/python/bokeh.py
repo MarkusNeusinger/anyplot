@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-05-16
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-16
 """
 
 import os
