@@ -1,37 +1,225 @@
 library: seaborn
+language: python
 specification_id: candlestick-volume
 created: '2025-12-31T13:52:19Z'
-updated: '2025-12-31T14:44:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620312762
+updated: '2026-05-16T05:28:55Z'
+generated_by: claude-haiku
+workflow_run: 25953644731
 issue: 3068
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/seaborn/plot.png
-preview_html: null
-quality_score: 88
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent theme adaptation with proper color tokens for both light and dark renders
+  - Perfect Okabe-Ito palette compliance across both panes and themes
+  - Realistic stock data with proper OHLC generation and volume correlation
+  - Dual-pane layout effectively communicates price-volume relationship
+  - Polished visual refinement with subtle grid, proper spines, and readable typography
+  weaknesses:
+  - Design Excellence scores above default but not exceptional—follows conventions
+    well rather than pushing aesthetic boundaries
+  - Library Mastery limited by domain—candlestick charts require manual matplotlib
+    code, underutilizing distinctive seaborn features beyond theme/palette management
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "candlestick-volume · seaborn · anyplot.ai" in dark text (INK=#1A1A17); axis labels "Price ($)", "Volume (M shares)", "Date" in dark text; tick labels (dates: Jan 02, Jan 17, Feb 02, etc.; prices and volumes) in secondary color (#4A4A44). Grid subtle, opacity 0.10-0.15. Legend in upper right with warm elevated background.
+      Data: Upper pane shows candlesticks (wicks and bodies) with green (#009E73) for bullish, orange (#D55E00) for bearish. Lower pane shows matching volume bars. 60 trading days, no overcrowding. Price range $120-$170, volume 0-7.5M shares.
+      Legibility verdict: PASS - all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels in light text (INK=#F0EFE8); tick labels in light secondary color (INK_SOFT=#B8B7B0). Grid still subtle. Legend maintains contrast.
+      Data: Identical colors to light render - green (#009E73) bullish, orange (#D55E00) bearish. Wicks and bodies match light render exactly. Volume bars same colors.
+      Legibility verdict: PASS - all text readable against dark background, no dark-on-dark failures, all data colors identical to light render
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend positioned safely, rotated date labels, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Candlesticks and volume bars clearly visible, 60 days fits comfortably
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors with strong contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format 4800x2700px, 75%/25% height ratio, proper margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title, axis labels with units, formatted date ticks
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette, theme-correct backgrounds, data colors identical
+          in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive tokens, professional appearance, custom spine removal
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hierarchy, shared axis, color consistency, visual focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct candlestick and volume chart with dual-pane layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: OHLC, volume, shared axis, color scheme, grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Axes correctly mapped, dates formatted, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Proper title format and legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All candlestick and volume features shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic price range, volume, timeframe, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible Y and X axis scales, readable formatting
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear procedural script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random seed set to 42
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no unused code
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, AR-08 compliant, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png naming
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.set_theme() with RC config, proper color parameters
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Domain expertise required; manual candlestick code necessary for
+          seaborn
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
-  - wide-to-long
   - explicit-figure
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
   - grid-styling
-review:
-  strengths:
-  - Excellent dual-pane layout with proper 75/25 height ratio as specified
-  - Good color scheme using Python blue/yellow that is colorblind accessible
-  - Clean seaborn styling with whitegrid and talk context provides professional appearance
-  - Realistic stock data generation with price-volume correlation
-  - Well-formatted axis labels with units and proper tick formatting for millions
-  weaknesses:
-  - Crosshair feature appears in code but is not visible in the rendered output image
-  - Legend placement in upper left may overlap with price data in some scenarios
-  - Volume axis label shows just Volume instead of Volume (M shares) as coded
