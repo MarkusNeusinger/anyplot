@@ -1,16 +1,29 @@
-""" pyplots.ai
+"""pyplots.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 Library: bokeh 3.8.2 | Python 3.13.11
 Quality: 90/100 | Created: 2026-01-07
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d
 from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (read from environment)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Lorenz attractor trajectory (classic chaotic system)
 np.random.seed(42)
@@ -52,10 +65,7 @@ x_proj = x_rot
 z_proj = y_rot * np.sin(elev_rad) + z * np.cos(elev_rad)
 
 # Time/progression for color gradient (shows trajectory evolution)
-time_progress = np.linspace(0, 1, n_points)
 time_seconds = np.linspace(0, n_points * dt, n_points)
-
-# Simulation time range for colorbar (0 to 15 seconds)
 max_time = n_points * dt  # 15 seconds
 
 # Color mapping using actual simulation time values
@@ -66,14 +76,10 @@ n_segments = n_points - 1
 xs = [[x_proj[i], x_proj[i + 1]] for i in range(n_segments)]
 ys = [[z_proj[i], z_proj[i + 1]] for i in range(n_segments)]
 
-# Map time values (in seconds) to colors
-colors = []
-for i in range(n_segments):
-    t_seconds = time_seconds[i]
-    # Map time to color index (0 to 255)
-    idx = int((t_seconds / max_time) * 255)
-    idx = max(0, min(255, idx))
-    colors.append(Viridis256[idx])
+# Vectorized color mapping for line segments
+segment_times = time_seconds[:-1]
+color_indices = np.clip((segment_times / max_time * 255).astype(int), 0, 255)
+colors = [Viridis256[idx] for idx in color_indices]
 
 # Create ColumnDataSource for line segments
 source = ColumnDataSource(data={"xs": xs, "ys": ys, "color": colors})
@@ -102,7 +108,7 @@ p = figure(
 # Draw trajectory as multi-line with color gradient showing time progression
 p.multi_line(xs="xs", ys="ys", line_color="color", line_width=3, line_alpha=0.85, source=source)
 
-# Add subtle scatter points for hover interaction (visible so users know where to hover)
+# Add subtle scatter points for hover interaction
 scatter = p.scatter(x="x", y="y", source=hover_source, size=18, alpha=0.15, hover_alpha=0.9, hover_color="orange")
 
 # Add HoverTool for interactivity (Bokeh distinctive feature)
@@ -119,7 +125,7 @@ y_min, y_max = z_proj.min(), z_proj.max()
 x_pad = (x_max - x_min) * 0.15
 y_pad = (y_max - y_min) * 0.15
 
-# Center the plot with balanced padding (reduced left padding for better balance)
+# Center the plot with balanced padding
 p.x_range = Range1d(x_min - x_pad * 0.8, x_max + x_pad * 1.0)
 p.y_range = Range1d(y_min - y_pad * 1.0, y_max + y_pad * 1.0)
 
@@ -134,8 +140,8 @@ origin_y_rot = origin_3d_x * np.sin(azim_rad) + origin_3d_y * np.cos(azim_rad)
 origin_x = origin_x_rot
 origin_y = origin_y_rot * np.sin(elev_rad) + origin_3d_z * np.cos(elev_rad)
 
-# Axis styling
-axis_color = "#444444"
+# Axis styling with theme-adaptive colors
+axis_color = INK_SOFT
 axis_width = 4
 axis_length = 2.5
 
@@ -221,13 +227,13 @@ p.patch(
     line_color=axis_color,
 )
 
-# Add descriptive axis labels with context
+# Add descriptive axis labels with theme-adaptive colors
 x_label = Label(
     x=x_axis_end_x + 0.15,
     y=x_axis_end_y - 0.2,
     text="X (state)",
     text_font_size="36pt",
-    text_color="#333333",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(x_label)
@@ -237,7 +243,7 @@ y_label = Label(
     y=y_axis_end_y - 0.4,
     text="Y (state)",
     text_font_size="36pt",
-    text_color="#333333",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(y_label)
@@ -247,12 +253,12 @@ z_label = Label(
     y=z_axis_end_y + 0.1,
     text="Z (state)",
     text_font_size="36pt",
-    text_color="#333333",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(z_label)
 
-# Add color bar for time progression with specific units
+# Add color bar for time progression with correct time range (0-15 seconds)
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=60,
@@ -269,23 +275,41 @@ p.add_layout(color_bar, "right")
 # Title styling for large canvas
 p.title.text_font_size = "44pt"
 p.title.text_font_style = "bold"
+p.title.text_color = INK
 
-# Grid styling - subtle
-p.xgrid.grid_line_color = "#dddddd"
-p.ygrid.grid_line_color = "#dddddd"
-p.xgrid.grid_line_alpha = 0.2
-p.ygrid.grid_line_alpha = 0.2
+# Grid styling - subtle with theme-adaptive colors
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_dash = [6, 4]
 p.ygrid.grid_line_dash = [6, 4]
 
-# Background styling
-p.background_fill_color = "#f9f9f9"
-p.border_fill_color = "white"
-p.outline_line_color = None
+# Background styling with theme-adaptive colors
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 p.min_border_right = 220
 
-# Save PNG
-export_png(p, filename="plot.png")
-
 # Save HTML for interactive version
-save(p, filename="plot.html", resources=CDN, title="line-3d-trajectory · bokeh · pyplots.ai")
+output_file(f"plot-{THEME}.html")
+save(p, resources=CDN, title="line-3d-trajectory · bokeh · pyplots.ai")
+
+# Screenshot with headless Chrome via Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
