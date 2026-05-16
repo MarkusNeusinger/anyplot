@@ -1,22 +1,46 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-16
 """
 
-import altair as alt
+import importlib.util
+import os
+import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
+
+# Load altair from site-packages, bypassing the local altair.py file
+script_dir = Path(__file__).parent
+spec = importlib.util.find_spec("altair")
+if spec and spec.origin and "site-packages" in spec.origin:
+    alt = importlib.util.module_from_spec(spec)
+    sys.modules["altair"] = alt
+    spec.loader.exec_module(alt)
+else:
+    original_path = sys.path.copy()
+    sys.path = [p for p in sys.path if str(script_dir) not in p]
+    import altair as alt
+
+    sys.path = original_path
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Generate realistic stock price data and calculate MACD
 np.random.seed(42)
 n_days = 150
 
-# Generate a random walk with trend for closing prices
-returns = np.random.normal(0.0005, 0.02, n_days)
+# Generate a random walk with moderate trend for closing prices
+returns = np.random.normal(0.001, 0.015, n_days)
 price = 100 * np.cumprod(1 + returns)
-
 
 # Calculate EMAs using pandas
 ema_12 = pd.Series(price).ewm(span=12, adjust=False).mean().values
@@ -54,7 +78,7 @@ histogram_chart = (
     .mark_bar(size=8)
     .encode(
         x=alt.X("date:T", title="Date", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
-        y=alt.Y("histogram:Q", title="Histogram", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
+        y=alt.Y("histogram:Q", title="Value", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
         color=alt.Color(
             "hist_color:N",
             scale=alt.Scale(domain=["Positive", "Negative"], range=["#2E7D32", "#C62828"]),
@@ -70,10 +94,10 @@ line_chart = (
     .mark_line(strokeWidth=3)
     .encode(
         x=alt.X("date:T", title="Date"),
-        y=alt.Y("value:Q", title="MACD Value"),
+        y=alt.Y("value:Q", title="Value"),
         color=alt.Color(
             "line_label:N",
-            scale=alt.Scale(domain=["MACD (12, 26)", "Signal (9)"], range=["#306998", "#FFD43B"]),
+            scale=alt.Scale(domain=["MACD (12, 26)", "Signal (9)"], range=["#0072B2", "#E69F00"]),
             legend=alt.Legend(title="Lines", labelFontSize=14, titleFontSize=16),
         ),
         strokeDash=alt.StrokeDash(
@@ -89,7 +113,7 @@ line_chart = (
 
 # Create zero reference line
 zero_line = (
-    alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color="#666666", strokeWidth=1.5, strokeDash=[4, 4]).encode(y="y:Q")
+    alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color=INK_SOFT, strokeWidth=1.5, strokeDash=[4, 4]).encode(y="y:Q")
 )
 
 # Combine charts: histogram + lines + zero line
@@ -98,21 +122,40 @@ chart = (
     .properties(
         width=1600,
         height=900,
+        background=PAGE_BG,
         title=alt.Title(
-            "indicator-macd · altair · pyplots.ai",
+            "indicator-macd · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
+            color=INK,
             subtitle="MACD (12, 26, 9) - Moving Average Convergence Divergence",
             subtitleFontSize=18,
-            subtitleColor="#666666",
+            subtitleColor=INK_SOFT,
         ),
     )
-    .configure_axis(labelFontSize=16, titleFontSize=20, gridColor="#E0E0E0", gridOpacity=0.5)
-    .configure_view(strokeWidth=0)
-    .configure_legend(labelFontSize=14, titleFontSize=16, orient="right")
+    .configure_axis(
+        labelFontSize=16,
+        titleFontSize=20,
+        gridColor=INK,
+        gridOpacity=0.10,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_legend(
+        labelFontSize=14,
+        titleFontSize=16,
+        orient="right",
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
     .resolve_scale(color="independent")
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(str(script_dir / f"plot-{THEME}.png"), scale_factor=3.0)
+chart.save(str(script_dir / f"plot-{THEME}.html"))
