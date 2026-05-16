@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:56:13Z'
-updated: '2026-05-16T01:14:15Z'
+updated: '2026-05-16T01:27:24Z'
 generated_by: claude-haiku
 workflow_run: 25948607298
 issue: 2997
@@ -12,111 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-anno
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/bokeh/plot-dark.html
-quality_score: 55
+quality_score: 89
 review:
   strengths:
-  - Event markers positioned effectively to avoid overlap with data
-  - Clear upward trend visualization
-  - Proper use of Span and Label layout elements
-  - Deterministic data generation with seed
+  - Excellent theme adaptation with proper token-based color system for both light
+    and dark renders
+  - All text elements explicitly sized for high-resolution output with perfect legibility
+    in both themes
+  - Clean, idiomatic Bokeh code following recommended patterns (ColumnDataSource,
+    Span, Label)
+  - Event annotation approach effectively highlights key moments in the time series
+  - Proper data generation with seed and realistic active-user growth scenario
   weaknesses:
-  - Dark render has unreadable event labels (dark text on dark background violates
-    dark-theme readability)
-  - 'Main line uses wrong color (#306998 instead of #009E73 brand green)'
-  - 'Event label text is not theme-adaptive (hardcoded #333333 instead of INK token)'
-  - 'Background colors not exact (#fafafa instead of #FAF8F1 light, border_fill_color
-    wrong)'
-  - Uses deprecated export_png instead of Selenium per bokeh.md guidelines
-  - Saves as plot.png instead of plot-{THEME}.png (wrong output filename format)
-  - Title contains typo (pyplots.ai instead of anyplot.ai)
-  - Missing implementation of theme-adaptive chrome tokens (ANYPLOT_THEME not read)
+  - Event marker color (#FFD43B) does not match Okabe-Ito palette position 7 (#F0E442)
+  - Limited visual hierarchy and data storytelling - plot displays data but doesn't
+    guide viewer to key insights
+  - Design falls within well-configured defaults rather than distinctive aesthetic
+    choices
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (approximately #FAF8F1)
-      Chrome: Title "line-annotated-events · bokeh · anyplot.ai", axis labels "Date" and "Active Users (thousands)", tick marks and gridlines all clearly visible in dark text
-      Data: Main line rendered in teal/cyan color (approximately #0072B2 Okabe-Ito position 3, should be #009E73 position 1 brand green) trending upward 100k→185k. Five yellow dashed vertical lines at event dates with labels positioned at alternating heights (Product Launch, Feature Update, Server Upgrade, API v2 Release, Mobile App Launch). Legend shows "Daily Active Users" at bottom right.
-      Legibility verdict: PASS - all text readable against light background
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels ("Date", "Active Users (thousands)"), tick labels all clearly visible in dark ink - excellent legibility
+      Data: Green line (#009E73, Okabe-Ito position 1) shows upward trend from ~100 to ~190 thousand users with seasonal variation. Five yellow dashed vertical lines mark events with labels positioned at varying heights to avoid overlap. Event labels: "Product Launch", "Feature Update", "Server Upgrade", "API v2 Release", "Mobile App Launch" - all readable
+      Legibility verdict: PASS - no readability issues, excellent contrast, all elements visible
 
     Dark render (plot-dark.png):
-      Background: Dark near-black surface (should be #1A1A17)
-      Chrome: Title and axis labels readable in light text. Y-axis gridlines visible as dotted lines (different style than light render - only chrome should change, not grid style).
-      Data: Main line color identical to light render (correct - Okabe-Ito positions 1-7 must be identical between themes). Yellow event marker lines visible and unchanged.
-      CRITICAL ISSUE: Event label text is dark gray (#333333) on the dark near-black background, making labels completely unreadable. This is a "dark-on-dark" failure — the most common theme-adaptation mistake.
-      Legibility verdict: FAIL - event label text invisible due to insufficient contrast with dark background
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all clearly visible in light ink (#F0EFE8/#B8B7B0) against dark background - excellent legibility, no dark-on-dark failures
+      Data: Same green line (#009E73) identical to light render, confirming perfect color consistency. Same event markers and labels rendered in light colors with excellent contrast. No text legibility issues.
+      Legibility verdict: PASS - no dark-on-dark failures, all text readable, grid visible but subtle
+
+    Both renders pass theme readability checks completely. Data colors are identical between themes; only chrome adapts. All text elements maintain proper contrast and legibility in both rendering contexts.
   criteria_checklist:
     visual_quality:
-      score: 16
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: 'Event labels unreadable in dark render (dark #333333 on dark #1A1A17
-          background)'
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          all perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Event labels well-positioned with minimal collision
+        comment: Event labels positioned at varying heights; all text fully readable
+          with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All elements visible, but event labels fail dark-theme readability
+        comment: Line thickness and event marker sizing optimal for data density;
+          all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Main line is #0072B2 (Okabe-Ito pos 3) instead of #009E73 (pos 1
-          brand green)'
+        passed: true
+        comment: Okabe-Ito palette used; colorblind-safe with good contrast between
+          data and event markers
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and whitespace
+        comment: Plot utilizes 50-70% of canvas with balanced margins; legend positioned
+          naturally
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title and axis labels present (though title has typo: pyplots.ai)'
+        comment: Title format correct; axis labels descriptive with units ('Active
+          Users (thousands)')
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: Main line wrong color; event labels not theme-adaptive; backgrounds
-          not exact spec colors
+        comment: 'Primary data (#009E73) correct, but event yellow (#FFD43B) should
+          be #F0E442 (Okabe-Ito position 7). Theme chrome perfect in both renders.'
     design_excellence:
-      score: 4
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
         passed: false
-        comment: Generic Python defaults, no intentional palette design
+        comment: Well-configured design with clean layout; professional but conventional
+          - not groundbreaking
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 4
         max: 6
         passed: false
-        comment: Minimal customization beyond basic API
+        comment: Subtle grid and legend styling present; could be more polished with
+          additional refinement
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 3
         max: 6
         passed: false
-        comment: Simple trend visualization with no visual hierarchy
+        comment: Shows growth trend with events marked; limited interpretive emphasis
+          and visual hierarchy
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,27 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with event annotations
+        comment: Correct annotated line plot with vertical event markers
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Event markers and labels present but not theme-correct
+        comment: 'All spec features present: line series, 5 event markers with labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date/value axes correct, full range displayed
+        comment: X-axis (datetime) and Y-axis (numeric) correctly assigned; all data
+          visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title has typo: pyplots.ai instead of anyplot.ai'
+        passed: true
+        comment: Title format correct; legend label matches spec
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,21 +160,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Time series and event markers demonstrated
+        comment: Complete time-series with trend, seasonal patterns, and distributed
+          events
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible active users scenario
+        comment: Realistic product platform scenario with plausible event labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (100-185k) sensible for user metrics
+        comment: User values (100-200K) and time span (365 days) proportional and
+          sensible
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,59 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward implementation
+        comment: Simple linear structure with no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: export_png is deprecated per bokeh.md
+        passed: true
+        comment: All imports used; no unnecessary dependencies
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Uses export_png instead of recommended Selenium approach
+        passed: true
+        comment: Clean Pythonic code; appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png instead of plot-{THEME}.png
+        passed: true
+        comment: Saves as plot-{THEME}.png and .html; current API
     library_mastery:
-      score: 2
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource and basic API but doesn't follow bokeh.md theme-adaptation
-          pattern
+        passed: true
+        comment: Expert use of figure(), ColumnDataSource, line(), Span, Label with
+          proper theming
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 4
         max: 5
         passed: false
-        comment: No exploitation of bokeh-specific features
-  verdict: REJECTED
+        comment: Good use of Bokeh-specific Span and Label; Selenium integration appropriate;
+          strong overall but could leverage more distinctive patterns
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - annotations
   - html-export
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep:
-  - cumulative-sum
+  - time-series
   styling:
   - grid-styling
+  - alpha-blending
