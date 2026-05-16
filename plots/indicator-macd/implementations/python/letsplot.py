@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
 Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-07
+Quality: 92/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,15 +13,26 @@ from lets_plot import *  # noqa: F403, F405
 
 LetsPlot.setup_html()
 
-# Generate realistic stock price data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # First series (green)
+SECONDARY = "#D55E00"  # Orange
+
+# Generate realistic stock price data with momentum
 np.random.seed(42)
 n_days = 120
 
-# Simulate stock prices with trend and volatility
-dates = pd.date_range(start="2024-01-01", periods=n_days + 35, freq="B")  # Extra days for EMA calc
-returns = np.random.normal(0.0005, 0.02, n_days + 35)
-# Add some trending behavior
-trend = np.sin(np.linspace(0, 4 * np.pi, n_days + 35)) * 0.01
+# Simulate stock prices with trend and volatility (more realistic)
+dates = pd.date_range(start="2024-01-01", periods=n_days + 35, freq="B")
+returns = np.random.normal(0.0005, 0.015, n_days + 35)
+# Add trending behavior
+trend = np.sin(np.linspace(0, 4 * np.pi, n_days + 35)) * 0.012
 returns = returns + trend
 prices = 100 * np.cumprod(1 + returns)
 
@@ -60,34 +73,34 @@ df_lines["line_type"] = df_lines["line_type"].map({"macd": "MACD Line", "signal"
 # Create the MACD chart
 plot = (
     ggplot()
-    # Histogram bars
     + geom_bar(
         data=df, mapping=aes(x="day_num", y="histogram", fill="hist_color"), stat="identity", width=0.8, alpha=0.8
     )
-    # Zero reference line
-    + geom_hline(yintercept=0, color="#666666", size=0.8, linetype="dashed")
-    # MACD and Signal lines
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
     + geom_line(data=df_lines, mapping=aes(x="day_num", y="value", color="line_type"), size=1.5)
-    # Manual color scales
-    + scale_fill_manual(values={"Positive": "#22C55E", "Negative": "#EF4444"}, name="Histogram")
-    + scale_color_manual(values={"MACD Line": "#306998", "Signal Line": "#FFD43B"}, name="Lines")
-    # Labels and title
-    + labs(x="Trading Day", y="MACD Value", title="indicator-macd · letsplot · pyplots.ai")
-    # Theme styling
+    + scale_fill_manual(values={"Positive": "#56B4E9", "Negative": "#D55E00"}, name="Histogram")
+    + scale_color_manual(values={"MACD Line": BRAND, "Signal Line": SECONDARY}, name="Lines")
+    + labs(x="Trading Day", y="MACD Value", title="indicator-macd · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_minor=element_blank(),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
         legend_position="right",
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save interactive HTML version
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
