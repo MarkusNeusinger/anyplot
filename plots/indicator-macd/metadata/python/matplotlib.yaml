@@ -1,156 +1,176 @@
 library: matplotlib
+language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:27:43Z'
-updated: '2026-01-07T16:30:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788377673
+updated: '2026-05-16T10:45:52Z'
+generated_by: claude-haiku
+workflow_run: 25959758452
 issue: 3181
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - All three MACD components (MACD line, signal line, histogram) clearly displayed
-  - 'Correct color coding: green for positive histogram, red for negative histogram'
-  - Zero reference line present as dashed gray line for crossover identification
-  - Standard MACD parameters (12, 26, 9) documented in legend
-  - Clean, readable code with proper EMA calculations
-  - Good use of date_range for realistic trading day simulation (business days freq=B)
+  - Perfect visual quality with theme-correct renderings in both light and dark modes
+  - All text explicitly sized and fully readable at 4800×2700 resolution
+  - Correct Okabe-Ito palette with green as first categorical series
+  - Clean, reproducible code with proper seed for synthetic data
+  - Proper title format and informative legend labels
+  - Excellent data showing 120-day MACD patterns with realistic values
+  - Subtle grid styling and well-proportioned subplot layout
   weaknesses:
-  - Could use annotations to highlight specific crossover signals (buy/sell points)
-  - Histogram bar width could be slightly wider for better visibility at this data
-    density
-  - Color accessibility could be improved by using a non-red/green palette for histogram
-    (e.g., blue/orange)
-  image_description: The plot displays a MACD technical indicator chart with three
-    components over approximately 6 months of trading data (July 2024 to January 2025).
-    The MACD line (blue, linewidth 2.5) shows the difference between 12-day and 26-day
-    EMAs, oscillating between approximately -2.7 and +1.2. The Signal line (yellow/gold,
-    linewidth 2.5) follows as a smoothed 9-day EMA of MACD. The histogram bars show
-    the MACD-Signal difference, colored green (#2ECC71) for positive values and red
-    (#E74C3C) for negative values, with alpha=0.7 transparency. A gray dashed zero
-    reference line marks the center. The title correctly displays "indicator-macd
-    · matplotlib · pyplots.ai" in large font. Axis labels "Date" and "MACD Value"
-    are clearly visible. The legend is positioned in the upper left. X-axis dates
-    are rotated 45 degrees for readability. Grid lines are subtle with alpha=0.3.
+  - Design could be more sophisticated—uses library defaults without custom enhancements
+  - No annotations on significant MACD/Signal crossover points to emphasize key insights
+  - Limited use of distinctive library features beyond standard plotting
+  - Design Excellence (DE-01, DE-02) scores are solid but not exceptional
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title 'indicator-macd · matplotlib · anyplot.ai', axis labels 'MACD Value', 'Histogram', 'Date' all dark and clearly readable; legend with light elevated background; rotated date labels on x-axis prevent overlap
+      Data: MACD line (blue #0072B2), Signal line (orange #E69F00), histogram bars in green (#009E73) for positive and orange-red (#D55E00) for negative; all colors distinct and visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title and axis labels in light text, clearly readable against dark background; legend with darker elevated background; no dark-on-dark failures
+      Data: MACD line (blue #0072B2), Signal line (orange #E69F00), histogram bars identical to light render (green positive, orange-red negative); data colors unchanged across themes (correct)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt, legend 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, dates rotated for clarity
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable with rotated date labels, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines at 2.5 linewidth visible; bars slightly thin for the data density
+        comment: Lines are 3pt and histogram bars optimally sized for 120-day dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow lines colorblind-safe; green/red histogram uses classic
-          red-green but with sufficient brightness difference
+        comment: Okabe-Ito palette with good contrast; green/orange-red histogram
+          pair is CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, no wasted space
+        comment: Perfect proportions with 2:1 subplot ratio, balanced margins, no
+          cut-off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Date, MACD Value) but no units
+        comment: Descriptive labels ('MACD Value', 'Histogram', 'Date') with appropriate
+          units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3, legend well placed
+        comment: 'Okabe-Ito positions correct; backgrounds (#FAF8F1 light, #1A1A17
+          dark); theme-adaptive chrome correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults, lacks custom touches or exceptional
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed, grid subtle, whitespace balanced—some refinement
+          visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good visual hierarchy through layout; could emphasize key crossovers
+          with annotations
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct MACD chart with all three components (MACD line, signal line,
-          histogram)
+        comment: Correct MACD chart with two-subplot layout (lines + histogram)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, MACD values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: MACD line, signal line, histogram with
-          green/red coloring, zero reference line, parameters noted in legend'
-      - id: SC-04
-        name: Data Range
+        comment: MACD line, Signal line, histogram bars, colors for positive/negative,
+          zero line, parameters all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (dates), upper Y-axis (MACD values), lower Y-axis (histogram)
+          all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly describe each component with parameters
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format indicator-macd · matplotlib · pyplots.ai
+        comment: Title format correct; legend labels informative ('MACD (12, 26)',
+          'Signal (9)')
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish periods, crossovers visible; could
-          have more dramatic crossover signals
+        comment: Shows all MACD components, positive/negative values, crossover patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Synthetic stock price data with realistic daily returns and 120 trading
-          days
+        comment: Stock price data with realistic volatility, 120 trading days, actual
+          MACD value ranges
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: MACD values in realistic range; initial values quite negative partially
-          due to EMA warmup
+        comment: All proportions mathematically correct, realistic MACD indicator
+          values
     code_quality:
       score: 10
       max: 10
@@ -160,52 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → EMA calculation → plotting
-          → save'
+        comment: 'Linear flow: imports → data → plot → save, no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set, deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: matplotlib, numpy, pandas'
+        comment: 'All imports used: os, sys, matplotlib, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic, minimal ema() helper, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of subplots with gridspec_kw, ax methods, theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses standard matplotlib features but no advanced techniques like
-          twin axes or annotations
+        comment: Uses subplots with height_ratios and conditional coloring; fairly
+          standard financial plotting
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - subplots
   patterns:
   - data-generation
-  dataprep:
   - time-series
-  - rolling-window
+  dataprep: []
   styling:
-  - alpha-blending
   - grid-styling
