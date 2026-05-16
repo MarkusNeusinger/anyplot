@@ -1,152 +1,169 @@
 library: letsplot
+language: python
 specification_id: maze-printable
 created: '2026-01-07T20:25:50Z'
-updated: '2026-01-07T20:35:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795219278
+updated: '2026-05-16T15:10:48Z'
+generated_by: claude-haiku
+workflow_run: 25964947995
 issue: 3232
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-printable/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/maze-printable/letsplot/plot.html
-quality_score: 91
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/letsplot/plot-dark.html
+quality_score: 73
 review:
   strengths:
-  - Excellent DFS maze generation algorithm that guarantees a single solution path
-  - Clean black-and-white printable design with consistent wall thickness
-  - Proper use of theme_void() for print-friendly output
-  - Well-positioned S/G markers outside the maze boundaries
-  - Square aspect ratio (1200x1200 scaled 3x) is appropriate for the maze format
-  - Proper coordinate transformation to display maze with entrance at top-left
+  - Algorithmically correct DFS maze generation with guaranteed single solution
+  - Clean, print-optimized design for light mode with high wall-to-passage contrast
+  - Proper entrance/exit openings and clear start/goal marker positioning
+  - Good code structure using KISS principles with deterministic random seeding
+  - Light render perfectly suitable for printing and puzzle solving
   weaknesses:
-  - Does not leverage any distinctive lets-plot features (no interactivity, tooltips,
-    or unique styling)
-  image_description: The plot displays a 25×25 printable maze puzzle with black walls
-    on a white background. The maze is rendered using filled rectangles (geom_rect)
-    creating a clean grid pattern. An "S" marker in blue (#306998) is positioned at
-    the top-left corner just above the entrance opening, and a "G" marker in the same
-    blue color is at the bottom-right just below the exit opening. The title "maze-printable
-    · letsplot · pyplots.ai" appears centered at the top in gray text. The maze uses
-    theme_void() for a clean printable appearance with no axes, gridlines, or other
-    chrome. The maze walls are consistently thick and the passages are wide enough
-    for pen/pencil marking. The entrance is at the top-left and exit at the bottom-right
-    of the outer wall.
+  - 'Maze walls hardcoded to black, not theme-adaptive — creates dark-on-dark contrast
+    failure in dark mode, making maze structure invisible against #1A1A17 background'
+  - Marker label size (10pt) is small for visibility at full 3600×3600 resolution
+  - No visual refinement or design sophistication beyond functional defaults
+  - Theme adaptation incomplete — INK token not used for maze wall colors
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, print-friendly
+      Chrome: Title "maze-printable · letsplot · anyplot.ai" is clearly visible at 24pt, centered. Start "S" and Goal "G" labels at top-left and bottom-right are visible in dark bold text.
+      Data: Black maze walls on white background with high contrast. 25×25 cell maze with clear passages and entrance/exit openings. Structure is crisp, readable, and print-ready.
+      Legibility verdict: PASS — all elements clearly readable and optimized for printing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme color
+      Chrome: Title is clearly visible in light text. Start "S" and Goal "G" labels are visible in light text against dark background.
+      Data: Black maze walls on #1A1A17 background have extremely low contrast, making the maze structure barely distinguishable. Walls appear as near-black on near-black, creating a dark-on-dark failure. The viewer must carefully examine to discern paths.
+      Data color consistency: Title and labels adapt properly. However, maze walls are NOT adapted to theme and fail the contrast requirement.
+      Legibility verdict: FAIL — dark-on-dark walls on dark background compromise maze visibility. The visualization is functionally unreadable for its intended purpose in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 21
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is clearly readable at 24pt, S and G markers are bold and visible
-          at size 10
+        comment: Font sizes explicit (24pt title, 10pt labels), readable in light;
+          labels could be larger
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, markers positioned outside maze boundaries
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Wall thickness is consistent and appropriate, passages are clearly
-          visible
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Maze walls barely visible in dark mode due to contrast with #1A1A17
+          background'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black and white design is maximally accessible, blue markers provide
-          good contrast
+        score: 1
+        max: 2
+        passed: false
+        comment: Good contrast in light mode; poor contrast in dark mode (black on
+          dark background)
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Maze fills the canvas well with balanced margins, square aspect ratio
-          is appropriate
+        comment: Excellent canvas utilization with proper margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is descriptive and well-formatted
+      - id: VQ-07
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: N/A for maze puzzle (theme_void used appropriately), but technically
-          no axis labels
-      - id: VQ-07
-        name: Grid & Legend
+        comment: 'Dark-on-dark failure: black walls on #1A1A17 background lack sufficient
+          contrast for readability'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean black-and-white aesthetic appropriate for puzzles, but generic
+          defaults
+      - id: DE-02
+        name: Visual Refinement
         score: 2
-        max: 2
-        passed: true
-        comment: theme_void provides clean appearance, no distracting elements
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Functional data display without visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct maze puzzle visualization with DFS algorithm
+        comment: Correct maze puzzle visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Walls correctly mapped to rectangles, coordinate system properly
-          inverted
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has entrance/exit openings, S/G markers, black walls on white, consistent
-          wall thickness
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: maze generation, entrance, exit, start/goal
+          labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axis limits properly set to show full maze plus markers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Spatial layout correct, all maze cells properly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for maze, but S/G markers correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format maze-printable · letsplot · pyplots.ai
+        comment: Title format correct with clear markers
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 25x25 grid shows complexity, single solution path guaranteed by DFS
+        comment: Demonstrates full maze complexity with entrance/exit
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Generic maze puzzle, suitable for printing, but no themed context
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: 25x25 is within recommended 15-40 range
+        comment: Real, practical use case for printable puzzles
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Appropriate 25×25 grid size
     code_quality:
       score: 10
       max: 10
@@ -156,52 +173,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data generation, plot, save'
+        comment: Clean imports→data→plot→save structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, appropriate complexity with proper DFS algorithm
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct output format (plot-{THEME}.png and .html)
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct letsplot usage (ggplot, geom_rect, theme_void)
+      - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: Uses basic geom_rect and geom_text, no distinctive lets-plot features
-          like interactivity or special theming
+        comment: Generic visualization, could be implemented in any library
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
-  - patches
+  techniques: []
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
