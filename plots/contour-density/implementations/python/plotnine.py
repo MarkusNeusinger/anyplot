@@ -1,13 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 contour-density: Density Contour Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from plotnine import aes, element_line, element_text, geom_density_2d, geom_point, ggplot, labs, theme, theme_minimal
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_density_2d,
+    geom_point,
+    ggplot,
+    labs,
+    stat_density_2d,
+    theme,
+    theme_minimal,
+)
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - create bivariate distribution with clusters
 np.random.seed(42)
@@ -31,25 +51,28 @@ y3 = np.random.normal(75, 5, n3)
 x = np.concatenate([x1, x2, x3])
 y = np.concatenate([y1, y2, y3])
 
-df = pd.DataFrame({"measurement_a": x, "measurement_b": y})
+df = pd.DataFrame({"Temperature (°C)": x, "Pressure (kPa)": y})
 
 # Plot
 plot = (
-    ggplot(df, aes(x="measurement_a", y="measurement_b"))
-    + geom_point(alpha=0.2, size=2, color="#306998")
-    + geom_density_2d(color="#FFD43B", size=1.2)
-    + labs(x="Measurement A", y="Measurement B", title="contour-density · plotnine · pyplots.ai")
+    ggplot(df, aes(x="Temperature (°C)", y="Pressure (kPa)"))
+    + geom_density_2d(stat=stat_density_2d(levels=12), color="#009E73", size=1.5)
+    + geom_point(alpha=0.15, size=2.5, color=INK_SOFT)
+    + labs(x="Temperature (°C)", y="Pressure (kPa)", title="contour-density · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        panel_grid_major=element_line(color="#cccccc", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#eeeeee", size=0.3, alpha=0.2),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        legend_position="none",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
