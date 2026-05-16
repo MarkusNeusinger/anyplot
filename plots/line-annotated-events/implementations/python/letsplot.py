@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-16
+Quality: 89/100 | Updated: 2026-05-16
 """
 
 import numpy as np

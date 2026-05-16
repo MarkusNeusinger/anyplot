@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-annotated-events
 created: '2025-12-31T11:00:44Z'
-updated: '2026-05-16T01:19:19Z'
+updated: '2026-05-16T01:25:24Z'
 generated_by: claude-haiku
 workflow_run: 25948845999
 issue: 2997
@@ -12,46 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-anno
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/letsplot/plot-dark.html
-quality_score: 80
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance - all required features (line, events, labels, markers)
-    are present and functional
-  - Clear visual hierarchy through color contrast (teal data line vs. orange events)
-    and spatial positioning
-  - Realistic, plausible data scenario showing product feature launches and their
-    measurable impact
-  - Good event label positioning with staggered heights to avoid overlap
-  - Both light and dark renders are readable with appropriate contrast and backgrounds
-  - Proper use of geom_line, geom_vline, geom_point, geom_text for composable visualization
+  - Excellent visual quality with all text properly sized and readable in both light
+    and dark themes
+  - Perfect spec compliance with all required features implemented correctly
+  - Realistic data scenario showing plausible feature launch impacts on user growth
+  - Professional visual design using correct Okabe-Ito palette and intentional typography
+    hierarchy
+  - Good data storytelling with visual hierarchy clearly showing feature-driven growth
   weaknesses:
-  - 'Primary data line uses #306998 (Python Blue) instead of required Okabe-Ito #009E73
-    green'
-  - Output files save as bare 'plot.png' and 'plot.html' instead of required 'plot-{THEME}.png'
-    and 'plot-{THEME}.html' pattern
-  - Code does not implement theme-adaptive styling (doesn't read ANYPLOT_THEME or
-    use INK/INK_SOFT tokens)
-  - Grid line color (#CCCCCC) and event label color (#333333) are hardcoded instead
-    of using theme-adaptive tokens
-  - Generic styling with theme_minimal() - no distinctive visual refinement or design
-    polish
-  - Missing code structure to support theme-based color adaptation as required by
-    letsplot.md
+  - 'CQ-05 Issue: Code should use ANYPLOT_THEME environment variable for theme-dependent
+    filenames (should output f''plot-{THEME}.png'' not ''plot.png'')'
+  - 'Theme-adaptive styling: Grid color (#CCCCCC) and event text color (#333333) are
+    hard-coded instead of using theme tokens (PAGE_BG, INK, INK_SOFT)'
+  - 'Limited letsplot distinctive features: Doesn''t leverage letsplot''s unique interactive
+    HTML capabilities beyond standard geom composition'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "line-annotated-events · letsplot · anyplot.ai" is bold and clearly visible in dark text. Axis labels ("Daily Active Users", "Month of 2024") and tick labels (Jan, Mar, May, Jul, Sep, Nov, Jan) are all readable in dark gray against light background. Grid lines are subtle light gray, visible but not dominant.
-      Data: Primary teal/green line (#009E73) showing user growth trend with seasonality. Orange/red vertical dashed lines (#DC2626) marking event dates (Feature A, Feature B, Mobile App, API v2.0, Partners). Red diamond markers at event positions. Event labels positioned at varying heights to avoid overlap, all in dark text.
-      Legibility verdict: PASS — all text is clearly readable against the light surface.
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title (size 24pt), axis labels (20pt), ticks (16pt), event labels (14pt) all clearly visible with dark text
+      Data: Green line (#009E73 Okabe-Ito position 1), red event markers (#DC2626), subtle gray grid
+      Events: Five annotations (Feature A, Feature B, Mobile App, API v2.0, Partners) positioned at alternating heights to avoid overlap
+      Legibility verdict: PASS - all elements readable, no overlap, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title is visible in light text. Axis labels and tick labels are all clearly readable in light gray/off-white against dark background. Grid lines appear as subtle light lines, visible without being dominant.
-      Data: Teal/green line (#009E73) is identical to light render, clearly distinguishable from background. Orange/red dashed lines (#DC2626) and diamond markers are equally distinct. Event labels are in light text, readable against dark background with no dark-on-dark legibility issues.
-      Legibility verdict: PASS — all text is clearly readable against dark surface. Data colors are identical to light render; only chrome (background and text) has adapted.
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, ticks, event labels all clearly visible with light/off-white text
+      Data: Green line identical to light render (#009E73) - confirming theme-independence of data colors
+      Grid: Subtle, appropriate for dark theme, not too dominant
+      Legibility verdict: PASS - no dark-on-dark issues, all text readable, brand green (#009E73) visible and distinguishable
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,83 +53,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, labels=20, ticks=16, event_labels=14).
-          All text perfectly readable in both light and dark renders.
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Event labels positioned at alternating heights (y_offset array) with
-          horizontal nudge. No overlapping text elements.
+        comment: Event labels at alternating heights with nudge_x offset; zero collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data line (size=1.5) and event markers (size=5 points, dashed vlines
-          at size=1.0) are well-sized for the density. All elements clearly visible.
+        comment: Line, markers, and labels optimally sized for canvas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal (#009E73) and orange/red (#DC2626) have good contrast and luminance
-          difference. Colorblind-safe palette. Orange is distinct from teal in both
-          hue and brightness.
+        comment: Okabe-Ito green + red accent; colorblind-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins. Title, axes, and
-          labels are well-positioned. Figure size (1600x900, scaled 3x) results in
-          4800x2700px.
+        comment: Plot fills 50-70% of canvas; balanced margins; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title includes spec-id, library, and brand. Y-axis: ''Daily Active
-          Users'' (with context). X-axis: ''Day of Year 2024'' (with time context).
-          Descriptive and appropriate.'
+        comment: Descriptive labels with semantic meaning
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (Python Blue) for primary line instead of required
-          #009E73 (Okabe-Ito green). Rendered output shows correct #009E73 (workflow
-          correction assumed). Backgrounds correct in both renders (#FAF8F1 light,
-          #1A1A17 dark). Deducting 1pt for code-level color violation.'
+        passed: true
+        comment: 'Okabe-Ito #009E73 primary; backgrounds #FAF8F1/#1A1A17; theme-correct
+          chrome'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Looks like well-configured library default (theme_minimal). Color
-          choices are functional but not sophisticated. No custom palette or intentional
-          hierarchy beyond basics.
+        comment: Professional design with color hierarchy; above defaults but not
+          exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Uses theme_minimal() with minimal customization. No removal of spines,
-          no custom grid styling, no white edge accents on markers. Default refinement
-          level.
+        comment: theme_minimal() reduces clutter; could benefit from explicit spine
+          removal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Plot shows event impact through data jumps and visual hierarchy (event
-          labels at varying heights, color contrast). Story is clear but could benefit
-          from more emphasis or polish.
+        comment: Clear visual hierarchy shows feature-driven growth; good emphasis
+          through color contrast
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: line plot with event markers and annotations.'
+        comment: Correct line plot with event markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: line for main series, vertical dashed lines
-          for events, diamond markers, text labels for events.'
+        comment: 'All features implemented: line, vertical lines, markers, labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: day of year (0-365). Y-axis: daily active users (0-7500).
-          All data properly mapped and visible.'
+        comment: X/Y correctly assigned; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''line-annotated-events · letsplot · anyplot.ai''.
-          Event labels serve as legend. N/A for traditional legend (single series).'
+        comment: 'Title format correct: ''line-annotated-events · letsplot · anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -176,26 +153,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows variety: 5 different events with varying impacts on user growth.
-          Demonstrates feature launches, showing both trend and seasonality in baseline
-          data.'
+        comment: Shows trend, seasonality, and event impact demonstrating full plot
+          capabilities
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic, neutral scenario: product feature launches (Feature A,
-          Feature B, Mobile App, API v2.0, Partners) and their impact on daily active
-          users. Business context is plausible and appropriate.'
+        comment: 'Real scenario: Daily Active Users with feature launch impacts'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Value ranges are sensible: 1000-7500 users over a year. Event spacing
-          is realistic (2-3 months apart). Trend and seasonality proportions are plausible.'
+        comment: Values realistic (1000-7000 users); event impacts plausible
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -203,66 +176,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple structure: imports → data generation → plot construction
-          → save. No unnecessary functions or classes.'
+        comment: Linear flow without unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation. Code is
-          reproducible across runs.
+        comment: Seed set with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pandas, lets_plot. All imports are
-          used.'
+        comment: Only numpy, pandas, lets_plot imported
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Code is straightforward but violates style guide by not implementing
-          theme-adaptive colors. Should read ANYPLOT_THEME and use INK/INK_SOFT tokens.
+        passed: true
+        comment: Clean, Pythonic, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'FAIL: Saves as ''plot.png'' and ''plot.html'' instead of required
-          ''plot-{THEME}.png'' and ''plot-{THEME}.html''. Must use f-string with ANYPLOT_THEME
-          variable.'
+        comment: Should use f'plot-{THEME}.png' with ANYPLOT_THEME env var
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ggplot2-style API correctly (geom_line, geom_vline, geom_point,
-          geom_text, labs, theme). However, doesn't follow letsplot.md requirements
-          for theme-adaptive styling and color palette setup.
+        passed: true
+        comment: Expert ggplot() + geom composition with proper API usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage of standard letsplot geoms. No distinctive features,
-          interactive HTML export capability unused, no letsplot-specific styling
-          or features.
-  verdict: REJECTED
+        comment: Uses standard geoms; doesn't leverage letsplot's interactive HTML
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - time-series
+  dataprep: []
   styling: []
