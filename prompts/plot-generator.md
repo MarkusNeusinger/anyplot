@@ -268,7 +268,8 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 **Forbidden (Python):**
 - Functions or classes
 - `if __name__ == '__main__':`
-- Type hints or docstrings (keep it simple)
+- Type hints
+- **Extra** docstrings beyond the required 4-line module header (see "Docstring Format" above). The module header docstring at the top of the file is **mandatory** — `impl-review.yml` rewrites it after review and the catalog renders its metadata from it. Don't add function- or class-level docstrings (there shouldn't be any functions/classes anyway).
 - Cross-library workarounds **for plotting** (e.g., using matplotlib plotting functions inside plotnine)
 
 **Forbidden (R / ggplot2):**
@@ -276,6 +277,7 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 - Calling `print(p)` after `ggsave()` — `ggsave` already renders
 - Using a non-`ragg` device for PNG output (Cairo path is not installed in CI)
 - Falling back to base-R `plot()` / `barplot()` when ggplot2 can't express something — return NOT_FEASIBLE instead
+- **Extra** roxygen blocks beyond the required 4-line header (see "Docstring Format" above). The R equivalent of the Python rule: the `#'`-prefixed header at the top of the file is **mandatory** (`impl-review.yml` rewrites it); don't add other `#'` blocks elsewhere.
 
 > If a library cannot implement a plot type natively, **do not** fall back to another library's **plotting functions** (e.g., don't use `plt.scatter()` inside plotnine). The implementation should **fail** rather than use workarounds. Each library should demonstrate only its own native plotting capabilities.
 

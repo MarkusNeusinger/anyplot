@@ -573,8 +573,16 @@ jobs:
                   f"Quality: {score}/100 | {date_info}\n"
                   '"""'
               )
+              # Match an existing leading triple-quoted module docstring and
+              # replace it. If the impl file has no header (generator skipped
+              # it / regen wiped it), prepend the canonical one instead of
+              # silently leaving the file without metadata — mirrors the R
+              # branch behaviour above.
               pattern = r'^""".*?"""'
-              new_content = re.sub(pattern, new_header, content, count=1, flags=re.DOTALL)
+              if re.match(pattern, content, flags=re.DOTALL):
+                  new_content = re.sub(pattern, new_header, content, count=1, flags=re.DOTALL)
+              else:
+                  new_content = new_header + "\n" + content
 
           with open(impl_file, "w") as f:
               f.write(new_content)

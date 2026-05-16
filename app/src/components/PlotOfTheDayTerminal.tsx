@@ -42,9 +42,10 @@ export function PlotOfTheDayTerminal({
   const previewUrl = selectPreviewUrl(potd, isDark);
   if (!potd || !previewUrl) return null;
 
-  // File extension follows the implementation language; ggplot2 ships as .R,
-  // everything else as .py.
+  // File extension + runner command follow the implementation language;
+  // ggplot2 (R) ships as .R + Rscript, every Python library as .py + python.
   const ext = potd.language === 'r' ? '.R' : '.py';
+  const runner = potd.language === 'r' ? 'Rscript' : 'python';
   const displayFilename = `plots/${potd.spec_id}/${potd.library_id}${ext}`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);
   const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}${ext}`;
@@ -88,7 +89,7 @@ export function PlotOfTheDayTerminal({
         }}
       >
         <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>$</Box>
-        <Box component="span">python</Box>
+        <Box component="span">{runner}</Box>
         <Box
           component="a"
           href={githubFileUrl}
