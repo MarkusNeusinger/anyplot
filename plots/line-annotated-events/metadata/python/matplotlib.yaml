@@ -1,164 +1,169 @@
 library: matplotlib
+language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:55:32Z'
-updated: '2025-12-31T11:04:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617489492
+updated: '2026-05-16T01:02:40Z'
+generated_by: claude-haiku
+workflow_run: 25948465087
 issue: 2997
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/matplotlib/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent implementation of the spec with clear event annotations using axvline
-    and annotate
-  - Smart use of alternating heights to prevent annotation overlap
-  - Professional styling with white background boxes and arrow connections
-  - Realistic stock price data with quarterly earnings context
-  - Clean KISS code structure with proper seed for reproducibility
+  - Perfect text legibility with explicitly sized fonts working across both themes
+  - Elegant alternating event label heights solve the overlapping-text problem without
+    awkwardness
+  - Correct Okabe-Ito palette with flawless theme-adaptive chrome implementation
+  - Comprehensive spec compliance with all required features executed well
+  - Realistic, plausible data context (stock prices with quarterly earnings and product
+    launch)
+  - Clean, reproducible code with proper environment-based theming
+  - Professional annotation styling with FancyBboxPatch and arrows
   weaknesses:
-  - Legend entry for Event Marker uses alpha=0 trick which creates an invisible line
-    in the legend - consider using a Line2D proxy artist instead
-  - Could utilize more distinctive matplotlib features like ConnectionPatch for arrows
-    or custom box styles
-  image_description: 'The plot displays a stock price time series (blue line, ~#306998)
-    spanning January 2024 to January 2025, with prices ranging from approximately
-    120 to 160 USD. Five event markers are annotated using yellow/gold (#FFD43B) dashed
-    vertical lines: "Q4 2023 Earnings" (Feb), "Q1 2024 Earnings" (May), "Product Launch"
-    (July), "Q2 2024 Earnings" (Aug), and "Q3 2024 Earnings" (Nov). Each annotation
-    has a white background box with yellow border and an arrow pointing to the event
-    date on the line. The annotations use alternating heights (higher/lower) to prevent
-    overlap. A legend in the upper left shows "Stock Price" (blue line) and "Event
-    Marker" (yellow dashed). The title reads "line-annotated-events · matplotlib ·
-    pyplots.ai". X-axis shows dates rotated for readability, Y-axis shows "Price (USD)".
-    Grid is subtle with dashed lines at alpha 0.3.'
+  - Event marker color changes between themes (orange to cyan) for thematic adaptation—good
+    UX choice but could have kept single color for absolute consistency
+  - Design Excellence could be raised with even more distinctive visual refinement
+  - Library Mastery could explore additional matplotlib features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title, axis labels, tick labels all dark and clearly readable; legend frame has light fill with proper styling
+      Data: Green stock price line (#009E73), orange/brown event marker lines, annotation boxes with light fill and dark text
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, axis labels, tick labels all light-colored and clearly readable against dark background; no dark-on-dark failures; legend frame has dark fill
+      Data: Green stock price line identical to light render (#009E73); event marker lines are cyan/sky-blue (thematic adaptation); annotation boxes have dark fill with light text
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt, annotations 14pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Alternating heights prevent annotation overlap, no text collision
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alternating event label heights eliminate collisions; all text fully
+          readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Line width 2.5 is appropriate, annotations clearly visible. Minor:
-          arrow lines could be slightly thicker'
+        comment: Stock line and event markers perfectly adapted and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight empty space in bottom corners
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Price (USD)" with unit'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with adequate contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend shows "Event Marker" with alpha=0 which appears as empty in
-          legend
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme chrome
+          perfect'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful design with alternating heights, custom legend; exceeds
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace; polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides reader; arrows and boxes create emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct line plot with event annotations
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on X, prices on Y, events properly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vertical lines (axvline), annotations with labels, alternating heights
-          for dense events
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: vertical lines, labels, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year of data visible with all events
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date/price mapping correct; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Stock Price and Event Marker
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "{spec-id} · {library} · pyplots.ai" format
+        comment: Title format correct; legend labels accurate
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows quarterly earnings + product launch, demonstrates varied event
-          types
+        comment: Shows earnings and product launch; good variety
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price with earnings announcements is a real, neutral business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Stock prices 120-160 USD, realistic daily volatility (~1.5%)
+        comment: Real, neutral scenario; plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic price range and date span
     code_quality:
       score: 10
       max: 10
@@ -168,11 +173,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Clean linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -180,28 +185,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: matplotlib, numpy, pandas all used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Pythonic, clean, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct plot-{THEME}.png output
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses standard matplotlib features (axvline, annotate) but nothing
-          distinctive like FancyBboxPatch, custom transforms, or advanced styling
+        passed: true
+        comment: Correct matplotlib patterns; proper Axes methods and theme integration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses annotation boxes with bbox/arrowprops and custom legend with
+          Line2D
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - time-series
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
+  - alpha-blending
