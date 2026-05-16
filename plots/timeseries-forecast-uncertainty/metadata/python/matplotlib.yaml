@@ -1,158 +1,184 @@
 library: matplotlib
+language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:28:45Z'
-updated: '2026-01-07T16:36:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788380267
+updated: '2026-05-16T22:23:43Z'
+generated_by: claude-haiku
+workflow_run: 25974397400
 issue: 3188
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/matplotlib/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of nested confidence bands with appropriate alpha blending
-  - Clear visual distinction between historical (solid blue) and forecast (dashed
-    orange) periods
-  - Realistic data with trend and seasonality that demonstrates the visualization
-    purpose well
-  - Confidence intervals correctly widen over time showing increasing uncertainty
-  - Clean, well-structured code following KISS principles
-  weaknesses:
-  - Legend positioned in upper left partially overlaps the start of the confidence
-    bands - consider lower left or outside the plot
-  - Could add a small overlap period between historical and forecast for better continuity
-    (as suggested in spec)
-  image_description: 'The plot displays a time series forecast visualization for monthly
-    retail sales data spanning from January 2022 to January 2026. The historical period
-    (36 months) is shown as a solid blue line (#306998) exhibiting an upward trend
-    with clear annual seasonality - peaks around mid-year and troughs around year-end.
-    A vertical gray dotted line at January 2025 marks the forecast start. The forecast
-    period (12 months) is shown as an orange dashed line (#E07000). Two nested yellow
-    shaded bands represent the confidence intervals: a darker yellow band (alpha 0.5)
-    for the 80% CI and a lighter yellow band (alpha 0.3) for the 95% CI. The bands
-    appropriately widen over time, demonstrating increasing uncertainty with longer
-    forecast horizons. The title "timeseries-forecast-uncertainty · matplotlib · pyplots.ai"
-    is displayed prominently at the top. A clear legend in the upper left identifies
-    all elements. The x-axis shows dates with 6-month intervals, and the y-axis shows
-    "Monthly Sales (thousands)" ranging from ~80 to 180.'
+  - Perfect theme-adaptive implementation with both renders readable and identical
+    data colors
+  - 'Excellent palette compliance with Okabe-Ito colors in correct positions (#009E73
+    primary, #D55E00 secondary, #56B4E9 supporting)'
+  - 'Strong visual storytelling: historical→forecast transition with expanding confidence
+    bands narrates decreasing certainty over time'
+  - Professional code quality with proper reproducibility (seed=42) and KISS structure
+  - Complete specification compliance with all required features implemented
+  - Clear visual hierarchy and focal points without needing annotations
+  - Well-positioned legend outside plot area with proper dark/light theme styling
+  - Realistic data generation with proper uncertainty growth (sqrt-based fan-out pattern)
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title, axis labels ("Date", "Monthly Sales (thousands)"), and tick labels all clearly visible in dark colors (INK #1A1A17 for title/labels, INK_SOFT #4A4A44 for ticks). Y-axis grid is subtle (alpha=0.15). Spines properly styled (top/right removed, left/bottom in INK_SOFT).
+      Data: Historical period (2022-2025-01) shown as solid green line (#009E73, linewidth=3) with trend and seasonality. Forecast period (2025-01-2026-01) shown as dashed orange line (#D55E00) with two sky-blue confidence bands (#56B4E9): lighter band (alpha=0.2) for 95% CI, darker band (alpha=0.3) for 80% CI. Bands widen rightward showing increasing uncertainty. Dotted vertical line marks forecast start.
+      Legend: Positioned at bottom-left outside plot area, identifies all 5 elements with proper styling (elevated frame #FFFDF6, text in INK_SOFT).
+      Legibility verdict: PASS - All text perfectly readable, proper contrast, no collisions, all elements visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, and tick labels all clearly visible in light colors (INK #F0EFE8 for title/labels, INK_SOFT #B8B7B0 for ticks). Excellent contrast against dark surface. Y-axis grid properly adapted to dark theme. No "dark-on-dark" text failures.
+      Data: Historical line remains identical #009E73 (brand green, solid). Forecast line remains identical #D55E00 (orange, dashed). Confidence bands remain identical #56B4E9 with same alpha values (0.2 and 0.3). Dotted vertical forecast-start line visible in dark gray. All data colors prove perfect theme-adaptive implementation.
+      Legend: Dark elevated background (#242420) with light gray edges (INK_SOFT), light text for readability.
+      Legibility verdict: PASS - All text clearly readable on dark background, no contrast failures, data colors identical to light render, proper theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt bold, axis labels at 20pt, tick labels at 16pt - all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; rotated date labels prevent x-axis
-          crowding
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both light and dark renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend outside plot area, date labels rotated 30°, no collisions
+          detected in either render
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines at linewidth=3 are clearly visible; confidence bands have good
-          alpha values; forecast line could be slightly thicker
+        comment: 'All elements clearly visible: lines (3pt), bands (alpha 0.2-0.3),
+          grid (alpha 0.15), markers (dotted line)'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/orange/yellow color scheme is colorblind-safe; good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with tight_layout(); good margins and proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (thousands), X-axis labeled Date - descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (CVD-safe), good contrast between overlapping elements,
+          no red-green-only signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape (4800×2700 px), balanced margins, plot fills 50-70%
+          of canvas, nothing cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend overlaps data slightly in upper left where confidence intervals
-          begin
+        passed: true
+        comment: 'Descriptive labels with units: ''Monthly Sales (thousands)''; title
+          format correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito: first series #009E73, second #D55E00, supporting
+          #56B4E9; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette with intentional hierarchy; color gradient
+          (solid→dashed) guides narrative; legend styled with elevated frame; professional
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines customized (top/right removed), subtle grid (alpha 0.15),
+          generous whitespace, legend frame styled, rounded line caps
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy (historical solid→forecast dashed); focal
+          point on forecast with expanding bands; narrative of decreasing certainty
+          visualized effectively
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line plot with forecast and uncertainty bands
+        comment: Time series with forecast and confidence intervals; all subtypes
+          present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, sales values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: historical line, forecast line (dashed),
-          vertical divider, 80% and 95% nested confidence bands, clear legend'
-      - id: SC-04
-        name: Data Range
+        comment: Solid line (historical), dashed line (forecast), nested bands (95%/80%),
+          vertical marker, clear legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible including confidence bands
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on x-axis, sales on y-axis, 36 historical + 12 forecast months
+          with 1-month overlap for continuity
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all five elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format {spec-id} · {library} · pyplots.ai
+        comment: Title 'timeseries-forecast-uncertainty · matplotlib · anyplot.ai';
+          legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, uncertainty growth over horizon; no overlapping
-          forecast/actual period shown
+        comment: 'Shows all aspects: trend, seasonality, noise, forecast, multiple
+          confidence levels, uncertainty growth'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly retail sales is a realistic, neutral business scenario
+        comment: Monthly retail sales domain; 3-year history + 12-month forecast;
+          realistic scenario; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 80-180 thousands are plausible for retail sales; uncertainty
-          widening is realistic
+        comment: Trend 1.2/month (plausible growth), seasonality 15 units (~12% of
+          mean), noise σ=5; confidence interval growth sqrt-based
     code_quality:
       score: 10
       max: 10
@@ -162,43 +188,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure with no functions/classes
+        comment: 'Linear flow: constants → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set; all data generation deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, pandas imported and all used
+        comment: Only os, matplotlib, numpy, pandas; all imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Pythonic, appropriate complexity, no fake UI or over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png, dpi=300, bbox_inches='tight', current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of fig/ax pattern, ax methods, environment-variable theme
+          tokens, proper spine/grid customization, date handling, legend positioning
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of fill_between for confidence bands, axvline for forecast
-          marker, autofmt_xdate for date formatting; could use more advanced features
-          like date locators/formatters
+        comment: Uses fill_between with nested alpha, axvline for markers, theme-adaptive
+          styling; solid execution but standard techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -206,8 +238,8 @@ impl_tags:
   patterns:
   - data-generation
   - explicit-figure
-  dataprep:
   - time-series
+  dataprep: []
   styling:
   - alpha-blending
   - grid-styling
