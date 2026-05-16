@@ -1,11 +1,11 @@
 spec_id: contour-density
 title: Density Contour Plot
 created: '2025-12-30T09:06:00Z'
-updated: '2025-12-30T09:06:00Z'
+updated: '2026-05-16T03:14:14Z'
 issue: 2552
 suggested: claude-code
 tags:
-  plot_type: [contour, density, kde]
-  domain: [statistics, scientific]
-  features: [2d-density, bivariate, clustering]
-  data_type: [numeric, continuous]
+  plot_type: [contour, density]
+  data_type: [numeric, continuous, bivariate]
+  domain: [statistics, science]
+  features: [2d, density, clustering]
