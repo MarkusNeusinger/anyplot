@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-brush-zoom: Interactive Scatter Plot with Brush Selection and Zoom
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 71/100 | Updated: 2026-05-16
+Quality: 41/100 | Updated: 2026-05-16
 """
 
 import numpy as np
