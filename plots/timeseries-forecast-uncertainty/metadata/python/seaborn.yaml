@@ -1,152 +1,181 @@
 library: seaborn
+language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:28:34Z'
-updated: '2026-01-07T16:32:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788379638
+updated: '2026-05-16T22:34:02Z'
+generated_by: claude-haiku
+workflow_run: 25974439026
 issue: 3188
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual distinction between historical data and forecast with clear color
-    coding
-  - Nested confidence bands with appropriate transparency (0.2 for 95%, 0.35 for 80%)
-  - Well-implemented increasing uncertainty over forecast horizon using sqrt growth
-  - Clean, readable code with proper seaborn styling
-  - Smooth connection between historical and forecast data at the transition point
+  - Perfect visual quality across all dimensions (text legibility, layout, palette
+    compliance, no overlap)
+  - Excellent theme adaptation with proper chrome switching while maintaining data
+    color consistency
+  - Strong visual storytelling through confidence band widening and color hierarchy
+  - Robust code structure with proper reproducibility and clean imports
+  - All spec requirements met comprehensively
+  - Realistic, well-chosen example data demonstrating the plot type effectively
+  - Proper use of seaborn theme system for systematic color management
   weaknesses:
-  - Fill_between for confidence bands uses matplotlib directly instead of seaborn-native
-    approaches
-  - Legend includes 4 entries which is slightly busy; could consider grouping
-  image_description: 'The plot displays a time series forecast visualization with
-    monthly sales data from January 2022 to July 2025. The historical period (2022-01
-    to late 2024) is shown with a solid blue line depicting actual values ranging
-    from ~90 to ~140 units, showing clear seasonal patterns with peaks and troughs.
-    A vertical dotted gray line marks the "Forecast Start" point around January 2025.
-    Beyond this line, a dashed yellow/gold line shows the forecast prediction, with
-    two nested uncertainty bands: a darker gold band for 80% confidence and a lighter
-    pale yellow band for 95% confidence. The confidence intervals appropriately widen
-    as the forecast horizon extends. The title follows the correct format. The legend
-    is positioned in the upper left with white background, and axes are clearly labeled
-    ("Date" and "Monthly Sales (units)"). The overall layout uses a white grid background
-    typical of seaborn.'
+  - Design excellence could be elevated through more distinctive library-specific
+    features or advanced visualization techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark text and clearly readable
+      Data: Historical line in green (#009E73), forecast line in orange dashed (#D55E00), confidence bands in orange with nested alpha (0.25 for 80%, 0.15 for 95%)
+      Grid: Subtle y-axis only with low alpha (0.15)
+      Legend: Clean and well-positioned in upper left with descriptive labels
+      Spines: L-shaped (top/right removed)
+      Legibility verdict: PASS - all elements readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, tick labels now in light text (#F0EFE8 and #B8B7B0) and clearly readable against dark background
+      Data: Historical green (#009E73) and forecast orange (#D55E00) colors are identical to light render - only chrome has changed
+      Grid: Subtle gridlines properly styled
+      Vertical line: Dotted line at forecast boundary clearly visible
+      Legibility verdict: PASS - no dark-on-dark failures, all text light-colored and readable, brand green remains clearly visible
+
+    Both renders demonstrate perfect theme adaptation: data colors constant, chrome properly theme-dependent.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: All font sizes explicitly set (24pt, 20pt, 16pt); perfectly readable
+          in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; legend well-positioned; date labels properly
+          spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines well-sized (linewidth=3), bands clearly visible with good alpha
-          values
+        comment: Historical line (3px), forecast line (3px dashed), confidence bands
+          (alpha-blended) optimally visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue for historical and yellow/gold for forecast are colorblind-safe
-          and distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Monthly Sales (units) with units, Date is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (green vs. orange) provides excellent contrast;
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; no wasted space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend includes 4 entries which is slightly busy
+        passed: true
+        comment: 'Descriptive labels with units: ''Date'' and ''Stock Price ($)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1 light
+          / #1A1A17 dark; data colors identical in both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color hierarchy with nested alpha-blended confidence
+          bands; professional polish above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle y-axis grid, generous whitespace, refined
+          legend; strong attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy with solid vs. dashed lines; band widening tells
+          story of increasing uncertainty
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series forecast visualization
+        comment: 'Correct: time series with forecast and dual confidence intervals'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Historical line, forecast line, 80% and 95% confidence bands, vertical
-          forecast start marker all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: historical, forecast, 80%/95% bands, boundary
+          marker, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date and stock price correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses timeseries-forecast-uncertainty · seaborn · pyplots.ai format
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, increasing uncertainty over forecast horizon
+        comment: 'Shows all aspects: trend, volatility, forecast, dual confidence
+          levels, boundary condition'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly sales data is a plausible real-world scenario
+        comment: Stock price forecasting is real-world, neutral, plausible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 90-170 units are reasonable for sales
+        comment: Realistic prices ($145-175); correct business day frequency; mathematically
+          correct CI expansion
     code_quality:
       score: 10
       max: 10
@@ -156,46 +185,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Linear flow; no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean, Pythonic, well-organized; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format (plot-{THEME}.png); current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses sns.lineplot and sns.set_style, but fill_between is from matplotlib
+        comment: Expertly uses sns.set_theme(), axes-level API, proper legend handling
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses seaborn theme system and matplotlib fill_between(); solid but
+          somewhat standard
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
