@@ -1,165 +1,163 @@
 library: seaborn
+language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:44:32Z'
-updated: '2025-12-31T05:56:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612909868
+updated: '2026-05-16T07:06:16Z'
+generated_by: claude-haiku
+workflow_run: 25955609342
 issue: 2921
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies:
-    - sklearn
-  techniques:
-    - custom-legend
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling:
-    - alpha-blending
 review:
   strengths:
-  - Excellent decision boundary visualization with clear class separation using make_moons
-    data
-  - Comprehensive legend showing class regions, correctly classified points, and misclassified
-    points with distinct markers
-  - Accuracy metric displayed prominently in upper-left corner adds value
-  - Good use of seaborn scatterplot for training points overlay with appropriate styling
-  - Clean color scheme with blue (#306998) and yellow (#FFD43B) provides good contrast
-    and accessibility
-  weaknesses:
-  - Axis labels lack units (Feature X1/X2 rather than describing the specific feature
-    dimensions)
-  image_description: 'The plot shows a decision boundary visualization for a 2-class
-    SVM classifier trained on make_moons data. The feature space is divided into two
-    colored regions: a blue region (Class 0) on the left/top portion and a yellow
-    region (Class 1) on the right/bottom portion. A dark blue curved line marks the
-    decision boundary between the two classes. Training points are overlaid as circular
-    markers - blue circles for Class 0 and yellow circles for Class 1. Misclassified
-    points are shown with red X markers with red edges, clustered primarily near the
-    decision boundary where the two moon shapes overlap. The title "contour-decision-boundary
-    · seaborn · pyplots.ai" appears at the top, axis labels show "Feature X1" and
-    "Feature X2", and an "SVM Accuracy: 94.0%" box is displayed in the upper-left
-    corner. A comprehensive legend in the upper-right explains all visual elements.'
+  - Flawless visual quality with perfect text sizing and readability in both light
+    and dark themes
+  - Excellent theme adaptation with identical data colors across renders and perfectly
+    theme-correct chrome elements
+  - Strong professional design distinguishing correct vs misclassified points through
+    marker styling
+  - Perfect palette compliance using Okabe-Ito colors with brand green as primary
+    series
+  - Clean, reproducible, and idiomatic seaborn code with minimal dependencies
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) providing excellent contrast for all elements
+      Chrome: Title, axis labels "Feature 1/2 (Normalized)", and tick labels all in dark text with perfect legibility
+      Data: Two colored regions (teal #009E73 and orange #D55E00) with alpha=0.3, overlaid training points (filled circles for correct, outlined for misclassified in pink), clear dark boundary line
+      Legibility verdict: PASS - All elements clearly readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) providing excellent contrast for light text elements
+      Chrome: Title, axis labels, and tick labels in light text (#F0EFE8, #B8B7B0) with perfect visibility, no dark-on-dark issues
+      Data: Data colors identical to light render (teal and orange regions, pink misclassified markers) - only chrome elements adapted to dark theme
+      Legibility verdict: PASS - All text readable against dark background, perfect theme adaptation with no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (24pt, 20pt, 16pt), perfect readability
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend well-positioned
+        comment: All text properly spaced, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized (s=200/250), appropriate alpha (0.9) for 200 points
+        comment: Markers, points, boundary line all optimally sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend near data
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels but without units ("Feature X1" rather than specific
-          feature names with units)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Whitegrid style appropriate, legend well-placed and comprehensive
+        comment: CVD-safe Okabe-Ito palette with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, balanced margins, optimal canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with context, correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors, correct backgrounds, perfect theme-adaptive chrome
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong professional design with intentional marker differentiation
+          and color choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, generous whitespace, refined styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with boundary emphasis and misclassification
+          highlighting
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct decision boundary contour plot with classifier regions
+        comment: Correct decision boundary visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X1/X2 features correctly mapped to axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: colored regions, decision boundary line,
-          training points overlay, legend with class labels, different markers for
-          correct vs incorrect classifications'
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present and working
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding (±0.5)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned to features, mesh shows full space
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly explains all visual elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title in correct format, legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both classes, decision boundary, correctly and incorrectly
-          classified points, demonstrates non-linear SVM boundary capability
+        comment: Shows all decision boundary aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: make_moons is a standard ML benchmark dataset, neutral and appropriate
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Feature values in reasonable range (-2 to 2.5), noise level (0.25)
-          creates realistic classification challenge
+        comment: Valid ML teaching dataset, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic feature ranges and accuracy values
     code_quality:
       score: 10
       max: 10
@@ -169,33 +167,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → train → plot → save (no functions/classes)'
+        comment: Linear flow with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42 in make_moons
+        comment: np.random.seed(42) and deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, seaborn, sklearn'
+        comment: All imports used, minimal dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All APIs current
+        comment: Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Correct plot-{THEME}.png naming
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert sns.scatterplot() and theme handling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good API usage but core technique uses matplotlib
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
