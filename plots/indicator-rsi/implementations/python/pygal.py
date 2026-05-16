@@ -1,13 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 85/100 | Created: 2026-01-07
+Library: pygal 3.1.0 | Python 3.13
+Quality: 85 | Updated: 2026-05-16
 """
 
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
+import numpy as np
+
+
+# Clear the local module from sys.modules if it was somehow loaded
+if "pygal" in sys.modules and "implementations" in sys.modules["pygal"].__file__:
+    del sys.modules["pygal"]
+
+# Remove current directory from path to prevent local file from being imported
+_original_path = sys.path[:]
+sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd())]
+
+try:
+    import pygal
+    from pygal.style import Style
+finally:
+    # Restore path
+    sys.path = _original_path
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - Generate realistic RSI values over 120 trading days
 np.random.seed(42)
@@ -16,16 +38,15 @@ n_days = 120
 lookback = 14
 
 # Generate price changes that produce RSI entering both overbought (>70) and oversold (<30) zones
-# Use stronger trending to ensure RSI reaches extreme values
 base_changes = np.random.randn(n_days) * 0.8
 
-# Strong uptrend periods (push RSI above 70) - increased magnitude
-base_changes[15:32] += 4.0  # Strong bullish phase
-base_changes[75:92] += 4.5  # Another strong bullish phase
+# Strong uptrend periods (push RSI above 70)
+base_changes[15:32] += 4.0
+base_changes[75:92] += 4.5
 
-# Strong downtrend periods (push RSI below 30) - increased magnitude
-base_changes[40:57] -= 4.0  # Strong bearish phase
-base_changes[100:115] -= 3.5  # Another bearish phase
+# Strong downtrend periods (push RSI below 30)
+base_changes[40:57] -= 4.0
+base_changes[100:115] -= 3.5
 
 price_changes = base_changes
 
@@ -51,38 +72,33 @@ for i in range(lookback, n_days):
 with np.errstate(divide="ignore", invalid="ignore"):
     rs = np.divide(avg_gain, avg_loss, out=np.full_like(avg_gain, 100.0), where=avg_loss > 0)
 rsi = 100 - (100 / (1 + rs))
-rsi[:lookback] = 50  # Fill initial values with neutral
+rsi[:lookback] = 50
 
+# Okabe-Ito palette with brand green as first series
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
-# Custom style for large canvas
+# Custom style for theme-adaptive rendering
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=(
-        "#D04040",  # Overbought line (red)
-        "#30A030",  # Oversold line (green)
-        "#888888",  # Centerline (gray)
-        "#306998",  # RSI line (blue)
-    ),
-    title_font_size=80,
-    label_font_size=52,
-    major_label_font_size=46,
-    legend_font_size=52,
-    value_font_size=40,
-    stroke_width=6,
-    opacity=0.95,
-    opacity_hover=1.0,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=18,
+    major_label_font_size=16,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Create chart with custom configuration for zone rendering
+# Create chart
 chart = pygal.Line(
     width=4800,
     height=2700,
     style=custom_style,
-    title="indicator-rsi · pygal · pyplots.ai",
+    title="indicator-rsi · pygal · anyplot.ai",
     x_title="Trading Period (120 days, 14-period RSI lookback)",
     y_title="RSI Value (0-100)",
     show_dots=False,
@@ -97,27 +113,24 @@ chart = pygal.Line(
     show_x_labels=False,
 )
 
-# Create RSI data with zone-based coloring approach
-# Since pygal doesn't support horizontal bands natively, we'll use secondary value lines
-# and visual indication through dashed threshold lines with clear colors
-
-# Add threshold lines (constant values across all days)
+# Add threshold lines with colorblind-safe styling
 overbought_line = [70] * n_days
 oversold_line = [30] * n_days
 centerline = [50] * n_days
 
-# Add overbought threshold line (red, dashed)
-chart.add("Overbought (70)", overbought_line, stroke_style={"width": 5, "dasharray": "20,10"}, show_dots=False)
+# Overbought threshold (using Okabe-Ito position 2 - vermillion)
+chart.add("Overbought (70)", overbought_line, stroke_style={"width": 4, "dasharray": "20,10"}, show_dots=False)
 
-# Add oversold threshold line (green, dashed)
-chart.add("Oversold (30)", oversold_line, stroke_style={"width": 5, "dasharray": "20,10"}, show_dots=False)
+# Oversold threshold (using Okabe-Ito position 3 - blue)
+chart.add("Oversold (30)", oversold_line, stroke_style={"width": 4, "dasharray": "20,10"}, show_dots=False)
 
-# Add centerline (gray, dotted)
-chart.add("Centerline (50)", centerline, stroke_style={"width": 3, "dasharray": "10,10"}, show_dots=False)
+# Centerline (using muted ink color)
+chart.add("Centerline (50)", centerline, stroke_style={"width": 2, "dasharray": "10,10"}, show_dots=False)
 
-# Add RSI data last so it appears on top with thicker line
-chart.add("RSI (14)", list(rsi), stroke_style={"width": 8}, show_dots=False)
+# Add RSI data last so it appears on top with thicker line (brand green - first series)
+chart.add("RSI (14)", list(rsi), stroke_style={"width": 6}, show_dots=False)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
