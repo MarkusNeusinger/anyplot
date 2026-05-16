@@ -492,9 +492,15 @@ jobs:
 
           # Update implementation header with quality score
           if [ -f "$IMPL_FILE" ]; then
-            # Get library and python versions from metadata
+            # Get library version + the runtime version of the implementation language
+            # (Python for python libs, R for ggplot2). The script-level header in the
+            # impl file should display the impl's own runtime, not the pipeline Python.
             LIBRARY_VERSION=$(python3 -c "import yaml; print(yaml.safe_load(open('$METADATA_FILE'))['library_version'])" 2>/dev/null || echo "unknown")
-            PYTHON_VERSION=$(python3 -c "import yaml; print(yaml.safe_load(open('$METADATA_FILE'))['python_version'])" 2>/dev/null || echo "3.13")
+            LANGUAGE_VERSION=$(python3 -c "
+          import yaml
+          data = yaml.safe_load(open('$METADATA_FILE'))
+          print(data.get('language_version') or data.get('python_version') or 'unknown')
+          " 2>/dev/null || echo "unknown")
             DATE_INFO=$(python3 -c "
           import yaml
           data = yaml.safe_load(open('$METADATA_FILE'))
@@ -510,39 +516,65 @@ jobs:
             TITLE=$(python3 -c "import yaml; print(yaml.safe_load(open('plots/${SPEC_ID}/specification.yaml'))['title'])" 2>/dev/null || echo "${SPEC_ID}")
 
             # Replace old header using Python.
-            # All inputs are passed via env (NOT shell-interpolated into the
-            # Python source), and the heredoc uses single-quoted 'EOF' so bash
-            # does not expand $TITLE. This blocks the prior triple-quoted
-            # literal injection (a TITLE containing ''' would have escaped
-            # the string and executed arbitrary Python in the runner).
-            export IMPL_FILE SPEC_ID TITLE LIBRARY LIBRARY_VERSION PYTHON_VERSION SCORE DATE_INFO
+            # Inputs come through env (NOT shell-interpolated into Python source) and the
+            # heredoc uses single-quoted 'EOF' so bash does not expand $TITLE. That blocks
+            # triple-quote literal injection (a TITLE containing ''' would otherwise
+            # escape the string and execute arbitrary Python in the runner).
+            #
+            # Per-language header style:
+            #  - Python: triple-quoted docstring (""")
+            #  - R: roxygen-style #' block (R has no docstring syntax)
+            export IMPL_FILE LANGUAGE SPEC_ID TITLE LIBRARY LIBRARY_VERSION LANGUAGE_VERSION SCORE DATE_INFO
             python3 - <<'EOF'
           import os
           import re
 
           impl_file = os.environ["IMPL_FILE"]
+          language = os.environ["LANGUAGE"]
           spec_id = os.environ["SPEC_ID"]
           title = os.environ["TITLE"]
           library = os.environ["LIBRARY"]
           lib_version = os.environ["LIBRARY_VERSION"]
-          py_version = os.environ["PYTHON_VERSION"]
+          lang_version = os.environ["LANGUAGE_VERSION"]
           score = os.environ["SCORE"]
           date_info = os.environ["DATE_INFO"]
 
-          # Sanitize title to prevent triple-quote injection
-          title = title.replace('"""', '\"\"\"')
-
-          new_header = f'''""" anyplot.ai
-          {spec_id}: {title}
-          Library: {library} {lib_version} | Python {py_version}
-          Quality: {score}/100 | {date_info}
-          """'''
+          # Human-readable runtime label for the header. Extend this map when a new
+          # language joins the catalog.
+          RUNTIME_LABEL = {"python": "Python", "r": "R"}.get(language, language.capitalize())
 
           with open(impl_file, "r") as f:
               content = f.read()
 
-          pattern = r'^""".*?"""'
-          new_content = re.sub(pattern, new_header, content, count=1, flags=re.DOTALL)
+          if language == "r":
+              # Sanitize title — newlines would break the comment block. R header is
+              # roxygen-style #' so triple-quote injection isn't a concern.
+              title_safe = title.replace("\n", " ")
+              new_header = (
+                  "#' anyplot.ai\n"
+                  f"#' {spec_id}: {title_safe}\n"
+                  f"#' Library: {library} {lib_version} | {RUNTIME_LABEL} {lang_version}\n"
+                  f"#' Quality: {score}/100 | {date_info}"
+              )
+              # Match a leading run of #' lines (the existing roxygen header). Anchored to
+              # start of file. If no header exists we fall back to prepending one.
+              pattern = r"\A(?:#'[^\n]*\n)+"
+              if re.match(pattern, content):
+                  new_content = re.sub(pattern, new_header + "\n", content, count=1)
+              else:
+                  new_content = new_header + "\n" + content
+          else:
+              # Python: triple-quoted module docstring at the top of the file.
+              title_safe = title.replace('"""', '\\"\\"\\"')
+              new_header = (
+                  '""" anyplot.ai\n'
+                  f"{spec_id}: {title_safe}\n"
+                  f"Library: {library} {lib_version} | {RUNTIME_LABEL} {lang_version}\n"
+                  f"Quality: {score}/100 | {date_info}\n"
+                  '"""'
+              )
+              pattern = r'^""".*?"""'
+              new_content = re.sub(pattern, new_header, content, count=1, flags=re.DOTALL)
 
           with open(impl_file, "w") as f:
               f.write(new_content)

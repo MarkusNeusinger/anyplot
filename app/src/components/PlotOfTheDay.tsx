@@ -29,6 +29,7 @@ interface PlotOfTheDayData {
   image_description: string | null;
   library_version: string | null;
   python_version: string | null;
+  language_version: string | null;
   date: string;
 }
 
@@ -254,7 +255,7 @@ export function PlotOfTheDay() {
             │
           </Typography>
           <Typography sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>
-            {data.library_name}{data.library_version && data.library_version !== 'unknown' ? ` ${data.library_version}` : ''} · Python {data.python_version || '3.13'}
+            {data.library_name}{data.library_version && data.library_version !== 'unknown' ? ` ${data.library_version}` : ''} · {data.language === 'r' ? 'R' : 'Python'} {data.language_version || data.python_version || (data.language === 'r' ? '4.4' : '3.13')}
           </Typography>
         </Box>
       </Box>

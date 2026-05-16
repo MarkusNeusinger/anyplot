@@ -29,12 +29,8 @@ from core.constants import (
 class TestSupportedLibraries:
     """Tests for SUPPORTED_LIBRARIES constant."""
 
-    def test_contains_all_libraries(self) -> None:
-        """Should contain every catalog library (8 Python + ggplot2)."""
-        assert len(SUPPORTED_LIBRARIES) == 10
-
     def test_contains_expected_libraries(self) -> None:
-        """Should contain all expected library IDs."""
+        """Should contain exactly the expected catalog of library IDs (9 Python + ggplot2)."""
         expected = {
             "altair",
             "bokeh",
@@ -56,10 +52,6 @@ class TestSupportedLibraries:
 
 class TestLibrariesMetadata:
     """Tests for LIBRARIES_METADATA constant."""
-
-    def test_contains_all_libraries(self) -> None:
-        """Should contain metadata for every supported library."""
-        assert len(LIBRARIES_METADATA) == len(SUPPORTED_LIBRARIES)
 
     def test_ids_match_supported_libraries(self) -> None:
         """All metadata IDs should match SUPPORTED_LIBRARIES."""

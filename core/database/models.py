@@ -142,7 +142,13 @@ class Impl(Base):
     preview_html = synonym("preview_html_light")
 
     # Creation versions (filled by workflow)
+    # python_version is the Python interpreter that ran the impl-generate pipeline (3.13 today).
+    # language_version is the runtime version of the implementation's own language — same
+    # as python_version for Python libs, the R version for ggplot2. The frontend renders
+    # `{language_name} {language_version}`; old rows without language_version fall back to
+    # python_version (kept as a synonym for backwards compatibility).
     python_version: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "3.13"
+    language_version: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "3.13" / "4.4.1"
     library_version: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "3.9.0"
 
     # Test matrix (deferred — unused by any endpoint)

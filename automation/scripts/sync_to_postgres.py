@@ -366,8 +366,18 @@ def scan_plot_directory(plot_dir: Path) -> dict | None:
                     "preview_url_dark": preview_url_dark,
                     "preview_html_light": preview_html_light,
                     "preview_html_dark": preview_html_dark,
-                    # Versions (from metadata YAML, filled by workflow)
+                    # Versions (from metadata YAML, filled by workflow).
+                    # language_version is the implementation's own runtime version (Python for
+                    # python libs, R for ggplot2). python_version stays the pipeline Python.
                     "python_version": current.get("python_version") or impl_meta.get("python_version"),
+                    "language_version": (
+                        current.get("language_version")
+                        or impl_meta.get("language_version")
+                        # Legacy entries (pre-ggplot2) only carried python_version; fall back so
+                        # existing rows keep displaying correctly until they re-sync.
+                        or current.get("python_version")
+                        or impl_meta.get("python_version")
+                    ),
                     "library_version": current.get("library_version") or impl_meta.get("library_version"),
                     # Generation metadata
                     "generated_at": generated_at,
@@ -412,6 +422,7 @@ _IMPL_UPDATE_FIELDS = [
     "preview_html_light",
     "preview_html_dark",
     "python_version",
+    "language_version",
     "library_version",
     "generated_at",
     "updated",

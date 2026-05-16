@@ -115,6 +115,7 @@ class PlotOfTheDayResponse(BaseModel):
     code: str | None = None
     library_version: str | None = None
     python_version: str | None = None
+    language_version: str | None = None
     date: str
 
 
@@ -420,6 +421,7 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
         code=strip_noqa_comments(full_impl.code) if full_impl and full_impl.code else None,
         library_version=full_impl.library_version if full_impl else None,
         python_version=full_impl.python_version if full_impl else None,
+        language_version=(full_impl.language_version or full_impl.python_version) if full_impl else None,
         date=today,
     )
 

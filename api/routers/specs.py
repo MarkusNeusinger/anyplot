@@ -89,6 +89,7 @@ async def _build_spec_detail(db: AsyncSession, spec_id: str) -> SpecDetailRespon
             updated=impl.updated.isoformat() if impl.updated else None,
             generated_by=impl.generated_by,
             python_version=impl.python_version,
+            language_version=impl.language_version or impl.python_version,
             library_version=impl.library_version,
             review_strengths=impl.review_strengths or [],
             review_weaknesses=impl.review_weaknesses or [],

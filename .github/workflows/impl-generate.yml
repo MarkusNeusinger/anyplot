@@ -455,14 +455,15 @@ jobs:
 
           mkdir -p "$METADATA_DIR"
 
-          # Runtime version: Python for python libs, R for R libs. We still record
-          # a 'python_version' field in metadata for backwards compatibility; for R
-          # implementations it carries the R version instead (the DB / frontend treat
-          # it as a free-form runtime version string).
+          # python_version = the Python interpreter that ran THIS pipeline (always 3.13).
+          # language_version = the implementation's own runtime — same as python_version for
+          # Python libs, the R version for ggplot2. The frontend renders language_version with
+          # the right language label, so we never mislabel R as "Python".
+          PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
           if [ "$LANGUAGE" = "r" ]; then
-            PYTHON_VERSION=$(Rscript -e 'cat(as.character(getRversion()))' 2>/dev/null || echo "unknown")
+            LANGUAGE_VERSION=$(Rscript -e 'cat(as.character(getRversion()))' 2>/dev/null || echo "unknown")
           else
-            PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+            LANGUAGE_VERSION="$PYTHON_VERSION"
           fi
 
           # Get library version. Python libs read via `pip show`; R libs via
@@ -507,7 +508,7 @@ jobs:
           if [ -z "$LIBRARY_VERSION" ]; then
             LIBRARY_VERSION="unknown"
           fi
-          echo "::notice::Library version: $LIBRARY = $LIBRARY_VERSION ($LANGUAGE runtime $PYTHON_VERSION)"
+          echo "::notice::Library version: $LIBRARY = $LIBRARY_VERSION ($LANGUAGE runtime $LANGUAGE_VERSION, pipeline python $PYTHON_VERSION)"
 
           # Interactive libraries additionally produce HTML previews (one per theme)
           HAS_HTML="false"
@@ -526,6 +527,7 @@ jobs:
           run_id = ${{ github.run_id }}
           issue = int('$ISSUE' or '0')
           py_ver = '$PYTHON_VERSION'
+          lang_ver = '$LANGUAGE_VERSION'
           lib_ver = '$LIBRARY_VERSION'
           has_html = '$HAS_HTML' == 'true'
           metadata_file = '$METADATA_FILE'
@@ -559,6 +561,7 @@ jobs:
               'workflow_run': run_id,
               'issue': issue,
               'python_version': py_ver,
+              'language_version': lang_ver,
               'library_version': lib_ver,
               # Theme-aware preview URLs (Phase C). Both PNG variants are always emitted.
               'preview_url_light': f'{base_url}/plot-light.png',

@@ -86,6 +86,7 @@ def mock_spec():
     mock_impl.updated = None
     mock_impl.generated_by = "claude"
     mock_impl.python_version = "3.13"
+    mock_impl.language_version = "3.13"
     mock_impl.library_version = "3.10.0"
     # Review fields (must be proper types, not MagicMock)
     mock_impl.review_image_description = "A scatter plot showing data points"
@@ -1597,6 +1598,7 @@ class TestInsightsRouter:
         mock_impl.review_image_description = "A scatter plot"
         mock_impl.library_version = "3.10.0"
         mock_impl.python_version = "3.13.11"
+        mock_impl.language_version = "3.13.11"
         mock_impl_repo = MagicMock()
         mock_impl_repo.get_by_spec_and_library = AsyncMock(return_value=mock_impl)
 
