@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:34:36Z'
-updated: '2026-05-16T22:40:25Z'
+updated: '2026-05-16T22:45:57Z'
 generated_by: claude-haiku
 workflow_run: 25974733360
 issue: 3188
@@ -12,34 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Perfect theme-adaptive chrome with both renders passing legibility checks
-  - 'Correct Okabe-Ito palette with first series properly using #009E73'
-  - Excellent visual quality with no text overlap or legibility issues
-  - All spec requirements met with clean, feature-complete implementation
-  - Realistic, domain-appropriate stock price data with growing uncertainty
-  - Clean, reproducible code with explicit font sizing
+  - Proper theme-adaptive implementation with correct chrome flipping in both light
+    and dark renders
+  - Accurate Okabe-Ito palette usage with correct brand color (#009E73) for historical
+    series
+  - Effective nested confidence bands with well-chosen alpha transparency (0.35 for
+    80%, 0.2 for 95%)
+  - Clean, reproducible code with realistic synthetic data and proper seeding
+  - All spec requirements met with visual clarity and correct styling
   weaknesses:
-  - Design Excellence is adequate but not exceptional - follows defaults rather than
-    adding distinctive polish
-  - Visual storytelling could be stronger - no particular emphasis on uncertainty
-    growth insight
-  - Library mastery is competent but doesn't showcase distinctive lets-plot features
-    beyond standard usage
+  - 'Generic design defaults: could benefit from explicit spine removal (top/right)
+    per style guide'
+  - Grid styling uses defaults; could be refined to y-axis-only with lower opacity
+  - Legend frame styling and positioning could be more refined for stronger visual
+    hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "timeseries-forecast-uncertainty · letsplot · anyplot.ai" in dark text. Axis labels "Date" and "Stock Price ($)" with units, clearly readable. Tick labels are properly spaced and visible. Grid lines are subtle. All text is dark (#1A1A17) on light background.
-      Data: Historical period (Jan 2023-Dec 2025) shown as solid teal line (#009E73 - Okabe-Ito position 1). Forecast period marked by dotted vertical line, continuing with orange line (#E69F00 - Okabe-Ito position 5). Two nested confidence bands: 80% band in darker orange (alpha 0.35) and 95% band in lighter orange (alpha 0.2). Legend identifies both series correctly.
-      Legibility verdict: PASS - All text is perfectly readable, no contrast issues, no overlap.
+      Background: Warm off-white #FAF8F1 - correct color, not pure white
+      Chrome: Title, axis labels, tick labels all rendered in dark ink (#1A1A17) - fully readable against light background
+      Data: Green solid line (#009E73) for historical, orange dashed line (#E69F00) for forecast, two nested orange bands (alpha 0.35 and 0.2)
+      Elements: Vertical dotted line at forecast start, legend on right identifying series
+      Legibility verdict: PASS - All text clear and readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title in light text (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in light gray (#B8B7B0), fully readable. Grid lines visible and subtle. Legend text light-colored on darker background. NO dark-on-dark failures.
-      Data: Historical line is IDENTICAL teal (#009E73) as light render. Forecast line is IDENTICAL orange (#E69F00). Confidence bands have same colors and transparencies as light render - perfect color consistency between themes. Only chrome (text colors, grid) has adapted as expected.
-      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark failures, data colors identical to light render, theme adaptation perfect.
+      Background: Warm near-black #1A1A17 - correct color, not pure black
+      Chrome: Title, axis labels, tick labels rendered in light tones (#F0EFE8 for title, #B8B7B0 for ticks) - fully readable against dark background
+      Data: Green (#009E73) and orange (#E69F00) - identical to light render, confirming chrome-only adaptation
+      Elements: Vertical dotted line clear, legend readable
+      Legibility verdict: PASS - All text clear and readable, no dark-on-dark failures, axis text has proper contrast
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,49 +53,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          Perfectly readable in both themes.
+        comment: All text readable in both themes; font sizes appropriately scaled
+          for 4800×2700 canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Date labels and ticks are clean and well-spaced.
+        comment: Date labels well-spaced, legend positioned without collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data elements clearly visible. Line width and band alphas appropriately
-          sized.
+        comment: Lines sized appropriately (1.5pt), bands transparent enough to see
+          through
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between series. Okabe-Ito palette is CVD-safe. Overlapping
-          bands distinguishable.
+        comment: Okabe-Ito palette is colorblind-safe; green/orange have adequate
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with plot filling ~70% of canvas and balanced margins.
+        comment: Good proportions, nothing cut off, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units.
+        comment: Descriptive labels with units, correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect! First series #009E73, forecast #E69F00. Backgrounds correct.
-          Both renders theme-correct.'
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds correct
+          for both themes'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -100,22 +103,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured and professional, but follows library defaults. Not
-          exceptional or distinctively sophisticated.
+        comment: Follows style guide defaults; professional but generic styling
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and decent whitespace, but minimal custom refinement.
-          Could benefit from spine removal.
+        comment: Standard letsplot defaults; minimal spine customization or grid refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Functional story but lacks strong visual hierarchy. Could use focal
-          point to highlight uncertainty growth.
+        passed: true
+        comment: Nested bands create visual hierarchy; distinct line styles and vertical
+          marker guide viewer effectively
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series forecast plot with both confidence intervals.
+        comment: Correct time series with confidence bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: historical line, forecast line, dual bands,
-          vertical separator, legend.'
+        comment: 'All elements present: historical line, forecast, bands, marker,
+          legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct and all data visible.
+        comment: Date axis spans both periods, stock price axis shows all values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels accurate.
+        comment: Title correct format, legend identifies series
     data_quality:
       score: 15
       max: 15
@@ -154,19 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: upward trend, volatility, uncertainty growth.'
+        comment: 'Shows all aspects: historical, forecast, both CIs, horizon marker'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price forecasting is real-world, neutral, and comprehensible.
+        comment: Stock price scenario is neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions factually correct and realistic.
+        comment: Values plausible for stock price; uncertainty grows with horizon
     code_quality:
       score: 10
       max: 10
@@ -176,58 +177,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow.
+        comment: Simple, straightforward code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42.
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports.
+        comment: Only imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and current API.
+        comment: Saves as plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good idiomatic lets-plot usage with ggplot, geom_ribbon, geom_line.
+        comment: ggplot-style API correctly used; proper aes() and manual scales
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses geom_ribbon and HTML export, but fairly standard. Could leverage
-          more distinctive features.
+        comment: Uses letsplot-specific ggsize() and ggsave(scale=); LetsPlot.setup_html();
+          not extraordinary
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - time-series
+  - explicit-figure
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - theme-adaptive
