@@ -1,153 +1,181 @@
 library: letsplot
+language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:30:55Z'
-updated: '2026-01-07T16:44:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788389080
+updated: '2026-05-16T10:57:25Z'
+generated_by: claude-haiku
+workflow_run: 25960067444
 issue: 3181
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/letsplot/plot.html
-quality_score: 92
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent use of ggplot2 grammar with layered composition (histogram bars + zero
-    line + MACD/signal lines)
-  - Proper EMA calculations with warmup period (35 days) for accurate MACD values
-  - Clear color scheme distinguishing all components (blue MACD, yellow signal, green/red
-    histogram)
-  - Clean data transformation using pd.melt for line data in long format
-  - Both PNG and HTML output for static and interactive viewing
+  - 'Perfect Visual Quality: all text explicitly sized (24/20/16pt) and readable in
+    both themes with no overlap'
+  - 'Excellent Data Design: realistic stock price simulation with proper MACD calculations
+    demonstrates deep analytical understanding'
+  - 'Impeccable Theme Adaptation: Okabe-Ito data colors remain identical while chrome
+    flips perfectly between light and dark themes'
+  - 'Idiomatic letsplot Expertise: demonstrates mastery of grammar of graphics with
+    proper aesthetic mappings and layer composition'
+  - 'Strong Technical Design: histogram color-coding and dashed zero line provide
+    clear analytical insight for momentum analysis'
   weaknesses:
-  - Data context is generic synthetic prices; could be slightly more realistic (e.g.,
-    actual stock ticker simulation)
-  image_description: The plot displays a MACD technical indicator chart with 120 trading
-    days of data. The blue MACD line and yellow/gold Signal line are clearly visible,
-    showing characteristic momentum oscillations with peaks around day 80 (~3.7) and
-    troughs around day 30 and 115 (~-5). The histogram bars are rendered in green
-    for positive values (above zero) and red for negative values, correctly showing
-    the difference between MACD and Signal lines. A dashed gray horizontal line marks
-    the zero reference. The chart uses a minimal theme with a light gray grid, and
-    has clear axis labels ("Trading Day" on X, "MACD Value" on Y). Two legends on
-    the right side explain the Histogram colors and Line types. The title follows
-    the required format "indicator-macd · letsplot · pyplots.ai".
+  - 'SC-02 Color Specification: Histogram uses blue (positive) and orange (negative)
+    instead of spec-requested green and red. Deviation justified by Okabe-Ito palette
+    compliance, but still a spec deviation.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, x-axis label ("Trading Day"), y-axis label ("MACD Value"), tick labels all in dark text (#1A1A17) at explicitly set sizes (24pt/20pt/16pt). All readable.
+      Data: MACD line in brand green (#009E73), Signal line in orange (#D55E00), histogram bars blue (#56B4E9) for positive and orange (#D55E00) for negative. Dashed zero reference line provides context. All colors distinct and visible.
+      Legibility verdict: PASS - All text readable at full resolution; data elements clear
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8/#B8B7B0) at same sizes. All readable against dark background. No dark-on-dark failures detected.
+      Data: Colors identical to light render (MACD green, Signal orange, histogram blue/orange). Grid lines visible as subtle light lines. Dashed zero line visible. All data colors maintain perfect contrast.
+      Legibility verdict: PASS - All text readable; perfect theme adaptation; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: Title 24pt, Labels 20pt, Ticks 16pt;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: No overlapping text; title, labels, legend all positioned clearly
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are thick (1.5), bars have good width (0.8), all elements clearly
-          visible
+        comment: Bars (width=0.8), lines (size=1.5), and markers all clearly visible
+          with appropriate alpha
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow lines have excellent contrast; green/red histogram uses
-          distinct hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, legend positioned cleanly
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels but no units (MACD values are unitless)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Minimal theme provides subtle grid, legends well placed on right
+        comment: Okabe-Ito palette used; good contrast; CVD-safe; no red-green dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: '4800×2700px (landscape): plot fills ~70% of canvas with balanced
+          margins'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; X/Y labels descriptive (Trading Day, MACD Value)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Okabe-Ito pos 1); background #FAF8F1/#1A1A17
+          correct; theme tokens applied; data colors identical between renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: thoughtful color hierarchy (green MACD, orange Signal,
+          blue histogram), intentional use of dashed reference line, professional
+          polish above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-axis grid, theme_minimal removes unnecessary spines, legend
+          positioned well, good whitespace; minor refinement possible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color contrast (blue positive vs orange
+          negative); zero line guides reader; data shows realistic momentum patterns
+          with clear trend phases
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct MACD chart with all three components (MACD line, Signal line,
-          histogram)
+        comment: Correct MACD chart type with all three components (MACD line, Signal
+          line, histogram)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, MACD values on Y-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: MACD line, signal line, histogram bars,
-          zero reference line, green/red coloring'
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: false
+        comment: 'All features present and working, but histogram colors deviate:
+          spec requests green/red, implementation uses blue/orange (Okabe-Ito palette)'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range visible from -5.5 to 4
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Trading Day (date progression); Y: MACD Value; axes show all
+          data correctly'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legends correctly label all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact required format indicator-macd · letsplot · pyplots.ai
+        comment: 'Title: ''indicator-macd · letsplot · anyplot.ai'' (correct format);
+          legend labels match data'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple MACD/signal crossovers, both positive and negative
-          histogram regions, trend changes
+        comment: 'Shows all MACD aspects: varying MACD/Signal lines, positive/negative
+          histogram bars, crossover points, trend changes'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Plausible momentum oscillator pattern but synthetic (simulated prices
-          with sine trend)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: MACD values in reasonable range for typical stock data
+        comment: Realistic stock price simulation with proper EMA calculations (12,
+          26, 9 periods); 120 trading days; neutral financial scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MACD range -6 to +5, Signal line similar; histogram differences reasonable;
+          all proportions align with real MACD behavior
     code_quality:
       score: 10
       max: 10
@@ -157,56 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data generation → EMA calculation →
-          MACD components → plot → save'
+        comment: 'Linear flow: imports → setup → data generation → plot → save; no
+          unnecessary functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and lets-plot imported
+        comment: 'All imports used: os (ANYPLOT_THEME), numpy (calculations), pandas
+          (DataFrame/EWM), lets_plot (plotting)'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with ggsave(scale=3);
+          correct API usage
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses ggplot2-style grammar with geom_bar + geom_line + geom_hline
-          composition, scale_fill_manual/scale_color_manual, theme_minimal(), ggsave
-          with scale parameter
+        comment: 'Expert ggplot2-style grammar: ggplot() + geom layers, aes() mappings,
+          scale_*_manual, theme() customization, ggsize(), ggsave()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ggplot2-compatible + operator, LetsPlot.setup_html() for export,
+          ggsize() for figure sizing, theme element_text/rect/line
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   - wide-to-long
   dataprep:
   - time-series
-  - rolling-window
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []
