@@ -1,7 +1,7 @@
 """ anyplot.ai
 maze-printable: Printable Maze Puzzle
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 79/100 | Updated: 2026-05-16
+Quality: 61/100 | Updated: 2026-05-16
 """
 
 import numpy as np
