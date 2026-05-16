@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-brush-zoom: Interactive Scatter Plot with Brush Selection and Zoom
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_point,
     geom_rect,
@@ -27,6 +30,19 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is ALWAYS #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Brush rectangle color
+BRUSH_COLOR = "#0072B2"
 
 # Data - Generate clustered data for brush selection demonstration
 np.random.seed(42)
@@ -59,11 +75,11 @@ df = pd.DataFrame(
         "category": colors,
         "label": labels,
         "selected": selected,
-        "point_alpha": [0.9 if s else 0.25 for s in selected],
+        "point_alpha": [0.9 if s else 0.4 for s in selected],
     }
 )
 
-# Create tooltips for hover interaction - shows point details
+# Create tooltips for hover interaction
 tooltips = (
     layer_tooltips()
     .title("@label")
@@ -84,15 +100,6 @@ n_selected = df["selected"].sum()
 brush_df = pd.DataFrame({"xmin": [brush_xmin], "xmax": [brush_xmax], "ymin": [brush_ymin], "ymax": [brush_ymax]})
 
 # Create interactive scatter plot with brush selection visualization
-# The static PNG demonstrates brush selection with:
-# - Visible brush rectangle (blue dashed border with light fill)
-# - Selected points shown with full opacity, unselected dimmed
-# - Selection count annotation
-# The HTML export includes built-in toolbar with:
-# - Pan (drag to move around)
-# - Wheel zoom (scroll to zoom in/out)
-# - Box zoom (select area to zoom)
-# - Reset (double-click to reset view)
 plot = (
     ggplot(df, aes(x="x", y="y"))
     # Draw brush selection rectangle first (behind points)
@@ -100,28 +107,34 @@ plot = (
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         data=brush_df,
         inherit_aes=False,
-        fill="#3B82F6",
+        fill=BRUSH_COLOR,
         alpha=0.15,
-        color="#3B82F6",
+        color=BRUSH_COLOR,
         linetype="dashed",
         size=1.5,
     )
     # Plot points with alpha based on selection state
     + geom_point(aes(color="category", alpha="point_alpha"), size=5, tooltips=tooltips)
-    + scale_color_manual(values=["#306998", "#FFD43B", "#DC2626", "#059669"])
+    + scale_color_manual(values=OKABE_ITO)
     + scale_alpha_identity()
     + labs(
-        x="X Value (units)", y="Y Value (units)", title="scatter-brush-zoom · letsplot · pyplots.ai", color="Category"
+        x="X Value (units)", y="Y Value (units)", title="scatter-brush-zoom · letsplot · anyplot.ai", color="Category"
     )
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24, margin=[0, 0, 10, 0]),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        panel_grid_major=element_line(color="#E5E5E5", size=0.5),
-        panel_grid_minor=element_line(color="#F0F0F0", size=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_minor=element_line(color=INK_SOFT, size=0.2),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK, margin=[0, 0, 10, 0]),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_position="right",
+        legend_direction="vertical",
     )
     + ggsize(1600, 900)
 )
@@ -130,16 +143,11 @@ plot = (
 annotation_df = pd.DataFrame({"x": [40], "y": [88], "text": [f"Brush Selection: {n_selected} points selected"]})
 
 plot = plot + geom_text(
-    aes(x="x", y="y", label="text"), data=annotation_df, inherit_aes=False, size=14, color="#1E40AF", fontface="bold"
+    aes(x="x", y="y", label="text"), data=annotation_df, inherit_aes=False, size=14, color=BRUSH_COLOR, fontface="bold"
 )
 
 # Save static PNG (scaled 3x for 4800x2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save interactive HTML with zoom, pan, and hover capabilities
-# The HTML viewer includes a toolbar with:
-# - Pan mode: click and drag to navigate
-# - Wheel zoom: scroll to zoom in/out
-# - Box zoom: draw rectangle to zoom to area (brush-like selection)
-# - Reset: double-click or use reset button to restore original view
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
