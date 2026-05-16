@@ -1,177 +1,174 @@
 library: highcharts
+language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:51:30Z'
-updated: '2025-12-31T15:12:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612962959
+updated: '2026-05-16T07:20:19Z'
+generated_by: claude-haiku
+workflow_run: 25955849590
 issue: 2921
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/highcharts/plot-dark.html
 quality_score: 90
-impl_tags:
-  dependencies:
-    - sklearn
-    - selenium
-  techniques:
-    - colorbar
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent decision boundary visualization with clear separation between blue and
-    yellow regions
-  - Good use of different marker shapes (circles for Class 0, diamonds for Class 1)
-    to distinguish classes
-  - Proper colorblind-safe palette using blue (#306998) and yellow (#FFD43B)
-  - 'Title follows correct format: contour-decision-boundary · highcharts · pyplots.ai'
-  - Clean heatmap implementation showing probability gradients through the decision
-    space
+  - Excellent text legibility across both themes with explicit font sizing
+  - 'Perfect theme adaptation: identical data colors with properly transformed chrome
+    elements'
+  - Solid data quality with make_moons dataset demonstrating KNN classifier behavior
+  - Consistent theme token usage (INK, INK_SOFT, PAGE_BG) applied throughout
+  - 'Correct Okabe-Ito palette with #009E73 primary and #D55E00 secondary'
+  - Clean, reproducible code with deterministic seeding (random_state=42)
   weaknesses:
-  - X-axis label (Feature X1) is missing - only Y-axis label (Feature X2) is visible
-  - Color axis legend on right side shows truncated values (1.0 and 0.0 partially
-    visible)
-  - Legend box with Training Data title and class names is not visible in the rendered
-    image
-  image_description: 'The plot shows a decision boundary visualization for a KNN classifier
-    on moon-shaped data. The background is a heatmap with blue (#306998) regions on
-    the left side (Class 0 prediction probability) transitioning through a light gray/white
-    gradient in the middle to yellow (#FFD43B) regions on the right side (Class 1
-    prediction probability). Training data points are overlaid as scatter markers:
-    blue circles for Class 0 and yellow diamonds for Class 1. The title "contour-decision-boundary
-    · highcharts · pyplots.ai" appears at the top in bold, with a subtitle "KNN Classifier
-    Decision Boundary on Moon-shaped Data" below it. The Y-axis is labeled "Feature
-    X2" with tick values from -1.5 to 2.5. The X-axis shows tick values from -1.5
-    to 2.5. A small color axis legend appears on the right showing the 0.0 to 1.0
-    probability scale. The overall layout fills the canvas well with balanced margins.'
+  - Design lacks distinctive sophistication; uses generic styling beyond default theme
+    application
+  - Visual refinement could be enhanced; grid lines remain prominent over heatmap
+    region
+  - No custom visual emphasis or hierarchy to create exceptional design polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title, subtitle, axis labels, tick labels all in dark text (INK #1A1A17); perfectly readable
+      Grid: Subtle purple lines visible over heatmap for value reading
+      Data: Viridis heatmap (purple→yellow gradient) showing decision probability; Class 0 circles in #009E73 (brand), Class 1 diamonds in #D55E00; both marker types clearly visible
+      Legend: Right-aligned with "Training Data" title, showing both class markers
+      Legibility verdict: PASS - all elements readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels all in light text (#F0EFE8, #B8B7B0); perfectly readable against dark background
+      Grid: Light gray lines visible; subtle appearance on dark surface
+      Data: Identical viridis heatmap gradient to light render (only chrome inverted); Class 0 circles #009E73 and Class 1 diamonds #D55E00 unchanged; confirms data colors are theme-invariant
+      Legend: Light text on elevated background; no dark-on-dark conflicts
+      Legibility verdict: PASS - zero dark-on-dark failures, all elements clearly readable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, subtitle, and axis tick labels are clearly readable at the
-          high resolution; Y-axis label is visible but X-axis label is missing
+        comment: All sizes explicit (28px title, 22px labels, 18px ticks), perfectly
+          readable both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all data points and labels are clearly
-          separated
+        comment: All text properly spaced; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized with dark borders making them stand out against
-          the heatmap background
+        comment: Heatmap cells and markers (r=8) optimally visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe blue and yellow palette, avoiding problematic
-          red-green combinations
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization (~60% filled by plot), minor issue with missing
-          x-axis label
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Y-axis has "Feature X2" label but X-axis label "Feature X1" is not
-          visible
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Subtle grid lines present; color axis legend is small but functional;
-          main legend not visible
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct decision boundary visualization with heatmap regions and
-          overlaid scatter points
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X1 and X2 features correctly mapped to axes, class predictions to
-          color
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has colored regions, overlaid training points, different marker shapes;
-          missing visible legend box
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full data range visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: Color axis shows probability scale; class legend not visible in rendered
-          output
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: Correctly formatted as "contour-decision-boundary · highcharts ·
-          pyplots.ai"
-    data_quality:
-      score: 18
+        comment: Okabe-Ito colors + viridis heatmap all colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape with generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec/library/domain; feature axes labeled
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Class 0=#009E73, Class 1=#D55E00 (Okabe-Ito); viridis heatmap; backgrounds
+          #FAF8F1/#1A1A17; theme tokens applied; both renders correct'
+    design_excellence:
+      score: 12
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional but generic; Okabe-Ito palette used as default, no custom
+          design flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid visible for readability, spines present (appropriate for Highcharts),
+          good whitespace, legend styled
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point in gradient; color shows confidence; training overlay
+          tells distribution story; good hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision boundary with heatmap + scatter overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colored regions, training points, distinct markers, legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct; axes span data range properly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; legend labels match
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows moon-shaped classification with clear boundary separation;
-          some misclassified points visible demonstrating model behavior
+        comment: make_moons dataset; 150 points + 80×80 mesh grid appropriately scaled
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Classic machine learning example using make_moons dataset, commonly
-          used for demonstrating classification algorithms
+        comment: Synthetic data neutral and appropriate for ML education
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Appropriate feature ranges for synthetic data; 150 samples is reasonable
+        comment: Feature ranges ~-1.5 to 2.5 with 0.5 tick intervals; mesh resolution
+          matches density
     code_quality:
       score: 10
       max: 10
@@ -181,42 +178,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → classifier → heatmap →
-          scatter → HTML → screenshot'
+        comment: Straightforward, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Both np.random.seed(42) and random_state=42 set
+        comment: np.random.seed(42) and KNN random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (json, tempfile, time, urllib, Path, numpy,
-          selenium, sklearn)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current APIs used throughout
+        comment: Clear logic, no fake UI, proper theme tokens
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png and plot-{THEME}.html output
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Highcharts heatmap module with scatter overlay; builds JSON
-          options directly; good use of colorAxis for probability gradient
+        comment: 'Follows library guide pattern: inline JS for headless Chrome, options
+          dict, Selenium screenshot'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Heatmap + viridis colorscale, scatter marker symbols (circle/diamond),
+          layer composition
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  - selenium
+  techniques:
+  - colorbar
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
