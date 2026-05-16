@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 contour-density: Density Contour Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-16
 """
 
 import base64
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,6 +17,14 @@ from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data - generate bivariate data with clusters to demonstrate density contours
 np.random.seed(42)
@@ -49,7 +58,6 @@ y_grid = np.linspace(y_min, y_max, grid_size)
 X, Y = np.meshgrid(x_grid, y_grid)
 
 # Compute 2D Kernel Density Estimation using Gaussian kernel
-# Scott's rule for 2D bandwidth
 n = len(x_points)
 std_x = np.std(x_points)
 std_y = np.std(y_points)
@@ -87,7 +95,7 @@ ms_table = {
     15: [],
 }
 
-# Contour levels and colorblind-safe colors (viridis-inspired)
+# Contour levels and viridis-inspired colors (colorblind-safe)
 contour_levels = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 level_colors = {
     10: "#440154",
@@ -105,7 +113,7 @@ contour_series = []
 label_positions = []
 rows, cols = Z_normalized.shape
 
-# Extract contours using marching squares (inline)
+# Extract contours using marching squares
 for level in contour_levels:
     segments = []
     for i in range(rows - 1):
@@ -149,7 +157,7 @@ for level in contour_levels:
                 if e1 in edge_points and e2 in edge_points:
                     segments.append((edge_points[e1], edge_points[e2]))
 
-    # Connect segments into paths (inline)
+    # Connect segments into paths
     paths = []
     remaining = list(segments)
     while remaining:
@@ -222,7 +230,7 @@ for level in contour_levels:
             mid_y = y_min + (path[mid_idx][1] / (grid_size - 1)) * (y_max - y_min)
             label_positions.append({"x": mid_x, "y": mid_y, "level": level})
 
-# Prepare scatter data (subsample for clarity)
+# Prepare scatter data (increased visibility)
 sample_idx = np.random.choice(len(x_points), size=min(150, len(x_points)), replace=False)
 scatter_data = [[round(float(x_points[i]), 3), round(float(y_points[i]), 3)] for i in sample_idx]
 
@@ -235,7 +243,7 @@ chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 200,
     "marginRight": 350,
     "marginLeft": 220,
@@ -244,50 +252,46 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "contour-density · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
+    "text": "contour-density · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
 
 # X-axis with meaningful label
 chart.options.x_axis = {
-    "title": {"text": "Measurement A (normalized units)", "style": {"fontSize": "48px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "36px"}},
-    "lineWidth": 3,
-    "tickWidth": 3,
+    "title": {"text": "Measurement A (normalized units)", "style": {"fontSize": "22px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.15)",
-    "gridLineDashStyle": "Dot",
+    "gridLineColor": GRID,
+    "gridLineDashStyle": "Solid",
     "min": x_min,
     "max": x_max,
 }
 
 # Y-axis with meaningful label
 chart.options.y_axis = {
-    "title": {"text": "Measurement B (normalized units)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
-    "lineWidth": 3,
-    "tickWidth": 3,
+    "title": {"text": "Measurement B (normalized units)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.15)",
-    "gridLineDashStyle": "Dot",
+    "gridLineColor": GRID,
+    "gridLineDashStyle": "Solid",
     "min": y_min,
     "max": y_max,
 }
 
-# Add scatter series first (background)
+# Add scatter series first (background) - improved visibility
 scatter_series = {
     "type": "scatter",
     "name": "Data Points",
     "data": scatter_data,
-    "color": "rgba(48, 105, 152, 0.35)",
-    "marker": {
-        "radius": 10,
-        "fillColor": "rgba(48, 105, 152, 0.35)",
-        "lineWidth": 2,
-        "lineColor": "rgba(48, 105, 152, 0.6)",
-    },
+    "color": "#009E73",
+    "marker": {"radius": 12, "fillColor": "#009E73", "lineWidth": 1, "lineColor": PAGE_BG},
     "zIndex": 2,
     "showInLegend": True,
+    "opacity": 0.6,
 }
 
 # Add density legend series (visual scale representation)
@@ -318,11 +322,14 @@ chart.options.legend = {
     "x": -30,
     "y": 0,
     "floating": True,
-    "itemStyle": {"fontSize": "32px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "symbolRadius": 0,
     "symbolHeight": 20,
     "symbolWidth": 50,
-    "title": {"text": "Density Scale", "style": {"fontSize": "36px", "fontWeight": "bold"}},
+    "title": {"text": "Density Scale", "style": {"fontSize": "22px", "fontWeight": "bold", "color": INK}},
     "itemMarginTop": 8,
     "itemMarginBottom": 8,
 }
@@ -334,10 +341,10 @@ for pos in label_positions:
         {
             "point": {"x": pos["x"], "y": pos["y"], "xAxis": 0, "yAxis": 0},
             "text": f"{pos['level']}%",
-            "backgroundColor": "rgba(255, 255, 255, 0.9)",
+            "backgroundColor": ELEVATED_BG,
             "borderColor": level_colors[pos["level"]],
-            "borderWidth": 3,
-            "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#000000"},
+            "borderWidth": 2,
+            "style": {"fontSize": "18px", "fontWeight": "bold", "color": INK},
             "padding": 8,
             "borderRadius": 6,
         }
@@ -347,19 +354,25 @@ chart.options.annotations = [{"labels": annotations_list, "labelOptions": {"shap
 
 # Tooltip
 chart.options.tooltip = {
-    "style": {"fontSize": "28px"},
+    "style": {"fontSize": "18px", "color": INK},
     "headerFormat": "<b>Data Point</b><br>",
     "pointFormat": "Measurement A: {point.x:.2f}<br>Measurement B: {point.y:.2f}",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
 }
 
-# Download Highcharts JS modules
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
+# Download Highcharts JS modules from jsDelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/highcharts.js"
+annotations_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/modules/annotations.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+req = urllib.request.Request(highcharts_url)
+req.add_header("User-Agent", "Mozilla/5.0")
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
+req = urllib.request.Request(annotations_url)
+req.add_header("User-Agent", "Mozilla/5.0")
+with urllib.request.urlopen(req, timeout=30) as response:
     annotations_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -371,27 +384,15 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{annotations_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
 # Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(standalone_html)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -413,7 +414,7 @@ time.sleep(5)
 # Use CDP for full page screenshot
 screenshot_config = {"captureBeyondViewport": True, "clip": {"x": 0, "y": 0, "width": 4800, "height": 2700, "scale": 1}}
 result = driver.execute_cdp_cmd("Page.captureScreenshot", screenshot_config)
-with open("plot.png", "wb") as f:
+with open(f"plot-{THEME}.png", "wb") as f:
     f.write(base64.b64decode(result["data"]))
 driver.quit()
 
