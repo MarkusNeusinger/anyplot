@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-07
+Library: highcharts | Python 3.13
+Quality: 92 | Updated: 2026-05-16
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,6 +18,16 @@ from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Generate synthetic stock prices and calculate RSI
 np.random.seed(42)
@@ -55,7 +66,7 @@ chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "spacingTop": 60,
     "spacingBottom": 100,
     "spacingLeft": 80,
@@ -64,36 +75,40 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "indicator-rsi · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
+    "text": "indicator-rsi · highcharts · anyplot.ai",
+    "style": {"fontSize": "56px", "fontWeight": "bold", "color": INK},
     "margin": 40,
 }
 
 chart.options.subtitle = {
     "text": "Relative Strength Index (14-period) · Synthetic Stock Data",
-    "style": {"fontSize": "36px", "color": "#666666"},
+    "style": {"fontSize": "36px", "color": INK_SOFT},
 }
 
 # X-axis (datetime)
 chart.options.x_axis = {
     "type": "datetime",
-    "title": {"text": "Date", "style": {"fontSize": "36px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Date", "style": {"fontSize": "36px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "tickInterval": 14 * 24 * 3600 * 1000,  # 2-week ticks
     "dateTimeLabelFormats": {"day": "%b %d"},
 }
 
 # Y-axis (0-100 fixed with plot lines and bands)
 chart.options.y_axis = {
-    "title": {"text": "RSI Value", "style": {"fontSize": "36px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "RSI Value", "style": {"fontSize": "36px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}},
     "min": 0,
     "max": 100,
     "tickInterval": 10,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "plotLines": [
         {
             "value": 70,
@@ -123,14 +138,14 @@ chart.options.y_axis = {
         },
         {
             "value": 50,
-            "color": "#6B7280",
+            "color": INK_MUTED,
             "width": 3,
             "dashStyle": "Dot",
             "zIndex": 5,
             "label": {
                 "text": "Centerline (50)",
                 "align": "left",
-                "style": {"fontSize": "24px", "color": "#6B7280"},
+                "style": {"fontSize": "24px", "color": INK_MUTED},
                 "x": 10,
             },
         },
@@ -143,9 +158,9 @@ chart.options.y_axis = {
             "label": {
                 "text": "Overbought Zone",
                 "style": {"fontSize": "24px", "color": "#B45309"},
-                "align": "right",
-                "x": -20,
-                "y": 30,
+                "align": "center",
+                "x": 0,
+                "y": -40,
             },
         },
         {
@@ -155,23 +170,32 @@ chart.options.y_axis = {
             "label": {
                 "text": "Oversold Zone",
                 "style": {"fontSize": "24px", "color": "#1D4ED8"},
-                "align": "right",
-                "x": -20,
-                "y": -10,
+                "align": "center",
+                "x": 0,
+                "y": 30,
             },
         },
     ],
 }
 
 # Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "32px"}, "margin": 30}
+chart.options.legend = {
+    "enabled": True,
+    "itemStyle": {"fontSize": "32px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "margin": 30,
+}
 
 # Tooltip
 chart.options.tooltip = {
     "xDateFormat": "%B %d, %Y",
     "valueSuffix": "",
-    "style": {"fontSize": "28px"},
+    "style": {"fontSize": "28px", "color": INK},
     "valueDecimals": 1,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
 }
 
 # Plot options
@@ -183,7 +207,7 @@ chart.options.plot_options = {
 series = LineSeries()
 series.name = "RSI (14)"
 series.data = rsi_data
-series.color = "#306998"
+series.color = BRAND
 
 chart.add_series(series)
 
@@ -191,9 +215,30 @@ chart.add_series(series)
 chart.options.credits = {"enabled": False}
 
 # Export to PNG via Selenium
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Try jsDelivr CDN as primary, fall back to unpkg
+cdn_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.min.js",
+    "https://unpkg.com/highcharts@11/highcharts.js",
+    "https://code.highcharts.com/highcharts.js",
+]
+
+highcharts_js = None
+for url in cdn_urls:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"})
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                highcharts_js = response.read().decode("utf-8")
+                break
+        except (urllib.error.URLError, urllib.error.HTTPError):
+            if attempt < max_retries - 1:
+                time.sleep(1)
+    if highcharts_js:
+        break
+
+if not highcharts_js:
+    raise RuntimeError("Could not download Highcharts from any CDN")
 
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
@@ -202,14 +247,14 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
 # Save HTML version for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     cdn_html = (
         """<!DOCTYPE html>
 <html>
@@ -245,7 +290,7 @@ time.sleep(5)
 
 # Screenshot the chart container element for exact dimensions
 container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+container.screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
