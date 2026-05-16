@@ -1,167 +1,178 @@
 library: altair
+language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:54:27Z'
-updated: '2025-12-31T10:59:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617491440
+updated: '2026-05-16T01:08:47Z'
+generated_by: claude-haiku
+workflow_run: 25948655526
 issue: 2997
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/altair/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent use of alternating y-positions for event labels to prevent overlap
-  - Clean layered chart composition with separate charts for line, rules, markers,
-    and labels
-  - Good color scheme with Python blue (#306998) and contrasting yellow (#FFD43B)
-  - Realistic stock price data with appropriate volatility
-  - Proper use of Altair encoding types (:T, :Q, :N)
-  - Both PNG and interactive HTML outputs generated
+  - Flawless theme adaptation with correct colors, backgrounds, and text in both renders;
+    no dark-on-dark or light-on-light failures
+  - Clean visual hierarchy achieved through alternating event label heights that prevent
+    overlap while maintaining readability
+  - Realistic, plausible stock price data with authentic event annotations
+  - Proper Okabe-Ito palette usage with brand green primary series and vermillion
+    secondary color
+  - All text legible in both themes with proper font sizing scaled for large canvas
+    (28px title, 22px axis labels, 18px ticks)
+  - Well-structured altair code using layer composition idiomatically
   weaknesses:
-  - Missing legend/key for event types as suggested in spec notes
-  - Vertical rules use hardcoded y2=alt.value(900) which may not align with actual
-    chart height
-  - No tooltips on event markers for interactivity (missed opportunity for Altair's
-    strength)
-  image_description: 'The plot displays a stock price time series spanning January
-    2024 to December 2024, with prices ranging from approximately $120 to $200. A
-    blue line (#306998) traces the stock price trajectory showing typical market volatility.
-    Six vertical dashed yellow lines (#FFD43B) mark key events: Q4 Earnings (Feb),
-    Q1 Earnings (late Apr), Product Launch (Jun), Q2 Earnings (late Jul), Analyst
-    Upgrade (Sep), and Q3 Earnings (Nov). Each event has a yellow circular marker
-    with blue outline positioned at alternating heights above the data, with bold
-    text labels. The title "line-annotated-events · altair · pyplots.ai" appears centered
-    at the top. Axis labels show "Date" on x-axis and "Stock Price ($)" on y-axis
-    with subtle gray gridlines.'
+  - Design Excellence (14/20) could be elevated with subtle visual enhancements such
+    as color emphasis for specific event types, legend for event categories, or subtle
+    background shading for event regions
+  - Library Mastery (9/10) could demonstrate more distinctive altair features such
+    as conditional encoding, selections, or interactive filtering capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correctly themed
+      Chrome: Title clearly visible at top in dark text (28px), axis labels "Stock Price ($)" and "Date" in dark text (22px), tick labels in smaller dark text (18px) - all readable with excellent contrast against light background
+      Data: Main line in brand green #009E73 with strong visibility, six event markers in vermillion #D55E00 (orange circles), vertical dashed lines in matching vermillion connecting events across plot height, event labels positioned at alternating heights to avoid overlap
+      Grid: Subtle light gray grid lines visible but not dominant
+      Legibility verdict: PASS - all text clearly readable, no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correctly themed
+      Chrome: Title in light text clearly visible at top, axis labels in light text (22px), tick labels in smaller light text (18px) - all readable with excellent contrast against dark background, no dark-on-dark failures
+      Data: Main line retains brand green #009E73 (identical to light render), event markers in vermillion #D55E00 (identical), vertical dashed lines in matching vermillion - confirm data colors identical between renders
+      Grid: Subtle grid lines appropriately visible on dark surface
+      Legibility verdict: PASS - all text clearly readable against dark background, proper theme adaptation with only chrome changed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: title ~28pt, axis labels ~22pt, tick
-          labels ~18pt, event labels ~16pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Event labels at alternating heights prevent overlap, no text collision
+        comment: All text clearly visible in both renders; font sizes properly scaled
+          (28px title, 22px axis, 18px ticks)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Event labels positioned at alternating heights; no collisions or
+          readability issues
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line strokeWidth=3 appropriate, markers size=300 visible, dashed
-          rules clear (-1 for rules extending beyond visible y-range)
+        comment: Main line in bright green clearly visible; orange markers and dashed
+          rules are distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, but slight imbalance with event markers creating
-          extra space at top (-1)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Stock Price ($)" and "Date"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito colors provide CVD-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions; efficient use of space; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.3), but no legend for event types (-2)
+        comment: Title correct; axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary #009E73, secondary #D55E00; backgrounds correct; both renders
+          properly themed'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional design; thoughtful event annotation strategy; room for
+          additional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; intelligent label positioning; could be enhanced
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hierarchy with main trend line; alternating heights create
+          narrative flow
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: line plot with event annotations'
+        comment: Correct line plot with event annotations
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, price on Y, events mapped correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vertical lines, markers, and text labels all present as per spec
-      - id: SC-04
-        name: Data Range
+        comment: 'All required: vertical lines, markers, text labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, scale domain properly set
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: 'X: date (temporal), Y: stock price (quantitative)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend present for event types (spec suggests "subtle legend or
-          key if multiple event types shown") (-1)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-annotated-events · altair · pyplots.ai"'
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple event types (earnings, product launch, analyst upgrade),
-          varied timing (-1 for not showing events during both uptrends and downtrends
-          explicitly)
+        comment: 'Demonstrates all aspects: trend, events with varied types, realistic
+          distribution'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price with quarterly earnings and company milestones is very
-          realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Stock prices ~$120-200 with realistic daily volatility (~1.5% returns)
+        comment: Plausible stock trajectory; authentic event types
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic price range and time scale; appropriate event density
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,40 +180,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary functions; clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Deterministic via np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using y=alt.value(0), y2=alt.value(900) for rules is hacky (-1)
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of layered chart composition and encoding types. Saved interactive
-          HTML. Could improve by using Altair's tooltip for hover info on events (-2)
+        comment: High-level API used appropriately; layer composition idiomatic; proper
+          encoding types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses alt.layer(), alt.value(), interactive(); could explore more
+          advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []
