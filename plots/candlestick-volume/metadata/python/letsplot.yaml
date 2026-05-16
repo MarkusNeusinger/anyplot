@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: candlestick-volume
 created: '2025-12-31T13:53:52Z'
-updated: '2026-05-16T05:36:11Z'
+updated: '2026-05-16T05:41:41Z'
 generated_by: claude-haiku
 workflow_run: 25953910171
 issue: 3068
@@ -12,105 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - 'Excellent data quality: realistic OHLC generation with correlated volume spikes
-    showing trading patterns'
-  - 'Perfect theme implementation: both renders properly adapt colors (data unchanged,
-    chrome theme-correct) with no dark-on-dark failures'
-  - 'Strong spec compliance: candlestick + volume dual-pane layout with correct up/down
-    color coding (Okabe-Ito #1 green, #2 orange)'
-  - 'High code quality: clean KISS structure, deterministic seed, proper theme tokens,
-    idiomatic letsplot usage with gggrid() for layout'
-  - 'Professional styling: subtle grid, appropriate margins, clean legend positioning,
-    readable text at full resolution'
+  - Perfect visual quality across both light and dark themes with no readability issues
+  - Excellent use of letsplot's gggrid() for dual-pane layout with proper 70/30 spacing
+  - Comprehensive theme-adaptive styling with consistent INK and INK_SOFT token usage
+  - 'Realistic data demonstrating clear features: uptrend, reversal, recovery, and
+    volume correlation'
+  - Proper font sizing (24/20/16pt) with explicit configuration, not relying on defaults
+  - Candlestick visualization technically correct with distinct wicks and bodies
+  - Clean KISS code structure with proper reproducibility (np.random.seed)
   weaknesses:
-  - 'Title truncated at right edge (VQ-01/VQ-05): Title text is cut off preventing
-    full readability of ''anyplot.ai'' suffix. Increase canvas width or reduce title
-    length.'
-  - 'Title format deviation (SC-04): Uses ''Stock Trading · candlestick-volume · letsplot''
-    instead of spec format ''{spec-id} · {library} · anyplot.ai''. Remove ''Stock
-    Trading'' prefix.'
-  - 'Missing interactive features (SC-02): Spec mentions crosshair/cursor for precise
-    reading across panes. Static library limitation—documented in code comment explaining
-    this constraint.'
-  - 'Design excellence (DE-01): Competent execution but follows defaults without exceptional
-    aesthetic touches. Consider refined color harmony or visual hierarchy enhancements.'
-  - 'Spines remain visible (DE-02): Standard practice would remove top/right spines
-    for cleaner appearance. Consider spine removal for next iteration.'
+  - Design sophistication follows standard financial chart patterns rather than adding
+    unique visual storytelling
+  - Minimal data storytelling - plot displays data clearly but lacks strong visual
+    hierarchy or emphasis to guide viewer insights
+  - Limited use of visual emphasis techniques (color contrast, size variation, focal
+    points) to create narrative
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title (dark, 24pt) - TRUNCATED at right edge; axis labels (dark, 20pt) clearly readable; tick labels (medium gray, 16pt) readable; grid subtle and unobtrusive
-      Data: Green candlesticks (#009E73, Okabe-Ito #1) for up days; orange (#D55E00, Okabe-Ito #2) for down days; volume bars match candle colors; both wicks and bodies clearly distinguished; price range $115-$170, volume range 3.9M-10.1M
-      Legibility verdict: PASS (all visible text readable; title cut off due to canvas width)
+      Background: Warm off-white (#FAF8F1), professional appearance
+      Chrome: Title "candlestick-volume · letsplot · anyplot.ai" in dark text (24pt), axis labels "Price ($)" and "Volume (shares)" in dark text (20pt), tick labels readable (16pt), date labels (Jan 02, Jan 16, etc.) with no overlap, horizontal legend at top center
+      Data: Teal green (#009E73) candlesticks for "Up" days, orange (#D55E00) for "Down" days, wicks and bodies clearly distinct, volume bars show same color scheme, 60-day series fits well without cramping
+      Legibility verdict: PASS - All text is dark and clearly readable against the warm light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title (light, 24pt) - TRUNCATED identically to light render; axis labels (light, 20pt) clearly readable with excellent contrast; tick labels (light gray, 16pt) readable; grid subtle but visible
-      Data: Green candlesticks (#009E73) identical to light render; orange (#D55E00) identical; volume bars match. Data colors unchanged across themes - only chrome adapted. No dark-on-dark failures detected.
-      Legibility verdict: PASS (all visible text readable; title cut off matches light render)
-
-    Both renders theme-correct: Okabe-Ito data colors identical across themes, chrome properly inverted (light text on dark, dark text on light). Main legibility issue is title truncation, not theme adaptation.
+      Background: Warm near-black (#1A1A17), appropriate for dark theme
+      Chrome: Title in white text (light/readable), axis labels in light gray (INK_SOFT token), tick labels readable, date labels visible with proper contrast, no dark-on-dark text failures
+      Data: Candlestick colors identical to light render (#009E73 green, #D55E00 orange), volume bars maintain same colors - confirming data-color invariance across themes
+      Legibility verdict: PASS - All text is light and clearly readable against the dark background, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Font sizes explicitly set (24/20/16pt); all visible text readable.
-          Title truncated at right edge prevents full readability.
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; x-axis labels hidden on main pane;
-          volume pane shows dates clearly
+        comment: Date labels, tick labels, legend all clearly separated with no collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candlesticks (wicks 1.5, bodies 6.0) and volume bars (0.8 width)
-          perfectly sized for 60-point dataset; all elements distinct and visible
+        comment: Candlestick wicks (1.5px) and bodies (6.0px) optimally sized for
+          60-day density; volume bars clearly distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #1 (green #009E73) and #2 (orange #D55E00) provide strong
-          contrast; CVD-safe palette; easily distinguished'
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) is colorblind-safe with good
+          luminance contrast'
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas dimensions correct (1600×900 base, 4800×2700 scaled); pane
-          ratio 70/30 correct; but title cut off at right edge (content not fully
-          visible)
+        passed: true
+        comment: Landscape 4800×2700px with excellent utilization; 70/30 pane split;
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Price axis: ''Price ($)'' with units; Volume axes: ''Volume (shares)''
-          and ''Date (2024)'' with context; all descriptive and informative'
+        comment: 'Descriptive labels with units: Price ($), Volume (shares), Date
+          (2024)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light: #FAF8F1 background, #009E73 first series, #D55E00 second;
-          Dark: #1A1A17 background, identical data colors, light text. Perfect theme
-          adaptation.'
+        comment: 'Okabe-Ito colors correct; backgrounds #FAF8F1 light / #1A1A17 dark;
+          text colors theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -118,26 +104,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured professional styling with theme tokens and correct
-          Okabe-Ito palette. Competent execution but follows defaults without exceptional
-          artistic touches.
+        comment: Well-configured library default with intentional Okabe-Ito palette
+          and theme-adaptive design, but not exceptional or publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (size=0.25), generous margins, clean legend placement.
-          Spines remain visible; could remove top/right for cleaner appearance.
+        passed: true
+        comment: Subtle grid, thoughtful legend positioning, generous margins, dual-pane
+          structure shows refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Clear visualization of trading dynamics: price movement with candlesticks,
-          correlated volume, color-coded direction. Good visual hierarchy but subtle
-          emphasis.'
+        comment: Clear visual hierarchy (price dominant, volume supporting) but lacks
+          strong focal point or narrative emphasis
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,31 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with dual-pane volume layout; all subtypes
-          present
+        comment: Correct candlestick chart with OHLC structure and volume bars in
+          dual-pane layout
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Candlesticks (wicks + bodies), volume bars, shared x-axis, up/down
-          coloring all present. Missing: interactive crosshair/cursor (static library
-          limitation).'
+        passed: true
+        comment: 'All features present: candlesticks, volume bars, dual-pane, shared
+          x-axis, up/down coloring'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: date_idx (time); Price pane Y: OHLC values; Volume pane
-          Y: volume. All data visible, correctly mapped.'
+        comment: 'X-axis: date index with labels; Y-axes: price and volume correctly
+          mapped; all data visible'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title: ''Stock Trading · candlestick-volume · letsplot · anyplot.ai''
-          deviates from spec format (should be ''{spec-id} · {library} · anyplot.ai'').
-          Legend labels correct.'
+        passed: true
+        comment: Title format correct; legend labels match data categories
     data_quality:
       score: 15
       max: 15
@@ -179,23 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: bullish candles (green), bearish candles (orange),
-          wicks showing high-low, dramatic reversals (day 16 drop, day 35 bounce),
-          volume spikes'
+        comment: Shows bullish/bearish candles, high/low volatility, uptrend/reversal/recovery,
+          volume-volatility correlation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real stock trading scenario; 60 trading days of 2024; prices ~$115-$170
-          (realistic volatility); volume 3.9M-10.1M (realistic); synthetic but plausible
+        comment: Stock trading (neutral), 60 trading days (realistic), price range
+          $115-$170 (plausible), volume 3.9M-10.1M (realistic)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price volatility ~15% (realistic); volume scaling based on volatility;
-          returns ~0.1% mean, 2.5% std (realistic); all proportions factually sound
+        comment: Price evolution realistic; volume correlates with volatility; all
+          values factually plausible
     code_quality:
       score: 10
       max: 10
@@ -205,64 +185,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme/data constants → data generation →
-          plot creation → save. No functions/classes; clean and readable.'
+        comment: 'Linear flow: Imports → Data → Theme → Plot → Save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all OHLC generation deterministic; produces
-          identical output every run
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports used: os (ANYPLOT_THEME), numpy (data), pandas (dataframe),
-          lets_plot (plotting). No unused imports.'
+        comment: Only necessary imports; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. Well-organized with clear
-          variable names. No over-engineering or fake functionality.
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png (PNG) and plot-{THEME}.html (interactive).
-          Correct scale=3 for high resolution. Proper ggsave() usage.
+        comment: Correct output format (plot-{THEME}.png/html); current API
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: 'Correct idiomatic letsplot patterns: ggplot() + geom_* + scale_*
-          + theme() + ggsave(). Uses library properly but standard usage; could leverage
-          more patterns.'
+        passed: true
+        comment: Expert use of ggplot() + geom_*(), scale_manual(), theme(), gggrid(),
+          ggsave()
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Uses gggrid() for dual-pane layout (distinctive), ggsize() for dimensions,
-          HTML output. Some library-specific features; could explore more advanced
-          capabilities.
+        passed: true
+        comment: Uses gggrid() for dual-pane (distinctive to letsplot), theme-adaptive
+          element_*() styling, geom_segment() candlestick construction
+    score_caps:
+      applied: false
+      details: No defects trigger score caps
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - subplots
+  - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - grid-styling
