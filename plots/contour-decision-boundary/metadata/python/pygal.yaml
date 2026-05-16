@@ -1,214 +1,260 @@
 library: pygal
+language: python
 specification_id: contour-decision-boundary
 created: '2026-01-01T21:29:27Z'
-updated: '2026-01-01T21:31:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20645829976
+updated: '2026-05-16T07:21:34Z'
+generated_by: claude-haiku
+workflow_run: 25955811222
 issue: 2921
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - sklearn
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent creative solution using pygal XY chart with custom SVG injection for
-    decision regions
-  - Clear visualization of the moon-shaped decision boundary with proper color-coded
-    regions
-  - Good implementation of misclassified point markers with red X overlay
-  - Well-designed legend showing all three marker types
-  - Colorblind-safe blue/yellow color scheme
-  - Proper use of sklearn make_moons dataset for realistic ML context
+  - 'Perfect theme adaptation: backgrounds, text colors, and chrome are theme-aware
+    while data colors remain constant'
+  - 'Excellent visual hierarchy: correctly classified points, misclassified points
+    (red X), and decision boundary regions are clearly distinguished'
+  - 'Proper palette compliance: green (#009E73) and orange (#D55E00) follow Okabe-Ito
+    order; both light and dark renders are readable'
+  - 'Comprehensive legend: clearly distinguishes class labels and misclassified points'
+  - 'Clean canvas utilization: generous balanced margins with no text overlap'
+  - 'Proper font sizing: title (28px), axis labels (22px), tick labels (18px) are
+    all explicitly set and readable at full resolution'
+  - 'Data quality: synthetic moon dataset effectively demonstrates SVM behavior with
+    both correct and misclassified examples'
   weaknesses:
-  - Helper function data_to_svg() breaks KISS principle slightly, though justified
-    for coordinate mapping
-  - Axis labels lack units (acceptable for synthetic ML data, but Feature 1 normalized
-    would be better)
-  image_description: 'The plot displays a decision boundary visualization with two
-    moon-shaped class regions. The background is divided into two color zones: light
-    blue (Class 0) and light yellow (Class 1), with a curved boundary between them
-    following the characteristic moon pattern from sklearn''s make_moons dataset.
-    Training points are overlaid as solid circles - blue circles for Class 0 and yellow
-    circles for Class 1. Misclassified points are marked with red X symbols on top
-    of their class-colored circles. The title "contour-decision-boundary · pygal ·
-    pyplots.ai" appears at the top. Axis labels show "Feature 1" (x-axis) and "Feature
-    2" (y-axis) with clear tick marks ranging from approximately -1.9 to 2.9 on x-axis
-    and -1.4 to 2.0 on y-axis. A legend in the top-right corner shows Class 0, Class
-    1, and Misclassified markers.'
+  - 'Design excellence: plot follows library defaults without additional aesthetic
+    customization (e.g., no subtle grid, no refined color hierarchy beyond Okabe-Ito)'
+  - 'Library mastery: implementation relies heavily on manual SVG construction rather
+    than pygal''s native features, due to pygal''s limitations with filled contour
+    regions — approach is pragmatic but not idiomatic to the library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), precisely matching the spec requirement.
+      Chrome: Title "contour-decision-boundary · pygal · anyplot.ai" is rendered in dark text at the top; axis labels "Feature 1" (horizontal) and "Feature 2" (vertical) are in bold dark text and perfectly readable. X-axis tick labels range from -1.8 to 2.0, Y-axis similarly scaled. All text is sharp and clearly visible against the light surface.
+      Data: Two colored regions represent the SVM decision boundary — bluish-green (#009E73) for Class 0 on the left/upper region, vermillion (#D55E00) for Class 1 on the right/lower region. Approximately 150 training points are overlaid: filled circles (18px radius with dark stroke) for correctly classified points, red X-marked circles for the small set of misclassified points. The decision boundary is smooth, showing the classifier's RBF kernel behavior. A legend to the right clearly identifies "Class 0", "Class 1", and "Misclassified".
+      Layout: The plot fills ~65% of the 4800×2700 canvas with balanced margins (350px left, 400px right, 200px top, 250px bottom). Generous whitespace allows the data to breathe.
+      Legibility verdict: **PASS** - All text elements are readable; no overlap; colors are distinct; legend symbols are clear.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), precisely matching the spec requirement.
+      Chrome: Title and axis labels are rendered in light color (#F0EFE8) — all clearly readable against the dark surface. The same tick labels and descriptive axis titles are present and equally readable. No dark-on-dark failures detected.
+      Data: The class-region colors are **identical** to the light render — bluish-green (#009E73) and vermillion (#D55E00) remain unchanged, confirming proper theme adaptation. Training point markers (filled circles and red X's) are equally visible and distinguishable. The decision boundary visualization is equally clear.
+      Legend: Positioned identically, text in light color, symbols unchanged — all readable.
+      Legibility verdict: **PASS** - All text is light-colored on dark background; no legibility issues; data colors match light render perfectly (only chrome flipped); no unreadable elements.
+
+    Both renders demonstrate proper theme handling: Okabe-Ito data colors (positions 1–2) are constant; only the background, text, and secondary chrome adapt to the theme. The visualization successfully shows decision boundaries and correctly vs. incorrectly classified points in both rendering contexts.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and legend are all clearly readable
-          at the target resolution. Slightly smaller legend text.
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
+          all text perfectly readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels fully readable
+        comment: No overlapping text elements; all labels, ticks, and legend items
+          are clearly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized for the data density (~150 points), misclassified
-          markers clearly distinguishable
+        comment: Markers (18px) sized appropriately for ~150 points; decision boundary
+          regions clearly visible; all elements distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow palette is colorblind-safe, good contrast between classes
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, legend placed appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: '"Feature 1" and "Feature 2" are descriptive but lack units (acceptable
-          for synthetic ML data)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: No grid (acceptable for this plot type), legend well placed but could
-          be cleaner
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct decision boundary visualization with colored regions and
-          overlaid points
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X1/X2 correctly mapped to axes, class labels correctly colored
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Decision regions, training points, misclassified point markers, legend
-          all present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly identifies Class 0, Class 1, and Misclassified
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) colorblind-safe; misclassified
+          red (#E53935) distinct from data colors'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of 4800×2700 canvas; balanced margins (350L, 400R,
+          200T, 250B); generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format "contour-decision-boundary · pygal · pyplots.ai"
-          but title font could be slightly larger
-    data_quality:
-      score: 18
+        comment: 'Descriptive labels: ''Feature 1'', ''Feature 2''; title includes
+          spec-id, library, site name'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (green), second #D55E00 (orange) = correct
+          Okabe-Ito order; light background #FAF8F1, dark #1A1A17; theme-adaptive
+          chrome (text, grid); data colors identical in both renders'
+    design_excellence:
+      score: 13
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Above library defaults with thoughtful use of Okabe-Ito colors and
+          explicit sizing; good visual hierarchy; but lacks custom refinements (e.g.,
+          subtle grid, accent colors)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean axis frame, no unnecessary elements, good whitespace; mostly
+          library defaults with some manual styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good visual hierarchy via misclassified point highlighting (red X
+          markers) draws attention to classifier errors; decision boundary regions
+          clearly show separation behavior
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision boundary contour visualization with overlay training
+          points
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Decision boundary regions ✓, training point overlay ✓, correct vs
+          incorrect distinction ✓, legend ✓
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X1 → horizontal (Feature 1), X2 → vertical (Feature 2); axes show
+          full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct: ''contour-decision-boundary · pygal · anyplot.ai'';
+          legend shows ''Class 0'', ''Class 1'', ''Misclassified'''
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both classes, decision boundary, and misclassified points well.
-          Good representation of the moon-shaped classification problem.
+        comment: 'Shows all aspects: two distinct classes, decision boundary behavior,
+          correctly classified and misclassified points, smooth RBF kernel boundary'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses sklearn's make_moons, a standard ML teaching dataset, with SVM
-          classifier - excellent educational context
+        comment: Classic make_moons synthetic dataset; realistic for ML education;
+          neutral, well-understood example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Appropriate feature ranges for synthetic normalized data
+        comment: Feature values range ~-1.8 to 2.0; SVM parameters reasonable; proportions
+          correct for the kernel
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Mostly linear structure with helper function for coordinate mapping
-          (acceptable)
+        passed: false
+        comment: Mostly linear flow (imports→data→train→SVG→render) but includes data_to_svg()
+          helper function
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42
+        comment: np.random.seed(42) set; SVC uses consistent parameters
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, sys, Path, cairosvg, numpy, pygal, Style,
+          make_moons, SVC'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, readable code; manual SVG is appropriate complexity
+          for custom contour visualization; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Outputs plot.png and plot.svg, but also plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png + plot-{THEME}.html'
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Creative use of pygal's XY chart as a base with custom SVG injection
-          to create decision boundary regions. This is an excellent workaround for
-          pygal's limited contour capabilities.
+        passed: false
+        comment: Uses pygal.XY, Style, and render() correctly; however, relies on
+          manual SVG injection due to pygal's lack of native contour support — pragmatic
+          but not idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; SVG manipulation is a workaround, not a showcase of
+          pygal-specific strengths
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

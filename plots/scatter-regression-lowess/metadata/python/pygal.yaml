@@ -1,167 +1,178 @@
 library: pygal
+language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:54:43Z'
-updated: '2025-12-31T00:10:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608464403
+updated: '2026-05-14T01:25:41Z'
+generated_by: claude-haiku
+workflow_run: 25835795182
 issue: 2855
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - statsmodels
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - regression
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - LOWESS curve is visually distinct from scatter points with good color contrast
-    (blue vs yellow)
-  - Clean code structure following KISS principles with proper use of statsmodels
-    for LOWESS calculation
-  - Custom pygal Style properly configured for large canvas with appropriate font
-    sizes
-  - Correct title format following spec-id · library · pyplots.ai convention
-  - Good use of transparency (opacity=0.6) for scatter points to show density
-  - Appropriate LOWESS smoothing parameter (frac=0.35) within recommended range
+  - 'Perfect visual quality: all text sizes explicitly set and readable in both themes'
+  - 'Excellent theme adaptation: no dark-on-dark or light-on-light failures; data
+    colors identical across renders'
+  - 'Specification compliance: all required features present with proper LOWESS bandwidth
+    and transparency'
+  - Realistic pharmacological data with clear non-linear pattern demonstrating saturation
+    and hormesis effects
+  - 'Clean code structure: reproducible with np.random.seed(42), straightforward flow,
+    no over-engineering'
   weaknesses:
-  - Axis labels in rendered output are generic (X Value, Y Value) rather than the
-    domain-specific labels defined in the code
-  - Legend entries in output differ from code-defined labels
-  image_description: 'The plot displays a scatter plot with blue circular data points
-    and a smooth yellow/gold LOWESS regression curve on a white background. The title
-    reads "scatter-regression-lowess · pygal · pyplots.ai" at the top. The X-axis
-    is labeled "X Value" (ranging from 0 to 10) and the Y-axis is labeled "Y Value"
-    (ranging from approximately -2 to 13). The legend at the bottom shows two entries:
-    "Data Points" (blue) and "LOWESS Curve (frac=0.35)" (yellow). The LOWESS curve
-    smoothly captures the non-linear trend in the data, starting low, rising gradually
-    in the middle, dipping slightly around x=5, then rising steeply toward x=10. Grid
-    lines are subtle and dotted.'
+  - Generic styling with minimal customization beyond correct Okabe-Ito color choices;
+    lacks aesthetic sophistication
+  - 'Minimal visual refinement: grid shown but not optimized for subtlety; no visual
+    hierarchy emphasis on LOWESS trend'
+  - 'Library-specific features underutilized: interactive HTML output generated but
+    not leveraged in design; pygal''s interactive capabilities not highlighted'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "scatter-regression-lowess · pygal · anyplot.ai" in dark text, axis labels "Drug Concentration (mg/L)" and "Enzyme Activity (%)" with units, tick labels and legend all dark colored - all readable against light background
+      Data: 150 scatter points in green (#009E73, Okabe-Ito pos 1), LOWESS curve in orange (#D55E00, Okabe-Ito pos 2), grid lines subtle
+      Legibility verdict: PASS - all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: All text (title, axis labels, ticks, legend) converted to light colors and clearly visible; no dark-on-dark issues
+      Data: Scatter points and curve maintain identical colors to light render (green #009E73 and orange #D55E00) confirming proper theme adaptation; grid lines remain visible
+      Legibility verdict: PASS - all text readable against dark background, brand green (#009E73) prominent and accessible in both renders
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable, tick labels are clear. Slightly
-          smaller than optimal for the canvas size.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title=28px, labels=22px, major_label=18px,
+          legend=16px); perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with no overlapping text elements; excellent spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Scatter points and LOWESS curve are clearly visible and well-sized
-          for the data density. Points could be slightly larger.
+        comment: Scatter points (dots_size=10) and LOWESS curve (stroke_width=6) perfectly
+          adapted to 150-point dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue points and yellow curve provide excellent contrast and are colorblind-safe
+        comment: Okabe-Ito palette is colorblind-safe; green and orange have strong
+          contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space, minor whitespace imbalance
+        comment: Plot fills ~65% of canvas with balanced margins; excellent utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are descriptive ("X Value", "Y Value") but lack units. The
-          code specifies domain-specific labels which don't appear in the rendered
-          output.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate. Legend placement at bottom is functional
-          but legend text could be clearer.
+        comment: Descriptive labels with units; proper title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #D55E00; backgrounds #FAF8F1 (light)
+          and #1A1A17 (dark); both renders theme-correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with correct palette; professional but not
+          exceptionally sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean layout; grid shown but minimal customization; could optimize
+          for subtlety
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear visual hierarchy showing non-linear relationship; could strengthen
+          emphasis on LOWESS trend
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with LOWESS regression overlay
+        comment: Correct XY scatter plot with LOWESS regression curve
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned, LOWESS curve properly overlaid
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec requirements met: scatter points, LOWESS curve with distinct
-          color, appropriate smoothing (frac=0.35)'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: scatter points, LOWESS curve, moderate transparency
+          (opacity=0.6), frac=0.35, visually distinct line'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = drug concentration; Y = enzyme activity; axes show full data
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies data points and LOWESS curve with parameters
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-regression-lowess · pygal · pyplots.ai"'
+        comment: Title format correct; legend labels descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows non-linear relationship well with the curve capturing local
-          trends. Good demonstration of LOWESS smoothing behavior.
+        comment: Shows realistic drug dose-response with saturation and hormesis;
+          demonstrates non-linear relationship comprehensively
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: The code describes a drug dose-response scenario which is scientifically
-          plausible, though the rendered axis labels are generic.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Data values are realistic and sensible for the demonstrated relationship
+        comment: Real pharmacological scenario; neutral scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentration 0.1–50 mg/L and activity ~18–85% pharmacologically
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -171,41 +182,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Clean flow: imports → constants → data → LOWESS → chart → save;
+          no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pygal, Style, statsmodels lowess)
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern pygal API
+        comment: Clean, Pythonic, appropriate complexity; lowess() called correctly
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal's XY chart, custom Style for fonts/colors, legend_at_bottom,
-          stroke_style. Good use of pygal capabilities but could leverage more SVG
-          interactivity features.
+        comment: XY chart class, custom Style object with theme tokens, proper add()
+          usage; doesn't leverage interactive features
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses Style theming and HTML output; could showcase more interactive
+          JS capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -15,19 +15,29 @@ export function NotFoundPage() {
         <Typography
           variant="h4"
           component="h1"
-          sx={{ fontFamily: typography.fontFamily, fontWeight: 600, mb: 2, color: 'var(--ink)' }}
+          aria-label="Page not found"
+          sx={{
+            fontFamily: typography.mono,
+            fontWeight: 600,
+            mb: 2,
+            color: 'var(--ink)',
+            '& .subj': { color: 'var(--ink-muted)' },
+          }}
         >
-          404
+          <span className="subj">page</span>.miss()
         </Typography>
         <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText, mb: 4 }}>
-          page not found
+          404 — no route matched
         </Typography>
         <Box
           component={Link}
           to="/"
-          sx={{ color: colors.primary, fontFamily: typography.fontFamily, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          aria-label="Go home"
+          sx={{ color: colors.primary, fontFamily: typography.mono, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
         >
-          back to anyplot.ai
+          <span aria-hidden="true">
+            <Box component="span" sx={{ color: 'var(--ink-muted)' }}>page</Box>.home()
+          </span>
         </Box>
       </Box>
     </>

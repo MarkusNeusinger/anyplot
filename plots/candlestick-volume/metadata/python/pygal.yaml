@@ -1,0 +1,225 @@
+library: pygal
+language: python
+specification_id: candlestick-volume
+created: '2026-05-16T05:28:59Z'
+updated: '2026-05-16T05:52:31Z'
+generated_by: claude-haiku
+workflow_run: 25953834922
+issue: 3068
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/pygal/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Perfect visual quality with flawless readability in both light and dark themes
+  - 'Correct Okabe-Ito palette colors (#009E73 for up days, #D55E00 for down days)
+    with proper theme-adaptive chrome'
+  - Realistic Tesla stock data with full feature coverage showing bullish, bearish,
+    and volume variation
+  - Clean, reproducible code with deterministic seed and KISS structure
+  - Dual-pane layout correctly implements price-to-volume spatial relationship per
+    spec
+  weaknesses:
+  - 'Design Excellence low (8/20): uses library defaults with minimal aesthetic refinement;
+    no custom color harmonies, spine removal, or grid styling'
+  - Volume bars use single yellow-orange color instead of up/down color scheme (green
+    for up, orange for down) per spec requirement
+  - No visual hierarchy or data storytelling; plot displays data but doesn't guide
+    viewer to insights
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no legibility issues
+      Chrome: Title and axis labels visible in dark text; tick labels clear; legend positioned in upper left
+      Data: Green candlesticks (#009E73) for up days, orange (#D55E00) for down days, yellow-orange volume line
+      Legibility verdict: PASS — all text elements readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with strong contrast for all elements
+      Chrome: Title and axis labels visible in light text; tick labels clear; legend readable
+      Data: Candlestick colors identical to light render (green/orange preserved); volume line unchanged
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly visible as light colors on dark background
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; sparse x-labels prevent crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Candlestick wicks and bodies sharp and distinct; volume visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; green/orange high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 well-proportioned; price 70%, volume 30%; no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Labels include units; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #D55E00; backgrounds theme-correct;
+          chrome adapted'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but not exceptional or publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization; no visual polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or insight emphasis
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct candlestick chart with dual-pane layout
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: OHLC and volume present; volume should use up/down color scheme per
+          spec
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis dates, Y-axis prices, volume normalized correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format and legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows bullish, bearish, and volume variation across 60 periods
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tesla stock OHLC is real-world and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price/volume ranges and OHLC relationships realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports → theme → data → plot → save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports present
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format and current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct usage of pygal.XY, Style, chart.add(); standard patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Manual candlestick workaround; doesn't leverage distinctive pygal
+          features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling: []

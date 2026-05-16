@@ -1,175 +1,165 @@
 library: pygal
+language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:38:16Z'
-updated: '2025-12-31T05:52:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612855025
+updated: '2026-05-14T09:32:57Z'
+generated_by: claude-haiku
+workflow_run: 25852227744
 issue: 2926
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - fill-under-curve
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent visualization of frequency spectrum with clear, distinct peaks at 50
-    Hz, 120 Hz, and 200 Hz matching the synthetic signal
-  - Proper use of dB scale for amplitude representation, making the spectrum analysis
-    realistic
-  - Well-configured canvas size (4800x2700) with appropriately scaled font sizes for
-    readability
-  - Clean, professional appearance with subtle grid lines and good color contrast
-  - Appropriate data preprocessing including FFT computation, normalization, and frequency
-    limiting
-  - Good use of pygal XY chart with fill for area-under-curve visualization
+  - Perfect visual quality with excellent legibility in both light and dark themes
+  - Correct theme-adaptive implementation of all chrome elements
+  - Clear and accurate FFT-based spectrum visualization with three distinguishable
+    frequency peaks
+  - Realistic signal processing approach with appropriate dB scaling
+  - Complete spec compliance with proper title format and axis labels
   weaknesses:
-  - Missing peak annotations or markers to highlight the dominant frequency components
-    as suggested in the specification
-  - Font sizes in the custom style are quite large (title_font_size=72) which may
-    be excessive; could be slightly reduced for better proportions
-  image_description: 'The plot displays a frequency spectrum visualization with three
-    distinct peaks at the expected frequencies: 50 Hz (dominant peak reaching ~10
-    dB), 120 Hz (secondary peak at ~2 dB), and 200 Hz (tertiary peak at ~-5 dB). The
-    visualization uses a filled area chart in Python Blue (#306998) against a white
-    background. The noise floor is visible around -30 to -40 dB with natural variation.
-    The title "spectrum-basic · pygal · pyplots.ai" appears at the top. Axis labels
-    clearly show "Frequency (Hz)" on the X-axis (0-300 Hz range) and "Amplitude (dB)"
-    on the Y-axis (-60 to 20 dB range). Grid lines are subtle and non-distracting.
-    The layout is well-balanced with good use of canvas space.'
+  - Design could be more refined (consider removing top/right spines, more subtle
+    grid styling)
+  - Limited exploration of pygal-specific features beyond basic chart rendering
+  - Would benefit from visual annotations highlighting dominant frequency peaks (50
+    Hz, 120 Hz, 200 Hz)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1, correct for light theme
+      Chrome: Title, axis labels (Frequency Hz, Amplitude dB), and tick values all clearly visible in dark text with excellent contrast
+      Data: Brand-green (#009E73) filled area chart with white outline strokes; three prominent peaks at 50 Hz, 120 Hz, and 200 Hz clearly distinguishable; light gray grid lines provide subtle reference
+      Legibility verdict: PASS - all elements fully readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17, correct for dark theme
+      Chrome: Title, axis labels, and tick values all clearly visible in light text; no dark-on-dark contrast failures observed
+      Data: Brand-green (#009E73) fill color identical to light render with black outline strokes; three frequency peaks equally clear and distinguishable as light version
+      Legibility verdict: PASS - all elements readable against dark background; chrome uses correct theme tokens
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          large canvas size. Font sizes are appropriately scaled.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels and tick values are cleanly
-          spaced.
+        comment: All text readable in both themes; font sizes appropriately scaled
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions; clean separation
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'The filled area chart clearly shows the spectrum pattern with peaks
-          and noise floor visible. Minor: the fill makes it slightly harder to see
-          fine structure in noisy regions.'
+        comment: Frequency peaks clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (blue) with good contrast against white background;
-          no colorblind issues.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins. Plot area fills most
-          of the canvas appropriately.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Frequency (Hz)" and
-          "Amplitude (dB)".'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito compliant with adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Grid is subtle and appropriate. Legend is hidden (appropriate for
-          single series), but minor: no legend means the series name is not visible.'
+        comment: Descriptive title with units on axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first series; backgrounds theme-correct
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Good use of brand color but styling is relatively basic
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Functional but minimal customization beyond basics
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Peaks guide viewer; could benefit from annotations
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct frequency spectrum plot showing amplitude vs frequency.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Frequency correctly mapped to X-axis, amplitude (dB) to Y-axis.
-      - id: SC-03
+        comment: Correct frequency spectrum plot
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Shows frequency components, dB scale, clear peaks. Minor: spec suggests
-          highlighting peak frequencies or annotating dominant components - not implemented.'
-      - id: SC-04
-        name: Data Range
+        comment: All required features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all relevant data; 0-300 Hz range captures all signal components.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend hidden (appropriate for single series spectrum).
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "spectrum-basic · pygal · pyplots.ai".
+        comment: Correct format and requirements
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple frequency components at different amplitudes, noise
-          floor, and dB scale representation. Shows the key aspects of a spectrum
-          plot.
+        comment: Full spectrum with multiple components
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Signal processing scenario with realistic frequencies (50 Hz, 120
-          Hz, 200 Hz) that could represent real-world signals like electrical interference,
-          machinery vibration, etc.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Frequency range (0-300 Hz) and amplitude range (-60 to 20 dB) are
-          realistic for signal analysis.
+        comment: Authentic signal processing approach
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible values for domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,42 +167,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure with inline code.
+        comment: Straightforward implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible results.
+        comment: Uses random seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal, and Style.'
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `strict=True` in zip() which is Python 3.10+ only; minor compatibility
-          concern.
+        comment: No fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html correctly.
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct file formats and naming
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of pygal's XY chart type, custom Style for large canvas,
-          fill option for area chart effect. Could have used more pygal-specific features
-          like tooltips or interactive elements.
+        passed: false
+        comment: Good use of Style objects and theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses HTML export but could leverage more features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

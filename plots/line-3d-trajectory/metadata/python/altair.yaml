@@ -1,159 +1,180 @@
 library: altair
+language: python
 specification_id: line-3d-trajectory
 created: '2026-01-07T16:30:19Z'
-updated: '2026-01-07T16:38:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788382498
+updated: '2026-05-16T09:04:30Z'
+generated_by: claude-haiku
+workflow_run: 25957778021
 issue: 3182
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/altair/plot.html
-quality_score: 91
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent choice of the Lorenz attractor as example data - scientifically significant
-    and visually striking
-  - Creative use of mark_rule with x2/y2 encoding for smooth line segments with per-segment
-    coloring
-  - Well-implemented isometric projection with sensible viewing angles (20° elevation,
-    135° azimuth)
-  - Interactive pan/zoom via selection_interval compensates for lack of 3D rotation
-  - Tooltips preserve original 3D coordinates for inspection
-  - Clean subtitle showing physical parameters enhances educational value
+  - Perfect visual quality with flawless theme adaptation across both light and dark
+    renders
+  - Accurate isometric projection clearly reveals Lorenz attractor's iconic two-wing
+    structure
+  - 'Complete spec compliance with all required features: interactive pan/zoom, tooltips,
+    proper data mapping'
+  - 'High-quality scientific data: Lorenz attractor with 1500 smooth trajectory points'
+  - Clean, reproducible code using appropriate Altair patterns and theme tokens throughout
   weaknesses:
-  - Some visual density in tight spiral regions where line segments overlap
-  - Axis labels describe projection methodology but lack context for users unfamiliar
-    with projections
-  image_description: 'The plot displays the iconic Lorenz attractor "butterfly" pattern
-    as an isometric 2D projection. The trajectory forms two distinct lobes (left and
-    right wings) characteristic of this chaotic system. The color encoding uses the
-    viridis colormap to show time progression: dark purple/blue for early time steps
-    (0) transitioning through green to yellow for later time steps (~1500). The left
-    wing shows tighter spirals near the center, while the right wing displays similar
-    orbital structure. The title "Lorenz Attractor · line-3d-trajectory · altair ·
-    pyplots.ai" is prominently displayed with a subtitle showing the system parameters
-    (σ=10, ρ=28, β=8/3). Axis labels clearly indicate "X-Y Projection (Horizontal)"
-    and "Z Projection (Vertical)". A color legend labeled "Time Step" appears in the
-    upper right. Grid lines are subtle with dashed styling. The overall layout is
-    balanced with the trajectory filling the canvas appropriately.'
+  - 'Design Excellence is moderate (13/20): styling follows defaults without custom
+    design sophistication or emphasis techniques'
+  - 'Library Mastery is modest (6/10): doesn''t showcase Altair''s more advanced or
+    distinctive features beyond standard encoding'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "line-3d-trajectory · altair · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "X-Y Projection (Horizontal)" and "Z Projection (Vertical)" in INK_SOFT (#4A4A44), all readable. Tick labels in INK_SOFT, legible. Legend "Time Step" in elevated box (#FFFDF6) with INK_SOFT text, readable.
+      Data: Trajectory uses viridis colormap transitioning from purple/blue (early) through green/cyan to yellow (late). Two distinct Lorenz attractor wings clearly visible and separated. All colors vivid and distinguishable.
+      Legibility verdict: PASS — every text element readable, data colors vivid, strong contrasts throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title in light INK (#F0EFE8), clearly readable against dark background. Axis labels in INK_SOFT (#B8B7B0), legible. Tick labels similarly readable. Legend in dark elevated box (#242420) with INK_SOFT text, readable.
+      Data: Trajectory colors remain IDENTICAL to light render (same viridis progression from purple through cyan/green to yellow). No color change — only chrome flipped. Spatial structure and two wings remain clear.
+      Legibility verdict: PASS — perfect theme adaptation, no dark-on-dark conflicts, data colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, ticks at 18pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Font sizes explicitly set (titleFontSize=22, labelFontSize=18). Both
+          renders fully readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, axes, legend, and tick labels properly spaced with no collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Line segments visible with strokeWidth=2.5, though some overlap in
-          dense spiral regions
+        comment: Trajectory lines (strokeWidth=2.5) clearly visible. Viridis colors
+          vivid and distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe
+        comment: Viridis is perceptually uniform and CVD-safe. Strong contrast throughout.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Trajectory fills canvas well, balanced margins
+        comment: Good proportions (1600×900 → 4800×2700 at 3x). Generous whitespace,
+          nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no physical units (dimensionless system, so
-          appropriate)
+        comment: Title in standard format. Axis labels descriptive and clear.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle with alpha=0.3 and dashed style, legend well-placed
+        comment: 'Viridis for continuous data (correct). Backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark). Both renders theme-correct with readable text.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Technically sound isometric projection. Theme tokens applied. However,
+          styling follows defaults; limited custom design choices.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid opacity (10%) is appropriate. Legend styling clean. Minimal
+          refinement beyond configuration.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Isometric projection reveals 3D structure well. Time gradient creates
+          narrative. Two wings clearly distinct. Could be enhanced with emphasis techniques.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct 3D line trajectory visualization via isometric projection
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X, Y, Z coordinates correctly generated and projected
-      - id: SC-03
+        comment: Correctly implements 3D line plot with connected trajectory using
+          mark_rule.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Color gradient shows time progression, tooltips present; interactive
-          rotation not possible in Altair (pan/zoom provided instead)
-      - id: SC-04
-        name: Data Range
+        comment: X, Y, Z mapping, color encoding for time, interactive pan/zoom, tooltips
+          all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: X-Y projection. Y-axis: Z projection. Full range represented
+          correctly.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Time Step legend correctly describes color encoding
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows {spec-id} · {library} · pyplots.ai format with descriptive
-          prefix
+        comment: 'Title: ''line-3d-trajectory · altair · anyplot.ai''. Legend: ''Time
+          Step'' with scale.'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete Lorenz attractor with both wings, chaotic switching
-          between lobes
+        comment: Lorenz attractor (1500 points) demonstrates smooth curves, spatial
+          structure, temporal evolution, chaotic behavior.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic physics example, Lorenz attractor is foundational in chaos
-          theory
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standard Lorenz parameters (σ=10, ρ=28, β=8/3) produce correct scale
+        comment: Lorenz attractor is canonical chaotic system in physics. Scientifically
+          meaningful and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values consistent with Lorenz parameters (σ=10, ρ=28, β=8/3). Scale
+          suitable for visualization.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,43 +182,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Single-script, no unnecessary functions/classes. Direct and readable.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though not needed for Lorenz which is deterministic)
+        comment: Uses seed(42). Euler integration is deterministic. Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas'
+        comment: 'Only necessary imports: os, altair, numpy, pandas. All used.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity. pan_zoom is genuine Altair selection. Appropriate
+          complexity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png but also plot.html (both required for interactive
-          library)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html. scale_factor=3.0 correct.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses selection_interval for pan/zoom, tooltips with original 3D coordinates,
-          mark_rule for segments. However, true 3D rotation not possible in Altair.
+        passed: false
+        comment: mark_rule with x2, y2 is idiomatic. Encoding syntax clean. selection_interval
+          well-used. configure_* methods correct. Doesn't leverage advanced features.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses mark_rule line segments (somewhat distinctive). Interactive
+          capabilities well-used. 3D-to-2D projection is custom math, not Altair-specific.
+          Modest showcase of library distinctiveness.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -206,8 +235,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
-  styling:
-  - custom-colormap
-  - grid-styling
+  styling: []

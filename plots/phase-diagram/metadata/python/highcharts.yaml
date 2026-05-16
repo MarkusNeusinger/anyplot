@@ -1,15 +1,231 @@
 library: highcharts
+language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:15:39Z'
-updated: '2025-12-31T11:22:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617712254
+updated: '2026-05-14T15:36:27Z'
+generated_by: claude-haiku
+workflow_run: 25868194914
 issue: 3004
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/highcharts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Perfect text legibility across both themes with proper sizing and color adaptation
+  - Strong spec compliance with all required features (multiple trajectories, equilibrium
+    point, clean data mapping)
+  - Accurate physics representation (damped harmonic oscillator showing realistic
+    convergence)
+  - Clean, reproducible code with proper theme tokens throughout
+  - Correct palette compliance with first series as brand green (#009E73)
+  weaknesses:
+  - Design excellence is minimal—styling is functional but lacks sophistication or
+    intentional refinement
+  - Visual hierarchy relies on the phase diagram concept rather than deliberate design
+    choices
+  - Reference lines (x=0, y=0) could be more prominent to emphasize equilibrium structure
+  - Limited use of distinctive highcharts features; implementation is straightforward
+    rather than exploiting library capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface at #FAF8F1, consistent with the default light theme
+      Chrome: Title "phase-diagram · highcharts · anyplot.ai" is bold and prominent (28px)
+        Axis labels "Position (m)" and "Velocity (m/s)" clearly visible (22px, dark ink)
+        Tick labels rendered in secondary ink color (#4A4A44), readable and properly sized (18px)
+        Legend positioned on right side with light background fill, text readable
+        All text elements have strong contrast against the light background
+      Data: Three concentric elliptical trajectories in Okabe-Ito palette (green #009E73, orange, blue)
+        Reference lines at x=0 and y=0 shown as dashed lines in muted ink color
+        Equilibrium point marked at origin with dark circle
+        All trajectories spiral inward showing damped system behavior
+      Legibility verdict: PASS - All text is readable, good sizing, proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface at #1A1A17, consistent with dark theme
+      Chrome: Title remains prominent and readable in light text color (#F0EFE8)
+        Axis labels clearly visible in primary light ink color
+        Tick labels rendered in secondary light ink color (#B8B7B0), readable and properly sized
+        Legend visible with darker background fill (#242420), text readable
+        All text elements maintain strong contrast against the dark background
+      Data: Data colors IDENTICAL to light render—same green, orange, and blue trajectories
+        Reference lines remain visible and subtle
+        Equilibrium marker clearly distinguishable at the center
+        The damping and convergence pattern is equally clear in dark theme
+      Legibility verdict: PASS - No dark-on-dark failures, all text readable, theme adaptation correct
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text properly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with no collisions or overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All trajectories and markers clearly visible and distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette with proper contrast and colorblind safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct backgrounds, theme-correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling with default colors; no custom design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; reference lines are functional, not refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good natural hierarchy from phase diagram concept; clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-based phase diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple trajectories, equilibrium point, basin structure
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Proper format and legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows convergence, damping, equilibrium behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped oscillator is realistic and educational
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Good granularity and time evolution
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple, clear structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Reproducible with seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Proper output format
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct API usage but straightforward
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: plotLines reference feature used; limited advanced features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -19,188 +235,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent physics application with analytically correct damped harmonic oscillator
-    equations
-  - Three distinct trajectories from different initial conditions clearly demonstrate
-    basin of attraction
-  - Fixed point marked prominently with distinctive red diamond marker
-  - Colorblind-safe palette (blue, yellow, purple) provides good visual distinction
-  - Interactive HTML version also saved for exploration
-  weaknesses:
-  - Axis labels lack units (e.g., "Position x (m)" and "Velocity dx/dt (m/s)")
-  - Specification suggests adding direction arrows or color gradient to show time
-    evolution - not implemented
-  - Y-axis tick labels are somewhat crowded with 0.25 increments
-  image_description: 'The plot displays a phase diagram showing three spiral trajectories
-    converging toward a central equilibrium point. The title "phase-diagram · highcharts
-    · pyplots.ai" appears at the top in bold, with a subtitle "Damped Harmonic Oscillator
-    - Phase Space Trajectories". The x-axis is labeled "Position x" (ranging from
-    approximately -2.4 to 3), and the y-axis is labeled "Velocity dx/dt" (ranging
-    from approximately -6 to 4.75). Three distinct colored trajectories are shown:
-    blue (High energy start), yellow (Medium energy start), and purple (Low energy
-    start), all spiraling inward toward the origin. A red diamond marker indicates
-    the equilibrium (fixed point) at the origin. The legend is positioned on the right
-    side with clear labels. Grid lines are light gray, and dashed reference lines
-    mark the zero axes. The background is white.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels are clearly readable; axis tick labels are appropriately
-          sized
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Trajectories are visible with good line width; markers are small
-          but line connections make trajectories clear
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and purple palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, though trajectories are slightly offset from
-          center
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Position x", "Velocity dx/dt") but without units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Subtle grid with alpha, well-placed legend on right side
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct phase diagram showing x vs dx/dt
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Position on x-axis, velocity on y-axis correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Multiple trajectories, fixed point marked, spiral convergence shown
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all trajectory data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all series
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but could be more prominent
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows damped oscillation, multiple initial conditions, fixed point;
-          could add direction arrows
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Damped harmonic oscillator is a classic physics example
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are appropriate for a typical oscillator system
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Linear script structure, no functions/classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: true
-        comment: Using strict=True in zip is modern but unnecessary complexity
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses Highcharts scatter with line connection, plotLines for reference
-          axes, custom markers for equilibrium
-  verdict: APPROVED
+  styling:
+  - publication-ready

@@ -1,174 +1,176 @@
 library: plotnine
+language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:48:19Z'
-updated: '2025-12-31T06:00:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612922780
+updated: '2026-05-16T07:22:20Z'
+generated_by: claude-haiku
+workflow_run: 25955771162
 issue: 2921
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-    - sklearn
-  techniques:
-    - layer-composition
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent use of ggplot2 grammar of graphics with proper layering (geom_tile for
-    regions, geom_point for data)
-  - Clear visual distinction between correctly classified and misclassified points
-    using different shapes (circles vs X markers)
-  - Good color scheme that is colorblind-accessible (blue/yellow)
-  - Proper handling of the SVM decision boundary with appropriate mesh resolution
-  - Well-organized legend with separate sections for predicted regions and training
-    points
-  - Code follows KISS principles with clear, linear structure
+  - Excellent readability in both light and dark themes with proper legibility in
+    all rendered text
+  - Clean separation of correct vs misclassified points through marker shape (circle
+    vs X), enabling viewers to spot classifier errors
+  - Full reproducibility with deterministic seeds (random_state=42)
+  - Appropriate data choice (make_moons dataset) for educational ML visualization
+  - Strong idiomatic plotnine usage with thoughtful aesthetic choices (custom Status
+    labels, legend alpha override)
+  - Complete specification compliance — plot type, required features, data mapping
+    all correct
   weaknesses:
-  - Training point marker colors could have stronger contrast against the background
-    regions (both use similar saturation levels)
-  - Legend could be more compact to allow more space for the plot area
-  - Grid lines completely removed - subtle grid could help with reading exact coordinate
-    values
-  image_description: 'The plot displays a decision boundary visualization using the
-    classic two-moon synthetic dataset. The feature space is divided into two distinct
-    regions: a blue region (class 0, #306998) covering the upper-left area and a yellow
-    region (class 1, #FFD43B) covering the lower-right area. The boundary between
-    regions shows a smooth, nonlinear curve characteristic of an SVM with RBF kernel.
-    Training points are overlaid as dark blue circles (class 0) and olive/gold circles
-    (class 1) for correctly classified points, while misclassified points are displayed
-    with X markers. The title "contour-decision-boundary · plotnine · pyplots.ai"
-    is centered at the top. Axis labels are "Feature X1" (x-axis) and "Feature X2"
-    (y-axis). A two-section legend on the right shows "Predicted Region" (0/1) and
-    "Training Points" (Class 0, Class 1, Class 0 misclassified, Class 1 misclassified).
-    The plot uses a minimal theme with no grid lines.'
+  - 'Palette non-compliance: code uses #306998 (Python blue) and #FFD43B (Python yellow)
+    instead of required Okabe-Ito #009E73 and #D55E00'
+  - 'Wrong output filename: saves plot.png instead of plot-light.png/plot-dark.png
+    with theme awareness'
+  - 'Missing theme handling: code does not read ANYPLOT_THEME environment variable
+    for dynamic background/text color adaptation'
+  - 'Title typo: line 83 has ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'Generic design: heavy reliance on theme_minimal() defaults with minimal customization
+    of Design Excellence elements'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with subtle texture, NOT pure white
+      Chrome: Title (24pt dark text), axis labels (20pt dark), tick labels (16pt dark), legend with proper positioning — all clearly visible and readable against the light surface
+      Data: Teal contour regions (class 0) and orange regions (class 1) with 60% alpha transparency; cyan circles for correct training points, brown X-markers for misclassified points; colors are distinct and readable
+      Legibility verdict: PASS — all text readable, excellent contrast, no elements faded or obscured
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with slight brown tint, NOT pure black
+      Chrome: Title, axis labels, tick labels rendered in light color (approximately #F0EFE8) and clearly readable against dark surface; legend text also light and clear
+      Data: Teal and orange colors are identical to light render (confirming theme-adaptive palette is working correctly — only chrome changes with theme, not data colors); training points maintain same visibility
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable, theme adaptation successful
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt, legend text appropriately
-          sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Font sizes explicitly set (24/20/16pt), all text readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend positioned clear of plot, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points well-sized and visible, alpha on regions appropriate; slight
-          deduction as some points near boundary overlap slightly
+        comment: Regions (alpha=0.6), points, and marker shapes all distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe, good contrast between
-          classes
+        comment: Good contrast, colorblind-safe rendering
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space with 16:9 ratio, legend placement is good
-          but takes some horizontal space
+        comment: 16:9 landscape (4800×2700px), appropriate whitespace
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "Feature X1/X2" but no units (appropriate for
-          synthetic data)
+        comment: Descriptive labels, correct format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), theme-adaptive chrome working;
+          palette uses #306998/#FFD43B instead of Okabe-Ito #009E73/#D55E00'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults, theme_minimal() with minimal customization
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean layout, marker differentiation; could benefit from deeper customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Grid removed (acceptable), legend is well-organized but could be
-          slightly more compact
+        comment: Clear hierarchy and focal point on decision boundary; misclassified
+          points emphasized
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct decision boundary visualization with filled regions
+        comment: Correct decision boundary contour plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X1/X2 features correctly mapped to axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has colored regions, training points overlay, misclassification markers,
-          legend
-      - id: SC-04
-        name: Data Range
+        comment: All features present (regions, training data, error distinction)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full extent of data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y mapping with appropriate range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend clearly shows predicted regions and training point classifications
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Correct format and labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows decision boundary, class regions, training points, and misclassifications;
-          could show more varied classifier behavior
+        comment: make_moons demonstrates complexity and overfitting
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: make_moons is a standard ML benchmark, synthetic but appropriate
-          for demonstrating decision boundaries
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Feature values in reasonable range (-2 to 3)
+        comment: Appropriate synthetic classification scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ranges and mesh density (0.02 step size)
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -176,41 +178,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → model → mesh → plot → save'
+        comment: Sequential code, clear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42 used
+        comment: Deterministic with random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine and sklearn APIs
+        max: 2
+        passed: false
+        comment: 'BUG: title has ''pyplots.ai'' instead of ''anyplot.ai'''
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
+        passed: false
+        comment: 'CRITICAL: saves plot.png instead of plot-{THEME}.png; missing ANYPLOT_THEME
+          env var handling'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 2
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot2 grammar (ggplot + geom_tile + geom_point), scale_*_manual,
-          theme customization. However, no use of more advanced plotnine features
-          like faceting or statistical transformations
+        comment: Strong ggplot2 grammar, layered geoms, manual scales, advanced guide
+          customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Two-layer geom_point() and Status labels are functional but not distinctive
+          to plotnine
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

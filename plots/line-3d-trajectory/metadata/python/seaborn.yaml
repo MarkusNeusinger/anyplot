@@ -1,0 +1,235 @@
+library: seaborn
+language: python
+specification_id: line-3d-trajectory
+created: '2026-05-16T08:48:35Z'
+updated: '2026-05-16T09:00:20Z'
+generated_by: claude-haiku
+workflow_run: 25957663505
+issue: 3182
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - Clean deterministic Lorenz attractor generation with proper physics and reproducible
+    seeding
+  - Flawless theme adaptation with both renders passing legibility checks
+  - Correct use of INK tokens for theme-adaptive text colors
+  - Perceptually-uniform viridis colormap effectively showing time progression
+  - Font sizes (title=24pt, axis=20pt, ticks=16pt) correctly scaled for high-resolution
+    output
+  - Proper title format following anyplot.ai convention
+  weaknesses:
+  - 'Critical: Code-plot mismatch - rendered plots show legend and markers not generated
+    by implementation code'
+  - Generic design with all defaults - no custom styling, spine removal, or intentional
+    visual choices
+  - Low design excellence scores (DE-01=4/8, DE-02=2/6) indicating minimal aesthetic
+    sophistication
+  - Axis labels not descriptive (X, Y, Z only) - could enhance understanding with
+    semantic context
+  - Limited exploration of mplot3d distinctive features (viewing angles, surface properties)
+  - Potential pipeline issue producing plots from different code version
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "line-3d-trajectory · seaborn · anyplot.ai" clearly visible in dark text (#1A1A17); axis labels (X, Y, Z) and tick labels all readable and properly spaced
+      Data: Viridis colormap with smooth progression from deep blue (start) through cyan/green to yellow (end), showing time-based coloring of trajectory
+      Grid: Subtle (alpha=0.1) but visible, provides spatial reference without competing with data
+      Legibility verdict: PASS - all text elements maintain excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: All text transitions to light colors (#F0EFE8 for title, #B8B7B0 for ticks) with excellent contrast; no dark-on-dark failures detected
+      Data: Viridis colors **identical** to light render (only chrome changed theme), confirming proper theme separation
+      Grid: Visible and subtle, appropriate for dark background
+      Legibility verdict: PASS - both text and data clearly distinguishable
+
+    Both renders meet theme-readability requirements with proper color handling and text contrast in their respective color schemes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, labels, ticks all readable in both themes with proper color
+          tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, no collisions between text and data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Trajectory clearly visible; minor deduction for potential overlap
+          in dense center
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is CVD-safe and perceptually uniform
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure 16x9, DPI 300, all data visible in 3D space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; X/Y/Z standard for 3D
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis correct for continuous data; backgrounds match spec
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling with defaults, no custom palette or design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Standard grid, no customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color gradient shows progression but lacks intentional visual hierarchy
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: True 3D line plot showing trajectory as connected lines
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential connection, smooth progression, color gradient all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z properly mapped with full extent
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title correct but rendered plots show legend not in code
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Lorenz attractor shows characteristic chaotic structure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Physically meaningful, domain-neutral, real-world applicable
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2000 points yields smooth curves with realistic parameters
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear code
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with proper handling
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct projection='3d' and theme token usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Basic 3D usage, limited exploration of mplot3d features
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling

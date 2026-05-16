@@ -1,204 +1,232 @@
 library: letsplot
+language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:07:14Z'
-updated: '2025-12-31T11:17:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617567410
+updated: '2026-05-15T15:26:39Z'
+generated_by: claude-haiku
+workflow_run: 25925524639
 issue: 3003
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - layer-composition
-  - custom-shapes
-  - html-export
-  patterns:
-  - dataset-loading
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/letsplot/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent implementation of Chernoff faces using lets-plot grammar of graphics
-    approach
-  - Clear visual distinction between species through face colors and facial feature
-    variations
-  - Well-organized 3×4 grid layout with proper spacing
-  - Good use of geom_polygon for face outlines and eyes, geom_path for mouth and eyebrows
-  - Real Iris dataset provides meaningful multivariate data demonstration
-  - Proper normalization of data to 0-1 range as specified
-  - 'Facial features effectively encode data: face width (sepal length), eye size
-    (sepal width), mouth curvature (petal length), eyebrow slant (petal width)'
+  - Excellent theme-adaptive chrome with fully readable light and dark renders
+  - Correct Okabe-Ito palette usage with proper species color mapping
+  - All facial features mathematically sound and mapped to data variables
+  - Clean KISS code structure with proper reproducibility
+  - Perfect spec compliance with all required features
+  - All text explicitly sized and readable in both themes
   weaknesses:
-  - Code uses a helper function (create_face) which violates the KISS structure requirement
-  - Title uses lets-plot with hyphen instead of letsplot (single word)
-  - Legend is somewhat small and isolated on the right side
-  - Nose does not vary based on any data variable (static for all faces)
-  image_description: 'The plot displays 12 Chernoff faces arranged in a 3×4 grid layout.
-    Each row represents a different iris species: Setosa (top row, blue faces), Versicolor
-    (middle row, yellow faces), and Virginica (bottom row, red/pink faces). Each face
-    has distinct facial features including eyes with pupils, eyebrows, a nose, and
-    a mouth. The faces show variation in face width, eye size, mouth curvature (happy/sad),
-    and eyebrow slant across different samples. Setosa faces appear "happier" with
-    upward-curved mouths, while Virginica faces appear "sadder" with downward-curved
-    mouths. Each face is labeled with its species name below. A legend on the right
-    shows the three species colors. The title reads "Iris Species Comparison · chernoff-basic
-    · lets-plot · pyplots.ai".'
+  - Generic design lacking custom aesthetic touches or visual refinement
+  - No visual storytelling or emphasis—data presented but not interpreted
+  - Library mastery limited to basic API usage; could leverage more distinctive letsplot
+    features
+  - Design Excellence scores low due to default styling and lack of sophisticated
+    composition
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "chernoff-basic · letsplot · anyplot.ai" in dark INK (#1A1A17) at 24pt bold - clearly readable; species labels below faces in dark INK_SOFT (#4A4A44) at 12pt - fully readable; legend showing "Species" with dark text at 18pt title, 16pt items on elevated background (#FFFDF6) - all clearly visible
+      Data: 12 Chernoff faces arranged in 3×4 grid; Setosa faces in #009E73 (Okabe-Ito pos 1), Versicolor in #D55E00 (pos 2), Virginica in #0072B2 (pos 3); facial features (white eyes with dark pupils, dark mouth curves, eyebrows, noses) all visible and distinguishable; semi-transparent face fills add depth
+      Legibility verdict: PASS - All text readable without any light-on-light failures; facial features clear against background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface, not pure black
+      Chrome: Title in light INK (#F0EFE8) at 24pt - clearly readable against dark background; species labels in light INK_SOFT (#B8B7B0) at 12pt - fully readable; legend showing "Species" on elevated background (#242420) with light text at 18pt/16pt - all clearly visible with no dark-on-dark failures
+      Data: Same 12 Chernoff faces; data colors are IDENTICAL to light render - Setosa #009E73, Versicolor #D55E00, Virginica #0072B2; facial features (white eyes highly visible against dark, dark pupils, dark mouth/eyebrows/noses) all distinguishable and rendered correctly
+      Legibility verdict: PASS - All text readable in light colors; no dark-on-dark failures; data colors match light render exactly (only chrome has adapted as required)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and readable, species labels are bold and clear
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements, faces well-spaced in grid
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Faces are well-sized and visible, facial features clear
+        comment: Title (24pt), legend (18/16pt), labels (12pt) all explicitly sized
+          and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; clean positioning of labels and legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All facial features visible and distinguishable; pupils clear against
+          white eyes; mouth and eyebrows render clearly
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, red palette distinguishable but not ideal for colorblind
-          users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent grid layout utilizing canvas well
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend is small and positioned far right, somewhat isolated
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Chernoff faces visualization
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped to facial features (face width, eye size,
-          mouth curvature, eyebrow slant)
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has grid layout, color by species, labels; missing nose length variation
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data properly normalized and displayed
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly shows species colors
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Good contrast; Okabe-Ito palette CVD-safe; species distinction clear
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills 50-70% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses "lets-plot" instead of "letsplot" in title
-    data_quality:
-      score: 19
+        comment: 'Title format correct: chernoff-basic · letsplot · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series follows Okabe-Ito; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-adaptive in both renders'
+    design_excellence:
+      score: 8
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
-        passed: true
-        comment: Shows variation across species and within species, demonstrates face
-          differences effectively
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses real Iris dataset, a classic multivariate dataset
-      - id: DQ-03
-        name: Appropriate Scale
+        passed: false
+        comment: Well-configured defaults; intentional feature mapping; lacks custom
+          design polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; generic styling; library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual narrative or emphasis; viewer
+          must find their own story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Normalized values (0-1) as recommended in spec
+        comment: Correct Chernoff face visualization with all required features
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All 4 iris variables mapped: sepal length→face width, sepal width→eye
+          size, petal length→mouth curvature, petal width→eyebrow slant'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct mapping; all data visible; grid layout clear
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct; legend labels match (Setosa, Versicolor, Virginica)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all aspects of Chernoff face technique with varied features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris dataset (real, well-known scientific data); neutral botanical
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Iris measurements factually correct; 0-1 normalization appropriate
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses functions (create_face), violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set
+        comment: 'Simple structure: imports → data → plot → save; no unnecessary functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; deterministic sampling
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; appropriate complexity; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 2
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html (bonus for HTML)
-    library_features:
+        comment: Correct output format with plot-{theme}.png and .html
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Effectively uses ggplot grammar with geom_polygon, geom_path, geom_text,
-          scale_fill_manual, comprehensive theme customization
+        comment: Uses ggplot2-style grammar correctly; proper geom composition and
+          high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses basic letsplot features; generic usage that could apply to other
+          libraries
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - layer-composition
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling: []

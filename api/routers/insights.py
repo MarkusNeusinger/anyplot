@@ -10,20 +10,26 @@ Public analytics and discovery features that leverage aggregated database data:
 from __future__ import annotations
 
 import hashlib
+import logging
 import random
 from collections import Counter, defaultdict
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
+import httpx
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.cache import cache_key, get_or_set_cache
 from api.dependencies import require_db
+from core.config import settings
 from core.constants import SUPPORTED_LIBRARIES
 from core.database import ImplRepository, Spec, SpecRepository
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
+
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/insights", tags=["insights"])
@@ -82,6 +88,33 @@ class TimelinePoint(BaseModel):
     count: int
 
 
+class DailyImplPoint(BaseModel):
+    """Implementation updates on a single day (last-28-days timeline).
+
+    Window matches the visitors chart on the stats page so the two strips
+    read side-by-side. Distinct from `debug.DailyImplPoint` (which uses
+    `impls_updated`) — kept separate because the public dashboard's consumer
+    is the stats page bundle, not the admin debug view, and `count` is
+    consistent with `TimelinePoint`.
+    """
+
+    date: str  # ISO "YYYY-MM-DD"
+    count: int
+
+
+class VisitorPoint(BaseModel):
+    """Unique visitors on a single day, sourced from Plausible."""
+
+    date: str  # ISO "YYYY-MM-DD"
+    visitors: int
+
+
+class VisitorsResponse(BaseModel):
+    """Unique visitors per day for the public stats page."""
+
+    points: list[VisitorPoint]
+
+
 class DashboardResponse(BaseModel):
     """Full dashboard statistics."""
 
@@ -98,6 +131,7 @@ class DashboardResponse(BaseModel):
     tag_distribution: dict[str, dict[str, int]]
     score_distribution: dict[str, int]
     timeline: list[TimelinePoint]
+    daily_impls: list[DailyImplPoint]  # Last 28 days, zero-filled
 
 
 class PlotOfTheDayResponse(BaseModel):
@@ -233,6 +267,7 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
 
     tag_counter: dict[str, Counter[str]] = defaultdict(Counter)
     monthly_counts: Counter[str] = Counter()
+    daily_counts: Counter[str] = Counter()
     score_buckets: Counter[str] = Counter()
 
     coverage_rows: list[CoverageRow] = []
@@ -272,6 +307,13 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
             gen_dt = impl.generated_at
             if gen_dt:
                 monthly_counts[gen_dt.strftime("%Y-%m")] += 1
+
+            # Daily-impls timeline matches the debug page: count by `updated`
+            # so any re-generation/quality re-review of an existing impl is
+            # reflected on the day it actually moved, not on its first build.
+            upd_dt = impl.updated
+            if upd_dt:
+                daily_counts[upd_dt.date().isoformat()] += 1
 
         coverage_rows.append(CoverageRow(spec_id=spec.id, title=spec.title, libraries=row_libs))
 
@@ -322,6 +364,17 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
     # Timeline sorted by month
     timeline = [TimelinePoint(month=m, count=c) for m, c in sorted(monthly_counts.items())]
 
+    # Daily impls for the last 28 days, zero-filled. Window matches the
+    # visitors chart on the stats page so the two strips read side-by-side.
+    today = datetime.now(timezone.utc).date()
+    daily_impls = [
+        DailyImplPoint(
+            date=(today - timedelta(days=offset)).isoformat(),
+            count=daily_counts.get((today - timedelta(days=offset)).isoformat(), 0),
+        )
+        for offset in range(27, -1, -1)
+    ]
+
     # Coverage
     coverage = (total_impls / (len(all_specs) * len(SUPPORTED_LIBRARIES)) * 100) if all_specs else 0
 
@@ -341,6 +394,7 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
         tag_distribution={cat: dict(counter.most_common(20)) for cat, counter in sorted(tag_counter.items())},
         score_distribution=score_dist,
         timeline=timeline,
+        daily_impls=daily_impls,
     )
 
 
@@ -569,3 +623,86 @@ async def get_related_specs(
         return await _build_related(repo, spec_id, limit, mode, library)
 
     return await get_or_set_cache(cache_key("insights", "related", spec_id, str(limit), mode, library or ""), _fetch)
+
+
+# =============================================================================
+# 4. Plausible Visitors
+# =============================================================================
+
+
+async def _fetch_plausible_visitors() -> VisitorsResponse:
+    """Query the Plausible Stats API v2 for unique visitors per day (last 28d).
+
+    The 28-day window matches Plausible's own default "Last 28 days" report so
+    the totals here align with what the dashboard at plausible.io/anyplot.ai
+    shows by default.
+
+    Returns an empty `points` list when the API key is not configured or the
+    upstream call fails — the stats page treats `points: []` as "no data" and
+    renders a placeholder instead of an all-zero chart, so we can distinguish
+    real zeros (Plausible returned 0 visitors for a day) from missing data.
+    On a successful fetch the response is zero-filled across all 28 days so
+    the chart has a stable 28-bar width even for days Plausible has no row for.
+    """
+    if not settings.plausible_api_key:
+        return VisitorsResponse(points=[])
+
+    payload = {
+        "site_id": settings.plausible_site_id,
+        "metrics": ["visitors"],
+        "date_range": "28d",
+        "dimensions": ["time:day"],
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                settings.plausible_api_url,
+                headers={"Authorization": f"Bearer {settings.plausible_api_key}", "Content-Type": "application/json"},
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+    except Exception:
+        logger.warning("Plausible visitors fetch failed (returning empty series)", exc_info=True)
+        return VisitorsResponse(points=[])
+
+    # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [N]}, ...]}
+    by_date: dict[str, int] = {}
+    for row in data.get("results", []):
+        dims = row.get("dimensions") or []
+        metrics = row.get("metrics") or []
+        if not dims or not metrics:
+            continue
+        # The time:day dimension can come back as "YYYY-MM-DD" or an ISO datetime —
+        # normalize to a plain ISO date so the join with the zero-filled axis works.
+        day_str = str(dims[0])[:10]
+        try:
+            count = int(metrics[0] or 0)
+        except (TypeError, ValueError):
+            count = 0
+        by_date[day_str] = count
+
+    today = datetime.now(timezone.utc).date()
+    points = [
+        VisitorPoint(
+            date=(today - timedelta(days=offset)).isoformat(),
+            visitors=by_date.get((today - timedelta(days=offset)).isoformat(), 0),
+        )
+        for offset in range(27, -1, -1)
+    ]
+    return VisitorsResponse(points=points)
+
+
+@router.get("/visitors", response_model=VisitorsResponse)
+async def get_visitors() -> VisitorsResponse:
+    """Get unique visitors per day for the last 28 days (Plausible Stats API).
+
+    Cached for ~1h via stale-while-revalidate so we stay well under Plausible's
+    600-req/h rate limit even under traffic spikes on the public stats page.
+    """
+    return await get_or_set_cache(
+        cache_key("insights", "visitors", "28d"),
+        _fetch_plausible_visitors,
+        refresh_after=3600,
+        refresh_factory=_fetch_plausible_visitors,
+    )

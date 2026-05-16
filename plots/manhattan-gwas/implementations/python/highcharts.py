@@ -1,19 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-15
 """
 
 import json
+import os
+import subprocess
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for alternating chromosomes
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Simulated GWAS data with random p-values and significant peaks
 np.random.seed(42)
@@ -82,18 +94,20 @@ for chrom in range(1, 23):
     cumulative_offset += chr_sizes[chrom]
     chr_boundaries.append(cumulative_offset)
 
-# Prepare series by chromosome for alternating colors
+# Prepare series by chromosome with Okabe-Ito alternating colors
 series_data = []
 for chrom in range(1, 23):
     chrom_points = [[d["x"], d["y"]] for d in all_data if d["chr"] == chrom]
-    color = "#306998" if chrom % 2 == 1 else "#7a7a7a"  # Python Blue / Gray
+    # Use alternating Okabe-Ito colors
+    color_idx = (chrom - 1) % len(OKABE_ITO)
+    color = OKABE_ITO[color_idx]
     series_data.append(
         {
             "name": f"Chr {chrom}",
             "data": chrom_points,
             "color": color,
             "showInLegend": False,
-            "marker": {"radius": 6, "symbol": "circle"},
+            "marker": {"radius": 8, "symbol": "circle"},
             "turboThreshold": 0,
             "animation": False,
         }
@@ -105,8 +119,23 @@ tick_labels = {chr_midpoints[c]: str(c) for c in range(1, 23)}
 
 # Download Highcharts JS
 highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+result = subprocess.run(
+    [
+        "curl",
+        "-s",
+        "-A",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "-H",
+        "Accept: */*",
+        "-H",
+        "Referer: https://www.highcharts.com/",
+        highcharts_url,
+    ],
+    capture_output=True,
+    text=True,
+    timeout=30,
+)
+highcharts_js = result.stdout
 
 # Build Highcharts configuration
 chart_config = {
@@ -114,62 +143,65 @@ chart_config = {
         "type": "scatter",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginBottom": 180,
         "marginTop": 120,
         "marginLeft": 150,
         "marginRight": 80,
-        "style": {"fontFamily": "Arial, sans-serif"},
+        "style": {"fontFamily": "Arial, sans-serif", "color": INK},
     },
-    "title": {"text": "manhattan-gwas · highcharts · pyplots.ai", "style": {"fontSize": "64px", "fontWeight": "bold"}},
+    "title": {
+        "text": "manhattan-gwas · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
+    },
     "subtitle": {
         "text": "Simulated GWAS Results Across Human Chromosomes",
-        "style": {"fontSize": "40px", "color": "#666666"},
+        "style": {"fontSize": "22px", "color": INK_SOFT},
     },
     "xAxis": {
-        "title": {"text": "Chromosome", "style": {"fontSize": "48px", "fontWeight": "bold"}},
-        "labels": {"style": {"fontSize": "36px"}, "y": 45},
+        "title": {"text": "Chromosome", "style": {"fontSize": "22px", "fontWeight": "bold", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "y": 45},
         "tickPositions": tick_positions,
         "min": 0,
         "max": cumulative_offset,
         "tickLength": 0,
-        "lineWidth": 3,
-        "lineColor": "#333333",
+        "lineWidth": 2,
+        "lineColor": INK_SOFT,
     },
     "yAxis": {
-        "title": {"text": "-log\u2081\u2080(p-value)", "style": {"fontSize": "48px", "fontWeight": "bold"}},
-        "labels": {"style": {"fontSize": "36px"}},
+        "title": {"text": "-log₁₀(p-value)", "style": {"fontSize": "22px", "fontWeight": "bold", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
         "min": 0,
         "max": 16,
         "gridLineWidth": 1,
-        "gridLineColor": "#e0e0e0",
-        "lineWidth": 3,
-        "lineColor": "#333333",
+        "gridLineColor": GRID,
+        "lineWidth": 2,
+        "lineColor": INK_SOFT,
         "plotLines": [
             {
                 "value": 7.3,
-                "color": "#DC2626",
+                "color": "#009E73",
                 "width": 4,
                 "dashStyle": "Dash",
                 "zIndex": 5,
                 "label": {
-                    "text": "Genome-wide significance (p = 5\u00d710\u207b\u2078)",
+                    "text": "Genome-wide significance (p = 5×10⁻⁸)",
                     "align": "right",
                     "x": -20,
-                    "style": {"fontSize": "32px", "color": "#DC2626", "fontWeight": "bold"},
+                    "style": {"fontSize": "18px", "color": "#009E73", "fontWeight": "bold"},
                 },
             },
             {
                 "value": 5,
-                "color": "#2563EB",
+                "color": INK_SOFT,
                 "width": 3,
                 "dashStyle": "Dot",
                 "zIndex": 5,
                 "label": {
-                    "text": "Suggestive (p = 10\u207b\u2075)",
+                    "text": "Suggestive (p = 10⁻⁵)",
                     "align": "right",
                     "x": -20,
-                    "style": {"fontSize": "28px", "color": "#2563EB"},
+                    "style": {"fontSize": "16px", "color": INK_SOFT},
                 },
             },
         ],
@@ -177,8 +209,8 @@ chart_config = {
     "legend": {"enabled": False},
     "tooltip": {
         "headerFormat": "",
-        "pointFormat": "<b>{series.name}</b><br/>-log\u2081\u2080(p): {point.y:.2f}",
-        "style": {"fontSize": "24px"},
+        "pointFormat": "<b>{series.name}</b><br/>-log₁₀(p): {point.y:.2f}",
+        "style": {"fontSize": "16px"},
     },
     "credits": {"enabled": False},
     "series": series_data,
@@ -193,7 +225,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0; overflow:hidden;">
+<body style="margin:0; padding:0; overflow:hidden; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         var tickLabels = {tick_labels_json};
@@ -223,6 +255,10 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
+# Save HTML artifact for the site
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
@@ -238,11 +274,7 @@ chrome_options.add_argument("--window-size=4800,2800")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Save HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)

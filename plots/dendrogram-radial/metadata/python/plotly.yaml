@@ -1,0 +1,254 @@
+library: plotly
+language: python
+specification_id: dendrogram-radial
+created: '2026-05-14T09:35:18Z'
+updated: '2026-05-14T09:53:15Z'
+generated_by: claude-sonnet
+workflow_run: 25852212108
+issue: 5245
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - Branch coloring by species purity creates clear visual story about clustering
+    structure
+  - Correct Okabe-Ito first-position green for Setosa with full theme-adaptive chrome
+    in both renders
+  - Interactive hover tooltips and HTML export leverage Plotly distinctive interactivity
+  - Realistic Iris dataset with proper normalization demonstrates genuine hierarchical
+    clustering
+  weaknesses:
+  - Leaf annotation font size 10 is too small for 3600x3600 canvas — increase to at
+    least 14-16px
+  - Title has extra prefix before required spec-id format — fix to dendrogram-radial
+    · plotly · anyplot.ai
+  - Leaf markers at size 10 slightly small — increase to 12-14 for better visibility
+  - Bottom cluster label crowding due to tight angular spread
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "Iris Species Clustering · dendrogram-radial · plotly · anyplot.ai" at 28px clearly readable in dark ink (#1A1A17); legend font at 16px readable; leaf annotation labels at font size 10 are small but readable (below recommended 18px minimum for 3600x3600 canvas)
+      Data: Setosa branches in #009E73 (brand green), Versicolor in #D55E00 (vermillion), Virginica in #0072B2 (blue); mixed-species branches in INK_SOFT (#4A4A44); leaf markers with white border edges
+      Legibility verdict: PASS (minor concern: leaf annotation font size 10 is below recommended minimum)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title clearly visible in light text (#F0EFE8); legend box uses elevated background (#242420) with appropriate border; leaf labels in species colors are visible against dark background; no dark-on-dark failures detected; mixed-species branches render in #B8B7B0 (light gray, clearly visible on dark surface)
+      Data: Colors identical to light render — Setosa #009E73, Versicolor #D55E00, Virginica #0072B2 — confirming only chrome elements flip between themes
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Title 28px and legend 16px explicitly set; leaf annotations at size
+          10 too small for 3600x3600 canvas (recommended minimum 18px)
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Mostly clean; minor crowding at bottom where Virginica leaves cluster
+          (Vi-04, Vi-10, Vi-12, Ve-10 labels tight)
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Branches (width 2.5) and arcs well visible; leaf markers at size
+          10 slightly small for canvas resolution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; neutral color for mixed branches distinguishes
+          from pure-species
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 3600x3600 canvas appropriate for radial layout; dendrogram
+          fills most area with adequate margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; no axis labels needed (axes correctly hidden for
+          radial layout)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; Okabe-Ito order followed; backgrounds
+          #FAF8F1/#1A1A17 correct; theme chrome adaptive in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: intentional branch coloring by species purity, species-colored
+          leaf labels, white marker borders; not quite publication-grade'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, no grid, white marker edges, explicit line widths; good
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Branch purity coloring creates visual hierarchy showing Setosa separates
+          cleanly vs Versicolor/Virginica intermixing
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct radial dendrogram: root at center, leaves at circumference,
+          proportional branch lengths'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: scipy ward linkage, labels at circumference, cluster color coding,
+          interactive hover tooltips, proportional branch lengths
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Correct radial mapping: leaves r=1, internal nodes decreasing r
+          by normalized distance, angles from scipy dendrogram leaf order'
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title has extra prefix 'Iris Species Clustering · ' before required
+          spec-id format; all required elements present but not in exact format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows pure-cluster branches, mixed-species connections, 36 leaf labels,
+          hover tooltips, color-coded markers — full coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris dataset is canonical scientific data; species clustering is
+          genuine biological use case for radial dendrograms
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 36 leaves within spec recommended 20-500 range; ward linkage distances
+          realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: One helper function branch_color present; criterion requires no functions/classes
+          though function is minimal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before random leaf selection
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, numpy, plotly.graph_objects, scipy linkage/dendrogram,
+          sklearn load_iris/StandardScaler'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; appropriate complexity; manual Cartesian radial
+          layout well-structured
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Plotly
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic: multiple go.Scatter traces, update_layout, write_image
+          + write_html; radial uses Cartesian not polar projection (justified for
+          dendrogram control)'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive hover tooltips per leaf and HTML export leverage Plotly's
+          distinctive interactive capabilities vs static libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - sklearn
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - minimal-chrome
+  - edge-highlighting

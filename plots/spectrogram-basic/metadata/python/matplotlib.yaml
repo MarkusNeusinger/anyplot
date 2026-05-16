@@ -1,167 +1,173 @@
 library: matplotlib
+language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T05:34:22Z'
-updated: '2025-12-31T05:46:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612803106
+updated: '2026-05-15T07:31:44Z'
+generated_by: claude-haiku
+workflow_run: 25905696479
 issue: 2927
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - colorbar
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent spectrogram visualization with clear chirp signal and tone burst demonstration
-  - Perfect use of viridis colormap which is perceptually uniform and colorblind-safe
-  - Proper dB scale on colorbar with appropriate floor value (-80 dB)
-  - Good NFFT (256) and overlap (200) parameters for reasonable time-frequency resolution
-  - Clean, readable code following KISS principle
-  - Signal combination (chirp + burst + noise) effectively demonstrates time-varying
-    frequency content
+  - Proper spectrogram computation using scipy with appropriate signal parameters
+  - Correct use of viridis colormap for perceptually uniform continuous data representation
+  - Clean theme-adaptive styling with proper token usage for both light and dark themes
+  - Clear axis labeling with units and descriptive title
+  - Colorbar with dB scale units properly labeled
   weaknesses:
-  - Could leverage more matplotlib-specific features such as adding a time-domain
-    plot of the signal above the spectrogram
-  - The burst signal at 500 Hz overlaps visually with the chirp in a way that could
-    be clearer with different timing
-  image_description: The plot displays a spectrogram showing time-frequency representation
-    of a signal. The x-axis shows "Time (s)" ranging from 0 to approximately 2 seconds,
-    and the y-axis shows "Frequency (Hz)" ranging from 0 to 2000 Hz. The plot uses
-    the viridis colormap (purple-blue-green-yellow gradient) where brighter yellow
-    indicates higher power/frequency values. A clear diagonal line (chirp signal)
-    sweeps from approximately 100 Hz at t=0 to 1000 Hz at t=2s. There's also a visible
-    horizontal burst around 500 Hz between t=0.8s and t=1.2s overlapping with the
-    chirp. The background shows noise at roughly -60 to -70 dB/Hz (blue-purple tones).
-    A colorbar on the right indicates "Power/Frequency (dB/Hz)" ranging from -80 to
-    approximately -20 dB/Hz. The title correctly shows "spectrogram-basic · matplotlib
-    · pyplots.ai".
+  - Design Excellence at default/minimal level — could benefit from additional visual
+    refinement or distinctive styling choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title, axis labels, and tick labels are dark (INK color) and clearly readable against the light background. Colorbar label and scale are readable.
+      Data: Viridis colormap displays the spectrogram clearly, showing the chirp signal as a diagonal band increasing in frequency from ~100Hz to ~1000Hz over 2 seconds, with a distinct bright burst feature at ~0.8-1.2s/500Hz. Colors range from dark purple (low power, ~-90dB) to bright yellow (high power, ~-20dB).
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, and tick labels are light-colored and clearly readable against the dark background. No dark-on-dark failures observed. Colorbar label and scale are readable.
+      Data: Viridis colormap is identical to the light render, showing the same chirp and burst patterns with no loss of clarity. Data colors did not change between themes (only chrome flipped).
+      Legibility verdict: PASS — all text readable against dark background, proper theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at fontsize=24, axis labels at fontsize=20, tick labels at
-          fontsize=16 - all perfectly readable
+        comment: All text (title, axis labels, tick labels, colorbar) clearly readable
+          in both themes with proper font sizing
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collisions or overlapping elements; clean, readable layout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Spectrogram is clearly visible with good color intensity showing
-          the chirp and burst
+        comment: All elements clearly visible; spectrogram pattern distinct, chirp
+          and burst features easily identifiable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with proper margins, colorbar well-positioned, slight
-          deduction for small unused space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: "Time (s)" and "Frequency (Hz)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and colorblind-safe; excellent contrast
+          throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, spectrogram fills plot area well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No grid visible (appropriate for spectrogram heatmap), but no legend
-          present; colorbar serves as legend
+        comment: Axes labeled with units (Time (s), Frequency (Hz)), colorbar labeled
+          with units (Power/Frequency (dB/Hz))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis colormap correct for continuous data; backgrounds are #FAF8F1
+          (light) and #1A1A17 (dark); chrome colors use proper INK/INK_SOFT tokens'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional polish with appropriate colormap choice; viridis is
+          well-chosen but reflects standard matplotlib defaults rather than distinctive
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Spines properly styled (L-shaped frame); no grid (appropriate for
+          heatmaps); minimal visual customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data inherently tells the story (chirp and burst are naturally focal);
+          no deliberate visual hierarchy or emphasis beyond data representation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct spectrogram/time-frequency heatmap
+        comment: Correct spectrogram type using scipy.signal.spectrogram and pcolormesh
+          display
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, frequency on y-axis, power as color intensity
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes colorbar with dB scale, perceptually uniform colormap, proper
-          axis labels
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar with dB scale, time and frequency axes, clear axis labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis is time in seconds, Y-axis is frequency in Hz, colorbar shows
+          power in dB/Hz
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "spectrogram-basic · matplotlib · pyplots.ai"'
+        comment: Title follows pattern 'spectrogram-basic · matplotlib · anyplot.ai'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows chirp signal with frequency sweep AND burst component AND noise
-          - demonstrates time-varying frequency content well; slight deduction as
-          a more complex multi-component signal could showcase more
+        comment: Full spectrogram representation shows both the chirp signal and tone
+          burst, demonstrating key spectrogram features
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Chirp signal is a standard test signal used in signal processing
-          and audio analysis; plausible but somewhat generic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sample rate of 4000 Hz, frequency range 100-1000 Hz, 2-second duration
-          - all realistic values
+        comment: 'Realistic parameters: 4000 Hz sample rate, frequency range 100-1000
+          Hz, 2-second duration, appropriate dB scale'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Sensible values for signal processing domain: dB scale (-90 to -20),
+          frequency 0-2000 Hz, time 0-2 seconds'
     code_quality:
       score: 10
       max: 10
@@ -171,42 +177,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data generation → plot → save'
+        comment: No functions or classes; straightforward signal generation and visualization
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: 'Only necessary imports: os, matplotlib, numpy, scipy; all are used'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current ax.specgram() method
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no faked UI; signal generation is clear and
+          purposeful
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves correctly as plot-{THEME}.png with dpi=300 and bbox_inches='tight'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic matplotlib: fig/ax pattern, ax.pcolormesh(), fig.colorbar(),
+          proper environment-based theme handling'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Uses matplotlib's built-in ax.specgram() which is good, but doesn't
-          leverage additional matplotlib features like adding annotations, custom
-          colorbar formatting, or secondary plots (e.g., time domain signal above
-          spectrogram)
+        comment: Uses standard pcolormesh and colorbar approach; no distinctive matplotlib
+          features showcased
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap

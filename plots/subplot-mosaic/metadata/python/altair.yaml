@@ -1,173 +1,173 @@
 library: altair
+language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:56:12Z'
-updated: '2025-12-31T11:07:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617510407
+updated: '2026-05-14T17:08:06Z'
+generated_by: claude-haiku
+workflow_run: 25873590761
 issue: 3002
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/altair/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent demonstration of mosaic layout concept using Altair concatenation operators
-    (hconcat, vconcat)
-  - Clean, professional visual design with consistent color scheme (#306998 blue theme)
-  - Good variety of chart types (line, bar, scatter, area, gauge) showing layout flexibility
-  - Descriptive axis labels with appropriate units throughout
-  - Realistic business dashboard scenario with plausible data
+  - Perfect theme adaptation in both light and dark renders with no legibility failures
+  - Complex, well-structured mosaic layout demonstrating varied subplot sizes and
+    asymmetric arrangements
+  - 'Excellent color palette adherence: Okabe-Ito for categorical, viridis for continuous,
+    brand green correctly applied'
+  - Strong typography hierarchy with explicit font sizing across all elements
+  - Diverse chart types showcase different visualization techniques effectively
+  - Proper altair API usage with sophisticated nested concatenation
   weaknesses:
-  - No demonstration of empty cells using placeholder characters (e.g., "." for gaps)
-    as mentioned in spec
-  - Scatter plot lacks legend for the color encoding (efficiency gradient)
-  - HTML version could benefit from interactive features (tooltips, selection) which
-    Altair excels at
-  image_description: "The plot displays a dashboard-style mosaic layout with 6 panels\
-    \ on a white background. The main title \"subplot-mosaic · altair · pyplots.ai\"\
-    \ is displayed prominently at the top in large black text. \n\n**Top row:** A\
-    \ wide \"Monthly Revenue Overview\" line chart in blue (#306998) showing revenue\
-    \ trend from January to April, and a semi-circular gauge showing \"Performance\
-    \ Score\" of 78 in blue.\n\n**Middle row:** A \"Sales by Region\" bar chart with\
-    \ 5 blue bars (Central, East, North, South, West), and a large \"Efficiency vs\
-    \ Output\" scatter plot with circles varying in size and color (blue color scale),\
-    \ spanning two rows on the right side.\n\n**Bottom row:** A small yellow \"By\
-    \ Category\" bar chart (Type A, B, C) and a \"Daily Traffic Pattern\" area chart\
-    \ in blue showing hourly traffic.\n\nAll text is legible, axis labels include\
-    \ units where appropriate (Revenue $K, Sales $K, Efficiency %, Output units),\
-    \ and the layout demonstrates the mosaic concept well with varying panel sizes."
+  - Design is functional but could be more artistically sophisticated or unique
+  - Gauge visualization is a standard arc chart approach without distinctive flourishes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "subplot-mosaic · altair · anyplot.ai" (32px, dark), chart titles (20-24px, dark), axis labels (16-22px, dark), tick labels (14-18px, dark) - all clearly readable against light background
+      Data: Teal time series (#009E73), orange bars (#D55E00, #E69F00), blue area (#0072B2), viridis scatter gradient (purple to yellow)
+      Legibility verdict: PASS - all text clearly readable, no light-on-light issues, data colors vibrant and distinct
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title (32px, light #F0EFE8), chart titles (20-24px, light), axis labels (16-22px, light #4A4A44), tick labels (14-18px, light #4A4A44) - all clearly readable against dark background
+      Data: Identical to light render - teal, orange, blue, viridis colors unchanged. No dark-on-dark failures detected.
+      Legibility verdict: PASS - all text clearly readable in light colors, brand green visible and vibrant, grid subtle but visible
+
+    Both renders are theme-correct with proper chrome adaptation. Data colors remain identical between themes. No theme-readability failures in either render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'All text readable, title is large, axis labels clear. Minor: some
-          smaller charts have slightly smaller fonts than optimal'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: 'Font sizes explicitly set: title 32px, chart titles 20-24px, labels
+          16-22px, ticks 14-18px. All readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements. Generous spacing (30, 20) throughout.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Elements well-sized. Scatter plot markers appropriately sized with
-          opacity. Minor: some smaller chart elements could be slightly larger'
+        comment: All markers, lines, elements clearly visible. Scatter density (80
+          points) handled well.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses blue color scheme consistently, yellow accent for one panel
-          - colorblind safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good mosaic layout demonstrating varying sizes, balanced composition.
-          Minor: slight variation in spacing'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Revenue ($K)", "Sales ($K)", "Efficiency
-          (%)", "Output (units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito for categorical, viridis for continuous. Adequate contrast,
+          no red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned layout, nothing cut off, balanced composition.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Clean appearance, no distracting grids. Minor: no legend for scatter
-          color encoding'
+        comment: Descriptive with units. Main title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito colors correct, viridis for continuous,
+          backgrounds correct, both renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Good hierarchical layout with gauge. Functional but more utilitarian
+          than artistically sophisticated.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Intentional spacing, carefully chosen sizing, clean layout. Solid
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through sizing. Layout guides viewer effectively.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct mosaic/subplot layout with multiple chart types
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y correctly assigned in all subplots
-      - id: SC-03
+        comment: Correct complex mosaic layout with varying sizes and asymmetric arrangements.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Shows varying sizes, different plot types (line, bar, scatter, area,
-          gauge). Minor: no explicit empty cell demonstration with "."'
-      - id: SC-04
-        name: Data Range
+        comment: Shows varying sizes, multiple chart types, non-uniform layout, visual
+          hierarchy, spacing.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show complete data ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly mapped, all data visible, scales appropriate.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Subplot titles accurately describe content
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "subplot-mosaic · altair · pyplots.ai"'
+        comment: Main title correct format. Legends present and labeled.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows 6 different chart types demonstrating mosaic flexibility.
-          Minor: could show one panel with empty cell'
+        comment: Diverse plot types showcase mosaic capabilities.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: 'Real business dashboard scenario: revenue, sales regions, efficiency
-          metrics, traffic patterns'
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic values: revenue 30-50K, sales 29-52K, efficiency 60-95%,
-          traffic patterns'
+        comment: Plausible, neutral synthetic data in realistic dashboard context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible values for domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,41 +175,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → charts → concatenation → save structure
+        comment: No unnecessary functions/classes. Straightforward definitions.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42) for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: 'Only necessary imports: os, altair, numpy, pandas.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: 'Minor: uses expr calculation in mark_arc theta2 which could be simplified'
+        comment: Appropriate complexity, no fake UI, proper patterns.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's hconcat/vconcat for layout, layering for gauge chart,
-          proper encoding types. Could leverage more Altair-specific features like
-          selection or interactivity for HTML version
+        comment: Proper alt.Chart(), .mark_*(), .encode(). Correct hconcat/vconcat.
+          Theme handling correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses arc marks, viridis, scale ranges, nested concatenation. Standard
+          approach.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - arc-chart
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - nested-concatenation
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - theme-adaptive
+  - palette-compliant
+  - generous-spacing

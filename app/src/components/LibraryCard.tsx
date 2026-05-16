@@ -24,6 +24,7 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
     <Box
       component="button"
       onClick={onClick}
+      aria-label={`Browse ${name} examples`}
       sx={{
         all: 'unset',
         boxSizing: 'border-box',
@@ -55,6 +56,7 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
           boxShadow: '0 16px 32px -12px rgba(0,0,0,0.08)',
           borderColor: 'rgba(0, 158, 115, 0.2)',
           '&::before': { transform: 'scaleX(1)' },
+          '& .lib-card-cta': { color: colors.primary },
         },
         '&:focus-visible': {
           outline: `2px solid ${colors.primary}`,
@@ -93,7 +95,7 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
         {DESCRIPTIONS[name] || ''}
       </Box>
 
-      <Box sx={{
+      <Box className="lib-card-cta" sx={{
         fontFamily: typography.mono,
         fontSize: '11px',
         color: 'var(--ink-muted)',
@@ -101,8 +103,9 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
+        transition: 'color 0.2s',
       }}>
-        <span>browse →</span>
+        <span aria-hidden="true">.explore()</span>
       </Box>
     </Box>
   );

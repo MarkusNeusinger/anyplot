@@ -1,47 +1,73 @@
-""" pyplots.ai
+""" anyplot.ai
 shap-summary: SHAP Summary Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-31
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-14
 """
+
+import os
+import sys
+
+
+sys.path.insert(0, "/home/runner/work/anyplot/anyplot/.venv/lib/python3.13/site-packages")
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.colors import Normalize
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import make_classification
 from sklearn.ensemble import GradientBoostingClassifier
 
 
-# Data - Train a model and compute SHAP-like values
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data - Train a model and compute SHAP-like values for credit approval
 np.random.seed(42)
-data = load_breast_cancer()
-X = data.data[:, :12]  # Use first 12 features for cleaner visualization
-feature_names = list(data.feature_names[:12])
+X, y = make_classification(
+    n_samples=300, n_features=12, n_informative=10, n_redundant=2, n_classes=2, random_state=42, class_sep=1.5
+)
+
+feature_names = [
+    "Annual Income",
+    "Credit Score",
+    "Employment Years",
+    "Debt Ratio",
+    "Savings Balance",
+    "Age",
+    "Loan Amount",
+    "Payment History",
+    "Number of Accounts",
+    "Previous Defaults",
+    "Revolving Credit",
+    "Inquiries",
+]
 
 # Train a gradient boosting model
 model = GradientBoostingClassifier(n_estimators=100, max_depth=4, random_state=42)
-model.fit(X, data.target)
+model.fit(X, y)
 
 # Compute approximate SHAP values using tree-based contribution approach
 n_samples = 200
 sample_indices = np.random.choice(len(X), n_samples, replace=False)
 X_sample = X[sample_indices]
 
-# Calculate feature contributions with better spread
+# Calculate feature contributions
 base_pred = model.predict_proba(X_sample)[:, 1]
 baseline = base_pred.mean()
 shap_values = np.zeros((n_samples, X_sample.shape[1]))
 
 for i in range(X_sample.shape[1]):
-    # Create more varied perturbations for better SHAP value distribution
     X_low = X_sample.copy()
     X_high = X_sample.copy()
     X_low[:, i] = np.percentile(X_sample[:, i], 10)
     X_high[:, i] = np.percentile(X_sample[:, i], 90)
     pred_low = model.predict_proba(X_low)[:, 1]
     pred_high = model.predict_proba(X_high)[:, 1]
-    # Compute contribution based on feature value position
     feat_normalized = (X_sample[:, i] - X_sample[:, i].min()) / (X_sample[:, i].max() - X_sample[:, i].min() + 1e-8)
     shap_values[:, i] = (pred_high - pred_low) * (feat_normalized - 0.5) * 2
 
@@ -71,8 +97,25 @@ df = pd.DataFrame(plot_data)
 ordered_features = [feature_names[i] for i in sorted_indices]
 df["Feature"] = pd.Categorical(df["Feature"], categories=ordered_features, ordered=True)
 
+# Set theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
+)
+
 # Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Use seaborn stripplot for the main visualization
 sns.stripplot(
@@ -80,8 +123,8 @@ sns.stripplot(
     x="SHAP Value",
     y="Feature",
     hue="Feature Value",
-    palette="coolwarm",
-    size=8,
+    palette="BrBG",
+    size=11,
     alpha=0.7,
     jitter=0.3,
     legend=False,
@@ -89,24 +132,26 @@ sns.stripplot(
 )
 
 # Add vertical line at x=0
-ax.axvline(x=0, color="#306998", linestyle="-", linewidth=2, alpha=0.8)
+ax.axvline(x=0, color=INK_SOFT, linestyle="-", linewidth=2, alpha=0.6)
 
 # Styling
-ax.set_xlabel("SHAP Value (Impact on Model Output)", fontsize=20)
-ax.set_ylabel("Feature", fontsize=20)
-ax.set_title("shap-summary · seaborn · pyplots.ai", fontsize=24, pad=20)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, axis="x", alpha=0.3, linestyle="--")
+ax.set_xlabel("SHAP Value (Impact on Approval)", fontsize=20, color=INK)
+ax.set_ylabel("Feature", fontsize=20, color=INK)
+ax.set_title("shap-summary · seaborn · anyplot.ai", fontsize=24, color=INK, pad=20)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+# Subtle grid on x-axis
+ax.grid(True, axis="x", alpha=0.15, linestyle="-", linewidth=0.8)
 
 # Add colorbar for feature values
-sm = plt.cm.ScalarMappable(cmap="coolwarm", norm=Normalize(vmin=0, vmax=1))
+sm = plt.cm.ScalarMappable(cmap="BrBG", norm=Normalize(vmin=0, vmax=1))
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax, pad=0.02)
-cbar.set_label("Feature Value (Low to High)", fontsize=16, rotation=270, labelpad=20)
-cbar.ax.tick_params(labelsize=14)
+cbar.set_label("Feature Value (Low to High)", fontsize=16, rotation=270, labelpad=20, color=INK)
+cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
 
-# Adjust spines using seaborn
-sns.despine(left=True)
+# Remove spines
+sns.despine(left=True, ax=ax)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

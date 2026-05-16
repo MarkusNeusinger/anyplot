@@ -8,19 +8,19 @@ vi.mock('react-helmet-async', () => ({
 }));
 
 describe('NotFoundPage', () => {
-  it('renders 404 heading', () => {
+  it('renders page.miss() heading', () => {
     render(<NotFoundPage />);
-    expect(screen.getByText('404')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /page not found/i })).toBeInTheDocument();
   });
 
-  it('renders page not found message', () => {
+  it('renders 404 sub-message', () => {
     render(<NotFoundPage />);
-    expect(screen.getByText('page not found')).toBeInTheDocument();
+    expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
   });
 
   it('renders link back to home', () => {
     render(<NotFoundPage />);
-    const link = screen.getByText('back to anyplot.ai');
-    expect(link.closest('a')).toHaveAttribute('href', '/');
+    const link = screen.getByRole('link', { name: /go home/i });
+    expect(link).toHaveAttribute('href', '/');
   });
 });

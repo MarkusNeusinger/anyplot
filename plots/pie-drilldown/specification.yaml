@@ -6,7 +6,7 @@ title: Drilldown Pie Chart with Click Navigation
 
 # Specification tracking
 created: 2025-12-31T13:39:43Z
-updated: 2025-12-31T13:39:43Z
+updated: 2026-05-15T16:42:18Z
 issue: 3072
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - pie
-    - hierarchical
   data_type:
     - categorical
     - hierarchical

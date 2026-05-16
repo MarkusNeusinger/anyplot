@@ -4,22 +4,22 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
 #
-# Schedule: every 2h, skipping the 20:00–24:00 Berlin (CEST) evening window.
-# Berlin CEST run hours: 00, 02, 04, 06, 08, 10, 12, 14, 16, 18 → UTC 22, 00,
-# 02, 04, 06, 08, 10, 12, 14, 16. The 20:00 and 22:00 Berlin slots (UTC 18, 20)
+# Schedule: hourly, skipping the 20:00–23:59 Berlin (CEST) evening window.
+# Berlin CEST evening hours 20, 21, 22, 23 map to UTC 18, 19, 20, 21 — these
 # are intentionally skipped so runs never start during the user's evening.
+# All other UTC hours run, giving 20 ticks per day.
 #
 # bulk-generate is serialised via its own concurrency group. Default model is
-# Haiku, so a single spec completes well within the 2h slot, leaving the user
+# Haiku, so a single spec completes well within an hour, leaving the user
 # window clean. The model can be overridden per manual run.
 #
 # Triggers:
-#   - schedule: 10× daily (UTC, every 2h except 18:00 and 20:00 UTC) → Haiku
+#   - schedule: 20× daily (UTC, every hour except 18:00–21:00 UTC) → Haiku
 #   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
 
 on:
   schedule:
-    - cron: '0 0,2,4,6,8,10,12,14,16,22 * * *'
+    - cron: '0 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,22,23 * * *'
   workflow_dispatch:
     inputs:
       specification_id:
@@ -228,7 +228,7 @@ jobs:
         # block the main regeneration pipeline. Skip cleanly and continue.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
+        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: '--model haiku'
@@ -244,7 +244,7 @@ jobs:
         # rather than aborting the dispatch.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
+        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: '--model haiku'

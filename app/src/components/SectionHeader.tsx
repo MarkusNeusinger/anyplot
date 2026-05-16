@@ -3,18 +3,48 @@ import { Link } from 'react-router-dom';
 import { colors, typography } from '../theme';
 import { useAnalytics } from '../hooks';
 
-interface SectionHeaderProps {
+interface SectionHeaderBaseProps {
   /** Prefix symbol — e.g. `§`, `❯`, `$`. Rendered at the same size as the title. */
   prompt?: string;
   title: React.ReactNode;
-  linkText?: string;
-  linkTo?: string;
 }
+
+/**
+ * `linkTo` (internal route) and `linkHref` (external URL) are mutually
+ * exclusive. The discriminated union enforces this at the type level so
+ * callers can't accidentally pass both.
+ */
+type SectionHeaderLinkProps =
+  | { linkText?: never; linkTo?: never; linkHref?: never }
+  | { linkText: string; linkTo: string; linkHref?: never }
+  | { linkText: string; linkHref: string; linkTo?: never };
+
+type SectionHeaderProps = SectionHeaderBaseProps & SectionHeaderLinkProps;
 
 const titleFontSize = { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' };
 
-export function SectionHeader({ prompt, title, linkText, linkTo }: SectionHeaderProps) {
+/** Derive a low-cardinality identifier (hostname) for analytics dimensions. */
+function externalDestination(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+export function SectionHeader(props: SectionHeaderProps) {
+  const { prompt, title, linkText, linkTo, linkHref } = props;
   const { trackEvent } = useAnalytics();
+  const linkSx = {
+    fontFamily: typography.mono,
+    fontSize: '12px',
+    color: 'var(--ink-soft)',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'color 0.2s',
+    '&:hover': { color: colors.primary },
+  } as const;
   return (
     <Box sx={{
       display: 'grid',
@@ -58,16 +88,19 @@ export function SectionHeader({ prompt, title, linkText, linkTo }: SectionHeader
           component={Link}
           to={linkTo}
           onClick={() => trackEvent('nav_click', { source: 'section_header', target: linkTo })}
-          sx={{
-            fontFamily: typography.mono,
-            fontSize: '12px',
-            color: 'var(--ink-soft)',
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            transition: 'color 0.2s',
-            '&:hover': { color: colors.primary },
-          }}
+          sx={linkSx}
+        >
+          {linkText}
+        </Box>
+      )}
+      {linkText && linkHref && !linkTo && (
+        <Box
+          component="a"
+          href={linkHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackEvent('external_link', { source: 'section_header', destination: externalDestination(linkHref) })}
+          sx={linkSx}
         >
           {linkText}
         </Box>

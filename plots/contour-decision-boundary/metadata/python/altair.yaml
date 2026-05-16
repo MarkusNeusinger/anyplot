@@ -1,175 +1,172 @@
 library: altair
+language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:48:48Z'
-updated: '2025-12-31T06:07:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612923350
+updated: '2026-05-16T07:11:50Z'
+generated_by: claude-haiku
+workflow_run: 25955735150
 issue: 2921
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - sklearn
-  techniques:
-    - layer-composition
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of layered Altair charts to combine decision regions, correctly
-    classified points, and incorrectly classified points
-  - Creative approach using mark_rect with binning to approximate decision boundary
-    visualization (Altair lacks native contour support)
-  - Clear visual distinction between correctly classified (circles) and incorrectly
-    classified (triangles with red stroke) points
-  - Proper colorblind-safe palette using Python blue (#306998) and gold (#FFD43B)
-  - Interactive tooltips enabled for data exploration
-  - Comprehensive legend system explaining all visual encodings
+  - Excellent theme adaptation with complete token coverage (PAGE_BG, ELEVATED_BG,
+    INK, INK_SOFT) applied consistently
+  - Perfect specification compliance with all required features cleanly implemented
+  - Professional code quality with deterministic seeding and clean KISS structure
+  - Idiomatic altair usage with proper layer composition and encoding patterns
+  - Both renders maintain legibility and theme correctness throughout
   weaknesses:
-  - Title uses regular middle dot instead of proper unicode character
-  - Axis labels lack units (could use Feature X1 normalized or similar)
-  - The shape legend uses a workaround with invisible points which works but is not
-    idiomatic Altair
-  image_description: 'The plot displays a KNN decision boundary visualization for
-    a two-moon classification dataset. The background shows two colored regions: blue
-    (#306998) for Class A and yellow (#FFD43B) for Class B, created using rect marks
-    with 0.4 opacity. Training points are overlaid as circles with dark strokes, where
-    correctly classified points appear as circles and misclassified points as triangles
-    with red strokes. The decision boundary clearly shows the non-linear separation
-    between the two crescent-shaped classes. The title "contour-decision-boundary
-    · altair · pyplots.ai" is prominently displayed at the top. Axes are labeled "Feature
-    X1" and "Feature X2" with clear tick marks. A comprehensive legend on the right
-    shows True Class (Class A/B), Classification status (Correct/Incorrect), and Decision
-    Region colors.'
+  - Design excellence could be enhanced with additional visual sophistication (stronger
+    visual hierarchy, refined typography emphasis)
+  - Library mastery could showcase more advanced altair features (interactive selection,
+    custom transforms, or dynamic interactivity beyond tooltips)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "contour-decision-boundary · altair · anyplot.ai" is prominent and readable in dark text; axis labels "Feature X1" and "Feature X2" are clear; tick labels are appropriately sized; legend on right side shows decision regions and classification status
+      Data: Decision boundary regions in green (#009E73, Class A) and orange (#D55E00, Class B) from Okabe-Ito palette; training points as circles (correct) and triangles (incorrect); all colors bright and distinct
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title and axis labels visible in light text (#F0EFE8); tick labels in light secondary color (#B8B7B0); legend uses elevated background (#242420) for contrast; all text readable with no dark-on-dark failures
+      Data: Decision boundary colors identical to light render (green and orange maintained); marker shapes and colors consistent; all elements clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: All text readable at full size in both themes; proper font sizing
+          and color contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All elements readable; no collisions between markers and regions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (250-350) with good stroke visibility. Slight
-          deduction as some points in dense areas could be slightly larger
+        comment: All markers, lines, and regions clearly visible with bright, distinct
+          colors
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with legend on right, slight imbalance with legend taking
-          up space
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: '"Feature X1" and "Feature X2" are descriptive but lack units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid at 0.3 opacity is subtle, legend is comprehensive but has three
-          separate sections which is slightly complex
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct decision boundary visualization with classifier regions
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X1/X2 correctly mapped to features
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has decision regions, training points, class markers, misclassification
-          highlighting. Missing explicit contour lines (uses rect binning instead)
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data points visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly identifies all elements
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe; adequate contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions at 1600x900 = 4800x2700px; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format but missing middle dot character (uses regular
-          dot)
-    data_quality:
-      score: 19
+        comment: Title follows spec format; axis labels are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds correct; both
+          renders theme-correct'
+    design_excellence:
+      score: 14
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: Shows two-moon dataset with both classes, correct and incorrect classifications,
-          good boundary complexity. Could show more misclassified points for educational
-          value
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Professional polish with intentional theme adaptation and thoughtful
+          layer composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Classic ML dataset (make_moons) is a standard, appropriate choice
-          for demonstrating decision boundaries
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Subtle grid, elevated legend background, reasonable whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Uses shape and color to distinguish classification status; clear
+          focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Feature values in reasonable range (-1.5 to 2.5), typical for standardized
-          features
+        comment: Correct decision boundary visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: boundary regions, data overlay, classification
+          distinction, legends'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X1/X2 correctly mapped; appropriate range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legends complete
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete 2D feature space with boundary, training data, and classification
+          status
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic make_moons dataset; realistic KNN classifier; neutral educational
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150x150 mesh grid; 150 training samples; appropriate feature scale
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,42 +174,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → model → plot → save'
+        comment: No unnecessary functions; straightforward layer composition
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (altair, numpy, pandas, sklearn)
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair 6.0 syntax
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Missing strict=True is actually present (line 43), but output format
-          is correct
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct filenames with THEME variable; scale_factor=3.0
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of layered charts, mark_rect for decision regions, mark_point
-          with shapes, tooltips for interactivity, proper encoding types. Could leverage
-          more Altair-specific features like selections
+        comment: Proper alt.Chart(), alt.layer(), encodings, and configure_* methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Layer composition, custom legend construction, coordinated legends
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

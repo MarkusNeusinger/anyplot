@@ -1,207 +1,59 @@
 library: plotly
+language: python
 specification_id: contour-density
 created: '2025-12-30T09:31:21Z'
-updated: '2025-12-30T09:39:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593351187
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-density/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-density/plotly/plot.html
-quality_score: 92
+updated: '2026-05-16T03:26:32Z'
+generated_by: claude-haiku
+workflow_run: 25951459916
+issue: 2552
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotly/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Perfect theme adaptation: both light and dark renders are pixel-perfect with
+    correct backgrounds (#FAF8F1 light, #1A1A17 dark) and readable text in both themes'
+  - 'Explicit font sizing: all text elements have carefully set sizes (title 32px,
+    labels 24px, ticks 18px) resulting in perfect legibility at full resolution'
+  - 'Strong visual storytelling: the density contours create clear visual hierarchy,
+    with 3 distinct clusters visible and colorbar effectively communicating the density
+    scale'
+  - 'Excellent library mastery: idiomatic Plotly usage with Histogram2dContour, custom
+    colorscale, and scatter overlay layer composition'
+  - 'Clean code structure: KISS principle followed, seed set for reproducibility,
+    all imports used, polished output format'
+  weaknesses:
+  - 'VQ-07: Custom colorscale uses non-standard palette (transparent → orange → blue)
+    instead of recommended continuous cmaps (viridis/cividis/BrBG) — while visually
+    effective and readable, this deviates from guidelines by 1 point'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with perfect neutral tone
+      Chrome: Title "contour-density · plotly · pyplots.ai" clearly visible in dark text. Axis labels "Height (cm)" and "Weight (kg)" with units are crisp and readable. Tick labels in dark gray (#4A4A44) are perfectly legible. Subtle grid lines provide reference without competing with data.
+      Data: Filled contour plot showing 3 distinct bivariate clusters. Color progression from light orange (outer/low-density regions) through medium tones to deep blue (inner/peak-density regions). Semi-transparent green (#009E73) scatter points overlay the contours for individual data context. Colorbar on right shows "Density" scale (0-35) with matching theme-aware styling.
+      Legibility verdict: PASS - All text is explicitly sized and readable. No light-on-light issues. Data elements clearly distinguishable from background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with correct tone (not pure black)
+      Chrome: Title, axis labels, and tick labels all rendered in light text (#F0EFE8 and #B8B7B0) and completely readable against the dark surface. Grid lines remain visible at appropriate opacity. Colorbar styling adapts with dark background (#242420) and light borders.
+      Data: Contours are identical to light render (same colors: orange → blue gradient), confirming data colors are theme-independent. Semi-transparent green scatter points remain visible and consistent with light render. Colorbar scale matches light render perfectly.
+      Legibility verdict: PASS - No dark-on-dark failures. All text is light-colored and readable. Data colors identical to light render. Brand green (#009E73) is clearly visible on dark surface.
+
+    Both renders demonstrate perfect theme-adaptive implementation with Okabe-Ito color consistency and theme-correct chrome.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-    - colorbar
-    - html-export
+  - colorbar
+  - layer-composition
   patterns:
-    - data-generation
-  dataprep: []
+  - data-generation
+  dataprep:
+  - kde
   styling:
-    - custom-colormap
-    - alpha-blending
-review:
-  strengths:
-  - Excellent use of filled contours with custom colorscale transitioning from transparent
-    white to yellow to blue
-  - Smart combination of density contours with scatter point overlay provides context
-    as recommended in spec
-  - Three distinct clusters effectively demonstrate the plot purpose of finding density
-    patterns
-  - Clean code structure following KISS principles
-  - Proper font sizing for 4800x2700 output (scale=3)
-  weaknesses:
-  - Axis labels are generic (X Variable, Y Variable) rather than tied to a realistic
-    context
-  - Grid lines are too subtle (alpha 0.1) - consider alpha 0.2-0.3 for better visibility
-  image_description: 'The plot displays a density contour visualization with three
-    distinct clusters. The colorscale transitions from transparent/cream at low density
-    through yellow (#FFD43B) at medium density to dark blue (#306998/#1a3d5c) at high
-    density. Three cluster centers are visible: one at approximately (2, 3), another
-    at (5, 5), and a third at (7, 2.5). Semi-transparent scatter points are overlaid
-    showing the underlying data distribution. The title "contour-density · plotly
-    · pyplots.ai" is centered at the top. Axis labels "X Variable" and "Y Variable"
-    are clearly displayed. A colorbar on the right shows the density scale from 0
-    to ~45. The background is white with subtle grid lines.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements anywhere
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Contour fills are well-defined, scatter overlay uses appropriate
-          alpha (0.3) for 500 points
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow-to-blue colorscale is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but generic (no units or specific context)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Colorbar well-placed, but grid alpha at 0.1 is too subtle/barely
-          visible
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct density contour plot using Histogram2dContour
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned to continuous variables
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Has contour lines, filled contours, scatter overlay as spec suggests
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Colorbar correctly labeled as "Density"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "contour-density · plotly · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows multiple clusters with varying densities, demonstrates core
-          use case of finding density patterns
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 7
-        passed: true
-        comment: Plausible bivariate data but generic (not tied to real-world scenario
-          like scientific measurements)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Values in sensible range (0-8), appropriate for demonstration
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set correctly
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only numpy and plotly.graph_objects used, both necessary
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with correct dimensions
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses Histogram2dContour which is Plotly-specific, but does not leverage
-          Plotly's interactive features in the static output (hover tooltips would
-          enhance HTML version)
-  verdict: APPROVED
+  - alpha-blending
+  - custom-colormap

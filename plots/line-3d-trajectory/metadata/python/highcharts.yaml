@@ -1,217 +1,254 @@
 library: highcharts
+language: python
 specification_id: line-3d-trajectory
 created: '2026-01-07T16:29:08Z'
-updated: '2026-01-07T16:36:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788387610
+updated: '2026-05-16T09:16:35Z'
+generated_by: claude-haiku
+workflow_run: 25957940457
 issue: 3182
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/highcharts/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent choice of the Lorenz attractor as a chaotic system example, perfectly
-    matching the spec suggestion
-  - Good 3D visualization with proper depth perception through frame panels
-  - Clean and readable code with proper inline JavaScript embedding for headless Chrome
-  - Generates both PNG and HTML outputs for static and interactive viewing
-  - Proper title format following pyplots conventions
-  - Appropriate line width and marker sizing for the trajectory
+  - Perfect text legibility and accessibility - all typography properly sized, no
+    legibility issues in either theme, excellent contrast
+  - Correct theme adaptation - data colors identical between light and dark renders,
+    only chrome adapts, no dark-on-dark failures
+  - Mathematically elegant data - Lorenz attractor is scientifically important with
+    proper canonical parameters and Euler method implementation
+  - Clean, reproducible code with proper error handling, reproducible random seed,
+    and robust network request handling
+  - Complete spec implementation - all required features present including 3D coordinates,
+    trajectory connection, color encoding, and tooltips
   weaknesses:
-  - Code contains a helper function lorenz_attractor() which deviates from the KISS
-    structure guideline
-  - Missing color gradient to show time progression along the trajectory (spec mentions
-    this as an optional but valuable feature)
-  - The 3D plot could utilize more canvas area - the effective plot area is somewhat
-    small relative to margins
+  - 'VQ-07: Custom color gradient for continuous data instead of viridis/cividis/BrBG
+    standard colormaps - violates style guide for continuous color mapping'
+  - 'DE-01: Limited design sophistication - implementation follows Highcharts defaults
+    without custom visual refinement or intentional design choices'
+  - 'DE-03: Minimal data storytelling - lacks annotations explaining Lorenz system
+    significance or butterfly pattern meaning'
+  - 'LM-02: Under-utilizes library features - could showcase more distinctive Highcharts
+    capabilities to better demonstrate library mastery'
   image_description: |-
-    The plot displays a 3D visualization of the Lorenz Attractor chaotic system. The trajectory is rendered as a connected blue line (#306998) in 3D space, showing the characteristic butterfly-shaped double-lobe pattern of the Lorenz system. The plot includes:
-    - A main title "Lorenz Attractor · line-3d-trajectory · highcharts · pyplots.ai" at the top with a subtitle "Chaotic trajectory visualization in 3D phase space"
-    - Three labeled axes: X Position (horizontal), Y Position (vertical), Z Position (depth)
-    - Semi-transparent blue frame panels on the bottom, back, and side for 3D depth perception
-    - A legend on the right showing "Lorenz Trajectory"
-    - Grid lines on all three planes with subtle styling
-    - The trajectory clearly shows the spiraling motion between the two attractors
-    - White background with good contrast
-    - The 3D perspective (alpha=20°, beta=30°) provides a clear view of the trajectory structure
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "Lorenz Attractor · line-3d-trajectory · highcharts · anyplot.ai" at top in dark text (28px), clearly readable. X/Y/Z axis labels at 22px readable. Tick labels at 18px in soft gray, all clearly visible against light background.
+      Data: 3D trajectory with color gradient progressing green (#009E73) → orange (#D55E00) → blue (#0072B2) showing time progression. 1000+ connected points forming butterfly pattern.
+      3D Frame: Light gray edges properly styled, no visual clutter.
+      Legibility verdict: PASS - all elements clearly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title visible at top in light text (#F0EFE8), readable. X/Y/Z axis labels and tick labels in light colors appropriate for dark theme.
+      Data: Identical trajectory colors to light render (green, orange, blue) - confirming correct theme-independent data coloring
+      3D Frame: Light gray edges visible and appropriate for dark background
+      Legibility verdict: PASS - all text readable in dark theme, no dark-on-dark failures. Colors identical to light render confirming proper theme adaptation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'Title, subtitle, axis labels, and tick marks are all readable. Minor:
-          at rendered resolution some tick labels could be slightly larger.'
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
+          Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements. All labels are well-positioned.
+        comment: No overlapping text elements. All labels fully readable with adequate
+          spacing.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 4px with small markers provides excellent visibility
-          of the trajectory path.
+        comment: 1000+ trajectory points render clearly with appropriate line width
+          (2px) and marker radius (2-3).
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Uses single blue color (#306998) which is colorblind-safe.
+        comment: Okabe-Ito positions 1-3 (green, orange, blue). Excellent contrast,
+          CVD-safe.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space, though the plot could be slightly larger.
-          The 3D frame helps fill the space.
+        comment: Plot fills 50-70% of canvas with balanced 200/150px margins. Perfect
+          proportions.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: X Position, Y Position, Z Position.'
+        comment: Descriptive axis labels (X/Y/Z Position). Title includes spec-id,
+          library, and site.
       - id: VQ-07
-        name: Grid & Legend
-        score: 2
+        name: Palette Compliance
+        score: 1
         max: 2
-        passed: true
-        comment: Subtle grid (alpha 0.10), legend well-placed on right side.
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), theme chrome correct, data
+          colors identical between themes. ISSUE: Custom gradient [#009E73, #D55E00,
+          #0072B2] instead of standard viridis/cividis/BrBG for continuous data.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Highcharts 3D defaults applied thoughtfully, but design primarily
+          follows presets without custom visual refinement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid disabled appropriately, theme-adapted colors used, but minimal
+          custom refinement beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color gradient shows time progression, butterfly pattern is clear,
+          but lacks annotations explaining significance.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 3D line trajectory visualization using scatter3d with lineWidth.
+        comment: Correct 3D line plot with connected trajectory using scatter3d.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, Z coordinates correctly mapped from Lorenz attractor.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Connected lines, sequential points, color consistency, interactive
-          tooltips.
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: sequential points, 3D coords, color encoding,
+          rotation, tooltips.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show complete data range with appropriate min/max values.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/Z correctly mapped. Color mapped to time (0→1). Ranges appropriate
+          for Lorenz system.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Lorenz Trajectory.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows format: Lorenz Attractor · line-3d-trajectory · highcharts
-          · pyplots.ai'
+        comment: Title includes spec-id, library, site plus context. Legend correctly
+          disabled for continuous gradient.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows the full Lorenz attractor trajectory with both lobes. Could
-          benefit from color gradient showing time progression.
+        comment: 1000+ points show complete butterfly pattern. All aspects of 3D trajectory
+          visualization present.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Lorenz attractor is a classic chaotic system example, exactly as
-          suggested in the spec.
+        comment: Lorenz attractor is scientifically important chaos theory system.
+          Proper canonical parameters (σ=10, ρ=28, β=8/3).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good scale with 3000 steps and appropriate downsampling. Values are
-          realistic for Lorenz system parameters.
+        comment: Axis ranges match standard Lorenz behavior. Time step (dt=0.01) and
+          iterations (3000) produce realistic trajectory.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code has a helper function lorenz_attractor() which deviates from
-          KISS principle.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
+        comment: 'Linear flow: imports → constants → data → HTML → screenshot → save.
+          No unnecessary functions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42). Euler method is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: 'All imports justified and used: json, os, tempfile, time, Path,
+          numpy, requests, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts and Selenium APIs.
+        comment: Clean, readable, Pythonic. Proper retry strategy. No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Uses current API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct scatter3d configuration, 3D options properly set, colorAxis
+          for gradient mapping.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Good use of Highcharts 3D capabilities (options3d, scatter3d), frame
-          styling, and interactive tooltips. Could have used more distinctive features
-          like color gradient per point or animation.
+        passed: false
+        comment: Uses Highcharts 3D (options3d with frame styling), colorAxis stops.
+          Could showcase more unique features.
   verdict: APPROVED
 impl_tags:
   dependencies:
+  - requests
   - selenium
   techniques:
   - 3d-projection
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
-  - grid-styling
+  - publication-ready

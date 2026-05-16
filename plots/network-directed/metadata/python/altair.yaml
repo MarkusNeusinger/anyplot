@@ -1,215 +1,243 @@
 library: altair
+language: python
 specification_id: network-directed
 created: '2025-12-30T23:54:55Z'
-updated: '2025-12-31T00:11:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608486085
+updated: '2026-05-14T03:33:08Z'
+generated_by: claude-haiku
+workflow_run: 25839856662
 issue: 2858
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-directed/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-directed/altair/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - bezier-curves
-  - layer-composition
-  - hover-tooltips
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent hierarchical layout algorithm that calculates node depths based on topological
-    ordering
-  - Clever handling of bidirectional edges using curved bezier paths to avoid overlap
-  - Clean color palette with five distinct, colorblind-safe colors for module groupings
-  - Proper use of Altair layered chart composition (edges + curved edges + arrows
-    + nodes + labels)
-  - Thoughtful arrow positioning using angle encoding for correct orientation along
-    edges
-  - Interactive tooltips showing node label and group on hover
+  - Perfect visual quality with all text readable in both light and dark themes
+  - Expert Altair usage demonstrating sophisticated layer composition and custom arrow
+    rendering
+  - Strong spec compliance with all features present and correct formatting
+  - Excellent theme adaptation preserving data color integrity while properly adapting
+    chrome
+  - Clean maintainable code with proper structure and no over-engineering
+  - Realistic and well-chosen data representing authentic software dependency scenarios
   weaknesses:
-  - Edge lines are relatively thin (strokeWidth=2) making some dependency paths harder
-    to follow in the dense central area
-  - Layout results in vertical clustering at certain depth levels creating visual
-    congestion
-  - Does not utilize Altair built-in interactivity features like selection highlighting
-    or zoom/pan that would help explore the network
-  image_description: 'The plot displays a directed network graph visualizing software
-    package dependencies. The layout is hierarchical, flowing left-to-right with "App"
-    on the far left as the root node, progressing through middleware/router/api layers
-    to utility nodes like "Logger" and "Config" on the right. There are 12 circular
-    nodes color-coded by module type: blue (main: App), yellow (core: Router, API,
-    Auth, Database, Middleware), cyan (service: Cache), gray (util: Utils, Logger,
-    Config), and red (data: Models, Schemas). Directed edges are drawn as gray lines
-    with triangular arrow heads indicating dependency direction. The title reads "network-directed
-    · altair · pyplots.ai" with a subtitle explaining "Software Package Dependencies
-    (curved edges show bidirectional dependencies)". A legend labeled "Module Type"
-    appears in the upper right showing the 5 category colors. Node labels appear above
-    each circle in bold black text.'
+  - Design sophistication uses library defaults without distinctive visual polish
+    beyond requirements
+  - Visual emphasis relies on layout hierarchy alone without size variation or focal
+    point highlighting techniques
+  - Aesthetic customization opportunities exist for grid styling or typography refinement
+    but are not critical
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper contrast
+      Chrome: Title "network-directed · altair · anyplot.ai" at 28px dark bold text, clearly readable. Legend "Module Type" at right with 16px labels in light gray. All node labels at 18px bold font positioned above nodes, fully readable.
+      Data: Okabe-Ito colors correctly applied - green (#009E73) for main, orange (#D55E00) for core, blue (#0072B2) for service, reddish purple (#CC79A7) for util, yellow-orange (#E69F00) for data. Edge lines in soft gray with directional arrow terminals.
+      Legibility verdict: PASS - All text clearly readable, no contrast issues, proper size hierarchy
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with excellent contrast
+      Chrome: Title in light text (#F0EFE8) at 28px, clearly visible. Legend text in light gray (#B8B7B0), properly themed. All node labels at 18px in light text, fully readable with no dark-on-dark issues.
+      Data: Node colors identical to light render - same green, orange, blue, purple, yellow in same positions. Data encoding preserved between themes. Only chrome has adapted to dark theme. Edge lines in light gray with visible arrow terminals.
+      Legibility verdict: PASS - All text highly readable against dark background, data colors preserved perfectly, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title (28pt), subtitle (18pt), and node labels (18pt) are clearly
-          readable. Legend text is appropriately sized.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; labels positioned above nodes with good spacing
+        comment: 'All font sizes explicitly set: title 28px, labels 18px, legend 16px.
+          All readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Node labels positioned with dy=-28 to avoid nodes. No text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes are appropriately sized (800), arrows visible with triangular
-          markers (size 150). Edge lines slightly thin but visible.
+        comment: Nodes 800px, arrows 150px clearly visible, edges 2px with 0.6 opacity,
+          all distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Five distinct colors that are colorblind-safe (blue, yellow, cyan,
-          gray, red) - no red-green confusion issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good hierarchical layout utilizing ~60% of canvas, slight imbalance
-          with more whitespace at bottom
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate for network), legend well-placed in upper right
-          with clear labels
+        comment: Okabe-Ito palette colorblind-safe, good contrast between nodes and
+          backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 1600×900 (3.2x scale). Perfect proportions, nothing cut off,
+          generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. No axes needed for network graph.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order followed, backgrounds correct,
+          theme chrome correct, data colors identical.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured defaults. Hierarchical layout is functional. No distinctive
+          visual polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Edge opacity provides subtlety. No unnecessary elements. Some refinement
+          visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Hierarchical layout guides viewer left to right. Color grouping tells
+          story. Clear visual hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct directed network graph with nodes and directed edges
+        comment: Directed network graph with clear arrowheads showing directionality.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes correctly represent entities, edges show directed dependencies
-          from source to target
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has directed arrows, node grouping by color, hierarchical layout,
-          curved edges for bidirectional connections as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: nodes, labels, edges, arrows, grouping, bidirectional
+          handling.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 nodes and 24 edges visible and within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y coordinates properly mapped. All nodes and edges visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps Module Type categories to colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "network-directed · altair · pyplots.ai"'
+        comment: Title format correct, legend labels accurate.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows directed edges, bidirectional pairs with curves, hierarchical
-          structure, node grouping. Minor: could show edge weights via thickness'
+        comment: Shows multiple groups, various relationships, bidirectional connections.
+          Complex structure.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software package dependencies is a perfect, realistic, neutral example
-          for directed graphs
+        comment: Software dependency graph with realistic module names. Real-world
+          plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 12 nodes is appropriate for static visualization (spec says 10-50).
-          Good number of edges (24) showing realistic dependency patterns
+        comment: 12 nodes, 23 edges fit spec (10-50). Sensible magnitudes.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Follows imports → data → plot → save pattern, but has significant
-          computation logic for layout/curves (necessary for network graphs)
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Linear flow: imports → data → layout → viz. No unnecessary functions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sets np.random.seed(42). Deterministic layout.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and all used
+        comment: Only used imports. Clever sys.path handling.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair 5.x/6.x API
+        comment: No fake UI. Handles complex geometry appropriately.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html. Current API.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses Altair's declarative encoding, layered charts, tooltips, and
-          angle encoding for arrow rotation. However, doesn't leverage Altair's interactivity
-          (selection, zoom/pan) which would enhance network exploration.
+        passed: true
+        comment: Expert Chart API usage. Proper encoding. Idiomatic layering. Theme
+          tokens applied correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Layer composition with multiple marks. Custom arrow rendering. Bezier
+          curves for bidirectional edges.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
+  - dark-theme

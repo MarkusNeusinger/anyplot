@@ -1,40 +1,222 @@
 library: pygal
+language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:37:41Z'
-updated: '2025-12-31T15:21:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612794558
+updated: '2026-05-15T03:44:18Z'
+generated_by: claude-haiku
+workflow_run: 25898709547
 issue: 2925
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/pygal/plot.html
-quality_score: 82
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/pygal/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Proper theme adaptation with all required theme tokens (PAGE_BG, INK, INK_SOFT,
+    INK_MUTED)
+  - Correct Okabe-Ito color palette with first series as brand green (#009E73)
+  - Both light and dark renders are fully readable with no legibility failures
+  - Clean visualization with effective alternating chromosome coloring
+  - Both significance thresholds properly marked at correct p-value levels
+  - Data colors remain identical between themes; only chrome adapts appropriately
+  - Reproducible output with fixed random seed
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct per style guide
+      Chrome: Title, axis labels (X: "Chromosome", Y: "-log₁₀(p-value)"), tick labels all in dark text (#1A1A17) — clearly readable
+      Data: Alternating teal/green (#009E73 - Okabe-Ito position 1) and orange (#D55E00 - position 2) for odd/even chromosomes. Significant peaks in blue (#0072B2). Two dashed threshold lines at y=5 and y≈7.3. All elements clearly distinguishable.
+      Legibility verdict: PASS — all text and data elements are readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct per style guide
+      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8) — clearly readable against dark background. No "dark-on-dark" failures.
+      Data: Identical colors to light render — same greens and oranges for chromosome alternation, same blue for significant peaks. Threshold lines visible. All elements distinguishable from dark background.
+      Legibility verdict: PASS — all text is readable against dark background, data colors maintain identity from light render, no theme-adaptation failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text elements clearly readable in both themes at full size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap, chromosome labels at midpoints, legend positioned
+          cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All markers visible even in dense regions, significant peaks stand
+          out
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format, axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct, both themes work perfectly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional with theme adaptation, lacks extraordinary sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean, minimal, could have more explicit spine/grid refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Guides viewer through genome, thresholds provide context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: XY scatter correctly implements manhattan plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: alternating colors, thresholds, significant
+          peaks'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correct, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full manhattan plot with all GWAS elements
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic GWAS-like data, neutral domain context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic p-value range and standard thresholds
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Has np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format and current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good XY chart and Style usage, follows pygal conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Limited showcase of distinctive pygal features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  - layer-composition
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent alternating blue/gray color scheme for chromosome distinction that is
-    colorblind-friendly
-  - Both genome-wide significance (p=5×10⁻⁸) and suggestive (p=1×10⁻⁵) threshold lines
-    are clearly visible
-  - Good use of pygal's tooltip system with informative labels showing chromosome,
-    position, and p-value
-  - Significant SNPs are properly highlighted in red as a separate series
-  - Clean chromosome labeling at midpoints with all 22 chromosomes visible
-  weaknesses:
-  - Contains a helper function (format_x_label) which violates the KISS principle
-    requiring flat script structure
-  - Data point markers are somewhat small for the 11,000+ point dataset; larger dots_size
-    would improve visibility
-  - Legend at bottom takes substantial vertical space; could be more compact
+  styling:
+  - publication-ready

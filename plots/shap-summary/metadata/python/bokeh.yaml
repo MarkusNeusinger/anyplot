@@ -1,0 +1,233 @@
+library: bokeh
+language: python
+specification_id: shap-summary
+created: '2026-05-14T12:59:23Z'
+updated: '2026-05-14T13:08:45Z'
+generated_by: claude-haiku
+workflow_run: 25861163134
+issue: 2923
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/bokeh/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect technical execution: all text readable in both light and dark themes
+    with no legibility failures'
+  - 'Complete and correct palette compliance: BrBG11 diverging scale appropriate for
+    continuous feature values; theme-adaptive chrome fully applied'
+  - 'Spec adherence is flawless: feature importance ordering, SHAP distribution, x=0
+    reference line, correct data mappings'
+  - Clean, reproducible code with proper Bokeh patterns and ColumnDataSource usage
+  - 'Strong data quality: realistic real-estate domain with plausible feature distributions
+    and SHAP value magnitudes'
+  - 'Theme adaptation is robust: both renders pass legibility checks with zero dark-on-dark
+    or light-on-light failures'
+  weaknesses:
+  - Design Excellence score is solid but not exceptional; plot looks like a well-configured
+    library default rather than publication-grade sophistication
+  - 'Could leverage more visual emphasis: slightly larger markers for top-importance
+    features, or more refined spine/grid styling for stronger visual hierarchy'
+  - Limited use of distinctive Bokeh features beyond core scatter/line functionality
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title, axis labels, and feature names all clearly visible in dark text (28pt, 22pt, 18pt explicitly set)
+      Data: Points colored with BrBG11 diverging palette (blue to red); vertical reference line at x=0 clearly visible
+      Legibility verdict: PASS - all elements fully readable, no overlap, perfect theme adaptation
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, and feature names all clearly visible in light text; no dark-on-dark failures
+      Data: Colors identical to light render (BrBG11 gradient preserved); only chrome has flipped themes
+      Legibility verdict: PASS - all elements fully readable, proper theme adaptation, brand colors visible
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All fonts explicitly set (28pt, 22pt, 18pt); perfectly readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Feature labels evenly spaced; no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 150 points with size=12, alpha=0.6; optimal for moderate density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: BrBG11 diverging palette is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 px, balanced margins, plot fills 50-70% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: BrBG11 correct for diverging; backgrounds and chrome tokens all theme-correct
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; professional but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, outline spines, generous whitespace; visible customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Feature importance ordering and color gradient create visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct SHAP summary scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features from spec present: ordering, distribution, coloring,
+          reference line'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=SHAP values, Y=features, Color=feature values; all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; legend not needed for continuous scale
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 diverse real estate features with varied distributions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real estate/price prediction domain; neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Feature values and SHAP magnitudes are factually realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple linear flow with no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic results
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extraneous dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no over-engineering or fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct naming: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary Bokeh patterns: figure, ColumnDataSource, circle, line,
+          headless Chrome export'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Standard but competent usage; limited distinctive Bokeh features
+          beyond core API
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

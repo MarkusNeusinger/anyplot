@@ -1,15 +1,236 @@
 library: altair
+language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:53:39Z'
-updated: '2025-12-31T14:01:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620334905
+updated: '2026-05-15T01:12:06Z'
+generated_by: claude-haiku
+workflow_run: 25894545245
 issue: 3070
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/altair/plot.html
-quality_score: 91
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/altair/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Perfect text legibility with explicit font sizing in both themes
+  - Proper theme adaptation with no dark-on-dark or light-on-light failures
+  - 'Okabe-Ito palette correctly applied: first series #009E73, subsequent colors
+    in canonical order'
+  - 'All required phylogenetic tree features present: branch lengths, species labels,
+    scale bar'
+  - Clean, idiomatic Altair code with proper layer composition and interactivity
+  - Meaningful color coding by clade creates natural visual hierarchy
+  - Real, neutral, factually accurate primate evolution data
+  - Professional balance of scientific accuracy and visual clarity
+  weaknesses:
+  - DE-01 could reach 7-8 with more distinctive design choices (custom font treatment,
+    refined color harmony)
+  - DE-02 could be improved by more explicit axis styling in Altair configuration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1, correct for light theme
+      Chrome: Title "Primate Evolution · tree-phylogenetic · altair · anyplot.ai" is prominent and dark; subtitle clearly readable; all species labels positioned with proper offsets; scale bar visible
+      Data: Three-color clade coding - green (#009E73) for Apes, orange (#D55E00) for Old World Monkeys, blue (#0072B2) for Lesser Apes; all branch connections clearly visible; leaf points appropriately sized
+      Legibility verdict: PASS - All text is easily readable against the light background; no contrast issues; grid at 10% opacity is subtle but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17, correct for dark theme
+      Chrome: Title and all labels rendered in light text (INK_SOFT); all readable against dark background; no dark-on-dark failures; scale bar visible
+      Data: Colors identical to light render - green, orange, and blue clades are unchanged, confirming theme-adaptive chrome-only changes
+      Legibility verdict: PASS - All text is clearly visible; no dark-on-dark failures (no black text on near-black background); grid remains subtle and readable; theme adaptation is perfect
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
+          Perfectly readable in both light and dark themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels positioned with dx=12 offset. No text collisions or overlaps.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Branch strokeWidth=3.5, leaf points size=600, internal points size=350.
+          Optimally sized for data density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. Good contrast between data colors
+          and background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 (→4800×2700px with 3x scale) uses canvas efficiently with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis descriptive with units: ''Evolutionary Distance (substitutions
+          per site)''. Y-axis appropriately omitted for tree diagram.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, subsequent Okabe-Ito colors correct. Backgrounds
+          #FAF8F1/#1A1A17. Theme-adaptive chrome working perfectly in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color coding. Typography hierarchy
+          is clear. Professional configuration. Could reach 7-8 with more distinctive
+          design choices.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid at 10% opacity. Scientific scale bar adds credibility.
+          Generous whitespace. Clean positioning.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Color coding by clade creates visual hierarchy. Branch structure
+          guides viewer through evolution. Focal point clear: green Apes most prominent.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct phylogenetic tree (rectangular/cladogram layout). Branch
+          lengths proportional to evolutionary distance.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: branch lengths, species labels, hierarchical
+          structure, scale bar.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly shows evolutionary distance. Y-axis positions species
+          properly. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format 'Primate Evolution · tree-phylogenetic · altair · anyplot.ai'
+          correct. Legend appropriately omitted.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: multiple clades, leaf and internal nodes, diverse
+          branch lengths, bifurcating structure.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real primate species with accurate evolutionary relationships. Neutral,
+          non-controversial biological data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Branch lengths align with actual primate evolution. Scale bar correctly
+          labeled. Factually accurate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with appropriate helper functions. No unnecessary classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set. Deterministic data structure.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os, altair, numpy, pandas.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Pythonic and readable. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0.
+          Current API.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses Altair's declarative API with mark_rule, mark_circle,
+          mark_text, layer composition, and proper configure methods.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Leverages Altair strengths: layering, interactive tooltips, HTML
+          export, theme-adaptive configuration.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -18,190 +239,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent visual clarity with proper text sizing and no overlap
-  - Scientifically accurate primate phylogeny with realistic branch lengths
-  - Good use of Altair layered composition for complex tree structure
-  - Proper scale bar with units for interpreting evolutionary distances
-  - Interactive tooltips enhance exploration of the tree
-  - Colorblind-safe Python Blue/Yellow color scheme
-  weaknesses:
-  - Code uses helper functions instead of preferred flat KISS structure
-  - Missing clade color-coding which was mentioned in specification notes
-  - Internal nodes could be slightly larger for better visibility
-  image_description: 'The plot displays a phylogenetic tree of primate species showing
-    evolutionary relationships based on mitochondrial DNA divergence. The tree uses
-    a rectangular (cladogram) layout with Python Blue (#306998) branches and small
-    blue internal nodes. Leaf nodes are marked with Python Yellow (#FFD43B) circles
-    with blue borders. Seven species are labeled: Olive Baboon, Rhesus Macaque, Gibbon,
-    Orangutan, Bonobo, Chimpanzee, and Human. The x-axis shows "Evolutionary Distance
-    (substitutions per site)" ranging from -0.02 to 0.46. A scale bar labeled "0.05
-    subs/site" appears in the lower left. The title reads "Primate Evolution · tree-phylogenetic
-    · altair · pyplots.ai" with a subtitle "Phylogenetic tree based on mitochondrial
-    DNA divergence". The y-axis has no labels or ticks (appropriately hidden for a
-    tree diagram).'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, labels at 20pt bold, all text clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, species labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Branches at strokeWidth=4, nodes clearly visible, slight deduction
-          for internal nodes being small
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe, no red-green issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight empty space on right side
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: X-axis has descriptive label with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid visible but very subtle (good), no legend needed for this plot
-          type
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct phylogenetic tree with rectangular/cladogram layout
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Branch lengths proportional to evolutionary distance
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has scale bar, branch lengths, species labels; missing color-coding
-          of clades
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A (no legend needed, tooltips available)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: tree-phylogenetic · altair · pyplots.ai'
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows hierarchical branching, varying branch lengths, multiple clades;
-          could show more divergence in some branches
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real primate phylogeny based on mitochondrial DNA, scientifically
-          accurate relationships
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Branch lengths in substitutions per site are realistic for mtDNA
-          divergence
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: Uses helper functions (get_leaves, calc_x_positions, calc_y_positions)
-          instead of flat structure
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used (altair, numpy, pandas)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of layered composition, mark_rule for branches, mark_circle
-          for nodes, mark_text for labels, tooltips for interactivity, proper configuration
-  verdict: APPROVED
+  styling:
+  - grid-styling

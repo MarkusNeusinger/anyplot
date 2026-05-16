@@ -1,17 +1,39 @@
-""" pyplots.ai
+""" anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-15
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from plotnine import aes, element_text, geom_line, ggplot, labs, scale_color_manual, theme, theme_minimal
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_line,
+    ggplot,
+    labs,
+    scale_color_manual,
+    theme,
+    theme_minimal,
+)
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler
 
 
-# Load iris dataset
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Data
 iris = load_iris()
 X = iris.data
 y = iris.target
@@ -43,26 +65,31 @@ for idx in range(len(X_normalized)):
 
 df = pd.DataFrame(plot_data)
 
-# Distinct colors for the three species (blue, orange, green - colorblind-safe)
-colors = ["#1f77b4", "#ff7f0e", "#2ca02c"]
+# Theme-adaptive styling
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=element_rect(color=INK_SOFT, fill=None),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(size=24, color=INK),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+)
 
-# Create plot
+# Plot
 plot = (
     ggplot(df, aes(x="t", y="value", color="species", group="observation"))
     + geom_line(alpha=0.4, size=0.8)
-    + labs(title="andrews-curves · plotnine · pyplots.ai", x="t (radians)", y="Andrews Curve Value", color="Species")
-    + scale_color_manual(values=colors)
+    + labs(title="andrews-curves · plotnine · anyplot.ai", x="t (radians)", y="Andrews Curve Value", color="Species")
+    + scale_color_manual(values=OKABE_ITO)
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
-    )
+    + anyplot_theme
+    + theme(figure_size=(16, 9))
 )
 
-# Save plot
-plot.save("plot.png", dpi=300, verbose=False)
+# Save
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

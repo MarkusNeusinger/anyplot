@@ -6,7 +6,7 @@ title: Phylogenetic Tree Diagram
 
 # Specification tracking
 created: 2025-12-31T13:39:29Z
-updated: 2025-12-31T13:39:29Z
+updated: 2026-05-15T00:54:58Z
 issue: 3070
 suggested: MarkusNeusinger
 
@@ -14,9 +14,7 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - tree
     - dendrogram
-    - hierarchy
   data_type:
     - hierarchical
     - categorical
@@ -27,4 +25,3 @@ tags:
   features:
     - basic
     - proportional
-    - evolutionary

@@ -1,170 +1,173 @@
 library: altair
+language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T05:35:22Z'
-updated: '2025-12-31T05:40:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612806176
+updated: '2026-05-15T07:33:59Z'
+generated_by: claude-haiku
+workflow_run: 25906008375
 issue: 2927
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent STFT implementation from scratch using numpy FFT, demonstrating understanding
-    of signal processing
-  - Proper use of x/x2/y/y2 encoding for precise rectangle positioning without gaps
-  - Good use of viridis colormap as recommended in the specification for perceptually
-    uniform display
-  - Clean dB scale conversion with appropriate epsilon to avoid log(0)
-  - Interactive tooltips showing Time, Frequency, and Power values
-  - Correctly limits frequency range to 0-1000 Hz for better visualization
+  - Perfect theme adaptation with correct light/dark chrome in both renders
+  - Expert Altair implementation using x2/y2 encoding for proper heatmap rectangles
+  - Excellent data quality with realistic chirp signal demonstrating real-world use
+    case
+  - Clean, deterministic code with explicit font sizing ensuring legibility at high
+    resolution
+  - 'Correct palette compliance: viridis for continuous data with proper theme-correct
+    backgrounds and text colors'
   weaknesses:
-  - Missing .interactive() call which would enable zoom/pan for detailed exploration
-    of the spectrogram
-  - Colorbar font sizes could be slightly larger for better visibility
-  image_description: The plot displays a spectrogram showing a linear chirp signal
-    sweeping from approximately 100 Hz to 800 Hz over 2 seconds. The title "spectrogram-basic
-    · altair · pyplots.ai" is clearly visible at the top. The x-axis shows "Time (s)"
-    ranging from 0.00 to ~2.00 seconds, and the y-axis shows "Frequency (Hz)" ranging
-    from 0 to ~1000 Hz. A bright yellow diagonal band represents the frequency sweep,
-    clearly visible against a teal/green background with noise. The colorbar on the
-    right shows "Power (dB)" ranging from approximately -60 dB (dark) to +30 dB (yellow/bright).
-    The viridis colormap is used effectively, making the signal energy clearly distinguishable
-    from the noise floor.
+  - 'Design excellence is solid but conventional: implementation follows best practices
+    without exceptional aesthetic innovations or visual emphasis techniques'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "spectrogram-basic · altair · anyplot.ai" in dark text (#1A1A17); axis labels "Time (s)" and "Frequency (Hz)" in secondary dark (#4A4A44); tick labels readable; colorbar legend "Power (dB)" with proper theming
+      Data: Viridis colormap showing chirp signal as diagonal band from ~100 Hz to ~800 Hz; colors range from dark purple (low power) to bright yellow (high power)
+      Legibility verdict: PASS - all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and axis labels in light text (theme-adapted); tick labels readable in light secondary color; legend "Power (dB)" with elevated background (#242420) and light text
+      Data: Identical viridis colormap to light render (data colors unchanged); same chirp signal band visible
+      Legibility verdict: PASS - no dark-on-dark failures; all chrome correctly theme-adapted while data colors remain constant between renders
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text is clearly readable: title at top, axis labels "Time (s)"
-          and "Frequency (Hz)" are descriptive and well-sized, tick labels are legible'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements properly spaced with no overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: The spectrogram heatmap is clearly visible with good density; the
-          chirp signal is prominently displayed against the noise background
+        comment: Spectrogram rectangles optimally sized for time-frequency resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses viridis colormap which is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though the plot could be slightly larger
-          relative to the total canvas; margins are balanced
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Time (s)" and "Frequency
-          (Hz)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis colormap is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 65% of canvas with balanced margins; excellent proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No grid is present (which is fine for a heatmap), but the colorbar
-          title "Power (dB)" is properly labeled
+        comment: 'Descriptive labels with units: Time (s), Frequency (Hz)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); theme-correct chrome in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Uses appropriate viridis colormap and follows best practices; configuration-level
+          polish but no exceptional aesthetic innovations
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid opacity set to 0.10; legend styled with theme-adaptive colors;
+          thoughtful customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Chirp signal frequency sweep visually clear through color progression;
+          viewer understands time-frequency evolution
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: spectrogram displayed as a time-frequency heatmap'
+        comment: Correct spectrogram chart type as time-frequency heatmap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, frequency on y-axis, power/amplitude as color - all
-          correct
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: colorbar with dB units, proper axis labels,
-          perceptually uniform colormap'
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar with dB scale, time/frequency axes, amplitude representation
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Axes show the full data range: 0-2s time, 0-1000Hz frequency'
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Time (s), Y=Frequency (Hz), Color=Power (dB); correct assignments
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately shows Power (dB) with correct scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "spectrogram-basic · altair · pyplots.ai"'
+        comment: Title format correct; legend title "Power (dB)" correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows chirp signal clearly demonstrating time-frequency relationship;
-          noise is also visible showing typical real-world signal characteristics
+        comment: Full frequency range 100-800 Hz; complete 2-second timespan; realistic
+          noise component
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Chirp signal is a classic test signal used in radar, audio, and vibration
-          analysis - very appropriate
+        comment: Chirp signal is standard test signal for spectrogram analysis; authentic
+          real-world use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Frequency range (0-1000 Hz) and sample rate (4000 Hz) are realistic;
-          dB scale is appropriate for power representation
+        comment: 4000 Hz sample rate (realistic); 2 second duration (good window);
+          frequency range respects Nyquist
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,42 +175,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script structure: imports → data generation → STFT computation
-          → DataFrame creation → Altair chart → save'
+        comment: Linear pipeline with no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible noise
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and all used
+        comment: 'All imports used: os, altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean STFT implementation; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html, which is correct for Altair
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png/html format with scale_factor=3.0
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses mark_rect() with x/x2/y2 encoding for proper rectangle rendering,
-          tooltips for interactivity, and proper color scale configuration; could
-          have added .interactive() for zoom/pan
+        comment: Expert fluent API with x2/y2 encoding for pixel-perfect heatmap rectangles
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Altair's x2/y2 encoding, Legend customization, .save() with
+          scale_factor
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling

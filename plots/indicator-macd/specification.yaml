@@ -6,7 +6,7 @@ title: MACD Technical Indicator Chart
 
 # Specification tracking
 created: 2026-01-07T16:13:17Z
-updated: null
+updated: 2026-05-16T07:17:34Z
 issue: 3181
 suggested: MarkusNeusinger
 
@@ -16,7 +16,6 @@ tags:
   plot_type:
     - line
     - bar
-    - indicator
   data_type:
     - timeseries
     - numeric
@@ -27,4 +26,4 @@ tags:
     - technical-analysis
     - momentum
     - crossover
-    - multi-component
+    - multi

@@ -1,0 +1,238 @@
+library: seaborn
+language: python
+specification_id: map-tilegrid
+created: '2026-05-14T14:12:03Z'
+updated: '2026-05-14T14:33:27Z'
+generated_by: claude-sonnet
+workflow_run: 25864454521
+issue: 5246
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Luma-adaptive tile text coloring ensures readability across all 50 states in both
+    themes
+  - 'Both renders theme-correct: correct backgrounds, adaptive chrome, identical viridis
+    data colors between themes'
+  - 'Full spec compliance: all 50 US states, colorbar with units, geographic grid
+    layout, equal-area tiles'
+  - Clean reproducible code with proper random seed and flat script structure
+  weaknesses:
+  - Title at 22pt vs. guideline 24pt for high-res canvas
+  - Seaborn contribution limited to sns.set_theme() theme setup; core visualization
+    is 100% raw matplotlib patches and text
+  - 'No data storytelling: Pacific NW vs Southeast renewable energy divide is visible
+    but not annotated or emphasized'
+  - State abbreviation fontsize 15pt slightly under 16pt guideline for high-res canvas
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 as specified
+      Chrome: Title "Renewable Energy by State - map-tilegrid - seaborn - anyplot.ai" at fontsize 22 in dark ink, clearly readable; colorbar label "Renewable Energy Adoption (%)" at fontsize 20 with ticks at fontsize 16 in INK_SOFT - all readable
+      Data: 50 US state tiles colored with viridis from deep purple (~10-20%) through teal/cyan (~40-50%) to yellow-green (~70-80%); state abbreviations in bold with luma-adaptive color (dark text on bright tiles, light text on dark tiles)
+      Legibility verdict: PASS - all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 as specified
+      Chrome: Title in light ink (#F0EFE8) clearly readable; colorbar label in light ink readable; ticks in INK_SOFT (#B8B7B0) readable against dark background; no dark-on-dark text failures
+      Data: Viridis tile colors identical to light render confirming only chrome has flipped; luma-adaptive state abbreviation text coloring unchanged and legible
+      Legibility verdict: PASS - all text readable against warm near-black background
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title at 22pt vs guideline 24pt; colorbar label 20pt and ticks 16pt
+          correct; state abbreviations 15pt clear
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles have proper gap; no text collisions between state labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 50 state tiles visible; viridis range clearly differentiated
+          across color spectrum
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe; no red-green encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12x12 figure appropriate for tile grid; colorbar well-placed
+          below
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id; colorbar label includes unit (%)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous data; backgrounds #FAF8F1 light and
+          #1A1A17 dark both correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Luma-adaptive tile text coloring is genuinely clever; otherwise functional
+          rather than artful
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axis fully hidden; clean layout; proper tile gap; limited additional
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Geographic pattern visible but not emphasized; no annotations or
+          callouts guiding the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct square-tile grid map with geographic positioning
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region abbreviation labels, colorbar, equal-area tiles, geographic
+          row/col layout all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value encoded via tile color; full 10-80% range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, anyplot.ai; colorbar legend present
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all defining characteristics of tile grid maps
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US state renewable energy adoption is plausible and politically neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 10-80% with realistic geographic variation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no unnecessary functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no dead imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Luma calculation for adaptive text color is elegant and correct
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as f"plot-{THEME}.png" correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.set_theme() with rc dict is the correct seaborn theming pattern;
+          matplotlib patches appropriate for this chart type
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn contribution limited to theme setup; core visualization is
+          100% matplotlib patches and text; no seaborn-specific features demonstrated
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap

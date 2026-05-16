@@ -1,36 +1,255 @@
 library: altair
+language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:00:16Z'
-updated: '2025-12-31T11:38:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617521051
+updated: '2026-05-15T15:21:23Z'
+generated_by: claude-haiku
+workflow_run: 25925130696
 issue: 3003
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/altair/plot.html
-quality_score: 87
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/altair/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect theme adaptation: data colors identical between light/dark renders, all
+    chrome fully adaptive with no legibility failures in either render'
+  - 'Correct Okabe-Ito palette implementation with #009E73 as first series; three-series
+    order maintained'
+  - 'Clear visual encoding: facial features smoothly and logically mapped to numeric
+    variables (face width←sepal length, etc.)'
+  - Professional grid layout with clean 4×3 arrangement, generous spacing, and readable
+    labels at both font sizes
+  - 'Comprehensive legends: feature mapping legend clearly explains all six encodings,
+    species legend identifies groups with matching colors'
+  - 'Strong data representativeness: 12 diverse Iris samples across three species,
+    normalized 0–1 scale appropriate for feature encoding'
+  weaknesses:
+  - 'Design Excellence could be raised with additional visual polish: subtle background
+    texture, legend box styling, or other subtle refinements (though current clean
+    aesthetic is also valid)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with excellent contrast. Title and subtitle clearly visible at top center.
+      Chrome: Dark text (INK #1A1A17 and INK_SOFT #4A4A44) on light background. Title (28px), feature mapping legend (12px), species labels (14px), and sample labels (13px) all readable. No legibility failures.
+      Data: Chernoff faces in Okabe-Ito colors—green (#009E73) for setosa, orange (#D55E00) for versicolor, blue (#0072B2) for virginica. Faces have distinct visual features: elliptical outlines, dark eyes (INK) with light pupils (PAGE_BG), eyebrows with varying slant, and orange mouths. All markers clearly distinguishable from background.
+      Layout: 4×3 grid with generous spacing. Feature mapping legend on left side, species legend on right side. All elements well-positioned with no overlap.
+      Legibility verdict: PASS — all text readable, all data colors distinct, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper contrast. Title and subtitle clearly visible.
+      Chrome: Light text (INK #F0EFE8 and INK_SOFT #B8B7B0) on dark background. All labels and legends readable. No dark-on-dark failures—critically, eyes are light (INK color in dark theme) and pupils are light (INK_SOFT), avoiding the dark-on-dark trap.
+      Data: Chernoff faces with IDENTICAL colors to light render—green, orange, and blue remain unchanged. Only mouth color adapted to yellow (#E69F00) for dark theme visibility. Eyes and pupils properly theme-adapted without affecting face color identity.
+      Layout: Identical 4×3 grid arrangement with same legend positions. Spacing and proportions maintained.
+      Legibility verdict: PASS — all text readable, data colors identical to light render (theme-consistent), no dark-on-dark failures. Brand green visible and vibrant.
+
+    Both renders PASS the theme-readability check. Chrome colors fully adapted between themes while data colors remain constant.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title (28px), labels (13-14px), all readable in both themes with
+          proper contrast; dark text on light, light text on dark
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Face labels positioned below without collision; clean 4×3 grid layout
+          ensures no text overlaps
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 faces distinct; eyes, mouths, eyebrows, noses all visible
+          and size-varied by encoding
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses colorblind-safe Okabe-Ito palette; three distinct categorical
+          colors with no red-green sole signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 canvas with 4×3 grid properly proportioned; generous margins
+          and spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive with library/domain identifiers; subtitle explains
+          data; feature mapping legend complete
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; three-series follows Okabe-Ito positions 1,2,3;
+          backgrounds #FAF8F1/#1A1A17 correct; both renders theme-adapted'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Chernoff faces are inherently sophisticated with elliptical shapes
+          and concentric fills; thoughtful color encoding. Raised from baseline 4
+          due to careful rendering and intentional design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean spacing, well-positioned legends, consistent typography, opacity
+          gradients for depth. Raised from baseline 2 for refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Strong visual hierarchy through color (three species), size variation
+          of features, grid layout guides comparison. Raised from baseline 2.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Chernoff face visualization for multivariate data
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: observation_id (Sample labels), 4 numeric
+          variables (sepal/petal measurements), normalized 0–1 scale, grid layout,
+          categorical grouping'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All six feature mappings correct and clearly documented in legend
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; feature mapping legend clear; species legend
+          labeled with matching colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four Iris measurements encoded; full multivariate representation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Iris dataset; 12 diverse samples across three species; values
+          realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized 0–1 scale appropriate for facial feature mapping; 12 observations
+          in recommended 5–50 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes/functions; straightforward procedural code; readable and
+          maintainable
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; deterministic data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, altair, numpy, pandas imported; all used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for task; clear variable names; no fake UI
+          or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current Altair API
+          used
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Good use of high-level Altair API with proper encodings and environment-driven
+          theme adaptation. Slightly unconventional using many point marks for geometric
+          shapes rather than native geometry, but valid and effective.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses layer composition, custom legend construction, order-based sorting
+          for depth. Shows good Altair knowledge; techniques are effective though
+          relatively standard for this library.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-    - layer-composition
-    - custom-shapes
-    - html-export
+  - custom-legend
+  - layer-composition
   patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
-    - alpha-blending
-review:
-  strengths:
-  - Creative implementation of Chernoff faces using Altair mark_point with layered
-    scatter points
-  - Excellent color coding by species with colorblind-friendly palette
-  - Well-organized grid layout with good canvas utilization
-  - Feature mapping legend clearly explains variable-to-feature correspondence
-  - Good use of Iris dataset as a classic multivariate example
-  weaknesses:
-  - Feature mapping text overlaps with Sample 9 label causing text collision
-  - Does not leverage Altair distinctive features like interactivity or tooltips
-  - Face feature variations could be more visually pronounced between samples
+  - alpha-blending

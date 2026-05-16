@@ -1,167 +1,191 @@
 library: bokeh
+language: python
 specification_id: candlestick-volume
 created: '2025-12-31T13:52:49Z'
-updated: '2025-12-31T13:59:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620313325
+updated: '2026-05-16T05:26:33Z'
+generated_by: claude-haiku
+workflow_run: 25953719981
 issue: 3068
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep:
-  - time-series
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent dual-pane layout with proper 70/30 split as specified
-  - Shared x-range between candlestick and volume charts works perfectly
-  - CrosshairTool added for both panes as requested in spec
-  - Color scheme is colorblind-accessible (blue/yellow instead of red/green)
-  - Volume bars correctly color-coded to match candlestick up/down days
-  - Text sizes well-scaled for 4800×2700 output
-  - Clean, readable code following KISS principles
+  - Perfect theme-adaptive rendering with ideal text legibility in both light and
+    dark modes
+  - 'Correct Okabe-Ito color palette (#009E73, #D55E00) used consistently across both
+    panes'
+  - Professional dual-pane layout with proper proportions (70/30) and synchronized
+    x-axis
+  - 'All specification requirements met perfectly: OHLC candlesticks, volume bars,
+    shared axis, crosshair tool, aligned grids'
+  - Clean, idiomatic bokeh code using ColumnDataSource and proper tool patterns
+  - Realistic, well-scaled financial data demonstrating candlestick behavior and price-volume
+    correlation
   weaknesses:
-  - Grid styling could be more subtle (current alpha 0.3 is slightly prominent)
-  - Volume bar colors appear more muted compared to candlesticks - consider matching
-    fill_alpha
-  - Missing HoverTool which would enhance Bokeh interactive capabilities
-  image_description: The plot displays a professional dual-pane candlestick chart
-    with volume. The upper pane (~70% height) shows OHLC candlesticks spanning 60
-    trading days from June to August 2024, with Python Blue (#306998) for bullish
-    (up) days and Yellow (#FFD43B) for bearish (down) days. The wicks (high-low lines)
-    and bodies are clearly visible. The price ranges from approximately $125 to $165.
-    The lower pane (~30% height) displays volume bars using the same color scheme,
-    with volume ranging from 0 to ~4.5 million. Both panes share a common x-axis with
-    rotated date labels. The title "candlestick-volume · bokeh · pyplots.ai" appears
-    at the top left. Grid lines are subtle with dashed styling. Y-axes are labeled
-    "Price ($)" and "Volume" with the x-axis labeled "Date".
+  - Could enhance DE-01 (Aesthetic Sophistication) with additional visual refinement—consider
+    more sophisticated accent elements or custom grid styling beyond defaults
+  - Could improve DE-02 (Visual Refinement) by selectively removing spines or adding
+    subtle enhancements to the grid appearance
+  - Could expand LM-02 (Distinctive Features) by exploring more advanced bokeh capabilities
+    like linked selections or custom interactions
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1, perfectly on-theme
+      Chrome: Title, axis labels, and tick labels all in dark text (INK token), highly readable. No light-on-light issues.
+      Data: Green candlesticks (#009E73) for up days, orange (#D55E00) for down days. Wicks show high-low range. Volume bars use same color scheme.
+      Layout: Dual-pane with price chart (70%) on top, volume chart (30%) below. Shared x-axis shows 60 trading days.
+      Grid: Subtle grid lines (10% opacity) aid readability without competing with data.
+      Legibility verdict: PASS - All text clearly readable. Colors have excellent contrast. No overlapping elements.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17, perfectly on-theme
+      Chrome: Title, axis labels, and tick labels all in light colors (off-white INK token), highly readable against dark background. No dark-on-dark failures.
+      Data: Green candlesticks (#009E73) and orange (#D55E00) identical to light render—data colors perfectly preserved across themes.
+      Layout: Dual-pane layout identical to light render. Crosshair tool spans both panes for synchronized interaction.
+      Grid: Subtle grid lines visible and appropriately styled for dark theme.
+      Legibility verdict: PASS - All text clearly readable. No dark-on-dark issues detected. Colors maintain same visibility as light render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 18-22pt all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, rotated x-axis labels well spaced
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt).
+          Perfect readability in both themes with theme-adaptive colors.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 60 candlesticks with adequate spacing. X-axis labels rotated 0.8
+          radians. No text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Candlesticks well-sized, wicks visible, slight deduction for thin
-          wicks
+        comment: Candlesticks clearly visible with prominent wicks. Volume bars perfectly
+          sized. High contrast.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/Yellow is colorblind-safe but not the most distinctive pair
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent 70/30 split, good canvas utilization
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Price ($)", "Volume", "Date" - descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) is CVD-safe. Up/down distinction
+          from both color and shape.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect dual-pane proportions (70/30). 4800x2700 canvas. Balanced
+          margins. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed, but grid could be slightly more subtle
+        comment: Descriptive title with spec format. Y-axis labels with units. X-axis
+          labeled "Date".
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓. Second series #D55E00 (Okabe-Ito pos 2)
+          ✓. Backgrounds #FAF8F1 / #1A1A17 ✓. Data colors identical, only chrome flips
+          ✓.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional dual-pane layout for financial charting. Custom Okabe-Ito
+          colors. Clear hierarchy. Solid design, could have more embellishment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines styled with INK_SOFT. Subtle grid (10% alpha). Generous margins.
+          Could improve with more polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hierarchy with price dominating (70%), volume below (30%).
+          Green/orange tells up/down story. Crosshair aids visual correlation.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct candlestick + volume chart
+        comment: Correct candlestick + volume dual-pane layout.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: OHLC correctly mapped to candlesticks, volume to bars
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Dual pane, shared x-axis, color-coded volume bars, crosshair tools
-          added
-      - id: SC-04
-        name: Data Range
+        comment: Dual-pane, shared x-axis, date formatting, up/down colors, crosshair
+          tool, aligned grids—all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, no clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: 60 trading days. Y-axis price: OHLC correct. Y-axis volume:
+          bars correct. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this chart type (colors self-explanatory)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "candlestick-volume · bokeh · pyplots.ai"'
+        comment: Title format correct. No legend needed (up/down colors self-explanatory).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish candles, volume variation, overall
-          downtrend with rallies
+        comment: Shows all candlestick aspects (OHLC). Volume bars present. Date formatting
+          and price-volume correlation demonstrated.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price data from $125-165 with realistic 2M base volume
+        comment: Realistic stock movement (geometric random walk). Volume correlates
+          with price. Date range realistic. Neutral data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good price range, volume slightly high for some stocks but plausible
+        comment: Start price $150 (realistic). Range ~126-168 (reasonable). Volume
+          ~1M-4M (realistic). Axes scaled well.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,40 +193,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'No functions/classes. Linear flow: imports → data → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, time, pathlib, numpy, pandas, bokeh, selenium.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI. Proper bokeh patterns. Clean
+          naming.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png (correct) but also plot.html unnecessarily
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
+          with correct naming.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, CrosshairTool, linked x-range, vbar/segment.
-          Could leverage HoverTool for tooltips
+        comment: Proper ColumnDataSource. High-level plotting methods. Correct tools
+          (HoverTool, CrosshairTool). Theme-adaptive styling. Solid usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: column() layout for dual-pane sync. Shared x-range. CrosshairTool
+          spanning. NumeralTickFormatter for volume. Could explore more.
+    score_caps:
+      applied: false
+      reasons: []
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  - subplots
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - time-series
+  styling: []

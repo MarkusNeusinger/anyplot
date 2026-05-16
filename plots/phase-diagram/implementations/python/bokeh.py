@@ -1,39 +1,46 @@
-""" pyplots.ai
+""" anyplot.ai
 phase-diagram: Phase Diagram (State Space Plot)
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-14
 """
 
-# Fix module shadowing when script is named bokeh.py
+import os
 import sys
+import time
+from pathlib import Path
 
 
-sys.path = [p for p in sys.path if p and not p.endswith("implementations")]
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p and p != "." and p != script_dir and not p.endswith("implementations")]
+os.chdir(script_dir)
 
 import numpy as np  # noqa: E402
-from bokeh.io import export_png, output_file, save  # noqa: E402
-from bokeh.models import ColorBar, ColumnDataSource, LinearColorMapper  # noqa: E402
+from bokeh.io import output_file, save  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, LinearColorMapper  # noqa: E402
 from bokeh.palettes import Viridis256  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.chrome.options import Options  # noqa: E402
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data: Damped harmonic oscillator (simple pendulum with friction)
 # dx/dt = v, dv/dt = -omega^2 * x - gamma * v
 np.random.seed(42)
 
-omega = 2.0  # Natural frequency
-gamma = 0.3  # Damping coefficient
+omega = 2.0
+gamma = 0.3
 dt = 0.02
 n_steps = 800
 
-# Multiple trajectories from different initial conditions
 trajectories = []
-initial_conditions = [
-    (2.0, 0.0),  # Start from displacement, no velocity
-    (-1.5, 2.0),  # Start with both displacement and velocity
-    (0.5, -2.5),  # Different quadrant
-    (2.5, 1.5),  # Another starting point
-]
+initial_conditions = [(2.0, 0.0), (-1.5, 2.0), (0.5, -2.5), (2.5, 1.5)]
 
 for x0, v0 in initial_conditions:
     x_traj = [x0]
@@ -42,7 +49,6 @@ for x0, v0 in initial_conditions:
     x, v = x0, v0
 
     for i in range(n_steps):
-        # Euler integration of damped harmonic oscillator
         ax = -(omega**2) * x - gamma * v
         x_new = x + v * dt
         v_new = v + ax * dt
@@ -57,91 +63,123 @@ for x0, v0 in initial_conditions:
 p = figure(
     width=4800,
     height=2700,
-    title="Damped Pendulum · phase-diagram · bokeh · pyplots.ai",
+    title="phase-diagram · bokeh · anyplot.ai",
     x_axis_label="Position x (displacement)",
     y_axis_label="Velocity dx/dt (m/s)",
-    tools="pan,wheel_zoom,box_zoom,reset",
+    tools="pan,wheel_zoom,box_zoom,reset,hover",
+    background_fill_color=PAGE_BG,
+    border_fill_color=PAGE_BG,
 )
 
-# Color palette for distinct trajectories
-traj_colors = ["#306998", "#FFD43B", "#E34A33", "#31A354"]
+# Theme-adaptive styling
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Single color mapper for time evolution (shared across all trajectories)
+# Grid styling
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
+p.outline_line_color = INK_SOFT
+
+# Okabe-Ito colors for trajectories (first series is BRAND, then alternates)
+traj_colors = [BRAND, "#D55E00", "#0072B2", "#CC79A7"]
+
 color_mapper = LinearColorMapper(palette=Viridis256, low=0, high=1)
 
-# Plot each trajectory as connected line with time-based color markers
+# Plot each trajectory
 for idx, (x_traj, v_traj, t_traj) in enumerate(trajectories):
-    # Normalize time for color mapping
     t_norm = np.array(t_traj)
     t_norm = (t_norm - t_norm.min()) / (t_norm.max() - t_norm.min())
 
-    source = ColumnDataSource(data={"x": x_traj, "v": v_traj, "t_norm": t_norm.tolist()})
+    source = ColumnDataSource(
+        data={"x": x_traj, "v": v_traj, "t_norm": t_norm.tolist(), "t": t_traj, "traj_id": [idx + 1] * len(x_traj)}
+    )
 
-    # Draw trajectory as scatter points with time-based coloring
-    p.scatter(x="x", y="v", source=source, size=12, color={"field": "t_norm", "transform": color_mapper}, alpha=0.85)
+    # Trajectory points with time-based coloring
+    scatter = p.scatter(
+        x="x", y="v", source=source, size=12, color={"field": "t_norm", "transform": color_mapper}, alpha=0.85
+    )
 
-    # Add starting point marker (larger, colored by trajectory)
+    # Starting point marker
     p.scatter(
         x=[x_traj[0]],
         y=[v_traj[0]],
-        size=30,
+        size=25,
         color=traj_colors[idx],
         marker="circle",
-        line_color="white",
-        line_width=3,
-        legend_label=f"Start: ({initial_conditions[idx][0]}, {initial_conditions[idx][1]})",
+        line_color=INK_SOFT,
+        line_width=2,
+        legend_label=f"Start {idx + 1}: ({initial_conditions[idx][0]}, {initial_conditions[idx][1]})",
     )
 
-# Mark the fixed point (equilibrium at origin)
-p.scatter(x=[0], y=[0], size=40, color="#D62728", marker="x", line_width=5, legend_label="Equilibrium (stable)")
+# Fixed point (equilibrium)
+p.scatter(x=[0], y=[0], size=35, color="#E63946", marker="x", line_width=4, legend_label="Equilibrium (stable)")
 
-# Add zero velocity line (where dx/dt = 0)
+# Zero velocity line
 p.line(
     x=[-3.5, 3.5],
     y=[0, 0],
-    line_width=3,
+    line_width=2,
     line_dash="dashed",
-    line_color="#7F7F7F",
-    alpha=0.7,
+    line_color=INK_SOFT,
+    alpha=0.6,
     legend_label="Zero velocity (dx/dt = 0)",
 )
 
-# Add color bar to show time evolution
-color_bar = ColorBar(
-    color_mapper=LinearColorMapper(palette=Viridis256, low=0, high=16),
-    title="Time (s)",
-    title_text_font_size="24pt",
-    major_label_text_font_size="20pt",
-    label_standoff=15,
-    width=40,
-    location=(0, 0),
-)
-p.add_layout(color_bar, "right")
-
-# Styling for large canvas (4800x2700)
-p.title.text_font_size = "36pt"
-p.title.text_font_style = "bold"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
-
-# Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
+# Configure HoverTool
+hover = p.select_one(HoverTool)
+hover.tooltips = [
+    ("Position (x)", "@x{0.00}"),
+    ("Velocity (dx/dt)", "@v{0.00}"),
+    ("Time (s)", "@t{0.0}"),
+    ("Trajectory", "@traj_id"),
+]
 
 # Legend styling
 p.legend.label_text_font_size = "20pt"
+p.legend.label_text_color = INK_SOFT
 p.legend.location = "top_right"
-p.legend.background_fill_alpha = 0.9
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 0.95
+p.legend.border_line_color = INK_SOFT
 p.legend.border_line_width = 2
-p.legend.padding = 15
-p.legend.spacing = 10
+p.legend.padding = 20
+p.legend.spacing = 15
 
-# Background
-p.background_fill_color = "#fafafa"
-
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

@@ -28,6 +28,9 @@ const inlineCodeSx = {
   padding: '2px 6px',
   borderRadius: '3px',
   color: 'var(--ink)',
+  // Long URLs / commands sit in TableCells; without explicit wrapping they
+  // force the table wider than a mobile viewport.
+  overflowWrap: 'anywhere' as const,
 };
 
 export function McpPage() {

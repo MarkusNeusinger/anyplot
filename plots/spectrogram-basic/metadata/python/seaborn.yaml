@@ -1,162 +1,163 @@
 library: seaborn
+language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T05:34:16Z'
-updated: '2025-12-31T05:45:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612803772
+updated: '2026-05-15T07:33:34Z'
+generated_by: claude-haiku
+workflow_run: 25905774645
 issue: 2927
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-    - scipy
-  techniques:
-    - colorbar
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent visualization of chirp signal showing clear time-frequency relationship
-    with bright diagonal trace
-  - Proper use of perceptually uniform viridis colormap as recommended in specification
-  - Well-formatted colorbar with dB units and appropriate sizing
-  - All text elements properly sized for the 16:9 aspect ratio output
-  - Correct use of seaborn heatmap for spectrogram visualization with proper axis
-    orientation
+  - Perfect theme-adaptive implementation with correct contrast in both renders
+  - Technically correct spectrogram computation with proper dB scaling
+  - Clear visual communication of chirp signal showing frequency increase over time
+  - All spec requirements met with proper axes, colorbar, and data mapping
   weaknesses:
-  - No grid lines present (minor issue for heatmap plots)
-  image_description: The plot displays a spectrogram showing a chirp signal with frequency
-    increasing linearly from approximately 100 Hz to 800 Hz over a 2-second duration.
-    The visualization uses the viridis colormap (dark purple to yellow), with the
-    bright yellow diagonal line clearly showing the frequency sweep against a teal/green
-    background representing noise. The x-axis is labeled "Time (s)" ranging from 0.0
-    to 2.0, and the y-axis is labeled "Frequency (Hz)" ranging from 0 to 2000. A colorbar
-    on the right shows "Power (dB)" with values from approximately -90 to -20 dB.
-    The title correctly displays "spectrogram-basic · seaborn · pyplots.ai".
+  - Limited design excellence—uses standard seaborn defaults without custom visual
+    refinement
+  - Colorbar styling could be more sophisticated
+  - No enhanced visual hierarchy to emphasize key signal pattern
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and professional
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text (#1A1A17, #4A4A44)
+      Data: Viridis heatmap with clear diagonal chirp signal (yellow-green stripe) showing frequency increase over time. Power scale from purple (low) to yellow (high) is perceptually uniform and readable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and professional
+      Chrome: All text rendered in light colors (#F0EFE8, #B8B7B0) - no dark-on-dark issues, all elements legible
+      Data: Viridis colors identical to light render (only chrome changed). Diagonal chirp pattern clearly visible and easy to interpret.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable with
-          appropriate font sizes (24pt title, 20pt labels, 16pt ticks)
+        comment: All text properly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean layout with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: The spectrogram data is clearly visible with excellent contrast between
-          the signal (yellow) and background noise (teal/green)
+        comment: Heatmap and chirp signal clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas, though colorbar takes some space; plot fills
-          adequate area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes include units: "Time (s)" and "Frequency (Hz)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions with generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis for continuous data, correct backgrounds, both renders theme-correct
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No grid present (not critical for heatmaps, but could enhance readability)
+        comment: Standard seaborn styling without custom refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization, uses default heatmap appearance
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Chirp signal clearly tells the story of frequency increase over time
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct spectrogram/heatmap visualization
+        comment: Correct spectrogram/time-frequency heatmap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, frequency on y-axis, power as color intensity
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes colorbar with dB units, proper axis labels, perceptually
-          uniform colormap as specified
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: heatmap, colorbar with dB scale, axis labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full time range (0-2s) and frequency range (0-2000 Hz) displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Time and frequency axes correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Power (dB)"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "spectrogram-basic · seaborn · pyplots.ai"
+        comment: Correct title format and colorbar label
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Chirp signal excellently demonstrates time-frequency relationship,
-          clearly shows frequency increasing over time
+        comment: 'Shows all spectrogram aspects: time, frequency, power'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Chirp signal is a standard test signal in signal processing; could
-          be more domain-specific (e.g., labeled as radar chirp or audio sweep)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Sample rate of 4000 Hz, frequencies 100-800 Hz, 2-second duration
-          are all realistic signal processing values
+        comment: Chirp signal with realistic parameters (4kHz sample rate, 100-800
+          Hz)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: dB scale appropriate for spectral power
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,11 +165,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions or classes
+        comment: Linear, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -176,28 +177,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, seaborn, scipy)
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn and scipy APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses sns.heatmap with cbar_kws for colorbar customization; could
-          leverage more seaborn-specific styling
+        comment: Idiomatic seaborn and scipy usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Some customization but limited distinctive features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
