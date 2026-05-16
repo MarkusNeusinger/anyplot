@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 71/100 | Updated: 2026-05-16
+Quality: 81/100 | Updated: 2026-05-16
 """
 
 import matplotlib.pyplot as plt
