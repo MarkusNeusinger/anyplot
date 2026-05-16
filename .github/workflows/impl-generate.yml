@@ -541,7 +541,6 @@ jobs:
           ts = '$TIMESTAMP'
           run_id = ${{ github.run_id }}
           issue = int('$ISSUE' or '0')
-          py_ver = '$PYTHON_VERSION'
           lang_ver = '$LANGUAGE_VERSION'
           lib_ver = '$LIBRARY_VERSION'
           has_html = '$HAS_HTML' == 'true'
@@ -575,7 +574,10 @@ jobs:
               'generated_by': f'claude-{model}',
               'workflow_run': run_id,
               'issue': issue,
-              'python_version': py_ver,
+              # language_version is the runtime of the implementation's own language
+              # (Python for matplotlib/seaborn/..., R for ggplot2). The pipeline's own
+              # Python interpreter is no longer written here — workflow_run is enough
+              # for audit, and python_version on an R artifact was misleading.
               'language_version': lang_ver,
               'library_version': lib_ver,
               # Theme-aware preview URLs (Phase C). Both PNG variants are always emitted.
