@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-16
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-16
 """
 
 import os
