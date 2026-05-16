@@ -746,13 +746,15 @@ export function FilterBar({
                   return [
                     <MenuItem key="no-results" disabled>
                       <Typography
+                        aria-label="No matches"
                         sx={{
-                          fontFamily: typography.fontFamily,
+                          fontFamily: typography.mono,
                           fontSize: fontSize.base,
                           color: semanticColors.mutedText,
+                          '& .subj': { opacity: 0.7 },
                         }}
                       >
-                        no matches
+                        <span className="subj">results</span>.empty()
                       </Typography>
                     </MenuItem>,
                   ];

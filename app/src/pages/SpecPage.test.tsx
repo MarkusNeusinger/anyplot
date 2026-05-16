@@ -125,9 +125,9 @@ describe('SpecPage', () => {
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('404')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: /page not found/i })).toBeInTheDocument();
     });
-    expect(screen.getByText('page not found')).toBeInTheDocument();
+    expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
   });
 
   it('handles fetch error', async () => {
