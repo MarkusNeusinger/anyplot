@@ -6,7 +6,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // sent with fetch. Falls back to API_URL locally where there's no Worker.
 export const DEBUG_API_URL = import.meta.env.VITE_DEBUG_API_URL || API_URL;
 export const GITHUB_URL = 'https://github.com/MarkusNeusinger/anyplot';
-export const LIBRARIES = ['altair', 'bokeh', 'highcharts', 'letsplot', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
+export const LIBRARIES = ['altair', 'bokeh', 'ggplot2', 'highcharts', 'letsplot', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
 export const BATCH_SIZE = 36;
 
 // Image size: 'normal' or 'compact' (half size)
@@ -23,4 +23,5 @@ export const LIB_ABBREV: Record<string, string> = {
   pygal: 'pyg',
   highcharts: 'hc',
   letsplot: 'lp',
+  ggplot2: 'gg',
 };

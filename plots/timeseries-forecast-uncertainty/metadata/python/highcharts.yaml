@@ -1,153 +1,174 @@
 library: highcharts
+language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T21:44:51Z'
-updated: '2026-01-07T21:47:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20797279910
+updated: '2026-05-16T22:44:39Z'
+generated_by: claude-haiku
+workflow_run: 25974828494
 issue: 3188
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/highcharts/plot.html
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of nested confidence bands using AreaRangeSeries with
-    proper z-ordering
-  - Clear visual distinction between historical (solid blue) and forecast (dashed
-    orange) data
-  - Professional use of plotLines to mark forecast start with label
-  - High-resolution output (4800x2700) with appropriate font scaling
-  - Good use of shared tooltip for interactive viewing
-  - Both PNG and HTML outputs provided
+  - 'Spec adherence: all required features (historical, forecast, dual confidence
+    bands, forecast-start marker, legend) implemented and clearly visible'
+  - 'Theme consistency: theme-adaptive tokens applied throughout with no dark-on-dark
+    or light-on-light failures'
+  - 'Visual clarity: all text readable, data elements distinguishable, generous spacing,
+    no overlaps'
+  - 'Data storytelling: forecast vs. historical distinction clear, widening bands
+    effectively communicate uncertainty'
+  - 'Palette mastery: Okabe-Ito colors used correctly and CVD-safe'
+  - 'Code quality: clean, reproducible, proper error handling with CDN fallback'
   weaknesses:
-  - Confidence bands use similar yellow tones - slightly more color differentiation
-    would improve clarity
-  - Legend symbols at bottom are small relative to the large canvas
-  image_description: 'The plot displays a time series forecast with uncertainty bands.
-    The chart shows historical product demand data (Jan 2022 - Dec 2024) as a solid
-    blue line with circular markers, followed by forecast data (Jan 2025 - Nov 2025)
-    as a dashed orange line with diamond markers. Two nested confidence bands are
-    shown: a lighter pale yellow/cream band for 95% CI and a darker golden yellow
-    band for 80% CI, both widening over time to represent increasing uncertainty.
-    A vertical dashed gray line labeled "Forecast Start" clearly delineates the historical
-    from forecast periods. The title follows the required format "timeseries-forecast-uncertainty
-    · highcharts · pyplots.ai" with a descriptive subtitle. Axes are properly labeled
-    ("Date" for X, "Product Demand (Units)" for Y), and a clear legend at the bottom
-    identifies all four series.'
+  - 'Design conservatism: styling follows standard template without distinctive refinements
+    (custom grid styling, spine removal, typography hierarchy)'
+  - 'DE-02 minimal: visual refinement is competent but incremental with no bold design
+    choices'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title, Y-axis label "Product Demand (Units)", X-axis label "Date", tick labels all clearly visible in dark text; grid lines subtle but visible; legend lists all four series
+      Data: Historical data is solid green line (#009E73, brand color) with circular markers; forecast is dashed orange line (#D55E00) with diamond markers; 95% confidence band is lighter blue (#56B4E9, opacity 0.15); 80% confidence band is darker blue (#0072B2, opacity 0.25); both bands widen over forecast horizon; vertical dashed line marks "Forecast Start"
+      Legibility verdict: PASS - all elements readable, proper contrast, no overlaps
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and axis labels in light text (#F0EFE8); tick labels in soft light color (#B8B7B0); grid lines light on dark; legend borders and text properly adapted; all elements clearly readable against dark surface
+      Data: Historical green (#009E73), forecast orange (#D55E00), confidence bands both blue colors - identical to light render, proving only chrome flips
+      Legibility verdict: PASS - no dark-on-dark failures, brand green remains visible, theme-adaptive tokens properly applied throughout
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: title at 56px, axis labels at 36px, tick
-          labels at 28px'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; date labels well spaced
+        comment: Title, axis labels, tick labels all appropriately sized and readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No critical overlaps; spacing is clean and intentional
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width and markers appropriate; confidence bands visible but
-          could have more contrast
+        comment: All markers, lines, and bands clearly distinguishable and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/orange/yellow palette is colorblind-safe, no red-green issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well with good margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units 'Product Demand (Units)', X-axis has 'Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape format with generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid subtle but legend symbols small relative to large canvas
+        passed: true
+        comment: Title includes spec-id, library, anyplot.ai; Y-axis includes units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, bands use Okabe-Ito 3&6, backgrounds
+          correct, data colors constant between themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional Okabe-Ito palette and theme tokens; competent styling
+          but follows standard template
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Appropriate line weights, good margins; minimal custom refinements
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear historical vs. forecast distinction, widening bands communicate
+          uncertainty, visual hierarchy guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series forecast with uncertainty bands
+        comment: Time series line plot with confidence bands, correct chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, demand on Y, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: historical line, forecast line (dashed), 80%
-          and 95% CI bands, vertical forecast start line'
-      - id: SC-04
-        name: Data Range
+        comment: Historical, forecast, 80% and 95% intervals, forecast-start marker,
+          legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Datetime X-axis, numeric Y-axis, all data points mapped, axes span
+          appropriate ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows exact format: {spec-id} · {library} · pyplots.ai'
+        comment: Title format correct, legend clearly identifies all four series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, and widening uncertainty; could show more
-          variation in forecast pattern
+        comment: Shows trend, seasonality, widening uncertainty; all plot type aspects
+          present
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly product demand is a realistic business scenario
+        comment: Monthly product demand realistic; 3-year history + 1-year forecast
+          plausible; confidence intervals widen over time
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 80-225 units are reasonable; time span appropriate
+        comment: Y-axis range (80-180 units) sensible; data fills canvas well
     code_quality:
       score: 10
       max: 10
@@ -157,53 +178,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data → plot → save'
+        comment: No unnecessary functions; straightforward data generation and configuration
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no dead imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: No simulated interactivity, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-light.html, plot-dark.html, plot-light.png, plot-dark.png;
+          uses current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses AreaRangeSeries for CI bands, LineSeries with dashed style,
-          plotLines for forecast marker - good usage but not exceptional
+        comment: Proper HighchartsOptions, AreaRangeSeries, LineSeries, theme tokens,
+          CDN fallback, Selenium export
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: AreaRangeSeries for bands, plotLines for forecast start, theme-adaptive
+          styling well-executed
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling

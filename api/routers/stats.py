@@ -7,7 +7,7 @@ from api.cache import cache_key, get_or_set_cache
 from api.dependencies import optional_db
 from api.schemas import StatsResponse
 from core.config import settings
-from core.constants import LIBRARIES_METADATA
+from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
 from core.database import ImplRepository, LibraryRepository, SpecRepository
 from core.database.connection import get_db_context
 
@@ -27,8 +27,13 @@ async def _refresh_stats() -> StatsResponse:
 
     specs_with_impls = [s for s in specs if s.impls]
     total_impls = sum(len(s.impls) for s in specs)
+    languages = len({lib.language_id for lib in libraries}) or len(LANGUAGES_METADATA)
     return StatsResponse(
-        specs=len(specs_with_impls), plots=total_impls, libraries=len(libraries), lines_of_code=total_loc
+        specs=len(specs_with_impls),
+        plots=total_impls,
+        libraries=len(libraries),
+        languages=languages,
+        lines_of_code=total_loc,
     )
 
 
@@ -37,10 +42,10 @@ async def get_stats(db: AsyncSession | None = Depends(optional_db)):
     """
     Get platform statistics.
 
-    Returns counts of specs, implementations (plots), and libraries.
+    Returns counts of specs, implementations (plots), libraries, and languages.
     """
     if db is None:
-        return StatsResponse(specs=0, plots=0, libraries=len(LIBRARIES_METADATA))
+        return StatsResponse(specs=0, plots=0, libraries=len(LIBRARIES_METADATA), languages=len(LANGUAGES_METADATA))
 
     async def _fetch() -> StatsResponse:
         spec_repo = SpecRepository(db)
@@ -52,8 +57,13 @@ async def get_stats(db: AsyncSession | None = Depends(optional_db)):
 
         specs_with_impls = [s for s in specs if s.impls]
         total_impls = sum(len(s.impls) for s in specs)
+        languages = len({lib.language_id for lib in libraries}) or len(LANGUAGES_METADATA)
         return StatsResponse(
-            specs=len(specs_with_impls), plots=total_impls, libraries=len(libraries), lines_of_code=total_loc
+            specs=len(specs_with_impls),
+            plots=total_impls,
+            libraries=len(libraries),
+            languages=languages,
+            lines_of_code=total_loc,
         )
 
     return await get_or_set_cache(
