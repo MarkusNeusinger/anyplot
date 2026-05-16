@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:42:59Z'
-updated: '2026-05-16T12:46:34Z'
+updated: '2026-05-16T12:53:39Z'
 generated_by: claude-haiku
 workflow_run: 25962155797
 issue: 3230
@@ -12,48 +12,59 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-dark.html
-quality_score: 66
+quality_score: 79
 review:
   strengths:
   - 'Perfect theme implementation: Both light and dark renders display correctly with
-    proper text colors and backgrounds'
-  - 'Excellent visual legibility: All text, axes, labels are clearly readable at full
-    resolution in both themes'
-  - 'Well-structured data: Multi-modal Gaussian surface with clear peaks demonstrates
-    realistic complex elevation landscape'
-  - 'Idiomatic Altair usage: Proper method chaining, mark selection, and theme-adaptive
-    configuration patterns'
-  - 'Clean code quality: Simple structure, proper reproducibility with seed, minimal
-    imports, no unnecessary complexity'
-  - 'Correct color palette: Viridis colormap is perceptually uniform and colorblind-safe
-    for continuous elevation data'
-  - 'Interactive features enabled: Zoom and pan available for exploring the 2D surface
-    visualization'
-  weaknesses:
-  - 'Critical: Specification requires 3D contour plot with surface geometry preservation.
-    Implementation delivers 2D heatmap. Altair is fundamentally a 2D library and cannot
-    render true 3D visualization.'
-  - 'Missing contour lines: Spec requires ''contour lines at regular intervals to
-    show level curves on the surface'' - only color bands present, no explicit contour
+    proper text colors (#INK and #INK_SOFT), backgrounds (#FAF8F1/#1A1A17), and excellent
+    readability in both themes'
+  - 'Improved contour visualization: Now includes overlaid contour points at regular
+    intervals showing level curves, addressing attempt-1 feedback about missing contour
     lines'
-  - 'No 3D geometry or rotation: Spec mentions ''Enable rotation for interactive libraries''
-    and ''preserves the surface geometry'' - not achievable in Altair'
-  - 'Generic design: Uses default viridis colormap with no custom styling or visual
-    refinement beyond required theme tokens'
+  - 'Excellent visual legibility: All title, axis labels, tick labels, and legend
+    text clearly readable at full resolution in both themes with proper font sizing
+    (title 28px, axis labels 22px, tick labels 18px)'
+  - 'Appropriate colormap: BrBG (brownbluegreen) diverging colormap correctly used
+    for continuous elevation data, perceptually uniform and colorblind-safe'
+  - 'Well-structured code: Simple, direct implementation with proper data generation
+    (multi-modal Gaussian), reproducible with seed, idiomatic Altair patterns with
+    layer composition'
+  - 'Interactive features: Enables zoom and pan for exploring the 2D surface, proper
+    tooltip support'
+  - 'Clean layout: No text overlaps, good proportions at 1600x900 (4800x2700 at 3x
+    scale), proper margins and spacing'
+  weaknesses:
+  - 'CRITICAL: Specification requires true 3D contour plot with surface geometry and
+    rotation. Altair is fundamentally a 2D visualization library and cannot render
+    3D surfaces, preserve 3D geometry, or enable rotation—this is an architectural
+    limitation, not an implementation flaw'
+  - 'Missing core 3D features: Spec explicitly requires contour lines on a 3D surface,
+    base plane projections, and rotation capability. Implementation delivers 2D heatmap
+    with overlaid contour points—a 2D approximation only'
+  - 'Contour representation ineffective for 3D spec: While contour points help show
+    level curves, they cannot substitute for true surface geometry visualization.
+    The grayscale contour coloring also creates visual separation from the main elevation
+    colorbar, reducing clarity'
+  - 'No design enhancement: Implementation uses default BrBG colormap with minimal
+    customization. No visual hierarchy, emphasis techniques, or aesthetic sophistication
+    beyond required theme tokens'
+  - 'Redundant legend information: Both the main ''Elevation'' colorbar and the overlaid
+    ''Contour Levels'' grayscale create visual clutter without adding unique insight—the
+    elevation colormap already encodes contour information'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "contour-3d · altair · anyplot.ai" in dark text at top, clearly visible; X and Y axis labels descriptive ("X Coordinate", "Y Coordinate") in dark text with proper sizing (22px); tick labels visible at correct size (18px); colorbar titled "Elevation" with light frame; all text readable and properly colored
-      Data: Heatmap using viridis colormap showing elevation gradients - multi-modal Gaussian surface with peaks represented through blue-green-yellow color progression; contour levels visible through color bands; no missing regions
-      Legibility verdict: PASS - All elements readable, proper contrast, no text visibility issues in light theme
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "contour-3d · altair · anyplot.ai" is dark (#INK) and clearly visible at top in 28px font. X/Y axis labels "X Coordinate" / "Y Coordinate" in dark 22px font. Tick labels (-6 to 6) in dark 18px font. Colorbar labeled "Elevation Contour" with light frame (#FFFDF6). Legend text in dark secondary color.
+      Data: 2D heatmap using BrBG (brown-blue-green) diverging colormap showing elevation values. Overlaid contour points in grayscale showing specific level curves. Color gradient smooth from brown (low) through cyan/white (mid) to green (high).
+      Legibility verdict: PASS - All text is dark on light background with excellent contrast. No overlapping elements. Grid lines are subtle but visible. Heatmap cells and contour points clearly distinguishable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text, clearly readable; axis labels and tick labels in light color (INK_SOFT #B8B7B0) with good contrast against dark background; colorbar frame in appropriate dark theme color (#242420); all text legible
-      Data: Identical viridis colormap as light render - confirms theme-adaptive chrome only (data colors unchanged); same elevation gradient visualization; all contour structure preserved
-      Legibility verdict: PASS - No dark-on-dark failures, all text has proper light coloring, no readability issues in dark theme
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title is light (#F0EFE8) and clearly visible in 28px font. X/Y axis labels in light 22px font. Tick labels in light 18px font. Colorbar frame adapted to dark (#242420). All legend text in light secondary color (#B8B7B0).
+      Data: Identical colormap to light render - BrBG gradient from brown (low) through cyan/white (mid) to green (high). Contour point grayscale overlay identical to light render. Colors are pixel-perfect identical, confirming only chrome adapted while data colors remained constant.
+      Legibility verdict: PASS - All text is light on dark background with excellent contrast. No dark-on-dark failures. Contour points (light grayscale) stand out clearly against dark background. Grid lines visible and subtle. No legibility issues.
 
-    Both renders pass theme readiness check. Data visualization is consistent between themes (only chrome adapts). Interactive features (zoom/pan) enabled on both.
+    Both renders successfully demonstrate theme-adaptive implementation with high legibility in each context.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -64,48 +75,55 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for both light and dark themes
+        comment: All text properly sized and colored for both themes. Title 28px,
+          axis labels 22px, tick labels 18px. Excellent contrast in both light and
+          dark renders.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no overlapping elements or text collisions
+        comment: Clean layout with no overlapping text or elements. Proper spacing
+          between heatmap, colorbar, and legend.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells, axes, and legend clearly visible and distinguishable
+        comment: All heatmap cells, contour points, axes, and legend clearly visible
+          and distinguishable in both renders.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: BrBG colormap is perceptually uniform and colorblind-safe diverging
+          palette. Appropriate for continuous elevation data.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions at 1600x900 (4800x2700 at 3x scale), nothing cut
-          off
+        comment: 1600×900 dimensions (4800×2700 at 3x scale) provide good proportions
+          for landscape format. Nothing cut off, generous margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (X/Y Coordinate, Elevation) with proper title
-          format
+        comment: 'Title follows proper format: ''contour-3d · altair · anyplot.ai''.
+          Axis labels descriptive: ''X Coordinate'' and ''Y Coordinate'' with correct
+          range [-6, 6].'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis scheme correct for continuous data, backgrounds are #FAF8F1/#1A1A17,
-          both themes correct'
+        comment: 'BrBG diverging colormap correctly used for continuous data (not
+          Okabe-Ito categorical). Plot backgrounds correctly #FAF8F1 (light) and #1A1A17
+          (dark). Both renders theme-correct.'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -113,20 +131,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic viridis colormap (default), no custom palette or design refinement
+        comment: Uses default BrBG colormap with no custom palette or design refinement.
+          Functional but lacking visual sophistication.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond required styling, functional but not
-          refined
+        comment: Minimal customization beyond required theme tokens. No spine removal
+          (all four visible), no grid styling, no emphasis techniques.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Clear visualization but no visual hierarchy or emphasis technique
+        comment: Clearly shows elevation structure and contour levels, but no visual
+          hierarchy or emphasis. Contour point grayscale overlay creates visual separation
+          rather than unified hierarchy.
     spec_compliance:
       score: 10
       max: 15
@@ -136,55 +157,59 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Specification requires 3D contour plot with surface geometry. Implementation
-          is 2D heatmap. Altair is a 2D library and cannot render true 3D visualization
-          as specified.
+        comment: Specification requires '3D contour plot displays contour lines or
+          filled contour bands on a three-dimensional surface'. Implementation delivers
+          2D heatmap with overlaid contour points. Altair is fundamentally 2D and
+          cannot render true 3D geometry.
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: 'Missing: contour lines, 3D geometry visualization, rotation capability.
-          Has: colorbar, elevation data, interactive zoom/pan.'
+        comment: 'Missing: 3D surface geometry, rotation capability, base plane projections.
+          Has: contour point overlay (improved from attempt 1), colorbar, elevation
+          data. Contour points alone cannot satisfy ''3D surface'' requirement.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates properly mapped to axes, Z mapped to color, axes
-          show full data range
+        comment: X and Y properly mapped to axes, Z mapped to elevation colormap,
+          axes show full data range [-6, 6].
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Proper title format 'contour-3d · altair · anyplot.ai', colorbar
-          legend correctly labeled
+        comment: Title correctly formatted as 'contour-3d · altair · anyplot.ai'.
+          Colorbar and contour legends present with proper labels.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Shows elevation variation and data structure, but missing 3D aspect
-          central to spec. 50x50 grid is appropriate size.
+        passed: true
+        comment: Shows elevation variation clearly with multi-modal Gaussian surface.
+          Contour overlay demonstrates level curves. 50×50 grid provides good detail.
+          -1 for not showing true 3D aspects as specified.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Multi-modal Gaussian surface with peaks is realistic, plausible,
-          and neutral
+        comment: Multi-modal Gaussian with peaks is realistic elevation landscape.
+          Neutral context without distracting domain specifics. Values reasonable
+          for mathematical function visualization.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges (-6 to 6), grid density appropriate, color
-          scale well-distributed
+        comment: Grid size 50×50 appropriate for contour detail. Value ranges sensible
+          (0-160 elevation). Coordinate ranges [-6, 6] standard for function plotting.
     code_quality:
       score: 10
       max: 10
@@ -194,35 +219,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct code structure with no unnecessary functions or classes
+        comment: Simple, direct code. No unnecessary functions or classes. Straightforward
+          data generation and visualization encoding.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42)) ensures reproducible data generation
+        comment: Seed set (np.random.seed(42)) ensures reproducible data generation.
+          Output deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (numpy, pandas, altair); includes clever sys.path
-          manipulation to avoid name collision
+        comment: 'Only imports: numpy, pandas, altair, os, sys. All used. Clever sys.path
+          manipulation avoids name collision with script filename.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity level, no fake functionality, clean data preparation
+        comment: Appropriate complexity for task. No fake functionality or UI simulation.
+          No ESLint/formatting issues.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves correctly as plot-{THEME}.png and plot-{THEME}.html with 3x
-          scale factor
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with proper 3x scale
+          factor. Current Altair API used correctly.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -230,21 +258,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Altair idiomatically with method chaining, proper mark selection
-          (mark_rect for heatmap), theme-adaptive configuration patterns
+        comment: 'Uses Altair idiomatically: proper method chaining, mark selection
+          (mark_rect for heatmap, mark_point for contours), encoding channels, layer
+          composition. Theme-adaptive configuration patterns correct.'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Uses standard heatmap visualization. Interactive() for zoom/pan is
-          basic, no distinctive Altair features exploited
+        comment: Uses standard heatmap with interactive() zoom/pan. Layer composition
+          adds two marks (overlay technique) but still basic. No advanced Altair features
+          like transforms, selections, or multi-view composition.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - colorbar
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
