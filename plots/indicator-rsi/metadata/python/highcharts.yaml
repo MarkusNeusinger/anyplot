@@ -1,161 +1,179 @@
 library: highcharts
+language: python
 specification_id: indicator-rsi
 created: '2026-01-07T21:11:49Z'
-updated: '2026-01-07T21:21:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20796525489
+updated: '2026-05-16T16:49:14Z'
+generated_by: claude-haiku
+workflow_run: 25967335041
 issue: 3229
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/highcharts/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - 'Excellent implementation of all RSI-specific features: threshold lines at 30/70,
-    centerline at 50, and zone shading for overbought/oversold regions'
-  - Strong visual clarity with proper color coding (orange for overbought, blue for
-    oversold) that matches typical financial charting conventions
-  - Correct title format and comprehensive subtitle with methodology details
-  - Well-structured synthetic data that demonstrates realistic RSI momentum behavior
-    including overbought entries, deep oversold conditions, and recovery patterns
-  - Clean code structure following KISS principles with reproducible data generation
+  - Perfect visual quality with excellent text legibility in both light and dark themes
+  - Complete specification compliance with all required features (overbought/oversold
+    zones, threshold lines, centerline)
+  - Clean, reproducible code with proper structure and seed management
+  - Excellent palette compliance with perfect theme-adaptive design
+  - Professional typography hierarchy and layout
+  - Uses Highcharts-distinctive visualization techniques (plotLines, plotBands)
+  - Realistic and well-explained synthetic data showing RSI technical analysis
   weaknesses:
-  - Zone labels (Overbought Zone, Oversold Zone) are positioned at the far right edge
-    of the chart which creates slight visual imbalance
-  image_description: 'The chart displays an RSI Technical Indicator with a dark blue
-    line plotting RSI values from January through late April 2024. The Y-axis spans
-    0-100 with tick marks at intervals of 10. The X-axis shows dates with 2-week intervals
-    (Jan 8, Jan 22, Feb 5, etc.). Three horizontal reference lines are clearly visible:
-    an orange dashed line at 70 labeled "Overbought (70)", a blue dashed line at 30
-    labeled "Oversold (30)", and a gray dotted line at 50 labeled "Centerline (50)".
-    The overbought zone (70-100) is shaded in light orange with "Overbought Zone"
-    label, and the oversold zone (0-30) is shaded in light blue with "Oversold Zone"
-    label. The RSI line shows clear momentum patterns: it enters overbought territory
-    (above 70) around early February reaching ~93, then drops sharply through the
-    oversold zone to near 3 around early March, before recovering. A second overbought
-    entry occurs around early April (~85). The title "indicator-rsi · highcharts ·
-    pyplots.ai" is prominently displayed with subtitle showing "Relative Strength
-    Index (14-period) · Synthetic Stock Data". Legend at bottom shows "RSI (14)".'
+  - Design Excellence could be improved with more refined color palette (threshold
+    colors are functional but custom)
+  - Could leverage additional Highcharts features (themes, advanced animations)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with excellent contrast
+      Chrome: Title in bold dark text (56px), axis labels (36px), tick labels (28px) - all clearly visible
+      Data: RSI line in brand green (#009E73), overbought zone (70-100) in light orange, oversold zone (0-30) in light blue
+      Zones: Orange dashed line at 70 with label, blue dashed line at 30 with label, gray dotted centerline at 50
+      Grid: Subtle horizontal grid lines visible but not dominant
+      Legend: "RSI (14)" positioned at bottom
+      Legibility verdict: PASS - all elements are clearly readable with strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with warm undertone
+      Chrome: Title in light text (same weight/size), all axis and tick labels in light color - all clearly readable
+      Data: RSI line in identical green (#009E73) as light render - perfect color consistency
+      Zones: Identical zone colors and positions to light render - data colors unchanged
+      Grid: Subtle horizontal grid lines visible
+      Legend: "RSI (14)" in light text at bottom
+      No dark-on-dark failures: All text properly themed with light colors
+      Legibility verdict: PASS - perfect theme adaptation with no readability issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is clearly readable: title, subtitle, axis labels, tick
-          labels, and zone labels are all properly sized for the 4800x2700 canvas'
+        comment: 'All font sizes explicitly set: title 56px, labels 36px, ticks 28px.
+          Perfectly readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; zone labels positioned appropriately
+        comment: No overlapping text elements. All positioned clearly.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: RSI line has good thickness (5px), clearly visible against the background
-          and zone shading
+        comment: RSI line at 5px linewidth perfectly visible. Zones well-defined.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue RSI line, orange overbought zone, blue oversold zone - colorblind-safe
-          palette, no red-green conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space with proper spacing; minor deduction for
-          zone labels positioned at far right edge
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: RSI Value and Date are descriptive axis labels
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green for RSI. Distinct threshold colors. Good contrast,
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions. Balanced margins. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Zone labels positioned at far right edge creates slight visual imbalance
+        passed: true
+        comment: 'Title format correct: ''indicator-rsi · highcharts · anyplot.ai''.
+          Y-axis labeled ''RSI Value''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
+          Theme-correct chrome. Data colors identical in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-thought layout with professional typography and theme tokens.
+          Custom threshold colors functional but not from unified palette.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, proper spacing, evident theme awareness and customization.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone shading and threshold labels create visual hierarchy. Story
+          is present and clear.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct RSI line chart type
+        comment: Correct line chart with proper RSI visualization.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, RSI values (0-100) on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: fixed 0-100 Y-axis, 70/30 threshold lines,
-          50 centerline, overbought/oversold zone shading'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: thresholds at 70/30, centerline at 50, zones
+          shaded.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly fixed at 0-100, X-axis shows full date range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates on X-axis, RSI 0-100 on Y-axis, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows RSI (14)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title uses correct format: indicator-rsi · highcharts · pyplots.ai'
+        comment: Title format correct, legend shows 'RSI (14)'.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Data shows all RSI characteristics: overbought conditions (>70),
-          oversold conditions (<30), trending periods, recovery patterns'
+        comment: Shows overbought, oversold, and normal oscillation. 120 periods sufficient.
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Synthetic stock data is plausible for RSI demonstration, though labeled
-          as synthetic rather than real scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: RSI values stay within 0-100 range, showing realistic momentum oscillator
-          behavior
+        comment: Realistic stock trading scenario. Neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct RSI calculation. Proper values and scale.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,43 +181,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure, no unnecessary functions/classes
+        comment: 'Linear flow: imports → data → RSI → chart → export.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation
+        comment: Seed set (np.random.seed(42)). Deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, highcharts_core, selenium, etc.)
+        comment: Only used imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code. No fake functionality.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly but no explicit verification
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts plotBands for zone shading, plotLines for threshold
-          markers, datetime axis formatting; could leverage more interactive features
-          but static PNG limits this
+        comment: Proper Chart/HighchartsOptions/LineSeries patterns. Good structure.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses plotLines, plotBands (distinctive to Highcharts), datetime support.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -208,9 +230,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - time-series
   dataprep:
   - rolling-window
-  styling:
-  - grid-styling
-  - alpha-blending
+  - time-series
+  styling: []
