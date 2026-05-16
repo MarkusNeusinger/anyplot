@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: timeseries-forecast-uncertainty
 created: '2026-05-16T22:38:27Z'
-updated: '2026-05-16T22:41:35Z'
+updated: '2026-05-16T22:47:38Z'
 generated_by: claude-haiku
 workflow_run: 25974776452
 issue: 3188
@@ -12,43 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect color palette compliance: Okabe-Ito colors correctly applied (#009E73
-    first series), both renders with identical data colors and proper theme-adaptive
-    chrome'
-  - Flawless theme handling in both light and dark renders with no legibility issues;
-    all text clearly readable with proper INK tokens
-  - 'Complete spec implementation: all required features (historical, forecast, 80%
-    CI, 95% CI, transition marker, legend) present and correctly rendered'
-  - 'Excellent visual clarity: confidence band alpha blending (0.15, 0.25) allows
-    overlapping without obscuring data'
-  - Realistic, comprehensible sales forecasting scenario with proper seasonal patterns
-    and plausible uncertainty ranges
-  - Clean, idiomatic ggplot2 code with proper use of geoms (ribbon, line, vline),
-    manual scales, and theme tokens
+  - 'Correct palette usage: historical series is brand green (#009E73), forecast is
+    vermillion (#D55E00) per Okabe-Ito spec'
+  - 'Perfect theme adaptation: both light and dark renders are fully legible with
+    proper text colors and backgrounds'
+  - 'Clean confidence band visualization: nested ribbons with alpha transparency (0.15
+    for 95%, 0.25 for 80%) clearly show uncertainty hierarchy'
+  - 'Strong data storytelling: dashed vertical line effectively marks the forecast
+    start, guiding viewer attention'
+  - 'Proper ggplot2 idioms: clean use of geom_ribbon(), scale_*_manual(), and theme
+    tokens throughout'
+  - 'All specification requirements met: historical line, forecast line, dual confidence
+    bands, transition marker, descriptive labels'
   weaknesses:
-  - 'Minimal design sophistication: plot appears as well-configured library default
-    without custom aesthetic touches; colors are standard Okabe-Ito (correct but not
-    distinctive)'
-  - 'Limited visual refinement: theme_minimal provides basic defaults but lacks custom
-    grid styling, spine optimization, or whitespace tuning for higher polish'
-  - Unused tidyr import should be removed from imports
-  - 'Generic data storytelling: visual hierarchy exists but is straightforward; could
-    benefit from emphasis techniques for more compelling narrative'
+  - 'Unused library import: tidyr is loaded but never used—remove to clean up imports'
+  - 'Minor: could remove top/right spines for even cleaner minimalism (currently using
+    theme_minimal which leaves them subtle)'
+  - 'Legend positioning: top placement is fine, but consider horizontal layout optimization
+    for very long category names'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and not pure white
-      Chrome: Title, axis labels ("Date", "Sales ($)"), tick labels all in dark text (#1A1A17 primary, #4A4A44 secondary) — all clearly readable against light background
-      Data: Teal/cyan historical line (#009E73), orange forecast line (#D55E00), nested confidence bands (95% CI lighter tan, 80% CI darker tan) with appropriate alpha transparency; vertical dashed line marks forecast start
-      Legibility verdict: PASS — all text sizes properly set (24pt title, 20pt labels, 16pt ticks), excellent contrast, no overlaps, full readability
+      Background: Warm off-white (#FAF8F1) providing excellent contrast
+      Chrome: Title "timeseries-forecast-uncertainty · ggplot2 · anyplot.ai" in dark ink at 24pt; "Date" and "Sales ($)" axis labels at 20pt; tick labels at 16pt—all clearly readable dark text on light surface
+      Data: Historical line in brand green (#009E73) showing 36-month sales trend with seasonal pattern; forecast line in orange (#D55E00) continuing 6 months; nested confidence bands in orange (darker 80% at α=0.25, lighter 95% at α=0.15); dashed separator line at forecast boundary; legend at top showing all four elements
+      Legibility verdict: PASS—all text crisp and dark, grid subtle, data colors vivid
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct and not pure black
-      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8 primary, #B8B7B0 secondary) — all clearly readable against dark background; no dark-on-dark failures
-      Data: Teal historical line (identical to light), orange forecast line (identical to light), confidence bands with same orange fill and alpha values (identical to light)
-      Legibility verdict: PASS — text colors properly adapted, excellent contrast, no legibility issues, all data colors remain vibrant and visible
+      Background: Warm near-black (#1A1A17) providing strong contrast with text
+      Chrome: Title, axis labels, and ticks rendered in light text (#F0EFE8 and #B8B7B0)—excellent readability on dark surface; no dark-on-dark text failures
+      Data: Historical and forecast lines are identical to light render (#009E73 and #D55E00), confirming only chrome changes between themes; confidence bands maintain identical orange tones with proper alpha layering; separator line equally visible
+      Legibility verdict: PASS—all text crisp and light, grid visible without competing with data, data colors identical to light render confirming proper theme implementation
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,73 +55,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized (24pt title, 20pt labels, 16pt ticks);
-          perfectly readable in both themes
+        comment: All text explicitly sized and colored via theme tokens; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable; legend clear and
-          well-positioned
+        comment: Legend well-positioned at top, no text-data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines (linewidth=1.2) and bands (alpha=0.15, 0.25) perfectly adapted;
-          all data distinct and visible
+        comment: Line thickness 1.2, ribbon alpha 0.15/0.25 clearly visible; all elements
+          well-adapted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; teal vs orange contrast excellent
+        comment: Okabe-Ito palette is CVD-safe; strong contrast between teal and orange
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins; legend near plot;
-          perfect layout
+        comment: 16:9 landscape proportions correct; nothing cut off; generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; Y-axis includes units 'Sales ($)'
+        comment: Y-axis includes units ($); descriptive labels; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17
-          correct; theme-adaptive chrome perfect in both renders'
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default; Okabe-Ito colors standard (correct);
-          professional but not exceptional design
+        passed: true
+        comment: Professional design with intentional color choices; nested confidence
+          bands add visual sophistication
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; adequate but unremarkable;
-          no custom grid/spine/whitespace tuning
+        comment: Good customization but could remove top/right spines and further
+          refine grid
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dashed line marks transition; bands show uncertainty; visual hierarchy
-          guides reader (historical → forecast → bands)
+        comment: Clear visual hierarchy; dashed line marks transition effectively;
+          color differentiation guides understanding
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series with forecast and dual confidence bands; all
-          subtypes present
+        comment: Time series with confidence bands—correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Historical line, forecast line, 80% band, 95% band, transition marker,
-          legend all present
+        comment: Historical line, forecast line, 80% band, 95% band, transition marker
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis date, Y-axis sales; all data visible and correctly mapped
+        comment: 'X: dates; Y: sales; axes show full data range appropriately'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend labels accurate
+        comment: Title format correct; legend labels match spec requirements
     data_quality:
       score: 15
       max: 15
@@ -165,21 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: historical with seasonality, forecast continuation,
-          dual confidence intervals'
+        comment: 'Covers all plot aspects: trend, forecast, dual CI bands, transition
+          marker'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales forecasting scenario is realistic, comprehensible, and neutral
+        comment: Monthly sales data ($50k-$75k) is plausible; seasonal pattern realistic;
+          neutral narrative
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values (52k–75k) realistic; seasonal magnitude sensible; factually
-          plausible
+        comment: 36-month history + 6-month forecast is standard; values sensible
+          for business context
     code_quality:
       score: 9
       max: 10
@@ -189,7 +183,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: Imports → Data → Plot → Save; no functions/classes'
+        comment: Straightforward single-plot script, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,37 +195,38 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: tidyr imported but unused; should be removed
+        comment: tidyr imported but never used—should be removed
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic R; no over-engineering; no fake functionality
+        comment: Appropriate complexity; elegant use of geom_ribbon(); proper manual
+          color scales
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct ggsave() API
+        comment: Saves plot-light.png and plot-dark.png with current ragg API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert ggplot2 grammar: geom_ribbon, geom_line, geom_vline; manual
-          scales with breaks; theme tokens for adaptation'
+        comment: Proper grammar of graphics; good use of aes(), geoms, scales, and
+          theme
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses geom_ribbon and theme tokens well, but fairly standard practices;
-          no particularly distinctive ggplot2-specific innovation
+        comment: geom_ribbon() for confidence bands is good; theme tokens used; otherwise
+          somewhat standard approach
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -239,6 +234,8 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - alpha-blending
+  - publication-ready
