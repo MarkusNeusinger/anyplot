@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 68/100 | Created: 2026-05-16
@@ -25,6 +25,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 UP_COLOR = "#009E73"
 DOWN_COLOR = "#D55E00"
+VOLUME_COLOR = "#56B4E9"
 
 OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
@@ -40,16 +41,8 @@ high_prices = np.maximum(open_prices, close_prices) + np.abs(np.random.normal(0,
 low_prices = np.minimum(open_prices, close_prices) - np.abs(np.random.normal(0, 1.2, n_periods))
 volumes = np.random.uniform(1e6, 4e6, n_periods)
 
-volume_scaled = (volumes - volumes.min()) / (volumes.max() - volumes.min()) * 15 + low_prices.min()
-
 up_mask = close_prices >= open_prices
 down_mask = ~up_mask
-
-up_points = [(float(date_nums[i]), float(high_prices[i])) for i in range(n_periods) if up_mask[i]]
-down_points = [(float(date_nums[i]), float(high_prices[i])) for i in range(n_periods) if down_mask[i]]
-
-high_points = [(float(date_nums[i]), float(high_prices[i])) for i in range(n_periods)]
-low_points = [(float(date_nums[i]), float(low_prices[i])) for i in range(n_periods)]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -70,31 +63,89 @@ chart = pygal.XY(
     style=custom_style,
     width=4800,
     height=2700,
-    title="Tesla Stock · candlestick-volume · pygal · anyplot.ai",
-    x_title="Trading Day",
-    y_title="Price (USD) / Volume Index",
+    title="Tesla Stock OHLC Candlestick with Volume · candlestick-volume · pygal · anyplot.ai",
+    x_title="Trading Date",
+    y_title="Price (USD)",
     show_legend=True,
     show_y_guides=True,
     show_x_guides=False,
+    range=(low_prices.min() - 5, high_prices.max() + 10),
 )
 
-if up_points:
-    chart.add("↑ Close (Up days)", up_points, dots_size=10, color=UP_COLOR, show_only_major_dots=False)
-if down_points:
-    chart.add("↓ Close (Down days)", down_points, dots_size=10, color=DOWN_COLOR, show_only_major_dots=False)
+up_wicks = []
+down_wicks = []
+up_bodies = []
+down_bodies = []
 
-chart.add("High", high_points, stroke_width=2, color=INK_MUTED, opacity=0.4, show_only_major_dots=False)
-chart.add("Low", low_points, stroke_width=2, color=INK_MUTED, opacity=0.4, show_only_major_dots=False)
+for i in range(n_periods):
+    x = float(date_nums[i])
+    h = float(high_prices[i])
+    low = float(low_prices[i])
+    o = float(open_prices[i])
+    c = float(close_prices[i])
+
+    if up_mask[i]:
+        up_wicks.append((x, low))
+        up_wicks.append((x, h))
+        up_wicks.append(None)
+        body_min = min(o, c)
+        body_max = max(o, c)
+        up_bodies.append((x, body_min))
+        up_bodies.append((x, body_max))
+        up_bodies.append(None)
+    else:
+        down_wicks.append((x, low))
+        down_wicks.append((x, h))
+        down_wicks.append(None)
+        body_min = min(o, c)
+        body_max = max(o, c)
+        down_bodies.append((x, body_min))
+        down_bodies.append((x, body_max))
+        down_bodies.append(None)
+
+if up_wicks:
+    chart.add(
+        "Up Day Wicks", up_wicks, stroke_width=5, color=UP_COLOR, dots_size=0, show_only_major_dots=False, fill=False
+    )
+    chart.add(
+        "Up Day Bodies", up_bodies, stroke_width=16, color=UP_COLOR, dots_size=0, show_only_major_dots=False, fill=False
+    )
+
+if down_wicks:
+    chart.add(
+        "Down Day Wicks",
+        down_wicks,
+        stroke_width=5,
+        color=DOWN_COLOR,
+        dots_size=0,
+        show_only_major_dots=False,
+        fill=False,
+    )
+    chart.add(
+        "Down Day Bodies",
+        down_bodies,
+        stroke_width=16,
+        color=DOWN_COLOR,
+        dots_size=0,
+        show_only_major_dots=False,
+        fill=False,
+    )
+
+volume_min = low_prices.min() - 4
+volume_normalized = (volumes - volumes.min()) / (volumes.max() - volumes.min()) * 3 + volume_min
+volume_series = [(float(date_nums[i]), float(volume_normalized[i])) for i in range(n_periods)]
 chart.add(
     "Volume Index",
-    [(float(date_nums[i]), float(volume_scaled[i])) for i in range(n_periods)],
+    volume_series,
     stroke_width=2,
-    color="#56B4E9",
-    opacity=0.5,
+    color=VOLUME_COLOR,
+    dots_size=6,
     show_only_major_dots=False,
+    fill=False,
+    opacity=0.7,
 )
 
-x_labels = [str(i + 1) if i % 10 == 0 else "" for i in range(n_periods)]
+x_labels = [dates[i].strftime("%m-%d") if i % 10 == 0 else "" for i in range(n_periods)]
 chart.x_labels = x_labels
 
 chart.render_to_png(f"plot-{THEME}.png")
