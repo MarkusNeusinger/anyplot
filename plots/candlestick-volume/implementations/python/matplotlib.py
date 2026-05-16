@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-16
 """
+
+import os
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -10,6 +12,17 @@ import numpy as np
 import pandas as pd
 from matplotlib.patches import Patch
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+UP_COLOR = "#009E73"  # Brand green (up days)
+DOWN_COLOR = "#D55E00"  # Vermillion (down days)
 
 # Data - Generate realistic 60 trading days of OHLC data with volume
 np.random.seed(42)
@@ -47,19 +60,21 @@ volumes = base_volume * volume_multiplier * np.random.uniform(0.7, 1.3, n_days)
 volumes = volumes.astype(int)
 
 # Colors for up/down days
-up_color = "#306998"  # Python Blue for up
-down_color = "#FFD43B"  # Python Yellow for down
 is_up = closes >= opens
 
 # Create figure with two subplots sharing x-axis (75% price, 25% volume)
-fig, (ax_price, ax_volume) = plt.subplots(2, 1, figsize=(16, 9), gridspec_kw={"height_ratios": [3, 1]}, sharex=True)
+fig, (ax_price, ax_volume) = plt.subplots(
+    2, 1, figsize=(16, 9), gridspec_kw={"height_ratios": [3, 1]}, sharex=True, facecolor=PAGE_BG
+)
+ax_price.set_facecolor(PAGE_BG)
+ax_volume.set_facecolor(PAGE_BG)
 
 # Candlestick chart - Price pane
 candle_width = 0.6
 for i in range(n_days):
-    color = up_color if is_up[i] else down_color
+    color = UP_COLOR if is_up[i] else DOWN_COLOR
     # Draw wick (high-low line)
-    ax_price.plot([dates[i], dates[i]], [lows[i], highs[i]], color=color, linewidth=1.5, solid_capstyle="round")
+    ax_price.plot([dates[i], dates[i]], [lows[i], highs[i]], color=color, linewidth=2.5, solid_capstyle="round")
     # Draw body (open-close rectangle)
     body_bottom = min(opens[i], closes[i])
     body_height = abs(closes[i] - opens[i])
@@ -69,27 +84,32 @@ for i in range(n_days):
 
 # Volume bars with matching colors
 for i in range(n_days):
-    color = up_color if is_up[i] else down_color
+    color = UP_COLOR if is_up[i] else DOWN_COLOR
     ax_volume.bar(dates[i], volumes[i], width=candle_width, color=color, alpha=0.8)
 
 # Price pane styling
-ax_price.set_ylabel("Price ($)", fontsize=20)
-ax_price.tick_params(axis="both", labelsize=16)
-ax_price.grid(True, alpha=0.3, linestyle="--")
-ax_price.set_title("candlestick-volume · matplotlib · pyplots.ai", fontsize=24, pad=15)
+ax_price.set_ylabel("Price ($)", fontsize=20, color=INK)
+ax_price.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax_price.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax_price.set_title("candlestick-volume · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=15)
 
 # Add legend
 legend_elements = [
-    Patch(facecolor=up_color, label="Up (Close ≥ Open)"),
-    Patch(facecolor=down_color, label="Down (Close < Open)"),
+    Patch(facecolor=UP_COLOR, label="Up (Close ≥ Open)"),
+    Patch(facecolor=DOWN_COLOR, label="Down (Close < Open)"),
 ]
-ax_price.legend(handles=legend_elements, loc="upper left", fontsize=14)
+leg = ax_price.legend(handles=legend_elements, loc="upper left", fontsize=16)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(0.8)
+for text in leg.get_texts():
+    text.set_color(INK_SOFT)
 
 # Volume pane styling
-ax_volume.set_xlabel("Date", fontsize=20)
-ax_volume.set_ylabel("Volume", fontsize=20)
-ax_volume.tick_params(axis="both", labelsize=16)
-ax_volume.grid(True, alpha=0.3, linestyle="--")
+ax_volume.set_xlabel("Date", fontsize=20, color=INK)
+ax_volume.set_ylabel("Volume (shares)", fontsize=20, color=INK)
+ax_volume.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax_volume.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 # Format y-axis for volume (in millions)
 ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x / 1e6:.1f}M"))
@@ -97,15 +117,24 @@ ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x / 1e6:.1
 # Format x-axis dates
 ax_volume.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO, interval=2))
 ax_volume.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-plt.setp(ax_volume.xaxis.get_majorticklabels(), rotation=45, ha="right")
+plt.setp(ax_volume.xaxis.get_majorticklabels(), rotation=45, ha="right", color=INK_SOFT)
 
 # Ensure y-axis starts at 0 for volume
 ax_volume.set_ylim(bottom=0)
 
-# Add crosshair cursor via spines styling (visual alignment between panes)
+# Crosshair cursor: vertical line at mouse position spanning both panes
+# Static crosshair at the midpoint for visual alignment
+midpoint_date = dates[n_days // 2]
+for ax in [ax_price, ax_volume]:
+    ax.axvline(x=midpoint_date, color=INK_SOFT, linestyle="--", linewidth=1, alpha=0.4)
+
+# Spine styling for both panes
 for ax in [ax_price, ax_volume]:
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+    for s in ("left", "bottom"):
+        ax.spines[s].set_color(INK_SOFT)
+        ax.spines[s].set_linewidth(0.8)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
