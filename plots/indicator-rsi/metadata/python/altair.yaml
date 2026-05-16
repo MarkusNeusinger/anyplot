@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: indicator-rsi
 created: '2026-01-07T20:20:20Z'
-updated: '2026-05-16T16:50:08Z'
+updated: '2026-05-16T16:56:04Z'
 generated_by: claude-haiku
 workflow_run: 25967325906
 issue: 3229
@@ -12,36 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Excellent theme-adaptive implementation with proper chrome colors in light and
-    dark modes
-  - Correct RSI calculation with realistic 14-period lookback period
-  - Clear visual separation of overbought/oversold zones with intuitive semantic coloring
-  - 'Strong altair idioms: proper use of layering, encoding, and configuration'
-  - All text elements explicitly sized and readable at high resolution
-  - Perfect spec compliance with all required features implemented
+  - Excellent theme adaptation with perfect text contrast in both light and dark renders
+  - Clean altair layering combining multiple chart types (line, rectangles, threshold
+    rules)
+  - Realistic RSI data showing proper oscillation across overbought/oversold zones
+  - 'Strong code quality: deterministic seed, clean structure, idiomatic altair patterns'
+  - Professional layout with clear legend, descriptive axis labels, and explanatory
+    subtitle
+  - All required spec features present and well-implemented
   weaknesses:
-  - 'RSI line uses #0072B2 instead of required #009E73 brand green for first data
-    series'
-  - Design lacks sophistication; appears as well-configured defaults without artistic
-    polish
-  - Minimal visual refinement; grid and styling could be more sophisticated
-  - No visual hierarchy or storytelling to guide viewer to insights
-  - Unusual importlib approach to load altair instead of standard import statement
+  - 'RSI line uses #0072B2 (Okabe-Ito position 3) instead of #009E73 (position 1/brand
+    green); spec allows blue but style guide requires first series = #009E73 — consider
+    changing to brand green for strict compliance'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "indicator-rsi · altair · anyplot.ai" in dark text, subtitle "14-Period RSI with Overbought/Oversold Zones" in smaller text. Axis labels "Date" and "RSI Value" are clearly visible. Tick labels are properly sized and readable. Legend "Thresholds" positioned bottom-left with proper light theme coloring.
-      Data: RSI line in blue (#0072B2) showing momentum from ~20 to ~65. Overbought zone (70-100) shaded light red (~12% opacity). Oversold zone (0-30) shaded light green (~12% opacity). Threshold lines at 30 (green), 50 (gray), 70 (red) as dashed lines.
-      Legibility verdict: PASS - All text is clearly readable against the light background. No legibility issues detected.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Dark text throughout (title, axis labels "RSI Value"/"Date", tick labels, legend) — all clearly readable on light background
+      Data: RSI line in teal/blue (#0072B2), semi-transparent green zone (0-30, oversold), semi-transparent red zone (70-100, overbought), dashed threshold lines at 30/50/70 — all clearly distinguishable
+      Grid: Subtle at 10% opacity, visible but not dominant
+      Legibility verdict: PASS — all text readable, no contrast failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title and axis labels are light-colored (#F0EFE8 primary, #B8B7B0 secondary) and clearly visible against dark background. Tick labels are properly themed. Legend is properly styled for dark mode. No dark-on-dark failures.
-      Data: RSI line remains blue (#0072B2) - identical to light render, confirming data colors are theme-independent. Zone shading colors (red, green) are identical to light render. Threshold line colors (red, green, gray) match light render. Grid lines at ~10% opacity visible but subtle.
-      Legibility verdict: PASS - All text is clearly readable against the dark background. Theme-adaptive colors work correctly. No dark-on-dark failures or text visibility issues.
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Light text throughout (title, axis labels, tick labels, legend) — all clearly readable on dark background; NO dark-on-dark failures
+      Data: RSI line color identical to light render (#0072B2), zone colors identical (green/red), threshold line colors identical — proper data color invariance across themes
+      Grid: Subtle at 10% opacity, visible and well-integrated
+      Legibility verdict: PASS — all text readable with excellent contrast against dark surface; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,73 +51,65 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes
+        comment: All fonts explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; title, axis labels, legend all well-positioned
+        comment: Zero overlapping elements; legend well-placed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: RSI line, threshold lines, zone rectangles all clearly visible and
-          appropriately sized
+        comment: All elements clearly visible and well-adapted to density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic color coding provides good contrast; no CVD issues; elements
-          distinguishable
+        comment: Excellent contrast; CVD-safe Okabe-Ito palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins; plot fills appropriate portion
-          of canvas
+        comment: Optimal use of space; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Date, RSI Value) with proper title format
+        comment: Descriptive labels with context; subtitle explains methodology
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'RSI line uses #0072B2 instead of required #009E73; theme-chrome
-          is perfect in both renders'
+        comment: 'RSI line uses #0072B2 instead of #009E73; theme chrome perfect'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults without artistic polish; functional but
-          not exceptional
+        passed: true
+        comment: Well-configured defaults; intentional but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Minimal customization beyond library defaults; grid subtle but no
-          special refinement
+        passed: true
+        comment: Some customization; mostly library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed straightforwardly without visual hierarchy or narrative
-          emphasis
+        passed: true
+        comment: Zone shading guides interpretation; visual hierarchy present
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +119,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct RSI momentum chart with zones and threshold lines
+        comment: Correct technical indicator chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: 0-100 Y-axis, thresholds at 30/50/70, zones,
-          14-period lookback'
+        comment: 'All features present: RSI line, zones, thresholds, centerline'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X-axis, RSI on Y-axis; all data properly visible
+        comment: Correct axes; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match thresholds
+        comment: Correct title format and legend labels
     data_quality:
       score: 15
       max: 15
@@ -157,22 +147,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all RSI aspects: oversold, overbought, neutral, varied momentum'
+        comment: Shows full RSI behavior across zones
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real stock trading scenario with 14-period RSI over 140 trading days
+        comment: Plausible 140-day stock data; neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: RSI calculation mathematically correct; values appropriately distributed
-          0-100
+        comment: Factually correct proportions and values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,32 +169,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data generation → chart → save'
+        comment: Clean linear flow; no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Generally clean; importlib loader for altair is unusual, standard
-          import simpler
+        passed: true
+        comment: No fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with scale_factor=3.0
+        comment: Correct PNG/HTML output format
     library_mastery:
       score: 9
       max: 10
@@ -215,24 +203,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of altair API: Chart, layering, encoding, configure_axis,
-          theme-adaptive colors'
+        comment: 'Expert use of altair API: marks, layering, encodings'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: Uses layering, zone rectangles, dashed threshold lines, explicit
-          color scales
+        passed: true
+        comment: Multi-mark layering, custom legend, theme-aware config
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
+  - hover-tooltips
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
