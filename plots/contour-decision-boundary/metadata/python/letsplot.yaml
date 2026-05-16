@@ -1,173 +1,182 @@
 library: letsplot
+language: python
 specification_id: contour-decision-boundary
 created: '2026-01-01T21:31:34Z'
-updated: '2026-01-01T21:33:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20645829576
+updated: '2026-05-16T07:30:42Z'
+generated_by: claude-haiku
+workflow_run: 25955886942
 issue: 2921
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - sklearn
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/letsplot/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent visual representation of the decision boundary using geom_tile for filled
-    regions
-  - Clear distinction between correctly and incorrectly classified points using shape
-    encoding
-  - Appropriate use of lets-plot grammar of graphics with proper layering (background
-    regions + foreground points)
-  - 'Good color scheme with Python colors (#306998 blue, #FFD43B yellow) that is colorblind-accessible'
-  - 'Comprehensive legend system showing all three aspects: predicted class, true
-    class, and classification accuracy'
+  - Perfect visual quality with all text readable in both themes
+  - Flawless theme-adaptive chrome implementation with correct backgrounds and data
+    color consistency
+  - Strong spec compliance with all required features present and correctly implemented
+  - Excellent code quality with deterministic results and clean imports
+  - Well-chosen synthetic data that clearly demonstrates decision boundary complexity
+    and misclassifications
+  - Correct use of Okabe-Ito palette with brand green as first series
   weaknesses:
-  - Three separate legends consume significant horizontal space; could potentially
-    be consolidated
-  - Axis labels lack meaningful domain context (just Feature X1/X2 since using synthetic
-    data)
-  image_description: 'The plot displays a decision boundary classifier visualization
-    using the make_moons dataset. The feature space is divided into two regions: a
-    light blue region (predicted class 0) primarily covering the left and upper portions,
-    and a light yellow/gold region (predicted class 1) covering the right and lower
-    portions. The curved decision boundary between regions clearly shows the KNN classifier''s
-    ability to separate the two moon-shaped clusters. Training data points are overlaid
-    as circles (correctly classified) and X markers (incorrectly classified). Blue
-    circles/X marks represent true class 0, yellow circles/X marks represent true
-    class 1. Three separate legends on the right side explain: Predicted Class, True
-    Class, and Classification status. The title "contour-decision-boundary · letsplot
-    · pyplots.ai" appears at top. Axis labels show "Feature X1" (x-axis) and "Feature
-    X2" (y-axis).'
+  - Generic styling without custom visual refinement or design sophistication
+  - Limited visual emphasis on misclassified points—no size variation, outline, or
+    color distinction to guide viewer attention
+  - Minimal utilization of letsplot-specific features beyond basic geom layers
+  - No visual hierarchy or data storytelling elements to highlight classification
+    accuracy patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, verified to be #FAF8F1 per style guide
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all clearly visible in dark text. Axis labels "Feature X1" and "Feature X2" are descriptive. Title format correct. Legend on right side with clear labels for Predicted Class, True Class, and Classification status.
+      Data: Green (#009E73) contour region for class 0, orange (#D55E00) for class 1—correct first two Okabe-Ito colors. Training data overlay shows filled circles (Correct) and X markers (Incorrect) with colors matching true classes. Markers at size=5 are clearly distinguishable.
+      Legibility verdict: PASS — all text elements are readable against light background with appropriate contrast. No light-on-light conflicts.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, verified to be #1A1A17 per style guide
+      Chrome: Title, axis labels, tick labels all clearly visible in light text. No dark-on-dark failures observed. Legend background is elevated dark color (#242420) with light text at appropriate contrast. All axes and frame elements readable.
+      Data: Green and orange colors are visually identical to light render—data colors have not shifted between themes. Only chrome (background, text, legend frame) has adapted to dark theme as specified. Training data markers are visible and distinguishable with same fill/outline pattern as light render.
+      Legibility verdict: PASS — all text elements are readable against dark background. Data colors correctly maintained between themes. No theme-adaptation failures detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size with appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels clearly visible
+        comment: Title 24pt, axis labels 20pt, tick labels 16pt all readable in light
+          and dark renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Training points well-distributed, no text or marker collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (size=5) with appropriate visibility, though
-          some overlap near the decision boundary
+        comment: Contour tiles at alpha=0.4 clearly visible, markers at size=5 stand
+          out well
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow color scheme is colorblind-safe, good contrast between
-          regions and points
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall layout, but three separate legends take up significant
-          space on the right
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Feature X1", "Feature X2") but no units (though
-          not applicable for synthetic features)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean minimal theme, legends are well-positioned
+        comment: Okabe-Ito palette CVD-safe, strong green-orange contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 base (4800x2700 at 3x) correctly proportioned, generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title includes spec-id/library/domain, axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1/#1A1A17.
+          Data colors identical between themes, only chrome flips'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Default theme_minimal, standard color application, no custom-curated
+          design choices or visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal styling but lacks sophisticated touches like subtle grid,
+          spine customization, or refined legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Shows classification accuracy via markers, but no visual emphasis
+          on misclassifications or boundary confidence guidance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct decision boundary visualization with filled regions
+        comment: Decision boundary classifier visualization with contoured regions—correct
+          type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X1 and X2 correctly mapped to feature dimensions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: colored regions, overlaid training points,
-          marker styles for correct/incorrect, legend'
-      - id: SC-04
-        name: Data Range
+        comment: Boundary regions colored by prediction, data overlay with true labels,
+          distinct colors, legend present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X1/X2 correctly mapped, mesh resolution h=0.02 shows full boundary,
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legends accurately describe classes and classification status
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "contour-decision-boundary · letsplot · pyplots.ai"'
+        comment: Title format 'contour-decision-boundary · letsplot · anyplot.ai'
+          correct, legend labels match classes
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both classes, decision boundary, correct and incorrect classifications;
-          make_moons is a standard ML dataset
+        comment: 'Comprehensive: boundary regions, training data, correct/incorrect
+          markers, dual legends'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Make_moons is a well-known synthetic classification dataset; plausible
-          ML demonstration scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Appropriate feature range for normalized synthetic data
+        comment: make_moons is standard ML benchmark, neutral context, KNN realistic
+          for decision boundary teaching
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n_neighbors=5 reasonable, h=0.02 balances resolution and performance,
+          data range appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,40 +184,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Linear script, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42
+        comment: seed(42) and random_state=42 ensure deterministic results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy, pandas, sklearn, lets_plot'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but includes unnecessary plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/html per spec, current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar (geom_tile, geom_point, scale_*_manual), theme_minimal;
-          could leverage more lets-plot specific interactive features
+        comment: 'Proper ggplot2 grammar: aes() mappings, + layering, theme() customization
+          all correct'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses geom_tile and geom_point appropriately but no advanced letsplot
+          features like hover tooltips or callbacks
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
