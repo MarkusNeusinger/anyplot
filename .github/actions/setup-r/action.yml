@@ -18,7 +18,9 @@ runs:
   using: "composite"
   steps:
     - name: Install R
-      uses: r-lib/actions/setup-r@e2e21ddc06d49ebc3007bf9d52aa66f8d4b1d8f3  # v2
+      # r-lib/actions ships every sub-action from a single repo and tags them together;
+      # `@v2` is the maintained moving tag. Dependabot will pin to a SHA on first run.
+      uses: r-lib/actions/setup-r@v2
       with:
         r-version: ${{ inputs.r-version }}
         use-public-rspm: true
@@ -44,9 +46,16 @@ runs:
           libfribidi-dev
 
     - name: Install R packages from renv.lock
-      uses: r-lib/actions/setup-renv@e2e21ddc06d49ebc3007bf9d52aa66f8d4b1d8f3  # v2
+      uses: r-lib/actions/setup-renv@v2
       with:
         working-directory: ${{ inputs.working-directory }}
+      env:
+        # renv refuses to restore when per-package `Hash` fields are missing.
+        # The lockfile here is hand-written and intentionally omits hashes —
+        # reproducibility comes from the pinned Posit RSPM snapshot URL in
+        # renv.lock instead. Once a successful CI run populates hashes via
+        # renv::snapshot(), this flag can be dropped.
+        RENV_CONFIG_INSTALL_HASHES: "FALSE"
 
     - name: Smoke-test ggplot2 renders a PNG
       shell: bash
