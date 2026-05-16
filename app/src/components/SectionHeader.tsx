@@ -3,20 +3,37 @@ import { Link } from 'react-router-dom';
 import { colors, typography } from '../theme';
 import { useAnalytics } from '../hooks';
 
-interface SectionHeaderProps {
+interface SectionHeaderBaseProps {
   /** Prefix symbol — e.g. `§`, `❯`, `$`. Rendered at the same size as the title. */
   prompt?: string;
   title: React.ReactNode;
-  linkText?: string;
-  /** Internal route (React Router). Mutually exclusive with `linkHref`. */
-  linkTo?: string;
-  /** External URL — opens in a new tab. Mutually exclusive with `linkTo`. */
-  linkHref?: string;
 }
+
+/**
+ * `linkTo` (internal route) and `linkHref` (external URL) are mutually
+ * exclusive. The discriminated union enforces this at the type level so
+ * callers can't accidentally pass both.
+ */
+type SectionHeaderLinkProps =
+  | { linkText?: never; linkTo?: never; linkHref?: never }
+  | { linkText: string; linkTo: string; linkHref?: never }
+  | { linkText: string; linkHref: string; linkTo?: never };
+
+type SectionHeaderProps = SectionHeaderBaseProps & SectionHeaderLinkProps;
 
 const titleFontSize = { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' };
 
-export function SectionHeader({ prompt, title, linkText, linkTo, linkHref }: SectionHeaderProps) {
+/** Derive a low-cardinality identifier (hostname) for analytics dimensions. */
+function externalDestination(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+export function SectionHeader(props: SectionHeaderProps) {
+  const { prompt, title, linkText, linkTo, linkHref } = props;
   const { trackEvent } = useAnalytics();
   const linkSx = {
     fontFamily: typography.mono,
@@ -82,7 +99,7 @@ export function SectionHeader({ prompt, title, linkText, linkTo, linkHref }: Sec
           href={linkHref}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { source: 'section_header', destination: linkHref })}
+          onClick={() => trackEvent('external_link', { source: 'section_header', destination: externalDestination(linkHref) })}
           sx={linkSx}
         >
           {linkText}

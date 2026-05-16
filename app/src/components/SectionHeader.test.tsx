@@ -31,4 +31,27 @@ describe('SectionHeader', () => {
     await user.click(screen.getByText('specs.all()'));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'section_header', target: '/specs' });
   });
+
+  it('renders an external link and tracks external_link with the hostname', async () => {
+    const user = userEvent.setup();
+    render(
+      <SectionHeader
+        prompt="❯"
+        title="visitors"
+        linkText="plausible.view()"
+        linkHref="https://plausible.io/anyplot.ai"
+      />,
+    );
+
+    const link = screen.getByText('plausible.view()');
+    expect(link).toHaveAttribute('href', 'https://plausible.io/anyplot.ai');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+
+    await user.click(link);
+    expect(trackEvent).toHaveBeenCalledWith('external_link', {
+      source: 'section_header',
+      destination: 'plausible.io',
+    });
+  });
 });
