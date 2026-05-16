@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: maze-printable
 created: '2026-01-07T20:28:48Z'
-updated: '2026-05-16T14:49:00Z'
+updated: '2026-05-16T14:55:51Z'
 generated_by: claude-haiku
 workflow_run: 25964729163
 issue: 3232
@@ -15,39 +15,33 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 quality_score: 79
 review:
   strengths:
-  - Clean DFS maze generation with guaranteed single solution
-  - Correct maze complexity (25×25) for printable activity sheets
-  - Good canvas layout with appropriate margins and wall thickness
-  - All spec requirements met (correct plot type, start/goal markers, printable design)
-  - Perfect reproducibility with np.random.seed(42)
-  - Appropriate data scale and realistic educational/entertainment use case
+  - Clean black-and-white design optimized for printing
+  - DFS maze generation guarantees single solution path
+  - Both renders properly themed and readable
+  - Correct maze topology with clear start/goal positioning
+  - Deterministic output with seed=42 for reproducibility
   weaknesses:
-  - 'No theme adaptation: dark render has white background (#FFFFFF) instead of required
-    #1A1A17; background and text colors hardcoded with no ANYPLOT_THEME check'
-  - 'Palette non-compliance: start marker uses #306998 (Python Blue, legacy) instead
-    of Okabe-Ito #009E73'
-  - 'Wrong export method: uses deprecated export_png() instead of Selenium headless
-    Chrome (bokeh.md lines 48-84 explicitly warn)'
-  - 'Wrong output filenames: saves as plot.png instead of theme-specific plot-light.png
-    and plot-dark.png'
-  - 'Minimal design sophistication: looks like functional code without intentional
-    aesthetic choices or visual refinement'
-  - Missing idiomatic theme-adaptive pattern from bokeh.md (lines 124-158)
+  - Title domain is 'pyplots.ai' instead of 'anyplot.ai'
+  - Saves as 'plot.png' instead of 'plot-light.png' (wrong filenames)
+  - Uses deprecated export_png instead of documented Selenium headless Chrome method
+  - 'Missing theme adaptation: background and text colors hardcoded instead of using
+    ANYPLOT_THEME environment variable and theme tokens'
+  - 'Start marker uses #306998 (Python blue) instead of Okabe-Ito palette color'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 appearance), clean and appropriate for printing
-      Chrome: Title "maze-printable · bokeh · pyplots.ai" clearly visible in dark text (36pt, explicitly sized)
-      Data: Black rectangular walls form 25×25 maze passages on white ground; blue circle with "S" at start (top-left); yellow circle with "G" at goal (bottom-right); all elements have excellent contrast
-      Legibility verdict: PASS - All elements fully readable; title and markers properly sized and positioned; maze structure clear
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "maze-printable · bokeh · pyplots.ai" in dark text (#333333), clearly visible and readable
+      Data: Black maze walls on white passages (ideal for printing), blue start marker (top-left) with white "S", yellow goal marker (bottom-right) with dark "G" - all elements clearly distinguishable
+      Legibility verdict: PASS - All text and maze structure fully readable on light background
 
     Dark render (plot-dark.png):
-      Background: CRITICAL FAILURE - Background is white (#FFFFFF), NOT the required dark #1A1A17. This is a pure-white surface instead of the warm near-black required by the specification
-      Chrome: Title, marker labels remain in same colors as light render (no theme adaptation); text is not light-colored as it should be for dark theme
-      Data: Maze walls and marker colors (blue #306998, yellow #FFD43B) are identical to light render (correct for data consistency), but the chrome/background is wrong-theme
-      Legibility verdict: FAIL - Dark render background is wrong-theme (pure white instead of #1A1A17). The implementation hardcodes p.background_fill_color = "white" and does not read ANYPLOT_THEME environment variable. This render would fail in dark-mode display on anyplot.ai website.
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title text appears light-colored against dark background, readable; note the title domain error remains ("pyplots.ai" instead of "anyplot.ai")
+      Data: Maze walls rendered as dark gray for contrast on dark background, start marker appears cyan/light blue with white "S", goal marker remains yellow with dark "G" - all elements visible
+      Legibility verdict: PASS - All elements readable on dark background; however, start marker color appears perceptually different due to background contrast (should verify theme handling in code)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,76 +49,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and marker text explicitly sized (36pt, 28pt), all readable;
-          limited text elements due to hidden axes
+        comment: Title size explicitly set (36pt), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; maze structure clear; markers well-separated
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Maze walls perfectly visible; markers (size=55) stand out with high
-          contrast
+        comment: Maze walls, markers, and text all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Good contrast, but #306998 is Python Blue (non-compliant); should
-          use Okabe-Ito #009E73'
+        passed: true
+        comment: Black/white contrast excellent, markers distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×4800 square format appropriate; excellent margin utilization;
-          plot fills 70%+ of canvas
+        comment: Maze fills ~70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; axes hidden (appropriate for maze)
+        comment: Descriptive title present
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL FAILURE: Background is pure white in both renders (should
-          be #FAF8F1 light / #1A1A17 dark); dark render completely breaks theme requirement;
-          marker color is Python Blue not Okabe-Ito; no theme adaptation implemented'
+        comment: 'Start marker uses #306998 (not Okabe-Ito); should use #0072B2 or
+          #56B4E9'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Functional design with library defaults; no custom palette or intentional
-          hierarchy
+        passed: true
+        comment: Clean, professional design; no unnecessary embellishment
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Axes hidden (minimalist); no grid (appropriate); generous margins;
-          mostly defaults
+        passed: true
+        comment: Minimal chrome appropriate; minimal customization from defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Maze with clear start/goal markers; minimal visual hierarchy or narrative
-          emphasis
+        comment: Maze is functional but lacks visual hierarchy or emphasis
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -132,29 +118,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: algorithmically generated printable maze with guaranteed
-          single solution'
+        comment: Correct maze visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: DFS maze generation, start (S) and goal (G) markers, clean black/white
-          design
+        comment: Start, goal, and single-solution path present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Canvas mapping appropriate; maze structure clearly visible across
-          full 25×25 grid
+        comment: Layout and positioning correct
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct 'maze-printable · bokeh · pyplots.ai'; no legend
-          needed
+        passed: false
+        comment: 'Title domain wrong: ''pyplots.ai'' instead of ''anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -164,23 +146,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 25×25 maze shows multiple decision points and varied passage configurations
+        comment: Maze shows full puzzle complexity
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Perfect use case: actual printable puzzle for activity sheets, education,
-          entertainment'
+        comment: Printable puzzle scenario, neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25×25 grid appropriate difficulty; cell size (80px) and wall thickness
-          (8px) print-friendly
+        comment: 25x25 grid is appropriately challenging
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -188,57 +168,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → maze gen → figure → plot → save; no functions/classes'
+        comment: Linear flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; maze fully deterministic
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, bokeh.io, bokeh.plotting; all necessary
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clear, readable DFS algorithm; appropriate complexity
+        passed: false
+        comment: Missing theme adaptation; hardcoded colors instead of using ANYPLOT_THEME
+          and theme tokens
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png not plot-light.png/plot-dark.png; uses
-          deprecated export_png() instead of Selenium headless Chrome (bokeh.md warns
-          explicitly)'
+        comment: Saves as 'plot.png' instead of 'plot-light.png'; uses deprecated
+          export_png instead of Selenium
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses figure/scatter/text correctly but MISSES critical theme-adaptive
-          pattern from bokeh.md lines 124-158; should use os.getenv('ANYPLOT_THEME')
-          and color tokens
+        passed: true
+        comment: Correct usage but doesn't leverage advanced patterns
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage; rect() for maze is efficient but not library-specific;
-          could replicate in any plotting library
+        comment: Generic usage; could use ColumnDataSource, tooltips, or other Bokeh-specific
+          features
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   - matrix-construction
