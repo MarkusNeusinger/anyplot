@@ -1,14 +1,49 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-16
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for data series
+MACD_COLOR = "#009E73"  # Brand green (first series)
+SIGNAL_COLOR = "#D55E00"  # Vermillion (second series)
+
+# Colorblind-safe histogram colors
+HIST_POSITIVE = "#0072B2"  # Blue
+HIST_NEGATIVE = "#D55E00"  # Vermillion (used for negative, distinct from signal line)
+
+# Configure seaborn styling
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Generate synthetic stock price data for MACD calculation
 np.random.seed(42)
@@ -33,32 +68,48 @@ df["histogram"] = df["macd"] - df["signal"]
 df = df.iloc[33:].reset_index(drop=True)
 
 # Prepare histogram colors
-df["hist_color"] = np.where(df["histogram"] >= 0, "#2ca02c", "#d62728")
+df["hist_color"] = np.where(df["histogram"] >= 0, HIST_POSITIVE, HIST_NEGATIVE)
 
 # Create figure with proper sizing for 4800x2700 at 300 DPI
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Plot histogram as bars
-bar_width = 0.8
-for _, row in df.iterrows():
-    ax.bar(row["date"], row["histogram"], width=bar_width, color=row["hist_color"], alpha=0.7)
+# Plot histogram as bars using seaborn-compatible approach
+for i, row in df.iterrows():
+    ax.bar(
+        row["date"],
+        row["histogram"],
+        width=0.7,
+        color=row["hist_color"],
+        alpha=0.6,
+        label="Histogram" if i == 0 else "",
+    )
 
 # Plot MACD line
-sns.lineplot(data=df, x="date", y="macd", ax=ax, color="#306998", linewidth=3, label="MACD (12, 26)")
+sns.lineplot(data=df, x="date", y="macd", ax=ax, color=MACD_COLOR, linewidth=3, label="MACD (12, 26)")
 
 # Plot Signal line
-sns.lineplot(data=df, x="date", y="signal", ax=ax, color="#FFD43B", linewidth=3, label="Signal (9)")
+sns.lineplot(data=df, x="date", y="signal", ax=ax, color=SIGNAL_COLOR, linewidth=3, label="Signal (9)")
 
 # Add zero reference line
-ax.axhline(y=0, color="gray", linestyle="--", linewidth=1.5, alpha=0.7)
+ax.axhline(y=0, color=INK_SOFT, linestyle="--", linewidth=1.5, alpha=0.5)
 
 # Style the plot
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("MACD Value", fontsize=20)
-ax.set_title("indicator-macd · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=16, loc="upper left")
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.set_xlabel("Date", fontsize=20, color=INK)
+ax.set_ylabel("MACD Value", fontsize=20, color=INK)
+ax.set_title("indicator-macd · seaborn · anyplot.ai", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+
+# Grid styling
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+
+# Legend configuration
+ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
 
 # Rotate x-axis labels for better readability
 plt.xticks(rotation=45, ha="right")
@@ -71,8 +122,9 @@ ax.annotate(
     fontsize=14,
     ha="right",
     va="bottom",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "gray", "alpha": 0.8},
+    color=INK,
+    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.95},
 )
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
