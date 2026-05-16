@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T06:00:00Z'
-updated: '2026-05-16T07:12:46Z'
+updated: '2026-05-16T07:18:35Z'
 generated_by: claude-haiku
 workflow_run: 25955694612
 issue: 2921
@@ -12,7 +12,225 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - Excellent visual quality with perfect readability in both light and dark themes
+  - Perfect data quality with well-chosen synthetic example
+  - Clean, reproducible code with proper seed management
+  - Sophisticated handling of multiple data layers with separate hover tools
+  - Proper theme-aware styling with token-based colors throughout
+  - All required spec features implemented
+  weaknesses:
+  - Title format is incorrect - should be 'contour-decision-boundary · bokeh · anyplot.ai'
+    per spec requirement SC-04
+  - Design Excellence could be stronger - styling is competent but not exceptionally
+    refined
+  - LM-02 score is modest - techniques used are solid but not particularly distinctive
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme-adaptive surface
+      Chrome: Title, axis labels, tick labels all clearly visible with dark text
+      Data: Class 0 in green (#009E73), Class 1 in orange (#D55E00), misclassified marked with red X
+      Legibility verdict: PASS - all elements readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme-adaptive surface
+      Chrome: Title, axis labels, tick labels clearly visible with light text; no dark-on-dark failures
+      Data: Colors identical to light render (#009E73 green, #D55E00 orange with cyan outlines), Cividis colormap renders appropriately
+      Legibility verdict: PASS - all elements readable against dark background; proper theme contrast throughout
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, labels, ticks, legend all readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; clean layout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All markers, lines, regions properly visible for 4800×2700 canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette colorblind-safe; Cividis perceptually uniform;
+          X marker provides non-color signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper proportions; all elements fit; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 0
+        max: 2
+        passed: false
+        comment: Title should be 'contour-decision-boundary · bokeh · anyplot.ai'
+          per spec, not 'Decision Boundary Classifier Visualization'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Cividis appropriate; backgrounds #FAF8F1/#1A1A17
+          correct; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Good theming with token-based colors; professional styling; lacks
+          distinctive enhancements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid appropriately subtle (10% alpha); clean styling; could be more
+          refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with color regions and overlaid points; misclassified
+          X markers effective
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision boundary visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, overlaid points, misclassified markers, legend,
+          mesh grid all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes show features correctly; color mapping appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Title format incorrect; legend labels match
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Displays boundary regions, training points, accuracy, misclassifications
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: make_moons dataset is classic; n_samples=200, noise=0.25 appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Natural feature ranges; mesh step h=0.02 provides good resolution
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions; straightforward linear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Proper seed management ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no unused dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; HoverTools are legitimate Bokeh interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; proper theme token
+          usage
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of figure(), ColumnDataSource, HoverTool, LinearColorMapper
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: LinearColorMapper with Cividis, multiple ColumnDataSources, layered
+          hover tools; not exceptionally distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  - selenium
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - theme-adaptive
