@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-16
@@ -79,12 +79,17 @@ chart = pygal.Line(
     show_legend=True,
     legend_at_bottom=False,
     dots_size=3,
+    print_values=False,
+    print_values_position="top",
 )
 
 chart.title = "timeseries-forecast-uncertainty · pygal · anyplot.ai"
 chart.x_title = "Month"
 chart.y_title = "Sales ($)"
-chart.x_labels = x_labels
+
+# Thin x-axis labels: show every 6 months for readability
+sparse_labels = [x_labels[i] if i % 6 == 0 else "" for i in range(len(x_labels))]
+chart.x_labels = sparse_labels
 
 # Prepare data series
 historical_data = list(actual[:split_idx])
@@ -94,46 +99,56 @@ lower_95_band = list(lower_95)
 upper_80_band = list(upper_80)
 lower_80_band = list(lower_80)
 
-# Add historical data
-chart.add("Historical", historical_data, stroke_dasharray=(0,), color=BRAND)
+# Add historical data - solid line emphasizing observed values
+chart.add("Historical (observed)", historical_data, stroke_dasharray=(0,), color=BRAND, fill=False)
 
-# Add forecast data
-chart.add("Forecast", [None] * split_idx + forecast_data, stroke_dasharray=(5, 5), color=FORECAST_COLOR)
-
-# Add confidence bands (lighter transparency for wider bounds)
+# Add forecast data - dashed line for distinct visual separation
 chart.add(
-    "95% Upper",
+    "Forecast (projected)",
+    [None] * split_idx + forecast_data,
+    stroke_dasharray=(5, 5),
+    color=FORECAST_COLOR,
+    fill=False,
+)
+
+# Add 95% confidence interval (outer band, lighter)
+chart.add(
+    "95% confidence interval",
     [None] * split_idx + upper_95_band,
-    show_legend=False,
+    show_legend=True,
     stroke_dasharray=(0,),
     color=FORECAST_COLOR,
     opacity=0.15,
+    fill=True,
 )
 chart.add(
-    "95% Lower",
+    None,
     [None] * split_idx + lower_95_band,
     show_legend=False,
     stroke_dasharray=(0,),
     color=FORECAST_COLOR,
     opacity=0.15,
+    fill=True,
 )
 
-# Add 80% confidence bands (more opaque)
+# Add 80% confidence interval (inner band, more opaque)
 chart.add(
-    "80% Upper",
+    "80% confidence interval",
     [None] * split_idx + upper_80_band,
-    show_legend=False,
+    show_legend=True,
     stroke_dasharray=(0,),
     color=FORECAST_COLOR,
     opacity=0.3,
+    fill=True,
 )
 chart.add(
-    "80% Lower",
+    None,
     [None] * split_idx + lower_80_band,
     show_legend=False,
     stroke_dasharray=(0,),
     color=FORECAST_COLOR,
     opacity=0.3,
+    fill=True,
 )
 
 # Render outputs
