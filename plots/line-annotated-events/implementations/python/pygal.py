@@ -1,92 +1,100 @@
-""" pyplots.ai
+""" anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 72/100 | Created: 2025-12-31
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
 # Data - Stock price over a year with quarterly events
 np.random.seed(42)
 n_days = 250  # Trading days in a year
 
-# Generate realistic stock-like price data with trend
+# Generate realistic stock-like price data with trend and volatility
 base_price = 150
 returns = np.random.randn(n_days) * 0.012
 prices = base_price * np.cumprod(1 + returns)
 
-# Event data - indices and labels (quarterly earnings + product launch)
+# Event data - indices and labels
 events = [(31, "Q4 Earnings"), (94, "Q1 Earnings"), (136, "Product Launch"), (157, "Q2 Earnings"), (220, "Q3 Earnings")]
 
-# Custom style for 4800x2700 canvas with large fonts
+# Custom style with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#1a1a1a",
-    foreground_subtle="#666666",
-    colors=("#306998", "#E74C3C", "#F39C12", "#9B59B6", "#27AE60", "#3498DB"),
-    title_font_size=72,
-    label_font_size=42,
-    major_label_font_size=38,
-    legend_font_size=42,
-    value_font_size=36,
-    value_label_font_size=34,
-    tooltip_font_size=32,
-    stroke_width=6,
-    font_family="sans-serif",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Create XY chart for better control over coordinates
+# Create XY chart for precise coordinate control
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="line-annotated-events · pygal · pyplots.ai",
+    title="line-annotated-events · pygal · anyplot.ai",
     x_title="Trading Day (2024)",
     y_title="Stock Price (USD)",
     show_dots=False,
-    stroke_style={"width": 6, "linecap": "round"},
+    stroke_style={"width": 3, "linecap": "round"},
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
     show_x_guides=False,
     show_y_guides=True,
-    margin=100,
+    margin=120,
     margin_bottom=200,
     margin_left=200,
-    margin_right=100,
+    margin_right=150,
     print_values=False,
     interpolate="cubic",
-    range=(min(prices) * 0.95, max(prices) * 1.08),
+    range=(min(prices) * 0.95, max(prices) * 1.05),
     xrange=(0, n_days),
     x_labels_major_count=6,
     show_minor_x_labels=False,
 )
 
-# Set numeric x-axis labels for trading days
+# Set x-axis labels
 chart.x_labels = [0, 50, 100, 150, 200, 250]
 
 # Add main stock price line as XY coordinates
 price_data = [(i, prices[i]) for i in range(n_days)]
-chart.add("Stock Price", price_data, stroke_style={"width": 6})
+chart.add("Stock Price", price_data, stroke_style={"width": 3})
 
-# Add event markers as separate dot series with vertical line effect
-# Each event gets its own series for clear legend labeling
+# Add event markers with vertical lines
+# Each event is visualized as a prominent vertical line with dot marker
 y_min = min(prices) * 0.95
-y_max = max(prices) * 1.08
+y_max = max(prices) * 1.05
 
-for event_idx, label in events:
-    # Create vertical line effect using multiple points
-    event_price = prices[event_idx]
-    # Vertical line from bottom to the event point
-    vertical_line = [(event_idx, y_min), (event_idx, event_price)]
-    # Add the vertical line with dashed effect
-    chart.add(label, vertical_line, stroke_style={"width": 4, "dasharray": "15, 10"}, show_dots=True, dots_size=18)
+for day_idx, label in events:
+    event_price = prices[day_idx]
+
+    # Create vertical line from bottom to the event point
+    vertical_line = [(day_idx, y_min), (day_idx, event_price)]
+
+    # Add vertical line with prominent styling
+    chart.add(label, vertical_line, stroke_style={"width": 8, "dasharray": "20, 12"}, show_dots=True, dots_size=8)
 
 # Render outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
