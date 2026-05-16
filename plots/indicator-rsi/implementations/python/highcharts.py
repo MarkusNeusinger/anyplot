@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
-Library: highcharts | Python 3.13
-Quality: 92 | Updated: 2026-05-16
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-16
 """
 
 import os
