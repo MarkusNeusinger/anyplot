@@ -13,20 +13,10 @@ A horizontal box plot displays the distribution of numerical data through quarti
 
 ## Data
 
-The visualization requires:
-- **Categorical variable**: Groups or categories (displayed on y-axis)
-- **Numeric variable**: Values to show distribution (displayed on x-axis)
-
-Example structure:
-```
-Category    | Value
-------------|-------
-Category A  | 45.2
-Category A  | 52.1
-Category B  | 38.7
-Category B  | 41.3
-...
-```
+- `categories` (categorical) - Groups or categories for comparison (displayed on y-axis)
+- `values` (numeric) - Numeric values to show distribution (displayed on x-axis)
+- Size: 10–100 points (varies by number of groups and observations per group)
+- Example: Salary ranges by job title, test score distributions by course
 
 ## Notes
 

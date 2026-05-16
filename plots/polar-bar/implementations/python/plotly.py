@@ -1,98 +1,78 @@
-""" pyplots.ai
+""" anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-13
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data: Wind speed distribution by direction (8 compass points)
-# Each direction has 3 speed ranges (stacked bars)
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+wind_speed_labels = ["Light (0-10 km/h)", "Moderate (10-20 km/h)", "Strong (20+ km/h)"]
+
+# Data: Wind speed distribution by direction (8 compass points)
+np.random.seed(42)
 directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
-# Wind speed frequencies by direction (simulating typical coastal wind patterns)
-# Light breeze (0-10 km/h)
+# Wind speed frequencies by direction (coastal wind pattern)
 light = np.array([8, 5, 4, 3, 6, 12, 15, 10])
-# Moderate breeze (10-20 km/h)
 moderate = np.array([6, 4, 3, 2, 4, 10, 12, 8])
-# Strong breeze (20+ km/h)
 strong = np.array([3, 2, 1, 1, 2, 5, 6, 4])
 
 # Create figure with polar subplot
 fig = go.Figure()
 
-# Add stacked bars for each wind speed category (base is cumulative)
-fig.add_trace(
-    go.Barpolar(
-        r=light,
-        theta=directions,
-        name="Light (0-10 km/h)",
-        marker=dict(color="#306998", line=dict(color="white", width=2)),
-        opacity=0.9,
+# Add stacked bars for each wind speed category
+for data, label, color in zip([light, moderate, strong], wind_speed_labels, OKABE_ITO, strict=True):
+    fig.add_trace(
+        go.Barpolar(
+            r=data,
+            theta=directions,
+            name=label,
+            marker=dict(color=color, line=dict(color=PAGE_BG, width=2)),
+            hovertemplate="<b>%{theta}</b><br>%{customdata}<br>Frequency: %{r}<extra></extra>",
+            customdata=[label] * len(directions),
+            opacity=0.9,
+        )
     )
-)
 
-fig.add_trace(
-    go.Barpolar(
-        r=moderate,
-        theta=directions,
-        name="Moderate (10-20 km/h)",
-        marker=dict(color="#FFD43B", line=dict(color="white", width=2)),
-        opacity=0.9,
-    )
-)
-
-fig.add_trace(
-    go.Barpolar(
-        r=strong,
-        theta=directions,
-        name="Strong (20+ km/h)",
-        marker=dict(color="#4ECDC4", line=dict(color="white", width=2)),
-        opacity=0.9,
-    )
-)
-
-# Update layout for polar chart
+# Update layout for polar chart with theme-adaptive styling
 fig.update_layout(
-    title=dict(text="polar-bar · plotly · pyplots.ai", font=dict(size=32, color="#333"), x=0.5, y=0.95),
+    title=dict(text="polar-bar · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     polar=dict(
         barmode="stack",
         radialaxis=dict(
             visible=True,
             range=[0, max(light + moderate + strong) + 3],
-            tickfont=dict(size=18),
-            tickangle=45,
-            gridcolor="rgba(0,0,0,0.2)",
-            linecolor="rgba(0,0,0,0.3)",
-            title=dict(text="Frequency (%)", font=dict(size=18)),
+            tickfont=dict(size=18, color=INK_SOFT),
+            gridcolor=GRID,
+            linecolor=INK_SOFT,
+            title=dict(text="Frequency", font=dict(size=20, color=INK)),
         ),
         angularaxis=dict(
-            tickfont=dict(size=22, color="#333"),
-            direction="clockwise",
-            rotation=90,  # N at top
-            gridcolor="rgba(0,0,0,0.15)",
-            linecolor="rgba(0,0,0,0.3)",
+            tickfont=dict(size=22, color=INK), direction="clockwise", rotation=90, gridcolor=GRID, linecolor=INK_SOFT
         ),
-        bgcolor="rgba(255,255,255,0.95)",
     ),
     legend=dict(
-        font=dict(size=20),
-        x=0.85,
-        y=0.95,
-        bgcolor="rgba(255,255,255,0.9)",
-        bordercolor="rgba(0,0,0,0.2)",
-        borderwidth=1,
+        font=dict(size=18, color=INK_SOFT), x=0.85, y=0.95, bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1
     ),
-    template="plotly_white",
-    margin=dict(l=80, r=180, t=120, b=80),
+    margin=dict(l=100, r=200, t=120, b=100),
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save as PNG (4800 x 2700 px) and interactive HTML
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

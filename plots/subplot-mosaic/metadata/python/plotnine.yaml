@@ -1,172 +1,176 @@
 library: plotnine
+language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T11:20:28Z'
-updated: '2025-12-31T11:30:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617510969
+updated: '2026-05-14T17:21:14Z'
+generated_by: claude-haiku
+workflow_run: 25873527210
 issue: 3002
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/plotnine/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent use of plotnine composition operators (| and /) to create mosaic-like
-    layout
-  - Clean, consistent color scheme using blue/yellow palette throughout all panels
-  - Good visual hierarchy with larger overview panel and smaller detail panels
-  - Well-structured code with clear separation of data generation and plotting
-  - Appropriate use of diverse geoms (geom_line, geom_point, geom_bar, geom_tile,
-    geom_text)
-  - Professional theming with customized text sizes for high-resolution output
+  - Flawless execution across technical metrics (visual quality, spec compliance,
+    data quality, code quality)
+  - Perfect theme adaptation with no legibility issues in either render
+  - Excellent use of plotnine's composition operators for asymmetric mosaic layout
+  - Custom theme applied consistently, demonstrating deep mastery of plotnine's theming
+    system
+  - Diverse subplot types (line, bar, scatter, heatmap) demonstrate comprehensive
+    capability
   weaknesses:
-  - Heatmap colorbar legend is placed at the very bottom of the figure, visually separated
-    from its panel
-  - Title uses suptitle which works but could be more integrated with plotnine native
-    theme system
-  - Could demonstrate the mosaic empty cell feature mentioned in the spec using placeholder
-    characters
-  image_description: 'The plot displays a well-organized mosaic dashboard layout with
-    5 distinct panels. The top row features a large line+point chart (left ~2/3 width)
-    showing sales trends over 60 days for three products (Alpha in dark blue, Beta
-    in yellow, Gamma in light blue), alongside a smaller bar chart (right ~1/3) showing
-    quarterly revenue with Q4 highlighted in yellow. The bottom row contains three
-    equally-sized panels: a scatter plot of Units Sold vs Margin (%), a heatmap showing
-    regional performance across Sales/Profit/Growth metrics with numeric values displayed
-    in each cell, and a bar chart of monthly scores (Jan-Jun). The main title "subplot-mosaic
-    · plotnine · pyplots.ai" is centered at the top in bold. Colors are consistent
-    throughout with a blue (#306998) and yellow (#FFD43B) theme.'
+  - Design Excellence could be elevated with more visual emphasis or hierarchy within
+    individual panels (e.g., strategic color contrast or size variation in the Monthly
+    Performance bars)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "subplot-mosaic · plotnine · anyplot.ai" is bold (24pt) and dark, axis labels (20pt) and tick labels (16pt) are dark and clearly readable against light surface. Grid lines are subtle (alpha=0.10/0.05). All text elements meet legibility requirements.
+      Data: Sales Trend uses green (#009E73), orange (#D55E00), blue (#0072B2) with visible points (alpha=0.6). Quarterly Revenue shows the same color sequence for Q1-Q4 bars. Margin Analysis displays teal scatter points (alpha=0.7). Regional Performance heatmap uses viridis colormap with clear tile boundaries. Monthly Performance bars are green (#009E73). All colors match Okabe-Ito specification.
+      Legibility verdict: PASS - All elements are clearly readable on light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, and tick labels are light-colored and fully readable against dark background. No dark-on-dark text failures detected. Grid lines are subtle and visible. All chrome elements adapt correctly to dark theme.
+      Data: Sales Trend, Quarterly Revenue, and Monthly Performance colors are IDENTICAL to light render (green #009E73, orange #D55E00, blue #0072B2, pink). Regional Performance heatmap colormap is identical to light render. Brand green remains prominent and distinguishable. Only the background and text colors have adapted to the dark theme, as required.
+      Legibility verdict: PASS - All elements are clearly readable on dark background with no theme-adaptation failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is readable; title is large and bold, axis labels clear,
-          though some tick labels on the heatmap are slightly small
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Title 24pt, axis labels 20pt, ticks 16pt. All readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Five panels clearly separated with hspace=0.32, wspace=0.22. No collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Elements well-sized; scatter points visible with good alpha; line
-          plot markers appropriately sized for data density
+        comment: Lines (size=1.2), points (size=2.5-3), scatter (size=3, alpha=0.7),
+          heatmap tiles all clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow palette is colorblind-friendly, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good mosaic layout with varying panel sizes; slight imbalance as
-          heatmap legend is at the very bottom separated from its panel
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units where appropriate ("Sales (Units)",
-          "Revenue (k$)", "Margin (%)")
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito + viridis is colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Asymmetric layout with clear hierarchy. Nothing cut off. Proportions
+          excellent.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grids subtle, product legend well placed; heatmap colorbar legend
-          at bottom is functional but isolated from the panel
+        comment: All labels descriptive with units (Day, Sales Units, Quarter, Revenue
+          k$, etc.).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Multi-series follow Okabe-Ito order. Continuous
+          uses viridis. Backgrounds theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom theme, explicit color choices, intentional palette. Professional
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, grid subtle, whitespace generous, heatmap borders
+          provide definition.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy, consistent colors unify panels, dashboard structure
+          narrates product performance.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements mosaic subplot layout with varying sizes
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y correctly assigned across all panels
-      - id: SC-03
+        comment: Mosaic layout with varying sizes using plotnine composition operators
+          (| and /).
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows different plot types (line, bar, scatter, heatmap), varying
-          panel sizes; could demonstrate empty cell placeholder feature
-      - id: SC-04
-        name: Data Range
+        comment: Layout flexibility, different plot types, visual hierarchy, all spec
+          requirements satisfied.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show complete data ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct x/y mapping in all panels. Axes show complete data ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels are accurate
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Has correct format "subplot-mosaic · plotnine · pyplots.ai" but uses
-          regular dot instead of middle dot (·) in some places
+        comment: Main title correct format. Panel titles present. Legends properly
+          labeled.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple plot types, varying panel sizes; demonstrates visual
-          hierarchy with larger overview panel
+        comment: Multiple data types showcase subplot versatility.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product performance dashboard is a plausible business scenario
+        comment: Product performance dashboard is neutral and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for business metrics; some margin values go
-          slightly negative which could be more realistic
+        comment: 'All values sensible: sales 75-150, revenue 35-55k, margins 0-40%,
+          scores 75-95.'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,40 +178,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No functions or classes. Direct plot creation.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports. No unused modules.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity (AR-08 PASS). Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent use of ggplot + geoms, theme customization, composition
+          operators. Pure plotnine idiom.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Effectively uses plotnine's composition operators (| for horizontal,
-          / for vertical layout), ggplot grammar with multiple geoms, custom theming
+        comment: Mosaic composition and custom theme demonstrate strong mastery.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - alpha-blending

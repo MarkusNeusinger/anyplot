@@ -1,170 +1,174 @@
 library: matplotlib
+language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:30:33Z'
-updated: '2025-12-30T09:36:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593348706
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-  patterns:
-    - data-generation
-  dataprep:
-    - cumulative-sum
-  styling:
-    - grid-styling
+updated: '2026-05-11T22:37:05Z'
+generated_by: claude-haiku
+workflow_run: 25701171456
+issue: 2549
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 97
 review:
   strengths:
-  - Excellent use of step histogram with filled area for clear visualization of cumulative
-    distribution
-  - Smart percentile annotation positioning to avoid overlap (right-aligned for 75th/90th,
-    left-aligned for 25th/50th)
-  - Realistic exam score scenario with multi-modal distribution (combining normal
-    distributions)
-  - Appropriate color choices with good accessibility (blue primary, yellow reference
-    lines)
-  - Clean code structure following KISS principles
-  weaknesses:
-  - Axis labels could include units or be more descriptive (e.g., "Exam Score (points)"
-    or "Cumulative Probability")
-  - Could use more distinctive matplotlib features like axhspan for percentile bands
-    or secondary y-axis for counts
-  image_description: The plot displays a cumulative histogram showing exam score distribution.
-    The chart uses a blue (#306998) step function with a light blue filled area underneath.
-    The x-axis shows "Exam Score" ranging from 0 to 100, and the y-axis shows "Cumulative
-    Proportion" from 0.0 to 1.0. Yellow dashed reference lines mark the 25th, 50th,
-    75th, and 90th percentiles with annotations showing the corresponding score values
-    (58, 69, 82, and 88 respectively). The title follows the correct format "histogram-cumulative
-    · matplotlib · pyplots.ai". A legend in the lower right shows "Cumulative Distribution".
-    The grid is subtle with dashed lines at alpha 0.3.
+  - Dual histogram representation (step outline + filled area) creates sophisticated
+    visual clarity
+  - Percentile bands with carefully positioned annotations demonstrate professional
+    design thinking and add valuable context
+  - Theme adaptation is flawlessly executed with perfect legibility in both light
+    and dark renders
+  - Code is clean, idiomatic matplotlib following best practices with proper theme
+    token implementation
+  - Realistic bimodal data distribution effectively demonstrates cumulative histogram
+    use cases
+  - Comprehensive theme-adaptive styling across all elements (backgrounds, text, grid,
+    spines, legend, annotations)
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - exactly as specified, not pure white
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all dark text (INK/INK_SOFT tokens), clearly readable. Grid subtle at 15% opacity. Legend frame light elevated background. Annotation boxes with rounded corners.
+      Data: Brand green (#009E73) step line with light-filled area underneath. Orange (#D55E00) percentile markers (horizontal and vertical dashed lines). Four percentile annotations (25th, 50th, 75th, 90th) with values.
+      Legibility verdict: PASS - All text readable, no light-on-light failures, proper contrast throughout.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - exactly as specified, not pure black
+      Chrome: Title, axis labels, tick labels now light text, clearly readable against dark background. Grid subtle. Legend frame dark elevated background. Annotation boxes dark with light text.
+      Data: Brand green (#009E73) and orange (#D55E00) colors identical to light render - confirms proper theme adaptation. Only chrome has flipped.
+      Legibility verdict: PASS - All text readable, NO dark-on-dark failures detected, proper contrast throughout. Brand green remains visible and legible.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, annotations
-          at 14pt - all clearly readable
+        comment: All text properly sized (24pt title, 20pt axis, 16pt ticks) and colored
+          for both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All text elements are well-positioned; percentile annotations strategically
-          placed to avoid overlap
+        comment: Annotation boxes positioned carefully to avoid collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step histogram with linewidth=3 is clearly visible; filled area with
-          alpha=0.3 enhances visibility without obscuring
+        comment: Step line (linewidth=3), filled area, percentile markers all clearly
+          visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast; colorblind-safe
-          combination
+        comment: 'Okabe-Ito palette (#009E73, #D55E00), CVD-safe, no red-green-only
+          coding'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization with tight_layout(); slight deduction for
-          y-axis extending to 1.05 creating minor empty space at top
+        comment: 16:9 landscape format, proper margins, tight_layout applied
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Exam Score" and "Cumulative Proportion" are descriptive but lack
-          units (though proportion is unitless, score could have "points")'
+        comment: Descriptive with units, spec-id title format correct
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid at alpha=0.3 is appropriately subtle; legend well-placed in
-          lower right but could be smaller
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, flawless theme
+          adaptation'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Dual histogram (step + stepfilled), percentile bands, custom annotation
+          boxes with rounded corners
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped frame, subtle grid (alpha=0.15), generous whitespace, theme-adaptive
+          legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy, percentile annotations guide viewer, filled
+          area conveys accumulation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct cumulative histogram with step display as specified
+        comment: Cumulative histogram correctly implemented with histtype=step and
+          cumulative=True
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows values, Y-axis shows cumulative proportion - correctly
-          mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows cumulative count normalized, step function display, percentile
-          reference lines
-      - id: SC-04
-        name: Data Range
+        comment: Cumulative probability, percentile visualization, threshold determination
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 0-100 (full exam range), Y-axis 0-1.05 shows complete distribution
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (0-100), Y-axis (0-1 cumulative), all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: '"Cumulative Distribution" accurately describes the plot element'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: 'Format correct: histogram-cumulative · matplotlib · anyplot.ai'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows monotonically increasing step function with percentile markers;
-          could demonstrate more variation in distribution shape
+        comment: Step function, filled area, percentile bands comprehensively demonstrate
+          plot type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Exam scores with realistic distribution (average ~65, high performers
-          ~85, lower performers ~45) - educational context is neutral and appropriate
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Scores 0-100, realistic distribution with median ~69, all values
-          plausible for exam scores
+        comment: Exam scores realistic, bimodal distribution plausible, neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30 bins appropriate, y-axis scale 0-1.05 standard for cumulative
     code_quality:
       score: 10
       max: 10
@@ -174,42 +178,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save, no functions or
-          classes'
+        comment: No unnecessary functions, straightforward implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used, both necessary
+        comment: Only os, matplotlib.pyplot, numpy—all necessary
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: All APIs current for matplotlib 3.x
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, no AR-08 violations, clean matplotlib patterns
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses matplotlib's hist() with cumulative and histtype parameters
-          effectively, but could leverage more matplotlib-specific features like axhspan
-          for percentile bands or twin axes
+        passed: true
+        comment: Axes methods, spine manipulation, legend frame styling all idiomatic
+          matplotlib
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Dual histogram rendering, percentile bands, custom annotation styling
+          demonstrates library mastery
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

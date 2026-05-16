@@ -1,0 +1,246 @@
+library: bokeh
+language: python
+specification_id: bar-3d-categorical
+created: '2026-05-15T08:53:32Z'
+updated: '2026-05-15T09:16:55Z'
+generated_by: claude-sonnet
+workflow_run: 25908295058
+issue: 5248
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Custom oblique 3D projection using Bokeh's patches glyph is technically impressive
+    and demonstrates deep library knowledge
+  - Three-face bar shading (hex_darken/hex_lighten) creates convincing depth perception
+    without any external 3D library
+  - 'Full Okabe-Ito compliance with correct color ordering; identical data colors
+    in both themes; correct background tokens (#FAF8F1 light / #1A1A17 dark)'
+  - Painter's algorithm for depth-correct bar rendering is correctly implemented
+  - Value labels on all 20 bars add practical readability without cluttering the chart
+  weaknesses:
+  - Axis label font size (17pt) and title font size (26pt) are below the 22pt/28pt
+    guidelines for pixel-based Bokeh at 4800px
+  - Character-by-character vertical axis label is inelegant — a rotated Label at angle=pi/2
+    would be cleaner
+  - Canvas whitespace is unbalanced — significant empty area in upper-right due to
+    oblique projection; x_range right bound could be tightened
+  - No HoverTool on the HTML output — missed opportunity to leverage Bokeh's most
+    distinctive interactive feature
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Retail Sales by Product & Quarter · bar-3d-categorical · bokeh · anyplot.ai" centered at top in dark ink (#1A1A17), readable. Product labels (Electronics, Apparel, Food & Bev, Books, Sports) in INK_SOFT at bottom, readable. Value tick labels (30/60/90/120) in INK_MUTED at left axis, readable. Quarter labels (Q1-Q4) in their respective Okabe-Ito colors on right side, readable. "Sales (K units)" spelled character-by-character vertically at left, visible but inelegant.
+      Data: Q1=green (#009E73), Q2=orange (#D55E00), Q3=blue (#0072B2), Q4=pink (#CC79A7). Three-face shading (front/side/top) with darkened and lightened variants. Value labels visible on bar tops. Base-plane grid at 12% alpha.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all text elements rendered in light ink (#F0EFE8 / #B8B7B0), clearly visible against dark background. No dark-on-dark failures detected. Quarter labels retain their Okabe-Ito series colors. Vertical axis ticks and product labels fully readable.
+      Data: Colors identical to light render — Q1 green, Q2 orange, Q3 blue, Q4 mauve. Face shading consistent. No color shift between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All sizes explicitly set but title 26pt (< 28pt guideline) and axis
+          label 17pt (< 22pt guideline); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions; minor natural depth-ordering occlusion inherent
+          to 3D perspective
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly visible with 3-face shading; spacing well calibrated
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; luminance contrast adequate
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Notable empty space in upper-right quadrant from oblique projection;
+          ~45% canvas utilization with imbalanced right margin
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Sales (k units) axis label, descriptive product and quarter labels
+          present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Q1=#009E73 first series, canonical Okabe-Ito order, correct backgrounds,
+          identical data colors across themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom oblique 3D with face shading, colored series labels as legend
+          substitute, custom axis — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Toolbar disabled, Bokeh axes hidden, subtle base-plane grid; deducted
+          for character-by-character vertical axis label
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bar height variation creates natural hierarchy; colored quarter labels
+          guide viewer; no explicit focal-point annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 3D bar chart with two categorical axes and height encoding
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bar spacing, color encoding per quarter, base-plane grid, value labels,
+          oblique viewing angle all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Products on x, quarters on depth-y, sales values on z; all 20 data
+          points rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; colored Q1-Q4 side labels serve as legend substitute
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 5x4 grid; values span 38-134 showing meaningful variation; 3-face
+          shading demonstrates depth perception
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Retail sales by product category and quarter is real-world, neutral,
+          comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 38-134 thousand units; plausible differences match real-world intuition
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Four helper functions (project, hex_darken, hex_lighten, add_patch)
+          are justified for oblique 3D math but depart from flat structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; data array is hardcoded and deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; painter's algorithm is legitimate; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per prescribed
+          pattern
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource, p.patches() for polygon rendering, Label models,
+          figure theming — all idiomatic Bokeh
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: p.patches() with ColumnDataSource for multi-polygon 3D bar rendering
+          is Bokeh-distinctive; HTML export pattern correct; no HoverTool used
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - patches
+  - html-export
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

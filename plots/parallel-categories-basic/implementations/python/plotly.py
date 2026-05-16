@@ -1,12 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-13
 """
+
+import os
 
 import plotly.graph_objects as go
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito colors for categorical data
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Titanic survival data with multiple categorical dimensions
 df = sns.load_dataset("titanic")
@@ -45,52 +56,34 @@ dimensions = [
     },
 ]
 
-# Create color scale based on survival outcome (last dimension)
+# Create color scale based on survival outcome (Okabe-Ito palette)
 color_values = df["survived"].values
 
 # Create parallel categories plot
 fig = go.Figure(
     go.Parcats(
         dimensions=dimensions,
-        line={
-            "color": color_values,
-            "colorscale": [[0, "#306998"], [1, "#FFD43B"]],  # Python Blue for not survived, Yellow for survived
-            "shape": "hspline",
-        },
+        line={"color": color_values, "colorscale": [[0, OKABE_ITO[1]], [1, OKABE_ITO[0]]], "shape": "hspline"},
         hoveron="color",
         hoverinfo="count+probability",
         arrangement="freeform",
     )
 )
 
-# Update layout for 4800x2700 canvas
+# Update layout for 4800x2700 canvas with theme-adaptive styling
 fig.update_layout(
     title={
-        "text": "Titanic Passengers · parallel-categories-basic · plotly · pyplots.ai",
-        "font": {"size": 32, "color": "#333333"},
+        "text": "parallel-categories-basic · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    font={"size": 20},
-    paper_bgcolor="white",
-    plot_bgcolor="white",
-    margin={"l": 80, "r": 80, "t": 120, "b": 80},
-    annotations=[
-        {
-            "text": "Color: Yellow = Survived, Blue = Did Not Survive",
-            "x": 0.5,
-            "y": -0.08,
-            "xref": "paper",
-            "yref": "paper",
-            "showarrow": False,
-            "font": {"size": 18, "color": "#666666"},
-            "xanchor": "center",
-        }
-    ],
+    font={"size": 18, "color": INK_SOFT},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    margin={"l": 100, "r": 100, "t": 120, "b": 80},
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save PNG and HTML with theme-suffixed filenames
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

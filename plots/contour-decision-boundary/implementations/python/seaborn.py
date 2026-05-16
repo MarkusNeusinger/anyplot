@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-16
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,84 +15,94 @@ from sklearn.datasets import make_moons
 from sklearn.svm import SVC
 
 
-# Data - Generate synthetic 2D classification data
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"
+ALT_COLOR = "#D55E00"
+
 np.random.seed(42)
 X, y = make_moons(n_samples=200, noise=0.25, random_state=42)
 X1 = X[:, 0]
 X2 = X[:, 1]
 
-# Train classifier
 clf = SVC(kernel="rbf", C=1.0, gamma="scale")
 clf.fit(X, y)
 
-# Create mesh grid for decision boundary
 x1_min, x1_max = X1.min() - 0.5, X1.max() + 0.5
 x2_min, x2_max = X2.min() - 0.5, X2.max() + 0.5
 xx1, xx2 = np.meshgrid(np.linspace(x1_min, x1_max, 200), np.linspace(x2_min, x2_max, 200))
 grid_points = np.c_[xx1.ravel(), xx2.ravel()]
 
-# Predict on mesh grid
 Z = clf.predict(grid_points).reshape(xx1.shape)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot decision regions as filled contours
-cmap_light = sns.color_palette(["#306998", "#FFD43B"], as_cmap=False)
-contour = ax.contourf(xx1, xx2, Z, levels=[-0.5, 0.5, 1.5], colors=["#306998", "#FFD43B"], alpha=0.4)
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-# Plot decision boundary line
-ax.contour(xx1, xx2, Z, levels=[0.5], colors=["#1a3d5c"], linewidths=3)
+contour = ax.contourf(xx1, xx2, Z, levels=[-0.5, 0.5, 1.5], colors=[BRAND, ALT_COLOR], alpha=0.3)
 
-# Overlay training points with seaborn scatterplot
-# Create separate masks for correct and incorrect predictions
+ax.contour(xx1, xx2, Z, levels=[0.5], colors=[INK_SOFT], linewidths=3)
+
 predictions = clf.predict(X)
 correct_mask = predictions == y
 incorrect_mask = ~correct_mask
 
-# Correctly classified points - filled markers
-scatter_correct = sns.scatterplot(
+sns.scatterplot(
     x=X1[correct_mask],
     y=X2[correct_mask],
     hue=y[correct_mask],
-    palette=["#306998", "#FFD43B"],
+    palette=[BRAND, ALT_COLOR],
     s=200,
-    edgecolor="white",
+    edgecolor=PAGE_BG,
     linewidth=1.5,
     alpha=0.9,
     ax=ax,
     legend=False,
 )
 
-# Incorrectly classified points - with red edge
 if np.any(incorrect_mask):
-    sns.scatterplot(
-        x=X1[incorrect_mask],
-        y=X2[incorrect_mask],
-        hue=y[incorrect_mask],
-        palette=["#306998", "#FFD43B"],
-        s=250,
-        edgecolor="#d62728",
-        linewidth=3,
-        alpha=0.9,
-        ax=ax,
-        marker="X",
-        legend=False,
+    ax.scatter(
+        X1[incorrect_mask],
+        X2[incorrect_mask],
+        s=300,
+        edgecolors="#CC79A7",
+        linewidths=3.5,
+        facecolors="none",
+        alpha=0.95,
+        marker="o",
     )
 
-# Create legend manually for classes
 legend_elements = [
-    Patch(facecolor="#306998", alpha=0.4, edgecolor="#1a3d5c", label="Class 0 Region"),
-    Patch(facecolor="#FFD43B", alpha=0.4, edgecolor="#1a3d5c", label="Class 1 Region"),
+    Patch(facecolor=BRAND, alpha=0.3, edgecolor=INK_SOFT, label="Class 0 Region"),
+    Patch(facecolor=ALT_COLOR, alpha=0.3, edgecolor=INK_SOFT, label="Class 1 Region"),
     Line2D(
         [0],
         [0],
         marker="o",
         color="w",
-        markerfacecolor="#306998",
+        markerfacecolor=BRAND,
         markersize=14,
-        markeredgecolor="white",
+        markeredgecolor=PAGE_BG,
         markeredgewidth=1.5,
         label="Class 0 (correct)",
     ),
@@ -99,33 +111,31 @@ legend_elements = [
         [0],
         marker="o",
         color="w",
-        markerfacecolor="#FFD43B",
+        markerfacecolor=ALT_COLOR,
         markersize=14,
-        markeredgecolor="white",
+        markeredgecolor=PAGE_BG,
         markeredgewidth=1.5,
         label="Class 1 (correct)",
     ),
     Line2D(
         [0],
         [0],
-        marker="X",
+        marker="o",
         color="w",
-        markerfacecolor="gray",
+        markerfacecolor="none",
         markersize=14,
-        markeredgecolor="#d62728",
-        markeredgewidth=2,
+        markeredgecolor="#CC79A7",
+        markeredgewidth=3.5,
         label="Misclassified",
     ),
 ]
-ax.legend(handles=legend_elements, loc="upper right", fontsize=14, framealpha=0.9)
+ax.legend(handles=legend_elements, loc="upper right", fontsize=14, framealpha=0.95)
 
-# Labels and styling
-ax.set_xlabel("Feature X1", fontsize=20)
-ax.set_ylabel("Feature X2", fontsize=20)
-ax.set_title("contour-decision-boundary · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Feature 1 (Normalized)", fontsize=20, color=INK)
+ax.set_ylabel("Feature 2 (Normalized)", fontsize=20, color=INK)
+ax.set_title("contour-decision-boundary · seaborn · anyplot.ai", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Calculate and display accuracy
 accuracy = np.mean(predictions == y) * 100
 ax.text(
     0.02,
@@ -135,8 +145,12 @@ ax.text(
     fontsize=16,
     verticalalignment="top",
     fontweight="bold",
-    bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
+    bbox={"boxstyle": "round", "facecolor": ELEVATED_BG, "alpha": 0.95, "edgecolor": INK_SOFT},
+    color=INK,
 )
 
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

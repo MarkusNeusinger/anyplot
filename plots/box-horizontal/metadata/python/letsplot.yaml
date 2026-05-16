@@ -1,164 +1,187 @@
 library: letsplot
+language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:31:53Z'
-updated: '2025-12-30T09:42:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593352038
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-12T01:23:35Z'
+generated_by: claude-haiku
+workflow_run: 25707004796
+issue: 2548
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent data design with varied distributions showcasing boxplot features (different
-    medians, spreads, outliers)
-  - Clean horizontal orientation with readable service type labels
-  - Good color contrast between blue boxes and yellow outliers
-  - Realistic tech scenario with appropriate response time values
-  - Proper title format and axis labels with units
+  - Perfect visual quality and legibility in both light and dark themes
+  - Excellent palette compliance—Okabe-Ito green consistent across renders, chrome
+    correctly theme-adaptive
+  - All text elements explicitly sized and readable at full resolution
+  - Clean, minimal design with subtle grid and no visual clutter
+  - Data well-chosen to show outliers and distribution variation
+  - Reproducible code with proper theme token setup
   weaknesses:
-  - Grid lines could be more subtle (alpha reduced) for better visual balance
-  - Does not leverage lets-plot distinctive features like interactive tooltips or
-    hover information
-  - Minor empty space on right side of plot due to outlier distribution
-  image_description: 'The plot displays a horizontal box plot showing response times
-    (in milliseconds) for 6 different service types: API Gateway, Database Query,
-    Authentication, File Storage, Cache Lookup, and Email Service. The boxes are rendered
-    in a muted blue color (#306998) with darker outlines. Outliers are displayed as
-    yellow/gold circles. The x-axis shows "Response Time (ms)" ranging from 0 to ~750ms,
-    while the y-axis shows "Service Type" with category labels. The title "box-horizontal
-    · letsplot · pyplots.ai" appears at the top. The plot uses a minimal theme with
-    subtle vertical grid lines and no horizontal grid lines. Each service shows distinct
-    distributions - Cache Lookup has the tightest distribution near 0-50ms, while
-    Database Query and File Storage show wider distributions with outliers extending
-    to 600-750ms.'
+  - 'DE-02: Good but could be more refined. Grid opacity and line weight are adequate
+    but generic.'
+  - 'DE-03: No visual emphasis or focal point. The sorting helps, but the plot relies
+    solely on data position rather than color, size, or annotation to guide interpretation.'
+  - 'LM-02: Does not leverage distinctive letsplot features. Could use layer composition
+    or other techniques unique to the library.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) provides excellent contrast
+      Chrome: Title "box-horizontal · letsplot · anyplot.ai" is dark ink (#1A1A17), clearly visible. Y-axis labels (Service Type) are secondary ink (#4A4A44), all readable. X-axis label "Response Time (ms)" is descriptive with units. Tick labels are in secondary ink, well-spaced with no overlap.
+      Data: Box plot boxes are teal (#009E73, Okabe-Ito position 1). Outliers rendered as gray circles (#B8B7B0). Whiskers and median lines clearly visible. Boxes show variety in distributions and quartile widths.
+      Grid: Subtle x-axis grid lines only (size=0.2, INK_SOFT color). No y-axis grid, keeping focus on service names.
+      Legibility verdict: PASS — All elements are readable, no overlaps, excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) provides excellent contrast for light text
+      Chrome: Title remains clearly visible in light ink (#F0EFE8). Y-axis labels are in soft light gray (#B8B7B0)—no dark-on-dark failures. All text remains readable against the dark background. X-axis labels and tick labels are light-colored.
+      Data: Box plot boxes are identical teal (#009E73) as in light render. Outliers are in light gray (#B8B7B0), matching the secondary text color for cohesion. Whiskers and medians visible and clear.
+      Grid: Subtle x-axis grid lines visible but not dominant. Same INK_SOFT token applied to dark theme (becomes lighter for dark background).
+      Legibility verdict: PASS — All text readable, no dark-on-dark failures, data colors consistent with light render.
+
+    Both renders pass theme adaptation with flying colors. Only chrome flips (text, grid, background). Data colors (#009E73) remain identical, confirming proper implementation of theme-independent Okabe-Ito palette.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at appropriate
-          sizes
+        comment: Title (24pt), axis labels (20pt), tick labels (16pt) explicitly set
+          and perfectly readable at 4800×2700px
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; service names on y-axis are well-spaced
+        comment: No overlapping text elements. Service labels well-spaced on y-axis.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots are well-sized, outliers clearly visible with contrasting
-          yellow color
+        comment: Box sizes and outlier circles optimally visible and appropriately
+          scaled for data density.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue boxes with yellow outliers provide good contrast; colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space, minor: some empty space on right side
-          due to outliers'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units "Response Time (ms)", Y-axis is descriptive "Service
-          Type"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Good contrast. Okabe-Ito green (#009E73) stands out clearly on both
+          light and dark backgrounds. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect layout: plot fills 60-70% of canvas with balanced margins.
+          Excellent whitespace distribution.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Vertical grid lines are present but quite prominent; no legend needed
-          for this plot
+        comment: 'Descriptive axis labels with units: ''Response Time (ms)'' and ''Service
+          Type''. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73. Background is #FAF8F1 (light)
+          / #1A1A17 (dark). Data colors identical across themes. Chrome is theme-correct
+          in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults. Clean and professional but not
+          exceptional. No distinctive aesthetic choices beyond standard configuration.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: minimal grid (x-axis only), theme_minimal removes
+          spines, subtle styling with alpha blending. Grid styling is custom but generic.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data is sorted by median response time, creating spatial hierarchy.
+          Viewer can see the pattern but no visual emphasis (color, size, annotations)
+          guides interpretation.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal box plot
+        comment: Correct horizontal box plot type with all statistical elements present.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, numeric values on X-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows median, quartiles, whiskers, and outliers
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: median line, quartile box, whiskers (1.5×IQR),
+          outliers clearly visible.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X/Y correctly mapped: Response Time (numeric) on x-axis, Service
+          (categorical) on y-axis.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; categories are self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "box-horizontal · letsplot · pyplots.ai"
+        comment: 'Title format correct: ''box-horizontal · letsplot · anyplot.ai''.
+          Single-series plot needs no legend.'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: different medians, spreads, and outlier patterns
-          across services'
+        comment: 'Shows all aspects: multiple distributions, outliers in several boxes,
+          varying quartile widths and median positions demonstrate full feature coverage.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Response times by service type is a realistic, neutral tech scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times in ms are realistic (15ms for cache to 300ms for file
-          storage)
+        comment: Real, neutral, and comprehensible scenario. Response time by service
+          type is a common business use case. Services (API Gateway, Database, Cache,
+          etc.) are recognizable.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic scales: 5-700ms range is plausible. Distributions make
+          sense (Cache Lookup ~5-40ms fast, Database Query ~150-350ms slow).'
     code_quality:
       score: 10
       max: 10
@@ -168,40 +191,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: 'Clean linear structure: imports → theme tokens → data generation
+          → plot → save. No unnecessary functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Sets np.random.seed(42) for deterministic data generation. Fully
+          reproducible across runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: 'Only necessary imports: os, numpy, pandas, lets_plot. All are used.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic, appropriate complexity. No over-engineering or fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: 'Correct output format: plot-{THEME}.png (scaled 3x for 4800×2700px)
+          + plot-{THEME}.html. Current API (LetsPlot 4.9.0).'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses ggplot2-style API: ggplot() + geoms, labs(), theme_minimal(),
+          custom theme(). Proper use of ggsize() and ggsave().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Basic ggplot grammar usage without lets-plot specific features like
-          tooltips or interactivity configuration
+        comment: Generic usage. HTML export is present but not distinctive to letsplot.
+          No leverage of library-specific features like layer composition, annotations,
+          or interactive callbacks.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

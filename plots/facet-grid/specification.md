@@ -13,19 +13,12 @@ A grid of subplots where each cell shows the same type of plot for a different s
 
 ## Data
 
-The visualization requires:
-- **Numeric variables**: For the base plot (x, y)
-- **Faceting variable(s)**: Categorical variables to split by (row, column)
-
-Example structure:
-```
-X    | Y    | Row_Var | Col_Var
------|------|---------|--------
-1.2  | 3.4  | A       | X
-2.3  | 4.5  | A       | Y
-3.1  | 2.8  | B       | X
-...
-```
+- `x` (numeric) - First axis variable for the base plot
+- `y` (numeric) - Second axis variable for the base plot
+- `row_facet` (categorical) - Variable to split rows
+- `col_facet` (categorical) - Variable to split columns
+- Size: 100–5000 points minimum (sufficient to show variation across facets)
+- Example: Palmer Penguins (split by species and island), or any dataset with 2+ categorical grouping variables
 
 ## Notes
 

@@ -62,6 +62,14 @@
 /* MonoLisa script variant (italic ss02) — test */
 html { font-feature-settings: "ss02"; }
 
+/* Defense-in-depth against page-level horizontal scroll on mobile. `clip`
+   (not `hidden`) so the masthead's `position: sticky` keeps working — `hidden`
+   would create a scroll container and break it. Wide elements still need their
+   own local containment (e.g. tables, code blocks); this just stops a stray
+   overflow from leaking into viewport-wide horizontal scroll, which on SPA
+   nav otherwise persists across routes. */
+html, body { overflow-x: clip; }
+
 /* Animations */
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }

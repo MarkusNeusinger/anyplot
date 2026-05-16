@@ -1,160 +1,186 @@
 library: matplotlib
+language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:47:26Z'
-updated: '2025-12-30T17:50:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602446751
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/matplotlib/plot.png
-preview_html: null
+updated: '2026-05-13T07:22:07Z'
+generated_by: claude-haiku
+workflow_run: 25784345022
+issue: 2781
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - grid-styling
 review:
   strengths:
-  - Clear visualization of asymmetric error bars with visible caps and appropriate
-    thickness
-  - Excellent use of fill_between to show confidence region - enhances visual understanding
-  - Well-chosen realistic business scenario with monthly sales data
-  - Perfect title format and axis labeling with units
-  - Good color choice and overall visual balance
+  - 'Theme-Adaptive Excellence: Both light and dark renders are pixel-perfect with
+    correct token application and no readability failures'
+  - 'Asymmetric Visualization: Error bars with fill_between effectively communicate
+    unequal uncertainty bounds'
+  - 'Spec Fidelity: All required features (caps, asymmetry, legend) implemented as
+    specified'
+  - 'Code Clarity: Simple, idiomatic, reproducible implementation with no bloat'
+  - 'Data Appropriateness: Realistic monthly sales scenario with plausible confidence
+    intervals'
   weaknesses:
-  - Marker size (15) could be slightly larger for better visibility at full resolution
-  - Legend could better explain what asymmetric bounds represent (the fill region
-    is not explained)
-  image_description: The plot displays a clean asymmetric error bar visualization
-    with 8 data points representing monthly sales data (Jan-Aug). Each point is shown
-    as a solid blue (#306998) circle marker with thick vertical error bars extending
-    asymmetrically above and below. The error bars have visible horizontal caps at
-    both ends. A subtle light blue filled region connects all error bounds, showing
-    the confidence interval range across months. The title "errorbar-asymmetric ·
-    matplotlib · pyplots.ai" is prominently displayed at the top. The x-axis shows
-    months, y-axis shows "Sales (thousands USD)" ranging from 0 to 120. A legend in
-    the upper left explains "Median with 10th-90th percentile". The grid is subtle
-    with dashed lines and low opacity.
+  - 'Minimal Design Flourish: Uses default marker styling; could explore edge colors
+    or transparency gradients for higher design scores'
+  - 'Limited Distinctive Techniques: Relies on core errorbar + fill_between; no secondary
+    techniques (twin-axes, annotations) explored'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "errorbar-asymmetric · matplotlib · anyplot.ai" in dark INK color (24pt), Y-axis label "Sales (thousands USD)" and X-axis label "Month" in INK color (20pt), tick labels in INK_SOFT (#4A4A44) at 16pt
+      All text is HIGHLY READABLE against light background - PASS
+      Data: 8 data points with large circular markers (22pt) in brand green (#009E73), asymmetric error bars with visible caps (capsize=10), semi-transparent green fill between confidence bounds
+      Legend: "Median with 10th-90th percentile bounds" on elevated background (#FFFDF6) in upper left
+      Grid: Subtle Y-axis grid at 15% alpha, aids value reading without competing with data
+      Legibility verdict: PASS - excellent contrast, no overlaps, all elements clearly distinguished
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and axis labels in light INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0)
+      All text is HIGHLY READABLE against dark background - PASS
+      Data: Identical to light render - brand green (#009E73) markers and error bars confirm Okabe-Ito invariance
+      Legend: Same label on dark elevated background (#242420) with appropriate edge color
+      Grid: Subtle Y-axis grid at 15% alpha, consistent with light render
+      Color consistency: Data colors IDENTICAL to light render - only chrome flipped as expected
+      Legibility verdict: PASS - no dark-on-dark failures, no text contrast issues, all elements clearly visible
+      Both renders PASS theme-readability check - implementation successful
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: All text (title 24pt, labels 20pt, ticks 16pt) explicitly sized and
+          perfectly readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping elements; legend positioned cleanly with adequate
+          spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (s=15) and error bars (elinewidth=3, capsize=10) are well-sized
-          and visible; slightly larger markers could improve visibility
+        comment: Markers (markersize=22) and error bars (elinewidth=3) clearly distinguishable;
+          fill adds depth
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme (#306998) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, good use of space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Month" and "Sales (thousands USD)" - descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green (#009E73) is CVD-safe with strong contrast on both
+          surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio optimal for time series; tight layout; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid has alpha=0.3 which is appropriate; however the legend text
-          "Median with 10th-90th percentile" is slightly cut-off/cramped
+        comment: Descriptive labels with units; title follows spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses #009E73; backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semi-transparent fill_between() adds refined visual storytelling;
+          intentional color choice; limited custom flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines properly removed; grid subtle; generous whitespace; could
+          use marker edge colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Asymmetric errors guide viewer; clear visual hierarchy; legend explains
+          bounds; strong narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct asymmetric error bar plot
+        comment: Correct asymmetric error bar plot using errorbar() with asymmetric
+          yerr
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months (categorical), Y=sales values with asymmetric errors correctly
-          assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has visible caps, legend explaining bounds, asymmetric error magnitudes
-      - id: SC-04
-        name: Data Range
+        comment: 'All present: error bars with visible caps, asymmetric bounds, clear
+          markers, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-120 shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (months), Y-axis (sales); all 8 points correctly plotted;
+          Y-range shows all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes "10th-90th percentile"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title matches spec format; legend explains asymmetric interpretation
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear asymmetry (upper errors larger than lower), variety in
-          error magnitudes; could show more dramatic asymmetry in some points
+        comment: Asymmetric error bars fully demonstrated with different lower and
+          upper magnitudes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly sales performance is a real, neutral business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values 42-82 thousands USD are realistic for business data
+        comment: Monthly sales data realistic and neutral; percentile interpretation
+          plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible; error magnitudes proportionate; Y-axis extends comfortably
     code_quality:
       score: 10
       max: 10
@@ -164,41 +190,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: No functions or abstractions; straightforward plot code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only os, matplotlib.pyplot, numpy imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; current matplotlib API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses standard errorbar function correctly but fill_between is a nice
-          touch; could leverage more matplotlib-specific features like custom error
-          bar styling or annotations
+        passed: true
+        comment: Proper errorbar() with asymmetric yerr; theme-adaptive colors; spine
+          idiom; legend styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: fill_between() visualization is distinctive; limited to single technique
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

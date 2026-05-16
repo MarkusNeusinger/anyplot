@@ -13,19 +13,19 @@ A line plot with visible markers at each data point, combining line and scatter 
 
 ## Data
 
-The visualization requires:
-- **X variable**: Continuous variable
-- **One or more Y variables**: Series with data points to mark
+- `x` (continuous, numeric) - X-axis values
+- `y` (numeric, continuous) - Y-axis values; supports multiple series
 
-Example structure:
+Size: 10–1000 points per series recommended
+
+Example:
 ```
-X    | Value
------|-------
+x    | y
+-----|-----
 0    | 10.5
 1    | 12.3
 2    | 11.8
 3    | 14.2
-...
 ```
 
 ## Notes

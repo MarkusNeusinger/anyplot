@@ -1,160 +1,171 @@
 library: letsplot
+language: python
 specification_id: network-directed
 created: '2025-12-30T23:57:51Z'
-updated: '2025-12-31T00:05:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608487718
+updated: '2026-05-14T03:40:01Z'
+generated_by: claude-haiku
+workflow_run: 25840099156
 issue: 2858
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-directed/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-directed/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent hierarchical layout clearly showing software dependency structure from
-    top (App) to bottom (utilities)
-  - Clean use of lets-plot ggplot2-style grammar with geom_segment arrows and geom_point
-    for nodes
-  - Well-chosen color palette distinguishing four module types (application, core,
-    infrastructure, utility)
-  - Proper edge shortening to prevent arrow overlap with nodes
-  - Correct title format and professional styling with theme_void
+  - Full theme-adaptive color support with INK_SOFT edges and INK text labels correctly
+    switching between light and dark themes
+  - Correct Okabe-Ito palette usage with first series as brand green (#009E73)
+  - Clean minimal design using theme_void() that doesn't compete with network structure
+  - Hierarchical layout effectively shows dependency flow and creates natural visual
+    hierarchy
+  - Both light and dark renders fully readable with no legibility issues
+  - White node strokes provide excellent definition across all color backgrounds
+  - Title and legend formatting meet spec requirements precisely
   weaknesses:
-  - Could demonstrate bidirectional edges (curved edges) as mentioned in spec for
-    nodes with mutual connections
-  - File handling code (os, shutil for moving files from lets-plot-images) adds unnecessary
-    complexity
-  - HTML export could leverage lets-plot interactive features like tooltips showing
-    module details
-  image_description: 'The plot displays a directed network graph visualizing software
-    package dependencies. At the top sits a dark blue "App" node, connected by arrows
-    to a yellow "API" node below. The API node then branches out to multiple modules:
-    Auth (yellow), Database (yellow), and Cache (green) in the middle layer. At the
-    bottom layer are HTTP Client (green), Queue (green), Config (purple), and Logger
-    (purple). A separate Utils node (purple) appears on the right side. Arrows with
-    closed triangle heads show the direction of dependencies, all using a consistent
-    gray color. The background is clean white (theme_void), and a legend on the right
-    shows four module types: application (blue), core (yellow), infrastructure (green),
-    and utility (purple).'
+  - Node stroke color hardcoded as white rather than theme-adaptive (though works
+    well visually)
+  - Limited design sophistication beyond functional minimalism
+  - No curved edges despite spec mentioning them for bidirectional connections
+  - Could employ more visual refinement (e.g., subtle edge bundling, varied edge weights,
+    or more sophisticated layout tweaking)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no pure white or dark elements
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text with strong contrast
+      Data: Nodes colored by Okabe-Ito palette (green #009E73 primary, orange/blue/purple for other groups), edges gray with visible closed arrows
+      Legibility verdict: PASS - all elements clearly readable with appropriate contrast on light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with no pure black elements
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (#F0EFE8) with strong contrast
+      Data: Okabe-Ito colors identical to light render (only chrome has flipped), edges appear lighter gray (INK_SOFT #B8B7B0), no dark-on-dark failures
+      Legibility verdict: PASS - all elements clearly readable, no dark-on-dark issues, brand green remains distinctly visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and node labels are bold and readable, good font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; labels positioned below nodes cleanly
+        comment: All text bold and clearly readable in both themes with strong contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; nodes and labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes are well-sized, arrows are visible with proper arrowheads;
-          slightly crowded in the middle layer
+        comment: Nodes appropriately sized, arrows prominent with closed heads and
+          visible alpha
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, purple palette is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good hierarchical layout, plot fills canvas well
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed on right, clean void theme
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted, no axis labels appropriate for network
+          graph
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct, both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Hierarchical layout thoughtful but styling relatively standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Clean minimal design but limited visual embellishment
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with effective dependency flow narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements directed network graph with arrows
+        comment: Correct directed network graph
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes and edges correctly mapped with source→target direction
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has nodes, directed edges with arrows, node grouping by color
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 10 nodes visible within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Nodes positioned hierarchically, edges correctly represent relationships
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 4 module types
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: network-directed · letsplot · pyplots.ai'
+        comment: Title and legend properly formatted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchical dependencies, multiple connection patterns, various
-          node degrees; could show bidirectional edges
+        comment: All network graph features demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software package dependency network is a perfect, realistic example
+        comment: Software dependencies is authentic and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 10 nodes and 20 edges is appropriate; could have slightly more variety
-          in edge density
+        comment: 10 nodes is ideal scale, neither sparse nor crowded
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,41 +173,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Straightforward procedural code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Imports are appropriate but os and shutil for file moving adds complexity
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only imports used, proper namespacing
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity with edge-shrinking logic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot composition and geom usage
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar, geom_segment with arrow(), scale_fill_manual,
-          theme_void; could use more lets-plot specific features like tooltips for
-          HTML version
+        comment: Uses arrow() and geom_segment appropriately
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

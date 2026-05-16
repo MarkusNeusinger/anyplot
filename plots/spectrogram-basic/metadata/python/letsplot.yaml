@@ -1,166 +1,180 @@
 library: letsplot
+language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T05:34:45Z'
-updated: '2025-12-31T05:46:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612811020
+updated: '2026-05-15T07:42:43Z'
+generated_by: claude-haiku
+workflow_run: 25906322719
 issue: 2927
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/letsplot/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent use of scipy.signal.spectrogram for proper FFT-based spectrogram computation
-  - Viridis colormap is perceptually uniform and colorblind-safe as recommended in
-    spec
-  - dB scale conversion (10 * log10) provides better dynamic range visualization
-  - Clean chirp signal generation with appropriate parameters demonstrates frequency
-    sweep clearly
-  - Proper axis labels with units (seconds, Hz, dB) as specified
-  - Correct title format following pyplots.ai conventions
-  - Good text sizing for legibility at 4800x2700 resolution
-  - Interactive HTML output also generated
+  - Perfect text legibility in both light and dark renders with correct theme token
+    application
+  - Proper use of viridis colormap for continuous power data (not categorical)
+  - Clean minimal aesthetic with theme_minimal() providing professional polish
+  - Accurate scipy.signal.spectrogram computation with appropriate windowing parameters
+  - 'Excellent data storytelling: ascending frequency band immediately visible showing
+    the chirp pattern'
+  - Flawless theme-adaptive design with no dark-on-dark or light-on-light text failures
   weaknesses:
-  - No grid lines to help read values at specific time-frequency points
-  - Y-axis shows 0-500 Hz but chirp only goes to 200 Hz, wasting some visual space
-  - Could benefit from minor grid for easier value reading on the heatmap
-  image_description: The spectrogram displays a time-frequency heatmap showing a chirp
-    signal with frequency increasing over time. The plot uses the viridis colormap
-    with colors ranging from dark purple (low power, ~-80 dB) through teal/green (mid
-    power, ~-40 to -60 dB) to bright yellow (high power, ~-20 dB). The X-axis shows
-    "Time (seconds)" from 0 to 2, and the Y-axis shows "Frequency (Hz)" from 0 to
-    500. A clear diagonal bright yellow band sweeps from low frequency (~10 Hz) at
-    time 0 to approximately 200 Hz at time 2 seconds, demonstrating the characteristic
-    chirp pattern. The title reads "spectrogram-basic · lets-plot · pyplots.ai" at
-    the top. A colorbar legend on the right shows "Power (dB)" with the scale. The
-    background noise appears as scattered teal/green tiles outside the main signal
-    band.
+  - 'Minor: DE-01 could be higher with more distinctive aesthetic choices beyond library
+    defaults'
+  - 'Minor: LM-02 could explore more LetsPlot-specific interactive capabilities (though
+    spec is for basic visualization)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) provides clean surface.
+      Chrome: Title, axis labels, tick labels all clearly readable in dark text (INK=#1A1A17, INK_SOFT=#4A4A44). Grid lines subtle but visible. Legend well-positioned.
+      Data: Viridis colormap renders smoothly from purple (low power ~-80 dB) through cyan/green to bright yellow (high power ~-20 dB). Ascending frequency chirp pattern clearly visible.
+      Legibility verdict: PASS - All text readable, no contrast issues, data colors clear.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) provides dark surface.
+      Chrome: Title, axis labels, tick labels all clearly readable in light text (INK=#F0EFE8, INK_SOFT=#B8B7B0). No dark-on-dark failures. Grid lines visible. Legend properly styled.
+      Data: Viridis colormap colors are IDENTICAL to light render - confirming theme-adaptation where only chrome flips. Ascending frequency band unmistakable. Colors distinguish low/medium/high power effectively.
+      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark issues, data colors identical to light render.
+
+    Both renders verified: Theme-adaptation correct, all text legible, data colors consistent, palette compliant.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels all clearly readable at proper sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Font sizes explicitly set (title=24, labels=20, ticks=16); all readable
+          in both light and dark themes with proper color tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; tick labels well-spaced; colorbar clearly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tiles are well-sized and clearly visible; the chirp signal is easily
-          distinguishable
+        comment: Heatmap tiles clearly visible; chirp ascending frequency pattern
+          obvious and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight imbalance with legend placement
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Proper units: "Time (seconds)" and "Frequency (Hz)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is CVD-safe; good contrast throughout; no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No visible grid lines; legend is present but grid would help interpretation
+        passed: true
+        comment: 'All labels include units: Time (seconds), Frequency (Hz), Power
+          (dB)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous data; backgrounds exactly #FAF8F1/#1A1A17;
+          chrome theme-adapted; data colors identical across renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean minimal design using theme_minimal(); viridis professional;
+          typography clear; well above defaults but not exceptionally distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal() removes unnecessary elements; subtle grid; generous
+          whitespace; polished overall
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Ascending frequency band visible as focal point; viridis brightness
+          encodes power; clear story of frequency sweep
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct spectrogram/heatmap visualization
+        comment: Correct spectrogram heatmap representation using geom_tile
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, Frequency on Y-axis, Power as color fill
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar with dB units, proper axis labels, chirp signal demonstration
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar with dB units; time/frequency axes labeled; time-frequency
+          grid mapping complete
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full time and frequency range visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Time on X (0-2s), Frequency on Y (0-260 Hz), Power in color; all
+          data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: '"Power (dB)" legend accurate'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "spectrogram-basic · lets-plot · pyplots.ai"'
+        comment: Title format 'spectrogram-basic · letsplot · anyplot.ai' correct;
+          legend label appropriate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows chirp signal clearly with noise; could show additional signal
-          features
+        comment: Chirp ascending 10→200 Hz visible; noise added for realism; time-frequency
+          resolution trade-off evident
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Chirp signal is a standard test signal used in radar, sonar, and
-          audio analysis
+        comment: Chirp signal is canonical spectrogram example; 1000 Hz sample rate
+          realistic; sweep range realistic for audio
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Reasonable frequency range (10-200 Hz chirp), sample rate (1000 Hz),
-          duration (2 sec); slight overkill on y-axis range showing 0-500 Hz
+        comment: dB scale standard for power representation; frequency range 0-250
+          Hz appropriate; all values factually correct
     code_quality:
       score: 10
       max: 10
@@ -170,40 +184,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Direct script: imports → signal generation → spectrogram → plot
+          → save; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, lets_plot, scipy.signal)
+        comment: Only used imports (os, numpy, pandas, scipy.signal, lets_plot)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current API usage
+        comment: Clean Pythonic code; appropriate complexity; no fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_tile, scale_fill_viridis, theme_minimal;
-          good but no advanced lets-plot specific features
+        comment: Uses ggplot2 grammar (ggplot + aes + geom_tile + scale + theme);
+          high-level API; follows letsplot guide
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggsize() and ggsave(scale=3); theme composition; HTML export;
+          solid usage but not exceptionally distinctive to letsplot
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap

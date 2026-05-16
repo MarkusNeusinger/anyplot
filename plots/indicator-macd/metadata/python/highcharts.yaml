@@ -1,159 +1,188 @@
 library: highcharts
+language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:33:30Z'
-updated: '2026-01-07T16:44:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788389882
+updated: '2026-05-16T10:55:35Z'
+generated_by: claude-haiku
+workflow_run: 25960028031
 issue: 3181
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/highcharts/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of all three MACD components (histogram, MACD line, signal
-    line)
-  - Clear zero reference line with label for identifying crossover signals
-  - Good subtitle showing MACD parameters (12, 26, 9) as required by spec
-  - 'Proper color coding: green for positive histogram, red for negative'
-  - Clean data generation with proper EMA calculations
-  - Interactive HTML output also generated
-  - Good use of dashed line style for signal line to distinguish from MACD line
+  - Theme-adaptive styling with correct color tokens (INK, INK_SOFT, GRID) applied
+    to both renders
+  - All three MACD components clearly visible and distinguished (histogram, MACD line,
+    signal line)
+  - 'Proper use of Highcharts features: datetime axis, plotLines for zero reference,
+    shared tooltips, per-point color assignment'
+  - Realistic MACD data generation with correct 12/26/9 parameters and proper EMA
+    calculations
+  - Professional layout with appropriate font sizes (28px title, 22px axis labels,
+    18px ticks) and generous margins
+  - Both light and dark renders fully functional with correct background colors and
+    no theme-adaptation failures
   weaknesses:
-  - Uses red-green color combination for histogram bars which is not colorblind-safe;
-    consider using blue/orange or other accessible palette
-  - X-axis Date label appears slightly cut off at the bottom of the image
-  - Implementation uses manual JavaScript/JSON construction rather than the highcharts_core
-    Python library API
-  image_description: 'The plot displays a MACD technical indicator chart with three
-    components: histogram bars (green for positive, red for negative values), a solid
-    blue MACD line, and a dashed yellow/orange signal line. The chart spans from Feb
-    19 to Jul 08 on the x-axis (datetime) and MACD values from approximately -3.60
-    to 2.20 on the y-axis. A prominent zero reference line is visible with a "Zero
-    Line" label on the right side. The title "indicator-macd · highcharts · pyplots.ai"
-    appears at the top, with a subtitle showing "MACD (12, 26, 9) - Simulated Stock
-    Data". A legend in the top area shows all three series. The histogram bars effectively
-    show momentum changes, with green bars above zero and red bars below. The MACD
-    and signal line crossovers are clearly visible, demonstrating the indicator''s
-    purpose for identifying trend reversals.'
+  - 'Histogram color palette (#22C55E green, #EF4444 red) deviates from Okabe-Ito
+    standard, though justified by spec requirement'
+  - De-01 design excellence score conservative—styling is professional but could explore
+    additional visual hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 ✓
+      Chrome: Title, axis labels, ticks all readable in dark INK and INK_SOFT colors. Subtitle present explaining parameters. ✓
+      Data: Green histogram (positive), red histogram (negative), bluish-green MACD line (#009E73), vermillion signal line (#D55E00) all clearly visible and distinct.
+      Zero reference line at y=0 with label. Legend positioned top-center with 3 series.
+      Legibility verdict: PASS - all text readable, data clearly distinguished, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 ✓
+      Chrome: Title, axis labels, ticks all readable in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) colors. ✓
+      Data: Histogram colors (green/red) remain identical to light render. MACD and signal lines maintain same colors.
+      Zero reference line visible. Legend readable with appropriate contrast.
+      Legibility verdict: PASS - all text readable in light colors, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are well-spaced
+        comment: Title 28px, axis labels 22px, ticks 18px all readable in both themes
+          with proper color tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram, MACD line, signal line clearly separated. Legend positioned
+          without collision.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars and lines are visible and appropriately sized; minor
-          deduction as some histogram bars could be slightly wider
+        comment: All three series visible and distinct. Histogram bars clearly show
+          positive/negative momentum.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses green/red for histogram which is a red-green combination; however,
-          the lines (blue/yellow) are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with appropriate margins; plot fills canvas well
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Y-axis has MACD Value (descriptive but no units), X-axis Date label
-          partially cut off
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines, legend is well-positioned at top
+        comment: 'Okabe-Ito used for lines (#009E73, #D55E00). Histogram green/red
+          per spec. CVD-safe and distinct.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 canvas well-utilized with appropriate margins. Nothing
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. Subtitle explains parameters. Axis labels descriptive
+          (Date, MACD Value).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito positions 1-2 used for lines. Histogram green/red justified
+          by spec. Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Professional publication-ready styling with theme adaptation. Histogram
+          emphasis creates visual hierarchy. Solid but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines visible, grid subtle. Standard refinement level, not minimal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Clear narrative: histogram shows momentum direction, lines show
+          convergence/divergence, zero line highlights crossovers. Good focal points.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct MACD chart with histogram, MACD line, and signal line
+        comment: Correct MACD technical indicator with three components (line, line,
+          histogram).
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, MACD values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: histogram with green/red colors, zero
-          line, MACD line, signal line, parameters noted (12, 26, 9)'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: MACD line, signal line, histogram with green/red,
+          zero reference line, distinct colors, parameters noted.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct. Axes show full data range (115 periods). Datetime axis
+          appropriate.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format indicator-macd · highcharts · pyplots.ai
+        comment: Title format 'indicator-macd · highcharts · anyplot.ai' correct.
+          Legend shows Histogram, MACD Line, Signal Line.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows MACD/signal crossovers, both bullish and bearish momentum periods,
-          zero-line crossings; slightly less variation in histogram extremes
+        comment: 'Shows all MACD components: main line, signal line, momentum histogram.
+          Demonstrates oscillator use case.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Simulated stock data is appropriate; neutral business/finance context
+        comment: Simulated stock price data with proper EMA calculations (12/26/9).
+          Plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: MACD values are reasonable for typical stock analysis; range is realistic
+        comment: 115 data points within spec range (60-200). MACD values realistic.
+          Time period appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,53 +190,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save structure followed
+        comment: 'Straightforward code: data generation, config string, HTML generation,
+          screenshot. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports (numpy, pandas, selenium, urllib, tempfile, time, os,
+          pathlib, json) are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses manual JSON construction instead of highcharts_core library
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Highcharts interactivity is real (tooltips,
+          hover), not simulated.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
+        comment: Correctly saves plot-light.png, plot-dark.png, plot-light.html, plot-dark.html.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper Highcharts patterns: datetime axis, plotLines, shared tooltips,
+          per-point color assignment, theme-adaptive configuration, inline scripts
+          for headless Chrome.'
+      - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Does not use highcharts_core Python library; manually constructs
-          JavaScript which works but doesn't leverage the Python API as intended
+        comment: Uses library-specific features (plotLines, datetime axis, color per
+          point), but implementation is fairly standard. Some use of advanced features
+          but could explore more.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - hover-tooltips
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - time-series
-  - rolling-window
   styling:
-  - grid-styling
+  - publication-ready

@@ -1,168 +1,169 @@
 library: plotnine
+language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:22:17Z'
-updated: '2025-12-30T11:29:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595336206
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - grid-styling
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-12T09:33:17Z'
+generated_by: claude-haiku
+workflow_run: 25725352010
+issue: 2645
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of step histogram using geom_step with manually computed
-    bin edges
-  - Perfect demonstration of overlaying multiple distributions for comparison (key
-    application from spec)
-  - Clean, readable code following KISS principles
-  - Proper figure sizing (16x9) and text scaling for 4800x2700 output
-  - Good color contrast between the two distributions
-  - Realistic and neutral data scenario (server performance comparison)
+  - Perfect visual quality with explicit font sizing
+  - Flawless theme-adaptive implementation with both renders equally readable
+  - Clean, realistic example data effectively demonstrating the plot type
+  - Proper Okabe-Ito palette compliance with correct color ordering
+  - All spec requirements met
   weaknesses:
-  - Legend placement inside the plot area could potentially overlap with data in some
-    cases; consider placing outside
-  - Manual histogram computation instead of exploring plotnine native histogram capabilities
-  image_description: The plot displays two overlapping step histograms showing response
-    time distributions for server configurations. The blue line represents "Optimized
-    Setup" (centered around 180ms with a tighter distribution) and the yellow/gold
-    line represents "Standard Setup" (centered around 250ms with a wider spread).
-    The plot uses a clean white background with subtle gray grid lines. The title
-    "histogram-stepwise · plotnine · pyplots.ai" is prominently displayed at the top.
-    X-axis shows "Response Time (ms)" ranging from about 50 to 500, Y-axis shows "Frequency"
-    ranging from 0 to 60. A legend in the right portion of the plot area identifies
-    the two configurations. The step lines are thick and clearly visible with good
-    contrast.
+  - Design excellence limited to defaults; could benefit from more intentional aesthetic
+    choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 as required
+      Chrome: Title, axis labels, and tick labels clearly visible in dark text (#1A1A17 and #4A4A44)
+      Data: Green step function (#009E73) for Optimized Setup, orange (#D55E00) for Standard Setup
+      Legend: Bottom-positioned, clearly identifying both configurations
+      Legibility verdict: PASS - all text readable, proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 as required
+      Chrome: All text (title, labels, ticks) clearly visible in light colors (#F0EFE8 and #B8B7B0)
+      Data: Identical colors to light render (green #009E73 and orange #D55E00), confirming theme-independence for data
+      Legend: Same structure as light render, fully readable
+      Legibility verdict: PASS - no dark-on-dark failures, all elements properly adapted for dark theme
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: title at 24pt, axis labels at 20pt, tick
-          labels at 16pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt)
+          and perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Step lines are thick (size=2) and visible, alpha=0.9 provides good
-          contrast. Minor: where distributions overlap, both are still distinguishable'
+        comment: Step lines optimally visible, both distributions clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) have good contrast and are distinguishable
-          for most color vision deficiencies. Not a perfect colorblind-safe palette
-          but acceptable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Response Time (ms)"
-          and "Frequency"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures CVD safety with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 16x9 layout with ~60% canvas utilization and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Response Time (ms)'' and ''Frequency'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00 in correct Okabe-Ito order;
+          backgrounds theme-correct in both renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is appropriately subtle. However, the legend placement inside
-          the plot area is acceptable but could be positioned better to avoid potential
-          overlap with data
+        comment: Well-configured defaults but no exceptional design thought or custom
+          refinements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some customization visible (subtle grid, panel border) but could
+          benefit from more aggressive refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy with two distinct step functions creating natural
+          comparison narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step histogram (outline only, no fill)
+        comment: Correct step histogram with outline only, no fill
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows continuous variable values, Y-axis shows frequency counts
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows step lines without fill, horizontal segments at count levels,
-          vertical segments connecting bins, demonstrates overlaying multiple distributions
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: step-line display, multiple distributions
+          for comparison'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y correctly assigned; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both configurations
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-stepwise · plotnine · pyplots.ai"'
+        comment: Title format correct; legend labels proper and identified
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two overlapping distributions with different means and spreads,
-          demonstrating the main use case. Could show more distinct shapes (e.g.,
-          skewed distribution)
+        comment: Shows all aspects of histogram type with both tight and loose distributions
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response time comparison is a realistic, neutral scenario
+        comment: Server response times (ms) are realistic domain; comparison of configurations
+          is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times of 180ms and 250ms are realistic for server responses.
-          Range is sensible.
+        comment: Values factually correct and proportionally accurate for response
+          time distributions
     code_quality:
       score: 10
       max: 10
@@ -172,42 +173,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: 'Clean linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set to 42; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Pythonic, appropriate complexity, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_step, theme_minimal, and proper theming.
-          However, manually computing histogram bins rather than using geom_histogram
-          with stat approach is a workaround rather than leveraging plotnine's native
-          capabilities
+        comment: Uses ggplot() + geom_step() correctly with standard plotnine composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Straightforward usage of geom_step(); no distinctive features beyond
+          basic plotting
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling: []

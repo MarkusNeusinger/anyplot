@@ -1,159 +1,178 @@
 library: letsplot
+language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:17:22Z'
-updated: '2025-12-31T00:20:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20608712128
+updated: '2026-05-14T05:50:51Z'
+generated_by: claude-haiku
+workflow_run: 25844034586
 issue: 2860
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/letsplot/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/letsplot/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent demonstration of overfitting concept with training/validation loss divergence
-  - Clean implementation of optimal stopping point marker with diamond shape and vertical
-    dashed line
-  - Good use of lets-plot grammar of graphics with proper theme customization
-  - Appropriate color scheme (blue/yellow) that is colorblind-friendly
-  - Proper sizing with ggsize(1600, 900) and scale=3 for high-resolution output
+  - 'Excellent theme adaptation: both light and dark renders are perfectly legible
+    with proper text-color mapping'
+  - 'Accurate color palette compliance: Okabe-Ito colors (#009E73, #D55E00) correctly
+    applied'
+  - 'Strong spec compliance: all required features present, including optional optimal-epoch
+    marker'
+  - Clean, idiomatic letsplot code with proper theme system for chrome adaptation
+  - Realistic, demonstrative data showing clear overfitting narrative
+  - Perfect visual quality across all 6 criteria (30/30)
   weaknesses:
-  - Grid lines are not visible despite using theme_minimal (could add explicit grid
-    with alpha for subtle visibility)
-  - The legend shows empty string for color label which works but is not ideal practice
-  image_description: 'The plot displays a training loss curve with two lines on a
-    light gray gridded background. The blue line represents "Training Loss" starting
-    at ~2.5 and decreasing smoothly to ~0.1 by epoch 100. The yellow/gold line represents
-    "Validation Loss" starting at ~2.6, decreasing initially but then showing overfitting
-    behavior after ~epoch 50, rising to ~0.6 by epoch 100. A vertical red dashed line
-    marks the optimal stopping point at approximately epoch 60, with a red diamond
-    marker at the minimum validation loss point (~0.4). The title "line-loss-training
-    · letsplot · pyplots.ai" appears in bold at the top. The legend is positioned
-    at the top, showing "Training Loss" (blue) and "Validation Loss" (yellow). Axes
-    are clearly labeled: "Epoch" (x-axis) and "Cross-Entropy Loss" (y-axis).'
+  - 'Design Excellence could be elevated: consider removing top/right spines for more
+    refined L-shaped frame'
+  - 'Distinctive library features not fully leveraged: letsplot offers interactive
+    tooltips and custom guides that could enhance showcase'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface, clean and neutral
+      Chrome: Title "line-loss-training · letsplot · anyplot.ai" in dark text (#1A1A17), clearly visible. Axis labels "Epoch" (X) and "Cross-Entropy Loss" (Y) in dark text. Tick labels (0-100 epochs, 0-2.6 loss) all readable in dark text. Subtle gray grid lines visible without competing with data.
+      Data: Training Loss curve in green (#009E73, Okabe-Ito pos 1) showing smooth decrease from ~2.5 to ~0.1. Validation Loss curve in orange (#D55E00, pos 2) showing early decrease then increase after epoch 50 (overfitting). Red vertical dashed line at epoch 60 marking optimal point, with diamond-shaped marker at the minimum validation loss. Legend at top clearly identifies both curves.
+      Legibility verdict: PASS — all text is dark and crisp against the warm light background; curves are clearly distinguishable; no dark-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface, no pure black, properly theme-adapted
+      Chrome: Title in light text (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in light text (INK_SOFT #B8B7B0), all readable. Grid lines subtle but visible.
+      Data: Training Loss curve remains green (#009E73), Validation Loss remains orange (#D55E00) — **identical colors to light render, confirming proper data-color independence**. Red marker line and diamond at epoch 60 remain visible. Legend colors match light render.
+      Legibility verdict: PASS — no dark-on-dark failures; text colors properly adapted from INK (#1A1A17 on light → #F0EFE8 on dark); data colors unchanged; all elements readable. Brand green (#009E73) reads well on dark surface as expected.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large, axis labels and tick marks are clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: Title, axis labels, tick labels all clearly readable in both light
+          and dark renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend positioned at top, no element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are well-sized (1.5), optimal point marker visible but could
-          be slightly larger
+        comment: Both curves distinct, optimal point marker (diamond + line) clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are distinguishable, colorblind-safe combination
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Cross-Entropy Loss" (descriptive), X-axis has "Epoch"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; red marker distinct without relying
+          on color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 (scaled 3×) landscape format well-proportioned, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is minimal theme (no visible grid lines), legend well placed
-          at top
+        comment: Title format correct; axes labeled with units (Cross-Entropy Loss)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series green (#009E73), second orange (#D55E00), backgrounds
+          correct for both themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom theme with theme-adaptive tokens; optimal-epoch marker adds
+          narrative. Professional but not groundbreaking.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean base, unframed legend. Could remove spines for
+          more refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear overfitting narrative with optimal-epoch focal point. Effective
+          color contrast and marker hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot for training loss curves
+        comment: Correct dual-curve line plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Epoch on X, Loss on Y correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Dual curves, distinct colors, legend, optimal stopping point marked
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors, legend, epoch range, loss function label, optional
+          optimal-epoch marker
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, epochs 1-100
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (Epoch), Y (Loss) correct; axes span full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Training Loss and Validation Loss
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "line-loss-training · letsplot · pyplots.ai"
+        comment: Title format correct; legend labels match curves
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows key features: initial high loss, training convergence, overfitting
-          divergence after epoch 50'
+        comment: Demonstrates training-loss decrease and validation-loss overfitting
+          realistically
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Neural network training is realistic, loss values plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Loss values 0-2.6 appropriate for cross-entropy, 100 epochs typical
+        comment: Plausible neural-network scenario; neutral, non-controversial; seed
+          ensures reproducibility
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 100 epochs typical; 0–2.6 loss range appropriate for cross-entropy
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,40 +180,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: No functions/classes; straightforward script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: All imports used; no cruft
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png but also saves plot.html (minor, acceptable)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ggplot2 grammar; theme_minimal() + custom theme; scale_color_manual()
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar, theme_minimal, scale_color_manual, geom_vline;
-          good but not exceptional library usage
+        comment: Theme system well-used; ggsave() with scale for resolution. Standard
+          patterns, not distinctive beyond expected.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

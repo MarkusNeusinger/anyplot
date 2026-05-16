@@ -1,168 +1,178 @@
 library: highcharts
+language: python
 specification_id: polar-bar
 created: '2025-12-30T16:36:34Z'
-updated: '2025-12-30T16:45:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601059516
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T01:21:05Z'
+generated_by: claude-haiku
+workflow_run: 25771976624
+issue: 2693
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-bar/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-bar/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - polar-projection
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - edge-highlighting
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent polar bar chart implementation with proper stacking for wind speed categories
-  - Colorblind-safe palette with good contrast between segments
-  - Realistic meteorological data showing prevailing westerly wind pattern
-  - Clean, readable layout with well-positioned legend
-  - Proper use of Highcharts polar column type with highcharts-more.js module
-  - Both PNG and HTML exports provided for static and interactive viewing
+  - 'Perfect theme adaptation with correct backgrounds (#FAF8F1 light, #1A1A17 dark)
+    and readable text in both renders'
+  - Okabe-Ito palette correctly applied with consistent data colors across themes
+  - Excellent polar bar chart implementation showing realistic wind patterns with
+    stacked speed categories
+  - Clean, reproducible code with proper imports and deterministic data generation
+  - Comprehensive legend with clear category labels and theme-adaptive styling
+  - All text elements (title, subtitle, axis labels, legend) properly sized and readable
+    at 4800x2700
   weaknesses:
-  - Y-axis label says Frequency (%) but data values appear to be raw counts, not percentages
-  - Could leverage more Highcharts interactive features like data labels on segments
-    or custom tooltips
-  image_description: 'The plot displays a polar bar chart (wind rose) on a white background.
-    The title "polar-bar · highcharts · pyplots.ai" appears at the top with subtitle
-    "Wind Speed Distribution by Direction". Eight compass directions (N, NE, E, SE,
-    S, SW, W, NW) are labeled around the perimeter in bold text. Stacked bars radiate
-    outward from the center, with four color-coded categories: dark blue (Calm <1
-    mph), bright yellow (Light 1-10 mph), purple (Moderate 10-20 mph), and cyan (Strong
-    >20 mph). The radial axis shows frequency values from 0 to 40, with concentric
-    grid circles. A legend is positioned on the right side. The data shows a realistic
-    prevailing westerly wind pattern with W, SW, and NW directions having the highest
-    frequencies.'
+  - Design is somewhat formulaic with standard Highcharts styling rather than distinctive
+    customization
+  - Limited use of advanced Highcharts polar features beyond basic stacked columns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface — matches style guide
+      Chrome: Title "polar-bar · highcharts · anyplot.ai" in dark text (28px), subtitle "Wind Speed Distribution by Direction" in softer gray (22px), all readable. Direction labels (N, NE, E, SE, S, SW, W, NW) around the circle in soft gray (22px), clearly visible. Frequency axis label on right in dark text. Legend on right side with light background (#FFFDF6) and dark border/text.
+      Data: Stacked polar bars with 4 wind speed categories: Calm (<1 mph) in #009E73 (brand green/teal), Light (1-10 mph) in #D55E00 (orange), Moderate (10-20 mph) in #0072B2 (blue), Strong (>20 mph) in #CC79A7 (pink). Colors match Okabe-Ito palette. Bars radiate from center showing frequency magnitude per direction, with prevailing westerlies pattern visible (stronger bars to the west).
+      Legibility verdict: PASS — all text is clearly readable against the light background; no legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface — matches style guide
+      Chrome: Same title and subtitle in light text (inverted from light theme), all readable. Direction labels in light gray (#B8B7B0), clearly visible — no dark-on-dark failures. Frequency axis in light text. Legend now has dark background (#242420) with light border and text.
+      Data: Colors are IDENTICAL to light render (#009E73, #D55E00, #0072B2, #CC79A7) — only chrome (background, text, borders) has adapted to dark theme. Stacked bars are equally visible and distinguish the wind patterns.
+      Legibility verdict: PASS — all text is clearly readable on dark background; proper theme adaptation with no dark-on-dark text issues.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, subtitle, direction labels, and legend are all clearly readable.
-          Radial axis labels are slightly small but still legible.
+        comment: All text readable in both themes; font sizes properly scaled (28px
+          title, 22px labels, 18px ticks)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the chart.
+        comment: No overlapping elements; legend positioned well on right; all labels
+          have adequate spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stacked bar segments are well-sized and clearly distinguishable.
-          Good use of white borders between segments.
+        comment: All bars clearly visible and distinct; stacked colors are well-separated;
+          markers are clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette (blue, yellow, purple, cyan) - avoids red-green
-          combination.
+        comment: Okabe-Ito palette is colorblind-safe; adequate contrast in both themes
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Chart is well-positioned to the left with legend on right. Good use
-          of canvas space, though slightly more centered would be ideal.
+        comment: Well-proportioned 4800x2700 layout; generous margins; nothing cut
+          off; balanced spacing
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Frequency (%)" label but the data appears to be counts,
-          not percentages. Minor inconsistency.
+        comment: Title format correct; subtitle provides context; axis labels describe
+          data (Frequency, directions)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate. Legend is well-placed but slightly
-          far from the chart.
+        comment: 'First series is #009E73 ✓; follows Okabe-Ito order; backgrounds
+          correct (#FAF8F1 light / #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with thoughtful color use; Okabe-Ito palette
+          well-applied; layout is clean but somewhat standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid lines, appropriate border colors, legend styling is refined;
+          fairly standard Highcharts styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color; wind patterns are evident (prevailing
+          westerlies visible); good composition
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar bar/wind rose chart type.
+        comment: Correct polar bar chart (wind rose format)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angular categories correctly map to compass directions, radial values
-          correctly map to frequency/magnitude.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: bars radiating outward, stacked for multiple
-          categories (speed ranges), 8 compass directions, color encoding.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: radial bars, angular categories, magnitude
+          representation, stacked categories'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data is visible within the chart range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Directions mapped to angles correctly; frequencies mapped to bar
+          length; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels all four wind speed categories.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "polar-bar · highcharts · pyplots.ai"'
+        comment: Title format correct; legend labels match data categories
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows stacking, multiple categories, directional variation. Could
-          include more dramatic variation between directions.
+        comment: 'Shows all aspects of polar bar charts: directional categories, frequency
+          distribution, speed categories via stacking, full circular representation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Wind data with prevailing westerlies is a scientifically accurate
-          and neutral meteorological scenario.
+        comment: Wind direction and speed data is meteorologically plausible; prevailing
+          westerlies pattern is evident; realistic frequency values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Frequency values are reasonable (0-40 range). Label says "%" but
-          values appear to be counts.
+        comment: Frequency values sensible (3-15 range); realistic scale for wind
+          observation data
     code_quality:
       score: 10
       max: 10
@@ -172,41 +182,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → chart config → save.'
+        comment: Simple, straightforward script; no unnecessary functions or classes;
+          clean and linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`.
+        comment: Uses np.random.seed(42) for deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used appropriately.
+        comment: All imports used; no unnecessary dependencies; proper organization
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Highcharts API.
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; uses Highcharts API properly; no simulated
+          interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly outputs plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Highcharts polar column chart correctly, but doesn't leverage
-          more advanced features like tooltips, animation, or data labels. The interactive
-          HTML export is good.
+        passed: true
+        comment: Uses Highcharts polar configuration correctly; proper series setup;
+          standard Selenium pattern; good but fairly conventional
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses polar projection and stacked columns; includes highcharts-more.js
+          for advanced features; could showcase more distinctive Highcharts capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - requests
+  techniques:
+  - polar-projection
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready

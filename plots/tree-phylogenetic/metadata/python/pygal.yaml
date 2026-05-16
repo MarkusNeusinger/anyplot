@@ -1,217 +1,225 @@
 library: pygal
+language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:57:05Z'
-updated: '2025-12-31T14:49:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620337510
+updated: '2026-05-15T01:35:24Z'
+generated_by: claude-haiku
+workflow_run: 25894667204
 issue: 3070
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/pygal/plot.html
-quality_score: 82
-impl_tags:
-  dependencies:
-  - cairosvg
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/pygal/plot-dark.html
+quality_score: 68
 review:
   strengths:
-  - Creative use of pygal XY chart to represent phylogenetic tree structure
-  - Excellent colorblind-friendly color palette for species markers
-  - Includes proper scale bar with units for evolutionary distance interpretation
-  - Species labels are clearly positioned next to their markers without overlap
-  - Scientifically accurate primate evolutionary relationships represented
+  - Phylogenetic tree structure accurately represents evolutionary relationships
+  - Branch lengths correctly scaled to evolutionary distance
+  - Scale bar provides important reference
+  - Species labels clear and well-positioned
+  - Realistic and appropriate data choice
+  - Both light and dark renders are readable
   weaknesses:
-  - Code uses a helper function which deviates from KISS principle
-  - Tree is somewhat compressed with unused whitespace on the right side of the canvas
-  - Y-axis grid lines are visible but serve no purpose for tree visualization
-  image_description: 'The plot displays a phylogenetic tree diagram showing primate
-    evolutionary relationships. The tree has a white background with blue (pyplots
-    blue #306998) branch lines connecting 6 species: Human, Chimpanzee, Gorilla, Orangutan,
-    Gibbon, and Macaque. Each species is represented by a colored dot marker at the
-    leaf node with matching colored bold text labels positioned to the right of each
-    marker. The colors used are red (Human), blue (Chimpanzee), teal (Gorilla), gold
-    (Orangutan), orange (Gibbon), and brown (Macaque) - a colorblind-friendly palette.
-    The x-axis shows "Evolutionary Distance (substitutions per site)" from 0 to 1,
-    with a scale bar in the bottom-left indicating "0.1 substitutions/site". The title
-    reads "Primate Evolution · tree-phylogenetic · pygal · pyplots.ai" at the top.
-    The tree correctly shows evolutionary relationships with Human-Chimpanzee as the
-    closest pair, then Gorilla, then Orangutan, with Gibbon-Macaque as an outgroup.'
+  - Title says 'pyplots.ai' instead of 'anyplot.ai'
+  - 'Uses custom color palette instead of Okabe-Ito standard; first species should
+    be #009E73 not #2A9D8F'
+  - Code does not read ANYPLOT_THEME environment variable; no theme-adaptive color
+    tokens
+  - 'Hardcoded white background instead of #FAF8F1 (light) / #1A1A17 (dark)'
+  - Output files saved as 'plot.png' instead of 'plot-{THEME}.png'
+  - Unnecessary code complexity with manual SVG label insertion and tree segment construction
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Appears to be off-white (should be #FAF8F1 per spec)
+      Chrome: Title, axis labels, tick labels, and species names all clearly visible in dark text
+      Data: Tree branches connect six primate species (Human, Chimpanzee, Gorilla, Orangutan, Gibbon, Macaque) with branch lengths proportional to evolutionary distance. Species markers use custom colors (#E63946, #457B9D, #2A9D8F, #E9C46A, #F4A261, #9C6644) instead of Okabe-Ito palette. First series is #2A9D8F (teal) instead of required #009E73 (brand green).
+      Legibility verdict: PASS (all text readable, but wrong title and custom palette)
+
+    Dark render (plot-dark.png):
+      Background: Dark (appears to be #1A1A17 or similar)
+      Chrome: Title, axis labels, tick labels appear in light color for contrast; all readable against dark background
+      Data: Identical species marker colors and branch colors to light render (correct — only chrome should flip between themes). Scale bar label visible. Tree structure clearly distinguishable.
+      Legibility verdict: PASS (all elements readable, proper dark-on-light contrast achieved)
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis label, species labels, and scale bar text are all clearly
-          readable at the canvas size. Font sizes are well-scaled for 4800x2700.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; species labels are well-positioned
-          next to their markers.
+        comment: All text readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Branch lines are clearly visible with appropriate stroke width.
-          Markers are well-sized (dots_size=28). Minor: some leaf nodes extend quite
-          far right leaving unused space.'
+        comment: Tree branches and markers clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-friendly palette with distinct hues for each
-          species.
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good vertical spread but horizontal layout could be better optimized;
-          significant whitespace on the right side of the plot.
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
+        score: 1
         max: 2
+        passed: false
+        comment: Custom palette used instead of Okabe-Ito
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: X-axis has descriptive label with units "Evolutionary Distance (substitutions
-          per site)".
+        comment: Good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Title says 'pyplots.ai' instead of 'anyplot.ai'
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: No legend needed (labels inline), but vertical guide lines are visible
-          and somewhat distracting from the tree structure.
+        comment: 'Wrong palette (custom instead of Okabe-Ito); first species should
+          be #009E73'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 3
+        max: 8
+        passed: false
+        comment: Functional but lacks sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear relationships but no visual emphasis
     spec_compliance:
-      score: 23
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements a phylogenetic tree (rectangular cladogram style).
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis correctly represents evolutionary distance; Y positions correctly
-          separate species.
-      - id: SC-03
+        comment: Correct phylogenetic tree
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Has branch lengths proportional to evolutionary distance, species
-          labels, scale bar. Missing: clade coloring mentioned in spec notes.'
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: false
+        comment: Missing circular layout option
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range.
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis and y-axis mapped correctly
+      - id: SC-04
+        name: Title & Legend
         score: 1
-        max: 2
-        passed: true
-        comment: No formal legend, but inline labels are accurate. Could benefit from
-          clade grouping indication.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Primate Evolution · tree-phylogenetic · pygal ·
-          pyplots.ai"'
+        max: 3
+        passed: false
+        comment: 'Title error: ''pyplots.ai'' instead of ''anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchical relationships, branch lengths, multiple clades.
-          Could show more variation in branch lengths to highlight divergence differences.
+        comment: Shows complete phylogenetic relationships
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Primate mitochondrial DNA evolution is a real, well-documented scenario.
-          Species relationships are scientifically accurate.
+        comment: Primate mitochondrial DNA tree is scientifically plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Substitution rates are plausible. Some branch length values could
-          be more varied to better demonstrate the proportionality feature.
+        comment: Realistic evolutionary distance scale
     code_quality:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Generally follows KISS but has significant complexity with SVG manipulation
-          and coordinate conversion functions.
+        passed: false
+        comment: Unnecessary complexity in tree construction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data, no random seed needed as all values are hardcoded.
+        comment: Deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: pygal, cairosvg, Style.'
+        comment: Minimal, used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 1
+        max: 2
         passed: false
-        comment: Uses manual SVG manipulation which is fragile; coordinate conversion
-          relies on hardcoded plot bounds.
+        comment: Relies on raw SVG manipulation
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Creates plot.png but also creates plot.svg and plot.html which are
-          not required.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves to plot.png instead of plot-{THEME}.png
+    library_mastery:
+      score: 1
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 1
         max: 5
-        passed: true
-        comment: Uses pygal XY chart with custom styling, but had to resort to SVG
-          manipulation for labels and scale bar rather than using native pygal features.
-  verdict: APPROVED
+        passed: false
+        comment: Does not follow pygal.md guide; ignores ANYPLOT_THEME
+      - id: LM-02
+        name: Distinctive Features
+        score: 0
+        max: 5
+        passed: false
+        comment: Uses raw SVG instead of pygal features
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling: []

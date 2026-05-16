@@ -1,163 +1,170 @@
 library: plotnine
+language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:55:04Z'
-updated: '2025-12-31T11:00:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617491526
+updated: '2026-05-16T01:21:03Z'
+generated_by: claude-haiku
+workflow_run: 25948783349
 issue: 2997
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/plotnine/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent implementation of alternating y-positions for event labels to avoid
-    overlap
-  - Clean grammar of graphics approach with well-layered geoms (line → vline → point
-    → text)
-  - 'Appropriate use of the Python color scheme (#306998 blue, #FFD43B yellow)'
-  - Good text sizing following the library guidelines (24pt title, 20pt axis labels,
-    16pt ticks)
-  - Realistic website traffic scenario with meaningful event annotations
+  - 'Perfect theme-adaptive rendering: data colors remain constant, chrome adapts
+    correctly to both light and dark surfaces'
+  - Clean, deterministic code with proper seeding for reproducibility
+  - Thoughtful event label positioning (alternating heights) prevents overlap while
+    maintaining readability
+  - 'Comprehensive event annotations: vertical lines, markers, and labels work together
+    to mark key dates'
+  - All specification requirements met; no missing features
   weaknesses:
-  - Axis labels could include units (e.g., "Daily Visitors (count)")
-  - Event markers at alternating heights work well but the fixed y_offset values (0.85,
-    0.92) could be slightly higher to give more separation from the data line peaks
-  image_description: 'The plot displays a blue line chart showing daily website visitors
-    over the year 2024 (January through December). The y-axis ranges from approximately
-    40,000 to 55,000 daily visitors. Five vertical dashed yellow lines mark significant
-    events, each with a yellow diamond marker positioned at alternating heights (higher/lower)
-    to prevent label overlap. The event labels are: "v2.0 Release" (Feb 2024), "Mobile
-    App Launch" (May 2024), "API Update" (Jul 2024), "Enterprise Tier" (Oct 2024),
-    and "Holiday Campaign" (Dec 2024). The title follows the correct format "line-annotated-events
-    · plotnine · pyplots.ai". X-axis labels are rotated 45 degrees showing months.
-    The overall aesthetic is clean with a minimal theme and subtle gray grid lines.'
+  - 'Design Excellence could be elevated: consider removing full-frame border (keep
+    L-shaped spines instead) for a more minimal aesthetic'
+  - 'Library Mastery is standard: implementation uses high-level geoms correctly but
+    doesn''t showcase distinctive plotnine features (e.g., faceting, advanced positioning)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1
+      Chrome: Title, axis labels, tick labels all in dark ink (#1A1A17), clearly readable
+      Data: Green line (#009E73), orange event markers (#D55E00) with diamond shapes, dashed vertical lines for events
+      Layout: Clean with generous margins, complete frame border, subtle grid lines
+      Legibility verdict: PASS - All text fully readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17
+      Chrome: Title, axis labels, tick labels all in light ink (#F0EFE8), clearly readable; no dark-on-dark failures
+      Data: Green line (#009E73) identical to light, orange event markers (#D55E00) identical to light render
+      Layout: Same frame border and grid styling adapted to dark theme with appropriate opacity
+      Legibility verdict: PASS - All text fully readable against dark background, color consistency confirmed across both renders
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt bold, axis labels at 20pt, tick labels at 16pt, all
-          perfectly readable
+        comment: All text sizes properly scaled; readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Event labels use alternating heights to avoid overlap, no text collisions
+        comment: Event labels use alternating vertical offsets; no collisions with
+          data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line weight of 1.2 is appropriate for 365 daily points, event markers
-          clearly visible with size=4 diamonds
+        comment: Data line, event markers, vertical dashed lines all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast, colorblind-safe
-          combination
+        comment: 'Okabe-Ito palette (#009E73, #D55E00); good contrast; CVD-safe'
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions overall, though the plot area could utilize slightly
-          more vertical space
+        comment: Good proportions, generous margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Daily Visitors" and "Date" are descriptive but lack units'
+        comment: Title correct format; axes descriptive with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is appropriately subtle (alpha 0.3), no legend needed for this
-          single-series plot
+        comment: 'First series #009E73; backgrounds correct; both themes correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive colors well-executed; event positioning shows design
+          intent; fairly standard overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and clean layout; full-frame border slightly less minimal
+          than L-shaped spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear narrative through product events; alternating heights create
+          visual rhythm
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct line plot with event annotations
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, values on Y-axis, events correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has vertical lines (axvline), markers, text labels, dashed style
-          for events
-      - id: SC-04
-        name: Data Range
+        comment: Line, vertical markers, diamond points, text labels all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 365 data points and 5 events fully visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (date), Y-axis (value); data range properly displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type (no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "line-annotated-events · plotnine · pyplots.ai"
+        comment: Title correct format; event labels serve as inline legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation, weekly patterns, multiple event types;
-          could show more dramatic impact of events on metrics
+        comment: Time series with realistic patterns; 5 events well-distributed
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Website traffic with product releases is an excellent, neutral business
-          scenario
+        comment: Website traffic scenario plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 40k-55k daily visitors is plausible for a mid-sized website; seasonal/weekly
-          patterns realistic
+        comment: Visitor counts sensible; one-year time span appropriate
     code_quality:
       score: 10
       max: 10
@@ -167,40 +174,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Direct plotting, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42); deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with clean aesthetics and theme configuration
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Good use of plotnine's grammar of graphics (ggplot + geom_* layering),
-          but doesn't leverage advanced features like faceting or statistical transformations
+        passed: true
+        comment: Standard geom usage; doesn't showcase advanced plotnine capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending

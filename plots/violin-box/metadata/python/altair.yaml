@@ -1,174 +1,171 @@
 library: altair
+language: python
 specification_id: violin-box
 created: '2025-12-30T11:22:21Z'
-updated: '2025-12-30T11:29:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595338513
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-box/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-box/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  - faceting
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling:
-  - grid-styling
+updated: '2026-05-12T15:21:44Z'
+generated_by: claude-haiku
+workflow_run: 25743803874
+issue: 2646
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Altair declarative layering to combine violin (mark_area with
-    transform_density) and box plot layers
-  - Realistic and varied data showing different distribution shapes (exponential,
-    normal, tight normal, bimodal)
-  - Clean faceted layout with independent x-scales for proper violin centering
-  - Good color palette that is colorblind-accessible
-  - Proper title format and clear axis labeling with units
+  - Perfect visual and specification compliance across both renders
+  - Both light and dark renders pass theme-readability checks; chrome correctly adapted
+    (text colors, box styling)
+  - Clean, professional code with proper seeding and minimal imports
+  - 'Idiomatic Altair: elegant use of layer composition, transform_density, and mark_boxplot'
+  - Realistic data with thoughtful diversity (exponential, normal, and bimodal distributions
+    across tiers)
+  - Generous whitespace and minimalist aesthetic; faceting is an effective design
+    choice
   weaknesses:
-  - Box plot median line could have higher contrast against the gray box for better
-    visibility
-  - Legend placement in top-right leaves some empty space; could be integrated more
-    tightly
-  image_description: 'The plot displays four violin plots with embedded box plots
-    showing server response times across four tiers (Basic, Standard, Premium, Enterprise).
-    Each violin is distinctly colored: Basic in blue, Standard in yellow, Premium
-    in light blue, and Enterprise in green. The violins show smooth KDE distributions
-    with dark gray box plots centered inside, displaying median (white horizontal
-    line), quartiles (gray box), and whiskers extending to min/max values. The title
-    "violin-box · altair · pyplots.ai" appears centered at the top in large font.
-    The Y-axis is labeled "Response Time (ms)" ranging from 0-650ms. Category labels
-    appear below each violin. A color legend for "Server Tier" is positioned in the
-    top right corner.'
+  - Design excellence is competent but not exceptional — faceting and color are standard;
+    could benefit from special visual emphasis or more intentional data storytelling
+  - No particularly sophisticated visual hierarchy or focal point to guide the viewer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct color
+      Chrome: Title "violin-box · altair · anyplot.ai" in dark INK (#1A1A17), clearly visible at 28px. Y-axis label "Response Time (ms)" in dark INK. Tick labels in INK_SOFT (#4A4A44), fully readable against light background. Legend positioned right side, text readable.
+      Data: Violin shapes in Okabe-Ito sequence (green #009E73, orange #D55E00, blue #0072B2, pink #CC79A7). Box plots embedded in light gray. All distributions clearly visible with no collisions.
+      Legibility verdict: PASS - all text readable, no light-on-light issues, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct color
+      Chrome: Title in light text, clearly visible. Y-axis label in light gray (INK_SOFT #B8B7B0), fully readable. Tick labels in light gray, no dark-on-dark failures. All text maintains excellent contrast against dark background.
+      Data: Colors identical to light render (green, orange, blue, pink preserved). Box plots in light gray, fully visible against dark background. Brand green #009E73 reads well on dark surface.
+      Legibility verdict: PASS - all text readable, no dark-on-dark legibility issues, chrome correctly adapted, both renders maintain theme consistency
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are clearly readable. Font sizes
-          are appropriate for the canvas size.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated.
+        comment: All text readable in both themes; 28px title, 18–20px labels properly
+          sized
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Faceted layout eliminates collisions; legend clearly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violins and box plots are clearly visible. Box plots could be slightly
-          more prominent but are adequately visible.
+        comment: Violin shapes, box plots, whiskers all visible and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colors are colorblind-safe with good contrast. Blue, yellow, light
-          blue, and green are distinguishable.
+        comment: Okabe-Ito palette colorblind-safe; strong contrast throughout
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space with faceted layout. Plot elements are well-proportioned.
+        comment: Well-balanced proportions; nothing cut off; generous margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units "Response Time (ms)". X-axis
-          uses category names (no explicit axis label needed for faceted categorical).
+        comment: Title format correct; Y-axis labeled with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3). Legend is placed well but could be closer
-          to the data.
+        comment: 'First series #009E73; Okabe-Ito order maintained; backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark)'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional design; faceting effective; solid but not exceptionally
+          sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome; no clutter; generous whitespace; thoughtful box styling
+          with opacity
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clear group comparison through faceting; lacks special emphasis or
+          focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: violin plot with embedded box plot.'
+        comment: Correct violin-box composition with proper layers
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Numeric variable (Response Time) on Y-axis, categorical (Server Tier)
-          creates facets.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows KDE distribution (violin), median, quartiles (box), and whiskers
-          as specified.
-      - id: SC-04
-        name: Data Range
+        comment: Density (KDE), quartiles, median, whiskers all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data is visible; axes show full range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Value → Y-axis; groups → facet columns; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels all four server tiers.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "violin-box · altair · pyplots.ai"'
+        comment: Title format correct; legend labels match groups
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: Basic shows right-skewed exponential distribution,
-          Standard shows normal distribution, Premium shows tight normal, Enterprise
-          shows bimodal distribution. Shows different distribution shapes well.'
+        comment: All violin-box aspects demonstrated across four distinct distributions
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response times is a real, neutral business/technology scenario.
-          The progression from Basic (high latency) to Enterprise (low latency with
-          caching) is realistic.
+        comment: Server response-time context realistic; tier differences plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times in ms are realistic (25-600ms range). Values are plausible
-          for server tiers.
+        comment: 0–650ms sensible for response times; all positive values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,43 +173,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → violin layer → box layer
-          → combined chart → save.'
+        comment: Linear code; no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`.
+        comment: Seed set (np.random.seed(42)); deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas).
+        comment: Only necessary imports (os, altair, numpy, pandas)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html (correct for Altair).
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: 'Uses Altair''s declarative grammar well: `transform_density` for
-          KDE, `mark_area` with `orient="horizontal"` and `stack="center"` for violin
-          shape, `mark_boxplot` with customization, layering with `alt.layer`, and
-          faceting with `alt.Column`. Good use of Altair''s compositional approach.'
+        comment: 'Idiomatic Altair: transform_density, mark_boxplot, proper layer
+          composition and faceting'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of layer composition and Altair-specific transforms; solid
+          but not exceptionally advanced
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - faceting
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - publication-ready

@@ -1,11 +1,11 @@
 spec_id: box-horizontal
 title: Horizontal Box Plot
 created: '2025-12-30T09:06:00Z'
-updated: '2025-12-30T09:06:00Z'
+updated: '2026-05-12T00:51:33Z'
 issue: 2548
 suggested: claude-code
 tags:
-  plot_type: [box, distribution]
+  plot_type: [box]
   domain: [statistics, general]
-  features: [horizontal, quartiles, outliers]
+  features: [horizontal, quartiles, outliers, distribution]
   data_type: [numeric, categorical]

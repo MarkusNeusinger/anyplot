@@ -1,173 +1,186 @@
 library: plotly
+language: python
 specification_id: facet-grid
 created: '2025-12-30T16:30:15Z'
-updated: '2025-12-30T16:47:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601057130
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/facet-grid/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/facet-grid/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-13T03:35:42Z'
+generated_by: claude-haiku
+workflow_run: 25776278040
+issue: 2696
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Clean implementation using Plotly Express native faceting capability (facet_row,
-    facet_col)
-  - Excellent data generation with realistic business scenario (marketing spend vs
-    sales by region and quarter)
-  - Good visual hierarchy with clear title, readable axis labels with units, and subtle
-    grid
-  - Produces both PNG and HTML output leveraging Plotly interactivity
-  - Proper use of template=plotly_white for clean appearance
+  - Perfect text legibility in both light and dark themes with no readability failures
+  - 'Flawless theme-adaptive chrome: all elements (title, axes, grid, borders) correctly
+    switch between light and dark'
+  - Proper Okabe-Ito palette compliance with identical data colors across renders
+  - Excellent use of plotly's faceting API (facet_row, facet_col)
+  - Clean, reproducible code with no unused imports
+  - Well-proportioned layout with generous margins and no overlapping elements
+  - Realistic, neutral data with appropriate scales
+  - All specification requirements met exactly
   weaknesses:
-  - Legend showing regions is redundant since region is already encoded by facet rows
-  - Markers could be slightly larger (15-18 instead of 12) for better visibility with
-    ~15 points per facet
-  - Row facet labels are displayed vertically which reduces readability compared to
-    horizontal text
-  image_description: The plot displays a 4×4 faceted grid layout showing the relationship
-    between Marketing Spend ($K) and Sales ($K). The columns represent quarters (Q1,
-    Q2, Q3, Q4) and the rows represent regions (North, South, East, West). Each subplot
-    contains approximately 15 scatter points. The color scheme uses blue (#306998)
-    for all data points consistently across all facets. A legend appears on the right
-    side showing region colors (North=blue, South=yellow, East=blue, West=yellow),
-    though this appears to be an artifact from Plotly's automatic color mapping rather
-    than the code's explicit single-color setting. The row labels are displayed vertically
-    on the right side in format "Region=North", etc. Column labels at the top show
-    "Quarter=Q1", etc. The main title "facet-grid · plotly · pyplots.ai" is prominently
-    displayed at the top center. Axes show Marketing Spend ($K) on x-axis (10-50 range)
-    and Sales ($K) on y-axis (60-140 range). Grid lines are subtle with light gray
-    color.
+  - 'Design Excellence is moderate (13/20): styling is clean but not distinctive.
+    Consider removing top/right spines for a cleaner look, exploring subtle visual
+    hierarchy through opacity or emphasis, or adding custom grid styling.'
+  - 'Minor improvement in Library Mastery: could demonstrate more distinctive plotly
+    features (e.g., custom hover templates or advanced trace styling).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct, not pure white)
+      Chrome: Title "facet-grid · plotly · anyplot.ai" centered at 28px, axis labels at 22px, tick labels at 18px — all in dark text (#1A1A17), clearly visible against light background
+      Data: 4×4 faceted grid of scatter plots showing Marketing Spend (X, 10–50$K) vs Sales (Y, ~60–150$K) across Regions (North, South, East, West rows) and Quarters (Q1–Q4 columns). Markers are Okabe-Ito #009E73 with white edges, 80% opacity, size 16. Data is clearly distinguishable.
+      Grid: Subtle, present on both axes, does not compete with data
+      Facet labels: Clearly positioned on right side (regions) and top (quarters) in dark text
+      Legibility verdict: PASS (all text readable, no light-on-light failures)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct, not pure black)
+      Chrome: Title and all axis/tick labels now rendered in light text (#F0EFE8), clearly readable against dark background. No dark-on-dark failures.
+      Data: Identical 4×4 layout. Markers are IDENTICAL to light render (#009E73 — confirmed data colors unchanged). Grid and borders adapted with appropriate opacity for dark theme.
+      Grid: Subtle, visible with proper contrast
+      Facet labels: Same positioning as light render, now in light text, clearly visible
+      Legibility verdict: PASS (all text readable, proper contrast, no dark-on-dark failures, brand green visible)
+
+    Both renders synchronized perfectly: data colors constant, only chrome changes per theme.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is large and clear at 32pt, axis labels at 20pt, tick labels
-          at 16pt; facet annotations at 18pt are readable but slightly small for the
-          annotation text
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated
+        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
+          sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text is distinct and non-overlapping; facet labels clearly positioned
+          on right and top
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at size=12 with 0.8 opacity are visible but could be slightly
-          larger given 15 points per facet
+        comment: Markers (size 16, opacity 0.8) are clearly visible; density is moderate
+          (15 points per facet) and well-managed
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is accessible; no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space with 4×4 grid; margins are reasonable but
-          legend takes some space redundantly
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Marketing Spend ($K)", "Sales ($K)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito #009E73 provides adequate contrast and is CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions; 80px margins on sides and bottom, 100px top;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at 0.1 alpha (good), but legend showing regions is
-          redundant since regions are already encoded by row facets
+        comment: Title includes spec format; axes labeled with units ($K)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) and #1A1A17 (dark);
+          data colors identical between renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean, professional styling with marker edge definition. No custom
+          color palettes or exceptional visual hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid styling is subtle; margins are generous. Spines are present
+          but could be refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear comparison across regions and quarters; facet structure guides
+          the eye. Visual hierarchy is functional but not exceptional.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct faceted grid plot with scatter subplots
+        comment: Faceted grid of scatter plots with correct structure (4 regions ×
+          4 quarters)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped to Marketing Spend and Sales
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Facets by both row (Region) and column (Quarter) as spec requires
-      - id: SC-04
-        name: Data Range
+        comment: X (Marketing Spend), Y (Sales), row facet (Region), column facet
+          (Quarter) all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correctly mapped; all data shown; ranges are appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Facet labels correctly identify categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "facet-grid · plotly · pyplots.ai"'
+        comment: Title matches spec format; legend correctly hidden for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and quarters with different base values;
-          could show more dramatic differences between facets
+        comment: Full grid coverage across all categorical combinations (16 facets)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Marketing spend vs sales is a realistic business scenario with plausible
-          relationships
+        comment: Marketing spend→sales relationship is plausible; regional/quarterly
+          variation is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable ($10-50K marketing, $60-140K sales) though
-          the correlation is quite strong across all facets
+        comment: Marketing Spend (10–50$K) and Sales (~60–150$K) are sensible for
+          domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,41 +188,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Simple, direct code with no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, plotly.express)
+        comment: 'Only used imports: os, numpy, pandas, plotly.express'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly Express API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png/html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses px.scatter with facet_row/facet_col which is Plotly Express's
-          strength; also outputs HTML for interactivity; could leverage more Plotly
-          features like hover data or trendlines
+        comment: Excellent use of plotly.express and faceting parameters; proper theme-adaptive
+          styling throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Well-executed use of facet_row, facet_col, for_each_annotation, and
+          marker edge styling. Could explore more advanced features.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive

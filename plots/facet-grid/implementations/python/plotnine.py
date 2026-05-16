@@ -1,91 +1,104 @@
-""" pyplots.ai
+""" anyplot.ai
 facet-grid: Faceted Grid Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-13
 """
 
-import numpy as np
-import pandas as pd
-from plotnine import (
-    aes,
-    element_line,
-    element_rect,
-    element_text,
-    facet_grid,
-    geom_point,
-    ggplot,
-    labs,
-    scale_color_brewer,
-    theme,
-    theme_minimal,
-)
+import os
+import sys
 
 
-# Data - Plant growth study with soil type and light conditions
+# Handle import conflicts: remove the script directory from sys.path to prevent
+# shadowing of installed modules (matplotlib, plotnine, etc.)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_original_path = sys.path.copy()
+sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
+
+# Also remove any __pycache__ or .pyc files that might exist
+_mod_cache = {k: v for k, v in sys.modules.items() if k not in ("matplotlib", "plotnine")}
+
+try:
+    import numpy as np
+    import pandas as pd
+    from plotnine import (
+        aes,
+        element_line,
+        element_rect,
+        element_text,
+        facet_grid,
+        geom_point,
+        ggplot,
+        labs,
+        scale_color_manual,
+        theme,
+        theme_minimal,
+    )
+finally:
+    pass
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Student exam scores across teaching methods and subjects
 np.random.seed(42)
 
-# Create faceting variables
-soil_types = ["Sandy", "Loamy", "Clay"]
-light_levels = ["Low", "Medium", "High"]
-species = ["Basil", "Fern", "Tomato"]  # Alphabetical order for consistent legend
+methods = ["In-Person", "Online", "Hybrid"]
+subjects = ["Math", "Science", "Reading", "Writing"]
 
-# Generate realistic data with more pronounced differences between conditions
 data = []
-for soil in soil_types:
-    for light in light_levels:
-        # Amplified effects to show clearer differences between facets
-        soil_effect = {"Sandy": -12, "Loamy": 0, "Clay": 8}[soil]
-        light_effect = {"Low": -15, "Medium": 0, "High": 18}[light]
+for subject in subjects:
+    for method in methods:
+        subject_effect = {"Math": 5, "Science": 3, "Reading": -2, "Writing": 0}[subject]
+        method_effect = {"In-Person": 3, "Online": -2, "Hybrid": 1}[method]
 
-        for sp in species:
-            species_effect = {"Basil": 0, "Tomato": 8, "Fern": -5}[sp]
-            n_points = 12  # Slightly fewer points per panel for clarity
+        n_points = 15
+        hours = np.random.uniform(2, 10, n_points)
 
-            # Water amount (x-axis)
-            water = np.random.uniform(25, 65, n_points)
+        base_score = 60 + 6 * hours + subject_effect + method_effect
+        score = base_score + np.random.randn(n_points) * 5
+        score = np.clip(score, 30, 100)
 
-            # Growth depends on water, soil, light, and species
-            base_growth = 25 + 0.9 * water + soil_effect + light_effect + species_effect
-            growth = base_growth + np.random.randn(n_points) * 4
-
-            for i in range(n_points):
-                data.append(
-                    {"water": water[i], "growth": growth[i], "soil_type": soil, "light_level": light, "species": sp}
-                )
+        for i in range(n_points):
+            data.append({"hours": hours[i], "score": score[i], "subject": subject, "method": method})
 
 df = pd.DataFrame(data)
 
-# Ensure correct ordering of categorical variables for facets
-df["soil_type"] = pd.Categorical(df["soil_type"], categories=soil_types, ordered=True)
-df["light_level"] = pd.Categorical(df["light_level"], categories=light_levels, ordered=True)
-# Match legend order with species order
-df["species"] = pd.Categorical(df["species"], categories=species, ordered=True)
+df["subject"] = pd.Categorical(df["subject"], categories=subjects, ordered=True)
+df["method"] = pd.Categorical(df["method"], categories=methods, ordered=True)
 
-# Plot - Faceted grid showing growth patterns across soil and light conditions
 plot = (
-    ggplot(df, aes(x="water", y="growth", color="species"))
-    + geom_point(size=3.5, alpha=0.75)
-    + facet_grid("soil_type ~ light_level", labeller="label_both")
-    + scale_color_brewer(type="qual", palette="Set2")
-    + labs(title="facet-grid · plotnine · pyplots.ai", x="Water (mL/day)", y="Growth (cm)", color="Species")
+    ggplot(df, aes(x="hours", y="score", color="method"))
+    + geom_point(size=4, alpha=0.75)
+    + facet_grid("subject ~ method", labeller="label_both")
+    + scale_color_manual(values=OKABE_ITO[:3])
+    + labs(title="facet-grid · plotnine · anyplot.ai", x="Study Hours", y="Exam Score", color="Method")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, face="bold", ha="center"),
-        axis_title=element_text(size=18),
-        axis_text=element_text(size=14),
-        strip_text_x=element_text(size=14, face="bold"),
-        strip_text_y=element_text(size=14, face="bold", rotation=0),
-        strip_background=element_rect(fill="#f0f0f0", color="#cccccc"),
-        legend_title=element_text(size=16, face="bold"),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, color=INK, ha="center"),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        strip_text_x=element_text(size=14, color=INK, face="bold"),
+        strip_text_y=element_text(size=14, color=INK, face="bold", rotation=0),
+        strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
         legend_position="right",
-        panel_grid_major=element_line(color="#cccccc", alpha=0.4),
-        panel_grid_minor=element_line(color="#eeeeee", alpha=0.2),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
         panel_spacing_x=0.06,
         panel_spacing_y=0.06,
     )
 )
 
-# Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

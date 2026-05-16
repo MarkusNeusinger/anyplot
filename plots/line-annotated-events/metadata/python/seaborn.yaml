@@ -1,159 +1,175 @@
 library: seaborn
+language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:54:41Z'
-updated: '2025-12-31T10:59:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617488740
+updated: '2026-05-16T01:06:04Z'
+generated_by: claude-haiku
+workflow_run: 25948571723
 issue: 2997
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent use of alternating label heights to prevent overlap with dense events
-  - 'Clear visual hierarchy: blue data line, yellow event markers create strong contrast'
-  - Comprehensive data generation with realistic trend, seasonality, and noise
-  - Proper handling of event markers on the actual data line with scatter points
-  - Well-sized text elements for readability at high resolution
+  - Perfect technical execution across all criteria
+  - Excellent theme adaptation with data colors constant and chrome correctly adapted
+  - Thoughtful event label positioning prevents overlap while maintaining readability
+  - All font sizes explicitly set and readable in both themes at full resolution
+  - Clean minimal aesthetic with proper spine removal and subtle grid
+  - Professional Okabe-Ito palette usage with appropriate secondary color for events
   weaknesses:
-  - No legend or key explaining the event marker style (spec mentions including a
-    subtle legend or key)
-  - Realistic context score could be higher with more domain-specific context (e.g.,
-    actual product category mentioned in labels)
-  image_description: 'The plot displays a time series of daily sales (in units) from
-    January 2024 to January 2025. The main line is rendered in Python blue (#306998)
-    showing daily fluctuations with an upward trend from ~100 to ~180 units. Five
-    yellow vertical dashed lines mark marketing events: Valentine''s Campaign (Feb
-    14), Spring Sale (May 1), Summer Launch (Jul 15), Fall Promotion (Sep 20), and
-    Black Friday (Nov 25). Each event has a yellow background label with bold text
-    positioned at alternating heights (85%/75%) to avoid overlap. Yellow circular
-    markers with dark edges appear on the line at each event date. The title uses
-    the correct format "{spec-id} · seaborn · pyplots.ai". X-axis shows dates with
-    rotated labels, Y-axis shows "Daily Sales (Units)" with clear tick marks. A subtle
-    grid is visible in the background.'
+  - Design Excellence is solid but not exceptional (styling is well-configured seaborn
+    defaults rather than distinctive custom design)
+  - Library Mastery is generic (correct usage but no distinctive seaborn features
+    leveraged beyond sns.lineplot() and theming)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title (24pt bold), axis labels (20pt), tick labels (16pt) all dark and clearly readable. X-axis rotated 30° for clarity. Legend positioned upper left.
+      Data: Teal line (#009E73) shows sales trend from ~100 to ~180 units over year with seasonality. Five yellow dashed lines (#F0E442) mark events with rounded-box annotations at alternating heights (0.85, 0.75, 0.85, 0.75, 0.85) to prevent overlap.
+      Legibility verdict: PASS - all text is dark, readable, no overlaps, optimal sizing for 4800x2700 canvas
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title, axis labels, tick labels all light-colored (#F0EFE8 primary, #B8B7B0 secondary) and clearly readable on dark surface. No dark-on-dark failures. Legend correctly styled for dark theme.
+      Data: Teal line (#009E73) is IDENTICAL to light render (same hex value, same visual appearance). Yellow event markers (#F0E442) identical to light render. Event annotations visible and well-positioned. Grid is subtle and adapted to dark theme.
+      Legibility verdict: PASS - all text is light and readable, no dark-on-dark failures, data colors match light render exactly
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt - all perfectly readable
+        comment: 'All sizes explicitly set: title 24pt, labels 20pt, ticks 16pt. Perfect
+          readability in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Event labels use alternating heights, no text overlap
+        comment: Event labels positioned with alternating heights; tick labels rotated
+          30°; no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 2.5 appropriate for daily data, markers s=150 visible
+        comment: Line width 2.5pt, event markers s=150, dashed lines 2pt—all well-adapted
+          to canvas size.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue line and yellow markers provide excellent contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins with tight_layout
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Daily Sales (Units)" with units, "Date" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette (#009E73, #F0E442) is CVD-safe; good contrast;
+          no red-green sole signal.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas; balanced margins; legend positioned near
+          plot; no wasted space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'X-axis: ''Date''; Y-axis: ''Daily Sales (Units)'' with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
+          Both renders theme-correct; data colors identical.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle at alpha=0.3 (good), but no legend explaining event
-          marker colors
+        comment: Well-configured with thoughtful customization (alternating heights,
+          rounded boxes). Professional but not distinctive.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed; subtle grid (10% alpha); generous whitespace; clean,
+          polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Uptrend clear, event markers draw attention, yellow pops against
+          green, alternating labels create rhythm.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: line plot with event annotations'
+        comment: Correct line plot with event annotations and all subtypes.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, sales on Y, events properly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vertical lines (axvline), markers on line, text labels - all present
-      - id: SC-04
-        name: Data Range
+        comment: Main line, vertical event lines, event labels, event markers all
+          present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis range appropriate (95-185)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: date (temporal), Y: sales (numeric). All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, events self-labeled)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"line-annotated-events · seaborn · pyplots.ai"'
+        comment: Title format correct. Legend labels correct.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, noise, and 5 diverse events across the
-          year
+        comment: Full year with trend, seasonality, noise, five events. All aspects
+          demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Product sales with marketing events is plausible, dates match real
-          calendar events
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Sales values 95-185 units/day are realistic for e-commerce
+        comment: Product sales with marketing events—real, neutral scenario. Event
+          names realistic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales 100–180, trend +80, seasonality ±15, noise ±8. All plausible
+          and factually sound.
     code_quality:
       score: 10
       max: 10
@@ -163,41 +179,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → data → plot → styling → save'
+        comment: 'Linear: imports → tokens → data → plot → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (plt, np, pd, sns)
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern seaborn API
+        comment: Clean, Pythonic, no fake UI or fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png. Current API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot() and sns.set_theme() with rc (idiomatic). Straightforward
+          but correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Uses sns.lineplot correctly, but annotations done via matplotlib
-          directly. Seaborn's statistical features not leveraged, though reasonable
-          given the spec.
+        comment: Custom Legend and rc theming are solid, but overall usage is generic
+          for task.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - time-series
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

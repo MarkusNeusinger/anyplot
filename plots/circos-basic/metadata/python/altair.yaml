@@ -1,165 +1,171 @@
 library: altair
+language: python
 specification_id: circos-basic
 created: '2025-12-31T21:35:04Z'
-updated: '2025-12-31T21:44:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20627531457
+updated: '2026-05-15T09:31:26Z'
+generated_by: claude-haiku
+workflow_run: 25910437623
 issue: 3005
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circos-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/circos-basic/altair/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-    - bezier-curves
-    - layer-composition
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent circular layout with proper segment proportions and gaps
-  - Creative use of Altair mark_line with filled=True to create arc shapes
-  - Well-implemented Bezier curves for ribbon connections
-  - Good color palette that maintains segment identity throughout
-  - Inner track provides additional data dimension with darker shades
-  - Clean readable code structure with clear data definitions
-  - Tooltips added to ribbons for interactivity
+  - Perfect visual quality and spec compliance in both light and dark renders with
+    full text legibility
+  - 'Clean theme-adaptive implementation: data colors stay identical (Okabe-Ito) while
+    chrome adapts properly to each theme'
+  - Realistic, appropriate-scale software dependency data with effective multi-layer
+    visualization (outer ring, inner tracks, ribbons)
+  - Well-structured, reproducible code with clean imports and idiomatic Altair patterns
+    (proper encoding, layering, configuration)
   weaknesses:
-  - Some ribbons in the center appear slightly congested making individual connections
-    harder to trace
-  - Inner track bars could have more visible separation from each other
-  - Legend shows segment colors but not inner track or ribbon meaning
-  image_description: 'The plot displays a Circos-style circular visualization showing
-    software module dependencies. Eight segments are arranged around a circle: Core
-    (blue), API (yellow), Database (green), Auth (crimson), Cache (purple), Queue
-    (teal), Logger (orange), and Config (gray). Each segment''s arc length is proportional
-    to its relative size/importance. An inner concentric track shows darker-shaded
-    bars representing activity/importance values. Semi-transparent ribbons connect
-    segments through the center, with curved Bezier paths showing dependencies between
-    modules (e.g., Core-API, Core-Database, API-Auth). Labels are positioned outside
-    each segment in matching colors. The title "circos-basic · altair · pyplots.ai"
-    appears at the top.'
+  - Design excellence uses mostly default styling and required palette; no custom
+    aesthetic refinements beyond circular layout
+  - Visual hierarchy could be stronger; inner tracks present but not highlighted as
+    a key feature
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct and provides strong contrast
+      Chrome: Title "circos-basic · altair · anyplot.ai" in dark INK color (#1A1A17), all 8 segment labels in dark INK, legend with "Modules" title and segment names — all clearly readable
+      Data: 8 modules in outer ring with Okabe-Ito colors (Core=#009E73 first), inner tracks in darker segment shades, 14 ribbons with proportional widths in source-module colors with 0.5 opacity
+      Legibility verdict: PASS — all text is readable, colors vibrant, no overlaps
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct and provides strong contrast
+      Chrome: Title and labels in light INK color (#F0EFE8), legend background #242420 with light text — all clearly readable, no dark-on-dark failures
+      Data: Identical Okabe-Ito colors to light render (Core=#009E73, all 7 positions identical), inner tracks preserve darker shades, ribbons show same opacity and width proportions
+      Legibility verdict: PASS — all text is readable against dark surface, data colors match light render, theme adaptation is correct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels are clearly readable at output resolution; slightly
-          smaller than optimal
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: Title (28px) and labels (22px) readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Segments gapped; labels well-spaced; ribbon overlaps acceptable via
+          opacity
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Segments, tracks, and ribbons are visible; some ribbons could be
-          slightly more distinct
+        comment: All segments, ribbons, inner tracks clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with good contrast between segments
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Circular plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for Circos plots (no axes), but segment labels present
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-positioned on right side with clear module names
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600×3600 ideal for circular; centered; good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; legend clear; no axes needed (N/A)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Core=#009E73; Okabe-Ito order; backgrounds correct; chrome theme-adaptive;
+          data colors identical
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean design with good gaps; legend well-styled; uses required palette,
+          not custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good opacity handling (ribbons 0.5, inner 0.85); legend styling;
+          gaps add polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ribbon colors tied to source; inner tracks add layer; narrative clear
+          but not emphasized
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Circos plot with circular segments and ribbons
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Source/target connections properly mapped with ribbon widths
-      - id: SC-03
+        comment: Correct circos with segments, tracks, ribbons
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has segments, ribbons, inner track; gaps between segments present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: distinct colors, proportional ribbons, tracks, gaps'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All segments and connections visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Segments→circle; values→ribbon widths; track data→heights
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all modules
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: circos-basic · altair · pyplots.ai'
+        comment: Title format correct; legend shows all modules
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows segments, connections, inner track data; varying ribbon widths
+        comment: Shows segments, tracks, connections, relationships
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software module dependencies is a realistic, neutral scenario
+        comment: Software dependencies realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 8 segments with 14 connections is appropriate; segment sizes plausible
+        comment: 8 segments, 14 connections, sensible values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,41 +173,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: No unnecessary functions; straightforward
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: mark_line with filled=True is non-standard for area shapes'
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; theme tokens well-implemented; no AR-08
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: plot-{THEME}.png/html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper Chart, marks, encoding, scales, detail/order, configuration
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layered composition, tooltips, and declarative encoding; however,
-          Circos requires manual geometry calculation rather than leveraging Altair's
-          strengths
+        comment: Good layering and coordinate computation; legend customization; could
+          showcase more
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - concentric-tracks
+  - layered-composition
+  patterns:
+  - data-generation
+  - theme-adaptation
+  dataprep: []
+  styling:
+  - publication-ready
+  - theme-responsive

@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-15
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,13 @@ from scipy import signal
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Generate chirp signal (frequency increases over time)
 np.random.seed(42)
@@ -35,25 +44,34 @@ Sxx_db = 10 * np.log10(Sxx + 1e-10)
 time_grid, freq_grid = np.meshgrid(times, frequencies)
 df = pd.DataFrame({"time": time_grid.flatten(), "frequency": freq_grid.flatten(), "power": Sxx_db.flatten()})
 
-# Create spectrogram using geom_tile
+# Filter to relevant frequency range (0-250 Hz) to avoid wasted space
+df = df[df["frequency"] <= 250]
+
+# Create spectrogram using geom_tile with theme-adaptive styling
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+    legend_text=element_text(size=16, color=INK_SOFT),
+)
+
 plot = (
     ggplot(df, aes(x="time", y="frequency", fill="power"))
     + geom_tile()
     + scale_fill_viridis(name="Power (dB)")
-    + labs(x="Time (seconds)", y="Frequency (Hz)", title="spectrogram-basic · lets-plot · pyplots.ai")
+    + labs(x="Time (seconds)", y="Frequency (Hz)", title="spectrogram-basic · letsplot · anyplot.ai")
     + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+# Save as PNG (scale 3x for 4800x2700) and HTML with theme suffix
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")

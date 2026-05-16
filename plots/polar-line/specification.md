@@ -13,20 +13,10 @@ A line plot rendered in polar coordinates, where data points are connected with 
 
 ## Data
 
-The visualization requires:
-- **Theta variable**: Angular position (degrees or radians)
-- **Radius variable**: Magnitude/distance from center
-
-Example structure:
-```
-Angle | Value
-------|-------
-0     | 4.2
-30    | 5.1
-60    | 6.3
-90    | 5.8
-...
-```
+- `theta` (numeric) - Angular position in degrees or radians (e.g., 0-360 or 0-2π)
+- `radius` (numeric) - Magnitude or distance from center; can represent any continuous measure
+- Size: 20-500 points recommended
+- Example: Daily measurements (24 hours × multiple days) or seasonal patterns (12 months × multiple years)
 
 ## Notes
 

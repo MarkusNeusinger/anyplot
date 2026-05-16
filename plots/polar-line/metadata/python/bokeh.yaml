@@ -1,166 +1,185 @@
 library: bokeh
+language: python
 specification_id: polar-line
 created: '2025-12-30T16:30:25Z'
-updated: '2025-12-30T16:37:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601057155
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-line/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-line/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - columndatasource
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-05-12T23:03:43Z'
+generated_by: claude-haiku
+workflow_run: 25766481298
+issue: 2692
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/bokeh/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent simulation of polar coordinates in Bokeh (which lacks native polar support)
-    using manual Cartesian conversion
-  - Clean, readable hour labels around the perimeter with good spacing
-  - Appropriate data scenario (wind speed pattern) that naturally fits polar/cyclical
+  - Both light and dark renders present with correct theme chrome (backgrounds, text
+    colors, grid styles)
+  - Correct polar plot implementation with clear hour labels and proper cyclical data
     visualization
-  - Good color contrast between the two series (blue/yellow)
-  - Properly closed loops connecting back to starting point
+  - All text readable at scale in both themes—no dark-on-dark or light-on-light failures
+  - Appropriate color palette for multi-series visualization (teal and orange appear
+    Okabe-Ito compliant)
+  - Well-chosen example data (wind patterns over 24 hours) demonstrates the polar
+    plot effectively
+  - No overlapping elements; layout is clean and uncluttered
   weaknesses:
-  - Missing axis label for radial dimension (could add Wind Speed m/s text annotation)
-  - Radius labels (2, 4, 6, 8, 10) positioned only on positive X-axis could be more
-    prominent
-  image_description: 'The plot shows a polar line chart visualizing wind speed patterns
-    over 24 hours for two days. The chart uses a circular layout with hour labels
-    (0h-22h) positioned around the perimeter at 2-hour intervals. Concentric circles
-    represent wind speed values (2, 4, 6, 8, 10 m/s). Two line series are displayed:
-    Day 1 in blue (#306998) and Day 2 in yellow (#FFD43B), both with data markers.
-    The lines form closed loops connecting back to the starting point. The plot has
-    a light gray background (#fafafa) with subtle gray grid lines. A legend in the
-    top-right corner identifies the two series. The title "polar-line · bokeh · pyplots.ai"
-    is centered at the top.'
+  - 'Code specifies #306998 (Python Blue) and #FFD43B (Python Yellow), but rendered
+    colors appear Okabe-Ito compliant—source code should be updated to match'
+  - No ANYPLOT_THEME environment variable reading in code; theme adaptation must be
+    applied by pipeline, not implementation
+  - Code uses export_png instead of recommended Selenium headless Chrome approach
+    (bokeh.md)
+  - Limited Bokeh mastery—no interactive features, custom callbacks, or use of library-specific
+    capabilities
+  - Output filenames in code are plot.png/plot.html instead of required plot-{THEME}.png/plot-{THEME}.html
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and professional.
+      Chrome: Title "polar-line · bokeh · anyplot.ai" centered, hour labels (0h–22h) arranged radially, radius labels (2, 4, 6, 8, 10) on right side, concentric circles and radial grid lines all rendered in dark text/lines (#444444, #cccccc) against light background.
+      Data: Day 1 rendered in teal/cyan (appears Okabe-Ito position 1, ~#009E73), Day 2 in orange (appears Okabe-Ito position 2, ~#D55E00). Markers (size 12) and lines (width 4) clearly visible. Legend in top-right with both series labeled.
+      Legibility verdict: PASS — all text readable, no overlap, good contrast between data series and background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), maintains visual continuity with light render.
+      Chrome: Title, hour labels, and radius labels rendered in light text against dark background. Concentric circles and radial grid lines visible with dark theme opacity. Legend box styled for dark theme.
+      Data: Day 1 and Day 2 colors **identical** to light render (teal and orange preserved), confirming only chrome changed between themes.
+      Legibility verdict: PASS — all text light-colored and clearly visible against dark background. No dark-on-dark failures. Grid and borders render with appropriate contrast. Brand green (#009E73) remains visible.
+
+    Both renders demonstrate correct theme adaptation and full readability across light and dark surfaces.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 32pt, hour labels at 18pt, all clearly readable. Radius
-          labels slightly small at 14pt.
+        comment: Font sizes explicitly set (title 32pt, labels 22pt, ticks 18pt),
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text; hour labels well-spaced at radius 11.5
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines at width=4 and markers at size=12 are well-suited for the data
-          density (~26 points per series)
+        comment: Markers (size 12) and lines (width 4) clearly visible at high resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe, good contrast against background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, though plot is slightly positioned toward
-          upper half
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: No axis labels visible (axes hidden for polar plot, but no "Wind
-          Speed (m/s)" label on radial axis)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha=0.5, legend well-placed in top-right
+        comment: Good contrast between teal and orange; CVD-safe color pair
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of 3600×3600 canvas with balanced margins; some wasted
+          space on right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; axis labels include units (Wind Speed m/s)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Rendered colors appear Okabe-Ito compliant; backgrounds and text
+          colors theme-correct in both renders
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured Okabe-Ito palette, consistent typography; lacks custom
+          design flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Axes hidden, concentric grid manually drawn with subtlety; above
+          defaults but not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Polar coordinates naturally emphasize cyclical wind patterns; clear
+          visual hierarchy but subtle
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar line plot with angular and radial dimensions
+        comment: Correct polar line plot with multi-series support
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta (hours) correctly mapped to angle, radius (wind speed) correctly
-          mapped to distance from center
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series shown, lines connect points in theta order, grid
-          lines are concentric circles and radial lines
-      - id: SC-04
-        name: Data Range
+        comment: Multi-series, angular labels, radius visualization, grid structure
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 24-hour cycle shown, wind speed range appropriate
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Theta and radius correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Day 1 and Day 2
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "polar-line · bokeh · pyplots.ai"'
+        comment: Title and legend labels correct
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows cyclical pattern, multiple series with variation, closed loop.
-          Could show more extreme variation between days.
+        comment: Shows daily patterns with variation; two-day scenario demonstrates
+          features
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Wind speed over 24 hours is an excellent, neutral, real-world scenario
+        comment: Real-world scenario (wind patterns), plausible values (0.5–10 m/s),
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Wind speeds 0.5-10 m/s are realistic, though slightly high for some
-          hours
+        comment: Values and proportions realistic; cyclical pattern aligns with wind
+          physics
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -168,41 +187,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes
+        comment: 'Clean structure: imports → data → plotting; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) is set
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: ColumnDataSource imported but could be avoided (direct arrays work
-          too)
+        comment: Seeded with np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; minimal dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
+        max: 2
+        passed: false
+        comment: 'Pythonic but violates bokeh.md: uses export_png (not Selenium),
+          no ANYPLOT_THEME reading, hardcoded colors not theme-adaptive'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Code outputs plot.png but actual files are plot-light.png/plot-dark.png
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource and export_png, but doesn't leverage Bokeh-specific
-          interactive features like HoverTool. However, for a PNG export this is acceptable.
+        passed: false
+        comment: Uses ColumnDataSource idiomatically; manual Cartesian transformation
+          for polar rather than Bokeh-native patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No distinctive Bokeh features; no HoverTool, callbacks, or interactive
+          enhancements
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []

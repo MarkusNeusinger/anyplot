@@ -1,15 +1,228 @@
 library: pygal
+language: python
 specification_id: icicle-basic
 created: '2025-12-30T21:52:27Z'
-updated: '2025-12-30T22:00:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20606632269
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T23:00:39Z'
+generated_by: claude-haiku
+workflow_run: 25830901202
+issue: 2497
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/pygal/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Flawless visual quality with perfect legibility in both light and dark themes
+  - Proper theme adaptation with color tokens correctly applied throughout
+  - Accurate hierarchical representation with proportional sizing and depth-based
+    coloring
+  - Responsive typography with adaptive font sizes that scale to available space
+  - Professional use of Okabe-Ito palette and clean SVG rendering
+  weaknesses:
+  - 'Library Mastery moderate (4/5): hand-coded SVG necessary for icicle layout but
+    limits pygal-typical pattern demonstration'
+  - Design Excellence could benefit from additional visual refinement beyond functional
+    styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface
+      Chrome: Title "icicle-basic · pygal · anyplot.ai" centered with dark text; right-side hierarchy labels (Company, Division, Department, Team) in soft gray; all readable
+      Data: Green/orange/blue/pink rectangles using Okabe-Ito palette, sized proportionally by hierarchy values; labels shown within rectangles where space permits (>70px width)
+      Legibility: PASS - all text readable against light background, clear visual separation via 2px white gaps
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface
+      Chrome: Title in light text; hierarchy labels in soft light gray; all readable with good contrast
+      Data: Identical Okabe-Ito colors to light render (only chrome changed); proportions and structure identical
+      Legibility: PASS - all text readable against dark background, no dark-on-dark failures, brand green visible and distinct
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; font sizes adaptive and appropriate
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; labels truncated and hidden when necessary
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All rectangles visible; spacing clear; distinct color separation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette; colorblind-safe; high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape; good proportions; margins appropriate; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; hierarchy level labels descriptive; node names
+          clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Depth 0: #009E73 (brand); subsequent depths follow Okabe-Ito order;
+          backgrounds correct for both themes; theme-adaptive chrome correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom depth-based palette; professional appearance; intentional
+          hierarchy; thoughtful spacing
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean 2px gaps; generous whitespace; refined margins; subtle visual
+          separation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy by depth; root node guides eye; proportional
+          sizing tells data story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct icicle chart; horizontal orientation (top-to-bottom) as recommended
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: hierarchy, value-proportional sizing, parent-child
+          relationships visible'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct hierarchical mapping; all nodes displayed; proportional sizing
+          accurate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; right-side legend shows hierarchy levels; node
+          labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all icicle aspects: 4-level hierarchy, size variation,
+          real-world structure'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Organizational hierarchy realistic; neutral company name; plausible
+          team sizes (15-70)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for context; good variation shows proportional sizing
+          benefits
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Direct script; tree building and positioning clear and concise
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data; no random elements; identical output each run
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used (ET, Style, cairosvg); no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Manual SVG necessary for icicle layout; no fake UI; clean algorithms
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; theme env
+          var handled
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Style object used correctly for theme tokens; cairosvg for PNG conversion
+          idiomatic; manual SVG necessary
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Functional implementation but limited distinctive pygal features;
+          manual SVG renders plot but doesn't showcase library capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
@@ -17,194 +230,5 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Excellent hierarchical visualization with clear parent-child relationships through
-    spatial adjacency
-  - Smart color scheme differentiating hierarchy levels with colorblind-safe palette
-  - Good use of file system metaphor making the data immediately understandable
-  - Adaptive label truncation prevents overlap while maintaining readability
-  - Level labels on right side provide helpful context
-  - Clean legend placement at bottom
-  weaknesses:
-  - Manual SVG construction is necessary but makes code more complex than typical
-    pygal implementations
-  - Some leaf nodes have very narrow rectangles making labels hard to read (e.g.,
-    Cov.., Th..)
-  image_description: 'The plot displays a hierarchical icicle chart with 4 levels
-    arranged vertically (top-to-bottom). The root node (blue, #306998) spans the full
-    width at the top labeled "Root". Below it, three category nodes in yellow (#FFD43B)
-    show "Documents", "Pictures", and "Music" with proportional widths. The third
-    level (teal, #4ECDC4) contains subcategories like "Reports", "Letters", "Spreadsheets",
-    "Photos", "Screenshots", "Icons", "Albums", "Playlists", and "Podcasts". The bottom
-    level (coral, #FF6B6B) shows individual items like "Q1 Report", "Q2 Report", "Photo
-    1", "Rock", "Jazz", etc. Level labels appear on the right side (Root, Category,
-    Subcategory, Item). A legend at the bottom shows the four hierarchy levels with
-    color coding. The title "icicle-basic · pygal · pyplots.ai" is prominently displayed
-    at the top.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and most labels clearly readable; some smaller items use truncated
-          labels but remain legible
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text; labels appropriately truncated for narrow rectangles
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Rectangles well-sized and visible; small items like "Cov..", "Th..",
-          "An.." are narrow but still distinguishable
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-safe palette (blue, yellow, teal, coral) with
-          good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space with balanced margins; level labels on right
-          add context
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for icicle charts (no traditional axes); level labels serve similar
-          purpose
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean legend at bottom, no distracting grid elements
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct icicle chart with horizontal orientation (top-to-bottom)
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchy correctly mapped with parent-child relationships
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Shows hierarchy levels, proportional sizing, color by level, labels
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All nodes visible and appropriately sized
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend accurately shows 4 hierarchy levels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "icicle-basic · pygal · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows 4 levels of hierarchy with varying sizes; could show more variation
-          in branch depths
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: File system metaphor is excellent and intuitive (Documents, Pictures,
-          Music folders)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are reasonable; some items could have more variation
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code uses procedural style but is more complex due to manual SVG
-          generation (necessary for icicle chart)
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic data, no random elements
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used appropriately
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses pygal Style for theming and config; SVG generation is manual
-          since pygal lacks native icicle chart support
-  verdict: APPROVED

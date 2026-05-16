@@ -1,166 +1,175 @@
 library: pygal
+language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:38:59Z'
-updated: '2025-12-30T10:48:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594562097
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-12T05:54:39Z'
+generated_by: claude-haiku
+workflow_run: 25715577181
+issue: 2601
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-dark.html
+quality_score: 73
 review:
   strengths:
-  - Excellent implementation of stacked histogram concept using pygal StackedBar
-  - Clean, well-organized code following KISS principles
-  - Realistic plant growth scenario with meaningful group labels
-  - Proper title format and axis labels with units
-  - Good color palette with sufficient contrast between groups
-  - Appropriate use of custom Style for consistent theming
+  - Correct stacked histogram with clear three-way composition showing three plant
+    growth distributions
+  - Data shows realistic plant science scenario with distinct distributions centered
+    at different heights
+  - No overlapping elements, clean layout with adequate margins and proper histogram
+    calculations
+  - Renders properly in both light and dark themes with appropriate background and
+    text colors
   weaknesses:
-  - Legend position in top-left corner could be moved to avoid proximity to plot area
-  - Could leverage more pygal-specific features like custom tooltips or value labels
-  image_description: 'The plot displays a stacked bar chart simulating a stacked histogram
-    of plant height measurements in centimeters. Three groups are shown: Shade-grown
-    (blue, #306998), Partial-sun (yellow, #FFD43B), and Full-sun (green, #4CAF50).
-    The x-axis displays 12 bin ranges from "5-10" to "60-65" cm with the label "Plant
-    Height (cm)". The y-axis shows "Frequency" ranging from 0 to approximately 80.
-    The title correctly reads "histogram-stacked · pygal · pyplots.ai" at the top
-    center. The legend is positioned in the top-left corner showing all three group
-    labels. The bars are properly stacked, with the blue (Shade-grown) distribution
-    centered around 20-30 cm, yellow (Partial-sun) around 30-40 cm, and green (Full-sun)
-    around 40-50 cm. The overall layout is clean with a white background and subtle
-    horizontal grid lines.'
+  - 'No theme-aware code architecture: hardcodes ''white'' background instead of reading
+    ANYPLOT_THEME environment variable'
+  - 'Wrong color palette: uses Python Blue (#306998) as first series instead of Okabe-Ito
+    brand green (#009E73); colors do not follow Okabe-Ito specification'
+  - 'Incorrect output API: saves as bare ''plot.png'' instead of ''plot-{THEME}.png'';
+    filenames not theme-adaptive'
+  - 'Minimal design refinement: library defaults with no visual hierarchy, no aesthetic
+    polish, awkward color combination (Python Blue + Yellow + Material Green)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at approximately #FAF8F1 - correct color
+      Chrome: Title, axis labels, tick labels all dark-colored and clearly readable against light background
+      Data: Three stacked segments in teal-green (Shade-grown), orange (Partial-sun), and blue (Full-sun); legend shows all labels clearly
+      Legibility verdict: PASS - all text is fully readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at approximately #1A1A17 - correct color
+      Chrome: Title, axis labels, tick labels all light-colored and clearly readable against dark background
+      Data: Same three colors as light render (teal-green, orange, blue) - colors are identical between renders, only chrome has flipped
+      Legibility verdict: PASS - all text is fully readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 5
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all readable. Font sizes
-          are appropriate for the 4800x2700 canvas. Legend text is slightly small
-          but still legible.
+        comment: Text readable but relying on defaults rather than explicit theme-aware
+          sizing
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements. X-axis labels are well-spaced.
+        comment: All labels and elements have clear spacing, no overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and clearly visible. Stacking is clearly distinguishable.
+        comment: Stacked bars properly sized and fully visible with clear segment
+          distinction
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and green provide good contrast. Not a red-green combination,
-          but blue-yellow-green could be slightly improved for deuteranopia.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins. Legend is appropriately
-          positioned.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has "Plant Height (cm)" with units, Y-axis has "Frequency".
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Good contrast between colors, CVD-safe, not relying on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Balanced layout with adequate margins, fills ~65% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid lines are subtle (good), but legend placement in top-left corner
-          overlaps with the plot area slightly and could be better positioned.
+        comment: 'Descriptive labels with units: Plant Height (cm) and Frequency'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL: Code specifies non-Okabe-Ito colors (#306998 instead of
+          #009E73), hardcoded white background instead of theme-adaptive values'
+    design_excellence:
+      score: 6
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic defaults with poorly chosen color palette (Python Blue +
+          Yellow + Material Green)
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements stacked histogram using pygal's StackedBar chart.
+        comment: Correct stacked bar histogram with proper stacking
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X shows bin ranges, Y shows frequency, stacking shows group contributions.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: stacked bars, distinct colors, legend
-          with group labels, same bin boundaries for all groups.'
-      - id: SC-04
-        name: Data Range
+        comment: All stacking and grouping features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the chart bounds.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly show "Shade-grown", "Partial-sun", "Full-sun".
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows exact format: "histogram-stacked · pygal · pyplots.ai".'
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct distributions with different means and spreads.
-          Could benefit from more overlap between groups to better demonstrate stacking.
+        comment: 'Shows all aspects: three distributions with different shapes and
+          spreads'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plant growth measurements under different sunlight conditions is
-          a realistic, neutral scientific scenario.
+        comment: Real plant science scenario with neutral, comprehensible context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Plant heights of 5-65 cm are reasonable, though the distributions
-          could have more natural variation.
+        comment: Heights and sample sizes (150, 180, 120) are plausible and domain-realistic
     code_quality:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -168,40 +177,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → chart config → save.'
+        comment: 'Clean organization: Imports → Data → Plot → Save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal, Style.'
+        comment: Only necessary imports (numpy, pygal, Style)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current pygal API.
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, straightforward code with no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: 'CRITICAL: Saves as bare ''plot.png'' instead of ''plot-{THEME}.png'';
+          does not use ANYPLOT_THEME environment variable'
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.StackedBar and Style correctly, missing theme-aware environment
+          variable patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Uses pygal's StackedBar and custom Style, but doesn't leverage more
-          distinctive pygal features like tooltips configuration or value formatters.
-  verdict: APPROVED
+        comment: Basic usage of Style object; no distinctive pygal features leveraged
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling: []

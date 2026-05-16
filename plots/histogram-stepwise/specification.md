@@ -13,10 +13,10 @@ A histogram displayed as step lines (outline only) without filled bars. The dist
 
 ## Data
 
-The visualization requires:
-- **Continuous variable**: Values to bin and count
+- `values` (numeric, continuous) — Raw continuous measurements to be binned and counted
+- Size: 50–5000 points (larger datasets reveal distribution shape better)
+- Example: Heights in cm, test scores, sensor readings
 
-Example structure:
 ```
 Value
 ------
@@ -24,6 +24,8 @@ Value
 18.3
 15.7
 22.1
+24.6
+19.2
 ...
 ```
 

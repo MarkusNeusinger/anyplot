@@ -1,165 +1,178 @@
 library: altair
+language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:49:20Z'
-updated: '2025-12-30T17:59:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602453376
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+updated: '2026-05-13T11:18:18Z'
+generated_by: claude-haiku
+workflow_run: 25795263793
+issue: 2790
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent text legibility with appropriate font sizes for high-resolution output
-  - Clean declarative layer composition using Altair's grammar of graphics
-  - Realistic, neutral dataset with recognizable tech companies and accurate financials
-  - Smart label positioning with consistent dx/dy offsets to avoid point overlap
-  - Proper use of tooltips for interactivity in HTML output
+  - 'Excellent visual quality across all dimensions (VQ: 30/30)'
+  - Perfect spec compliance and data quality
+  - Clean, maintainable code with proper reproducibility
+  - Strong idiomatic Altair usage with effective layer composition
+  - 'Flawless theme adaptation: data colors identical between renders, chrome correctly
+    inverted'
+  - Well-chosen example data demonstrating the plot type effectively
+  - 'No visual defects: readable in both light and dark themes'
   weaknesses:
-  - Missing connector lines/arrows from labels to points as mentioned in specification
-    notes
-  - Could leverage more Altair-specific features like conditional formatting or selections
-  image_description: The plot displays a scatter plot with 10 tech company data points
-    showing Revenue (Billions USD) on the x-axis (ranging from 0-640) and Profit Margin
-    (%) on the y-axis (ranging from 0-60). Each point is rendered as a blue circle
-    (#306998) with moderate opacity. Company names are displayed as bold dark text
-    labels positioned to the upper-right of each point. Companies shown include NVIDIA
-    (high profit margin ~55%, low revenue ~61B), Apple (high revenue ~385B, moderate
-    margin ~25%), Microsoft, Amazon (highest revenue ~574B, lowest margin ~6%), Google,
-    Meta, Adobe, Oracle, Tesla, and Intel. The title "scatter-annotated · altair ·
-    pyplots.ai" appears centered at the top. Grid lines are subtle with low opacity.
-    The overall layout is clean and balanced.
+  - Design sophistication is competent but not exceptional—relies on well-configured
+    defaults rather than distinctive aesthetic choices
+  - Visual refinement is minimal—mostly library defaults with subtle grid customization
+  - No visual hierarchy or storytelling emphasis beyond displaying the annotated data
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title (28px, dark ink), axis labels (22px, dark ink), tick labels (18px, soft ink) all clearly readable against light surface
+      Data: 10 green points (#009E73, opacity=0.7) with bold company name labels (18px) offset via dx/dy; connector lines (opacity=0.3) subtle but visible
+      Legibility verdict: PASS - All text elements readable, no dark-on-dark issues, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and axis labels render in light ink (#F0EFE8), tick labels in soft ink (#B8B7B0); all clearly readable against dark surface. NO dark-on-dark text failures detected.
+      Data: Green points (#009E73) identical to light render, confirming correct theme implementation; connector lines properly adapted
+      Legibility verdict: PASS - All text elements readable, perfect dark theme chrome, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large (28pt), axis labels are 22pt, tick labels are 18pt,
-          all clearly readable at full size
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px,
+          text 18px); all perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; labels are well-positioned with dx=12, dy=-8
-          offset
+        comment: Text labels positioned with dx/dy offset; no overlapping elements
+          detected
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size=250 with opacity=0.7 is appropriate for 10 data points
+        comment: Points (size=250, opacity=0.7) clearly visible; labels (fontSize=18,
+          bold) fully readable; connector lines visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with good contrast, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall balance, but data clusters in left-center leaving right
-          side sparse (this is data-driven, not a layout issue per se)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Revenue (Billions USD)" and "Profit Margin
-          (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Colorblind-safe Okabe-Ito #009E73; good contrast between markers
+          and backgrounds'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 70-80% of canvas with balanced margins; no content cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (0.3 opacity), but no legend is present (though not
-          strictly needed for this single-series plot)
+        comment: 'Descriptive labels with units: Revenue (Billions USD) and Profit
+          Margin (%)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; text colors theme-adaptive;
+          both renders correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with clean theme adaptation and thoughtful
+          connector lines, but presentation remains fundamentally library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid (opacity=0.10) and connector lines add some refinement,
+          but mostly library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly with annotations but no visual hierarchy or
+          emphasis beyond showing the data
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct scatter plot with text annotations
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=revenue, Y=profit_margin correctly assigned
-      - id: SC-03
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has text labels near points; however, spec mentions "subtle connecting
-          lines or arrows from labels to points when offset" which is missing
-      - id: SC-04
-        name: Data Range
+        comment: Scatter points, text labels, x/y mapping all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding (0-620 for x, 0-60 for
-          y)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (Revenue), Y (Profit Margin), Labels (Company names) correctly
+          assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-annotated · altair · pyplots.ai"'
+        comment: Title format correct; no legend needed for single series
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variation: high margin/low revenue (NVIDIA), low margin/high
-          revenue (Amazon), and middle performers'
+        comment: Shows full range of profit margins (6-55%) and revenue (19-574B);
+          good spread demonstrates plot type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real tech companies with realistic financial metrics; neutral business
-          topic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Revenue and profit margin values are realistic for these companies
+        comment: Real tech companies with factually accurate financial data; neutral,
+          comprehensible context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values and proportions align with real-world facts
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,42 +180,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → points layer → labels layer →
-          combine → save'
+        comment: Imports → data → plot → save; no functions/classes; clean structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42), though data is actually deterministic arrays
+        comment: np.random.seed(42); deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: 'Only used imports: os, altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current Altair API
+        comment: Clean Pythonic code; layer composition well-structured; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png/.html with scale_factor=3.0; current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 2
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's layered grammar (points + labels), tooltip encoding,
-          and declarative style. However, could leverage more Altair-specific features
-          like interactive selections, conditional encodings, or text adjustments
+        comment: Expert use of high-level Altair API; all methods correctly applied
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses declarative layer composition and theme-adaptive configuration;
+          good library-specific patterns but not exceptional
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready

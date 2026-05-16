@@ -1,163 +1,183 @@
 library: plotnine
+language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T05:33:26Z'
-updated: '2025-12-31T05:44:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612807474
+updated: '2026-05-15T07:42:14Z'
+generated_by: claude-haiku
+workflow_run: 25906085519
 issue: 2927
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - colorbar
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Clear visualization of chirp signal with frequency increasing over time
-  - Proper use of dB scale for power representation
-  - Well-formatted title following spec format exactly
-  - Good axis labels with units as specified
-  - Reproducible with fixed random seed
-  - Clean, readable KISS code structure
-  - Appropriate colormap that is perceptually reasonable
+  - Excellent theme implementation with perfect text legibility in both light and
+    dark modes
+  - Correct spectrogram implementation with clear frequency sweep visualization
+  - All font sizes explicitly set for high-resolution rendering
+  - Proper viridis colormap for perceptually uniform continuous data representation
+  - Clean, well-structured code with deterministic data generation
+  - Proper data preparation using scipy.signal.spectrogram
+  - Correct title format and descriptive axis labels with units
+  - No text overlap or contrast failures
   weaknesses:
-  - Custom color gradient could use a more perceptually uniform colormap like viridis
-    (spec recommends viridis/inferno)
-  - No grid lines to aid in reading specific time-frequency values
-  - Frequency axis filtered to 500 Hz when chirp only reaches 200 Hz - could be tighter
-    range for better visualization
-  image_description: The spectrogram displays a time-frequency heatmap on a 16:9 canvas
-    with a clean minimal theme. The x-axis shows "Time (s)" ranging from 0.0 to 2.0
-    seconds, and the y-axis shows "Frequency (Hz)" ranging from 0 to 500 Hz. A colorbar
-    on the right labeled "Power (dB)" shows the scale from approximately -70 dB (dark
-    blue) to -20 dB (light yellow/cream). The plot clearly shows a chirp signal with
-    frequency increasing linearly from about 50 Hz at t=0 to about 200 Hz at t=2,
-    visible as a bright diagonal band sweeping upward across the time axis. The background
-    noise appears as a mottled blue-green pattern at frequencies outside the chirp.
-    The title "spectrogram-basic · plotnine · pyplots.ai" is displayed at the top.
+  - 'Design Excellence could be elevated: consider unique visual refinements beyond
+    defaults (e.g., custom grid styling, refined typography hierarchy)'
+  - Limited use of plotnine's distinctive capabilities beyond standard geom_tile and
+    theme customization
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), no contrast issues
+      Chrome: Title "spectrogram-basic · plotnine · anyplot.ai" bold and dark, axis labels "Time (s)" and "Frequency (Hz)" with units, tick labels on both axes dark and readable. Grid subtle with low alpha. Panel border visible but minimal.
+      Data: Viridis colormap showing clear frequency sweep (chirp pattern) from 50 Hz to 200 Hz. Yellow diagonal stripe represents high power, darker colors represent low power. All color gradations distinct and readable.
+      Legibility verdict: PASS - All text elements perfectly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), proper theme adaptation
+      Chrome: Title, axis labels, and tick labels all light-colored (INK and INK_SOFT tokens) and clearly readable against dark background. No dark-on-dark contrast failures. Grid and borders visible and appropriate.
+      Data: Viridis colormap identical to light render (purple through green to yellow), confirming proper theme-independence of data colors. Same diagonal chirp pattern visible with identical color values.
+      Legibility verdict: PASS - All text elements perfectly readable against dark background. Data colors match light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfectly readable in both light and dark themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Legend positioned cleanly on right side, all
+          labels well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tiles are visible and the chirp pattern is clear, though some granularity
-          in the high-frequency region
+        comment: Heatmap tiles clearly visible and well-sized. Color gradation smooth
+          and perceptually distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses a perceptually reasonable colormap that avoids red-green issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: "Time (s)" and "Frequency (Hz)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and colorblind-safe. Excellent contrast
+          throughout the range.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout. Plot fills 60-70% of canvas with balanced margins.
+          Caption included.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'X-axis: ''Time (s)'' and Y-axis: ''Frequency (Hz)'' both have units.
+          Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data (correct for sequential heatmap). Background
+          #FAF8F1 (light)/#1A1A17 (dark). Text colors properly theme-adaptive. Both
+          renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No visible grid (spec suggests grid could help), legend is well-placed
+        comment: Well-configured library default with proper theme tokens. Professional
+          styling but not distinctively sophisticated or creative.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid, minimal panel border, generous whitespace.
+          Clear attention to visual polish.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: diagonal chirp pattern is immediately recognizable.
+          Color gradient guides viewer through power spectrum evolution. Caption provides
+          context.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct spectrogram heatmap visualization
+        comment: Correct spectrogram heatmap implementation with time-frequency representation.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X, Frequency on Y, Power as color intensity
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar with dB units, clear axes, chirp signal demonstration
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: time-frequency heatmap, power scale in dB, colorbar,
+          proper axes labels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows full 0-2s time range and 0-500 Hz frequency range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Time (0-2s), Y: Frequency (0-250 Hz), Z: Power (dB). All axes
+          correctly mapped and visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Power (dB)"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "{spec-id} · {library} · pyplots.ai" format
+        comment: 'Title: ''spectrogram-basic · plotnine · anyplot.ai'' (correct format).
+          Legend: ''Power (dB)'' label correct.'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows time-frequency representation well; chirp clearly visible;
-          noise background present
+        comment: 'Demonstrates all aspects: frequency sweep, noise, background power
+          variation, time-evolution of frequency content.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Chirp signal is a standard signal processing example, scientifically
-          neutral
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Sample rate and frequency ranges are plausible; filtering to 500
-          Hz is arbitrary when chirp only goes to 200 Hz
+        comment: Chirp signal is standard in signal processing. Audio analysis is
+          listed spec application. Neutral, technical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample rate 1000 Hz standard for audio. Duration 2s reasonable. Frequency
+          50-200 Hz appropriate. dB scale correct for spectrograms.
     code_quality:
       score: 10
       max: 10
@@ -167,41 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Clean flow: imports → data generation → spectrogram computation
+          → DataFrame → plot → save. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set. All randomness deterministic. Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy, pandas, scipy.signal, plotnine. No unused
+          imports.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. Theme tokens properly implemented. Appropriate
+          complexity. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png at 300 dpi. Correct API usage.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses geom_tile appropriately for heatmap, but custom color gradient
-          instead of plotnine's scale functions; theme_minimal is good but basic usage
-          overall
+        passed: true
+        comment: Expertly uses plotnine's ggplot syntax. Proper geom_tile for heatmap,
+          scale_fill_cmap for continuous data, theme() for customization.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine-specific theme element customization (element_text,
+          element_line, element_rect) and scale_fill_cmap. Standard but appropriate
+          usage.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

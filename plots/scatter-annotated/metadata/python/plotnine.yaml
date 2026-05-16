@@ -1,160 +1,165 @@
 library: plotnine
+language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:47:43Z'
-updated: '2025-12-30T17:53:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20602453182
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-13T11:29:02Z'
+generated_by: claude-haiku
+workflow_run: 25795358982
+issue: 2790
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 72
 review:
   strengths:
-  - Excellent label placement with nudge_y preventing overlap
-  - Clean minimal theme appropriate for annotated scatter plot
-  - Well-chosen data spread prevents label collisions
-  - Proper use of plotnine grammar of graphics syntax
-  - Appropriate font sizing for 4800x2700 resolution
+  - Correct plot type with all required annotations
+  - Clean, deterministic data generation with realistic business context
+  - Readable layout with no text overlap
+  - Consistent data colors across light and dark renders
   weaknesses:
-  - Grid lines could be more subtle (add alpha parameter if possible)
-  - Point size could be slightly larger for only 10 data points (size=8-10 would be
-    more visible)
-  image_description: 'The plot displays a scatter chart showing 10 technology companies
-    plotted by Annual Revenue ($ Millions) on the x-axis and Profit Margin (%) on
-    the y-axis. Each blue circular data point (with alpha transparency ~0.7) has its
-    company name label positioned directly above it in dark gray text. Companies range
-    from TechCorp (lowest: ~$35M revenue, ~6% margin) to AI Labs (highest: ~$200M
-    revenue, ~23% margin). The plot uses a clean minimal theme with subtle gray grid
-    lines. The title "scatter-annotated · plotnine · pyplots.ai" appears at the top.
-    All text is clearly legible with appropriate font sizes.'
+  - 'Hardcoded point color (#306998) violates Okabe-Ito standard—should be #009E73'
+  - Hardcoded text color (#333333) fails dark theme with dark-on-dark legibility issue
+  - Code doesn't read ANYPLOT_THEME environment variable for theme adaptation
+  - Output filename hardcoded as plot.png instead of plot-{THEME}.png
+  - Generic styling with no theme-adaptive chrome (background, text, grid)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title, axis labels, and tick labels are dark gray, clearly visible and readable
+      Data: Ten company points in teal/cyan color with dark gray labels positioned above; revenue (x-axis) ranges 20-220M, profit margin (y-axis) ranges 4-26%
+      Legibility verdict: PASS - All text elements are clearly readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17), correct for dark theme
+      Chrome: Axis labels and title are light gray/tan, readable but not using recommended light-theme text tokens; company name labels appear in medium gray (#333333 hardcoded)
+      Data: Same teal/cyan data points as light render (colors correctly persist across themes); company labels are medium gray, struggling against dark background
+      Legibility verdict: PARTIAL FAIL - Company name labels have poor contrast on dark background (dark-on-dark issue); axis labels/title are readable but not optimally light-themed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 22
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and annotations all clearly readable
-          at full resolution
+        score: 4
+        max: 8
+        passed: false
+        comment: 'Light render readable; dark render has poor contrast on labels (hardcoded
+          #333333 on dark background)'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; data points strategically spread to avoid label
-          collision
+        comment: Labels positioned above points with adequate spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points sized well (size=6), alpha=0.7 appropriate; could be slightly
-          larger for 10 points
+        comment: Points and labels clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is colorblind-safe
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Point color hardcoded as #306998 instead of Okabe-Ito #009E73'
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good use of canvas space; slight extra whitespace on left side
+        comment: Good proportions and balanced margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Annual Revenue ($ Millions)", "Profit Margin
-          (%)"'
+        comment: Descriptive labels with units
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
-        passed: true
-        comment: Grid is subtle and appropriate; no legend needed for single series
+        passed: false
+        comment: 'Critical: Wrong point color (#306998 not #009E73), hardcoded text
+          colors, no theme adaptation, dark render text unreadable'
+    design_excellence:
+      score: 7
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic styling with hardcoded colors, no design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Labels identify points but provide no visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: annotated scatter plot'
+        comment: Correct scatter plot with annotations
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped (revenue vs profit margin)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: scatter points, text labels, appropriate alpha'
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with proper limits set
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-annotated · plotnine · pyplots.ai"'
+        comment: Title correct, no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good spread of companies across revenue/margin spectrum; could
-          show more outliers
+        comment: Shows full range of values
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Realistic business scenario: company revenue vs profit margin analysis'
+        comment: Real company names with plausible business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for mid-sized tech companies; revenue ranges
-          sensible
+        comment: Factually realistic values
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -162,40 +167,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → data → plot → save, no functions/classes'
+        comment: Simple linear script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
+        max: 2
+        passed: false
+        comment: Hardcoded colors instead of theme variables
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves as plot.png instead of plot-{THEME}.png
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar (aes, geom_point, geom_text, theme_minimal) correctly;
-          could leverage scale_color_brewer or other plotnine-specific features
+        comment: Correct plotnine pattern but no theme adaptation
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage of geoms and theme
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

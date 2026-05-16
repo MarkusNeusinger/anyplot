@@ -1,170 +1,178 @@
 library: matplotlib
+language: python
 specification_id: polar-line
 created: '2025-12-30T16:29:25Z'
-updated: '2025-12-30T16:35:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601054514
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-line/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-12T22:41:43Z'
+generated_by: claude-haiku
+workflow_run: 25766227539
+issue: 2692
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 97
 review:
   strengths:
-  - Excellent choice of square format (12x12) which is ideal for polar coordinate
-    plots
-  - Smart use of seasonal temperature data that naturally demonstrates cyclical patterns
-  - Clean color scheme with colorblind-safe yellow and blue that provide strong contrast
-  - Proper closing of the line loop by appending the first point, creating a complete
-    circle
-  - Comprehensive radial axis labeling with temperature units (°C)
-  - Time-based theta labels that directly relate to the cyclical nature of the data
-  weaknesses:
-  - Legend placement at bbox_to_anchor=(0.95, 0.95) places it slightly outside the
-    natural visual flow
-  - Could leverage matplotlib fill_between or polar-specific features for enhanced
-    visualization
-  image_description: The plot displays a polar line chart showing hourly temperature
-    patterns across 24 hours for two seasons. The outer yellow/gold line represents
-    Summer temperatures (ranging from approximately 12°C to 28°C), while the inner
-    blue line represents Winter temperatures (ranging from approximately 0°C to 10°C).
-    The angular axis shows time in 3-hour intervals (0:00, 3:00, 6:00, 9:00, 12:00,
-    15:00, 18:00, 21:00) around the circle. The radial axis displays temperature with
-    concentric circles at 0°C, 10°C, 20°C, and 30°C. Both lines have circular markers
-    at each data point and form closed loops. The legend is positioned in the upper
-    right. The title reads "Hourly Temperature Pattern · polar-line · matplotlib ·
-    pyplots.ai" at the top. The plot uses a square format with clean, subtle grid
-    lines.
+  - Perfect theme adaptation with all chrome properly flipped between light and dark
+    renders
+  - 'Correct Okabe-Ito palette use: brand green (#009E73) for Summer series, orange
+    (#D55E00) for Winter'
+  - Excellent text legibility in both themes with explicit font sizing and appropriate
+    color tokens
+  - 'Idiomatic matplotlib usage: proper polar projection, theme-aware styling, custom
+    tick formatting'
+  - Clean code structure with deterministic data generation and proper spine/grid
+    configuration
+  - Professional legend styling with background and border matching current theme
+  - 'All specification requirements met: two-series polar line plot with proper axes
+    and labels'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "polar-line · matplotlib · anyplot.ai" in dark text (#1A1A17); hour labels (6:00-0:00) and temperature labels (0°C-30°C) in soft dark gray (#4A4A44) — all clearly readable against light background
+      Data: Summer series in brand green (#009E73) as outer loop; Winter series in orange (#D55E00) as inner loop; both colors vibrant and well-distinguished; markers (circles) clearly visible
+      Legend: Positioned at upper left with light elevated background (#FFFDF6), dark text labels; grid subtle with low opacity
+      Legibility verdict: PASS — all text is dark on light with excellent contrast; grid supports rather than competes with data
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title in light text (#F0EFE8); hour and temperature labels in light soft gray (#B8B7B0) — all clearly readable against dark background; no dark-on-dark failures
+      Data: Summer (green #009E73) and Winter (orange #D55E00) colors are identical to light render — only chrome has flipped to light tones; markers and lines equally visible
+      Legend: Dark elevated background (#242420), light text labels; legend frame border in soft light gray; properly themed
+      Legibility verdict: PASS — all text is light on dark with good contrast; no legibility issues; brand green visible and distinct
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, tick labels at 16pt, radial labels at 14pt - all clearly
-          readable
+        comment: All text explicitly sized, readable in both light and dark renders
+          with appropriate theme colors
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, hour labels well-spaced around circumference
+        comment: No text collisions; legend positioned away from plot; radial labels
+          at 45° positioning
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 and marker size of 8 are well-suited for 24 data
-          points per series
+        comment: Markers (size 8) and lines (width 3) clearly visible; concentric
+          grid subtle but present
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow (#FFD43B) and blue (#306998) are colorblind-safe with excellent
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 12x12 format is perfect for polar plots, plot fills canvas
-          well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Radial axis shows temperature with units (°C), theta axis shows time
-          with format (HH:00)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-2; CVD-safe palette; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (12x12) appropriate for polar; nothing cut off; generous
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha=0.3), but legend position at upper right could
-          be better integrated; slightly outside optimal placement
+        passed: true
+        comment: Title with spec-id/library/brand; temperature labels with units;
+          hour labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series follows Okabe-Ito order; backgrounds
+          correct; chrome properly themed'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Theme-aware styling with careful color choices; intentional visual
+          hierarchy; custom legend frame
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha 0.15), generous title padding; polar grid structure
+          is visually appropriate
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear seasonal contrast (Summer outer/warmer vs Winter inner/cooler);
+          color guides narrative; legend provides context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar line plot with data connected around circular axis
+        comment: Correct polar line chart; lines connect points around circular axis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta correctly maps to hours (cyclical), radius correctly maps to
-          temperature (magnitude)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series shown with different colors as mentioned in spec
-          notes
-      - id: SC-04
-        name: Data Range
+        comment: Multiple series, connected lines, grid visible, markers on points
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate range (0-35°C)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'Theta: 0-24 hours; Radius: 0-35°C; all data within limits'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Summer and Winter series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "Hourly Temperature Pattern · polar-line ·
-          matplotlib · pyplots.ai"'
+        comment: Title format correct; legend labels match intent
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series, cyclical patterns, sinusoidal variation demonstrating
-          daily temperature swings
+        comment: Polar projection demonstrated; multi-series comparison; grid structure;
+          scale labels shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Hourly temperature patterns for seasons is a perfect, neutral, realistic
-          scenario for polar plots
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Summer 12-28°C and Winter 0-10°C are realistic temperature ranges
+        comment: Daily temperature cycle realistic; seasonal variation appropriate;
+          ranges plausible (5-30°C)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24-point hourly data; 0-35°C range sensible; random noise adds realism
     code_quality:
       score: 10
       max: 10
@@ -174,41 +182,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions or classes
+        comment: No unnecessary abstractions; straightforward generation and plotting
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Seed set (np.random.seed(42)) for deterministic results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only necessary imports; sys.path cleanup prevents conflicts
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib APIs
+        comment: No fake UI; theme handling elegant; polar loop-closing technique
+          appropriate
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png; correct DPI (300); no bare plot.png
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic polar projection but no distinctive matplotlib features
-          like custom theta ticks formatting, fill_between for area, or advanced polar
-          customization
+        passed: true
+        comment: Correct plt.subplots() with polar; axes methods; theme token pattern;
+          tight_layout(); set_rlabel_position()
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Polar projection mastery; theme-adaptive styling; legend frame API;
+          closed-loop technique; custom formatting
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling

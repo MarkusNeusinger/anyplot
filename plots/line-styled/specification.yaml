@@ -1,11 +1,11 @@
 spec_id: line-styled
 title: Styled Line Plot
 created: '2025-12-30T10:30:00Z'
-updated: '2025-12-30T10:30:00Z'
+updated: '2026-05-12T14:00:00Z'
 issue: 2598
 suggested: claude-code
 tags:
-  plot_type: [line, comparison]
+  plot_type: [line]
   domain: [general, publishing]
-  features: [line-styles, multi-series, print-friendly]
+  features: [comparison, line-styles, multi, printable]
   data_type: [numeric, continuous]

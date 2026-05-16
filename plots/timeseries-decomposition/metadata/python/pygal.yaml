@@ -1,226 +1,258 @@
 library: pygal
+language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:56:21Z'
-updated: '2025-12-31T11:37:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617483520
+updated: '2026-05-14T22:59:26Z'
+generated_by: claude-haiku
+workflow_run: 25889923925
 issue: 2992
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - statsmodels
-  - cairosvg
-  - pillow
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - time-series
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/pygal/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of all four decomposition components with clear visual
-    separation
-  - Uses statsmodels seasonal_decompose for proper time series decomposition
-  - Realistic CO2 data scenario with appropriate values and trends
-  - Custom style configuration with proper font sizing for large canvas
-  - Generates both PNG and interactive HTML output
-  - Clean color scheme with distinct, colorblind-friendly colors for each component
-  - Y-axis labels properly rotated and positioned for each subplot
-  - X-axis date labels only on bottom chart with appropriate rotation to prevent overlap
+  - 'Perfect spec compliance: all four components correctly displayed and decomposed'
+  - 'Excellent theme adaptation: both light and dark renders are legible with correct
+    color choices'
+  - Strong data quality with realistic CO₂ domain context and appropriate decomposition
+  - Clean, maintainable code with deterministic data generation
+  - Proper use of Okabe-Ito palette with intentional component color assignment
+  - Correct layout and sizing for 4800×2700 canvas
   weaknesses:
-  - Code structure is complex due to pygal limitations with multi-panel layouts (requires
-    PIL composition)
-  - Grid lines could be more subtle (current alpha appears fully opaque)
-  - Left margin y-axis label area could be slightly narrower for better canvas utilization
-  image_description: 'The plot displays a time series decomposition with four vertically
-    stacked subplots. The main title "timeseries-decomposition · pygal · pyplots.ai"
-    appears at the top in dark text. Each subplot shows a different component:
+  - Minor x-axis label crowding on bottom chart due to rotation (readability is still
+    adequate)
+  - Design excellence could be elevated with more visual refinement (e.g., spine styling,
+    grid opacity tuning)
+  - Library mastery score reflects workaround-heavy approach (PIL image assembly)
+    rather than leveraging pygal's native capabilities more elegantly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Main title "timeseries-decomposition · pygal · anyplot.ai" centered at top; component titles (Original Series, Trend, Seasonal, Residual); rotated y-axis labels with units; x-axis with dates at bottom. All text dark and clearly readable.
+      Data: Original Series (green #009E73), Trend Component (orange #D55E00), Seasonal Component (blue #0072B2), Residual Component (reddish-purple #CC79A7). Okabe-Ito palette correctly applied.
+      Grid: Subtle grid lines visible, not dominant
+      Legibility verdict: PASS - All text readable, proper contrast, clear hierarchy
 
-    1. **Original Series (CO2 ppm)** - Blue line showing the raw CO2 measurements
-    ranging from ~406-436 ppm with visible upward trend and oscillations
-
-    2. **Trend Component** - Yellow/gold line showing the smooth upward trend from
-    ~410 to ~430 ppm
-
-    3. **Seasonal Component** - Green line showing the repeating annual cycle oscillating
-    between approximately -3 and +3 ppm
-
-    4. **Residual Component** - Red/coral line showing random noise fluctuating around
-    zero between approximately -2 and +2 ppm
-
-
-    Each subplot has its own y-axis label on the left side (CO₂ (ppm), Trend (ppm),
-    Seasonal (ppm), Residual (ppm)). The bottom subplot includes x-axis date labels
-    showing dates from 2020-01 to 2025-07 at 6-month intervals with 35-degree rotation.
-    Light gray grid lines are present on all charts. The colors are distinct and colorblind-friendly.
-    The layout effectively uses the canvas with balanced spacing.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Same layout as light; all text rendered in light colors (#F0EFE8). Main title, component titles, axis labels, tick labels clearly visible.
+      Data: Colors identical to light render (original=green, trend=orange, seasonal=blue, residual=reddish-purple). Only chrome has adapted to dark theme as expected.
+      Grid: Subtle grid lines visible, not dominant
+      Legibility verdict: PASS - No dark-on-dark issues; brand green #009E73 visible and readable; all text clear
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is readable; main title, subplot titles, and axis labels
-          are clearly visible. Tick labels could be slightly larger.
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          all text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text anywhere; x-axis labels properly rotated and
-          spaced
+        comment: Vertical stacking prevents overlap; minor x-axis label crowding at
+          bottom due to 35° rotation, but still readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths are appropriate; data clearly visible across all 4 panels
+        comment: All four components clearly visible and separated; stroke_width=3
+          provides definition; dots disabled for clarity
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, and red/coral are colorblind-safe and easily
-          distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good vertical stacking; slight inefficiency in left margin usage
-          for y-axis labels
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All axes labeled with units (ppm for y-axes, Date for x-axis)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures colorblind safety; good contrast; no red-green
+          as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape format appropriate; good proportions for 4 stacked
+          charts; no cut-offs; reasonable margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid present but no legend (though not strictly needed since each
-          subplot is self-labeled)
+        passed: true
+        comment: Descriptive titles for all components; units included (ppm); x-axis
+          label shows Date; format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; multi-series follows Okabe-Ito order; backgrounds
+          #FAF8F1 (light)/#1A1A17 (dark); both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette; intentional component color hierarchy;
+          professional polish; good Style object usage; solid but conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid uses foreground_subtle for subtlety; reasonable whitespace;
+          minimal chrome visible in pygal; could refine further with spine control
+          and grid opacity tuning
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides viewer through decomposition; clear focal
+          points with color separation; good component ordering; strong narrative
+          flow
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: four vertically stacked line charts for decomposition components'
+        comment: 'Correct chart type: four vertically stacked line charts for time
+          series decomposition'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, values on y-axis for each component
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All 4 components shown: Original, Trend, Seasonal, Residual'
-      - id: SC-04
-        name: Data Range
+        comment: Four subplots with shared x-axis; statsmodels seasonal_decompose
+          used; all components labeled
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate y-ranges per component
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: dates; Y-axis: component values; sensible ranges per component
+          (410-437 for original, 405-435 for trend, -5 to 5 for seasonal, -3 to 3
+          for residual)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Subplot titles clearly identify each component
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "timeseries-decomposition · pygal · pyplots.ai"'
+        comment: 'Title format: "timeseries-decomposition · pygal · anyplot.ai"; component
+          titles clear; legend omitted (appropriate, components are labeled)'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear upward trend, regular seasonal pattern, and residual
-          noise
+        comment: 'All four aspects shown: original series, trend, seasonal, residual;
+          additive decomposition appropriate'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: CO2 measurements is a real, neutral, scientific scenario; values
-          are realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: CO2 values (~410-430 ppm) match real-world Mauna Loa-style data
+        comment: CO₂ measurements (410-430 ppm) realistic; 72-month timeframe realistic;
+          trend and seasonality plausible; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 410-430 ppm realistic for CO₂; ±3 ppm seasonality realistic; residual
+          ±2 ppm realistic; all scales sensible
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses functions/classes (PIL Image manipulation) beyond simple script
-          structure, though necessary for pygal
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: No unnecessary functions/classes; straightforward data generation
+          and decomposition; clear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42); pd.date_range deterministic; always produces
+          same output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies; proper sys.path safety
+          handling
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake interactivity; clean implementation;
+          no unnecessary abstractions
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct, but complexity added)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; ANYPLOT_THEME environment
+          variable; current pygal 3.1.0 API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.Line() appropriately; Style object for theme adaptation;
+          cairosvg integration for PNG; solid idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.Line with custom Style, SVG rendering, HTML output. Good
-          use of pygal's SVG nature, though complex image composition workaround needed.
+        comment: PNG rendering with cairosvg; PIL-based image assembly and text overlay;
+          creative workaround for pygal SVG limitations; but approach is heavy-handed
+          rather than elegant
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  - cairosvg
+  - statsmodels
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - theme-adaptive

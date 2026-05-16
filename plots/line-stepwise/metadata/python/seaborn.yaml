@@ -1,164 +1,181 @@
 library: seaborn
+language: python
 specification_id: line-stepwise
 created: '2025-12-30T21:51:58Z'
-updated: '2025-12-30T21:54:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20606633234
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T15:21:27Z'
+generated_by: claude-haiku
+workflow_run: 25808180648
+issue: 2600
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - manual-ticks
-  patterns:
-    - data-generation
-    - explicit-figure
-  dataprep: []
-  styling:
-    - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visualization of step function with clear horizontal and vertical transitions
-  - Realistic server load scenario that demonstrates the plot type well
-  - Perfect text sizing and legibility at target resolution
-  - Good use of markers to highlight actual data points on the step line
-  - Clean color scheme (Python blue/yellow) with good colorblind accessibility
-  - Proper title format following spec-id · library · pyplots.ai convention
+  - Perfect theme adaptation with correct INK/INK_SOFT tokens in both light and dark
+    renders
+  - Excellent text legibility across both themes with proper font sizing (24/20/16pt)
+  - Correct step line implementation using drawstyle="steps-post" demonstrating seaborn
+    mastery
+  - Clean code structure with proper reproducibility (seed=42) and comprehensive import
+    usage
+  - Full spec compliance with proper title format and axis labels with units
   weaknesses:
-  - sns.set_style("whitegrid") is called after figure creation, which may not apply
-    the style correctly (should be called before plt.subplots)
-  - Limited use of seaborn-specific features - the implementation relies heavily on
-    matplotlib drawstyle parameter passed through seaborn
-  image_description: 'The plot displays a step line chart showing server load percentage
-    (0-100%) over 24 hours (Hour of Day 0-23). A blue step line with `steps-post`
-    style creates clear horizontal segments that persist until the next data point,
-    then jump vertically to the new value. Yellow circular markers (with blue edges)
-    appear at each data point, making the actual measurements visible. The title "line-stepwise
-    · seaborn · pyplots.ai" is displayed at the top. The background uses seaborn''s
-    whitegrid style with subtle dashed grid lines (alpha ~0.3). X-axis ticks appear
-    every 2 hours. The data shows a realistic server load pattern: low overnight (~15-25%),
-    ramping up in morning (~40-70%), peak during business hours (~75-92%), and declining
-    in evening back to ~25%.'
+  - Design Excellence uses seaborn defaults with theme customization rather than exploring
+    advanced styling or visual hierarchy techniques
+  - Library mastery could be elevated with distinctive seaborn features (relplot for
+    multi-panel, enhanced legend styling, or advanced visual refinement)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct theme-adaptive surface)
+      Chrome: Title 'line-stepwise · seaborn · anyplot.ai' clearly visible in dark text (INK token); axis labels 'Trading Day' and 'Stock Price ($)' prominent with proper font sizing (20pt); tick labels (145–170 y-axis, 0–30 x-axis) readable in soft gray (INK_SOFT token); grid subtle with alpha=0.10
+      Data: Brand green #009E73 line with linewidth=3, white-edged markers at markersize=8; shows step function with horizontal segments (price persistence) and vertical transitions (discrete changes)
+      Legibility verdict: PASS — all text clearly readable, no contrast issues against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct theme-adaptive surface)
+      Chrome: Title clearly visible in light text (INK token for dark theme); axis labels and tick labels in soft light gray (INK_SOFT for dark); grid similarly subtle
+      Data: Brand green #009E73 (identical to light render), confirming proper data-color theme-independence; markers and line identical to light render
+      Legibility verdict: PASS — all text clearly readable in light colors against dark background, no dark-on-dark failures; grid and spines appropriate contrast
+
+    Theme comparison: Data colors (brand green #009E73) identical between light and dark renders ✓. Only chrome (background, text colors, grid, spines) flips appropriately between themes ✓. Both renders meet legibility and theme-correctness standards ✓.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text (title 24pt, labels 20pt, ticks 16pt) correctly sized and
+          colored using INK/INK_SOFT tokens; readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing throughout; no overlapping elements or text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line (linewidth=3) and markers (s=150) are clearly visible,
-          but markers could be slightly smaller for better step visibility
+        comment: Line (linewidth=3) and markers (markersize=8) clearly visible; appropriate
+          density for 31 points across 30 days
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Hour of Day" and "Server Load (%)" with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Uses Okabe-Ito #009E73 (colorblind-safe); adequate contrast on both
+          light and dark backgrounds'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio well-proportioned; generous margins; nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid alpha is 0.3 which is acceptable, but no legend is needed here
-          (-0 for no legend issue, however `sns.set_style("whitegrid")` is called
-          after subplot creation which may not apply correctly)
+        passed: true
+        comment: Title matches spec format; axis labels descriptive with units ($)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; backgrounds #FAF8F1 (light) / #1A1A17 (dark)
+          ✓; both renders theme-correct ✓'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-token integration demonstrates design awareness; L-shaped spines
+          and clean typography; conservative styling without additional customization
+          beyond theme adaptation
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed ✓; grid subtle (alpha=0.10, y-axis only)
+          ✓; generous whitespace ✓; clean appearance
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative showing price persistence and discrete changes; fitting
+          stock price context; standard visual hierarchy rather than innovative emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step function plot with horizontal-then-vertical transitions
+        comment: Correct step line plot using drawstyle="steps-post"
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time (hours), Y=values that change at specific points
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step alignment (post), clear distinction from smooth interpolation,
-          horizontal segments show persistence, vertical segments show changes
-      - id: SC-04
-        name: Data Range
+        comment: Step line visualization with horizontal-then-vertical transitions;
+          shows value persistence and discrete changes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Axes show all data (x: -0.5 to 23.5, y: 0 to 105)'
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Trading Day (0–30); Y: Stock Price ($150–$165); axes show all
+          data without distortion'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-stepwise · seaborn · pyplots.ai"'
+        comment: Title 'line-stepwise · seaborn · anyplot.ai' matches spec format;
+          no legend needed for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows step transitions, value persistence, discrete jumps; could
-          show multiple step styles (pre/mid/post) but single style is acceptable
+        comment: Demonstrates full step function behavior; price persistence, discrete
+          changes, variety of price levels
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server load over 24 hours is a realistic, neutral scenario - low
-          at night, high during business hours
+        comment: Stock price stepping realistic and plausible; trading day context
+          appropriate and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Server load 10-100% is realistic; the noise addition with clipping
-          is good, though the base pattern is somewhat predictable
+        comment: Y-axis range (145–170) sensible for data ($150–$164.50); X-axis range
+          (0–30) appropriate for 31 trading days
     code_quality:
       score: 10
       max: 10
@@ -168,42 +185,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save structure, no functions/classes
+        comment: No functions or classes; straightforward linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: '`np.random.seed(42)` is set'
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.pyplot, numpy, seaborn)
+        comment: All imports used (os, numpy, matplotlib, seaborn); no extraneous
+          imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: No fake interactivity; appropriate complexity for static seaborn
+          plot
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png`
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API usage
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot() idiomatic function; sns.set_theme() with comprehensive
+          rc parameters; strong theme-token integration
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses `sns.lineplot` with drawstyle and `sns.scatterplot`, but drawstyle
-          is a matplotlib passthrough parameter, not a seaborn-native feature. Could
-          have used more seaborn-specific features like statistical aggregation or
-          themed palettes.
+        passed: true
+        comment: Theme-token usage is distinctive; could leverage additional seaborn
+          features or advanced styling techniques
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

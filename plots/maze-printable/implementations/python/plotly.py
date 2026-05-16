@@ -1,14 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Maze parameters
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Maze generation parameters
 np.random.seed(42)
 width = 25
 height = 25
@@ -56,9 +65,18 @@ maze[2 * height, 2 * width - 1] = False  # Exit opening at bottom-right
 # Create figure
 fig = go.Figure()
 
-# Draw maze walls as shapes
+# Theme-specific colors for maze elements
+if THEME == "light":
+    # Light theme: black walls on white background (printable)
+    wall_color = INK
+    passage_color = None  # Passages implicit as white background
+else:
+    # Dark theme: explicitly draw passages as medium gray for visibility
+    wall_color = INK_SOFT  # Light gray walls
+    passage_color = "#4A4A44"  # Medium gray passages (distinct from dark bg and light walls)
+
+# Draw maze elements as shapes
 wall_shapes = []
-wall_width = 0.1  # Wall thickness
 
 for y in range(maze.shape[0]):
     for x in range(maze.shape[1]):
@@ -70,7 +88,19 @@ for y in range(maze.shape[0]):
                     "y0": (maze.shape[0] - 1 - y) - 0.5,
                     "x1": x + 0.5,
                     "y1": (maze.shape[0] - 1 - y) + 0.5,
-                    "fillcolor": "black",
+                    "fillcolor": wall_color,
+                    "line": {"width": 0},
+                }
+            )
+        elif THEME == "dark" and passage_color:  # Passage in dark theme
+            wall_shapes.append(
+                {
+                    "type": "rect",
+                    "x0": x - 0.5,
+                    "y0": (maze.shape[0] - 1 - y) - 0.5,
+                    "x1": x + 0.5,
+                    "y1": (maze.shape[0] - 1 - y) + 0.5,
+                    "fillcolor": passage_color,
                     "line": {"width": 0},
                 }
             )
@@ -83,12 +113,12 @@ fig.add_annotation(
     x=start_x,
     y=start_y + 2,  # Position above the maze
     text="<b>START</b>",
-    font={"size": 32, "color": "#306998"},
+    font={"size": 32, "color": BRAND},
     showarrow=True,
     arrowhead=2,
     arrowsize=2,
     arrowwidth=4,
-    arrowcolor="#306998",
+    arrowcolor=BRAND,
     ay=-50,  # Arrow points down
     ax=0,
     yanchor="bottom",
@@ -102,12 +132,12 @@ fig.add_annotation(
     x=goal_x,
     y=goal_y - 2,  # Position below the maze
     text="<b>GOAL</b>",
-    font={"size": 32, "color": "#306998"},
+    font={"size": 32, "color": BRAND},
     showarrow=True,
     arrowhead=2,
     arrowsize=2,
     arrowwidth=4,
-    arrowcolor="#306998",
+    arrowcolor=BRAND,
     ay=50,  # Arrow points up
     ax=0,
     yanchor="top",
@@ -116,8 +146,8 @@ fig.add_annotation(
 # Update layout
 fig.update_layout(
     title={
-        "text": "maze-printable · plotly · pyplots.ai",
-        "font": {"size": 36, "color": "black"},
+        "text": "maze-printable · plotly · anyplot.ai",
+        "font": {"size": 36, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -138,13 +168,13 @@ fig.update_layout(
         "range": [-4, maze.shape[0] + 3],
         "showline": False,
     },
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    plot_bgcolor=PAGE_BG,
+    paper_bgcolor=PAGE_BG,
     margin={"l": 60, "r": 60, "t": 100, "b": 60},
     width=3600,
     height=3600,
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=3600, height=3600, scale=1)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=3600, height=3600, scale=1)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

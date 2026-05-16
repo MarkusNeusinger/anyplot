@@ -1,0 +1,233 @@
+library: pygal
+language: python
+specification_id: upset-basic
+created: '2026-05-13T20:51:42Z'
+updated: '2026-05-13T21:55:04Z'
+generated_by: claude-sonnet
+workflow_run: 25825187434
+issue: 5250
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-dark.html
+quality_score: 74
+review:
+  strengths:
+  - Correct and complete UpSet plot structure with all three required panels (set
+    bars, matrix, intersection bars)
+  - Degree-based coloring from Okabe-Ito palette is semantically meaningful and well-executed
+  - Both theme renders pass readability checks with no dark-on-dark or light-on-light
+    failures
+  - 'Realistic neutral dataset: bug report overlap across software modules'
+  weaknesses:
+  - pygal library is never imported or used; the implementation is a raw SVG generator
+    using cairosvg directly — library mastery near zero
+  - No y-axis scale or tick labels for intersection bar chart making exact values
+    unreadable
+  - Count labels above intersection bars and set-size values use small font sizes
+    (18-20px) for a 4800x2700 canvas
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "upset-basic · pygal · anyplot.ai" in bold dark ink; subtitle in muted ink; set labels (Frontend, Backend, Database, API Layer, Auth Module) in INK_SOFT; set size numbers in INK_MUTED; "Set Size" and "Degree:" labels in INK_SOFT; all readable
+      Data: Intersection bars use Okabe-Ito palette by degree — degree-1 (#009E73 brand green), degree-2 (#D55E00 vermillion), etc.; horizontal set bars all in #009E73; filled dots in #009E73; empty circles with INK_MUTED stroke; green vertical connecting lines
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct warm dark, not pure black
+      Chrome: Title and subtitle in light #F0EFE8 / #B8B7B0 tones; set labels in INK_SOFT light; count labels and size numbers in muted light; all clearly readable against dark background; no dark-on-dark failures detected
+      Data: Intersection bar colors identical to light render (#009E73 and #D55E00 dominate); empty circles use light gray stroke visible against dark background; brand green #009E73 clearly visible
+      Legibility verdict: PASS — all text readable; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Readable in both themes; count and set-size labels slightly small
+          for canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean layout, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars, dots, connecting lines all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions, panels sized well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Title format correct; Set Size label present; missing y-axis scale/ticks
+          for intersection bars
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First degree uses #009E73; correct Okabe-Ito order; backgrounds
+          #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Degree-based coloring is meaningful; rounded bars; professional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle row separators, rounded corners, good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Descending sort highlights top intersections; degree coloring tells
+          complexity story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct UpSet plot with all three panels
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted descending, connected dots, set bars, intersection bars, degree
+          coloring
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Sets and intersections correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; degree legend present
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All UpSet plot aspects shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bug report overlap across software modules — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5 sets, 700 elements, realistic membership probabilities
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Five helper functions present; acceptable for SVG complexity but
+          deviates from flat-script ideal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: All imports used but main library (pygal) never imported despite
+          being designated library
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 1
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 1
+        max: 5
+        passed: false
+        comment: import pygal never appears; code generates raw SVG with helper functions
+          and calls cairosvg directly
+      - id: LM-02
+        name: Distinctive Features
+        score: 0
+        max: 5
+        passed: false
+        comment: No pygal chart types, styles, or rendering features used
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling: []

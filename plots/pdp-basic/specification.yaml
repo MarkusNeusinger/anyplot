@@ -6,7 +6,7 @@ title: Partial Dependence Plot
 
 # Specification tracking
 created: 2025-12-31T05:12:46Z
-updated: null
+updated: 2026-05-15T22:26:46Z
 issue: 2922
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - partial-dependence
   data_type:
     - numeric
     - continuous
@@ -24,5 +23,6 @@ tags:
     - statistics
   features:
     - basic
+    - diagnostic
     - interpretability
     - model-explanation

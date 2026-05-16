@@ -1,0 +1,222 @@
+library: letsplot
+language: python
+specification_id: contour-3d
+created: '2026-05-16T12:53:05Z'
+updated: '2026-05-16T13:28:47Z'
+generated_by: claude-haiku
+workflow_run: 25962323414
+issue: 3230
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Excellent theme adaptation with correct background colors and readable text in
+    both renders
+  - Perfect data color consistency between light and dark (viridis identical)
+  - Clean, deterministic code with KISS structure and no functions/classes
+  - 'Complete feature coverage: colorbar, proper axis labels, grid control, semantic
+    fill mapping'
+  - Proper use of letsplot grammar of graphics with ggplot() + geom_tile()
+  weaknesses:
+  - 'DE-01: Generic styling with standard viridis and no custom design touches'
+  - 'DE-02: Minimal visual refinement; mostly library defaults'
+  - 'DE-03: No visual hierarchy or narrative emphasis to guide viewer interpretation'
+  - 'SC-01: 2D tile-based representation rather than true 3D surface as spec implies'
+  - 'LM-02: Limited use of distinctive letsplot features; generic usage'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "contour-3d · letsplot · anyplot.ai" in dark (#1A1A17), axis labels "X Coordinate"/"Y Coordinate" in dark (#1A1A17), tick labels in soft gray (#4A4A44), colorbar labeled "Height (z)"
+      Data: 45×45 grid of tiles filled with viridis colormap (purple → cyan → green → yellow), representing a mathematical surface with peaks and valleys
+      Legibility verdict: PASS — all text readable, no contrast issues, grid subtle and appropriate
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in light (#F0EFE8), axis labels in light (#F0EFE8), tick labels in light gray (#B8B7B0), colorbar present and readable
+      Data: Viridis colormap identical to light render (proof of proper theme separation); tiles show identical patterns and value distributions
+      Legibility verdict: PASS — all text readable in light colors, no dark-on-dark failures, data colors unchanged from light render
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles optimally sized for 45x45 grid
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800x2700 landscape with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with clear semantic meaning
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis colormap + theme-correct backgrounds and text
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default; no custom design touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some grid customization; mostly library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no narrative emphasis or hierarchy
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct contour representation; 2D rather than true 3D
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: contours, isolines, colorbar, grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows multiple peaks, valleys, saddle regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematical function with real-world applications
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions physically sound
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct file naming and format
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot() + geom_tile() + theme() patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic usage; limited distinctive letsplot features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling

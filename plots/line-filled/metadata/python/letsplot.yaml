@@ -1,158 +1,168 @@
 library: letsplot
+language: python
 specification_id: line-filled
 created: '2025-12-30T11:23:34Z'
-updated: '2025-12-30T11:35:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595337286
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-filled/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-filled/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-    - layer-composition
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
-    - grid-styling
+updated: '2026-05-12T17:24:36Z'
+generated_by: claude-haiku
+workflow_run: 25750114039
+issue: 2643
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of geom_area + geom_line + geom_point combination for a complete
-    filled line visualization
-  - Perfect title format and well-chosen realistic data context (website traffic)
-  - Clean code structure following KISS principles with proper reproducibility seed
-  - Good visual balance with appropriate fill transparency (0.4) and line visibility
+  - Perfect visual quality with all text readable in both light and dark themes
+  - Spec compliance is flawless across all dimensions
+  - Code is clean, reproducible, and well-structured
+  - Theme-adaptive styling correctly implemented throughout
+  - Data quality demonstrates realistic website traffic with seasonal variation
+  - Explicit font sizing ensures readability at high resolution
   weaknesses:
-  - Axis labels lack units (e.g., "Month (2024)" or "Visitors (thousands)")
-  - Data variation could be more pronounced to better showcase the filled area effect
-  image_description: The plot displays a filled line chart showing monthly website
-    traffic over 12 months. The chart uses a blue color (#306998) with a semi-transparent
-    fill (alpha ~0.4) below the line. A solid blue line traces the data points, with
-    blue circular markers at each month. The y-axis shows "Website Visitors" ranging
-    from 0 to approximately 70,000, and the x-axis shows "Month" with values 1-12.
-    The title "line-filled · letsplot · pyplots.ai" appears at the top. The plot uses
-    a minimal theme with subtle gray horizontal grid lines on a white background.
-    The data shows variation with a peak around month 4 (~70,000 visitors) and a dip
-    at month 2 (~55,000 visitors).
+  - 'Design Excellence is moderate: lacks custom aesthetic sophistication beyond configured
+    defaults'
+  - Data storytelling could be enhanced with visual emphasis techniques on key patterns
+  - LetsPlot-specific features not fully leveraged in implementation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with subtle gridlines
+      Chrome: Title, axis labels ("Month", "Website Visitors"), and tick labels all clearly visible in dark text (INK #1A1A17)
+      Data: Rendered in Okabe-Ito brand color #009E73 with semi-transparent area fill (alpha=0.4), visible line on top, and marker points at each month
+      Legibility verdict: PASS - All text fully readable with no overlap or visibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with subtle theme-adapted gridlines
+      Chrome: Title, axis labels, and tick labels all clearly visible in light text (INK #F0EFE8 for primary, INK_SOFT #B8B7B0 for ticks). No dark-on-dark failures.
+      Data: Data color #009E73 is identical to light render, confirming proper theme implementation. Only chrome has flipped.
+      Legibility verdict: PASS - All text fully readable in dark theme with perfect contrast
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text fully readable with no collisions or overlapping elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width and point markers are appropriately sized for 12 data
-          points
+        comment: Markers and lines optimally adapted to data density (12 months).
+          All elements clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color scheme, no colorblind issues
+        comment: Okabe-Ito palette with good contrast and CVD-safe color.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space, data fills the plot area well
+        comment: Plot fills 60-70% of canvas with balanced, generous margins.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: '"Month" and "Website Visitors" are descriptive but lack units'
+        passed: true
+        comment: Descriptive labels with clear meaning.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle and appropriate; minor grid disabled which is good;
-          no legend needed for single series
+        passed: true
+        comment: 'Correct #009E73. Backgrounds are #FAF8F1 (light) and #1A1A17 (dark).
+          Theme-adaptive chrome throughout.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library default with intentional brand color. Clean
+          and professional but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() provides clean base. Subtle gridlines, balanced whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data shows seasonal pattern with clear peak. Visual hierarchy guides
+          reader through trend.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct filled line (area) chart
+        comment: Correct filled line plot with geom_area() + geom_line() + geom_point().
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=continuous (months), Y=numeric (visitors)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Semi-transparent fill, visible line on top, fill matches line color
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: semi-transparent fill, visible line, matching
+          colors, baseline at y=0.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts from 0 (correct baseline)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned. Axes show all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-filled · letsplot · pyplots.ai"'
+        comment: Title format correct. Single series, no legend (correct omission).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in the data with peaks and valleys; could have more
-          dramatic variation to better showcase the fill
+        comment: Shows variation, trend, and seasonal pattern.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Website traffic is a perfect real-world scenario for this plot type
+        comment: Real website traffic scenario. Neutral and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for website traffic (50k-70k monthly visitors)
+        comment: Realistic numbers. Plausible seasonal variation.
     code_quality:
       score: 10
       max: 10
@@ -162,41 +172,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Clean structure: imports → setup → data → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used
+        comment: Only necessary imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses ggplot paradigm with proper layer composition and theme
+          customization.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses geom_area, geom_line, geom_point, theme_minimal correctly but
-          doesn't showcase lets-plot specific features like tooltips or interactivity
-          in the plot design
+        passed: true
+        comment: Uses layer composition effectively. Theme-aware styling. Could leverage
+          more letsplot-specific features.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

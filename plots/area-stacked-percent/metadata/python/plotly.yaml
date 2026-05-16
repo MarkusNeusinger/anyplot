@@ -1,165 +1,183 @@
 library: plotly
+language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:22:20Z'
-updated: '2025-12-30T11:31:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595336832
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling: []
+updated: '2026-05-12T11:27:50Z'
+generated_by: claude-haiku
+workflow_run: 25730196318
+issue: 2647
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotly/plot-dark.html
+quality_score: 76
 review:
   strengths:
-  - Excellent use of Plotly stackgroup with groupnorm=percent for proper 100% stacking
-  - Clean professional visual appearance with well-sized fonts
-  - Realistic energy market share scenario showing energy transition story
-  - Good use of hovertemplate for informative tooltips
-  - Both PNG and HTML outputs generated for interactivity
-  - Proper normalization logic in data preparation
+  - Correct 100% stacking with proper percentage normalization
+  - Realistic energy market share data with plausible trends
+  - Good data presentation showing renewable growth over time
+  - Clean visual hierarchy and readable legend
   weaknesses:
-  - Legend order reversed from visual stacking order - Hydro first in legend but at
-    top of stack
-  - Two green shades (Hydro olive and Wind bright) may be difficult to distinguish
-    for colorblind users
-  image_description: 'The plot displays a 100% stacked area chart showing energy source
-    market share evolution from 2015 to 2024. Five energy sources are represented:
-    Coal (dark blue, bottom), Natural Gas (yellow/gold), Wind (bright green), Solar
-    (magenta/pink), and Hydro (olive green, top). The chart clearly shows Coal declining
-    from ~40% to ~22%, while renewable sources (Wind, Solar) grow over time. Natural
-    Gas remains relatively stable around 30-32%. The title "area-stacked-percent ·
-    plotly · pyplots.ai" is centered at the top. A horizontal legend sits above the
-    plot area. The Y-axis shows "Market Share (%)" with percentage suffixes (0%-100%),
-    and the X-axis shows "Year" (2015-2024). The layout uses a clean white background
-    with subtle gridlines.'
+  - 'Critical: Output filenames are ''plot.png'' not ''plot-{THEME}.png'' — breaks
+    workflow'
+  - 'Critical: Code does not read ANYPLOT_THEME environment variable'
+  - 'Critical: Custom colors in code (#306998, #FFD43B, etc.) instead of Okabe-Ito
+    palette starting with #009E73'
+  - Title domain is 'pyplots.ai' should be 'anyplot.ai'
+  - Code lacks theme-adaptive chrome (INK, INK_SOFT, PAGE_BG tokens)
+  - No use of plotly's distinctive interactive features
+  - Generic styling with default template — no visual polish or refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title, axis labels ("Year", "Market Share (%)"), and tick labels all clearly visible with dark text on light background. Legend positioned horizontally at top, readable.
+      Data: Five areas stacked to 100% — Coal (green, bottom), Natural Gas (orange), Wind (blue), Solar (purple/pink), Hydro (yellow). Colors appear to be Okabe-Ito palette correctly applied. All areas visually distinct.
+      Grid: Subtle but visible on both axes
+      Legibility verdict: PASS — all elements readable, good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title and all labels clearly visible with light text on dark background. No dark-on-dark failures detected. Legend readable with proper contrast.
+      Data: Same five areas visible, colors identical to light render (correct — only chrome should flip between themes, not data colors). Okabe-Ito colors maintained.
+      Grid: Visible, properly subtle
+      Legibility verdict: PASS — excellent theme adaptation, all text readable, no contrast issues
+
+    Both renders display professional, accessible visualizations. Images demonstrate correct theme-aware rendering with consistent data colors and appropriate text colors for each theme.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, ticks at 18pt - all perfectly
-          readable
+        comment: All text readable in both renders. Code missing theme-adaptive logic
+          but images show correct implementation.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Clean stacking, no overlapping labels or elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stacked areas are clearly visible with good fill colors
+        comment: All five areas distinctly visible with clear boundaries.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but the olive green (Hydro) and bright
-          green (Wind) could be confused by some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, legend positioned cleanly
-          above
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Market Share (%)" with units, X-axis has "Year"
+        comment: Okabe-Ito palette (as shown in images) is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear descriptive labels. Title format mostly correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Grid is subtle (alpha 0.1), but legend order is reversed from visual
-          stacking order (Hydro shown first in legend but appears at top of stack)
+        comment: 'Critical mismatch: code defines custom colors (#306998, #FFD43B,
+          #4DAF4A, #E7298A, #66A61E) instead of Okabe-Ito. Images show correct colors,
+          suggesting code/image divergence.'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional but generic. Uses default plotly_white template with no
+          custom design choices.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization. Default grid, no spine removal or typography
+          hierarchy beyond basics.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Shows clear trend (renewable growth) but lacks visual emphasis or
+          focal points. Basic presentation without narrative design.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked area chart
+        comment: Correct 100% stacked area chart with proper normalization.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time (years), Y=percentages correctly stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Normalized to 100%, shows proportional changes over time
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: false
+        comment: All features present (time axis, categories, percentage stacking)
+          but color palette issue in code.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-100%, X-axis covers all years
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis (Year 2015-2024) and Y-axis (0-100%) correct. All categories
+          represented.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: All 5 categories correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: "area-stacked-percent · plotly · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title says 'pyplots.ai' — must be 'anyplot.ai'. Legend correct with
+          proper category labels.
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple categories with varying trends (declining Coal, growing
-          renewables, stable Gas)
+        comment: Five energy sources shown (Coal, Gas, Wind, Solar, Hydro) demonstrate
+          full plot type capabilities.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Energy source market share is a real, neutral, comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages are realistic for energy mix evolution
+        comment: Energy market share evolution is plausible and neutral. Trends (coal
+          decline, renewable growth) realistic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentages sensible, 2015-2024 timeframe realistic, values properly
+          normalized to 100%.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -167,41 +185,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: No unnecessary functions or classes. Linear data generation and plotting.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only numpy and plotly imported, both used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
+        max: 2
+        passed: false
+        comment: Code lacks theme-adaptive implementation. Missing ANYPLOT_THEME env
+          variable reading, theme tokens (INK, PAGE_BG, etc.), and conditional logic
+          for light/dark rendering.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        passed: false
+        comment: 'CRITICAL FAILURE: Saves to ''plot.png'' and ''plot.html'' instead
+          of ''plot-{THEME}.png'' and ''plot-{THEME}.html''. Breaks workflow — workflow
+          expects theme-specific filenames.'
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Uses stackgroup with groupnorm="percent", hovertemplate for custom
-          tooltips, update_layout with comprehensive styling, and generates interactive
-          HTML output
-  verdict: APPROVED
+        passed: false
+        comment: Basic plotly.graph_objects usage. Uses stackgroup and groupnorm='percent'
+          correctly but missing theme-adaptive patterns from plotly.md guide.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No distinctive plotly features used. No custom styling, color bars,
+          or advanced interactivity beyond basic hover.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling: []

@@ -1,172 +1,169 @@
 library: bokeh
+language: python
 specification_id: contour-density
 created: '2025-12-30T09:35:16Z'
-updated: '2025-12-30T09:47:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593352811
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-density/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-density/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
+updated: '2026-05-16T03:35:05Z'
+generated_by: claude-haiku
+workflow_run: 25951501615
+issue: 2552
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent contour visualization with 8 clearly visible density levels
-  - Smart approach using matplotlib for KDE contour extraction then rendering in Bokeh
-  - Good color gradient from light blue (low density) to dark blue (high density)
-  - Scatter point overlay provides valuable context for the underlying data
-  - Proper font sizing for 4800x2700 canvas
-  - Two-cluster data effectively demonstrates density variation
-  weaknesses:
-  - The legend text "Data points" is minimal and could be more descriptive
-  - Relies heavily on matplotlib for contour extraction rather than using a more Bokeh-native
-    solution
-  image_description: The plot displays a density contour plot with two distinct bivariate
-    clusters. The contours are rendered in a blue gradient from light blue (outer,
-    lower density) to dark blue/black (inner, higher density). There are 8 contour
-    levels visible, clearly showing two separate density peaks - one centered around
-    (25, 35) and another around (40, 50). Yellow/gold scatter points are overlaid
-    showing the actual data distribution with appropriate transparency. The title
-    "contour-density · bokeh · pyplots.ai" appears in the top left. X-axis is labeled
-    "Measurement A (units)" and Y-axis is labeled "Measurement B (units)". A legend
-    for "Data points" appears in the top left. The plot has a clean white background
-    with subtle dashed grid lines.
+  - Perfect visual quality with all text explicitly sized and readable in both themes
+  - Perfect spec compliance with exact chart type and all required features
+  - Excellent theme-adaptive design with data colors constant and chrome properly
+    flipped
+  - Strong color design with blue gradient for density levels and green data providing
+    excellent contrast
+  - Clean, reproducible code with proper seeding and linear structure
+  - 'Proper Okabe-Ito palette enforcement with #009E73 data series'
+  - Both light and dark renders visually balanced and professional
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title (28pt), axis labels (22pt), tick labels (18pt) all clearly visible in dark text (#1A1A17 and #4A4A44); grid subtle at 10% alpha
+      Data: Blue contour lines showing density gradient from #e8f4f8 to #143848; green scatter points (#009E73) at 40% alpha; two distinct clusters visible
+      Legibility verdict: PASS - All text readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (#F0EFE8 and #B8B7B0); grid subtle; no dark-on-dark failures
+      Data: Contour colors IDENTICAL to light render (same blue gradient #e8f4f8 to #0a1c24); green scatter points (#009E73) unchanged; same cluster pattern
+      Legibility verdict: PASS - All text readable; data colors preserved across themes; chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at full
-          size with appropriate font sizes (28pt title, 22pt axis labels, 18pt ticks)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels are clearly separated
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Contour lines are clearly visible with good line width, scatter points
-          visible but could be slightly larger for 500 points
+        comment: 500 scatter points optimally visible; contour lines perfectly adapted
+          to density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue gradient for contours is colorblind-safe, yellow points provide
-          good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, plot is well-centered, slight imbalance
-          with legend position
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Measurement A (units)" and "Measurement
-          B (units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Excellent contrast; CVD-safe; good alpha blending
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 70-80% of canvas; balanced margins; excellent space utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is appropriately subtle (alpha 0.3, dashed), but legend is very
-          sparse (just "Data points") and positioned in a way that overlaps slightly
-          with the title
+        passed: true
+        comment: Descriptive labels with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73; correct backgrounds; theme-adaptive chrome; data
+          colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with thoughtful blue gradient; intentional hierarchy;
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; theme-appropriate legend; generous whitespace; could
+          have more refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; two-cluster data demonstrates variation;
+          viewer perceives pattern immediately
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct density contour plot using KDE
+        comment: Correct 2D KDE contour plot with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y variables correctly assigned and displayed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows KDE contours, multiple density levels, scatter overlay for
-          context as suggested in spec
-      - id: SC-04
-        name: Data Range
+        comment: Contour lines, density levels, scatter overlay all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels the scatter points
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "contour-density · bokeh · pyplots.ai"'
+        comment: Correct title format; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two distinct clusters demonstrating density variation, contour
-          gradients clearly visible
+        comment: 'Shows all aspects: clusters, density gradients, scatter distribution'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Generic "Measurement A/B" context is plausible but not specifically
-          compelling
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values in sensible ranges (10-60 units), appropriate for generic
-          measurements
+        comment: Real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible; proportions logical; clustering realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,43 +171,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib for contour extraction, numpy, bokeh,
-          scipy)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: matplotlib imported but only used for contour line extraction,
-          not plotting'
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of figure, scatter, line; proper ColumnDataSource; theme-adaptive
+          styling
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource and export_png correctly, but relies on matplotlib
-          for the heavy lifting (contour extraction). The Bokeh-native approach would
-          be more distinctive.
+        passed: true
+        comment: Uses ColumnDataSource and Selenium patterns; integrates scipy; adequate
+          but somewhat standard
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - custom-colormap

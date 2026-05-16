@@ -6,7 +6,7 @@ title: Animated Scatter Plot with Play Controls
 
 # Specification tracking
 created: 2025-12-31T13:39:39Z
-updated: 2025-12-31T13:39:39Z
+updated: 2026-05-15T10:53:23Z
 issue: 3067
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - animation
   data_type:
     - numeric
     - timeseries

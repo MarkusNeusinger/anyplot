@@ -1,8 +1,10 @@
-"""pyplots.ai
+""" anyplot.ai
 circos-basic: Circos Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 82/100 | Created: 2025-12-31
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-15
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -10,59 +12,69 @@ import numpy as np
 import seaborn as sns
 
 
-# Set seaborn theme for consistent styling with larger fonts
-sns.set_theme(style="white", context="poster", font_scale=1.3)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: Regional trade flows (10 regions with trade connections)
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Set seaborn theme for consistent styling
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data: Software module dependencies (10 modules with inter-module calls)
 np.random.seed(42)
 
-# Define segments (regions) with their sizes (trade volume in billion USD)
-# Reordered to ensure adjacent regions have distinct colors
-segments = [
-    "North America",
-    "East Asia",
-    "Europe",
-    "South Asia",
-    "Middle East",
-    "Southeast Asia",
-    "Africa",
-    "Oceania",
-    "South America",
-    "Central Asia",
-]
+# Define segments (modules) with their sizes (lines of code)
+segments = ["Core", "Auth", "API", "Database", "Cache", "Queue", "Logging", "Utils", "Metrics", "Config"]
 n_segments = len(segments)
 
-# Segment sizes represent total trade volume (billion USD) - reordered
-segment_sizes = np.array([250, 280, 320, 120, 100, 150, 80, 60, 90, 50])
+# Segment sizes represent lines of code
+segment_sizes = np.array([2500, 1800, 2200, 2800, 1200, 1400, 900, 800, 1100, 600])
 
-# Create connection data (source, target, value in billion USD)
-# Updated indices for reordered segments:
-# 0=North America, 1=East Asia, 2=Europe, 3=South Asia, 4=Middle East,
-# 5=Southeast Asia, 6=Africa, 7=Oceania, 8=South America, 9=Central Asia
+# Create dependency connections (source module, target module, call count)
 connections = [
-    (0, 2, 85),  # North America - Europe
-    (0, 1, 120),  # North America - East Asia
-    (2, 1, 95),  # Europe - East Asia
-    (2, 4, 60),  # Europe - Middle East
-    (1, 5, 70),  # East Asia - Southeast Asia
-    (1, 3, 45),  # East Asia - South Asia
-    (5, 3, 35),  # Southeast Asia - South Asia
-    (2, 6, 40),  # Europe - Africa
-    (0, 8, 55),  # North America - South America
-    (1, 7, 50),  # East Asia - Oceania
-    (4, 3, 30),  # Middle East - South Asia
-    (4, 6, 25),  # Middle East - Africa
-    (2, 9, 20),  # Europe - Central Asia
-    (1, 9, 28),  # East Asia - Central Asia
-    (0, 5, 38),  # North America - Southeast Asia
+    (0, 1, 45),  # Core -> Auth
+    (0, 2, 65),  # Core -> API
+    (0, 7, 38),  # Core -> Utils
+    (1, 3, 55),  # Auth -> Database
+    (1, 7, 28),  # Auth -> Utils
+    (2, 1, 42),  # API -> Auth
+    (2, 3, 72),  # API -> Database
+    (2, 4, 35),  # API -> Cache
+    (3, 4, 48),  # Database -> Cache
+    (3, 6, 25),  # Database -> Logging
+    (4, 5, 32),  # Cache -> Queue
+    (5, 6, 20),  # Queue -> Logging
+    (6, 7, 15),  # Logging -> Utils
+    (9, 0, 18),  # Config -> Core
+    (9, 1, 12),  # Config -> Auth
 ]
 
-# Use seaborn's diverging color palette for better distinction between adjacent segments
-# tab10 provides 10 distinct colors that work well for categorical data
-colors = sns.color_palette("tab10", n_colors=n_segments)
+# Use Okabe-Ito palette, cycling through colors for segments
+colors = [OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_segments)]
 
-# Create square figure for circular symmetry (3600x3600 at 300 dpi = 12x12 inches)
-fig, ax = plt.subplots(figsize=(12, 12))
+# Create square figure for circular symmetry
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 ax.set_aspect("equal")
 
 # Calculate segment positions (angles)
@@ -94,9 +106,9 @@ for i, (start, end) in enumerate(angles):
     y_inner = inner * np.sin(theta[::-1])
     x = np.concatenate([x_outer, x_inner])
     y = np.concatenate([y_outer, y_inner])
-    ax.fill(x, y, color=colors[i], alpha=0.85, edgecolor="white", linewidth=2)
+    ax.fill(x, y, color=colors[i], alpha=0.85, edgecolor=PAGE_BG, linewidth=1.5)
 
-    # Add segment label with larger font
+    # Add segment label
     mid_angle = (start + end) / 2
     label_radius = outer_radius + 0.14
     label_x = label_radius * np.cos(mid_angle)
@@ -115,13 +127,14 @@ for i, (start, end) in enumerate(angles):
         segments[i],
         ha=ha,
         va="center",
-        fontsize=18,
+        fontsize=16,
         fontweight="bold",
         rotation=rotation,
         rotation_mode="anchor",
+        color=INK,
     )
 
-# Draw inner data track (trade volume as bar heights)
+# Draw inner data track (code volume as bar heights)
 inner_track_outer = outer_radius - ring_width - 0.03
 inner_track_inner = inner_track_outer - 0.15
 
@@ -138,7 +151,7 @@ for i, (start, end) in enumerate(angles):
     y = np.concatenate([y_outer, y_inner])
     ax.fill(x, y, color=colors[i], alpha=0.5, edgecolor="none")
 
-# Draw ribbons (connections between segments) - inline bezier curve calculation
+# Draw ribbons (connections between modules)
 ribbon_radius = inner_track_inner - 0.05
 max_value = max(c[2] for c in connections)
 min_value = min(c[2] for c in connections)
@@ -147,8 +160,7 @@ n_points = 50
 t = np.linspace(0, 1, n_points)
 
 for source, target, value in connections:
-    # Improved width calculation: ensure minimum visibility for smaller values
-    # Map values from min-max to 0.25-0.7 range for better distinction
+    # Width calculation: map values to 0.25-0.7 range for better distinction
     normalized_value = (value - min_value) / (max_value - min_value)
     width_fraction = 0.25 + normalized_value * 0.45
 
@@ -193,9 +205,9 @@ for source, target, value in connections:
     arc2_angles = np.linspace(ribbon_end2, ribbon_start2, 10)
     arc2 = ribbon_radius * np.column_stack([np.cos(arc2_angles), np.sin(arc2_angles)])
 
-    # Combine vertices and draw polygon
+    # Combine vertices and draw polygon with improved transparency
     vertices = np.vstack([arc1, curve1, arc2, curve2[::-1]])
-    polygon = plt.Polygon(vertices, facecolor=colors[source], edgecolor="none", alpha=0.45, zorder=1)
+    polygon = plt.Polygon(vertices, facecolor=colors[source], edgecolor="none", alpha=0.35, zorder=1)
     ax.add_patch(polygon)
 
 # Configure axes
@@ -203,16 +215,25 @@ ax.set_xlim(-1.7, 1.7)
 ax.set_ylim(-1.7, 1.7)
 ax.axis("off")
 
-# Title with proper format: spec-id · library · pyplots.ai
-ax.set_title("circos-basic · seaborn · pyplots.ai", fontsize=28, fontweight="bold", pad=20)
+# Title with correct format
+ax.set_title("circos-basic · seaborn · anyplot.ai", fontsize=26, fontweight="bold", pad=20, color=INK)
 
 # Add legend explaining the visualization
 legend_elements = [
-    mpatches.Patch(facecolor=colors[0], alpha=0.85, label="Outer ring: Region (arc size ∝ total trade)"),
-    mpatches.Patch(facecolor=colors[0], alpha=0.5, label="Inner track: Trade volume (bar height)"),
-    mpatches.Patch(facecolor=colors[0], alpha=0.45, label="Ribbons: Trade flow (width ∝ value)"),
+    mpatches.Patch(facecolor=OKABE_ITO[0], alpha=0.85, label="Outer ring: Module (arc size ∝ code volume)"),
+    mpatches.Patch(facecolor=OKABE_ITO[0], alpha=0.5, label="Inner track: Module size (bar height)"),
+    mpatches.Patch(facecolor=OKABE_ITO[0], alpha=0.35, label="Ribbons: Dependencies (width ∝ call count)"),
 ]
-ax.legend(handles=legend_elements, loc="lower center", bbox_to_anchor=(0.5, -0.08), ncol=1, fontsize=16, frameon=False)
+ax.legend(
+    handles=legend_elements,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.08),
+    ncol=1,
+    fontsize=14,
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

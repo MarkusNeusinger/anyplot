@@ -1,157 +1,169 @@
 library: altair
+language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:39:38Z'
-updated: '2025-12-30T10:50:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20594559674
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-13T15:33:27Z'
+generated_by: claude-haiku
+workflow_run: 25808540142
+issue: 2600
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with proper encoding types (:Q for
-    quantitative)
-  - Clean implementation of step-after interpolation which clearly demonstrates the
-    stepwise behavior
-  - 'Good use of Altair-specific features: tooltips, configure_axis for grid styling,
-    Title object with fontSize'
-  - Proper scale configuration with zero=False to focus on the data range
-  - Code is clean, well-organized, and follows KISS principles
+  - Excellent theme-adaptive implementation with proper chrome color mapping in both
+    light and dark themes
+  - Clear step-function visualization showing discrete changes with proper horizontal-then-vertical
+    segments
+  - Clean, reproducible code with deterministic seed and no unnecessary imports
+  - Appropriate font sizes (28px title, 22px axis, 18px ticks) for high-resolution
+    rendering
+  - Thoughtful visual design with subtle dashed grid (15% opacity) and area fill emphasis
   weaknesses:
-  - Data shows predominantly upward trend; could benefit from more varied step patterns
-    (both increases and decreases) to better demonstrate discrete state changes
-  image_description: The plot displays a step line chart showing temperature data
-    over 20 days. The line is rendered in a dark blue color (#306998) with step-after
-    interpolation, creating horizontal segments that step up vertically at each data
-    point. The Y-axis shows "Temperature (°C)" ranging from approximately 23°C to
-    35°C. The X-axis shows "Day" from 0 to 20. The title correctly displays "line-stepwise
-    · altair · pyplots.ai" at the top. The background is white with subtle dashed
-    grid lines. The data shows an overall upward trend with discrete step changes,
-    demonstrating the stepwise behavior well.
+  - 'Design Excellence could be elevated: consider removing top/right spines or more
+    aggressive grid styling'
+  - 'Data storytelling could be stronger: annotation or color variation to highlight
+    key price movements (e.g., largest jump)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title "line-stepwise · altair · anyplot.ai" in dark INK color (28px), X/Y axis labels in INK (22px), tick labels in INK_SOFT (18px) — all clearly readable against light background
+      Data: Step line in brand green (#009E73) with 4px stroke; horizontal segments show value persistence, vertical segments show discrete changes; light teal fill beneath emphasizes area; grid dashed at 15% opacity
+      Legibility verdict: PASS — all text and data elements readable; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title in light INK color (#F0EFE8), axis labels and ticks in INK_SOFT (light gray) — all clearly readable against dark background
+      Data: Step line color identical to light render (#009E73), confirming proper theme-adaptive chrome; fill still visible; grid visible and subtle
+      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failures; brand green visible on both light and dark; Okabe-Ito palette maintained across both renders
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: Title 28px, axis labels 22px, ticks 18px; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean spacing, no label collisions or text overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line strokeWidth=4 is clearly visible and appropriate
+        comment: Step line with 4px stroke clearly visible; step transitions distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" and "Day" with units where appropriate'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Brand green #009E73 with good contrast; Okabe-Ito safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 → 4800×2700px at 3× scale; well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle and appropriate, but no legend needed for single series
+        passed: true
+        comment: Descriptive labels with units (Day, Price $); format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional area fill styling; professional polish; raised from default
+          4
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed grid (gridDash=[4,4]), opacity 0.15, refined configuration;
+          raised from default 2
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with step function as focal point; area fill
+          guides viewer; raised from default 2
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step line chart with step-after interpolation
+        comment: Correct step-after interpolation via mark_line(interpolate='step-after')
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Day, Y=Temperature correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows horizontal-then-vertical transitions as specified
-      - id: SC-04
-        name: Data Range
+        comment: Step function present, both axes labeled, discrete changes visible
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate scale (zero=False)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Day (0–24 continuous); Y: Price $ (~95–155); axes span full data'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "line-stepwise · altair · pyplots.ai"
+        comment: Title format correct; single series requires no legend
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows step behavior well, but data only goes in one general direction
-          (upward trend)
+        comment: 25 data points; includes increases and decreases; demonstrates cumsum
+          pattern
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Daily temperature readings is a real, neutral scenario
+        comment: Stock price scenario plausible; $90–150 range sensible; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature values 23-35°C are realistic, though the consistent upward
-          trend over 20 days is less typical
+        comment: Y-axis sensible for price (zero=False); X-axis range appropriate
     code_quality:
       score: 10
       max: 10
@@ -161,40 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No unnecessary functions/classes; straightforward data + chart
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: Only used imports; proper import conflict workaround
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, readable; no fake UI; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Declarative encoding with interpolate="step-after", tooltips, configure_axis,
-          Title object
+        comment: Proper alt.Chart(), encoding, configure_*() methods; follows altair
+          conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: interpolate='step-after' for plot type; comprehensive theme-adaptive
+          configuration
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []

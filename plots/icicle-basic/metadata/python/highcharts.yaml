@@ -1,18 +1,226 @@
 library: highcharts
+language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:05:23Z'
-updated: '2025-12-30T00:34:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585401363
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-13T22:55:37Z'
+generated_by: claude-haiku
+workflow_run: 25830880520
+issue: 2497
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/highcharts/plot.html
-quality_score: 94
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect theme adaptation with correct background colors and text colors in both
+    light and dark renders
+  - Excellent text legibility throughout with properly scaled and adaptive font sizes
+  - 'Correct Okabe-Ito palette compliance with first category as #009E73 and identical
+    data colors between themes'
+  - Realistic and well-proportioned hierarchical file system data
+  - Clean, straightforward code structure with centralized theme tokens
+  weaknesses:
+  - Design Excellence is moderate—lacks sophistication and visual polish beyond core
+    requirements
+  - Library Mastery is below target—uses low-level Highcharts renderer primitives
+    rather than higher-level abstractions
+  - Minimal visual hierarchy—all category rows receive equal visual weight without
+    emphasis or focal points
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly theme-adapted
+      Chrome: Title "icicle-basic · highcharts · anyplot.ai" in dark text (#1A1A17) at top left; subtitle "File System Structure" in gray (#4A4A44); all clearly readable against light background
+      Data: Icicle chart with hierarchical rectangles; root "Project Files" in Okabe-Ito green (#009E73); four main categories (src, docs, tests, assets) using colors 1-4 from Okabe-Ito palette; lower levels with appropriate sizing; white separators between rectangles; legend at bottom with category names and colors
+      Legibility verdict: PASS - All text clearly readable with no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly theme-adapted
+      Chrome: Title and subtitle now in light colors (#F0EFE8 and #B8B7B0); all clearly visible against dark background with no dark-on-dark failures
+      Data: Identical icicle chart structure with same Okabe-Ito colors (#009E73, #D55E00, #0072B2, #CC79A7); data colors are perfectly preserved between renders confirming proper theme adaptation; white separators visible; legend maintains readability
+      Legibility verdict: PASS - All text clearly readable in dark theme with proper INK token application; no dark-on-dark issues detected
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text clearly readable in both themes with properly scaled font
+          sizes (28-48px headers, 18-24px labels)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All rectangles cleanly separated with white borders; no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements visible; label visibility properly gated on rectangle
+          size
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions; all content fits within 4800x2700; nothing
+          clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; subtitle descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First category #009E73 correct; backgrounds exact (#FAF8F1 light,
+          #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Professional but straightforward; lacks innovative design flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean layout but minimal customization; could benefit from subtle
+          polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Visual hierarchy present but relatively literal; could emphasize
+          key nodes more strongly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct icicle chart with horizontal row-based layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: hierarchy, sizing, labels, coloring'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Hierarchy correctly mapped; rectangle widths proportional to values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend displays all categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows 4 hierarchy levels with diverse file types and sizes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: File system example is real-world plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: File sizes (28-280 KB) are realistic and proportions make visual
+          sense
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward linear logic with no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data with hardcoded hierarchy
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports present
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; proper Selenium integration
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses Highcharts renderer primitives which works but is lower-level
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses renderer for custom shapes; does not showcase advanced Highcharts
+          features uniquely
+  verdict: APPROVED
 impl_tags:
   dependencies:
-  - pillow
   - selenium
   techniques:
   - html-export
@@ -20,183 +228,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent hierarchical visualization with clear parent-child relationships through
-    spatial adjacency
-  - Colorblind-safe palette with good contrast between categories
-  - Realistic file system example matching spec applications
-  - Creative use of Highcharts renderer API to implement icicle chart (not a native
-    chart type)
-  - Well-formatted title following spec-id · library · pyplots.ai convention
-  - Good label truncation strategy prevents overlap while showing as much text as
-    possible
-  weaknesses:
-  - Some leaf node labels are truncated (e.g., Footer, Modal.tsx) - could show more
-    with smaller font
-  - Uses helper functions instead of pure KISS linear code structure
-  image_description: 'The plot displays an icicle chart visualizing a file system
-    hierarchy. At the top is a dark gray "Project Files" root node spanning the full
-    width. Below it are four color-coded main directories: blue "src" (largest portion),
-    yellow "docs", purple "tests", and cyan "assets". Each directory is subdivided
-    into subdirectories (components, utils, api, images, styles) and leaf nodes showing
-    individual files with sizes in KB (e.g., "guide.md (120 KB)", "banner.jpg (280
-    KB)"). The chart uses top-to-bottom orientation with children stacked below parents.
-    A legend at the bottom identifies the four main categories. The title "icicle-basic
-    · highcharts · pyplots.ai" appears at the top with an explanatory subtitle.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 7
-        max: 10
-        passed: true
-        comment: Title and main labels clear; some leaf labels truncated with "..."
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, labels truncated appropriately
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Rectangles well-sized, hierarchy clearly visible
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette (blue, yellow, purple, cyan)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for icicle; subtitle provides context
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend well-placed at bottom
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct icicle chart with layered rectangles
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Parent-child relationships shown via spatial adjacency
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchical data, size-based rectangles, top-to-bottom orientation,
-          color by category
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly identifies four main categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "icicle-basic · highcharts · pyplots.ai"
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Multiple hierarchy levels (4 deep), varying sizes, different categories
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: File system structure is realistic, neutral example from spec applications
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: File sizes realistic (28-280 KB range)
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses helper functions instead of pure linear flow
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic hardcoded data
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
-        max: 5
-        passed: true
-        comment: Creative use of Highcharts renderer API for custom SVG drawing
-  verdict: APPROVED
+  styling:
+  - publication-ready

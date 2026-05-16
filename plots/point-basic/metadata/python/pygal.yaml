@@ -1,163 +1,177 @@
 library: pygal
+language: python
 specification_id: point-basic
 created: '2025-12-30T09:34:14Z'
-updated: '2025-12-30T09:44:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593352389
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-11T17:32:28Z'
+generated_by: claude-haiku
+workflow_run: 25685760658
+issue: 2551
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-basic/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent horizontal orientation matching spec recommendation for readable category
-    labels
-  - Clear visual hierarchy with distinct colors for reference line, CIs, and point
-    estimates
-  - Includes reference line at zero as suggested in spec notes
-  - Well-structured code following KISS principles with good use of pygal Style system
-  - Realistic clinical trial scenario demonstrating varied effect sizes and CI widths
+  - Perfect spec implementation with all required features (point estimates, CIs,
+    reference line)
+  - Excellent theme adaptation with proper light/dark backgrounds and legible text
+    in both renders
+  - Clean, idiomatic pygal usage with custom Style object and proper color palette
+  - Strong data quality with realistic sensor calibration scenario and varied confidence
+    intervals
+  - Professional layout with no overlap, good canvas utilization, and clear legend
   weaknesses:
-  - Confidence interval lines lack caps/endpoints as suggested in the specification
-    notes
-  - X-axis label Effect Size could include units or be more descriptive
-  image_description: 'The plot displays a horizontal point estimate visualization
-    with five categories (Treatment A, B, C, D, and Control) arranged vertically on
-    the y-axis. Each category shows a yellow/gold circular point marker representing
-    the point estimate, with blue horizontal lines extending on both sides to indicate
-    95% confidence intervals. A vertical gray reference line is positioned at x=0
-    (the null hypothesis line). The x-axis is labeled "Effect Size" with values ranging
-    from -1 to 4. The title "point-basic · pygal · pyplots.ai" appears at the top
-    in a clean monospace font. A legend at the bottom identifies the three visual
-    elements: Reference (x=0), 95% CI, and Point Estimate. The background is white
-    with subtle dotted horizontal guide lines.'
+  - Design Excellence lacks distinctive visual sophistication—relies on clean defaults
+    rather than intentional aesthetic choices
+  - Data storytelling could be strengthened with visual emphasis or hierarchy to highlight
+    key insights
+  - Minor opportunity to leverage more distinctive pygal features for unique presentation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and professional
+      Chrome: Title "point-basic · pygal · anyplot.ai" clearly visible; Y-axis labels (Sensor A–E) and X-axis label "Calibration Error (μV)" all readable with dark text; subtle vertical grid lines; legend at bottom with three series
+      Data: Five confidence interval lines in Okabe-Ito order (vermillion, blue, reddish purple, orange, sky blue) with visible caps; yellow point estimate markers at each CI center; green reference line at zero error
+      Legibility verdict: PASS — All text fully readable, excellent contrast, no overlap, all data elements visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), maintains professional appearance
+      Chrome: Title and all labels rendered in light text, fully readable against dark background; subtle grid visible; legend properly positioned
+      Data: Confidence interval colors identical to light render (Okabe-Ito positions 2–6 preserved); yellow point estimates identical to light render; brand green reference line still visible and distinct
+      Legibility verdict: PASS — No dark-on-dark issues; all text light-colored and readable; data colors unchanged from light render; both renders meet theme-readiness requirements
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and category labels are clearly readable; font
-          sizes are appropriate for the 4800x2700 canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; categories well-spaced
+        comment: All font sizes explicitly set in custom Style; title 28px, labels
+          22px, ticks 18px; fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; clean layout with proper margins and spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Point markers are visible and well-sized; CI lines are clear; could
-          be slightly thicker for better visibility
+        comment: All CI lines, point markers, and reference line clearly visible;
+          markers properly sized at 28px
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue CI lines and yellow points provide excellent contrast; colorblind-safe
-          combination
+        comment: Okabe-Ito palette ensures CVD safety; good contrast between all series
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space; plot is well-centered with appropriate
-          margins
+        comment: Excellent canvas utilization; plot fills 50-70% of canvas with balanced
+          margins; 4800×2700 format used appropriately
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has "Effect Size" but no units specified
+        comment: X-axis includes units (μV); descriptive labels throughout
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Subtle dotted grid lines; legend well-placed at bottom; grid could
-          be slightly less prominent
+        comment: 'Okabe-Ito palette correct: reference line #009E73, CIs positions
+          2–6, point estimates position 7; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); data colors identical across themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean, professional styling with proper theme tokens; however, relies
+          on library defaults without distinctive design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: subtle grid, proper margins, theme-adaptive styling;
+          could benefit from more visual polish'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Reference line provides context for null hypothesis; minimal visual
+          hierarchy or emphasis to guide viewer
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct point estimate plot with confidence intervals
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on Y-axis, effect sizes on X-axis, properly mapped
-      - id: SC-03
+        comment: Correct point estimate plot with confidence intervals
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has point estimates, CI lines, reference line; spec suggests error
-          bars should have caps at endpoints (missing)
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: point estimates, confidence intervals, reference
+          line, category labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points and intervals fully visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; categories on Y-axis, estimates on X-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "point-basic · pygal · pyplots.ai"'
+        comment: Title format correct; legend labels match data series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in effect sizes, different CI widths, includes control
-          group at zero; Treatment D CI crosses zero showing non-significance
+        comment: 'Shows all aspects: positive and negative estimates, varied CI widths,
+          range of uncertainty levels'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Clinical trial treatment effects scenario is realistic and neutral
+        comment: Sensor calibration error is realistic, neutral scenario; microVolt
+          scale is appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Effect sizes are plausible; CI ranges are reasonable though some
-          are quite wide
+        comment: Values are factually plausible for sensor calibration with realistic
+          CI ranges
     code_quality:
       score: 10
       max: 10
@@ -167,40 +181,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure; no functions/classes
+        comment: 'Linear structure: theme tokens → data → chart → rendering; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements)
+        comment: Deterministic data; no randomness, fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: Only os, pygal, Style imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean, appropriate complexity; no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses pygal's XY chart with custom styling, SVG-based rendering; could
-          leverage more pygal-specific features like tooltips
+        passed: false
+        comment: 'Good idiomatic usage: XY chart, custom Style object, theme adaptation;
+          follows library conventions'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses XY chart creatively for point estimates and CIs; fairly standard
+          approach overall
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive

@@ -1,14 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-14
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.seasonal import seasonal_decompose
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand — first series)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+]
 
 # Data - Monthly retail sales over 6 years (72 months = 6 full annual cycles)
 np.random.seed(42)
@@ -31,46 +48,54 @@ ts = pd.Series(values, index=dates)
 decomposition = seasonal_decompose(ts, model="additive", period=12)
 
 # Create plot with 4 subplots
-fig, axes = plt.subplots(4, 1, figsize=(16, 12), sharex=True)
-
-# Color palette
-color_original = "#306998"
-color_trend = "#FFD43B"
-color_seasonal = "#4B8BBE"
-color_residual = "#FFE873"
+fig, axes = plt.subplots(4, 1, figsize=(16, 12), sharex=True, facecolor=PAGE_BG)
 
 # Original series
-axes[0].plot(dates, ts.values, color=color_original, linewidth=2.5)
-axes[0].set_ylabel("Original", fontsize=18)
-axes[0].tick_params(axis="y", labelsize=14)
-axes[0].grid(True, alpha=0.3, linestyle="--")
-axes[0].set_title("timeseries-decomposition · matplotlib · pyplots.ai", fontsize=24, pad=15)
+axes[0].plot(dates, ts.values, color=OKABE_ITO[0], linewidth=2.5)
+axes[0].set_facecolor(PAGE_BG)
+axes[0].set_ylabel("Original (Sales USD)", fontsize=20, color=INK)
+axes[0].tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+axes[0].grid(True, alpha=0.15, linewidth=0.8, color=INK)
+axes[0].set_title(
+    "timeseries-decomposition · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=15
+)
 
 # Trend component
-axes[1].plot(dates, decomposition.trend, color=color_trend, linewidth=2.5)
-axes[1].set_ylabel("Trend", fontsize=18)
-axes[1].tick_params(axis="y", labelsize=14)
-axes[1].grid(True, alpha=0.3, linestyle="--")
+axes[1].plot(dates, decomposition.trend, color=OKABE_ITO[1], linewidth=2.5)
+axes[1].set_facecolor(PAGE_BG)
+axes[1].set_ylabel("Trend (Sales USD)", fontsize=20, color=INK)
+axes[1].tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+axes[1].grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 # Seasonal component
-axes[2].plot(dates, decomposition.seasonal, color=color_seasonal, linewidth=2.5)
-axes[2].set_ylabel("Seasonal", fontsize=18)
-axes[2].tick_params(axis="y", labelsize=14)
-axes[2].grid(True, alpha=0.3, linestyle="--")
+axes[2].plot(dates, decomposition.seasonal, color=OKABE_ITO[2], linewidth=2.5)
+axes[2].set_facecolor(PAGE_BG)
+axes[2].set_ylabel("Seasonal (Sales USD)", fontsize=20, color=INK)
+axes[2].tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+axes[2].grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 # Residual component
-axes[3].plot(dates, decomposition.resid, color=color_residual, linewidth=2.5, alpha=0.8)
-axes[3].axhline(y=0, color="#666666", linestyle="-", linewidth=1, alpha=0.5)
-axes[3].set_ylabel("Residual", fontsize=18)
-axes[3].set_xlabel("Date", fontsize=20)
-axes[3].tick_params(axis="both", labelsize=14)
-axes[3].grid(True, alpha=0.3, linestyle="--")
+axes[3].plot(dates, decomposition.resid, color=OKABE_ITO[3], linewidth=2.5)
+axes[3].axhline(y=0, color=INK_SOFT, linestyle="-", linewidth=1, alpha=0.3)
+axes[3].set_facecolor(PAGE_BG)
+axes[3].set_ylabel("Residual (Sales USD)", fontsize=20, color=INK)
+axes[3].set_xlabel("Date", fontsize=20, color=INK)
+axes[3].tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+axes[3].grid(True, alpha=0.15, linewidth=0.8, color=INK)
+
+# Remove top and right spines
+for ax in axes:
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color(INK_SOFT)
+    ax.spines["bottom"].set_color(INK_SOFT)
 
 # Adjust x-axis tick formatting
-plt.gcf().autofmt_xdate()
+fig.autofmt_xdate(rotation=45, ha="right")
+fig.axes[-1].tick_params(axis="x", labelsize=16)
 
 # Adjust spacing between subplots
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.15)
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

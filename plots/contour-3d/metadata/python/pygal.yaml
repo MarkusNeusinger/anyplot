@@ -1,0 +1,257 @@
+library: pygal
+language: python
+specification_id: contour-3d
+created: '2026-05-16T12:48:50Z'
+updated: '2026-05-16T19:08:50Z'
+generated_by: claude-haiku
+workflow_run: 25962238195
+issue: 3230
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/pygal/plot-dark.html
+quality_score: 66
+review:
+  strengths:
+  - 'Perfect code quality: clean flat structure, reproducible seed, all imports used,
+    creative matplotlib-backend pattern for contour path extraction'
+  - 'Correct palette compliance: viridis is the right choice for sequential continuous
+    data; both themes have correct #FAF8F1 / #1A1A17 backgrounds'
+  - Title format exactly matches spec requirement ('contour-3d · pygal · anyplot.ai');
+    legend labels are meaningful z-level values
+  - Segment filtering logic (keeping longest segment per level) avoids visual jump-line
+    artifacts cleanly
+  - Full HTML output generated correctly for this interactive library; SVG + PNG +
+    HTML all saved
+  weaknesses:
+  - Text sizes render too small at 4800x2700 despite explicit font sizes — title_font_size=36
+    is insufficient; needs ~60px; legend text is barely legible at full resolution
+  - 'Dark viridis colors (lowest 2 z-levels, z=-0.20 and z=0.00, approximately #440154-#482878)
+    are nearly invisible on the #1A1A17 dark background — viridis range should be
+    clipped to start at ~0.10 brightness'
+  - Missing colorbar — spec explicitly requires one; legend shows level labels but
+    no proper color scale
+  - Axis labels are generic single letters 'x' and 'y' rather than descriptive labels
+    (e.g., 'X Coordinate', 'Y Coordinate')
+  - No 3D aspect (unavoidable pygal limitation) — the 2D fallback lacks depth cues
+    that characterize the spec
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme background
+      Chrome: Title "contour-3d · pygal · anyplot.ai" visible at top center but very small relative to canvas; legend labels (z = -0.20 through z = 1.00) in top-left stacked column, extremely small; axis labels "x" and "y" visible; tick labels small but readable
+      Data: 8 contour isolines using viridis colormap — dark purple for lowest z levels transitioning to teal and yellow-green for highest; lines are stroke_width=4 and clearly visible against the light background; an interesting asymmetric topology with a main peak region and secondary features visible
+      Legibility verdict: PASS (marginally) — all text is technically visible but font sizes are too small for comfortable reading at 4800x2700 resolution; specifically the legend text and title are undersized
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme background
+      Chrome: Title and legend rendered in light text (#F0EFE8), readable; axis labels and tick labels appear in light color; no dark-on-dark text failure detected; chrome adapts correctly to dark theme
+      Data: Same 8 contour isolines with identical viridis colors (data colors unchanged between light and dark, only chrome flipped — correct); however, lowest 2 z-levels (z=-0.20 and z=0.00) use dark purple (~#440154-#482878) which has near-zero contrast against the #1A1A17 near-black background — these lines are nearly invisible in the dark render; mid-to-high z levels (teal through yellow-green) are clearly visible
+      Legibility verdict: FAIL — the dark purple viridis colors for the lowest contour levels (z=-0.20, z=0.00) are nearly invisible against the dark background; this is a data-on-dark-background visibility failure, not a chrome failure
+  criteria_checklist:
+    visual_quality:
+      score: 19
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 3
+        max: 8
+        passed: false
+        comment: Font sizes explicitly set (36/28/24/20px) but render too small at
+          4800x2700; title and legend text barely legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps detected in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Lowest 2 viridis levels (dark purple ~#440154) nearly invisible
+          on #1A1A17 dark background; all lines visible in light render'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Plot fills ~50-60% of canvas; some wasted space; legend compressed
+          in top-left corner
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Title format correct; axis labels are generic single letters 'x'
+          and 'y' with no units or description
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis used correctly for sequential continuous data; correct #FAF8F1
+          light and #1A1A17 dark backgrounds; chrome adapts correctly'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured above defaults; viridis intentional choice; no filled
+          contours or annotations; not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid guides disabled; show_dots=False; clean presentation; legend
+          in top-left is not ideal placement; some refinement but not polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without interpretation; no focal point, no annotations,
+          no visual hierarchy guiding viewer to peak or notable features
+    spec_compliance:
+      score: 11
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: false
+        comment: Correct base type (contour isolines) but missing 3D surface/projection;
+          pygal cannot render 3D so 2D is best approximation
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Has contour lines at regular intervals and sequential colormap; missing
+          colorbar (spec requires it), no 3D surface, no projection onto base plane
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correctly assigned; Z-value encoded via viridis color; all
+          data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format 'contour-3d · pygal · anyplot.ai' is correct; legend
+          labels are meaningful z-level values
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows 8 distinct contour levels with varied shapes; function has
+          interesting asymmetric topology with main peak and secondary features
+      - id: DQ-02
+        name: Realistic Context
+        score: 3
+        max: 5
+        passed: false
+        comment: Abstract mathematical function with no domain context; axis labels
+          are just 'x' and 'y'; plausible but generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: linspace(-3, 3, 60) appropriate; Z range ~-0.20 to 1.00 consistent
+          with the function; 60x60 grid slightly exceeds spec max of 50x50 but acceptable
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: theme setup -> data -> matplotlib backend contour extraction
+          -> pygal chart -> save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; function is deterministic anyway
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; matplotlib.cm, matplotlib.colors, matplotlib.pyplot,
+          numpy, pygal, pygal.style, os, sys all needed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Creative use of matplotlib as computational backend for contour path
+          extraction; max-by-length segment selection is clean; strict=False in zip
+          is correct
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png, plot-{THEME}.svg, plot-{THEME}.html correctly
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses pygal.XY with Style object correctly; HTML export is idiomatic;
+          however matplotlib is the actual visualization engine — pygal is a rendering
+          layer only
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Interactive HTML output is pygal-specific; but contour computation
+          in matplotlib; creative workaround but distinctive pygal features minimally
+          leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - matplotlib
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap

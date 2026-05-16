@@ -1,166 +1,175 @@
 library: altair
+language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:31:03Z'
-updated: '2025-12-30T16:40:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20601057881
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-13T05:46:03Z'
+generated_by: claude-haiku
+workflow_run: 25780502612
+issue: 2695
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent data variety showing different distribution shapes (tight, wide, bimodal,
-    with outliers)
-  - Clean layered architecture combining mark_boxplot and mark_circle
-  - Creative use of transform_calculate for jitter implementation
-  - Good visual balance with appropriate font sizes and subtle grid
-  - Yellow median line provides good contrast against blue boxes
+  - Perfect visual quality and theme compliance across both light and dark renders
+  - Excellent spec compliance with all required features present and working
+  - Clean, reproducible code with proper theme tokenization
+  - Strong data quality demonstrating all aspects of box-strip visualization
+  - Correct Okabe-Ito palette application and theme-adaptive chrome in both themes
   weaknesses:
-  - Missing legend to explain box plot vs strip point representation
-  - No tooltips for interactivity (Altair strength not fully utilized)
-  image_description: 'The plot displays a combined box plot with strip overlay showing
-    "Quality Score" (y-axis, ranging from ~20-110) across four departments: Engineering,
-    Marketing, Sales, and Support (x-axis). Each department shows a blue (#306998)
-    box plot with quartile boxes, whiskers, and a distinctive yellow/gold median line.
-    Individual data points are overlaid as semi-transparent blue circles with horizontal
-    jitter to reduce overlap. Engineering shows a tight, high-scoring distribution
-    (~75-95). Marketing has a wider spread (~40-98) with visible outliers. Sales shows
-    lower scores (~35-95) with notable outliers. Support displays a bimodal-like pattern
-    (~47-90). The title "cat-box-strip · altair · pyplots.ai" appears at the top in
-    appropriate font size. Grid lines are subtle with low opacity. The plot fills
-    the canvas well with balanced margins.'
+  - 'Design Excellence below optimal: generic aesthetic sophistication relying on
+    Okabe-Ito defaults without custom design direction'
+  - Minimal visual refinement beyond library defaults (grid opacity, subtle styling)
+  - Could leverage more distinctive altair features such as interactive selections
+    or conditional formatting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title, axis labels (Department, Quality Score), and tick labels all rendered in dark text (INK_SOFT/INK) - perfectly readable
+      Data: Box plots in #009E73 (Okabe-Ito position 1) with #F0E442 yellow median lines; strip points in semi-transparent green (opacity 0.6) with jitter applied. All elements clearly distinguishable.
+      Grid: Subtle grid lines visible at 10% opacity
+      Legibility verdict: PASS - all text readable, no overlaps, data elements clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title, axis labels, and tick labels rendered in light text (INK/INK_SOFT) - all readable against dark background. No dark-on-dark text failures.
+      Data: Box plots and strip points remain in identical greens (#009E73, #F0E442) - matching light render perfectly. Only chrome colors flipped for theme adaptation.
+      Grid: Subtle grid lines visible with theme-appropriate colors
+      Legibility verdict: PASS - all text readable, no theme-readability issues, data colors preserved across themes
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at full
-          resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; department labels are well-spaced with labelAngle=0
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, all labels clear and separate
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots and strip points are visible; jitter works well; point
-          size could be slightly larger for ~150 points
+        comment: Strip markers (size=100) and box plots optimally visible for data
+          density with jitter and transparency
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color scheme with yellow median; no colorblind issues
+        comment: Okabe-Ito palette CVD-safe, green (#009E73) distinguishable from
+          all backgrounds
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization; plot fills space appropriately
+        comment: Plot fills ~60% of canvas, balanced margins, excellent space utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("Department", "Quality Score") but no units
+        comment: 'Descriptive labels: ''Department'' and ''Quality Score'''
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), but no legend present to identify what
-          points vs boxes represent
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme-adaptive
+          chrome correct in both renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no custom design thought or exceptional
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some customization (grid opacity, subtle styling) but minimal refinement
+          beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides reader through departments; bimodal Support
+          and Marketing outliers create focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct combined box plot with strip overlay
+        comment: Correct box plot with strip overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categorical (Department) on X, numeric (Quality Score) on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Box shows median/quartiles/whiskers; strip points overlay with jitter
-          and transparency
-      - id: SC-04
-        name: Data Range
+        comment: Box plots (median, quartiles, whiskers), strip points with jitter
+          and transparency all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis scale [25, 105] shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Department (categorical), Y=Quality Score (numeric), all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-color visualization
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "cat-box-strip · altair · pyplots.ai"'
+        comment: Title format correct 'cat-box-strip · altair · anyplot.ai'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: tight distribution (Engineering), wide spread
-          with outliers (Marketing), lower scores with outliers (Sales), bimodal pattern
-          (Support)'
+        comment: 'Shows all distribution aspects: outliers, bimodal distribution,
+          tight distribution, variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product quality scores across departments is a plausible business
-          scenario
+        comment: Department quality scores is realistic, neutral, professional context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scores 30-100 are realistic; minor issue with scale going to 105
-          when max is ~100
+        comment: Values plausible (30–100 range), proportions reasonable across departments
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,40 +177,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Simple linear flow: imports → data → chart → save, no unnecessary
+          abstraction'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: 'Only necessary imports: os, altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: true
-        comment: Saves both plot.png and plot.html (correct for Altair)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses altair's high-level API correctly with proper encoding syntax
+          and scale management
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's layering, transform_calculate for jitter, mark_boxplot
-          with customization; could have added tooltips for interactivity
+        comment: Uses transform_calculate for jitter, layer composition with xOffset
+          encoding
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - jitter-transform
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

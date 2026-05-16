@@ -1,15 +1,224 @@
 library: highcharts
+language: python
 specification_id: circos-basic
 created: '2025-12-31T11:15:18Z'
-updated: '2025-12-31T11:41:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617728725
+updated: '2026-05-15T09:44:00Z'
+generated_by: claude-haiku
+workflow_run: 25910697930
 issue: 3005
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/circos-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/circos-basic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Flawless theme adaptation: both light and dark renders perfectly readable with
+    correct palette usage'
+  - Okabe-Ito colors applied correctly with brand green (#009E73) as primary series
+  - Large, legible text sizes appropriate for high-resolution canvas
+  - Realistic, reproducible data with exponential distribution and seed-based generation
+  - Clean, idiomatic Highcharts code with proper module management
+  - Well-structured legend with chromosome identification and symbol colors
+  weaknesses:
+  - Spec calls for 1-3 concentric tracks inside the outer ring, but Highcharts' dependencywheel
+    module does not support true concentric rings. The pie chart workaround is effective
+    but doesn't match the concentric-ring architecture described in specification.
+  - Limited showcase of Highcharts' distinctive visualization capabilities beyond
+    the dependencywheel module.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "circos-basic · highcharts · anyplot.ai" with subtitle "Chromosomal Connections with Expression Tracks" clearly readable with dark text. All chromosome labels (Chr1-Chr8), percentage values on inner pie, and legend entries all legible against light background.
+      Data: Okabe-Ito palette vibrant and distinct - primary series #009E73 (green) dominant, followed by #D55E00 (orange), #0072B2 (blue), #CC79A7 (pink), #E69F00 (orange-gold), #56B4E9 (sky blue), #F0E442 (yellow). Ribbons show inter-chromosomal connections with proportional widths. Inner donut pie chart displays expression percentages with color-matched segments.
+      Legibility verdict: PASS - All text readable, excellent contrast, no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, subtitle, and all labels visible with light text (INK token colors correctly applied). No dark-on-dark text issues. All chromosome labels readable. Legend text visible against dark background.
+      Data: Data colors identical to light render - Okabe-Ito palette consistency maintained across themes. Ribbons and pie segments maintain same color scheme as light render. Only chrome elements (background, text, borders) differ between renders.
+      Legibility verdict: PASS - No dark-on-dark failures, proper theme adaptation, excellent readability
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes with proper font sizes (28-52px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean label placement, no collisions, all labels distinct
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ribbons, nodes, pie segments all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned 3600×3600 square canvas, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct format: circos-basic · highcharts · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First color #009E73, backgrounds #FAF8F1/#1A1A17, both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Elegant circular arrangement, custom legend with title and symbol
+          sizing, good color hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good polish with text outlines for readability, legend background/border,
+          proper margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with outer segments → ribbons → center expression
+          data
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses dependencywheel for circular connections. Minor deduction:
+          spec calls for concentric tracks but Highcharts doesn''t support true concentric
+          rings.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: source/target/value data, segment coloring,
+          proportional ribbons, expression track'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct mapping of chromosomes, flows, and expression values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format, legend shows all chromosomes
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 8 segments, 28 connections, expression percentages'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Genomic context appropriate; exponential distribution realistic;
+          chromosome pairs have stronger connections
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8 segments within 5-30 range, 28 connections within 10-100 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Direct script, no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; proper module downloads
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts API idiomatically with proper options structure and
+          theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses dependencywheel module; limited opportunity for more distinctive
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -20,189 +229,3 @@ impl_tags:
   - matrix-construction
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Creative and effective implementation of Circos-style visualization using Highcharts
-    dependency wheel combined with inner pie chart for additional data track
-  - Excellent colorblind-safe palette with 8 distinct, easily distinguishable colors
-  - Realistic trade flow scenario with appropriate data showing varied connection
-    strengths between regions
-  - Well-balanced layout on 3600x3600 canvas with properly positioned legend
-  - Clean, reproducible code with fixed random seed
-  weaknesses:
-  - Minor label overlap at N.America segment where multiple ribbons converge
-  - Inner pie chart percentage labels are somewhat small and could be more prominent
-  - Missing explicit gaps between outer ring segments as mentioned in specification
-  image_description: The plot displays a circular Circos-style visualization showing
-    global trade flows between 8 regions. The outer ring is a dependency wheel chart
-    with ribbons/chords connecting regions - segments include N.America (dark blue),
-    S.America (yellow), Europe (purple), Africa (cyan), MidEast (brown), S.Asia (pink),
-    E.Asia (green), and Oceania (olive). The inner track shows a donut/pie chart displaying
-    GDP share percentages with white text labels (26%, 28%, 22%, etc.). The title
-    "circos-basic · highcharts · pyplots.ai" appears at the top with a subtitle "Global
-    Trade Flows Between Regions (with GDP Inner Track)". A legend on the right side
-    shows all 8 regions with their corresponding colors. The visualization effectively
-    uses the dependency wheel chart type with an inner pie chart to create a Circos-like
-    layout.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, subtitle, and region labels are clear and readable. Inner
-          pie chart percentages are visible but slightly small.
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Minor overlap at "N.America" label where multiple ribbons converge,
-          but overall very clean.
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Ribbons are well-sized and proportional to flow values, inner track
-          clearly visible.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses a colorblind-safe palette with distinct colors for all 8 regions.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of 3600x3600 square canvas, chart well-centered with
-          appropriate margins for legend.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend is present and well-placed, but no grid (appropriate for this
-          chart type, but could have subtle track guides).
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements a Circos-style visualization using dependency
-          wheel + inner pie track.
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source/target/value correctly mapped to ribbon connections.
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Has segments, ribbons proportional to values, distinct colors, inner
-          track. Missing: gaps between segments as specified.'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All regions and connections properly displayed.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly maps colors to region names.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format "circos-basic · highcharts · pyplots.ai" but uses
-          `·` from Highcharts which renders correctly.
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows multiple flow strengths (N.America-E.Asia strong, others varied),
-          inner GDP track shows economic context. Could show more variation in flow
-          magnitudes.
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Global trade flows between regions is a perfect, realistic scenario
-          for Circos visualization.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: GDP percentages sum to 100%, trade flow values are plausible.
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear structure: imports → data → chart config → render.'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42) for reproducible flow generation.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used (numpy, json, tempfile, selenium, etc.).
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: true
-        comment: Using direct chart config instead of highcharts_core library classes
-          (works but less idiomatic).
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 4
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
-        max: 5
-        passed: true
-        comment: Excellent use of Highcharts dependency wheel module with multiple
-          series composition (wheel + pie). Could use more Highcharts-specific features
-          like animations or tooltips in static export.
-  verdict: APPROVED

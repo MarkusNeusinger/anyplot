@@ -80,8 +80,8 @@ describe('RouteErrorBoundary', () => {
         <RouterProvider router={router} />
       </ThemeProvider>
     );
-    expect(await screen.findByText('404')).toBeInTheDocument();
-    expect(screen.getByText('page not found')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /page not found/i })).toBeInTheDocument();
+    expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
   });
 
   it('auto-reloads once on chunk load errors', async () => {

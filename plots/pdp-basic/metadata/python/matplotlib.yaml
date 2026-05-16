@@ -1,178 +1,175 @@
 library: matplotlib
+language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:34:35Z'
-updated: '2025-12-31T05:46:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20612797918
+updated: '2026-05-15T22:34:13Z'
+generated_by: claude-haiku
+workflow_run: 25944430345
 issue: 2922
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - colorbar
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of PDP with ICE lines using sklearn partial_dependence
-    function with kind=both
-  - Proper confidence band visualization using fill_between with mean ± 1.96*std
-  - Rug plot effectively shows training data distribution along x-axis
-  - Clean, readable code that follows KISS principles
-  - Good colorblind-safe color scheme with Python blue and yellow
-  - Appropriate text sizing for 4800x2700 canvas
-  weaknesses:
-  - Legend in upper left slightly overlaps with ICE lines - consider frameon=True
-    with white background
-  - Rug plot markers (s=100) could be larger (s=150-200) for better visibility on
-    high-resolution canvas
-  - Y-axis range dominated by wide confidence band making PDP line variation appear
-    minimal
-  image_description: 'The plot displays a Partial Dependence Plot (PDP) with a blue
-    color scheme. The main PDP line is a thick dark blue line (#306998) showing a
-    gentle upward slope from approximately -50 at feature value -2 to +40 at feature
-    value +1.7. A light blue 95% confidence band surrounds the main line, spanning
-    from about -300 to +250 in the middle range. Faint ICE (Individual Conditional
-    Expectation) lines are visible as semi-transparent blue curves within the confidence
-    band. A yellow/gold rug plot at the bottom of the chart (at y ≈ -290) shows the
-    distribution of training data values as vertical tick marks, concentrated between
-    -1 and +1 feature values. The title reads "pdp-basic · matplotlib · pyplots.ai"
-    at the top. X-axis is labeled "Feature Value" and Y-axis is labeled "Partial Dependence
-    (Predicted Value)". A legend in the upper left shows three items: 95% Confidence
-    Interval, Partial Dependence, and Data Distribution. The grid is subtle with dashed
-    lines at alpha=0.3.'
+  - Exceptional theme-adaptive design with explicit color tokens threading through
+    all elements
+  - Perfect text legibility across both renders with no dark-on-dark or light-on-light
+    failures
+  - 'Thoughtful visual hierarchy: main trend → uncertainty band → individual variation
+    → data distribution'
+  - Idiomatic matplotlib usage with clean, readable code
+  - Complete spec implementation with all optional features included (confidence band,
+    ICE lines, rug plot)
+  - Realistic ML scenario that meaningfully demonstrates PDP utility
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "pdp-basic · matplotlib · anyplot.ai", axis labels "Feature Value" and "Partial Dependence (Predicted Value)", tick labels all clearly visible in dark text (INK colors)
+      Data: Brand green line (#009E73) shows upward trend; semi-transparent green confidence band; faint green ICE lines; orange rug plot (#E69F00) at bottom showing feature value distribution
+      Legibility verdict: PASS - all text explicit font sizes (title 24pt, labels 20pt, ticks 16pt), no overlaps, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (light INK colors #F0EFE8, INK_SOFT #B8B7B0); no dark-on-dark failures
+      Data: Brand green line, band, and ICE lines are IDENTICAL to light render; orange rug plot is IDENTICAL to light render; only chrome colors have flipped to light theme
+      Legibility verdict: PASS - all text properly theme-adapted, excellent contrast against dark background, no readability issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend is well-positioned in upper
-          left
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Main PDP line is thick (linewidth=4), ICE lines sampled every 10th
-          for clarity, rug plot visible but markers could be slightly larger for the
-          4800x2700 canvas
+        comment: Main line (linewidth=4), confidence band (alpha=0.2), ICE lines (alpha=0.08),
+          rug plot all clearly visible and density-appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) color scheme is colorblind-safe
-          with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, but the rug plot at the very bottom edge
-          creates slight imbalance
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Feature Value" and "Partial Dependence (Predicted
-          Value)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette (#009E73, #E69F00); colorblind-safe; good contrast
+          with appropriate alpha blending'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas with balanced margins; excellent space
+          utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha=0.3, but legend overlaps with the ICE lines
-          making it slightly distracting
+        comment: 'Descriptive with context: ''Feature Value'' and ''Partial Dependence
+          (Predicted Value)''; correct title format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          chrome theme-correct in both renders; data colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful theme-adaptive design with explicit color tokens; intentional
+          visual hierarchy; well above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; subtle grid; custom legend frame styling;
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy guides viewer: thick line → uncertainty band
+          → ICE context → data distribution'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct PDP visualization showing marginal effect of feature on prediction
+        comment: Correct partial dependence plot with all required components
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Feature values on x-axis, partial dependence on y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: PDP line, confidence band, ICE lines,
-          rug plot'
-      - id: SC-04
-        name: Data Range
+        comment: Partial dependence line, confidence interval, ICE lines, rug plot
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes properly show full range of data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: feature values; Y: partial dependence; axes scale correctly'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three plot elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "pdp-basic · matplotlib · pyplots.ai"'
+        comment: Correct title format; clear descriptive legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows PDP with ICE lines showing individual variation, confidence
-          band, and data distribution. Shows the upward trend well but all ICE lines
-          have similar shape (less variation than ideal)
+        comment: Shows upward trend, varying confidence width, heterogeneous ICE lines,
+          data distribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses sklearn's regression data with GradientBoostingRegressor - a
-          standard ML interpretability scenario
+        comment: 'Synthetic but realistic ML pipeline: 500 samples, GradientBoostingRegressor,
+          proper relationships'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Feature values in -2 to 3 range is reasonable for standardized data,
-          but partial dependence range (-300 to 250) is very wide compared to the
-          actual PDP line movement
+        comment: Feature values (-3 to 3) and PDP range (-250 to 250) realistic for
+          regression scenario
     code_quality:
       score: 10
       max: 10
@@ -182,41 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure without functions/classes
+        comment: 'Linear flow: imports → tokens → data → model → PDP → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42 for model
+        comment: np.random.seed(42) and model random_state=42 set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: matplotlib, numpy, sklearn components'
+        comment: 'All imports used: os, matplotlib, numpy, sklearn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current sklearn.inspection.partial_dependence API
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current matplotlib API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses matplotlib's fill_between for confidence band, scatter for rug
-          plot, but could leverage more matplotlib-specific features like ax.axhline
-          for a reference line at y=0
+        comment: 'Expert use: subplots with figsize, Axes methods, spine handling,
+          legend customization, theme-aware styling'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses fill_between() for confidence band, custom legend frame styling,
+          scatter marker='|' for rug
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

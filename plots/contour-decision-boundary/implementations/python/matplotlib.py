@@ -1,14 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-16
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import make_moons
 from sklearn.svm import SVC
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - generate synthetic two-moon classification data
 np.random.seed(42)
@@ -27,14 +38,15 @@ xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 2
 Z = classifier.predict(np.c_[xx.ravel(), yy.ravel()])
 Z = Z.reshape(xx.shape)
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Plot decision regions with contourf
-ax.contourf(xx, yy, Z, alpha=0.4, cmap="coolwarm", levels=[-0.5, 0.5, 1.5])
+ax.contourf(xx, yy, Z, alpha=0.3, colors=[OKABE_ITO[0], OKABE_ITO[1]], levels=[-0.5, 0.5, 1.5])
 
 # Add decision boundary line
-ax.contour(xx, yy, Z, colors="white", linewidths=2, levels=[0.5])
+ax.contour(xx, yy, Z, colors=INK_SOFT, linewidths=2, levels=[0.5])
 
 # Identify correctly and incorrectly classified points
 predictions = classifier.predict(X)
@@ -47,25 +59,25 @@ class_1_correct = (y == 1) & correct
 ax.scatter(
     X[class_0_correct, 0],
     X[class_0_correct, 1],
-    c="#306998",
+    c=OKABE_ITO[0],
     s=150,
     alpha=0.9,
-    edgecolors="white",
+    edgecolors=PAGE_BG,
     linewidths=2,
     marker="o",
-    label="Class A (correct)",
+    label="Class 0 (correct)",
     zorder=3,
 )
 ax.scatter(
     X[class_1_correct, 0],
     X[class_1_correct, 1],
-    c="#FFD43B",
+    c=OKABE_ITO[1],
     s=150,
     alpha=0.9,
-    edgecolors="black",
+    edgecolors=PAGE_BG,
     linewidths=2,
     marker="o",
-    label="Class B (correct)",
+    label="Class 1 (correct)",
     zorder=3,
 )
 
@@ -77,36 +89,45 @@ if np.any(incorrect):
         ax.scatter(
             X[class_0_incorrect, 0],
             X[class_0_incorrect, 1],
-            c="#306998",
+            c=OKABE_ITO[0],
             s=200,
             alpha=0.9,
-            edgecolors="red",
+            edgecolors=INK_SOFT,
             linewidths=3,
             marker="X",
-            label="Class A (misclassified)",
+            label="Class 0 (misclassified)",
             zorder=4,
         )
     if np.any(class_1_incorrect):
         ax.scatter(
             X[class_1_incorrect, 0],
             X[class_1_incorrect, 1],
-            c="#FFD43B",
+            c=OKABE_ITO[1],
             s=200,
             alpha=0.9,
-            edgecolors="red",
+            edgecolors=INK_SOFT,
             linewidths=3,
             marker="X",
-            label="Class B (misclassified)",
+            label="Class 1 (misclassified)",
             zorder=4,
         )
 
-# Labels and styling
-ax.set_xlabel("Feature X1", fontsize=20)
-ax.set_ylabel("Feature X2", fontsize=20)
-ax.set_title("contour-decision-boundary · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=14, loc="upper left", framealpha=0.9)
-ax.grid(True, alpha=0.3, linestyle="--")
+# Style
+ax.set_xlabel("Feature X1", fontsize=20, color=INK)
+ax.set_ylabel("Feature X2", fontsize=20, color=INK)
+ax.set_title("contour-decision-boundary · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+
+leg = ax.legend(fontsize=14, loc="upper left")
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
