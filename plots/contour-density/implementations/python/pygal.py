@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-density: Density Contour Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 61/100 | Updated: 2026-05-16
@@ -329,7 +329,7 @@ for i in range(n_cb_labels):
     label_y = cb_y + frac * cb_height + 12
     svg_parts.append(
         f'<text x="{cb_x + cb_width + 15}" y="{label_y:.1f}" fill="{INK_SOFT}" '
-        f'style="font-size:16px;font-family:sans-serif">{val:.4f}</text>'
+        f'style="font-size:16px;font-family:sans-serif">{val:.1f}</text>'
     )
 
 # Colorbar title
