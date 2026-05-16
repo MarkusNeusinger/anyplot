@@ -66,6 +66,7 @@ interface SpecTabsProps {
   generatedAt?: string;
   // Common
   libraryId: string;
+  language?: string;
   onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
   // Overview mode - only show Spec tab
   overviewMode?: boolean;
@@ -179,6 +180,7 @@ export function SpecTabs({
   criteriaChecklist,
   generatedAt,
   libraryId,
+  language,
   onTrackEvent,
   overviewMode = false,
   highlightedTags = [],
@@ -263,7 +265,7 @@ export function SpecTabs({
         {code}
       </Box>
     }>
-      <CodeHighlighter code={code} />
+      <CodeHighlighter code={code} language={language} />
     </Suspense>
   ) : null;
 

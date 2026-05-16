@@ -28,6 +28,7 @@ on:
           - pygal
           - highcharts
           - letsplot
+          - ggplot2
       dry_run:
         description: "List what would be generated without executing"
         type: boolean
@@ -52,9 +53,9 @@ on:
         default: '{}'
 
 env:
-  ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot"
+  ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2"
 
-# Serialise bulk-generate runs. Each run paces its own 9 dispatches with
+# Serialise bulk-generate runs. Each run paces its own dispatches with
 # `pace_seconds`; letting two runs overlap would interleave their
 # dispatches and stack the Claude queue, which is exactly what the pacing
 # exists to avoid. Second run waits for first to finish instead.

@@ -28,6 +28,10 @@ vi.mock('react-syntax-highlighter/dist/esm/languages/prism/python', () => ({
   default: {},
 }));
 
+vi.mock('react-syntax-highlighter/dist/esm/languages/prism/r', () => ({
+  default: {},
+}));
+
 import CodeHighlighter from './CodeHighlighter';
 
 describe('CodeHighlighter', () => {
@@ -44,11 +48,27 @@ describe('CodeHighlighter', () => {
     expect(highlighter).toHaveTextContent('plt.show()');
   });
 
-  it('sets language to python', () => {
+  it('defaults to python when no language prop given', () => {
     render(<CodeHighlighter code="print('hello')" />);
     expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
       'data-language',
       'python'
+    );
+  });
+
+  it('uses r grammar when language is "r"', () => {
+    render(<CodeHighlighter code='library(ggplot2)' language="r" />);
+    expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
+      'data-language',
+      'r'
+    );
+  });
+
+  it('falls back to plain text for unknown languages', () => {
+    render(<CodeHighlighter code='echo "hi"' language="bash" />);
+    expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
+      'data-language',
+      'text'
     );
   });
 });

@@ -21,6 +21,7 @@ from api.cache import clear_cache
 from api.main import app, fastapi_app
 from api.routers.debug import require_admin
 from core.config import settings
+from core.constants import SUPPORTED_LIBRARIES
 from core.database import get_db
 
 
@@ -127,7 +128,7 @@ class TestDebugStatus:
         assert data["missing_preview_specs"] == []
         assert data["missing_tags_specs"] == []
         assert data["oldest_specs"] == []
-        assert len(data["library_stats"]) == 9  # All 9 supported libraries
+        assert len(data["library_stats"]) == len(SUPPORTED_LIBRARIES)
 
     def test_debug_status_with_specs_and_impls(self, db_client) -> None:
         """Debug status should compute library stats and coverage from specs/impls."""

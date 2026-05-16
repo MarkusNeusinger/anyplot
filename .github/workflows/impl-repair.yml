@@ -65,6 +65,25 @@ jobs:
           git fetch origin "$BRANCH"
           git checkout "$BRANCH"
 
+      - name: Derive language + extension from library
+        id: lang
+        env:
+          LIBRARY: ${{ inputs.library }}
+        run: |
+          case "$LIBRARY" in
+            ggplot2)
+              LANGUAGE="r"
+              EXT=".R"
+              ;;
+            *)
+              LANGUAGE="python"
+              EXT=".py"
+              ;;
+          esac
+          echo "language=$LANGUAGE" >> $GITHUB_OUTPUT
+          echo "ext=$EXT"           >> $GITHUB_OUTPUT
+          echo "::notice::Repair: $LANGUAGE/$LIBRARY (ext: $EXT)"
+
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
         with:
@@ -73,7 +92,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
 
-      - name: Install dependencies
+      - name: Install Python plotting dependencies
+        if: steps.lang.outputs.language == 'python'
         env:
           LIBRARY: ${{ inputs.library }}
         run: |
@@ -82,11 +102,22 @@ jobs:
           # Source of truth: pyproject.toml lib-${LIBRARY} extras
           uv pip install -e ".[lib-${LIBRARY}]" ruff pillow pyyaml
 
+      - name: Install Python helper deps (for non-Python implementations)
+        if: steps.lang.outputs.language != 'python'
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install pillow pyyaml
+
       - name: Setup Chrome for Highcharts
         if: inputs.library == 'highcharts'
         uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded  # v2
         with:
           chrome-version: stable
+
+      - name: Setup R + ggplot2
+        if: steps.lang.outputs.language == 'r'
+        uses: ./.github/actions/setup-r
 
       - name: Extract AI feedback from PR
         id: feedback
@@ -122,8 +153,9 @@ jobs:
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
 
             Variables for this run:
-            - LANGUAGE: python
+            - LANGUAGE: ${{ steps.lang.outputs.language }}
             - LIBRARY: ${{ inputs.library }}
+            - EXT: ${{ steps.lang.outputs.ext }}
             - SPEC_ID: ${{ inputs.specification_id }}
             - ATTEMPT: ${{ inputs.attempt }}
             - BRANCH: ${{ env.branch }}
@@ -141,8 +173,9 @@ jobs:
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
 
             Variables for this run:
-            - LANGUAGE: python
+            - LANGUAGE: ${{ steps.lang.outputs.language }}
             - LIBRARY: ${{ inputs.library }}
+            - EXT: ${{ steps.lang.outputs.ext }}
             - SPEC_ID: ${{ inputs.specification_id }}
             - ATTEMPT: ${{ inputs.attempt }}
             - BRANCH: ${{ env.branch }}
@@ -152,7 +185,7 @@ jobs:
         env:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
-          LANGUAGE: python
+          LANGUAGE: ${{ steps.lang.outputs.language }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
 
@@ -193,7 +226,7 @@ jobs:
         env:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
-          LANGUAGE: python
+          LANGUAGE: ${{ steps.lang.outputs.language }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
           STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"

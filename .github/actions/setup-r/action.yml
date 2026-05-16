@@ -1,0 +1,61 @@
+name: "Setup R + ggplot2"
+description: >-
+  Installs R, the system libraries needed for headless plot rendering, and the
+  package set used by anyplot's R implementations (ggplot2 + tidyverse helpers
+  + ragg device + dataset packages). Packages are restored from renv.lock at
+  the repository root so versions stay pinned.
+inputs:
+  r-version:
+    description: "R version to install"
+    required: false
+    default: "4.4.1"
+  working-directory:
+    description: "Directory containing renv.lock (defaults to the repo root)"
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install R
+      uses: r-lib/actions/setup-r@e2e21ddc06d49ebc3007bf9d52aa66f8d4b1d8f3  # v2
+      with:
+        r-version: ${{ inputs.r-version }}
+        use-public-rspm: true
+
+    # ragg needs libfreetype/libpng/libtiff/libjpeg headers; systemfonts needs
+    # libfontconfig1. These are pre-built on ubuntu-latest as binaries via
+    # Posit Package Manager, but keeping the apt fallback makes the action
+    # robust against future runner-image changes.
+    - name: Install system dependencies for ragg / systemfonts
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libcurl4-openssl-dev \
+          libssl-dev \
+          libxml2-dev \
+          libfontconfig1-dev \
+          libfreetype-dev \
+          libpng-dev \
+          libtiff5-dev \
+          libjpeg-dev \
+          libharfbuzz-dev \
+          libfribidi-dev
+
+    - name: Install R packages from renv.lock
+      uses: r-lib/actions/setup-renv@e2e21ddc06d49ebc3007bf9d52aa66f8d4b1d8f3  # v2
+      with:
+        working-directory: ${{ inputs.working-directory }}
+
+    - name: Smoke-test ggplot2 renders a PNG
+      shell: bash
+      run: |
+        Rscript -e '
+          library(ggplot2); library(ragg)
+          tmp <- tempfile(fileext = ".png")
+          ggsave(tmp, ggplot(mtcars, aes(wt, mpg)) + geom_point(),
+                 device = ragg::agg_png, width = 4, height = 3, dpi = 100)
+          stopifnot(file.exists(tmp), file.info(tmp)$size > 0)
+          cat("ok: ", tmp, " (", file.info(tmp)$size, " bytes)\n", sep = "")
+        '

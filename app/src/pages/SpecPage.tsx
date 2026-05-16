@@ -532,6 +532,7 @@ export function SpecPage() {
               criteriaChecklist={currentImpl?.review_criteria_checklist}
               generatedAt={currentImpl?.generated_at}
               libraryId={selectedLibrary || ''}
+              language={currentImpl?.language || urlLanguage || 'python'}
               onTrackEvent={trackEvent}
               highlightedTags={highlightedTags}
             />

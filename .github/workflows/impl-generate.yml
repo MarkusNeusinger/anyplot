@@ -29,6 +29,7 @@ on:
           - pygal
           - highcharts
           - letsplot
+          - ggplot2
       issue_number:
         description: "Issue number (optional, for tracking)"
         required: false
@@ -111,16 +112,27 @@ jobs:
             MODEL="sonnet"
           fi
 
-          # Language: only python supported today. Future multi-language work will derive this per spec.
-          LANGUAGE="python"
+          # Derive LANGUAGE + EXT from LIBRARY. Mirrors core/constants.py LIBRARIES_METADATA;
+          # new non-Python entries get listed here too.
+          case "$LIBRARY" in
+            ggplot2)
+              LANGUAGE="r"
+              EXT=".R"
+              ;;
+            *)
+              LANGUAGE="python"
+              EXT=".py"
+              ;;
+          esac
 
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
           echo "library=$LIBRARY" >> $GITHUB_OUTPUT
           echo "language=$LANGUAGE" >> $GITHUB_OUTPUT
+          echo "ext=$EXT" >> $GITHUB_OUTPUT
           echo "issue_number=$ISSUE" >> $GITHUB_OUTPUT
           echo "model=$MODEL" >> $GITHUB_OUTPUT
 
-          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL})"
+          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL}, ext: ${EXT})"
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
@@ -189,7 +201,8 @@ jobs:
           gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:pending" 2>/dev/null || true
 
       # ========================================================================
-      # Setup: Python and dependencies
+      # Setup: Python and dependencies (always installed — needed for image
+      # processing + metadata writing even for non-Python implementations).
       # ========================================================================
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
@@ -204,7 +217,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pngquant
 
-      - name: Install dependencies
+      - name: Install Python plotting dependencies
+        if: steps.inputs.outputs.language == 'python'
         env:
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
@@ -213,11 +227,24 @@ jobs:
           # Source of truth: pyproject.toml lib-${LIBRARY} extras
           uv pip install -e ".[lib-${LIBRARY}]" ruff pillow pyyaml
 
+      - name: Install Python helper deps (for non-Python implementations)
+        if: steps.inputs.outputs.language != 'python'
+        run: |
+          # ggplot2 / future non-Python libs render via their own runtime,
+          # but the pipeline still uses Python for metadata + image post-processing.
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install pillow pyyaml
+
       - name: Setup Chrome for Highcharts
         if: steps.inputs.outputs.library == 'highcharts'
         uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded  # v2
         with:
           chrome-version: stable
+
+      - name: Setup R + ggplot2
+        if: steps.inputs.outputs.language == 'r'
+        uses: ./.github/actions/setup-r
 
       # ========================================================================
       # Generate: Create implementation branch and code
@@ -244,9 +271,10 @@ jobs:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
+          EXT: ${{ steps.inputs.outputs.ext }}
         run: |
           METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
-          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
 
           if [ -f "$METADATA_FILE" ] && [ -f "$IMPL_FILE" ]; then
             echo "is_regeneration=true" >> $GITHUB_OUTPUT
@@ -349,6 +377,7 @@ jobs:
             Variables for this run:
             - LANGUAGE: ${{ steps.inputs.outputs.language }}
             - LIBRARY: ${{ steps.inputs.outputs.library }}
+            - EXT: ${{ steps.inputs.outputs.ext }}
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
 
@@ -368,6 +397,7 @@ jobs:
             Variables for this run:
             - LANGUAGE: ${{ steps.inputs.outputs.language }}
             - LIBRARY: ${{ steps.inputs.outputs.library }}
+            - EXT: ${{ steps.inputs.outputs.ext }}
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
 
@@ -380,6 +410,7 @@ jobs:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
+          EXT: ${{ steps.inputs.outputs.ext }}
           ISSUE: ${{ steps.issue.outputs.number }}
           BRANCH: ${{ steps.branch.outputs.branch }}
           MODEL: ${{ steps.inputs.outputs.model }}
@@ -424,39 +455,59 @@ jobs:
 
           mkdir -p "$METADATA_DIR"
 
-          # Get Python version (e.g., "3.13.1" from "Python 3.13.1")
-          PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+          # Runtime version: Python for python libs, R for R libs. We still record
+          # a 'python_version' field in metadata for backwards compatibility; for R
+          # implementations it carries the R version instead (the DB / frontend treat
+          # it as a free-form runtime version string).
+          if [ "$LANGUAGE" = "r" ]; then
+            PYTHON_VERSION=$(Rscript -e 'cat(as.character(getRversion()))' 2>/dev/null || echo "unknown")
+          else
+            PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+          fi
 
-          # Get library version from pip (use explicit venv path)
+          # Get library version. Python libs read via `pip show`; R libs via
+          # packageVersion() inside Rscript. Names that differ between catalogue
+          # id and registry id are mapped explicitly.
           get_pip_version() {
             .venv/bin/pip show "$1" 2>/dev/null | grep -i "^Version:" | awk '{print $2}'
           }
+          get_r_version() {
+            Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null
+          }
 
-          case "$LIBRARY" in
-            letsplot)
-              LIBRARY_VERSION=$(get_pip_version "lets-plot")
-              ;;
-            highcharts)
-              LIBRARY_VERSION=$(get_pip_version "highcharts-core")
-              ;;
-            *)
-              LIBRARY_VERSION=$(get_pip_version "$LIBRARY")
-              ;;
-          esac
-
-          # Fallback if version is empty
-          if [ -z "$LIBRARY_VERSION" ]; then
-            echo "::warning::Could not get version for $LIBRARY, trying alternative method"
-            # Map library names to Python module names
+          if [ "$LANGUAGE" = "r" ]; then
+            LIBRARY_VERSION=$(get_r_version "$LIBRARY")
+          else
             case "$LIBRARY" in
-              letsplot) PYTHON_MODULE="lets_plot" ;;
-              plotnine) PYTHON_MODULE="plotnine" ;;
-              highcharts) PYTHON_MODULE="highcharts_core" ;;
-              *) PYTHON_MODULE="$LIBRARY" ;;
+              letsplot)
+                LIBRARY_VERSION=$(get_pip_version "lets-plot")
+                ;;
+              highcharts)
+                LIBRARY_VERSION=$(get_pip_version "highcharts-core")
+                ;;
+              *)
+                LIBRARY_VERSION=$(get_pip_version "$LIBRARY")
+                ;;
             esac
-            LIBRARY_VERSION=$(.venv/bin/python -c "import $PYTHON_MODULE; print(getattr($PYTHON_MODULE, '__version__', 'unknown'))" 2>/dev/null || echo "unknown")
+
+            # Fallback if version is empty
+            if [ -z "$LIBRARY_VERSION" ]; then
+              echo "::warning::Could not get version for $LIBRARY, trying alternative method"
+              # Map library names to Python module names
+              case "$LIBRARY" in
+                letsplot) PYTHON_MODULE="lets_plot" ;;
+                plotnine) PYTHON_MODULE="plotnine" ;;
+                highcharts) PYTHON_MODULE="highcharts_core" ;;
+                *) PYTHON_MODULE="$LIBRARY" ;;
+              esac
+              LIBRARY_VERSION=$(.venv/bin/python -c "import $PYTHON_MODULE; print(getattr($PYTHON_MODULE, '__version__', 'unknown'))" 2>/dev/null || echo "unknown")
+            fi
           fi
-          echo "::notice::Library version: $LIBRARY = $LIBRARY_VERSION"
+
+          if [ -z "$LIBRARY_VERSION" ]; then
+            LIBRARY_VERSION="unknown"
+          fi
+          echo "::notice::Library version: $LIBRARY = $LIBRARY_VERSION ($LANGUAGE runtime $PYTHON_VERSION)"
 
           # Interactive libraries additionally produce HTML previews (one per theme)
           HAS_HTML="false"
@@ -527,7 +578,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
 
           # Verify implementation file exists in the repository (Claude should have committed it)
           if ! git ls-files --error-unmatch "$IMPL_FILE" >/dev/null 2>&1; then
@@ -625,6 +676,7 @@ jobs:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
+          EXT: ${{ steps.inputs.outputs.ext }}
           ISSUE: ${{ steps.issue.outputs.number }}
           BRANCH: ${{ steps.branch.outputs.branch }}
         run: |
@@ -643,7 +695,7 @@ jobs:
 
           Implements the **${LANGUAGE}/${LIBRARY}** version of \`${SPEC_ID}\`.
 
-          **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py\`"
+          **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}\`"
 
           if [ -n "$ISSUE" ]; then
             BODY="${BODY}

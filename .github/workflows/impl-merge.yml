@@ -100,13 +100,25 @@ jobs:
           SPEC_ID=$(echo "$BRANCH" | cut -d'/' -f2)
           LIBRARY=$(echo "$BRANCH" | cut -d'/' -f3)
 
-          # Language: only python supported today. If future branches encode language,
-          # parse it from the branch name here.
-          LANGUAGE="python"
+          # Derive LANGUAGE + EXT from LIBRARY. Mirrors core/constants.py
+          # LIBRARIES_METADATA — extend this case when new non-Python libraries
+          # are added. We don't encode language in the branch name to keep
+          # existing branches and tooling working.
+          case "$LIBRARY" in
+            ggplot2)
+              LANGUAGE="r"
+              EXT=".R"
+              ;;
+            *)
+              LANGUAGE="python"
+              EXT=".py"
+              ;;
+          esac
 
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
           echo "library=$LIBRARY" >> $GITHUB_OUTPUT
           echo "language=$LANGUAGE" >> $GITHUB_OUTPUT
+          echo "ext=$EXT"           >> $GITHUB_OUTPUT
 
       - name: Validate PR completeness before merge
         if: steps.check.outputs.should_run == 'true'
@@ -115,13 +127,14 @@ jobs:
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
           LANGUAGE: ${{ steps.extract.outputs.language }}
           LIBRARY: ${{ steps.extract.outputs.library }}
+          EXT: ${{ steps.extract.outputs.ext }}
           BRANCH: ${{ steps.check.outputs.branch }}
           PR_NUM: ${{ steps.check.outputs.pr_number }}
         run: |
           # Fetch the PR branch to check its contents
           git fetch origin "$BRANCH"
 
-          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
           META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
 
           # Check if implementation file exists on the PR branch
