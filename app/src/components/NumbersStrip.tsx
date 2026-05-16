@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import { typography } from '../theme';
 
 interface NumbersStripProps {
-  stats: { specs: number; plots: number; libraries: number; lines_of_code?: number } | null;
+  stats: { specs: number; plots: number; libraries: number; languages?: number; lines_of_code?: number } | null;
 }
 
 function formatLoc(n: number | undefined): string {
@@ -13,7 +13,7 @@ function formatLoc(n: number | undefined): string {
 
 export function NumbersStrip({ stats }: NumbersStripProps) {
   const items = [
-    { value: '1', label: 'languages' },
+    { value: stats?.languages ? String(stats.languages) : '—', label: 'languages' },
     { value: stats ? String(stats.libraries) : '—', label: 'libraries' },
     { value: stats ? String(stats.specs) : '—', label: 'specifications' },
     { value: stats ? stats.plots.toLocaleString() : '—', label: 'implementations' },

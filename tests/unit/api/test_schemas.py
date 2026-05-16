@@ -203,4 +203,8 @@ class TestStatsResponse:
     def test_serialization(self) -> None:
         stats = StatsResponse(specs=10, plots=50, libraries=9)
         data = stats.model_dump()
-        assert data == {"specs": 10, "plots": 50, "libraries": 9, "lines_of_code": 0}
+        assert data == {"specs": 10, "plots": 50, "libraries": 9, "languages": 0, "lines_of_code": 0}
+
+    def test_languages_field(self) -> None:
+        stats = StatsResponse(specs=10, plots=50, libraries=10, languages=2)
+        assert stats.languages == 2

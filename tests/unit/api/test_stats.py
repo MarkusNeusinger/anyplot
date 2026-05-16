@@ -90,6 +90,7 @@ class TestStatsRefreshFactory:
         assert result.specs == 1  # Only spec with impls
         assert result.plots == 1
         assert result.libraries == 1
+        assert result.languages == 1  # Single mock library → one distinct language_id
         assert result.lines_of_code == 42
 
 
