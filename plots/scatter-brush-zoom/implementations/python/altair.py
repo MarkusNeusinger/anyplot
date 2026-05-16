@@ -1,18 +1,40 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-brush-zoom: Interactive Scatter Plot with Brush Selection and Zoom
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-08
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-16
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Work around module name conflict: ensure altair library is imported, not this file
+if (
+    "altair" in sys.modules
+    and hasattr(sys.modules["altair"], "__file__")
+    and "scatter-brush-zoom" in sys.modules["altair"].__file__
+):
+    del sys.modules["altair"]
+sys.path = [p for p in sys.path if "scatter-brush-zoom" not in p]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Generate clustered data for brush selection demonstration
 np.random.seed(42)
 
-# Create 4 clusters with different characteristics
 n_points = 200
 clusters = []
 
@@ -38,23 +60,19 @@ df["id"] = range(len(df))
 # Define interval selection for brush (click-drag to select region)
 brush = alt.selection_interval()
 
-# Define color based on selection
-color_scale = alt.Scale(
-    domain=["Sensor A", "Sensor B", "Sensor C", "Sensor D"], range=["#306998", "#FFD43B", "#4CAF50", "#E91E63"]
-)
+# Define color scale using Okabe-Ito palette
+color_scale = alt.Scale(domain=["Sensor A", "Sensor B", "Sensor C", "Sensor D"], range=OKABE_ITO)
 
 # Create the scatter plot with brush selection
 points = (
     alt.Chart(df)
-    .mark_circle(size=200, strokeWidth=2)
+    .mark_circle(size=120, strokeWidth=2)
     .encode(
         x=alt.X("x:Q", title="Efficiency Score (%)", scale=alt.Scale(domain=[0, 100])),
         y=alt.Y("y:Q", title="Reliability Index", scale=alt.Scale(domain=[0, 100])),
-        color=alt.condition(
-            brush, alt.Color("category:N", scale=color_scale, title="Category"), alt.value("lightgray")
-        ),
+        color=alt.condition(brush, alt.Color("category:N", scale=color_scale, title="Category"), alt.value(INK_SOFT)),
         opacity=alt.condition(brush, alt.value(0.85), alt.value(0.3)),
-        stroke=alt.condition(brush, alt.value("#333333"), alt.value("transparent")),
+        stroke=alt.condition(brush, alt.value(INK), alt.value("transparent")),
         tooltip=[
             alt.Tooltip("id:O", title="Point ID"),
             alt.Tooltip("category:N", title="Category"),
@@ -76,12 +94,12 @@ scatter = alt.layer(points, legend_layer).properties(
     width=1600,
     height=900,
     title=alt.Title(
-        text="scatter-brush-zoom · altair · pyplots.ai",
+        text="scatter-brush-zoom · altair · anyplot.ai",
         fontSize=28,
         anchor="middle",
         subtitle="Click and drag to select a region | Scroll to zoom | Shift+drag to pan",
         subtitleFontSize=18,
-        subtitleColor="#666666",
+        subtitleColor=INK_SOFT,
     ),
 )
 
@@ -90,7 +108,11 @@ bars = (
     alt.Chart(df)
     .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
     .encode(
-        x=alt.X("category:N", title="Category", axis=alt.Axis(labelFontSize=16, titleFontSize=18)),
+        x=alt.X(
+            "category:N",
+            title="Category",
+            axis=alt.Axis(labelFontSize=16, titleFontSize=18, labelAngle=0, labelPadding=15),
+        ),
         y=alt.Y("count():Q", title="Selected Count", axis=alt.Axis(labelFontSize=16, titleFontSize=18)),
         color=alt.Color("category:N", scale=color_scale, legend=None),
     )
@@ -101,12 +123,31 @@ bars = (
 # Combine charts vertically
 chart = (
     alt.vconcat(scatter.interactive(), bars)
-    .configure_axis(labelFontSize=16, titleFontSize=20, gridColor="#E0E0E0", gridOpacity=0.5)
-    .configure_legend(titleFontSize=18, labelFontSize=16, symbolSize=200)
-    .configure_view(strokeWidth=0)
+    .properties(background=PAGE_BG)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        labelFontSize=16,
+        titleFontSize=20,
+        gridColor=INK,
+        gridOpacity=0.10,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_title(color=INK, fontSize=28)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=18,
+        labelFontSize=16,
+        symbolSize=200,
+    )
     .resolve_scale(color="shared")
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
