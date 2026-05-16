@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
-Library: plotnine 0.15.2 | Python 3.13.11
+Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-16
 """
 
