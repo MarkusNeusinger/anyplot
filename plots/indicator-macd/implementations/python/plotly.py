@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-16
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-16
 """
 
 import os
