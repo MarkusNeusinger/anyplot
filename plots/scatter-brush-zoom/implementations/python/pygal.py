@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-brush-zoom: Interactive Scatter Plot with Brush Selection and Zoom
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-16
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 75/100 | Created: 2026-05-16
 """
 
 import os
