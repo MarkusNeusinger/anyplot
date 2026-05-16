@@ -6,16 +6,14 @@ title: Printable Maze Puzzle
 
 # Specification tracking
 created: 2026-01-07T20:05:58Z
-updated: null
+updated: 2026-05-16T17:12:35Z
 issue: 3232
 suggested: MarkusNeusinger
 
 # Classification tags (applies to all library implementations)
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
-  plot_type:
-    - maze
-    - grid
+  plot_type: []
   data_type:
     - discrete
     - matrix
