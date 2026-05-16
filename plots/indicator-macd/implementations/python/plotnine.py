@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 83/100 | Created: 2026-05-16
+Quality: 82/100 | Created: 2026-05-16
 """
 
 import os
