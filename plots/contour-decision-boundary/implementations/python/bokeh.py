@@ -1,16 +1,50 @@
-""" pyplots.ai
+"""anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2025-05-16
 """
 
-import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, LinearColorMapper
-from bokeh.plotting import figure
-from sklearn.datasets import make_moons
-from sklearn.neighbors import KNeighborsClassifier
+import os
+import sys
+import time
+from pathlib import Path
 
+
+# Remove current directory from path to avoid shadowing bokeh package
+if "" in sys.path:
+    sys.path.remove("")
+sys.path.insert(0, "/home/runner/work/anyplot/anyplot/.venv/lib/python3.13/site-packages")
+
+# Change to script directory to save files in the correct location
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# isort: off
+import numpy as np  # noqa: E402
+from bokeh.io import output_file, save  # noqa: E402
+from bokeh.models import (  # noqa: E402
+    ColumnDataSource,
+    HoverTool,
+    Legend,
+    LegendItem,
+    LinearColorMapper,
+)
+from bokeh.palettes import Cividis256  # noqa: E402
+from bokeh.plotting import figure  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.chrome.options import Options  # noqa: E402
+from sklearn.datasets import make_moons  # noqa: E402
+from sklearn.neighbors import KNeighborsClassifier  # noqa: E402
+# isort: on
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito colors for classes
+CLASS_COLORS = ["#009E73", "#D55E00"]  # Positions 1 and 2 of the palette
 
 # Data - Generate synthetic classification data
 np.random.seed(42)
@@ -30,14 +64,11 @@ xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
 Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
 Z = Z.reshape(xx.shape)
 
-# Colors for classes
-class_colors = ["#306998", "#FFD43B"]  # Python Blue and Yellow
-
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="contour-decision-boundary · bokeh · pyplots.ai",
+    title="Decision Boundary Classifier Visualization",
     x_axis_label="Feature 1",
     y_axis_label="Feature 2",
     tools="",
@@ -46,10 +77,10 @@ p = figure(
     y_range=(y_min, y_max),
 )
 
-# Use image to render decision boundary efficiently
-color_mapper = LinearColorMapper(palette=["#C8D5E3", "#FFF5C8"], low=0, high=1)
+# Use continuous colormap for decision regions (Cividis for diverging appearance)
+color_mapper = LinearColorMapper(palette=Cividis256, low=0, high=1)
 p.image(
-    image=[Z.astype(float)], x=x_min, y=y_min, dw=x_max - x_min, dh=y_max - y_min, color_mapper=color_mapper, alpha=0.5
+    image=[Z.astype(float)], x=x_min, y=y_min, dw=x_max - x_min, dh=y_max - y_min, color_mapper=color_mapper, alpha=0.4
 )
 
 # Separate data points by class
@@ -79,15 +110,27 @@ source_class1 = ColumnDataSource(
     }
 )
 
-# Plot training points
-# Class 0 - circles
+# Plot training points for each class
 c0_scatter = p.scatter(
-    x="x", y="y", source=source_class0, size=25, fill_color="#306998", line_color="white", line_width=3, alpha=0.9
+    x="x",
+    y="y",
+    source=source_class0,
+    size=25,
+    fill_color=CLASS_COLORS[0],
+    line_color="white",
+    line_width=3,
+    alpha=0.85,
 )
 
-# Class 1 - circles
 c1_scatter = p.scatter(
-    x="x", y="y", source=source_class1, size=25, fill_color="#FFD43B", line_color="white", line_width=3, alpha=0.9
+    x="x",
+    y="y",
+    source=source_class1,
+    size=25,
+    fill_color=CLASS_COLORS[1],
+    line_color="white",
+    line_width=3,
+    alpha=0.85,
 )
 
 # Mark misclassified points with X marker
@@ -103,7 +146,7 @@ if np.any(misclassified_mask):
         }
     )
     misclassified_marker = p.scatter(
-        x="x", y="y", source=source_misclassified, marker="x", size=35, line_color="#CC3333", line_width=5, alpha=1.0
+        x="x", y="y", source=source_misclassified, marker="x", size=45, line_color="#CC3333", line_width=5, alpha=1.0
     )
 
 # Add HoverTool for interactivity
@@ -126,7 +169,7 @@ if misclassified_marker is not None:
     )
     p.add_tools(hover_misclassified)
 
-# Create legend with misclassified entry
+# Create legend with classes and misclassified entry
 legend_items = [
     LegendItem(label="Class 0", renderers=[c0_scatter]),
     LegendItem(label="Class 1", renderers=[c1_scatter]),
@@ -135,38 +178,67 @@ if misclassified_marker is not None:
     legend_items.append(LegendItem(label="Misclassified", renderers=[misclassified_marker]))
 
 legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "28pt"
+legend.label_text_font_size = "18pt"
 legend.glyph_height = 35
 legend.glyph_width = 35
-legend.background_fill_alpha = 0.8
+legend.background_fill_alpha = 0.95
 legend.padding = 15
 legend.spacing = 10
 p.add_layout(legend, "right")
 
-# Styling
-p.title.text_font_size = "36pt"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
+# Title and axis styling
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
 # Grid styling
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_dash = "dashed"
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
-# Background
-p.background_fill_color = "#FAFAFA"
-p.border_fill_color = "#FFFFFF"
+# Axis and background styling
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Axis styling
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
+# Legend styling
+if legend:
+    legend.background_fill_color = ELEVATED_BG
+    legend.border_line_color = INK_SOFT
+    legend.label_text_color = INK_SOFT
 
-# Save as PNG
-export_png(p, filename="plot.png")
-
-# Also save HTML for interactive version
-output_file("plot.html")
+# Save HTML file
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # Let Bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
