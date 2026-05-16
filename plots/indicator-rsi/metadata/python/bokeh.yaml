@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: indicator-rsi
 created: '2026-01-07T21:10:12Z'
-updated: '2026-05-16T16:40:47Z'
+updated: '2026-05-16T16:47:04Z'
 generated_by: claude-haiku
 workflow_run: 25967156985
 issue: 3229
@@ -12,107 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/bokeh/plot-dark.html
-quality_score: 38
+quality_score: 49
 review:
   strengths:
-  - Realistic RSI data generation with seed for reproducibility
-  - Correct plot type and data mapping (0-100 scale)
-  - Comprehensive threshold and zone annotations that show spec intent
-  - Uses Bokeh's ColumnDataSource for clean data handling
+  - Correct RSI calculation with realistic data patterns and momentum extremes
+  - Clear visual hierarchy with zones and threshold lines guiding interpretation
+  - Proper Y-axis fixed range (0-100) per specification
+  - All text elements readable in both light and dark renders
+  - Good use of scatter points to emphasize overbought/oversold extremes
   weaknesses:
-  - 'AR-07 AUTO-REJECT: Output format must be theme-aware (plot-{THEME}.png, plot-{THEME}.html)'
-  - 'CQ-04 CRITICAL: Uses export_png() instead of Selenium headless screenshot (see
-    bokeh.md)'
-  - 'VQ-07 CRITICAL: RSI line must be brand green (#009E73), not blue. Custom colors
-    must comply with Okabe-Ito palette'
-  - 'VQ-01/VQ-04 CRITICAL: Zero theme adaptation. Must use ANYPLOT_THEME environment
-    variable to set PAGE_BG, INK, INK_SOFT tokens'
-  - 'Dark theme broken: Text is nearly invisible on dark background (dark-on-dark
-    contrast failure)'
+  - 'Output file format wrong: saves plot.png instead of plot-light.png; no support
+    for ANYPLOT_THEME env var'
+  - 'Missing theme adaptation: background color hardcoded to #FAFAFA (should be #FAF8F1
+    light/#1A1A17 dark); text colors not set via theme tokens'
+  - 'Wrong export method: uses deprecated bokeh.io.export_png() instead of Selenium
+    + headless Chrome per bokeh.md spec'
+  - 'Color palette violations: RSI line should be #009E73 (brand green); overbought/oversold
+    extremes use CVD-unsafe red-green; all colors should follow Okabe-Ito standard'
+  - 'Minor: Title says pyplots.ai instead of anyplot.ai'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAFAFA, close to spec #FAF8F1)
-      Chrome: Title 'indicator-rsi · bokeh · anyplot.ai' and axis labels (Date, RSI (14-Period)) clearly readable in dark text. Grid lines subtle but visible.
-      Data: RSI line in blue (#306998) with cyan oversold zone (0-30) and red overbought zone (70-100). Horizontal threshold lines at 30 (green), 50 (gray), 70 (red). Scatter points highlight extremes.
-      Legibility verdict: PASS - All text elements readable against light background
+      Background: #FAFAFA (warm off-white, slightly off from spec #FAF8F1)
+      Chrome: Title, axis labels (Date, RSI (14-Period)), tick labels all visible in dark text
+      Data: Teal/cyan RSI line (#306998), orange scatter points for overbought extremes (#E74C3C), blue scatter for oversold (#27AE60); light red/cyan shaded zones; three threshold lines (red dashed at 70, green dashed at 30, gray dotted at 50)
+      Grid: Subtle dashed pattern at ~30% alpha, well-balanced
+      Legend: "RSI (14)" in top-right, readable
+      Legibility verdict: PASS - all elements clearly readable on light surface
 
     Dark render (plot-dark.png):
-      Background: Appears nearly pure black, not the warm near-black (#1A1A17) specified in style guide
-      Chrome: Title and axis labels are barely distinguishable against the dark background. Text colors appear unchanged from light render, causing dark-on-dark contrast failures (black text on near-black background). Grid lines are invisible.
-      Data: RSI line remains visible in cyan, but context text is nearly unreadable.
-      Legibility verdict: FAIL - Dark-on-dark contrast failure on title and axis labels. Text colors not inverted for dark theme. Grid invisible. Non-compliant with theme-adaptive token requirements.
+      Background: #1A1A17 (warm near-black, correct per spec)
+      Chrome: Title, axis labels, tick labels appear in light colors, readable against dark background
+      Data: Same teal RSI line, orange/blue scatter points - colors identical to light render (data colors are theme-independent as required)
+      Grid: Visible with same dashing pattern
+      Legend: "RSI (14)" visible
+      Theme note: Text colors appear correct despite code not explicitly setting them (rendering works visually but violates spec requirement for explicit theme token usage)
+      Legibility verdict: PASS - all elements readable, though theme adaptation is not explicitly implemented in code
   criteria_checklist:
     visual_quality:
-      score: 17
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 6
         max: 8
         passed: false
-        comment: Light theme readable, dark theme has dark-on-dark failures
+        comment: Both renders show readable text, but dark theme colors are not explicitly
+          set in code
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text clearly separated, no collisions
+        comment: All text elements properly spaced, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, zones clearly visible
+        comment: All markers, lines, zones clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 0
         max: 2
         passed: false
-        comment: Hardcoded colors without theme adaptation; fails dark theme contrast
+        comment: Red-green distinction for extremes is CVD anti-pattern; colors not
+          from Okabe-Ito palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Good proportions, nothing cut off, generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Descriptive labels; minor typo (pyplots.ai vs anyplot.ai)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: RSI line is blue (#306998) not brand green (#009E73). Custom zone
-          colors not Okabe-Ito. Background not theme-aware.
+        comment: 'Background #FAFAFA (not #FAF8F1), RSI line not #009E73, colors not
+          Okabe-Ito, no theme-adaptive chrome'
     design_excellence:
-      score: 6
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 3
         max: 8
         passed: false
-        comment: Generic styling with default colors
+        comment: Generic styling with default colors and layout, no custom palette
+          or intentional hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization
+        comment: Minimal customization beyond basic grid dashing, spines not refined
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or emphasis
+        passed: true
+        comment: Zones and threshold lines communicate zones; scatter points at extremes
+          add visual emphasis
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -120,25 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct RSI technical indicator chart
+        comment: Correct RSI momentum indicator chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Has zones and thresholds but styling violates spec
+        passed: true
+        comment: Y-axis fixed 0-100, threshold lines at 30/70, centerline at 50, overbought/oversold
+          zones
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, 0-100 range enforced
+        comment: Date vs RSI mapping correct, axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Title format incorrect for output naming
+        comment: Title says 'pyplots.ai' instead of 'anyplot.ai'; legend adequate
     data_quality:
       score: 15
       max: 15
@@ -148,21 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows RSI patterns and extremes
+        comment: Shows realistic RSI extremes and momentum patterns, 120-day window
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price simulation
+        comment: 120 trading days with realistic price dynamics and RSI behavior
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: RSI values properly bounded
+        comment: RSI properly bounded 0-100 with realistic momentum oscillation
     code_quality:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -170,33 +181,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions
+        comment: Simple, straightforward code with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports, no bloat
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Uses export_png() which bokeh.md forbids
+        passed: true
+        comment: No fake UI or unnecessary complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'AR-07: Wrong output format (plot.png not plot-{THEME}.png)'
+        comment: 'CRITICAL: Saves as plot.png instead of plot-light.png; no ANYPLOT_THEME
+          support for plot-dark.png'
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -204,13 +216,19 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses ColumnDataSource but misses theme-adaptive patterns
+        comment: 'Uses ColumnDataSource correctly, but VIOLATES bokeh.md: uses deprecated
+          export_png() instead of Selenium + headless Chrome'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage; misses Bokeh's theme capabilities
+        comment: Uses BoxAnnotation and Span (bokeh-specific), but limited feature
+          depth for demonstration
+    score_caps:
+      applied: true
+      description: 'VQ-04 = 0 (Color Accessibility): max 49 | CQ-05 = 0 (Output API):
+        max 70 | Final cap: 49/100'
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -220,6 +238,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - columndatasource
-  dataprep: []
-  styling: []
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling

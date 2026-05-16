@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 38/100 | Updated: 2026-05-16
+Quality: 49/100 | Updated: 2026-05-16
 """
 
 import numpy as np
