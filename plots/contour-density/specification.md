@@ -14,19 +14,10 @@ A density contour plot (also known as a 2D KDE contour plot) displays the concen
 
 ## Data
 
-The visualization requires:
-- **X variable**: First continuous variable
-- **Y variable**: Second continuous variable
-
-Example structure:
-```
-X     | Y
-------|------
-1.2   | 3.4
-2.1   | 4.5
-1.8   | 3.9
-...
-```
+- `x` (numeric, continuous) — First variable for the X-axis
+- `y` (numeric, continuous) — Second variable for the Y-axis
+- Size: 100–10,000 points recommended (larger datasets benefit from density visualization)
+- Example: Bivariate measurements (e.g., height vs. weight, temperature vs. pressure, geographic coordinates)
 
 ## Notes
 
