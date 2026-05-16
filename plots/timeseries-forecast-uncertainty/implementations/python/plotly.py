@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-Library: plotly | Python
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-16
 """
 
 import os
