@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-printable: Printable Maze Puzzle
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 69/100 | Updated: 2026-05-16
@@ -65,12 +65,17 @@ maze[2 * height, 2 * width - 1] = False  # Exit opening at bottom-right
 # Create figure
 fig = go.Figure()
 
-# Determine wall color based on theme
-# Light theme: black walls on light background (printable)
-# Dark theme: light walls on dark background
-wall_color = INK if THEME == "light" else INK_SOFT
+# Theme-specific colors for maze elements
+if THEME == "light":
+    # Light theme: black walls on white background (printable)
+    wall_color = INK
+    passage_color = None  # Passages implicit as white background
+else:
+    # Dark theme: explicitly draw passages as medium gray for visibility
+    wall_color = INK_SOFT  # Light gray walls
+    passage_color = "#4A4A44"  # Medium gray passages (distinct from dark bg and light walls)
 
-# Draw maze walls as shapes
+# Draw maze elements as shapes
 wall_shapes = []
 
 for y in range(maze.shape[0]):
@@ -84,6 +89,18 @@ for y in range(maze.shape[0]):
                     "x1": x + 0.5,
                     "y1": (maze.shape[0] - 1 - y) + 0.5,
                     "fillcolor": wall_color,
+                    "line": {"width": 0},
+                }
+            )
+        elif THEME == "dark" and passage_color:  # Passage in dark theme
+            wall_shapes.append(
+                {
+                    "type": "rect",
+                    "x0": x - 0.5,
+                    "y0": (maze.shape[0] - 1 - y) - 0.5,
+                    "x1": x + 0.5,
+                    "y1": (maze.shape[0] - 1 - y) + 0.5,
+                    "fillcolor": passage_color,
                     "line": {"width": 0},
                 }
             )
