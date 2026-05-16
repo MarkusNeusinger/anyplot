@@ -1,170 +1,165 @@
 library: highcharts
+language: python
 specification_id: line-annotated-events
 created: '2025-12-31T11:00:38Z'
-updated: '2025-12-31T11:11:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617493187
+updated: '2026-05-16T01:14:50Z'
+generated_by: claude-haiku
+workflow_run: 25948799736
 issue: 2997
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/highcharts/plot-dark.html
+quality_score: 96
 review:
   strengths:
-  - Excellent implementation of event annotation pattern using plotLines with alternating
-    label positions
-  - Clean colorblind-safe palette with blue line and yellow event markers
-  - Proper use of Highcharts datetime axis with appropriate label formatting
-  - Well-structured code following KISS principles with proper Selenium screenshot
-    workflow
-  - Realistic business scenario with 5 distinct milestones across 180-day period
-  weaknesses:
-  - Legend text could be larger for better visibility at full resolution
-  - Could leverage Highcharts native annotation module for more sophisticated event
-    labels
-  - Event marker scatter points could have tooltips showing event details for better
-    interactivity in HTML output
-  image_description: 'The plot shows a time series line chart spanning January 2024
-    to late June 2024. A blue line (#306998) displays "Daily Active Users" data ranging
-    from approximately 10,000 to 16,200 users, showing an overall upward trend with
-    visible seasonality and noise. Five vertical dashed yellow lines (#FFD43B) mark
-    key events: "Feature A Launch" (mid-January), "Marketing Campaign" (late February),
-    "App Redesign" (late March), "Partnership Deal" (late April), and "Mobile Update"
-    (late May). Each event is labeled at the top of the chart with alternating vertical
-    positions to avoid overlap. Yellow circular markers with black outlines appear
-    on the line at each event date. The title reads "line-annotated-events · highcharts
-    · pyplots.ai" with a subtitle "Daily Active Users with Key Milestones". The x-axis
-    shows monthly dates, y-axis shows "Daily Active Users", and a legend at the bottom
-    identifies the two series.'
+  - Excellent theme adaptation with proper application of all style tokens across
+    both light and dark renders
+  - Well-executed event annotation using Highcharts plotLines with alternating label
+    positioning to prevent overlap
+  - Perfect palette compliance with Okabe-Ito colors maintained identically across
+    themes
+  - Professional design with intentional visual hierarchy guiding the viewer through
+    key milestones
+  - 'Clear data storytelling: upward trend with distinct event markers tell a coherent
+    narrative'
+  - Proper handling of large canvas (4800×2700px) with readable text at all sizes
+  - Reproducible data generation with realistic growth pattern including trend, seasonality,
+    and noise
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, correctly themed
+      Chrome: Title, axis labels, tick labels, and event annotations all dark (#1A1A17) and clearly readable with excellent contrast
+      Data: Main line in Okabe-Ito green (#009E73); event markers in orange (#D55E00); both colors distinct and visible
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correctly themed
+      Chrome: Title, axis labels, tick labels, and event annotations all light (#F0EFE8, #B8B7B0) and clearly readable; no dark-on-dark failures
+      Data: Main line in Okabe-Ito green (#009E73); event markers in orange (#D55E00); identical colors to light render confirming proper theme-independence
+      Legibility verdict: PASS ✓
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, labels, and axis text are all clearly readable at large font
-          sizes. Event labels are slightly smaller relative to plot size but still
-          legible.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Event labels use alternating heights to avoid overlap, no text collisions
-          detected.
+        comment: All text properly sized and colored in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Event labels at alternating heights
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width is appropriate, event markers are clearly visible with
-          good contrast. Line could be slightly thicker for optimal visibility.
+        comment: All elements clearly visible and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue line and yellow markers are colorblind-safe, no red-green issues.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, chart fills most of the area. Minor margin
-          optimization possible.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Daily Active Users" are descriptive.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px with nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines, legend is present. Legend could
-          be more prominently sized.
+        comment: Descriptive labels and title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct colors and backgrounds for both themes
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Professional design with sophisticated event visualization
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Styled legend box, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative of growth with milestone markers
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart with event annotations.
+        comment: Correct line plot with event annotations
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, values on Y-axis correctly assigned.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: vertical event lines, markers at event
-          points, text labels, distinct styling.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: lines, labels, markers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show complete range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Datetime X-axis, numeric Y-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Daily Active Users" and "Key Events".
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: `line-annotated-events · highcharts · pyplots.ai`'
+        comment: Correct format with accurate legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, noise, and multiple events. Events are
-          well-distributed across the timeline.
+        comment: Full feature coverage with multiple events
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: User growth metrics with product milestones is a plausible, neutral
-          business scenario.
+        comment: Plausible growth pattern and events
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: User counts from 10K-16K are realistic. Scale is sensible though
-          values are somewhat round.
+        comment: Sensible ranges and distribution
     code_quality:
       score: 10
       max: 10
@@ -174,41 +169,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart setup → series → export.'
+        comment: Simple, straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)` for deterministic output.
+        comment: Uses np.random.seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API.
+        comment: No fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`.
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file output
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses plotLines for event markers, scatter series for event points,
-          datetime axis. Could better leverage Highcharts' native annotation features
-          or tooltips.
+        comment: Proper use of Highcharts API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses plotLines, scatter series, dateTimeLabelFormats
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - publication-ready
