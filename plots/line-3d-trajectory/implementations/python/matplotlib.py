@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2025-05-16
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 88/100 | Created: 2026-05-16
 """
 
 import os
