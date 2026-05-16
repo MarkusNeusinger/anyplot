@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-3d: 3D Contour Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 66/100 | Created: 2026-05-16
@@ -44,20 +44,56 @@ for i in range(len(x)):
         data_points.append({"x": x[i], "y": y[j], "z": Z[j, i]})
 df = pd.DataFrame(data_points)
 
-# Create heatmap showing contour levels via color
-chart = (
+# Extract contour lines at regular intervals by finding grid points near each level
+contour_levels = np.arange(10, 160, 20)  # Contours every 20 units
+contour_tolerance = 8  # Within 8 units of each level
+contour_data = []
+
+for level in contour_levels:
+    # Find all grid points where z is close to this contour level
+    mask = np.abs(Z - level) < contour_tolerance
+    contour_points = np.argwhere(mask)
+    for row, col in contour_points:
+        contour_data.append({"x": x[col], "y": y[row], "z_actual": float(Z[row, col]), "level": float(level)})
+
+contour_df = pd.DataFrame(contour_data) if contour_data else pd.DataFrame()
+
+# Create base heatmap with diverging colormap for better visual distinction
+heatmap = (
     alt.Chart(df)
     .mark_rect()
     .encode(
         x=alt.X("x:Q", title="X Coordinate", scale=alt.Scale(domain=[-6, 6])),
         y=alt.Y("y:Q", title="Y Coordinate", scale=alt.Scale(domain=[-6, 6])),
-        color=alt.Color("z:Q", title="Elevation", scale=alt.Scale(scheme="viridis")),
+        color=alt.Color("z:Q", title="Elevation", scale=alt.Scale(scheme="brownbluegreen")),
         tooltip=["x:Q", "y:Q", alt.Tooltip("z:Q", format=".1f")],
     )
-    .properties(
-        width=1600, height=900, background=PAGE_BG, title=alt.Title("contour-3d · altair · anyplot.ai", fontSize=28)
+    .properties(width=1600, height=900)
+)
+
+# Overlay contour lines for explicit level visualization
+if len(contour_df) > 0:
+    contour_lines = (
+        alt.Chart(contour_df)
+        .mark_point(size=20, opacity=0.5)
+        .encode(
+            x="x:Q",
+            y="y:Q",
+            color=alt.Color("level:Q", scale=alt.Scale(scheme="greys"), legend=alt.Legend(title="Contour Levels")),
+            tooltip=["level:Q"],
+        )
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
+    chart_base = (heatmap + contour_lines).properties(
+        background=PAGE_BG, title=alt.Title("contour-3d · altair · anyplot.ai", fontSize=28)
+    )
+else:
+    chart_base = heatmap.properties(
+        background=PAGE_BG, title=alt.Title("contour-3d · altair · anyplot.ai", fontSize=28)
+    )
+
+# Apply unified theme configuration
+chart = (
+    chart_base.configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
     .configure_axis(
         domainColor=INK_SOFT,
         domainWidth=2,
