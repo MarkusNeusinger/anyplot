@@ -1,12 +1,19 @@
-""" pyplots.ai
+""" anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-07
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 75/100 | Updated: 2026-05-16
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # Maze generation using Depth-First Search (DFS) algorithm
 np.random.seed(42)
@@ -59,17 +66,23 @@ start_y, start_x = 1, 1  # Top-left cell
 goal_y, goal_x = maze_height - 2, maze_width - 2  # Bottom-right cell
 
 # Create figure (square format for maze)
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
 
-# Draw maze - black walls, white passages
-# Invert maze for display: 1 (passage) = white, 0 (wall) = black
-ax.imshow(1 - maze, cmap="binary", interpolation="nearest", aspect="equal")
+# Draw maze - walls and passages with theme-adaptive colors
+# For printable maze: black walls on white passages works in both themes
+# Light: black walls, white passages; Dark: white walls, dark passages
+maze_display = maze.copy().astype(float)
+if THEME == "dark":
+    maze_display = 1 - maze_display
+
+ax.imshow(maze_display, cmap="gray", interpolation="nearest", aspect="equal")
+ax.set_facecolor(PAGE_BG)
 
 # Mark start position with "S"
-ax.text(start_x, start_y, "S", fontsize=28, fontweight="bold", ha="center", va="center", color="#306998")
+ax.text(start_x, start_y, "S", fontsize=28, fontweight="bold", ha="center", va="center", color=INK)
 
 # Mark goal position with "G"
-ax.text(goal_x, goal_y, "G", fontsize=28, fontweight="bold", ha="center", va="center", color="#306998")
+ax.text(goal_x, goal_y, "G", fontsize=28, fontweight="bold", ha="center", va="center", color=INK)
 
 # Remove axes for clean printable appearance
 ax.set_xticks([])
@@ -80,7 +93,7 @@ ax.spines["bottom"].set_visible(False)
 ax.spines["left"].set_visible(False)
 
 # Title
-ax.set_title("maze-printable · matplotlib · pyplots.ai", fontsize=24, pad=20)
+ax.set_title("maze-printable · matplotlib · anyplot.ai", fontsize=24, color=INK, pad=20)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
