@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-16
 """
+
+import os
 
 import altair as alt
 import numpy as np
@@ -10,6 +12,16 @@ import pandas as pd
 from sklearn.datasets import make_moons
 from sklearn.neighbors import KNeighborsClassifier
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - generate two-moon classification dataset
 np.random.seed(42)
@@ -51,8 +63,8 @@ background = (
         y=alt.Y("X2:Q", bin=alt.Bin(maxbins=150), title="Feature X2"),
         color=alt.Color(
             "Class:N",
-            scale=alt.Scale(domain=["Class A", "Class B"], range=["#306998", "#FFD43B"]),
-            legend=alt.Legend(title="Class", titleFontSize=18, labelFontSize=16, orient="right"),
+            scale=alt.Scale(domain=["Class A", "Class B"], range=[OKABE_ITO[0], OKABE_ITO[1]]),
+            legend=alt.Legend(title="Decision Region", titleFontSize=18, labelFontSize=16, orient="right"),
         ),
     )
 )
@@ -65,14 +77,14 @@ correct_points = (
         x=alt.X("X1:Q"),
         y=alt.Y("X2:Q"),
         fill=alt.Color(
-            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=["#306998", "#FFD43B"]), legend=None
+            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=[OKABE_ITO[0], OKABE_ITO[1]]), legend=None
         ),
-        stroke=alt.value("#333333"),
+        stroke=alt.value(INK_SOFT),
         tooltip=["X1:Q", "X2:Q", "Class:N", "Classification:N"],
     )
 )
 
-# Incorrectly classified points (triangles with red stroke)
+# Incorrectly classified points (triangles with orange stroke)
 incorrect_points = (
     alt.Chart(train_df[train_df["Classification"] == "Incorrect"])
     .mark_point(shape="triangle", size=350, strokeWidth=3, filled=True)
@@ -80,9 +92,9 @@ incorrect_points = (
         x=alt.X("X1:Q"),
         y=alt.Y("X2:Q"),
         fill=alt.Color(
-            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=["#306998", "#FFD43B"]), legend=None
+            "Class:N", scale=alt.Scale(domain=["Class A", "Class B"], range=[OKABE_ITO[0], OKABE_ITO[1]]), legend=None
         ),
-        stroke=alt.value("#E63946"),
+        stroke=alt.value(OKABE_ITO[1]),
         tooltip=["X1:Q", "X2:Q", "Class:N", "Classification:N"],
     )
 )
@@ -109,12 +121,30 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("contour-decision-boundary \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title("contour-decision-boundary · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=18,
+        titleFontSize=22,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=16,
+        titleFontSize=18,
+    )
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
