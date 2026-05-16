@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:29:30Z'
-updated: '2026-05-16T10:50:16Z'
+updated: '2026-05-16T10:55:28Z'
 generated_by: claude-haiku
 workflow_run: 25959900860
 issue: 3181
@@ -12,42 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 78
 review:
   strengths:
-  - Theme-adaptive design with explicit color tokens is well-implemented; both renders
-    perfectly readable with zero legibility failures
-  - Comprehensive technical indicator with correct MACD/Signal calculation and realistic
-    stock data
-  - Text sizing explicitly set throughout (title, labels, ticks); no reliance on library
-    defaults
-  - Clean, deterministic code with clear structure; good parameter annotation for
-    domain context
+  - Theme-adaptive styling correctly implemented — backgrounds, text colors, and grid
+    all respond to light/dark themes
+  - All text elements are legible in both renders — title, axis labels, tick labels,
+    legend, and annotations have appropriate sizing and color contrast
+  - 'Complete MACD visualization with all required components: histogram, MACD line,
+    signal line, and zero reference line'
+  - Proper use of plotly API with make_subplots and theme tokens for styling
+  - Realistic data generation with reproducible seed for consistent results
+  - HTML output generated for interactivity in addition to PNG static render
   weaknesses:
-  - 'Histogram colors (CRITICAL): Spec explicitly requires green (positive) and red
-    (negative); implementation uses blue (#0072B2) and purple (#CC79A7) instead, violating
-    spec requirement'
-  - Y-axis label 'MACD Value' lacks units or scale context (should be 'MACD Value
-    (points)' or similar)
-  - Library mastery is generic — does not leverage Plotly's unique strengths like
-    range sliders, custom hover templates, or interactive parameter adjustment
+  - 'Histogram colors violate spec requirement: spec explicitly calls for ''green
+    (positive) and red (negative)'' but implementation uses blue (#0072B2) for positive
+    and reddish-purple (#CC79A7) for negative. Should use #009E73 (green) for positive
+    and #D55E00 (vermillion/orange-red) for negative to match spec.'
+  - Minimal design enhancement beyond functional requirements — default styling without
+    intentional visual hierarchy or aesthetic refinement
+  - No distinctive library features beyond basic plotly API usage
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title 28px centered dark text, axis labels 22px dark, tick labels 18px gray - all readable with good contrast
-      Data: MACD line green (#009E73), Signal line orange (#D55E00) with width=3, histogram bars blue (positive) and purple (negative) at 70% opacity, zero reference line dashed gray
-      Layout: Legend top-left with bordered elevated background, parameter annotation bottom-right, balanced margins, ~60% canvas utilization
-      Legibility verdict: PASS — all text clearly readable, no legibility issues
+      Background: Warm off-white (#FAF8F1) — correct per style guide
+      Chrome: Title, axis labels ("Date", "MACD Value"), tick labels (dates, values) all clearly readable in dark text (#1A1A17) against light background. Legend positioned at top-left with clear labels. Parameters annotation at bottom-right. Grid lines subtle and visible. Zero reference line dashed and visible.
+      Data: MACD line in bluish-green (#009E73, brand color), Signal line in orange (#D55E00). Histogram bars in blue (#0072B2) for positive values and reddish-purple (#CC79A7) for negative values. All markers and lines clearly distinguishable from background.
+      Legibility verdict: PASS — All text is readable; all data elements are distinct and visible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title light (#F0EFE8), axis labels light, tick labels light gray (#B8B7B0) - all readable on dark surface, no dark-on-dark failures
-      Data: MACD line identical green (#009E73), Signal line identical orange (#D55E00), histogram bars identical blue and purple - confirms theme-independent data colors
-      Layout: Legend box changed to dark elevated (#242420) with light border, grid lines adapted to dark theme with light RGBA, all elements visible and distinguishable
-      Legibility verdict: PASS — both renders theme-correct, no readability issues in either theme
+      Background: Warm near-black (#1A1A17) — correct per style guide
+      Chrome: Title, axis labels, and tick labels all clearly readable in light text against dark background. Legend with light text on darker background (#242420). Zero reference line visible. Grid lines subtle but visible.
+      Data: MACD line, Signal line, and histogram bars are identical colors to light render (only chrome flipped). No "dark-on-dark" failures detected.
+      Legibility verdict: PASS — All text is readable against dark background; all data colors remain distinct.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -55,76 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes
+        comment: Title, axis labels, tick labels all readable in both themes with
+          appropriate sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend, axis labels, tick labels all clearly
-          spaced
+        comment: No text collisions or overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram at 70% opacity, lines at width=3; 115 data points appropriately
-          sized
+        comment: All MACD, signal, histogram, and reference line elements clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors have good contrast; blue and purple distinguishable;
-          no red-green sole signal
+        comment: Adequate contrast; Okabe-Ito palette used
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas; margins l=100 r=60 t=100 b=80; balanced
-          whitespace
+        comment: Good proportions; margins adequate; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Date is descriptive; MACD Value lacks units (should indicate scale/points)
+        passed: true
+        comment: Descriptive title 'indicator-macd · plotly · anyplot.ai'; axis labels
+          'Date' and 'MACD Value'; parameters noted
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'MACD #009E73 and Signal #D55E00 are Okabe-Ito correct; BUT histogram
-          colors violate spec (should be green/red, not blue/purple)'
+        passed: true
+        comment: 'MACD uses #009E73 (brand, first series); backgrounds are #FAF8F1
+          (light) and #1A1A17 (dark); theme rendering correct'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Theme-adaptive tokens well-executed; thoughtful design but standard
-          defaults, not exceptional
+        comment: Generic default styling; no custom palette or intentional design
+          enhancement
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Legend nicely bordered; grid subtle; whitespace generous; some refinement
-          but library defaults
+        comment: Minimal customization; standard axis layout without visual refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Visual hierarchy via line emphasis and histogram layering; zero line
-          aids interpretation; good technical context but minimal insight emphasis
+        comment: Adequate functional visualization but no visual hierarchy or emphasis
+          technique
     spec_compliance:
-      score: 13
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -132,28 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MACD chart with histogram, MACD line, Signal line, zero reference
+        comment: Correct MACD technical indicator chart with histogram, MACD line,
+          and signal line
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: 'CRITICAL: Histogram colors do not match spec (spec: green/red; impl:
-          blue/purple). MACD/Signal correct. Zero line present. Parameter annotation
-          helpful.'
+        comment: 'CRITICAL: Histogram colors do not match spec. Spec requires ''green
+          (positive) and red (negative)'' but implementation uses blue and reddish-purple.
+          Other features (zero line, parameter notes) present.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis Date, Y-axis MACD Value; all data visible and correctly mapped
+        comment: X/Y axes correct; all data visible; 115 data points adequate for
+          pattern recognition
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'indicator-macd · plotly · anyplot.ai' perfect format; legend
-          labels accurate
+        comment: Title format correct; legend labels match components
     data_quality:
       score: 15
       max: 15
@@ -163,22 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: positive/negative histogram, MACD/Signal crossovers,
-          trend reversals; 115 data points'
+        comment: 'All MACD components shown: MACD, signal, histogram, zero line'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price from realistic lognormal returns; correct MACD calculation;
-          Aug-Dec 2025 plausible
+        comment: Realistic stock price simulation with geometric Brownian motion;
+          150 trading days from June 2025
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MACD values -2.5 to +1.5 realistic; standard EMA(12,26,9) parameters;
-          no impossible proportions
+        comment: MACD values (-2.5 to +1.5) sensible for momentum indicator
     code_quality:
       score: 10
       max: 10
@@ -188,59 +183,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme → data → EMA → figure → save; no functions/classes'
+        comment: No functions or classes; direct imperative code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, plotly, os all used; no dead imports
+        comment: 'Only necessary imports: os, numpy, pandas, plotly'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear Pythonic code; appropriate complexity; no over-engineering
+        comment: No fake UI or simulated interactivity; code structure is appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Outputs plot-{THEME}.png and plot-{THEME}.html with correct naming
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: make_subplots, go.Bar/go.Scatter, add_hline usage is correct but
-          somewhat standard patterns
+        comment: Good use of make_subplots and add_trace; follows plotly conventions;
+          could leverage more advanced features
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses basic Plotly features; does not leverage unique strengths (range
-          sliders, selection, animations, custom callbacks)
+        comment: Standard plotly API usage without leveraging distinctive features
+          like custom js callbacks or advanced interactivity
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
   - annotations
   patterns:
   - data-generation
   - time-series
   dataprep:
   - rolling-window
-  styling:
-  - theme-adaptive
+  styling: []
