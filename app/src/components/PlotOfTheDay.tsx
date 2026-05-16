@@ -101,24 +101,33 @@ export function PlotOfTheDay() {
           gap: 0.75,
         }}>
           <Typography sx={{ fontFamily: mono, fontSize: fontSize.xs, color: colors.primary, fontWeight: 600 }}>$</Typography>
-          <Typography
-            component="a"
-            href={`${GITHUB_URL}/blob/main/plots/${data.spec_id}/implementations/${data.language}/${data.library_id}.py`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              trackEvent('nav_click', { source: 'potd_source_link', target: 'github', spec: data.spec_id, library: data.library_id });
-            }}
-            sx={{
-              fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText,
-              flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              textDecoration: 'none',
-              '&:hover': { color: colors.primary },
-            }}
-          >
-            python plots/{data.spec_id}/{data.library_id}.py
-          </Typography>
+          {(() => {
+            // Per-language file extension + runner command. Anyplot ships Python
+            // for nine libraries and R for ggplot2; the chip mimics what a user
+            // would actually type into a shell, so the runner label flips too.
+            const ext = data.language === 'r' ? '.R' : '.py';
+            const runner = data.language === 'r' ? 'Rscript' : 'python';
+            return (
+              <Typography
+                component="a"
+                href={`${GITHUB_URL}/blob/main/plots/${data.spec_id}/implementations/${data.language}/${data.library_id}${ext}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  trackEvent('nav_click', { source: 'potd_source_link', target: 'github', spec: data.spec_id, library: data.library_id });
+                }}
+                sx={{
+                  fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText,
+                  flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  textDecoration: 'none',
+                  '&:hover': { color: colors.primary },
+                }}
+              >
+                {runner} plots/{data.spec_id}/{data.library_id}{ext}
+              </Typography>
+            );
+          })()}
           <IconButton
             onClick={handleDismiss}
             size="small"
