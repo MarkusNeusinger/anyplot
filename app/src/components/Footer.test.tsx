@@ -8,8 +8,8 @@ describe('Footer', () => {
 
     expect(screen.getByText('github')).toBeInTheDocument();
     expect(screen.getByText('report')).toBeInTheDocument();
-    expect(screen.getByText('.about()')).toBeInTheDocument();
-    expect(screen.getByText('.legal()')).toBeInTheDocument();
+    expect(screen.getByText('about')).toBeInTheDocument();
+    expect(screen.getByText('legal')).toBeInTheDocument();
   });
 
   it('renders markus neusinger link', () => {
@@ -59,7 +59,7 @@ describe('Footer', () => {
 
     render(<Footer onTrackEvent={onTrackEvent} />);
 
-    await user.click(screen.getByText('.about()'));
+    await user.click(screen.getByText('about'));
     expect(onTrackEvent).toHaveBeenCalledWith('internal_link', expect.objectContaining({ destination: 'about' }));
   });
 
@@ -69,7 +69,7 @@ describe('Footer', () => {
 
     render(<Footer onTrackEvent={onTrackEvent} />);
 
-    await user.click(screen.getByText('.legal()'));
+    await user.click(screen.getByText('legal'));
     expect(onTrackEvent).toHaveBeenCalledWith('internal_link', expect.objectContaining({ destination: 'legal' }));
   });
 
@@ -107,14 +107,14 @@ describe('Footer', () => {
   it('renders about as internal router link to /about', () => {
     render(<Footer />);
 
-    const aboutLink = screen.getByText('.about()').closest('a');
+    const aboutLink = screen.getByText('about').closest('a');
     expect(aboutLink).toHaveAttribute('href', '/about');
   });
 
   it('renders legal as internal router link to /legal', () => {
     render(<Footer />);
 
-    const legalLink = screen.getByText('.legal()').closest('a');
+    const legalLink = screen.getByText('legal').closest('a');
     expect(legalLink).toHaveAttribute('href', '/legal');
   });
 });
