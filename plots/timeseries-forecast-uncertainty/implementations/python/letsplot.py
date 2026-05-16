@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-05-16
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-16
 """
 # ruff: noqa: F405
 
