@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-16
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Created: 2026-05-16
 """
 
 import sys
