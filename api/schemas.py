@@ -150,4 +150,5 @@ class StatsResponse(BaseModel):
     specs: int
     plots: int
     libraries: int
+    languages: int = 0
     lines_of_code: int = 0
