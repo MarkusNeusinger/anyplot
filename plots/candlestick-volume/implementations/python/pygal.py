@@ -1,7 +1,7 @@
 """ anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 40/100 | Created: 2026-05-16
+Quality: 68/100 | Created: 2026-05-16
 """
 
 import os

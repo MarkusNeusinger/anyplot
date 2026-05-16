@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: candlestick-volume
 created: '2026-05-16T05:28:59Z'
-updated: '2026-05-16T05:38:45Z'
+updated: '2026-05-16T05:45:31Z'
 generated_by: claude-haiku
 workflow_run: 25953834922
 issue: 3068
@@ -12,140 +12,160 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/pygal/plot-dark.html
-quality_score: 40
+quality_score: 68
 review:
   strengths:
-  - Clean code structure with proper seeding and imports
-  - Theme colors and backgrounds correctly applied to both renders
-  - Both light and dark renders display correctly with excellent legibility
-  - Realistic, neutral data context (stock trading scenario)
-  - Attempts to represent multiple OHLC aspects through series composition
+  - Theme adaptation working correctly - both light and dark renders are readable
+    with proper background colors and text colors
+  - 'Palette compliance excellent - Okabe-Ito colors (#009E73, #D55E00, #56B4E9) correctly
+    applied and identical across themes'
+  - Text legibility perfect - font sizes explicitly set (title 28px, labels 22px,
+    ticks 18px) and all clearly readable
+  - Code quality excellent - clean structure with proper seed setting for reproducibility,
+    no fake functionality
+  - Data presentation shows all OHLC components (open/close/high/low) and volume with
+    neutral, plausible Tesla stock context
   weaknesses:
-  - 'CRITICAL: Not a candlestick chart - uses scatter/line instead of proper candlestick
-    boxes with OHLC visualization'
-  - Volume not shown as separate pane - mixed into same axis as prices, destroying
-    clarity
-  - Title format incorrect - includes 'Tesla Stock' instead of just spec-id
-  - Volume representation missing up/down coloring scheme required by spec
-  - High/Low lines too subtle and barely visible
-  - Too many series (#5) creating visual clutter, legend confusion
-  - No visual hierarchy or design sophistication
-  - Fundamentally needs architectural redesign - current XY approach cannot implement
-    true candlestick + dual-pane structure
+  - 'SC-01 CRITICAL: Not a candlestick chart - spec requires OHLC candlesticks with
+    rectangular bodies showing open/close and vertical wicks showing high/low. Current
+    implementation uses dots and lines instead of proper candlestick visual format.'
+  - 'SC-02 CRITICAL: Missing dual-pane layout - spec requires separate price pane
+    (70-75% height) and volume pane (25-30% height). Currently volume is scaled into
+    same Y-axis as price, making the relationship unclear.'
+  - 'SC-02 CRITICAL: Missing crosshair/cursor feature - spec explicitly requires ''crosshair
+    or cursor that spans both panes for precise price/volume reading''.'
+  - 'SC-03: Data mapping confused - volume bars should be in dedicated pane with separate
+    scale, not normalized to price scale. Price and volume on same axis obscures both
+    datasets.'
+  - 'DE-01: Generic styling - while correctly configured with Okabe-Ito palette, the
+    overall visualization design is generic (looks like library defaults) with no
+    design sophistication beyond correct color choices.'
+  - 'DE-03: No visual hierarchy - visualization displays data but doesn''t create
+    a compelling candlestick story. Up/down candle distinction is subtle (just colored
+    dots), missing visual emphasis.'
+  - 'LM-02: No distinctive pygal features - uses basic XY scatter, doesn''t leverage
+    pygal-specific capabilities for this specialized chart type.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title, axis labels, tick labels all dark and clearly readable
-      Data: Green scatter points (up days), orange scatter points (down days), gray lines (High/Low), blue line (Volume Index), green volume bars below. First series not brand green (#009E73).
-      Layout: Single chart area with attempted dual representation (volume bars at bottom)
-      Legibility verdict: PASS - all text readable
+      Background: Warm off-white (#FAF8F1) - correctly themed ✓
+      Chrome: Title and axis labels clearly readable in dark text; y-axis guides subtle but visible
+      Data: Two visual regions - upper shows line traces (high/low in muted color) with colored dots for open/close (green #009E73 for up, orange #D55E00 for down); lower shows volume index as sky blue dots. Okabe-Ito colors correctly applied to data.
+      Legibility verdict: PASS - all elements readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title, axis labels, tick labels all light-colored and clearly readable. No dark-on-dark failures.
-      Data: Data colors identical to light render (green, orange, gray, blue). Backgrounds properly theme-adapted.
-      Layout: Identical structure to light render
-      Legibility verdict: PASS - all text readable on dark background
-
-    Both renders pass legibility checks. Data colors are consistent between themes. However, the fundamental visualization approach (scatter/line instead of candlestick boxes) fails to meet specification requirements regardless of rendering quality.
+      Background: Warm near-black (#1A1A17) - correctly themed ✓
+      Chrome: Title, axis labels, tick marks all readable in light text (#F0EFE8); no dark-on-dark failures
+      Data: Colors identical to light render - green, orange, blue unchanged. Only background and chrome flipped.
+      Legibility verdict: PASS - all elements readable with no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable but not all explicitly sized
+        comment: Font sizes explicitly set and all text perfectly readable in both
+          light and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text elements, legend properly positioned
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: false
-        comment: Points visible but small; High/Low lines too subtle
+        comment: Markers visible but small relative to 4800×2700 canvas; dots at bottom
+          particularly undersized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe palette
+        comment: Okabe-Ito palette safe for colorblind viewers; good contrast between
+          series
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Adequate space use but layout could be optimized
+        passed: true
+        comment: Good utilization of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Labels present but lack units and proper format
+        passed: true
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito used but first series not #009E73; backgrounds correct'
+        passed: true
+        comment: 'Perfect compliance: Okabe-Ito colors, correct backgrounds (#FAF8F1
+          light, #1A1A17 dark), theme-adaptive text, identical data colors across
+          themes'
     design_excellence:
-      score: 6
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults, no design polish
+        comment: Well-configured defaults but lacks design thought or custom refinement
+          beyond palette choice
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization, default grid
+        comment: Some refinement (subtle grid, style customization) but mostly library
+          defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Raw data display, no visual hierarchy
+        comment: Data displayed without clear candlestick/volume story; no visual
+          hierarchy emphasizing price action or volume relationships
     spec_compliance:
-      score: 4
+      score: 6
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 2
         max: 5
         passed: false
-        comment: 'CRITICAL: Not a candlestick chart - uses scatter/line instead of
-          candlestick boxes'
+        comment: 'CRITICAL FAILURE: Not a proper candlestick chart. Shows scatter
+          plot with dots/lines instead of OHLC rectangular bodies and wicks.'
       - id: SC-02
         name: Required Features
         score: 1
         max: 4
         passed: false
-        comment: Missing proper OHLC visualization and dual-pane layout
+        comment: 'CRITICAL: Missing dual-pane layout (70/30 split), volume bars in
+          separate pane, and crosshair/cursor spanning panes. Only shows simple XY
+          plot.'
       - id: SC-03
         name: Data Mapping
-        score: 2
-        max: 3
-        passed: false
-        comment: Data mapped but not candlestick-correct
-      - id: SC-04
-        name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Title format incorrect (includes 'Tesla Stock')
+        comment: 'Significant mapping issues: price and volume on same Y-axis creates
+          confusion. Should have separate scales and panes.'
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format acceptable; legend labels match data series
     data_quality:
       score: 12
       max: 15
@@ -154,20 +174,22 @@ review:
         name: Feature Coverage
         score: 4
         max: 6
-        passed: false
-        comment: Shows price variation but candlestick structure missing
+        passed: true
+        comment: Shows up/down days, high/low ranges, volume; covers main aspects
+          but not in proper candlestick context
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock trading scenario
+        comment: Tesla stock is real, neutral, and comprehensible context
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
-        passed: false
-        comment: Plausible but volume scaling confusing
+        passed: true
+        comment: Stock prices and volumes plausible; slight oddity in volume normalization
+          to price scale
     code_quality:
       score: 10
       max: 10
@@ -177,31 +199,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow
+        comment: Imports → Data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: 'Correct output format: plot-light.png, plot-dark.png, and HTML files'
     library_mastery:
       score: 4
       max: 10
@@ -210,14 +232,16 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses pygal correctly but basic patterns
+        passed: true
+        comment: Correct pygal usage with Style object for theming, but doesn't leverage
+          advanced patterns
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic XY chart usage
+        comment: Basic XY scatter usage; doesn't explore pygal-specific capabilities
+          or distinctive features for specialized charts
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -225,5 +249,6 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling: []
