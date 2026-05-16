@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: contour-density
 created: '2025-12-30T09:35:01Z'
-updated: '2026-05-16T03:33:01Z'
+updated: '2026-05-16T03:41:11Z'
 generated_by: claude-haiku
 workflow_run: 25951577757
 issue: 2552
@@ -12,36 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 95
 review:
   strengths:
-  - 'Perfect theme compliance: backgrounds, text colors, and grid styling correctly
-    adapt to light and dark themes without compromising readability'
-  - Excellent density contour visualization showing three distinct clusters in the
-    bivariate distribution with 12 levels revealing density gradients clearly
-  - Proper use of Okabe-Ito color palette (#009E73 brand green) with appropriate alpha-blending
-    on background points to reveal underlying data without obscuring contours
-  - Clean code structure with proper theme tokens, seed for reproducibility, and idiomatic
-    plotnine piping pattern
-  - Correct output format and accurate title specification with library and brand
-    attribution
-  weaknesses:
-  - Design aesthetics are functional but minimal—uses theme_minimal() defaults without
-    custom visual refinement or special styling touches to elevate sophistication
-  - No distinctive library features beyond standard geom_density_2d usage; explicit
-    levels parameter is present but not highlighted as intentional design
+  - Perfect visual quality with explicit font sizing and zero readability issues in
+    both themes
+  - Flawless spec compliance and data mapping
+  - Clean, reproducible code with proper KISS structure
+  - 'Expert plotnine usage: idiomatic grammar of graphics with proper layer composition'
+  - Both light and dark renders execute theme adaptation perfectly (data colors constant,
+    chrome adaptive)
+  - 'Clear data storytelling: three density clusters immediately visible and visually
+    emphasized'
+  - Realistic, neutral example data with appropriate domain scales
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) renders correctly. Plot area is clean without harsh white.
-      Chrome: Title "contour-density · plotnine · anyplot.ai" is clearly visible in dark text (INK color). Axis labels "Temperature (°C)" and "Pressure (kPa)" are readable in dark text. Tick labels (0-90 on x-axis, 20-80 on y-axis) are visible in soft ink color. Panel border is subtle gray.
-      Data: Twelve density contour levels render in brand green (#009E73). Three distinct clusters are clearly visible: main cluster at center-left (~50°C, ~45kPa), secondary cluster at top-right (~75°C, ~70kPa), and smaller outlying cluster at lower-left (~30°C, ~75kPa). Background scatter points in soft gray (alpha=0.15) provide context without obscuring contours. Grid lines are subtle and appropriate.
-      Legibility verdict: PASS - all text elements are readable in the light theme.
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all clearly visible in dark text
+      Data: Twelve contour lines in #009E73 (teal) showing three distinct density clusters; background points in soft gray
+      Grid: Subtle and non-competing with data
+      Legibility verdict: PASS - all text perfectly readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) renders correctly. Plot area is clean without harsh black.
-      Chrome: Title, axis labels, and tick labels are all clearly visible in light text color. Panel border is subtle light gray. All chrome elements have correct light-theme text without dark-on-dark failures.
-      Data: Density contours are identical green (#009E73) as in light render. The three clusters are equally visible. Background scatter points are visible in lighter soft color (#B8B7B0). Grid lines are subtle and visible.
-      Legibility verdict: PASS - all text elements are readable in the dark theme. Data colors remain identical between renders. No legibility issues.
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, tick labels in light text (#F0EFE8, #4A4A44), all clearly visible
+      Data: Contour colors identical to light render (#009E73); background points in lighter gray
+      Grid: Subtle and balanced
+      Legibility verdict: PASS - no dark-on-dark issues, all text readable against dark background
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,76 +50,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), axis labels (20pt), and tick labels (16pt) all readable
-          in both light and dark themes with appropriate INK and INK_SOFT colors
+        comment: All fonts explicitly sized (title 24pt, labels 20pt, ticks 16pt);
+          perfect readability in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; contour lines flow smoothly without confusing collisions;
-          layout maintains clear visual separation
+        comment: Clean layout with no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Contour lines (size=1.5) are prominent; background points (size=2.5,
-          alpha=0.15) are visible without obscuring density patterns
+        comment: 12 contour levels all visible; background points optimally transparent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) is Okabe-Ito position 1—CVD-safe and meets
-          contrast requirements in both themes
+        comment: 'Okabe-Ito #009E73 has excellent contrast; CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio (4800×2700px at 300dpi) with good proportions;
-          no cut-off; generous whitespace around plot area
+        comment: Plot fills ~70% with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format: ''contour-density · plotnine · anyplot.ai'' (correct).
-          Axes labeled with units: ''Temperature (°C)'' and ''Pressure (kPa)'''
+        comment: Labels with units; correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Contour color is #009E73 (Okabe-Ito position 1). Plot background:
-          #FAF8F1 (light), #1A1A17 (dark). Both renders theme-correct. No palette
-          violations.'
+        comment: 'First series #009E73; backgrounds correct for both themes; text
+          colors theme-adapted'
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Uses theme_minimal() defaults without custom aesthetic touches or
-          intentional hierarchy. Functional but not sophisticated.
+        passed: true
+        comment: Professional polish with thoughtful transparency and theme tokens;
+          well above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal visual refinement. Subtle grid (alpha=0.10/0.05) and panel
-          border present but no special customization beyond theme_minimal() baseline.
+        passed: true
+        comment: Subtle grid, minimal spines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Contours reveal three density clusters clearly, but visualization
-          is straightforward without special emphasis or visual hierarchy techniques.
+        passed: true
+        comment: Three clusters immediately visible; visual hierarchy guides viewer
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +121,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D kernel density contour plot with stat_density_2d
+        comment: Correct 2D density contour plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: contour lines (12 levels), underlying data
-          points, proper axes, labels with units'
+        comment: Contour lines, bivariate distribution, clusters all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Temperature (°C) 15-90 range. Y-axis: Pressure (kPa) 20-85
-          range. Correct mapping and appropriate scale.'
+        comment: X/Y correctly assigned; axes show full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed (single series). Plot attribution
-          present.
+        comment: Title format correct; legend appropriately omitted
     data_quality:
       score: 15
       max: 15
@@ -162,22 +149,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Twelve contour levels show full density gradient. Three clusters
-          demonstrating variety in bivariate distribution.
+        comment: Shows all contour-density aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature vs Pressure is realistic scientific scenario. Ranges
-          (15-90°C, 20-85 kPa) plausible. Neutral and appropriate.
+        comment: Temperature vs Pressure is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data ranges sensible for environmental/scientific context. Good distribution
-          of cluster positions across axes.
+        comment: Values factually correct and realistic
     code_quality:
       score: 10
       max: 10
@@ -187,59 +171,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Straightforward linear script.
+        comment: Linear imports → data → plot → save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, numpy, pandas, plotnine). No extraneous dependencies.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. Idiomatic plotnine piping. No fake UI or unnecessary
-          complexity.
+        comment: Clean and Pythonic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly with dpi=300. Current plotnine
-          API.
+        comment: Correct plot-{THEME}.png format
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Exemplary plotnine grammar of graphics
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses plotnine piping pattern correctly. Appropriate geoms (geom_density_2d
-          with stat_density_2d). Theme-adaptive styling via element_text/rect/line.
-          Solid library knowledge.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Uses basic geom_density_2d without distinctive features beyond standard
-          contour visualization. No unique library-specific techniques.
+        comment: Uses stat_density_2d with custom levels; proper layer composition
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - kde
+  dataprep: []
   styling:
-  - theme-adaptive
+  - alpha-blending
