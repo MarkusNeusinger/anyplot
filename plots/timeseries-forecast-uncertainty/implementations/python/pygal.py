@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 88/100 | Created: 2026-05-16
+Quality: 92/100 | Created: 2026-05-16
 """
 
 import os
