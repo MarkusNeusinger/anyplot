@@ -35,11 +35,17 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Local imports must come AFTER sys.path is patched so the script remains
 # runnable from any working directory (Copilot review: PR #5414).
 from core.config import settings  # noqa: E402
+from core.constants import LANGUAGE_FILE_EXTENSIONS, LIBRARIES_METADATA  # noqa: E402
 
-SUPPORTED_LIBRARIES = [
-    "matplotlib", "seaborn", "plotly", "bokeh", "altair",
-    "plotnine", "pygal", "highcharts", "letsplot",
-]
+# This local evaluator only supports Python AST + python-script execution.
+# Non-Python libraries (currently just ggplot2) skip in main() with a clear
+# pointer at the CI workflow.
+SUPPORTED_LIBRARIES = [lib["id"] for lib in LIBRARIES_METADATA if lib["language_id"] == "python"]
+
+# Reverse lookup: library_id -> language_id, used for path resolution and the
+# Python-only skip. Falls back to "python" for legacy callers that pass a
+# library not in LIBRARIES_METADATA (e.g. local test fixtures).
+LIBRARY_LANGUAGE = {lib["id"]: lib["language_id"] for lib in LIBRARIES_METADATA}
 
 # Library-specific plot function patterns
 LIBRARY_PATTERNS = {
@@ -137,9 +143,14 @@ def get_plot_paths(spec_id: str, library: str, language: str = "python") -> dict
     """Get all relevant paths for a plot implementation."""
     plots_dir = PROJECT_ROOT / "plots" / spec_id
     impl_dir = plots_dir / "implementations" / language
+    # File extension comes from the canonical LANGUAGE_FILE_EXTENSIONS mapping
+    # in core.constants — the single source of truth shared with
+    # automation/scripts/sync_to_postgres.py. Falls back to ".py" so callers
+    # passing an unknown language id don't crash here.
+    ext = LANGUAGE_FILE_EXTENSIONS.get(language, ".py")
     return {
         "spec": plots_dir / "specification.md",
-        "impl": impl_dir / f"{library}.py",
+        "impl": impl_dir / f"{library}{ext}",
         "metadata": plots_dir / "metadata" / language / f"{library}.yaml",
         "image": impl_dir / "plot.png",
         "image_light": impl_dir / "plot-light.png",
@@ -585,7 +596,18 @@ def main():
         print(f"Evaluating: {args.spec_id} / {library}")
         print("="*60)
 
-        paths = get_plot_paths(args.spec_id, library)
+        # Local evaluator currently only supports Python implementations
+        # (AR-01 parses a Python AST, AR-02 runs `python script.py`). Skip any
+        # non-Python library based on its declared language in
+        # LIBRARIES_METADATA so this automatically covers future R/JS/Julia
+        # entries without another code edit. Direct users at the CI workflow.
+        library_language = LIBRARY_LANGUAGE.get(library, "python")
+        if library_language != "python":
+            print(f"⚠ Skipping {library}: this local evaluator is Python-only (language={library_language}).")
+            print(f"  Use the CI workflow instead: gh workflow run impl-generate.yml -f library={library} -f specification_id={args.spec_id}")
+            continue
+
+        paths = get_plot_paths(args.spec_id, library, language=library_language)
 
         if not paths["impl"].exists():
             print(f"⚠ Skipping: implementation not found")

@@ -1,0 +1,70 @@
+name: "Setup R + ggplot2"
+description: >-
+  Installs R, the system libraries needed for headless plot rendering, and the
+  package set used by anyplot's R implementations (ggplot2 + tidyverse helpers
+  + ragg device + dataset packages). Packages are restored from renv.lock at
+  the repository root so versions stay pinned.
+inputs:
+  r-version:
+    description: "R version to install"
+    required: false
+    default: "4.4.1"
+  working-directory:
+    description: "Directory containing renv.lock (defaults to the repo root)"
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install R
+      # r-lib/actions ships every sub-action from a single repo and tags them together;
+      # `@v2` is the maintained moving tag. Dependabot will pin to a SHA on first run.
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: ${{ inputs.r-version }}
+        use-public-rspm: true
+
+    # ragg needs libfreetype/libpng/libtiff/libjpeg headers; systemfonts needs
+    # libfontconfig1. These are pre-built on ubuntu-latest as binaries via
+    # Posit Package Manager, but keeping the apt fallback makes the action
+    # robust against future runner-image changes.
+    - name: Install system dependencies for ragg / systemfonts
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libcurl4-openssl-dev \
+          libssl-dev \
+          libxml2-dev \
+          libfontconfig1-dev \
+          libfreetype-dev \
+          libpng-dev \
+          libtiff5-dev \
+          libjpeg-dev \
+          libharfbuzz-dev \
+          libfribidi-dev
+
+    - name: Install R packages from renv.lock
+      uses: r-lib/actions/setup-renv@v2
+      with:
+        working-directory: ${{ inputs.working-directory }}
+      env:
+        # renv refuses to restore when per-package `Hash` fields are missing.
+        # The lockfile here is hand-written and intentionally omits hashes —
+        # reproducibility comes from the pinned Posit RSPM snapshot URL in
+        # renv.lock instead. Once a successful CI run populates hashes via
+        # renv::snapshot(), this flag can be dropped.
+        RENV_CONFIG_INSTALL_HASHES: "FALSE"
+
+    - name: Smoke-test ggplot2 renders a PNG
+      shell: bash
+      run: |
+        Rscript -e '
+          library(ggplot2); library(ragg)
+          tmp <- tempfile(fileext = ".png")
+          ggsave(tmp, ggplot(mtcars, aes(wt, mpg)) + geom_point(),
+                 device = ragg::agg_png, width = 4, height = 3, dpi = 100)
+          stopifnot(file.exists(tmp), file.info(tmp)$size > 0)
+          cat("ok: ", tmp, " (", file.info(tmp)$size, " bytes)\n", sep = "")
+        '

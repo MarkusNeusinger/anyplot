@@ -14,11 +14,11 @@ from __future__ import annotations
 
 # Canonical set of all supported plotting libraries (IDs)
 SUPPORTED_LIBRARIES = frozenset(
-    ["altair", "bokeh", "highcharts", "letsplot", "matplotlib", "plotly", "plotnine", "pygal", "seaborn"]
+    ["altair", "bokeh", "ggplot2", "highcharts", "letsplot", "matplotlib", "plotly", "plotnine", "pygal", "seaborn"]
 )
 
 # Supported programming languages
-SUPPORTED_LANGUAGES = frozenset(["python"])
+SUPPORTED_LANGUAGES = frozenset(["python", "r"])
 
 # Language metadata for database seeding (analog to LIBRARIES_METADATA)
 LANGUAGES_METADATA = [
@@ -29,7 +29,15 @@ LANGUAGES_METADATA = [
         "runtime_version": "3.13",
         "documentation_url": "https://www.python.org",
         "description": "The default language for anyplot plot implementations.",
-    }
+    },
+    {
+        "id": "r",
+        "name": "R",
+        "file_extension": ".R",
+        "runtime_version": "4.4",
+        "documentation_url": "https://www.r-project.org",
+        "description": "R is a statistical computing environment widely used in academia, biotech, and finance research.",
+    },
 ]
 
 # Map from language id → file extension used by sync_to_postgres for discovery
@@ -52,6 +60,14 @@ LIBRARIES_METADATA = [
         "version": "3.4.0",
         "documentation_url": "https://bokeh.org",
         "description": "Interactive visualization library that makes it simple to create common plots, while also handling custom or specialized use-cases. Work in Python close to all the PyData tools you're already familiar with.",
+    },
+    {
+        "id": "ggplot2",
+        "name": "ggplot2",
+        "language_id": "r",
+        "version": "3.5.1",
+        "documentation_url": "https://ggplot2.tidyverse.org",
+        "description": "The de facto standard for data visualization in R. ggplot2 is an implementation of the grammar of graphics: declarative, layered charts that compose with a small set of primitives (geoms, aesthetics, scales, facets, themes).",
     },
     {
         "id": "highcharts",

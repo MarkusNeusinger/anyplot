@@ -53,6 +53,7 @@ def mock_spec():
     mock_impl.created = None
     mock_impl.generated_by = "claude-opus-4"
     mock_impl.python_version = "3.13"
+    mock_impl.language_version = "3.13"
     mock_impl.library_version = "3.10.0"
     mock_impl.review_strengths = ["Clean code"]
     mock_impl.review_weaknesses = ["Could improve"]

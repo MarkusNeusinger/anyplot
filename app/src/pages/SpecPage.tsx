@@ -355,7 +355,7 @@ export function SpecPage() {
           '@type': 'SoftwareSourceCode',
           name: `${specData.title} (${selectedLibrary})`,
           description: specData.description,
-          programmingLanguage: urlLanguage === 'python' ? 'Python' : urlLanguage,
+          programmingLanguage: { python: 'Python', r: 'R' }[urlLanguage ?? ''] ?? urlLanguage,
           codeSampleType: 'code snippet',
           codeRepository: 'https://github.com/MarkusNeusinger/anyplot',
           url: canonical,
@@ -532,6 +532,7 @@ export function SpecPage() {
               criteriaChecklist={currentImpl?.review_criteria_checklist}
               generatedAt={currentImpl?.generated_at}
               libraryId={selectedLibrary || ''}
+              language={currentImpl?.language || urlLanguage || 'python'}
               onTrackEvent={trackEvent}
               highlightedTags={highlightedTags}
             />

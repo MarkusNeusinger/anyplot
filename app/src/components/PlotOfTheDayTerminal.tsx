@@ -42,9 +42,12 @@ export function PlotOfTheDayTerminal({
   const previewUrl = selectPreviewUrl(potd, isDark);
   if (!potd || !previewUrl) return null;
 
-  const displayFilename = `plots/${potd.spec_id}/${potd.library_id}.py`;
+  // File extension follows the implementation language; ggplot2 ships as .R,
+  // everything else as .py.
+  const ext = potd.language === 'r' ? '.R' : '.py';
+  const displayFilename = `plots/${potd.spec_id}/${potd.library_id}${ext}`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);
-  const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}.py`;
+  const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}${ext}`;
 
   return (
     <Box
@@ -100,8 +103,8 @@ export function PlotOfTheDayTerminal({
             textOverflow: 'ellipsis',
             color: 'inherit',
             // Use text-decoration rather than border-bottom so the underline
-            // only covers the glyphs (ending at `.py`) and not the stretched
-            // flex child.
+            // only covers the glyphs (ending at the filename) and not the
+            // stretched flex child.
             textDecoration: 'none',
             transition: 'color 0.2s, text-decoration-color 0.2s',
             '&:hover': { color: colors.primary, textDecoration: 'underline dotted', textUnderlineOffset: '3px' },

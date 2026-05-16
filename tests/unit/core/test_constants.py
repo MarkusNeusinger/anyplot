@@ -7,6 +7,8 @@ Tests the centralized constants and helper functions.
 from core.constants import (
     ATTEMPT_LABELS,
     INTERACTIVE_LIBRARIES,
+    LANGUAGE_FILE_EXTENSIONS,
+    LANGUAGES_METADATA,
     LIBRARIES_METADATA,
     LIBRARY_LABELS,
     QUALITY_LABELS,
@@ -16,6 +18,7 @@ from core.constants import (
     QUALITY_THRESHOLD_GOOD,
     QUALITY_THRESHOLD_NEEDS_WORK,
     STATUS_LABELS,
+    SUPPORTED_LANGUAGES,
     SUPPORTED_LIBRARIES,
     get_library_label,
     is_interactive_library,
@@ -26,13 +29,20 @@ from core.constants import (
 class TestSupportedLibraries:
     """Tests for SUPPORTED_LIBRARIES constant."""
 
-    def test_contains_all_nine_libraries(self) -> None:
-        """Should contain exactly 9 supported libraries."""
-        assert len(SUPPORTED_LIBRARIES) == 9
-
     def test_contains_expected_libraries(self) -> None:
-        """Should contain all expected library IDs."""
-        expected = {"altair", "bokeh", "highcharts", "letsplot", "matplotlib", "plotly", "plotnine", "pygal", "seaborn"}
+        """Should contain exactly the expected catalog of library IDs (9 Python + ggplot2)."""
+        expected = {
+            "altair",
+            "bokeh",
+            "ggplot2",
+            "highcharts",
+            "letsplot",
+            "matplotlib",
+            "plotly",
+            "plotnine",
+            "pygal",
+            "seaborn",
+        }
         assert SUPPORTED_LIBRARIES == expected
 
     def test_is_frozenset(self) -> None:
@@ -43,10 +53,6 @@ class TestSupportedLibraries:
 class TestLibrariesMetadata:
     """Tests for LIBRARIES_METADATA constant."""
 
-    def test_contains_all_nine_libraries(self) -> None:
-        """Should contain metadata for all 9 libraries."""
-        assert len(LIBRARIES_METADATA) == 9
-
     def test_ids_match_supported_libraries(self) -> None:
         """All metadata IDs should match SUPPORTED_LIBRARIES."""
         metadata_ids = {lib["id"] for lib in LIBRARIES_METADATA}
@@ -54,7 +60,7 @@ class TestLibrariesMetadata:
 
     def test_each_library_has_required_fields(self) -> None:
         """Each library should have all required fields."""
-        required_fields = {"id", "name", "version", "documentation_url", "description"}
+        required_fields = {"id", "name", "language_id", "version", "documentation_url", "description"}
         for lib in LIBRARIES_METADATA:
             assert required_fields.issubset(lib.keys()), f"Missing fields in {lib.get('id', 'unknown')}"
 
@@ -63,6 +69,11 @@ class TestLibrariesMetadata:
         for lib in LIBRARIES_METADATA:
             url = lib["documentation_url"]
             assert url.startswith("http://") or url.startswith("https://"), f"Invalid URL for {lib['id']}: {url}"
+
+    def test_ggplot2_is_r_language(self) -> None:
+        """ggplot2 is the catalog's first non-Python entry."""
+        ggplot2 = next(lib for lib in LIBRARIES_METADATA if lib["id"] == "ggplot2")
+        assert ggplot2["language_id"] == "r"
 
 
 class TestInteractiveLibraries:
@@ -201,3 +212,33 @@ class TestIsInteractiveLibrary:
         static = SUPPORTED_LIBRARIES - INTERACTIVE_LIBRARIES
         for lib in static:
             assert is_interactive_library(lib) is False
+
+
+class TestSupportedLanguages:
+    """Tests for SUPPORTED_LANGUAGES + LANGUAGES_METADATA."""
+
+    def test_contains_python_and_r(self) -> None:
+        """Catalog currently supports Python and R."""
+        assert SUPPORTED_LANGUAGES == {"python", "r"}
+
+    def test_metadata_ids_match_supported(self) -> None:
+        """Every LANGUAGES_METADATA entry must appear in SUPPORTED_LANGUAGES."""
+        metadata_ids = {lang["id"] for lang in LANGUAGES_METADATA}
+        assert metadata_ids == SUPPORTED_LANGUAGES
+
+    def test_each_language_has_required_fields(self) -> None:
+        """Each language must declare id, name, file_extension, runtime_version."""
+        required = {"id", "name", "file_extension", "runtime_version", "documentation_url", "description"}
+        for lang in LANGUAGES_METADATA:
+            assert required.issubset(lang.keys()), f"Missing fields in language {lang.get('id', 'unknown')}"
+
+    def test_file_extensions_map(self) -> None:
+        """LANGUAGE_FILE_EXTENSIONS exposes the same data as a mapping."""
+        assert LANGUAGE_FILE_EXTENSIONS["python"] == ".py"
+        assert LANGUAGE_FILE_EXTENSIONS["r"] == ".R"
+
+    def test_every_library_references_known_language(self) -> None:
+        """No library may point at a language we don't list in LANGUAGES_METADATA."""
+        known = SUPPORTED_LANGUAGES
+        for lib in LIBRARIES_METADATA:
+            assert lib["language_id"] in known, f"{lib['id']} has unknown language_id {lib['language_id']}"

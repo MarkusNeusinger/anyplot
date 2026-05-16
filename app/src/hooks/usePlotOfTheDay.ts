@@ -16,6 +16,7 @@ export interface PlotOfTheDayData {
   quality_score?: number;
   library_version?: string | null;
   python_version?: string | null;
+  language_version?: string | null;
   date?: string;
 }
 

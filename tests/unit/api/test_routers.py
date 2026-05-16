@@ -17,6 +17,7 @@ from api.routers.plots import (
     _calculate_or_counts,
     _image_matches_groups,
 )
+from core.constants import SUPPORTED_LIBRARIES
 from core.database import get_db
 from tests.conftest import TEST_IMAGE_URL
 
@@ -85,6 +86,7 @@ def mock_spec():
     mock_impl.updated = None
     mock_impl.generated_by = "claude"
     mock_impl.python_version = "3.13"
+    mock_impl.language_version = "3.13"
     mock_impl.library_version = "3.10.0"
     # Review fields (must be proper types, not MagicMock)
     mock_impl.review_image_description = "A scatter plot showing data points"
@@ -1576,7 +1578,7 @@ class TestInsightsRouter:
             assert data["total_implementations"] == 1
             assert data["total_lines_of_code"] == 500
             assert data["total_interactive"] == 0
-            assert len(data["library_stats"]) == 9
+            assert len(data["library_stats"]) == len(SUPPORTED_LIBRARIES)
             assert isinstance(data["coverage_matrix"], list)
             assert isinstance(data["score_distribution"], dict)
             assert isinstance(data["tag_distribution"], dict)
@@ -1596,6 +1598,7 @@ class TestInsightsRouter:
         mock_impl.review_image_description = "A scatter plot"
         mock_impl.library_version = "3.10.0"
         mock_impl.python_version = "3.13.11"
+        mock_impl.language_version = "3.13.11"
         mock_impl_repo = MagicMock()
         mock_impl_repo.get_by_spec_and_library = AsyncMock(return_value=mock_impl)
 

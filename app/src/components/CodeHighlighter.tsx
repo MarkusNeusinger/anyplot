@@ -1,8 +1,17 @@
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
+import r from 'react-syntax-highlighter/dist/esm/languages/prism/r';
 import { typography } from '../theme';
 
 SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('r', r);
+
+// Map anyplot language IDs → Prism grammar names. Anything we don't know about
+// falls back to plain text so the block still renders, just unhighlighted.
+const PRISM_LANGUAGE: Record<string, string> = {
+  python: 'python',
+  r: 'r',
+};
 
 // Theme-aware Okabe-Ito syntax theme. All colors come from CSS variables in
 // tokens.css so the block adapts to light (paper) and dark modes. Comments
@@ -45,12 +54,14 @@ const okabeItoTheme: Record<string, React.CSSProperties> = {
 
 interface CodeHighlighterProps {
   code: string;
+  language?: string;
 }
 
-export default function CodeHighlighter({ code }: CodeHighlighterProps) {
+export default function CodeHighlighter({ code, language = 'python' }: CodeHighlighterProps) {
+  const prismLanguage = PRISM_LANGUAGE[language.toLowerCase()] ?? 'text';
   return (
     <SyntaxHighlighter
-      language="python"
+      language={prismLanguage}
       style={okabeItoTheme}
       customStyle={{
         margin: 0,

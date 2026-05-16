@@ -39,10 +39,11 @@ Read both sources to understand what needs to be fixed:
 
 ## Step 3: Read current implementation
 
-`plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py`
+`plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — `{EXT}` is `.py`
+for python libraries and `.R` for ggplot2.
 
 **Do NOT read sibling-library implementations under
-`plots/{SPEC_ID}/implementations/`** (other libraries' `.py` or `.yaml`).
+`plots/{SPEC_ID}/implementations/`** (other libraries' source or `.yaml`).
 Each library is an independent interpretation; copying data scenarios,
 color choices, layout, or aspect ratio from a sibling defeats the point of
 having multiple libraries in the catalog. See `prompts/plot-generator.md` →
@@ -57,11 +58,19 @@ Based on the AI feedback, fix:
 
 ## Step 5: Test the fix (BOTH themes)
 
+**Python (`LANGUAGE=python`)**:
 ```bash
 source .venv/bin/activate
 cd plots/{SPEC_ID}/implementations/{LANGUAGE}
 MPLBACKEND=Agg ANYPLOT_THEME=light python {LIBRARY}.py
 MPLBACKEND=Agg ANYPLOT_THEME=dark  python {LIBRARY}.py
+```
+
+**R (`LANGUAGE=r`)**:
+```bash
+cd plots/{SPEC_ID}/implementations/{LANGUAGE}
+ANYPLOT_THEME=light Rscript {LIBRARY}.R
+ANYPLOT_THEME=dark  Rscript {LIBRARY}.R
 ```
 
 Both renders must succeed.
@@ -72,18 +81,22 @@ View `plot-light.png` AND `plot-dark.png`. Verify the failed criteria are now fi
 
 ## Step 7: Format the code
 
+**Python (`LANGUAGE=python`)**:
 ```bash
 source .venv/bin/activate
 ruff format plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 ruff check --fix plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 ```
 
+**R (`LANGUAGE=r`)**: no formatter is required by CI. Keep idiomatic ggplot2
+style (4-space indent, `<-` for assignment).
+
 ## Step 8: Commit and push
 
 ```bash
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
-git add plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
+git add plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
 git commit -m "fix({LIBRARY}): address review feedback for {SPEC_ID}
 
 Attempt {ATTEMPT}/3 - fixes based on AI review"

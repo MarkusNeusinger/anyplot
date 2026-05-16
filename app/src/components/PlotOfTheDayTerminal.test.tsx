@@ -32,6 +32,7 @@ const potd = {
   image_description: null,
   library_version: '3.8.0',
   python_version: '3.12',
+  language_version: '3.12',
   date: '2026-04-25',
 };
 

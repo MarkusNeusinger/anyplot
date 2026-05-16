@@ -165,8 +165,8 @@ impl_tags:
 | Aspect | Spec-Level Tags | Impl-Level Tags |
 |--------|-----------------|-----------------|
 | **Describes** | WHAT is visualized | HOW it is implemented |
-| **Storage Location** | `specification.yaml` | `metadata/python/{library}.yaml` |
-| **Applies to** | All 9 libraries | Only this library |
+| **Storage Location** | `specification.yaml` | `metadata/{language}/{library}.yaml` |
+| **Applies to** | All libraries (every language) | Only this library |
 | **Assigned by** | `spec-create.yml` | `impl-review.yml` |
 | **Dimensions** | 4 (plot_type, data_type, domain, features) | 5 (dependencies, techniques, patterns, dataprep, styling) |
 | **Example** | "This is a scatter plot" | "This code uses twin-axes and scipy" |

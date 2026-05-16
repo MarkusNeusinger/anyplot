@@ -38,7 +38,7 @@ checks ensure excellence. Zero manual coding required.
 ## Architecture
 
 **Specification-first design**: Every plot starts as a Markdown spec (library-agnostic), then AI generates
-implementations for all 9 supported libraries.
+implementations for all 10 supported libraries across Python and R.
 
 ```
 plots/scatter-basic/
@@ -70,7 +70,8 @@ See [docs/reference/](docs/reference/) for details.
 
 **Frontend**: React 19 • Vite • TypeScript • MUI
 
-**Plotting**: matplotlib • seaborn • plotly • bokeh • altair • plotnine • pygal • highcharts • lets-plot
+**Plotting (Python)**: matplotlib • seaborn • plotly • bokeh • altair • plotnine • pygal • highcharts • lets-plot
+**Plotting (R)**: ggplot2
 
 **Infrastructure**: Google Cloud Run • Cloud SQL • Cloud Storage
 

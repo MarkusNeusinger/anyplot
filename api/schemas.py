@@ -31,6 +31,7 @@ class ImplementationResponse(BaseModel):
     updated: str | None = None
     generated_by: str | None = None
     python_version: str | None = None
+    language_version: str | None = None
     library_version: str | None = None
     # Review fields
     review_strengths: list[str] = []
