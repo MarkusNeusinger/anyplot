@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-3d: 3D Contour Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 75/100 | Created: 2026-05-16
+Quality: 86/100 | Created: 2026-05-16
 """
 
 import os
