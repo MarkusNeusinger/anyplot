@@ -1,0 +1,233 @@
+library: plotnine
+language: python
+specification_id: indicator-macd
+created: '2026-05-16T10:51:22Z'
+updated: '2026-05-16T11:00:45Z'
+generated_by: claude-haiku
+workflow_run: 25960004306
+issue: 3181
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - Complete implementation of all MACD components with correct specification mapping
+  - 'Proper color usage: Okabe-Ito palette for lines with intuitive green/red histogram
+    coding'
+  - Excellent theme adaptation with readable light and dark renders; data colors preserved
+    across themes
+  - Clean code structure with proper deterministic data generation and zero reference
+    line
+  - Clear axis labels, title formatting, and legend with good positioning
+  - Grid styling is subtle and supports readability without competing with data
+  - Data range produces meaningful MACD patterns with visible crossovers
+  weaknesses:
+  - 'Design Excellence LOW: Generic styling without custom design choices; lacks visual
+    hierarchy or focal point; minimal refinement beyond functional requirements'
+  - 'Library Mastery LOW: No distinctive plotnine features; standard geom composition
+    without advanced techniques; opportunity for more sophisticated visual design'
+  - Spines present (not removed per best practices for clean design)
+  - No visual hierarchy to guide viewer attention through key MACD patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title 'indicator-macd · plotnine · anyplot.ai' in dark INK (#1A1A17), axis labels 'Date' and 'Value' clearly visible, tick labels in INK_SOFT (#4A4A44) with strong contrast, legend in upper-left with box frame
+      Data: Histogram bars in green (positive) and red (negative) with 0.7 alpha; MACD line in teal (#0072B2); Signal line in orange (#D55E00); zero reference line at y=0 in soft gray
+      Legibility verdict: PASS - All text is fully readable, no contrast issues, proper sizing for 4800x2700px render
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct surface color
+      Chrome: Title and axis labels in light INK (#F0EFE8) with strong contrast against dark background; tick labels in soft INK_SOFT (#B8B7B0); legend frame uses elevated background (#242420); no dark-on-dark issues detected
+      Data: Histogram colors identical to light render (green positive, red negative); MACD line in teal (same #0072B2); Signal line in orange (same #D55E00); zero reference line visible and appropriately styled
+      Legibility verdict: PASS - All text is readable on dark background, proper light-text-on-dark rendering, no legibility failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All text sized for 4800x2700px: title 24pt, axis_title 20pt, axis_text
+          16pt, legend_text 16pt; readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; date labels well-spaced; legend positioned
+          with separation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram bars clearly visible with distinct colors; lines prominent
+          and distinguishable; reference line visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; red-green reinforced by line styling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio; generous whitespace; 4800x2700px at 300dpi
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: MACD=#0072B2, Signal=#D55E00, histogram green/red from Okabe-Ito;
+          backgrounds correct; theme adaptation proper
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling; standard colors from palette but no custom design
+          thinking; lacks refined visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Spines present (not removed); minimal customization; grid subtle
+          but unrefined
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Functional representation; lacks visual hierarchy or focal point;
+          no emphasis to guide viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct MACD indicator chart with all three components
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Histogram green/red, distinct line colors, zero line, 150 periods
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis, MACD/Signal/histogram on y-axis; all data displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend identifies lines properly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all MACD components: lines and histogram with proper calculation'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic stock price simulation; standard parameters; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible MACD ranges; EMA produces realistic technical analysis output
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward procedural code; no unnecessary complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42); deterministic calculations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports; includes sys.path workaround
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; clean data organization
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; uses current API
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses ggplot API idiomatically but without sophisticated techniques
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Standard geoms and scales; no advanced plotnine features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

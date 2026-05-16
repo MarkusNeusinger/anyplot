@@ -1,160 +1,170 @@
 library: plotly
+language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:29:30Z'
-updated: '2026-01-07T16:37:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788378228
+updated: '2026-05-16T11:01:04Z'
+generated_by: claude-haiku
+workflow_run: 25959900860
 issue: 3181
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/plotly/plot.html
-quality_score: 93
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotly/plot-dark.html
+quality_score: 81
 review:
   strengths:
-  - All three MACD components (MACD line, Signal line, histogram) are clearly visualized
-    with distinct colors
-  - Proper use of green/red histogram coloring for positive/negative values as specified
-  - Zero reference line with annotation helps identify crossover points
-  - Parameters annotation in the corner documents the standard 12/26/9 settings
-  - Clean code structure following KISS principles
-  - Both PNG and HTML outputs for static and interactive viewing
-  - Good font sizing for high-resolution output
+  - Perfect theme adaptation with readable text in both light and dark renders
+  - All MACD components correctly calculated with genuine EMA implementation
+  - Excellent visual quality with explicit font sizing (28/22/18px) and no text overlaps
+  - Clean, reproducible code with proper seeding and clear data generation logic
+  - Correct use of plotly graph_objects API with proper layout management
+  - Proper canvas utilization with balanced margins (100px left, 60px right, 100px
+    top, 80px bottom)
+  - Zero reference line and parameter annotations enhance technical clarity and usability
   weaknesses:
-  - Initial data period shows MACD/Signal starting from large negative values due
-    to EMA warm-up, which could confuse viewers
-  - Legend placement in upper-left may overlap with histogram bars in that region
-    during certain zoom levels
-  - Could benefit from custom hover templates showing exact values for better interactivity
-  image_description: 'The plot displays a MACD technical indicator chart spanning
-    approximately August 2025 to December 2025. The chart features three main components:
-    (1) a dark blue MACD line showing the difference between 12-day and 26-day EMAs,
-    oscillating between approximately -2.5 and +1.3; (2) a yellow/gold Signal line
-    (9-day EMA of MACD) that follows the MACD line with a lag; (3) a histogram with
-    green bars for positive values and red/pink bars for negative values, showing
-    the difference between MACD and Signal lines. A dashed gray horizontal zero reference
-    line is present with a "Zero Line" annotation on the left side. The title "indicator-macd
-    · plotly · pyplots.ai" is centered at the top. The X-axis shows "Date" with monthly
-    intervals, Y-axis shows "MACD Value". A legend in the upper-left corner identifies
-    all three series. Parameters annotation "EMA(12), EMA(26), Signal(9)" appears
-    in the lower-right corner. The chart shows clear bullish and bearish periods with
-    multiple crossover signals visible.'
+  - Histogram colors (blue positive, purple negative) deviate from spec requirement
+    of green and red
+  - Generic design without distinctive plotly features beyond basic bar and line traces
+  - No visual refinement beyond library defaults (e.g., spine removal, grid customization,
+    typography hierarchy)
+  - Limited visual storytelling or emphasis techniques to highlight key MACD insights
+    (crossovers, momentum changes)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as per style guide standard
+      Chrome: Title "indicator-macd · plotly · anyplot.ai" at 28px in dark text (#1A1A17), axis labels "Date" and "MACD Value" at 22px, tick labels at 18px - all readable and well-spaced
+      Data: MACD line in brand green (#009E73), Signal line in orange (#D55E00), histogram bars in blue (positive) and purple (negative). Zero reference line as dashed rule dividing positive/negative. Legend at top-left with light background frame
+      Legibility verdict: PASS - All text elements have excellent contrast and readability against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as per style guide standard
+      Chrome: Title and axis labels rendered in light text (#F0EFE8), tick labels in soft gray (#B8B7B0) for secondary emphasis. All text clearly readable and distinct from dark background. No dark-on-dark text failures detected
+      Data: Identical data colors to light render - MACD green (#009E73), Signal orange (#D55E00), histogram blue/purple. Colors remain distinct and visible. Zero line and grid properly adapted with subtle opacity
+      Legibility verdict: PASS - Both renders have perfect theme adaptation with readable typography throughout. Data colors remain constant between themes as required
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: title at ~32pt, axis labels at ~24pt,
-          tick labels at ~18pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend is well-positioned
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, all content fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines have good width (3px), histogram bars visible with 0.7 opacity;
-          some bars narrow during dense periods
+        comment: All data markers and lines clearly visible with appropriate sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue MACD, yellow Signal, green/red histogram - colorblind-distinguishable
-          palette
+        score: 1
+        max: 2
+        passed: false
+        comment: Histogram colors are CVD-safe Okabe-Ito but deviate from spec's explicit
+          green/red requirement
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins
+        comment: Plot fills 60-75% of canvas with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but MACD values are unitless
+        comment: Descriptive labels with units (Date, MACD Value)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.2), legend well-placed but may overlap histogram
-          in corner
+        comment: Perfect Okabe-Ito compliance with correct theme-adaptive chrome
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults, professional but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization beyond theme tokens
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: All components displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct MACD chart with all three required components
+        comment: Correct MACD chart with all components
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, MACD values on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: MACD line, Signal line, histogram, zero
-          line, colors, parameters'
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: false
+        comment: All technical features present; histogram colors deviate from spec
+          (blue/purple instead of green/red)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show complete range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, axes display full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three components
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: indicator-macd · plotly · pyplots.ai'
+        comment: Title format correct, legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bullish/bearish phases, crossovers, histogram expansion/contraction;
-          initial warm-up period shows unusual values
+        comment: Shows all MACD aspects including crossovers and momentum changes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Synthetic stock price data with realistic volatility and trend patterns
+        comment: Genuine stock price simulation with realistic returns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: MACD values reasonable for $100 stock; large initial negative values
-          during EMA warm-up
+        comment: MACD values realistic for 150-day period
     code_quality:
       score: 10
       max: 10
@@ -167,50 +177,53 @@ review:
         comment: 'Clean linear structure: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, plotly.graph_objects, plotly.subplots'
+        comment: Only necessary imports (numpy, pandas, plotly)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean, Pythonic code with appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses go.Bar, go.Scatter, add_hline, make_subplots, HTML export; could
-          use hover templates or range slider
+        passed: false
+        comment: Correct plotly patterns, make_subplots usage acceptable
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic plotly usage without distinctive library features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - annotations
-  - html-export
   patterns:
   - data-generation
-  dataprep:
   - time-series
+  dataprep:
   - rolling-window
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []
