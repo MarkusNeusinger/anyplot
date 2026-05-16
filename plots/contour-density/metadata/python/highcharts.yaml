@@ -1,218 +1,280 @@
 library: highcharts
+language: python
 specification_id: contour-density
 created: '2025-12-30T09:37:47Z'
-updated: '2025-12-30T09:54:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593358403
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-16T03:37:37Z'
+generated_by: claude-haiku
+workflow_run: 25951656195
+issue: 2552
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-density/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-density/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/highcharts/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent implementation of KDE-based density contours using a custom marching
-    squares algorithm
-  - Outstanding colorblind-safe viridis-inspired color palette for density gradient
-    visualization
-  - Effective combination of scatter overlay with contour lines for context
-  - Well-designed legend with density scale representation
-  - Proper use of Highcharts annotations for inline contour level labels
-  - Clean data generation showing three distinct clusters of varying densities
+  - Perfect text legibility in both themes with explicitly sized fonts
+  - Excellent data storytelling through visual density hierarchy with clear cluster
+    identification
+  - Comprehensive spec compliance with correct title format and feature-rich legend
+  - Strong marching squares contour algorithm with appropriate complexity and clean
+    implementation
+  - Viridis palette for continuous density scale is perceptually uniform and colorblind-safe
+  - Theme-adaptive chrome implementation with proper token usage throughout
+  - Well-balanced layout with generous margins and no element overlap
+  - Effective use of annotations for density level labels positioned within contours
   weaknesses:
-  - Grid lines could be more subtle (currently using Dot style which is adequate but
-    slightly prominent)
-  - Scatter points are somewhat small relative to the contour line thickness
-  image_description: "The plot displays a density contour visualization with three\
-    \ distinct clusters of data points. The title reads \"contour-density · highcharts\
-    \ · pyplots.ai\" at the top. The X-axis is labeled \"Measurement A (normalized\
-    \ units)\" ranging from approximately -5 to 5.75, and the Y-axis is labeled \"\
-    Measurement B (normalized units)\" ranging from approximately -6 to 7.5. \n\n\
-    Three clusters are clearly visible: a high-density cluster in the upper-right\
-    \ area (around x=2.5, y=3), a medium-density cluster in the left-center area (around\
-    \ x=-1.5, y=1), and a lower-density cluster in the bottom-center area (around\
-    \ x=0.5, y=-1.5). The contours use a viridis-inspired colorblind-safe color scheme\
-    \ progressing from dark purple (10%) through teal (50%) to yellow (90%) for the\
-    \ highest density regions. Semi-transparent blue scatter points are overlaid on\
-    \ the contours. A legend on the right shows \"Density Scale\" with entries for\
-    \ Data Points and density levels (90%, 70%, 50%, 30%, 10%). Contour level annotations\
-    \ (20%, 50%, 80%) appear directly on the plot."
+  - 'DE-02 could improve: grid styling while subtle is still present; consider more
+    minimal approach'
+  - 'DQ-02: Generic axis labels (''Measurement A/B'') reduce contextual clarity; could
+    use domain-specific labels'
+  - 'LM-02: While annotations are distinctive, the overall pattern is fairly standard
+    for Highcharts; could leverage more unique features like drilldown or linked interactions'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no pure-white appearance
+      Chrome: Title "contour-density · highcharts · anyplot.ai" in dark text (28px), axis labels in dark ink (22px), tick labels in INK_SOFT gray (18px) — all clearly readable against light background
+      Data: Scatter points in brand green (#009E73) with white edges for definition; contour lines in viridis-inspired gradient (purple→blue→cyan→green→yellow) showing density levels 10%-90%; legend on right with "Density Scale" title and colored line symbols
+      Layout: Gridlines subtle but visible; three distinct clusters clearly visible with density contours forming closed loops; scatter points provide context within contours
+      Legibility verdict: PASS — All text readable, excellent contrast, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with no pure-black appearance
+      Chrome: Title in light text (28px), axis labels in light INK (#F0EFE8, 22px), tick labels in INK_SOFT light gray (18px) — all clearly readable against dark background, no dark-on-dark failures
+      Data: Scatter points still in identical brand green (#009E73), contour lines in identical viridis colors — confirming data colors are theme-independent as required; legend styling matches light render
+      Layout: Same gridlines, same cluster visibility, same contour structure
+      Legibility verdict: PASS — All text readable, light text on dark background works perfectly, data colors unchanged from light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are clearly readable at the high
-          resolution. Font sizes are well-scaled.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; contour labels and legend are well-positioned
+        comment: All fonts explicitly sized; Title 28px, Labels 22px, Ticks 18px;
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements properly spaced; legend positioned on right without
+          interference
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Contour lines are thick and visible; scatter points could be slightly
-          more prominent but are adequate
+        comment: Markers radius=12 with white edges; contour lines lineWidth=4; excellent
+          visibility
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent viridis-inspired colorblind-safe palette from purple through
-          teal to yellow
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; plot area is well-proportioned with appropriate
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Measurement A (normalized units)",
-          "Measurement B (normalized units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Brand green and viridis palette colorblind-safe; strong contrast
+          between all elements
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins; plot fills 50-70% of canvas with generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is well-positioned and informative; grid could be slightly
-          more subtle
+        comment: 'Labels include context with units: ''Measurement A/B (normalized
+          units)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; viridis for continuous; backgrounds #FAF8F1/#1A1A17;
+          theme-adaptive chrome correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom viridis palette; intentional color gradient; professional
+          layout; KDE and marching squares show sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle gridlines; styled legend; contour labels with bordered boxes;
+          generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Excellent visual hierarchy; color gradient guides perception; scatter
+          points provide context; contour labels guide interpretation
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements density contour plot with KDE-based contours
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X and Y variables correctly mapped as continuous bivariate data
-      - id: SC-03
+        comment: 'Correct type: density contour plot with scatter overlay for bivariate
+          distribution'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Contour lines, density gradient levels, scatter overlay all present;
-          minor: filled contours mentioned in spec as alternative'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: contour levels, scatter points, density legend,
+          axes, title'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points and contours fully visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly labeled; full data range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows density scale and data points
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "contour-density · highcharts · pyplots.ai"'
+        comment: Title format correct; legend shows density scale with proper labels
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three clusters with different densities demonstrating the contour
-          visualization well; could show more variation in cluster shapes
+        comment: 'Shows all aspects: three clusters, density variation 10-90%, scatter
+          distribution'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Generic scientific measurement scenario is plausible and neutral
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Normalized units with sensible ranges for clustered data
+        comment: 'Bivariate measurements plausible (neutral domain); sample size reasonable.
+          Minor: generic axis labels.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic value ranges; cluster std ~0.7-1.2; KDE bandwidth formula
+          correct
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally linear flow but includes complex inline marching squares
-          algorithm which is acceptable for this use case
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for reproducible results
+        comment: Linear flow; imports → data → KDE → chart → export; no unnecessary
+          abstractions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; all computations deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused packages
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Marching squares appropriately complex; segment-to-path logic clean;
+          no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves to plot.png but also creates plot.html (minor)
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and .html; current API; no deprecated functions
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts features including annotations for contour
-          labels, line series for contours, scatter series with tooltips, and proper
-          legend configuration
+        comment: Proper Chart construction; HighchartsOptions; annotations module;
+          Selenium CDP export
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses annotations (somewhat distinctive); custom legend series; HTML
+          export; could explore more advanced features
+    auto_reject:
+      passed: true
+      checks:
+      - id: AR-01
+        name: Syntax Error
+        status: PASS
+      - id: AR-02
+        name: Runtime Error
+        status: PASS
+      - id: AR-03
+        name: Output Exists
+        status: PASS
+      - id: AR-04
+        name: Empty Plot
+        status: PASS
+      - id: AR-05
+        name: Library Usage
+        status: PASS
+      - id: AR-06
+        name: Feasibility
+        status: PASS
+      - id: AR-07
+        name: Output Format
+        status: PASS
+      - id: AR-08
+        name: No Fake Functionality
+        status: PASS
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
