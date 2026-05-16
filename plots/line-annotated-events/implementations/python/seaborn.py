@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Updated: 2026-05-16
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-16
 """
 
 import os
