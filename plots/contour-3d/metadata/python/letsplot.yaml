@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:53:05Z'
-updated: '2026-05-16T12:55:54Z'
+updated: '2026-05-16T13:12:38Z'
 generated_by: claude-haiku
 workflow_run: 25962323414
 issue: 3230
@@ -12,38 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 76
 review:
   strengths:
-  - Excellent theme-adaptive implementation with full legibility in both light and
+  - Flawless theme-adaptive chrome implementation with perfectly readable light and
     dark renders
-  - Clean, reproducible code with proper file handling for letsplot output directory
-  - Effective use of viridis colormap for continuous height data
-  - Proper element sizing for high-resolution output (title 24pt, axis labels 20pt,
-    tick labels 16pt)
-  - Comprehensive grid data showing surface features and contour variation clearly
+  - All text legibility criteria met with explicit font sizing (24/20/16pt)
+  - Clean, reproducible code with zero extraneous complexity
+  - Excellent use of viridis colormap for continuous data
+  - Perfect code quality (10/10) and proper KISS structure
   weaknesses:
-  - Limited by letsplot's lack of true 3D visualization; uses 2D tile approximation
-    instead of 3D surface/contour plot
-  - Design is functional but generic; uses default viridis without custom refinement
-    or visual hierarchy
-  - Could enhance data storytelling by emphasizing peak/valley regions through strategic
-    color or annotation emphasis
+  - 'Critical spec mismatch: 2D tile-based heatmap instead of true 3D contour plot
+    with contour lines'
+  - Missing explicit contour lines/bands as required by spec
+  - No base-plane contour projection
+  - Generic design sophistication relying entirely on library defaults
+  - Tiles are small (0.15×0.15) reducing element emphasis
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1, correct for light theme
-      Chrome: Title "contour-3d · letsplot · anyplot.ai" clearly visible in dark text; X/Y axis labels readable; tick labels in INK_SOFT color (#4A4A44); grid lines subtle and non-dominant
-      Data: 45×45 grid of colored tiles using viridis colormap showing height variation; colorbar labeled "Height (z)" clearly displays the color scale; tile colors transition smoothly from low (purple) to high (yellow)
-      Legibility verdict: PASS - all text readable against light background; no light-on-light issues
+      Background: Warm off-white (#FAF8F1), correct per style guide
+      Chrome: Title "contour-3d · letsplot · anyplot.ai" in 24pt dark text, axis labels "X Coordinate"/"Y Coordinate" in 20pt dark text, tick labels in 16pt gray, colorbar "Height (z)" in 16pt gray. All text clearly readable.
+      Data: 45×45 grid of small colored tiles using viridis colormap (purple-low to yellow-high). Pattern shows surface with multiple peaks and valleys. Color intensity encodes Z-values.
+      Grid: Subtle, visible, provides reference without dominating data
+      Legibility verdict: PASS - All text readable, excellent contrast, proper theme tokens
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17, correct for dark theme
-      Chrome: Title clearly visible in light text (INK #F0EFE8); axis labels and tick labels in light INK_SOFT (#B8B7B0); grid lines visible but subtle; legend background at #242420
-      Data: Tile colors identical to light render (viridis maintains data integrity across themes); colorbar clearly visible
-      Legibility verdict: PASS - all text readable against dark background; no dark-on-dark failures; data colors unchanged between renders (only chrome adapted)
+      Background: Warm near-black (#1A1A17), correct per style guide
+      Chrome: Title and axis labels in light text (INK color), tick labels in light gray (INK_SOFT), clearly visible against dark background. No dark-on-dark failures.
+      Data: Identical viridis color progression as light render (data colors preserved across themes, only chrome flips as intended)
+      Grid: Subtle and visible, theme-adapted
+      Legibility verdict: PASS - All text readable in dark mode, proper light text on dark background, no contrast failures
+
+    Theme-adaptive implementation: PASS - Both renders verified as readable with correct backgrounds (#FAF8F1 light, #1A1A17 dark) and theme-correct text colors.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,47 +54,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark themes; title, axis labels,
-          tick labels have explicit color mapping
+        comment: 'All fonts explicitly set: Title 24pt, Labels 20pt, Ticks 16pt. Perfectly
+          readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions; clean layout
+        comment: No overlapping text. All labels well-spaced and readable.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Tiles clearly visible and properly colored across full range
+        comment: Tiles visible but small (0.15×0.15). Pattern clear. Could be larger
+          for emphasis.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is colorblind-safe and perceptually uniform
+        comment: Viridis is perceptually uniform and CVD-safe. Excellent contrast
+          across levels.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced proportions; nothing cut off; generous margins
+        comment: Perfect 4800×2700 resolution. Plot fills 60-70% with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive title and axis labels with units
+        passed: false
+        comment: Descriptive but lack units. 'X Coordinate', 'Y Coordinate' could
+          add units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous data; backgrounds #FAF8F1/#1A1A17; both renders
-          theme-correct'
+        comment: 'Viridis correct for continuous data. Both renders identical data
+          colors, theme-adaptive chrome. Backgrounds exact #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -99,74 +105,74 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Functional but generic; standard viridis without custom refinement
+        comment: Well-configured defaults but no custom sophistication beyond standard
+          viridis.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Grid subtle and appropriate; basic refinement present
+        comment: Some grid customization and legend refinement, but minimal overall.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Shows height variation; colorbar provides context; functional hierarchy
-          but not sophisticated
+        comment: Data displayed clearly but no narrative, hierarchy, or emphasis.
     spec_compliance:
-      score: 14
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: 2D tile-based contour representation; letsplot lacks 3D, so this
-          is appropriate approximation
+        passed: false
+        comment: 'CRITICAL: Spec requires 3D contour plot with surface geometry. Implementation
+          provides 2D tile-based heatmap approximation.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: Shows contour bands via tiles; colorbar with label; regular grid
-          intervals
+        passed: false
+        comment: Missing explicit contour lines/bands and base-plane projection as
+          required.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates mapped correctly; Z values mapped to color; all data
-          visible
+        comment: X, Y, Z correctly mapped. Data range properly represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format; colorbar properly labeled
+        comment: Exact title format 'contour-3d · letsplot · anyplot.ai'. Colorbar
+          labeled 'Height (z)'.
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Mathematical surface with multiple peaks and valleys; clear contour
-          variation
+        comment: Surface shows peaks and valleys. Mathematical structure clear.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Synthetic mathematical surface (Gaussian bumps); neutral and appropriate
+        comment: Scientific/mathematical function with Gaussian bumps. Neutral and
+          plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid 45×45 within spec range; interesting Z value variation
+        comment: Values (-0.8 to 1.5) mathematically correct and well-proportioned.
     code_quality:
       score: 10
       max: 10
@@ -176,33 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward linear code; no unnecessary functions
+        comment: Clean imports → data → plot → save. No functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.linspace for deterministic grid; reproducible
+        comment: Uses np.linspace (deterministic). Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; no dead imports
+        comment: All imports necessary and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No unnecessary complexity or fake functionality
+        comment: Pythonic, clean theme-token handling.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; handles letsplot directory correctly
+        comment: Saves as plot-{THEME}.png and .html. Current API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -210,17 +216,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot + geom_tile + scale_fill_viridis; theme() application
-          correct
+        comment: Proper ggplot2 grammar with theme customization. Standard but correct.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Standard geoms; no distinctive letsplot features employed
-  verdict: APPROVED
+        passed: true
+        comment: Uses scale_fill_viridis, ggsave scale parameter, theme-adaptive tokens.
+  verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - colorbar
   patterns:
