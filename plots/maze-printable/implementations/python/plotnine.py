@@ -1,24 +1,21 @@
-""" pyplots.ai
+"""anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from plotnine import (
-    aes,
-    coord_fixed,
-    element_blank,
-    element_text,
-    geom_text,
-    geom_tile,
-    ggplot,
-    labs,
-    theme,
-    theme_void,
-)
+from plotnine import aes, coord_fixed, element_rect, element_text, geom_text, geom_tile, ggplot, labs, theme, theme_void
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Maze generation using Depth-First Search (Recursive Backtracker)
 np.random.seed(42)
@@ -79,18 +76,18 @@ markers_df = pd.DataFrame(
 # Create the plot
 plot = (
     ggplot()
-    + geom_tile(data=walls_df, mapping=aes(x="x", y="y"), fill="black", width=1, height=1)
-    + geom_text(data=markers_df, mapping=aes(x="x", y="y", label="label"), size=36, color="#306998", fontweight="bold")
+    + geom_tile(data=walls_df, mapping=aes(x="x", y="y"), fill=INK, width=1, height=1)
+    + geom_text(data=markers_df, mapping=aes(x="x", y="y", label="label"), size=48, color=BRAND)
     + coord_fixed(ratio=1)
-    + labs(title="maze-printable · plotnine · pyplots.ai")
+    + labs(title="maze-printable · plotnine · anyplot.ai")
     + theme_void()
     + theme(
         figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
-        plot_background=element_blank(),
-        panel_background=element_blank(),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
