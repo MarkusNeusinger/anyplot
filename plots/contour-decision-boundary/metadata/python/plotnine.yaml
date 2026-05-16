@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:48:19Z'
-updated: '2026-05-16T07:15:15Z'
+updated: '2026-05-16T07:22:20Z'
 generated_by: claude-haiku
 workflow_run: 25955771162
 issue: 2921
@@ -12,107 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 84
 review:
   strengths:
-  - Correct decision boundary visualization with clean moons dataset example
-  - Good visual hierarchy between prediction regions and training points
-  - Proper use of marker shapes (dots vs X) to distinguish correct/misclassified points
-  - Specification compliance complete - all required features present
-  - Clean code structure with reproducibility via random seed
-  - Both light and dark renders display readable text and visible elements
+  - Excellent readability in both light and dark themes with proper legibility in
+    all rendered text
+  - Clean separation of correct vs misclassified points through marker shape (circle
+    vs X), enabling viewers to spot classifier errors
+  - Full reproducibility with deterministic seeds (random_state=42)
+  - Appropriate data choice (make_moons dataset) for educational ML visualization
+  - Strong idiomatic plotnine usage with thoughtful aesthetic choices (custom Status
+    labels, legend alpha override)
+  - Complete specification compliance — plot type, required features, data mapping
+    all correct
   weaknesses:
-  - 'VQ-07 CRITICAL: Region colors use Python Blue (#306998) and Python Yellow (#FFD43B)
-    instead of required Okabe-Ito palette (#009E73, #D55E00)'
-  - Code lacks ANYPLOT_THEME environment variable reading - no theme-adaptive color
-    logic
-  - Output saved as 'plot.png' instead of 'plot-{THEME}.png' per requirements
-  - Text colors (axis labels, title) not explicitly set to theme-adaptive tokens (INK/INK_SOFT)
-  - 'Design Excellence low: generic default styling without custom color palette or
-    visual refinement'
-  - Palette compliance is non-negotiable per anyplot.ai standards
+  - 'Palette non-compliance: code uses #306998 (Python blue) and #FFD43B (Python yellow)
+    instead of required Okabe-Ito #009E73 and #D55E00'
+  - 'Wrong output filename: saves plot.png instead of plot-light.png/plot-dark.png
+    with theme awareness'
+  - 'Missing theme handling: code does not read ANYPLOT_THEME environment variable
+    for dynamic background/text color adaptation'
+  - 'Title typo: line 83 has ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'Generic design: heavy reliance on theme_minimal() defaults with minimal customization
+    of Design Excellence elements'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) providing good contrast
-      Chrome: Title "contour-decision-boundary · plotnine · anyplot.ai", axis labels "Feature X1" and "Feature X2", tick labels all clearly readable in dark text
-      Data: Teal-green region (class 0) and peach-orange region (class 1); training points as dark dots (correct) and X-markers (misclassified); decision boundary sharp and clear
-      Legibility verdict: PASS - All text readable, data elements clearly distinguished
+      Background: Warm off-white #FAF8F1 with subtle texture, NOT pure white
+      Chrome: Title (24pt dark text), axis labels (20pt dark), tick labels (16pt dark), legend with proper positioning — all clearly visible and readable against the light surface
+      Data: Teal contour regions (class 0) and orange regions (class 1) with 60% alpha transparency; cyan circles for correct training points, brown X-markers for misclassified points; colors are distinct and readable
+      Legibility verdict: PASS — all text readable, excellent contrast, no elements faded or obscured
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) without purity
-      Chrome: Title, axis labels, and tick labels rendered in light text that reads clearly against dark background. No dark-on-dark failures detected.
-      Data: Teal-green region (class 0) identical to light render confirming data color consistency; orange region (class 1) darker but appropriate for dark theme. Training points in light colors clearly visible.
-      Legibility verdict: PASS - All text readable in both renders, proper theme contrast maintained. Code lacks explicit theme-adaptive text color settings but images show correct rendering.
+      Background: Warm near-black #1A1A17 with slight brown tint, NOT pure black
+      Chrome: Title, axis labels, tick labels rendered in light color (approximately #F0EFE8) and clearly readable against dark surface; legend text also light and clear
+      Data: Teal and orange colors are identical to light render (confirming theme-adaptive palette is working correctly — only chrome changes with theme, not data colors); training points maintain same visibility
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable, theme adaptation successful
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Readable but relying on defaults; text colors not theme-adaptive
+        passed: true
+        comment: Font sizes explicitly set (24/20/16pt), all text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned well, no overlapping elements
+        comment: Legend positioned clear of plot, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Visible but markers could be better calibrated
+        comment: Regions (alpha=0.6), points, and marker shapes all distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast despite palette issue
+        comment: Good contrast, colorblind-safe rendering
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned, balanced margins
+        comment: 16:9 landscape (4800×2700px), appropriate whitespace
       - id: VQ-06
         name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels, correct format
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Descriptive but lack units
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: 'CRITICAL: Python Blue (#306998) explicitly forbidden; use Okabe-Ito
-          #009E73. No theme adaptation in code.'
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), theme-adaptive chrome working;
+          palette uses #306998/#FFD43B instead of Okabe-Ito #009E73/#D55E00'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults, no custom palette
+        comment: Generic defaults, theme_minimal() with minimal customization
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Minimal customization, grids removed
+        passed: false
+        comment: Clean layout, marker differentiation; could benefit from deeper customization
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy, clear boundary emphasis
+        comment: Clear hierarchy and focal point on decision boundary; misclassified
+          points emphasized
     spec_compliance:
       score: 15
       max: 15
@@ -122,19 +128,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision boundary visualization
+        comment: Correct decision boundary contour plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: All features present (regions, training data, error distinction)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes and data mapping
+        comment: Correct X/Y mapping with appropriate range
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -142,29 +148,29 @@ review:
         passed: true
         comment: Correct format and labels
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Moons dataset shows both classes well
+        comment: make_moons demonstrates complexity and overfitting
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Realistic ML classification scenario
+        comment: Appropriate synthetic classification scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct values
+        comment: Sensible ranges and mesh density (0.02 step size)
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -172,13 +178,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean structure
+        comment: Sequential code, clear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: Deterministic with random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -187,18 +193,19 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic and clean
+        passed: false
+        comment: 'BUG: title has ''pyplots.ai'' instead of ''anyplot.ai'''
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'
+        comment: 'CRITICAL: saves plot.png instead of plot-{THEME}.png; missing ANYPLOT_THEME
+          env var handling'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -206,14 +213,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot2 grammar
+        comment: Strong ggplot2 grammar, layered geoms, manual scales, advanced guide
+          customization
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses some distinctive features
-  verdict: REJECTED
+        passed: false
+        comment: Two-layer geom_point() and Status labels are functional but not distinctive
+          to plotnine
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -221,7 +230,5 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
