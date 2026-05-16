@@ -1,166 +1,182 @@
 library: highcharts
+language: python
 specification_id: candlestick-volume
 created: '2026-01-01T21:31:03Z'
-updated: '2026-01-01T21:33:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20645827229
+updated: '2026-05-16T05:36:04Z'
+generated_by: claude-haiku
+workflow_run: 25953871328
 issue: 3068
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/highcharts/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - subplots
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of Highstock for synchronized dual-pane layout
-  - Proper 70%/25% vertical split between price and volume panes as specified
-  - Volume bars correctly color-matched to candlestick direction
-  - Crosshair configured for precise price/volume reading across both panes
-  - Realistic stock data generation with proper gap handling and volatility modeling
-  - Clean title format following pyplots.ai convention
-  - Well-configured axis formatting ($ prefix for prices, M suffix for volumes)
+  - Perfect visual quality - all text readable in both themes, excellent palette compliance
+  - Correct use of Highstock API for dual-axis financial charts
+  - Comprehensive theme adaptation with proper token implementation
+  - Professional data generation with realistic stock price movements and volume variation
+  - Clean, uncluttered design with proper pane sizing (70% price, 22% volume)
+  - Proper OHLC data handling with correctly formatted candlesticks
+  - Crosshair spanning both panes for synchronized price/volume reading
   weaknesses:
-  - Blue/red color scheme could be improved for colorblind accessibility (consider
-    blue/orange instead)
-  - X-axis date labels appear clipped/truncated at bottom of image
-  image_description: The plot displays a professional stock candlestick chart with
-    a synchronized volume pane below. The upper pane (approximately 70% of height)
-    shows OHLC candlesticks over 60 trading days, with blue candles representing bullish
-    (up) days and red candles representing bearish (down) days. Price ranges from
-    approximately $118 to $170, showing an overall downtrend. The lower pane (approximately
-    25% of height) displays volume bars in matching colors - blue for up days and
-    red for down days. Volumes range from about 2M to 10M units. The title "candlestick-volume
-    · highcharts · pyplots.ai" appears at the top. Y-axis labels show "Price (USD)"
-    and "Volume" with proper formatting ($XXX and X.XM). X-axis shows date labels
-    (day numbers). Grid lines are subtle gray. A crosshair is configured for precise
-    reading.
+  - Limited design sophistication - functional implementation but lacks distinctive
+    visual polish or creative elements
+  - Modest use of library-specific features - fairly standard Highstock configuration
+    without advanced techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "candlestick-volume · highcharts · anyplot.ai" in dark text, clearly visible. Y-axis labels ("Price (USD)" and "Volume") in dark text. X-axis date labels and tick marks in dark text. Grid lines subtle with proper opacity. Legend in upper right shows "Stock Price" and "Volume" with proper contrast.
+      Data: Top pane shows candlestick OHLC data with blue (#0072B2) for up-days and orange (#E69F00) for down-days. Volume bars in bottom pane match candle direction. High-low wicks on candlesticks are visible. All data clearly distinguishable from light background.
+      Legibility verdict: PASS - All text is readable in light theme; proper spacing and sizing throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title is displayed in light text, clearly visible against dark background. Y-axis labels ("Price (USD)" and "Volume") in light text. X-axis date labels in light text. Grid lines remain subtle and visible. Legend properly styled with light text. No dark-on-dark contrast issues.
+      Data: Candlestick colors are IDENTICAL to light render (blue #0072B2 for up, orange #E69F00 for down). Volume bars perfectly match light render colors. High-low wicks visible. All data elements clearly distinguished from dark background.
+      Legibility verdict: PASS - All text is readable in dark theme; proper theme-adaptive colors applied throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48px, axis labels at 28px, tick labels at 24px - all clearly
-          readable
+        comment: All text (title, labels, tick marks) explicitly sized and readable
+          in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text properly positioned with no collisions; legend cleanly placed
+          in corner
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Candlesticks and volume bars are well-sized for data density
+        comment: Candlesticks and volume bars clearly visible; dual-pane layout shows
+          both series distinctly
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses blue/red which is distinguishable but not ideal for colorblind
-          users (3/5)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good 70/25 split, proper canvas utilization
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Price (USD)" and "Volume" are descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Blue (#0072B2) and Orange (#E69F00) are Okabe-Ito positions 3&5;
+          colorblind-safe up/down distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape format with proper proportions; nothing cut off;
+          generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle, but no legend present (series names in tooltip only)
+        passed: true
+        comment: Title follows spec format. Y-axes labeled 'Price (USD)' and 'Volume'
+          with units. X-axis shows date format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Data colors from
+          Okabe-Ito (positions 3&5). Theme tokens properly applied throughout.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, clean design with thoughtful color scheme. No unnecessary
+          decorations. Proper dual-pane layout for technical analysis. Functional
+          polish but limited creative flourish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean legend placement, proper spacing between panes, subtle grid
+          that doesn't compete with data.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy (price dominant, volume supporting). Colored
+          candlesticks and bars tell story of up/down moves with volume context.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct candlestick chart with volume bars
+        comment: Candlestick chart with volume bars in synchronized dual panes - correct
+          format
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: OHLC data correctly mapped to candlesticks, volume to bars
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Dual-pane layout, shared x-axis, color-matched volume bars, crosshair
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: candlesticks, volume bars, shared x-axis,
+          up/down coloring, crosshair, 60 trading days'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 60 trading days visible with appropriate price/volume range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: dates; Y-axis(top): price in USD; Y-axis(bottom): volume
+          formatted as millions. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Series named "Stock Price" and "Volume"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"candlestick-volume · highcharts · pyplots.ai"'
+        comment: Title matches spec format. Legend labels 'Stock Price' and 'Volume'
+          clearly shown.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish candles, varied volumes, trending
-          data
+        comment: 'All aspects of candlestick-volume shown: OHLC with wicks, volume
+          bars with direction coloring, proper axis labels'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price data with realistic daily movements and gaps
+        comment: Realistic stock price ($150 initial, $125-165 range), proper volatility
+          (0.018 std), volume correlates with price moves, trading days skip weekends
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
-        max: 5
-        passed: false
-        comment: Values are realistic but the downtrend is quite pronounced; volumes
-          correlate with price moves
+        score: 4
+        max: 4
+        passed: true
+        comment: Price and volume ranges are realistic and properly scaled for visibility
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,33 +184,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Linear script with clear data generation, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output every run
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: json, os, tempfile, time, urllib, datetime, pathlib,
+          numpy, selenium'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highstock API
+        comment: Proper theme tokens, no fake UI, clean data prep. Follows highcharts
+          library guide correctly.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
-      items: []
+        comment: Saves as plot-light.png/html and plot-dark.png/html with correct
+          naming
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Highcharts.stockChart() - correct API for financial charts.
+          Proper yAxis array for dual axes. Correct OHLC data format. Follows library
+          guide exactly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of Highstock for synchronized dual-axis. Crosshair spanning
+          both panes. Inline script embedding for headless Chrome. Fairly standard
+          configuration, not advanced techniques.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - time-series
+  dataprep: []
+  styling:
+  - publication-ready

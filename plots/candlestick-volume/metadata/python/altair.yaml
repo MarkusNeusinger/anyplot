@@ -1,173 +1,183 @@
 library: altair
+language: python
 specification_id: candlestick-volume
 created: '2025-12-31T13:51:59Z'
-updated: '2025-12-31T13:55:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20620313967
+updated: '2026-05-16T05:37:04Z'
+generated_by: claude-haiku
+workflow_run: 25953759519
 issue: 3068
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/altair/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent dual-pane layout with proper 75/25 vertical split between price and
-    volume
-  - Clean candlestick implementation using layered wicks (mark_rule) and bodies (mark_bar)
-  - Colorblind-safe blue/yellow color scheme consistently applied across both panes
-  - Comprehensive tooltips showing all OHLC values and volume
-  - Realistic 60-day stock data generation with appropriate volatility and volume
-    correlation
-  - Proper title formatting per pyplots.ai conventions
+  - Perfect legibility in both light and dark themes with all text properly sized
+    and colored
+  - Correct candlestick structure with wicks and bodies; accurate OHLC encoding
+  - Dual-pane layout with proper proportions (70% price / 30% volume) as specified
+  - 'Strong theme-adaptation: data colors (Okabe-Ito) identical across themes; chrome
+    properly theme-aware'
+  - Realistic, plausible stock data with deterministic generation and proper volatility
+    modeling
+  - Clean code structure with no extraneous functions; reproducible via seed
+  - Correct Okabe-Ito palette with adequate contrast for accessibility
   weaknesses:
-  - Missing grid lines - spec explicitly requests subtle grid lines aligned across
-    both panes
-  - Legend defined in code but not included in the final combined chart
-  - Missing crosshair/cursor that spans both panes as specified in requirements
-  - No .interactive() call - misses Altair key interactivity strength for financial
-    charts
-  image_description: The plot displays a professional dual-pane candlestick chart
-    with volume. The upper pane (roughly 75% of height) shows 60 days of OHLC candlesticks
-    with blue bars for bullish days (close >= open) and yellow/gold bars for bearish
-    days. Clear wicks extend from each candle body showing high-low range. Price axis
-    labeled "Price ($)" ranges from ~$110 to $154, showing a general downtrend from
-    $150 to $115 over the period. The lower pane (~25% height) displays volume bars
-    using the identical blue/yellow color scheme for visual consistency. Volume axis
-    labeled "Volume" with SI notation (2M, 4M, etc.) up to 12M. Both panes share a
-    synchronized x-axis showing dates from early January through late March 2024.
-    The title "candlestick-volume · altair · pyplots.ai" appears centered at the top
-    with proper formatting.
+  - 'Design Excellence below median: no custom refinements beyond specification (no
+    spine removal, no advanced grid styling, minimal visual hierarchy emphasis)'
+  - 'Library Mastery moderate: solid core patterns but no distinctive library features
+    (conditional scales, advanced interactivity, Altair-specific optimizations)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface - appropriate and not pure white
+      Chrome: Title "candlestick-volume · altair · anyplot.ai" in dark text (INK color); axis labels "Price ($)" and "Volume" clearly readable; tick labels at 18px and 22px font sizes; grid lines subtle at 15% opacity
+      Data: Bullish candles in brand green (#009E73), bearish candles in vermillion (#D55E00); wicks 2px, bodies 12px; volume bars use same color scheme; all markers clearly distinguishable
+      Legibility verdict: PASS - All text readable against light background; no light-on-light conflicts
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface - appropriate and not pure black
+      Chrome: Title rendered in light text (INK #F0EFE8) and clearly visible; axis labels in INK_SOFT (#B8B7B0); tick labels readable; grid lines subtle with appropriate dark-theme opacity
+      Data: Bullish candles #009E73 (identical to light), bearish candles #D55E00 (identical to light) - confirming theme-independent data colors; volume bars show same directional coloring
+      Legibility verdict: PASS - All text readable against dark background; no dark-on-dark failures; vertical synchronization preserved
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title 28pt, axis labels 20pt, tick labels 16pt - all clearly readable
-          but tick labels could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Font sizes explicitly set (18px tick, 22px axis/title); readable
+          in both light and dark renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Vertical layout with 10px spacing; no element collisions; clear separation
+          between panes
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Candlesticks and volume bars well-sized, but some narrow candles
-          on volatile days could be slightly thicker
+        comment: Wicks (2px), bodies (12px), and volume bars all clearly distinguishable;
+          no lost elements
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow scheme is colorblind-safe and provides excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: 75/25 split between price and volume panes as specified, good canvas
-          utilization
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Price ($)" with units, "Volume" and "Date" descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito #009E73 (bullish) and #D55E00 (bearish); adequate contrast;
+          CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×800 canvas (600px price ≈75%, 200px volume ≈25%); proportions
+          match spec; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No visible grid lines (spec asks for subtle grid), no legend shown
-          (color scheme is intuitive but legend was created but not displayed)
+        comment: Title includes spec-id, library, domain; axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #D55E00; backgrounds correct; both
+          renders theme-correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean, professional candlestick composition; Okabe-Ito palette applied
+          correctly; limited custom design beyond specification
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Spines present (not removed); grid subtle; spacing generous; minimal
+          additional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Clear hierarchy: price dominates, volume confirms; color coding
+          creates implicit narrative; synchronized panes show relationship'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct candlestick + volume dual-pane chart
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on x-axis, OHLC correctly mapped to candles, volume to bars
-      - id: SC-03
+        comment: Correct candlestick chart with OHLC components; dual-pane layout
+          with synchronized x-axis
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Dual-pane layout ✓, shared x-axis ✓, color-coded ✓, tooltips ✓ -
-          Missing: crosshair/cursor spanning both panes per spec'
-      - id: SC-04
-        name: Data Range
+        comment: Candlesticks, volume bars, shared date axis, proportions 70-75%/25-30%,
+          tooltips with OHLCV
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes properly scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: 'X: date (temporal); Y (price): open/high/low/close; Y (volume):
+          volume values; all visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend created in code but not actually displayed in final chart
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "candlestick-volume · altair · pyplots.ai"
+        comment: Format correct; legend appropriately omitted for binary direction
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish AND bearish candles, varying volume, price trend
-          with volatility
+        comment: All OHLC components rendered; both directions represented; volume
+          fully shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price data with realistic daily movements, appropriate volume
-          levels
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price ~$110-154 realistic for stocks, volume in millions appropriate
+        comment: Stock price with realistic movements; volume variation; neutral financial
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range sensible; volume realistic; 60 trading days standard
+          for technical analysis
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,41 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → chart creation → save'
+        comment: No functions/classes; straightforward data generation → chart → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42); deterministic date_range; reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: 'Only used imports: os, altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; .interactive() for legitimate features; no
+          fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct), but legend chart created
-          but not included in final output
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of vconcat for dual pane, layering for candlesticks, tooltips
-          - but no interactivity (.interactive()) which is Altair's key strength
+        comment: High-level API; mark composition idiomatic; encoding patterns correct;
+          vconcat for layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Interactive pan/zoom; formatted tooltips; dual synchronized panes;
+          solid but not exceptional
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
