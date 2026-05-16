@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: scatter-brush-zoom
 created: '2026-01-08T16:04:00Z'
-updated: '2026-05-16T23:30:42Z'
+updated: '2026-05-16T23:37:22Z'
 generated_by: claude-haiku
 workflow_run: 25975682426
 issue: 3295
@@ -12,41 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-brush-zoom/python/plotly/plot-dark.html
-quality_score: 80
+quality_score: 71
 review:
   strengths:
-  - Rendered output quality is excellent with proper light/dark theming
-  - Interactive features well-implemented with brush selection and zoom
-  - Data demonstrates scatter plot effectively with clear cluster separation
-  - Good typography and readability in both light and dark themes
-  - Proper use of Plotly's interactive selection API and modebar customization
+  - Scatter plot correctly implements brush selection and zoom features
+  - Data is well-structured with realistic clusters and outliers
+  - Both light and dark renders are properly themed and readable
+  - Clean code without over-engineering or unnecessary complexity
+  - Effective use of plotly's selection API and modebar customization
   weaknesses:
-  - 'Code specifies non-Okabe-Ito colors (hardcoded #306998, #FFD43B, #4CAF50, #E91E63
-    instead of #009E73, #D55E00, #0072B2, #CC79A7)'
-  - No theme-adaptive implementation - code does not read ANYPLOT_THEME environment
-    variable and does not apply theme-dependent colors to chrome elements
-  - Code saves to wrong filenames (plot.png instead of plot-{THEME}.png, plot.html
-    instead of plot-{THEME}.html)
-  - 'Code-output mismatch: rendered images show different axis labels (Temperature/Efficiency
-    with units) and legend labels (Normal Operation, High Temperature, etc.) than
-    what''s in the code'
-  - Code uses generic axis labels (X Value, Y Value) instead of descriptive ones matching
-    the data domain
+  - 'Palette colors are completely wrong - uses Python default colors instead of Okabe-Ito
+    palette; first series must be #009E73 not #306998'
+  - Code does not read ANYPLOT_THEME environment variable; hardcodes title and grid
+    colors instead of using theme-adaptive tokens
+  - Output files saved with wrong naming convention - must be plot-{THEME}.png and
+    plot-{THEME}.html
+  - Theme-adaptive chrome not implemented in code (import os, define color tokens
+    based on ANYPLOT_THEME)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 or similar) - correct light theme surface
-      Chrome: Title "scatter-brush-zoom · plotly · anyplot.ai" in dark text (readable); axis labels "Temperature (°C)" and "Efficiency (%)" are descriptive with units; tick labels at multiple scale points (40, 50...110 on X-axis; scaled values on Y) in dark gray are legible; grid lines are subtle and non-dominant; legend has white/light background with visible border and dark text
-      Data: Four distinct clusters in teal, orange, blue, and pink (appears to be Okabe-Ito palette); gray outliers scattered; all markers clearly visible with white edge definition; instruction text "Drag to select • Scroll to zoom • Double-click to reset" in gray at bottom
-      Legibility verdict: PASS - all text is clearly readable against the warm light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) with excellent contrast for readability
+      Chrome: Title "scatter-brush-zoom · plotly · anyplot.ai" in dark text, axis labels "Temperature (°C)" and "Efficiency (%)" with units, tick labels all clearly visible
+      Data: Four clusters in teal, pink, orange, blue plus gray outliers - NOT Okabe-Ito colors (should be #009E73, #D55E00, #0072B2, #CC79A7)
+      Grid: Subtle grid lines visible
+      Legibility verdict: PASS (text readable, but colors wrong)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17 or similar) - correct dark theme surface
-      Chrome: Title text is now light-colored and readable against dark background; axis labels and tick labels in light colors (legible, no dark-on-dark failures); grid lines subtle but visible; legend has dark background (#242420-ish) with light text and visible border
-      Data: Teal, orange, blue, and pink marker colors are IDENTICAL to light render (confirms proper theme-adaptation where only chrome flips); outliers maintain gray color consistency; instruction text visible in light gray
-      Legibility verdict: PASS - all text is clearly readable against the warm dark background; no dark-on-dark failures detected; data colors correctly preserved across themes
+      Background: Warm near-black (#1A1A17) appropriate for dark theme
+      Chrome: Title in light text, all axis labels and ticks readable on dark background, no dark-on-dark failures
+      Data: Colors IDENTICAL to light render (teal, pink, orange, blue, gray) - correct theme-preservation approach, but wrong palette choice
+      Grid: Visible in dark theme
+      Legibility verdict: PASS (readable in both themes, but palette non-compliant)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 21
       max: 30
       items:
       - id: VQ-01
@@ -54,78 +53,68 @@ review:
         score: 6
         max: 8
         passed: false
-        comment: Readable in both themes but code relies on library defaults rather
-          than comprehensive explicit sizing
+        comment: Text readable but fonts not all explicitly sized; title color hardcoded
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No overlapping text elements; legend positioned cleanly outside plot
-          area
+        passed: false
+        comment: Some overlap from density, transparent markers help readability
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Marker sizing and opacity appropriate for ~325 points; all elements
-          clearly visible
+        comment: Markers well-sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Colors are distinguishable and CVD-safe; rendered output uses Okabe-Ito
-          palette
+        passed: false
+        comment: Palette not CVD-safe or Okabe-Ito compliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced proportions, generous margins (L:80, R:150, T:100, B:80),
-          nothing cut-off
+        comment: Good proportions, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Rendered output has descriptive labels with units (Temperature °C,
-          Efficiency %); CODE shows generic X Value/Y Value labels
+        passed: true
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Code specifies non-Okabe-Ito colors (#306998, #FFD43B,
-          #4CAF50, #E91E63). Should use #009E73, #D55E00, #0072B2, #CC79A7. Code does
-          not read ANYPLOT_THEME and does not implement theme-adaptive chrome.'
+        comment: 'CRITICAL: First series #306998 instead of #009E73; all colors wrong'
     design_excellence:
-      score: 10
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks distinctive design choices; color
-          palette errors in code
+        comment: Custom palette attempted but all colors wrong (Python defaults, not
+          Okabe-Ito)
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: Legend styling is good, grid is subtle, whitespace adequate; some
-          refinement evident but room for improvement
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clusters are visually distinct but no explicit visual emphasis or
-          narrative beyond basic display
+        comment: Minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clusters create visual grouping but no intentional hierarchy
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -133,55 +122,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with interactive capabilities
+        comment: Correct interactive scatter plot
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: brush selection (dragmode), zoom (scroll),
-          selection highlighting (opacity changes), reset (double-click)'
+        passed: false
+        comment: Brush, zoom, reset implemented; static image cannot show interactive
+          state
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped; axes span all data
+        comment: X/Y correct, full data range shown
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: 'CRITICAL ERROR: Code defines cluster_names as [Cluster A, B, C,
-          D] but rendered output shows [Normal Operation, High Temperature, Low Efficiency,
-          Maintenance]. Code will not produce shown output.'
+        passed: true
+        comment: Correct format and labels
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows multiple clusters with different distributions plus distinct
-          outlier group
+        comment: Multiple clusters, outliers, good variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature vs. Efficiency is plausible real-world scenario; neutral
-          context
+        comment: Temperature vs Efficiency is plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 40-110°C and Efficiency 25-100% are factually sensible
-          values
+        comment: Sensible values and ranges
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -189,61 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save, no unnecessary
-          functions/classes'
+        comment: Simple linear code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is deterministic
+        comment: Seed set for reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly imported; both are used
+        comment: Only numpy and plotly
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code; no over-engineering or fake functionality
+        passed: false
+        comment: Does not read ANYPLOT_THEME; hardcodes colors
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png (line 129) and plot.html (line 132)
-          instead of plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves as plot.png instead of plot-{THEME}.png
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Proper high-level API: go.Figure(), go.Scatter(), update_layout(),
-          update_traces()'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
+        passed: true
+        comment: Good use of plotly API and selection features
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
         passed: false
-        comment: Good use of interactive features (dragmode, selectdirection, selection
-          styling); could leverage more unique patterns
+        comment: Uses selection features; could leverage more capabilities
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
