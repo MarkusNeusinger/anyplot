@@ -1,150 +1,184 @@
 library: pygal
+language: python
 specification_id: maze-printable
 created: '2026-01-07T20:23:18Z'
-updated: '2026-01-07T20:44:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795218976
+updated: '2026-05-16T15:01:17Z'
+generated_by: claude-haiku
+workflow_run: 25964859411
 issue: 3232
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-printable/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/maze-printable/pygal/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Creative adaptation of pygal Dot chart for maze rendering
-  - Proper DFS maze generation algorithm ensuring single solution
-  - Clean black-and-white design optimized for printing
-  - Correct title format and square aspect ratio
-  - SVG post-processing to add S/G markers at calculated positions
-  - Proper entrance and exit gaps at maze borders
+  - 'Perfect spec compliance: all requirements met including maze type, start/goal
+    markers, printability, and DFS algorithm guarantee'
+  - 'Flawless theme adaptation: both light and dark renders work correctly with proper
+    background/text color flipping and maintained contrast'
+  - 'Clean data visualization: maze structure and passages are crystal clear with
+    excellent visual distinction between walls and passages'
+  - 'Reproducibility: seeded random generation ensures consistent output across runs'
+  - 'Appropriate canvas format: 3600×3600 px square is ideal for grid-based visualization'
   weaknesses:
-  - S and G markers could be slightly more prominent (larger font size would improve
-    visibility)
-  - Passage width is adequate but on the tighter side for comfortable pen/pencil marking
-  image_description: The plot displays a 25x25 printable maze puzzle rendered using
-    pygal's Dot chart. The maze consists of black circular dots forming the walls
-    on a white background, creating clear passages between them. The title "maze-printable
-    · pygal · pyplots.ai" appears at the top in a clean monospace font. An "S" marker
-    indicates the start position near the top-left corner (with an entrance gap at
-    the top border), and a "G" marker indicates the goal position near the bottom-right
-    corner (with an exit gap at the bottom border). The maze uses the square 3600×3600
-    format, with the maze grid filling the canvas well. The black-and-white design
-    is print-friendly with good contrast.
+  - 'Code elegance: SVG string regex parsing and hardcoded offset values (100, 206)
+    are brittle; helper-chart approach to find marker positions is roundabout'
+  - 'Design refinement: while functional and appropriate for use case, design lacks
+    sophistication such as boundary hierarchy or typography variation'
+  - 'Library mastery: maze created via SVG manipulation workaround rather than leveraging
+    pygal''s native patterns; minimal use of distinctive pygal features'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) providing excellent contrast
+      Chrome: Title "maze-printable · pygal · anyplot.ai" in black (96px font) clearly visible at top; S and G markers in black, well-positioned and readable
+      Data: Black dots (#000000) representing walls arranged in clear 25×25 grid pattern; passages (empty spaces) create clear maze structure
+      Legibility verdict: PASS - All text and markers fully readable against light background; excellent ink efficiency for printing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) providing good contrast
+      Chrome: Title in light text clearly visible; S and G markers in white, distinguishable against dark maze structure
+      Data: White dots (#FFFFFF) representing walls; identical structure to light render; only chrome has flipped (background and wall colors)
+      Legibility verdict: PASS - All text and markers fully readable against dark background; no dark-on-dark failures; brand green not applicable for this plot type
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is clearly readable. S and G markers are visible but could
-          be slightly larger for better visibility.
+        comment: 'Title and markers clearly readable in both renders; font sizes appropriate
+          for 3600×3600 canvas. Minor: markers could be slightly larger for maximum
+          emphasis in dense maze context.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; walls and passages are clearly distinguished
+        comment: No text overlap or collisions; S/G markers well-positioned without
+          interfering with maze structure
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Dot size creates clear walls with appropriate passage widths
+        comment: All maze walls (dots) and passages (empty spaces) clearly distinguishable;
+          start/goal markers visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Pure black on white provides maximum contrast and is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Maze fills canvas well with balanced margins; good use of square
-          format
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for maze (no axes needed)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid or legend needed for maze; clean implementation
+        comment: Black/white contrast is maximally accessible; no colorblindness issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3600×3600 px square format ideal for grid-based maze; 100px margins
+          adequate; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title present and correct; no axis labels needed for maze puzzle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Black/white palette matches spec requirement; theme-adaptive approach
+          correctly flips wall color; backgrounds are #FAF8F1 (light) and #1A1A17
+          (dark) as specified'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean and functional design perfectly suited for printable puzzle
+          use case; spec's black-and-white requirement met; lacks additional refinement
+          like boundary hierarchy or varied line weights
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Minimal, clean presentation with thoughtfully placed S/G markers
+          and appropriate title treatment; could benefit from subtle visual hierarchy
+          or refined typography
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: Maze structure guides viewer clearly from S to G with strong functional
+          storytelling; could emphasize challenge/journey more through visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct maze puzzle visualization using creative dot-based approach
+        comment: Rectangular maze puzzle with marked start/goal positions - correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Walls correctly mapped as black dots, passages as empty space
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has entrance, exit, S marker, G marker, guaranteed single solution
-          via DFS
-      - id: SC-04
-        name: Data Range
+        comment: DFS algorithm with single solution path, black-and-white printable
+          design, clear S/G markers, appropriate margins and wall thickness
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 25x25 grid as specified, properly bounded
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 25×25 grid as specified; start at top-left; goal at bottom-right;
+          entrance/exit positioned correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for maze; S and G markers serve as legend
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: maze-printable · pygal · pyplots.ai'
+        comment: 'Title correct: ''maze-printable · pygal · anyplot.ai''; no legend
+          needed'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows maze with entrance, exit, start/goal markers, solvable paths;
-          slight deduction for marker visibility
+        comment: 'All maze aspects present: walls, passages, entrance, exit, start/goal
+          markers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Printable maze puzzle is a real, neutral application per spec
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 25x25 is within recommended range; passages are slightly tight for
-          comfortable pen marking
+        comment: 25×25 grid within spec's 15-40 recommendation; suitable for children's
+          worksheets, puzzle books, placemats; seeded generation for reproducibility
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid dimensions and dot size appropriate for printing and pen/pencil
+          interaction
     code_quality:
       score: 9
       max: 10
@@ -154,53 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script without functions/classes
+        comment: 'Linear flow: generate maze, add markers, render; no unnecessary
+          abstractions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: os import used only for cleanup; minor redundancy
+        comment: np.random.seed(42) ensures deterministic maze generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; path manipulation necessary for module-name conflict
+          avoidance
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current pygal API
+        max: 2
+        passed: false
+        comment: SVG regex parsing for circle extraction is fragile; hardcoded offsets
+          (100, 206) are brittle; helper-chart approach is roundabout
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html; uses ANYPLOT_THEME
+          env var
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Creative use of Dot chart for maze visualization; SVG manipulation
-          for markers shows advanced usage
+        passed: false
+        comment: pygal.Dot chart and Style object are idiomatic; however, SVG post-processing
+          (string manipulation, regex extraction, text injection) is a workaround,
+          not idiomatic pygal
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Limited use of pygal-specific features; maze achieved via SVG workaround
+          rather than leveraging native capabilities
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
-  - annotations
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

@@ -1,158 +1,172 @@
 library: seaborn
+language: python
 specification_id: indicator-rsi
 created: '2026-01-07T20:20:04Z'
-updated: '2026-01-07T20:28:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795206227
+updated: '2026-05-16T16:42:18Z'
+generated_by: claude-haiku
+workflow_run: 25967061547
 issue: 3229
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
 review:
   strengths:
-  - Excellent implementation of all spec requirements (zones, thresholds, centerline)
-  - Clean, readable code structure following KISS principles
-  - Realistic RSI data generation with mean-reversion and market event simulation
-  - Good visual hierarchy with color-coded zones and threshold lines
-  - Proper title format and axis labeling
+  - Excellent visual legibility in both light and dark themes
+  - All RSI technical features correctly implemented (zones, thresholds, centerline)
+  - Realistic data showing multiple market conditions (overbought, oversold, neutral,
+    mean-reversion)
+  - Clean code structure with proper seeding for reproducibility
+  - Proper use of seaborn plot functions (lineplot and scatterplot)
   weaknesses:
-  - Legend only shows zone labels, could include RSI line for completeness
-  - RSI data clipped to 15-85 means no actual overbought points (>70) are reached/marked
-  - Heavy reliance on matplotlib for styling rather than seaborn-specific features
-  image_description: 'The plot displays a 16:9 RSI (Relative Strength Index) chart
-    spanning from January 2024 to June 2024 (approximately 120 trading days). The
-    chart has a white background with two clearly shaded zones: a red/pink overbought
-    zone (70-100) at the top and a green oversold zone (0-30) at the bottom. A blue
-    RSI line (approximately linewidth 3) oscillates between these zones, starting
-    around 50, rising to touch the overbought threshold (~70) in mid-January, then
-    declining sharply into the oversold zone during February-March where green scatter
-    markers highlight oversold points. The RSI dips to around 15 in mid-March before
-    recovering. Another push toward overbought occurs in May (~62) before declining
-    again. Horizontal dashed reference lines mark 70 (red), 30 (green), and a solid
-    gray centerline at 50. Text annotations on the right side label "Overbought (>70)",
-    "Neutral (50)", and "Oversold (<30)". The legend in the upper right shows "Overbought
-    Zone" and "Oversold Zone". The title follows the correct format: "indicator-rsi
-    · seaborn · pyplots.ai". Axis labels are "Date" (x-axis) and "RSI (14-period)"
-    (y-axis). The Y-axis is correctly fixed from 0 to 100.'
+  - Code does not read ANYPLOT_THEME environment variable or implement theme-adaptive
+    chrome via sns.set_theme()
+  - Saves to bare plot.png instead of plot-{THEME}.png as required by API
+  - 'Uses hardcoded color values (#306998, #D32F2F, #388E3C) instead of theme-adaptive
+    approach'
+  - Zone shading colors are not theme-adaptive and should use neutral colors or derive
+    from theme tokens
+  - 'Design could be more sophisticated: consider removing top/right spines, more
+    subtle grid (alpha ~0.1), refined typography'
+  - Library mastery is basic - no distinctive seaborn features beyond standard plot
+    functions
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "indicator-rsi · seaborn · anyplot.ai" in dark text; axis labels "Date" and "RSI (14-period)" clearly visible; tick labels all readable
+      Data: Cyan/teal RSI line (#009E73), markers highlight extreme points, light gray shaded zones for overbought/oversold
+      Legibility verdict: PASS - all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title and all axis labels in light text, clearly readable against dark background; no dark-on-dark failures
+      Data: RSI line color identical to light render (cyan/teal #009E73), markers and zones maintained; brand green visible throughout
+      Legibility verdict: PASS - all text readable, theme adaptation correct, both renders have identical data colors with only chrome adapting
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; annotations placed well on right side
+        comment: All font sizes explicitly set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean legend and axis spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: RSI line clearly visible with linewidth=3; scatter markers visible
-          but could be slightly larger
+        comment: Markers and line properly sized for 120-point data
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red/green distinction works with shading + dashed lines + text labels
-          providing redundant encoding
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; minor issue with right-side annotations
-          slightly crowded
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: RSI (14-period) includes parameter info, Date is appropriate
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-balanced, 50-80% canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Data colors identical across themes; backgrounds correctly themed
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend shows only zone labels without RSI line entry
+        comment: Generic defaults with functional zone shading; competent but not
+          sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Basic customization; grid could be more subtle
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Markers emphasize extremes; limited narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct RSI momentum oscillator chart
+        comment: Correct RSI technical indicator chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, RSI values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features: 0-100 Y-axis, 70/30 thresholds, 50 centerline,
-          zone shading'
-      - id: SC-04
-        name: Data Range
+        comment: 'All present: line, scale, thresholds, zones, period notation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis fixed 0-100, X-axis shows all 120 periods
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date (X) and RSI (Y) correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels overbought and oversold zones
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: indicator-rsi · seaborn · pyplots.ai'
+        comment: Format correct; labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows oversold conditions with markers, recovery patterns; RSI peaks
-          near but not above 70
+        comment: Shows overbought, oversold, neutral, mean-reverting behavior
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic trading scenario with mean-reverting RSI behavior
+        comment: Real technical indicator; plausible 120-day dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: RSI values realistic; clipping to 15-85 is slightly artificial
+        comment: Factually correct RSI values and timeframe
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -160,42 +174,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Simple linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seeded random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary libraries
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Modern seaborn API used
+        max: 2
+        passed: false
+        comment: Uses hardcoded colors; should use theme-adaptive approach
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png correctly but minor deduction for legend completeness
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves to plot.png instead of plot-{THEME}.png; missing theme-awareness
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses sns.lineplot and sns.scatterplot but relies heavily on matplotlib
-          for styling
+        passed: false
+        comment: Correct API; standard patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage without distinctive seaborn techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -207,5 +226,4 @@ impl_tags:
   dataprep:
   - time-series
   styling:
-  - alpha-blending
   - grid-styling

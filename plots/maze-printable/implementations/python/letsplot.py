@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 73/100 | Updated: 2026-05-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,11 @@ from lets_plot import *
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # Maze parameters
 np.random.seed(42)
@@ -66,9 +73,6 @@ for y in range(maze_rows):
 df_walls = pd.DataFrame(wall_data)
 
 # Start and goal positions (outside the maze at entrance/exit)
-# Entrance opening is at maze[0, 1] -> display (1, 50) to (2, 51), center (1.5, 50.5)
-# Exit opening is at maze[50, 49] -> display (49, 0) to (50, 1), center (49.5, 0.5)
-# Place markers just outside these openings
 start_x = 1.5
 start_y = maze_rows + 0.5  # Just above the entrance
 goal_x = 2 * width - 1 + 0.5  # = 49.5
@@ -82,14 +86,18 @@ plot = (
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=df_walls, fill="black", color="black", size=0
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=df_markers, size=10, fontface="bold", color="#306998")
+    + geom_text(aes(x="x", y="y", label="label"), data=df_markers, size=10, fontface="bold", color=INK)
     + coord_fixed(ratio=1, xlim=(-1.5, maze.shape[1] + 0.5), ylim=(-1.5, maze_rows + 1.5))
     + theme_void()
-    + theme(plot_title=element_text(size=24, hjust=0.5), plot_margin=[40, 40, 40, 40])
-    + labs(title="maze-printable \u00b7 letsplot \u00b7 pyplots.ai")
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, hjust=0.5, color=INK),
+        plot_margin=[40, 40, 40, 40],
+    )
+    + labs(title="maze-printable · letsplot · anyplot.ai")
     + ggsize(1200, 1200)
 )
 
 # Save as PNG and HTML
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.html")

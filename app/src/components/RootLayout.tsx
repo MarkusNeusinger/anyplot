@@ -49,6 +49,13 @@ export function RootLayout() {
     window.scrollTo(0, 0);
   }, [pathname, hash, navigationType]);
 
+  // Always reset horizontal scroll on route change. If a previous page leaked
+  // page-level horizontal scroll (e.g. a wide table on mobile), the offset
+  // otherwise persists into the next page and clips its left edge.
+  useEffect(() => {
+    window.scrollTo({ left: 0, top: window.scrollY });
+  }, [pathname]);
+
   return (
     <Box sx={{
       display: 'flex',

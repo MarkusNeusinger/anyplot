@@ -1,152 +1,182 @@
 library: seaborn
+language: python
 specification_id: maze-printable
 created: '2026-01-07T20:19:52Z'
-updated: '2026-01-07T20:26:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795208790
+updated: '2026-05-16T14:50:15Z'
+generated_by: claude-haiku
+workflow_run: 25964641580
 issue: 3232
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-printable/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent use of seaborn heatmap function to render the maze grid efficiently
-  - Clean black-and-white design optimized for printing as specified
-  - DFS algorithm properly implemented ensuring a single solution path
-  - Good use of seaborn styling (set_style, set_context, despine) for clean output
-  - Start/Goal markers are visually distinct with contrasting colors
-  - Square aspect ratio is perfect for maze puzzles
+  - Perfect theme adaptation with correctly inverted colors between light (#FAF8F1)
+    and dark (#1A1A17) renders
+  - Excellent text legibility with explicitly set font sizes (title 28pt, labels 22pt)
+    in both themes
+  - Clean, algorithmically generated maze using DFS guarantees single solution path
+  - 'Correct Okabe-Ito palette usage: green (#009E73) for start, orange (#D55E00)
+    for goal'
+  - Idiomatic seaborn usage with proper theming tokens and consistent chrome styling
   weaknesses:
-  - Start (S) and Goal (G) markers could be slightly larger relative to passage width
-    for better visibility when printed
-  - Figure size (12x12) could be increased to better match the 3600x3600 target resolution
-  image_description: The plot displays a 25x25 cell rectangular maze puzzle with black
-    walls on a white background. The title "maze-printable · seaborn · pyplots.ai"
-    appears at the top in bold black text. The start position is marked with a blue
-    circle containing a white "S" in the top-left corner of the maze. The goal position
-    is marked with a yellow/gold circle containing a black "G" in the bottom-right
-    corner. The maze is algorithmically generated using DFS and shows consistent wall
-    thickness throughout. The design is clean and print-friendly with high contrast
-    black-and-white passages and walls. The maze fills the square canvas well with
-    adequate margins.
+  - 'Design Excellence below average - straightforward heatmap with minimal aesthetic
+    sophistication (DE-01: 4/8)'
+  - Limited visual hierarchy - start/goal markers provide basic direction but no dramatic
+    emphasis or visual storytelling
+  - Generic visual approach - could benefit from custom styling choices or more intentional
+    design decisions
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title "maze-printable · seaborn · anyplot.ai" in bold black text, clearly readable
+      Data: 25×25 maze rendered as black walls on white passages with perfect contrast; start marker (green circle with white "S") at top-left, goal marker (orange circle with white "G") at bottom-right
+      Legibility verdict: PASS - all text is clearly visible, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct surface color
+      Chrome: Title in white text on dark background, clearly readable; no dark-on-dark failures
+      Data: Maze inverts to white walls on black passages (maintaining high contrast for printability); start marker (green #009E73) and goal marker (orange #D55E00) are identical to light render, confirming data colors are theme-independent
+      Legibility verdict: PASS - all elements readable, proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large, bold, and perfectly readable. Start/Goal markers
-          are clear.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements anywhere in the visualization.
+        comment: 'Explicitly set font sizes: title 28pt, labels 22pt, all readable
+          in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Start/goal at opposite corners, title has proper padding, no overlapping
+          elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Walls and passages are clearly visible with good contrast. Markers
-          are slightly small relative to passages.
+        comment: All maze elements visible with high contrast, markers are prominent
+          (zorder=10)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black/white design is universally accessible. Blue and yellow markers
-          provide good contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square format is perfect for a maze, fills canvas well with balanced
-          margins.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for maze puzzle - no axes needed, appropriately hidden.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe; black-white maze is universally
+          visible
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600) appropriate for maze; balanced margins;
+          50-80% canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for this plot type, no grid/legend needed.
+        comment: Title is descriptive; start/goal positions clearly labeled
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green #009E73, second orange #D55E00; backgrounds are
+          theme-correct; data colors identical between light/dark'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with clean design, but lacks distinctive
+          aesthetic choices or sophisticated styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Spines removed and margins managed, but minimal visual refinement
+          beyond standard library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Start/goal markers provide basic direction, but no visual hierarchy
+          or dramatic emphasis techniques
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct maze puzzle visualization with walls and passages.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Grid correctly represents maze structure (0=wall, 1=passage).
-      - id: SC-03
+        comment: Correct printable maze with DFS-generated structure guaranteeing
+          single solution
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has start (S) and goal (G) markers, uses DFS algorithm. Could have
-          slightly more prominent markers.
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: marked start, marked goal, black walls, white
+          passages, print-optimized'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 25x25 maze visible within bounds.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Maze grid correctly mapped; start at (1,1), goal at (49,49); 25×25
+          size appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Start/Goal markers present but no explicit legend explaining S/G.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: maze-printable · seaborn · pyplots.ai'
+        comment: Title format correct; clear start/goal labeling; legend appropriately
+          omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete solvable maze with single solution path. Good complexity.
+        comment: Shows complete maze structure with all aspects of puzzle type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Perfect for printable puzzle sheets, educational materials.
+        comment: Realistic printable puzzle; reproducible with seed; neutral, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 25x25 is good size, within recommended 15-40 range.
+        comment: 25×25 grid is sensible complexity; wall thickness appropriate for
+          pen/pencil
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,55 +184,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data generation → plotting → save structure.
+        comment: 'Simple script structure: imports → constants → maze generation →
+          plotting → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible maze generation.
+        comment: np.random.seed(123) ensures deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib, numpy, seaborn).
+        comment: 'Only needed imports: os, matplotlib.pyplot, numpy, seaborn'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic DFS implementation; no over-engineering; no fake
+          functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn and matplotlib APIs.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but figsize is 12x12 not optimal for 3600x3600
-          target.
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct output format: f''plot-{THEME}.png'''
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Effectively uses sns.heatmap() with custom colormap, sns.set_style(),
-          sns.set_context(), and sns.despine().
+        comment: 'Expert use of seaborn high-level API: sns.heatmap, sns.set_theme,
+          sns.color_palette, sns.despine'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Clever colormap inversion for dark mode; uses theme tokens throughout;
+          somewhat above generic but not highly distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - patches
-  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-  - custom-colormap

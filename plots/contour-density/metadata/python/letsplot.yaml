@@ -1,160 +1,177 @@
 library: letsplot
+language: python
 specification_id: contour-density
 created: '2025-12-30T09:37:09Z'
-updated: '2025-12-30T09:47:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593405154
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-density/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-density/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-16T03:44:36Z'
+generated_by: claude-haiku
+workflow_run: 25951700037
+issue: 2552
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visualization of three distinct density clusters with clear concentric
-    contour lines
-  - Good use of scatter overlay with low alpha providing context without overwhelming
-    the contours
-  - Proper ggplot2-style grammar with geom_density2d following lets-plot conventions
-  - Axis labels include appropriate units (°C, %) and are descriptive
-  - 'Title follows the exact required format: spec-id · library · pyplots.ai'
-  - Realistic temperature/humidity scenario with sensible data ranges
-  weaknesses:
-  - Scatter point alpha could be slightly lower (0.2) for better contour visibility
-    in dense areas
-  image_description: 'The plot displays a density contour visualization on a light
-    gray background with subtle grid lines. Three distinct clusters are visible through
-    concentric blue contour lines (#306998 color): one in the upper-left area centered
-    around ~15°C/80% humidity (small, dense cluster), one in the lower-center area
-    around ~22°C/55% humidity (large, dense cluster with many contour levels), and
-    one on the right side around ~32°C/75% humidity (more diffuse cluster). Yellow-gold
-    scatter points (#FFD43B) with low alpha are overlaid showing the underlying data
-    distribution. The x-axis shows "Temperature (°C)" ranging from ~8 to 46, and the
-    y-axis shows "Relative Humidity (%)" ranging from ~35 to 100. The title "contour-density
-    · letsplot · pyplots.ai" appears at the top.'
+  - Theme tokens applied correctly to all chrome elements (title, axis labels, ticks,
+    grid) for both light and dark renders
+  - Excellent theme readability in both renders — no text legibility issues, proper
+    color contrast throughout
+  - Strong spec compliance — density contour plot with scatter overlay clearly reveals
+    three clusters and bivariate distribution shape
+  - Idiomatic letsplot usage — proper ggplot composition, geom_density2d with appropriate
+    bins=10, sensible alpha blending on overlay
+  - Professional, polished design with minimal-theme foundation and subtle grid styling
+  - Clean data generation with deterministic seed (42) and realistic bivariate distribution
+    (temperature vs humidity with three clusters)
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly themed, not pure white.
+      Chrome: Title "contour-density · letsplot · anyplot.ai" in dark text (#1A1A17), axis labels and tick labels all clearly readable against light surface.
+      Data: Contour lines in brand green (#009E73) reveal three distinct density clusters with varying spreads; scatter overlay points (same green, alpha=0.2) provide distribution context without visual clutter.
+      Grid: Subtle, 10% opacity, visible but doesn't compete with data.
+      Legibility verdict: PASS — all elements crisp and readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly themed, not pure black.
+      Chrome: Title, axis labels, tick labels all in light color (#F0EFE8 or similar), clearly legible against dark surface. No dark-on-dark failures.
+      Data: Contour lines identical green (#009E73) as light render, confirming color constancy. Scatter points visible with same transparency behavior.
+      Grid: Subtle grid lines visible and readable on dark surface.
+      Legibility verdict: PASS — both renders are fully readable and theme-consistent. Data colors unchanged, only chrome adapted.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title, axis labels, tick labels all readable in both themes with
+          proper color contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements well-spaced, no text collisions or overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Contour lines are clearly visible; scatter points slightly compete
-          with contours in dense areas
+        comment: Contour lines clearly visible at 10 density levels; scatter overlay
+          subtle but visible with alpha=0.2
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" and "Relative Humidity (%)" include units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito brand green #009E73 used throughout, CVD-safe, good contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio, well-proportioned, nothing cut off, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Subtle grid present; no legend needed for this plot type
+        comment: 'Descriptive labels with units: Temperature (°C), Relative Humidity
+          (%)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1 (light) / #1A1A17 (dark),
+          both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional use of theme tokens, intentional hierarchy with title
+          > axis labels > ticks, clean composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() base with custom token refinement, subtle grid (10%
+          opacity), generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Contour levels create visual hierarchy showing density gradient;
+          scatter overlay provides context; three clusters are focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct density contour plot with geom_density2d
+        comment: Correct 2D KDE density contour plot using geom_density2d
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned to temperature/humidity
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: KDE contours, scatter overlay for context as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Contour lines, scatter overlay, bivariate axes, multiple density
+          levels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=temperature (continuous), Y=humidity (continuous), all data displayed
+          with appropriate scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; plot is self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "contour-density · letsplot · pyplots.ai"
+        comment: 'Correct title format: ''contour-density · letsplot · anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple clusters with different densities and spreads (dense
-          vs diffuse)
+        comment: Shows bivariate distribution with clear clusters, contour levels,
+          and density patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Temperature/humidity is a real-world scientific scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Values are realistic though humidity reaching 100% is at the physical
-          limit
+        comment: Realistic bivariate scenario (temperature vs humidity), neutral data,
+          three distinct clusters with natural spread
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Sensible ranges; humidity values mostly 50-100% (cluster tails slightly
+          exceed typical saturation but well-visualized)
     code_quality:
       score: 10
       max: 10
@@ -164,40 +181,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Simple script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: All imports (os, numpy, pandas, lets_plot) are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current lets-plot API
+        comment: Appropriate complexity, no fake UI, clean theme composition
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, uses ggsave with
+          correct scale parameter
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses geom_density2d (ggplot2 grammar), proper ggsize scaling, and
-          theme customization
+        comment: 'Proper ggplot grammar: aes() mapping, geom_density2d with sensible
+          parameters, theme composition'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses letsplot's geom_density2d effectively; generates both interactive
+          HTML and static PNG outputs
+    score_caps:
+      applied: false
+      note: No score caps triggered
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending

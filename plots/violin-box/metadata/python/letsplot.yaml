@@ -1,164 +1,187 @@
 library: letsplot
+language: python
 specification_id: violin-box
 created: '2025-12-30T11:30:38Z'
-updated: '2025-12-30T11:37:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20595343277
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-box/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-box/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-15T22:23:55Z'
+generated_by: claude-sonnet
+workflow_run: 25943180785
+issue: 2646
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent combination of violin and box plot showing both KDE density and summary
-    statistics
-  - Clean ggplot2-style grammar implementation with proper layering
-  - Colorblind-friendly palette with four distinct colors
-  - Realistic server response time scenario with varied distributions
-  - Proper font sizing following lets-plot guidelines (24pt title, 20pt labels, 16pt
-    ticks)
-  - Outliers clearly visible as hollow circles
+  - Correct violin + embedded box plot implementation matching spec exactly
+  - 'Excellent data storytelling: four distinct distribution shapes (normal, outlier-heavy,
+    bimodal, tight) make group differences immediately clear'
+  - Outliers shown as open circles, whiskers and IQR box all present — full spec feature
+    coverage
+  - 'Good grid control: x-axis major grid removed, minor grid removed, only horizontal
+    reference lines remain'
+  - Realistic, neutral domain (server response times in ms) with appropriate scale
+    and 150 data points per group
+  - Reproducible with np.random.seed(42) and clean flat-script code structure
   weaknesses:
-  - Legend is hidden (legend_position=none) - while x-axis labels work as identifiers,
-    keeping a legend could add clarity
-  - Could leverage lets-plot interactive tooltip features for the HTML export
-  - Bimodal distribution in Premium group is somewhat subtle, could be more pronounced
-  image_description: 'The plot displays a violin plot with embedded box plots showing
-    server response times (ms) across four server configurations: Standard, Optimized,
-    Premium, and Enterprise. Each violin is colored distinctly - Standard is blue
-    (#306998), Optimized is yellow (#FFD43B), Premium is teal (#4A90A4), and Enterprise
-    is green (#7CB342). White box plots are centered inside each violin showing median,
-    quartiles, and whiskers. Outliers are displayed as hollow circles. The title "violin-box
-    · letsplot · pyplots.ai" appears at the top. Y-axis shows "Response Time (ms)"
-    ranging from 0-140, X-axis shows "Server Configuration". The plot uses a minimal
-    theme with subtle horizontal grid lines.'
+  - 'CRITICAL — Palette violation: scale_fill_manual uses ["#306998", "#FFD43B", "#4A90A4",
+    "#7CB342"] (Python brand colors) instead of Okabe-Ito. First series MUST be #009E73.
+    Fix: scale_fill_manual(values=["#009E73", "#D55E00", "#0072B2", "#CC79A7"])'
+  - 'CRITICAL — No ANYPLOT_THEME handling: code does not read os.getenv("ANYPLOT_THEME",
+    "light") and applies no theme-adaptive chrome (background, text, grid colors).
+    Both renders will be identical light-themed output regardless of environment variable.'
+  - 'CRITICAL — Wrong output filename: ggsave saves to "plot.png" and "plot.html"
+    instead of "plot-{THEME}.png" and "plot-{THEME}.html". The pipeline requires theme-suffixed
+    filenames.'
+  - Title in code uses "pyplots.ai" instead of "anyplot.ai" — the correct domain for
+    the title watermark.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct surface color.
+      Chrome: Title "violin-box · letsplot · anyplot.ai" in dark bold text, clearly readable. Axis label "Response Time (ms)" on y-axis and "Server Configuration" on x-axis — both clearly readable with dark ink. Tick labels (0, 10, 20, ... 140 on y; group names on x) are dark text on light background, legible.
+      Data: Four violins: Standard=teal-green (#009E73-like), Optimized=burnt orange (#D55E00-like), Premium=steel blue (#0072B2-like), Enterprise=reddish purple (#CC79A7-like). Each has embedded white-fill box plot showing quartiles and whiskers. Outlier circles visible on Standard (low outlier ~45ms), Optimized (several high outliers ~100-105ms, one low ~15ms), Enterprise (high outliers ~68-70ms). Premium shows bimodal shape clearly. Grid lines are subtle horizontal lines only.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+      NOTE: Images appear to be from a PREVIOUS code version. Current code uses non-Okabe-Ito palette (#306998, #FFD43B, #4A90A4, #7CB342) and has no ANYPLOT_THEME handling — if re-run, output will differ significantly from these images.
+
+    Dark render (plot-dark.png):
+      Background: Near-black consistent with #1A1A17 — correct dark surface.
+      Chrome: Title "violin-box · letsplot · anyplot.ai" in white/light text, clearly readable. Axis labels in light text on dark background, readable. Tick labels are light-colored, no dark-on-dark issues detected.
+      Data: Violin colors are identical to the light render (green, orange, blue, pink) — correct, only chrome flipped. Box plot interiors appear slightly darker in the dark render (box fill="white" is hardcoded which may render as off-white or get theme-overridden). Outliers visible as white-bordered open circles against dark violin fills.
+      Legibility verdict: PASS for these cached images — all text visible against dark background. However, current code lacks ANYPLOT_THEME handling, so re-running would NOT produce a dark-themed render.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and ~24pt, axis labels ~20pt, tick labels ~16pt, all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, category labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: 'Violins and box plots clearly visible, outliers shown as hollow
-          circles. Minor deduction: box plots could be slightly wider for better visibility'
+        comment: Text sizes correct (24pt title, 20pt axis, 16pt tick). Readable in
+          both renders from cached images.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Violins well-separated, no text collisions, outlier circles don't
+          overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'All violins and boxes clearly visible. Minor: box fill=''white''
+          hardcoded may reduce contrast in dark mode.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors that are colorblind-safe (blue, yellow, teal,
-          green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" with units, "Server Configuration" descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: CVD-safe palette visible in images. Not using red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off. Slight margin tightness.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (good), but legend is hidden when colors are mapped
-          to categories - this is acceptable since x-axis labels serve as legend
+        comment: Descriptive labels with units (ms), correct axis assignment.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CODE uses [''#306998'',''#FFD43B'',''#4A90A4'',''#7CB342''] — not
+          Okabe-Ito. First series must be #009E73. No ANYPLOT_THEME reading, no theme-adaptive
+          background set. Images appear cached from previous version.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Violin+box combination is inherently sophisticated. Clean layout,
+          no legend (appropriate). Penalized for wrong color palette in code.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good choices: x-grid removed, minor grid removed, no legend. No
+          explicit spine removal evident.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Four distinct distribution shapes (normal, outlier-heavy, bimodal,
+          tight) create a clear comparative narrative. Bimodal Premium is a nice touch.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct violin + box plot combination
+        comment: Correct violin with embedded box plot.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has violin (KDE), box plot (median, quartiles, whiskers), and outliers
-      - id: SC-04
-        name: Data Range
+        comment: KDE violin shape, median line, IQR box, whiskers, outlier points
+          — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data from 0-140ms
-      - id: SC-05
-        name: Legend Accuracy
+        comment: x=configuration (categorical), y=response_time (numeric). 4 groups,
+          150 points each.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: X-axis labels serve as categorical identifier
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "violin-box · letsplot · pyplots.ai"
+        max: 3
+        passed: false
+        comment: Code title uses 'pyplots.ai' instead of 'anyplot.ai'. Images show
+          correct 'anyplot.ai' but code is authoritative for future runs.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows different distribution shapes: unimodal (Standard, Enterprise),
-          bimodal (Premium visible), with outliers. Minor: bimodal in Premium could
-          be more pronounced'
+        comment: Shows KDE shape, quartiles, whiskers, outliers across 4 groups with
+          different distribution profiles.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response times is a real, neutral, comprehensible scenario
+        comment: Server response times in ms — realistic, neutral, non-controversial.
+          Tier names believable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 20-130ms are realistic, though range is slightly wide
+        comment: 10-140ms range appropriate for server response times.
     code_quality:
       score: 9
       max: 10
@@ -168,41 +191,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used
+        comment: numpy, pandas, lets_plot — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current lets-plot API
+        comment: Clean, no fake UI, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves both plot.png and plot.html, but uses path="." which is correct
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves to 'plot.png'/'plot.html' instead of 'plot-{THEME}.png'/'plot-{THEME}.html'.
+          Does not read ANYPLOT_THEME.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar, layered geom_violin + geom_boxplot, scale_fill_manual,
+          theme customization.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot2-style grammar with geom_violin and geom_boxplot layering,
-          theme_minimal, scale_fill_manual. Could leverage more lets-plot specific
-          features like tooltips for interactivity
-  verdict: APPROVED
+        comment: Uses violin+box layer composition, trim=False to show full distribution
+          tails, HTML export.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

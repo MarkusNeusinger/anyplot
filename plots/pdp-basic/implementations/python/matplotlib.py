@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-31
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-15
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +12,15 @@ from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.inspection import partial_dependence
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT = "#E69F00"  # Okabe-Ito position 5 for rug plot
 
 # Data: Train a gradient boosting model and compute partial dependence
 np.random.seed(42)
@@ -32,39 +43,53 @@ grid_values = pd_result["grid_values"][0]
 ice_mean = pdp_values
 ice_std = np.std(ice_lines, axis=0)
 
-# Create plot (4800x2700 px)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Plot ICE lines (faint individual lines)
-for i in range(0, len(ice_lines), 10):  # Sample every 10th line for clarity
-    ax.plot(grid_values, ice_lines[i], color="#306998", alpha=0.1, linewidth=1)
+for i in range(0, len(ice_lines), 10):
+    ax.plot(grid_values, ice_lines[i], color=BRAND, alpha=0.08, linewidth=1)
 
 # Plot confidence band
 ax.fill_between(
     grid_values,
     ice_mean - 1.96 * ice_std,
     ice_mean + 1.96 * ice_std,
-    alpha=0.25,
-    color="#306998",
+    alpha=0.2,
+    color=BRAND,
     label="95% Confidence Interval",
 )
 
 # Plot main PDP line
-ax.plot(grid_values, pdp_values, color="#306998", linewidth=4, label="Partial Dependence")
+ax.plot(grid_values, pdp_values, color=BRAND, linewidth=4, label="Partial Dependence")
 
 # Add rug plot showing data distribution
 rug_y = ax.get_ylim()[0]
 ax.scatter(
-    X[:, feature_idx], np.full(len(X), rug_y), marker="|", color="#FFD43B", alpha=0.4, s=100, label="Data Distribution"
+    X[:, feature_idx], np.full(len(X), rug_y), marker="|", color=ACCENT, alpha=0.5, s=200, label="Data Distribution"
 )
 
-# Labels and styling
-ax.set_xlabel("Feature Value", fontsize=20)
-ax.set_ylabel("Partial Dependence (Predicted Value)", fontsize=20)
-ax.set_title("pdp-basic · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=16, loc="upper left")
-ax.grid(True, alpha=0.3, linestyle="--")
+# Style
+ax.set_xlabel("Feature Value", fontsize=20, color=INK)
+ax.set_ylabel("Partial Dependence (Predicted Value)", fontsize=20, color=INK)
+ax.set_title("pdp-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+# Legend with background
+leg = ax.legend(fontsize=16, loc="upper left", frameon=True)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(1)
+for text in leg.get_texts():
+    text.set_color(INK_SOFT)
+
+# Grid
+ax.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

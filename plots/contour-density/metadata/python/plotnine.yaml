@@ -1,158 +1,167 @@
 library: plotnine
+language: python
 specification_id: contour-density
 created: '2025-12-30T09:35:01Z'
-updated: '2025-12-30T09:46:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20593355145
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-density/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-16T03:41:11Z'
+generated_by: claude-haiku
+workflow_run: 25951577757
+issue: 2552
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with clean ggplot-style composition
-  - Three distinct clusters effectively demonstrate the density contour concept
-  - Good overlay of scatter points for context as suggested in spec notes
-  - Clean minimal theme with appropriate text sizing
-  - Correct title format and colorblind-safe color palette
-  weaknesses:
-  - Axis labels lack units (generic Measurement A/B without specifying units)
-  - Could utilize filled contours for stronger visual impact as mentioned in spec
-  - Contour line thickness could be slightly thicker for better visibility at smaller
-    viewing sizes
-  image_description: 'The plot displays a density contour visualization with three
-    distinct clusters visible against a minimal gray background. Blue/gray semi-transparent
-    scatter points (alpha ~0.2) show the raw data distribution, while golden-yellow
-    contour lines (color #FFD43B) outline regions of equal density. The main cluster
-    is centered around (50, 45), a secondary cluster at (75, 70), and a smaller cluster
-    at (30, 75). The title "contour-density · plotnine · pyplots.ai" appears at the
-    top in black text. Axis labels read "Measurement A" (x-axis) and "Measurement
-    B" (y-axis). The plot uses a clean minimal theme with subtle gray gridlines. The
-    16:9 aspect ratio is properly utilized with good canvas coverage.'
+  - Perfect visual quality with explicit font sizing and zero readability issues in
+    both themes
+  - Flawless spec compliance and data mapping
+  - Clean, reproducible code with proper KISS structure
+  - 'Expert plotnine usage: idiomatic grammar of graphics with proper layer composition'
+  - Both light and dark renders execute theme adaptation perfectly (data colors constant,
+    chrome adaptive)
+  - 'Clear data storytelling: three density clusters immediately visible and visually
+    emphasized'
+  - Realistic, neutral example data with appropriate domain scales
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all clearly visible in dark text
+      Data: Twelve contour lines in #009E73 (teal) showing three distinct density clusters; background points in soft gray
+      Grid: Subtle and non-competing with data
+      Legibility verdict: PASS - all text perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, tick labels in light text (#F0EFE8, #4A4A44), all clearly visible
+      Data: Contour colors identical to light render (#009E73); background points in lighter gray
+      Grid: Subtle and balanced
+      Legibility verdict: PASS - no dark-on-dark issues, all text readable against dark background
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          proper sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All fonts explicitly sized (title 24pt, labels 20pt, ticks 16pt);
+          perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Scatter points visible with good alpha, contours clearly visible;
-          points could be slightly larger for optimal visibility
+        comment: 12 contour levels all visible; background points optimally transparent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with excellent contrast
+        comment: 'Okabe-Ito #009E73 has excellent contrast; CVD-safe'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Plot fills ~70% with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are descriptive but lack units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate; no legend needed for this plot type
+        comment: Labels with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct for both themes; text
+          colors theme-adapted'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with thoughtful transparency and theme tokens;
+          well above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, minimal spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three clusters immediately visible; visual hierarchy guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct density contour plot type using geom_density_2d
+        comment: Correct 2D density contour plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y continuous variables correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Contour lines showing density, scatter overlay for context (as mentioned
-          in spec notes)
-      - id: SC-04
-        name: Data Range
+        comment: Contour lines, bivariate distribution, clusters all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A, no legend required
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: contour-density · plotnine · pyplots.ai'
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple clusters at different densities demonstrating the
-          contour concept well; could show more density levels
+        comment: Shows all contour-density aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Generic measurement data is neutral and plausible for scientific/quality
-          control scenarios
+        comment: Temperature vs Pressure is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable; generic measurement units work
+        comment: Values factually correct and realistic
     code_quality:
       score: 10
       max: 10
@@ -162,41 +171,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure with no functions/classes
+        comment: Linear imports → data → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) properly set
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses geom_density_2d which is the standard approach; could leverage
-          additional ggplot grammar features like filled contours with stat_density_2d
-          or color-mapped density
+        passed: true
+        comment: Exemplary plotnine grammar of graphics
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses stat_density_2d with custom levels; proper layer composition
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

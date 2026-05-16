@@ -1,153 +1,169 @@
 library: bokeh
+language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:29:34Z'
-updated: '2026-01-07T16:37:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20788382932
+updated: '2026-05-16T10:57:16Z'
+generated_by: claude-haiku
+workflow_run: 25959949413
 issue: 3181
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/bokeh/plot.html
-quality_score: 91
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of all three MACD components (MACD line, signal line,
-    histogram)
-  - Clean separation of positive/negative histogram bars with appropriate colors
-  - Proper use of ColumnDataSource and Bokeh models (Legend, Span)
-  - Well-documented parameter values (12-26, 9) in the legend
-  - Appropriately trimmed warmup period (starts from day 35)
-  - Large, readable text sizes suitable for 4800x2700 canvas
-  - Subtle grid styling with dashed lines
+  - Flawless palette compliance and theme adaptation across both renders
+  - Perfect technical implementation of MACD calculations with correct parameters
+  - Excellent text legibility and visual hierarchy in both light and dark themes
+  - Clean, idiomatic Bokeh code using ColumnDataSource and interactive features
+  - Well-structured data with all required components (MACD line, signal line, histogram)
+  - Zero reference line effectively highlights crossover signals
   weaknesses:
-  - Green/red histogram colors not optimal for colorblind accessibility (consider
-    using blue/orange or colorblind-safe palette)
-  - Missing HoverTool for interactive data exploration - a key Bokeh strength
-  - Axis labels lack units (could use MACD Value (points) or similar context)
+  - Design could emphasize key insights (visual hierarchy highlighting significant
+    crossovers or divergences)
+  - No custom visual refinements beyond configured defaults
+  - Limited use of distinctive Bokeh features beyond standard plotting functions
   image_description: |-
-    The plot displays a MACD (Moving Average Convergence Divergence) technical indicator chart spanning from July 2025 to November 2025. The chart includes four main components:
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct page surface color
+      Chrome: Title "indicator-macd · bokeh · anyplot.ai" clearly visible in dark ink; axis labels "Date" and "MACD Value" readable; tick labels in secondary ink color (#4A4A44); legend in top-left with elevated background (#FFFDF6)
+      Data: Green histogram bars (#009E73) for positive values, orange bars (#D55E00) for negative values, blue MACD line (#0072B2), orange signal line (#E69F00) - all colors from Okabe-Ito palette
+      Legibility verdict: PASS - All text highly readable, excellent contrast against light background, grid subtle at 10% alpha
 
-    - MACD Line (blue): Shows the difference between 12-day and 26-day EMAs, ranging from approximately -3.5 to +1.5
-    - Signal Line (yellow/orange): The 9-day EMA of the MACD line, smoothly tracking the MACD
-    - Histogram (green bars): Positive values above the zero line showing bullish momentum
-    - Histogram (red bars): Negative values below the zero line showing bearish momentum
-
-    A gray dashed horizontal zero reference line clearly marks the crossover point. The legend is positioned in the top-left corner with clear labels including parameter values (12-26) and (9). Background is light gray (#FAFAFA) with subtle gridlines. The data demonstrates clear MACD/signal crossovers and histogram expansion/contraction patterns typical of real trading scenarios.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark surface color
+      Chrome: Title and axis labels clearly visible in light ink (#F0EFE8); tick labels in soft ink (#B8B7B0); legend with dark elevated background (#242420). No dark-on-dark failures observed.
+      Data: Green (#009E73), orange (#D55E00), blue (#0072B2), and orange (#E69F00) colors IDENTICAL to light render - perfect theme independence for data colors
+      Legibility verdict: PASS - All text readable against dark background, excellent contrast, zero reference line visible, no theme-adaptation issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend placement clean
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines well-sized (width=4), bars appropriately wide with gaps
+        comment: Bars and lines optimally sized; all elements clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: false
-        comment: Green/red histogram not ideal for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas appropriately, good margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels Date and MACD Value but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha=0.3), legend well-placed with semi-transparent
-          background
+        comment: Okabe-Ito palette; good contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 70-80% of canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct format; descriptive labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series in order; backgrounds correct;
+          chrome perfectly theme-adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; clean styling; not particularly distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good grid styling (subtle alpha), spines retained appropriately,
+          zero reference line adds value
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data patterns clearly visible but lacks emphasis on insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct MACD chart with all three components
+        comment: Correct MACD technical indicator with all three components
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=date, Y=MACD values correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: MACD line, signal line, histogram with
-          colors, zero line, parameters noted'
-      - id: SC-04
-        name: Data Range
+        comment: MACD line, signal line, histogram (positive/negative), zero line,
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X-axis, MACD values on Y-axis; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels accurate with parameter values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses indicator-macd · bokeh · pyplots.ai format
+        comment: Title format correct; legend labels informative
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive/negative histogram, crossovers, trend changes, expansion/contraction
+        comment: 'Shows all MACD aspects: line, signal, histogram (+/-), crossovers,
+          divergences'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Synthetic stock price data with realistic volatility patterns
+        comment: Realistic stock price simulation; proper EMA calculations
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: MACD values in reasonable range, warmup period trimmed
+        comment: Values and proportions mathematically correct for MACD definition
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,11 +171,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -167,40 +183,52 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no clutter
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; current APIs
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, figure(), vbar(), line(), HoverTool,
+          Legend
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, Span, Legend model - good but missing HoverTool
+        passed: false
+        comment: Uses ColumnDataSource pattern, HoverTool, Span; could leverage more
+          Bokeh-specific features
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - hover-tooltips
+  - html-export
   - custom-legend
   patterns:
   - data-generation
+  - time-series
   - columndatasource
   dataprep:
-  - time-series
   - rolling-window
   styling:
+  - publication-ready
   - alpha-blending
   - grid-styling
