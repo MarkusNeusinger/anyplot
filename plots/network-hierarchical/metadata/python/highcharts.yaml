@@ -1,156 +1,172 @@
 library: highcharts
+language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:42:25Z'
-updated: '2026-01-08T22:45:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20834079774
+updated: '2026-05-17T06:56:39Z'
+generated_by: claude-haiku
+workflow_run: 25983407107
 issue: 3343
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of Highcharts organization chart module which is purpose-built for
-    hierarchical data
-  - Clean colorblind-safe palette with good contrast between levels
-  - Proper title format and informative legend in subtitle
-  - Realistic organizational chart scenario matching spec applications
-  - Good canvas utilization with hierarchy spread across the image
+  - 'Correct Okabe-Ito color palette with #009E73 brand green as first series'
+  - 'Proper theme adaptation with correct background colors (#FAF8F1 light, #1A1A17
+    dark)'
+  - Clear hierarchical structure with 4-level organizational depth
+  - All text readable in both light and dark renders
+  - Realistic, professional organizational chart data
+  - Clean, maintainable code without unnecessary complexity
   weaknesses:
-  - Connection lines could be slightly thicker for better visibility at full resolution
-  - Node width is uniform; varying by level depth could improve visual hierarchy
-  image_description: 'The plot displays a hierarchical organization chart with 4 levels
-    arranged vertically from top to bottom. At the top is the CEO node in dark blue
-    (#306998). Below are 3 VP nodes (VP Engineering, VP Sales, VP Operations) in yellow
-    (#FFD43B). The third level contains 7 Director nodes in teal/cyan (#17BECF): Dir
-    Frontend, Dir Backend, Dir DevOps, Dir Americas, Dir EMEA, Dir Logistics, and
-    Dir HR. The bottom level shows 11 Manager nodes in pink (#E377C2): Mgr React,
-    Mgr Vue, Mgr API, Mgr Database, Mgr Cloud, Mgr NA Sales, Mgr LATAM, Mgr UK Sales,
-    Mgr DE Sales, Mgr Supply, and Mgr Talent. Gray connecting lines show parent-child
-    relationships between nodes. The title "network-hierarchical · highcharts · pyplots.ai"
-    appears at the top in bold text with a color-coded legend showing the four hierarchy
-    levels. All nodes are rounded rectangles with readable text labels. The layout
-    uses Highcharts organization chart type with inverted (top-to-bottom) orientation,
-    white background, and appropriate spacing between levels.'
+  - Generic Sankey styling without custom visual refinement
+  - Uses Sankey diagram instead of traditional tree layout algorithm
+  - Limited use of Highcharts-specific features beyond basic API
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface
+      Chrome: Title "network-hierarchical · highcharts · anyplot.ai" and subtitle "Organizational Hierarchy: 12 nodes across 4 levels" are clearly visible with dark text; all readable
+      Data: Hierarchical tree structure showing CEO (green #009E73) at root, 3 VPs (orange #D55E00) at level 1, 5 Directors (blue #0072B2) at level 2, and 11 Managers (purple #CC79A7) at level 3; parent-child edges shown as light gray lines; all node labels readable
+      Legibility verdict: PASS - All text and data elements are clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface
+      Chrome: Title and subtitle clearly visible with light text; all readable against dark background
+      Data: Identical data colors and hierarchy as light render - brand green is clearly visible on CEO node; orange, blue, and purple nodes maintain exact color values from light render; edge lines remain light gray; node labels readable with light text on colored nodes
+      Legibility verdict: PASS - No dark-on-dark failures; all text and markers are clearly visible with proper contrast against the dark background
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text clearly readable, title is bold and prominent, node labels
-          are legible
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements, nodes well-spaced
+        comment: All text readable in both themes - titles, labels, node names clearly
+          visible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All node labels, edges, and text elements non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes are well-sized and visible, connections clear, slight deduction
-          for relatively thin connection lines
+        comment: All nodes and edges clearly visible across 4 levels
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-safe palette (blue, yellow, teal, pink - no
-          red-green conflicts)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, hierarchy fills the space well
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for org charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed in subtitle, clear color indicators
+        comment: Okabe-Ito palette is colorblind-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous whitespace, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; subtitle provides context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; Okabe-Ito order followed ✓; backgrounds
+          correct ✓; both themes correct ✓'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Standard Sankey styling; properly executed but minimal customization
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean layout with generous whitespace; minimal visual enhancements
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual narrative of organizational hierarchy flowing from CEO
+          through management levels
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct hierarchical network/organization chart
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Parent-child relationships correctly shown with tree layout
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: levels, edges, hierarchical layout, node
-          labels'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 22 nodes and 21 connections visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all 4 hierarchy levels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: network-hierarchical · highcharts · pyplots.ai'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows 4 levels of hierarchy with varying branching (3 VPs, 7 Directors,
-          11 Managers)
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Organizational chart is a perfect real-world scenario for hierarchical
-          networks
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: 22 nodes is within spec range (10-50), good demonstration size
+        comment: Sankey effectively shows hierarchical structure; deviates from spec's
+          mention of tree-layout algorithm but functionally equivalent
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: hierarchy, parent-child relationships, level-based
+          positioning, node labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Parent-child relationships clearly mapped; 4 levels visible; all
+          data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; subtitle provides context; no legend needed
+          (each node labeled)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 22 nodes across 4 levels within recommended range; complete feature
+          set
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic organizational structure; professional, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible number of nodes per level; realistic role names
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,43 +174,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → JS generation → HTML → screenshot'
+        comment: No functions/classes; clear linear code structure
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed present, but data is deterministic/hardcoded so reproducibility
-          is ensured
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic output; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (tempfile, time, urllib, Path, selenium)
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts organization chart API
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts organization module, level-based coloring,
-          custom node styling, inverted layout
+        comment: Proper Highcharts Sankey configuration; correct Selenium usage for
+          headless export
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses Sankey (distinctive) but limited use of other Highcharts-specific
+          features
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -205,5 +227,4 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []

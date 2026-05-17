@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: highcharts unknown | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-17
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,186 +14,177 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data: Organizational hierarchy - CEO -> VPs -> Directors -> Managers
-# Structure: list of [from, to] connections for organization chart
-connections = [
-    # CEO to VPs
-    ["CEO", "VP Engineering"],
-    ["CEO", "VP Sales"],
-    ["CEO", "VP Operations"],
-    # VP Engineering to Directors
-    ["VP Engineering", "Dir Frontend"],
-    ["VP Engineering", "Dir Backend"],
-    ["VP Engineering", "Dir DevOps"],
-    # VP Sales to Directors
-    ["VP Sales", "Dir Americas"],
-    ["VP Sales", "Dir EMEA"],
-    # VP Operations to Directors
-    ["VP Operations", "Dir Logistics"],
-    ["VP Operations", "Dir HR"],
-    # Directors to Managers
-    ["Dir Frontend", "Mgr React"],
-    ["Dir Frontend", "Mgr Vue"],
-    ["Dir Backend", "Mgr API"],
-    ["Dir Backend", "Mgr Database"],
-    ["Dir DevOps", "Mgr Cloud"],
-    ["Dir Americas", "Mgr NA Sales"],
-    ["Dir Americas", "Mgr LATAM"],
-    ["Dir EMEA", "Mgr UK Sales"],
-    ["Dir EMEA", "Mgr DE Sales"],
-    ["Dir Logistics", "Mgr Supply"],
-    ["Dir HR", "Mgr Talent"],
-]
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Node levels for coloring
-node_levels = {
-    "CEO": 0,
-    "VP Engineering": 1,
-    "VP Sales": 1,
-    "VP Operations": 1,
-    "Dir Frontend": 2,
-    "Dir Backend": 2,
-    "Dir DevOps": 2,
-    "Dir Americas": 2,
-    "Dir EMEA": 2,
-    "Dir Logistics": 2,
-    "Dir HR": 2,
-    "Mgr React": 3,
-    "Mgr Vue": 3,
-    "Mgr API": 3,
-    "Mgr Database": 3,
-    "Mgr Cloud": 3,
-    "Mgr NA Sales": 3,
-    "Mgr LATAM": 3,
-    "Mgr UK Sales": 3,
-    "Mgr DE Sales": 3,
-    "Mgr Supply": 3,
-    "Mgr Talent": 3,
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Build hierarchical data using Sankey diagram (alternative to organization chart)
+# Nodes for each level
+ceo = "CEO"
+vps = ["VP Engineering", "VP Sales", "VP Operations"]
+directors = {
+    "VP Engineering": ["Dir Frontend", "Dir Backend", "Dir DevOps"],
+    "VP Sales": ["Dir Americas", "Dir EMEA"],
+    "VP Operations": ["Dir Logistics", "Dir HR"],
+}
+managers = {
+    "Dir Frontend": ["Mgr React", "Mgr Vue"],
+    "Dir Backend": ["Mgr API", "Mgr Database"],
+    "Dir DevOps": ["Mgr Cloud"],
+    "Dir Americas": ["Mgr NA Sales", "Mgr LATAM"],
+    "Dir EMEA": ["Mgr UK Sales", "Mgr DE Sales"],
+    "Dir Logistics": ["Mgr Supply"],
+    "Dir HR": ["Mgr Talent"],
 }
 
-# Level colors (colorblind-safe): Python Blue, Python Yellow, Teal, Pink
-level_colors = ["#306998", "#FFD43B", "#17BECF", "#E377C2"]
+# Build nodes list with colors by level
+nodes_list = [ceo]
+node_colors = [OKABE_ITO[0]]  # CEO is level 0
 
-# Build nodes config with colors based on level
-nodes_js = "[\n"
-for node_name, level in node_levels.items():
-    color = level_colors[level]
-    nodes_js += f'    {{id: "{node_name}", color: "{color}"}},\n'
+for vp in vps:
+    nodes_list.append(vp)
+    node_colors.append(OKABE_ITO[1])
+
+for vp in vps:
+    for director in directors[vp]:
+        if director not in nodes_list:
+            nodes_list.append(director)
+            node_colors.append(OKABE_ITO[2])
+
+for directors_group in managers.values():
+    for mgr in directors_group:
+        if mgr not in nodes_list:
+            nodes_list.append(mgr)
+            node_colors.append(OKABE_ITO[3])
+
+# Build links (from-to pairs with equal weight)
+links_list = []
+# CEO to VPs
+for vp in vps:
+    idx_from = nodes_list.index(ceo)
+    idx_to = nodes_list.index(vp)
+    links_list.append([idx_from, idx_to, 1])
+
+# VPs to Directors
+for vp, dirs in directors.items():
+    idx_from = nodes_list.index(vp)
+    for director in dirs:
+        idx_to = nodes_list.index(director)
+        links_list.append([idx_from, idx_to, 1])
+
+# Directors to Managers
+for director, mgrs in managers.items():
+    idx_from = nodes_list.index(director)
+    for manager in mgrs:
+        idx_to = nodes_list.index(manager)
+        links_list.append([idx_from, idx_to, 1])
+
+# Format nodes for JavaScript
+nodes_js = "["
+for i, node_name in enumerate(nodes_list):
+    color = node_colors[i]
+    nodes_js += f'{{"name": "{node_name}", "color": "{color}"}}'
+    if i < len(nodes_list) - 1:
+        nodes_js += ", "
 nodes_js += "]"
 
-# Build data connections
-data_js = "[\n"
-for conn in connections:
-    data_js += f'    ["{conn[0]}", "{conn[1]}"],\n'
-data_js += "]"
+# Format links for JavaScript
+links_js = "["
+for i, link in enumerate(links_list):
+    links_js += f"[{link[0]}, {link[1]}, {link[2]}]"
+    if i < len(links_list) - 1:
+        links_js += ", "
+links_js += "]"
 
-# Download Highcharts JS modules
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-sankey_url = "https://code.highcharts.com/modules/sankey.js"
-organization_url = "https://code.highcharts.com/modules/organization.js"
+# Download Highcharts JS from jsDelivr (sankey is in core)
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highcharts.js"
+sankey_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/sankey.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+req = urllib.request.Request(highcharts_url, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(sankey_url, timeout=30) as response:
+req = urllib.request.Request(sankey_url, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req, timeout=30) as response:
     sankey_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(organization_url, timeout=30) as response:
-    organization_js = response.read().decode("utf-8")
-
-# Chart JavaScript using organization chart
-chart_js = f"""
+# Create Sankey chart configuration
+chart_config = f"""
 Highcharts.chart('container', {{
     chart: {{
-        type: 'organization',
+        type: 'sankey',
         width: 4800,
         height: 2700,
-        backgroundColor: '#ffffff',
-        inverted: true,
-        marginBottom: 100,
-        spacingBottom: 50
+        backgroundColor: '{PAGE_BG}'
     }},
     title: {{
-        text: 'network-hierarchical · highcharts · pyplots.ai',
-        style: {{fontSize: '56px', fontWeight: 'bold'}}
+        text: 'network-hierarchical · highcharts · anyplot.ai',
+        style: {{fontSize: '28px', fontWeight: 'bold', color: '{INK}'}}
     }},
     subtitle: {{
-        text: '<span style="color:#306998; font-size:40px;">●</span> CEO &nbsp;&nbsp;&nbsp; <span style="color:#FFD43B; font-size:40px;">●</span> VPs &nbsp;&nbsp;&nbsp; <span style="color:#17BECF; font-size:40px;">●</span> Directors &nbsp;&nbsp;&nbsp; <span style="color:#E377C2; font-size:40px;">●</span> Managers',
-        useHTML: true,
-        style: {{fontSize: '32px', color: '#666666'}}
+        text: 'Organizational Hierarchy: 22 nodes across 4 levels',
+        style: {{fontSize: '22px', color: '{INK_SOFT}'}}
     }},
-    accessibility: {{
+    credits: {{
+        enabled: false
+    }},
+    legend: {{
         enabled: false
     }},
     plotOptions: {{
-        organization: {{
-            nodeWidth: 120,
-            nodePadding: 15,
-            borderRadius: 10,
+        sankey: {{
+            nodeWidth: 250,
+            nodeHeight: 40,
             dataLabels: {{
                 enabled: true,
                 style: {{
-                    fontSize: '22px',
+                    fontSize: '20px',
                     fontWeight: 'bold',
-                    textOutline: 'none'
+                    color: '{INK}'
                 }},
-                color: '#333333'
+                overflow: 'justify'
             }},
-            colorByPoint: false,
-            link: {{
-                color: '#888888',
-                lineWidth: 3
-            }},
-            hangingIndentTranslation: 'shrink'
+            tooltip: {{
+                headerFormat: '<span style="font-size: 18px"><b>{{point.name}}</b></span><br/>',
+                pointFormat: '{{}}'
+            }}
         }}
     }},
     series: [{{
-        type: 'organization',
+        type: 'sankey',
         name: 'Organization',
-        keys: ['from', 'to'],
-        data: {data_js},
         nodes: {nodes_js},
-        levels: [{{
-            level: 0,
-            color: '#306998',
-            dataLabels: {{style: {{color: 'white'}}}}
-        }}, {{
-            level: 1,
-            color: '#FFD43B',
-            dataLabels: {{style: {{color: '#333333'}}}}
-        }}, {{
-            level: 2,
-            color: '#17BECF',
-            dataLabels: {{style: {{color: '#333333'}}}}
-        }}, {{
-            level: 3,
-            color: '#E377C2',
-            dataLabels: {{style: {{color: '#333333'}}}}
-        }}]
+        data: {links_js},
+        colorByPoint: true
     }}]
 }});
 """
 
-# Generate HTML with inline scripts
+# Generate HTML
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
+    <title>network-hierarchical</title>
     <script>{highcharts_js}</script>
     <script>{sankey_js}</script>
-    <script>{organization_js}</script>
 </head>
-<body style="margin:0; padding:0;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{chart_js}</script>
+    <script>{chart_config}</script>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Take screenshot with Selenium
+# Screenshot with Selenium
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -202,12 +194,12 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(15)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
