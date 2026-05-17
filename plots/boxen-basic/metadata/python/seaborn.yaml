@@ -1,159 +1,181 @@
 library: seaborn
+language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:07:59Z'
-updated: '2026-01-09T08:10:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845371024
+updated: '2026-05-17T08:52:51Z'
+generated_by: claude-haiku
+workflow_run: 25986232018
 issue: 3414
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent demonstration of boxen plot ability to reveal distribution shapes in
-    large datasets
-  - Outstanding data generation showing four distinctly different distributions (normal,
-    bimodal, exponential, lognormal)
-  - Proper seaborn 0.14+ API usage with hue parameter for palette
-  - Clean publication-ready styling with removed spines and subtle grid
-  - Realistic server response time scenario perfect for this plot type
-  - Appropriate data size (5000 points per group) showcasing boxen plot advantages
+  - Perfect visual quality with explicit font sizing and readability in both themes
+  - Flawless spec compliance with correct boxen plot implementation showing nested
+    boxes, outliers, and clear labeling
+  - Excellent data quality demonstrating multiple distribution shapes (bimodal, right-skewed,
+    long-tailed, symmetric)
+  - Clean, reproducible code with proper KISS structure and theme-token configuration
+  - Strong design with custom theme handling, proper spine removal, and professional
+    polish
+  - Perfect theme-adaptive chrome with light text on dark background and dark text
+    on light background with no legibility issues
   weaknesses:
-  - Missing legend explaining quantile levels as required by spec
-  - Nested boxes for narrow distributions are compressed and hard to distinguish
-  image_description: 'The plot displays a boxen (letter-value) plot showing server
-    response times across four endpoints: API Gateway, Auth Service, Data Query, and
-    File Upload. Each endpoint is represented by a distinct color from a custom palette
-    (blue, yellow, blue variant, gray). The boxen plots show nested boxes that decrease
-    in width for deeper quantiles, clearly revealing the distribution shape. API Gateway
-    shows a right-skewed distribution with occasional high spikes (up to ~500ms).
-    Auth Service has a very tight, symmetric distribution centered around 80ms. Data
-    Query shows a bimodal pattern visible in the nested boxes. File Upload displays
-    a heavily right-skewed lognormal distribution with outliers extending to ~3200ms.
-    Outliers are displayed as individual circle markers above the main boxen structures.
-    The title "boxen-basic · seaborn · pyplots.ai" is prominently displayed at the
-    top in bold. Axes are clearly labeled with "Endpoint" on x-axis and "Response
-    Time (ms)" on y-axis with appropriate font sizes. A subtle dashed grid is visible
-    on the y-axis with alpha=0.3. Top and right spines have been removed for a cleaner
-    appearance.'
+  - Design Excellence could be elevated with additional visual emphasis or creative
+    refinement beyond configured defaults
+  - Library Mastery could leverage more distinctive seaborn features beyond standard
+    boxenplot usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - properly themed, not pure white
+      Chrome: Title "boxen-basic · seaborn · anyplot.ai" (24pt, dark text), axis labels "Gene" and "Expression Level (log2)" (20pt, dark text), tick labels (16pt, dark gray text) - all clearly readable against light background
+      Data: Four boxen plots with nested boxes decreasing in width for deeper quantiles. Colors: TP53 (bluish green #009E73), BRCA1 (vermillion #D55E00), MYC (blue #0072B2), EGFR (reddish purple #CC79A7). Outlier points displayed as circles above nested boxes. Grid is subtle (alpha=0.10). Legend text at bottom explains nested boxes represent letter values.
+      Legibility verdict: PASS - all text elements clearly visible, no contrast issues, data colors vivid and distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - properly themed, not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light colors against dark background - all clearly readable with no dark-on-dark issues. Grid lines visible but subtle.
+      Data: Identical nested box colors to light render (TP53 green #009E73, BRCA1 orange #D55E00, MYC blue #0072B2, EGFR purple #CC79A7) - theme-independent data colors confirmed. Outlier points visible. Explanatory legend text clearly visible in light gray.
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, data colors identical to light render with only chrome flipping as expected
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels well-spaced
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt)
+          - perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements - all gene names, axis labels, and tick
+          labels fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Boxen elements clearly visible; minor deduction as some narrow inner
-          boxes are quite thin
+        comment: Nested boxes and outlier markers clearly visible and well-adapted
+          to data scale
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colors distinguishable and colorblind-safe (blue/yellow/gray palette)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas use, slight imbalance due to File Upload outliers extending
-          high
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms) and Endpoint'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe with excellent contrast between gene
+          colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas with balanced margins and good use of whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle; no legend explaining quantile levels as required
-          by spec
+        passed: true
+        comment: Y-axis has units (log2), title follows format, all descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito implementation with first series #009E73; backgrounds
+          #FAF8F1 (light) and #1A1A17 (dark); both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom theme tokens, intentional palette choice,
+          professional polish - clearly above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: spines removed (L-shaped), subtle grid (alpha=0.10),
+          generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Good data choice showing four different distribution shapes with
+          natural visual hierarchy through nested box sizing
     spec_compliance:
-      score: 22
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct boxen/letter-value plot type
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on X, values on Y correctly mapped
-      - id: SC-03
+        comment: Correct boxen plot using sns.boxenplot() with all subtypes (nested
+          boxes, outliers)
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Shows nested boxes, decreasing widths, outliers; missing legend explaining
-          quantile levels
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: nested boxes, decreasing widths, outliers
+          displayed, axis labels, legend explanation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No quantile level legend present
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: 'X-axis: genes; Y-axis: expression level; hue: gene categories -
+          all correctly mapped and visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: boxen-basic · seaborn · pyplots.ai'
+        comment: Title format correct (boxen-basic · seaborn · anyplot.ai); legend
+          explains quantile levels
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: tight normal, bimodal, exponential with spikes,
-          lognormal with heavy tail'
+        comment: 'Excellent coverage: bimodal (TP53), right-skewed (BRCA1), long-tailed
+          (MYC), symmetric (EGFR)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Server response times by endpoint is perfect real-world scenario
-          for large datasets
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in realistic millisecond ranges (30-3200ms), 5000 points per
-          group
+        comment: 'Real scientific scenario: gene expression data is comprehensible
+          and neutral'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log2 scale is standard for genomics; 4000 points per gene appropriate
+          for boxen plots; all values realistic
     code_quality:
       score: 10
       max: 10
@@ -163,49 +185,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Clean structure: imports → data generation → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: All imports used (os, matplotlib, numpy, pandas, seaborn)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API with hue parameter correctly
+        comment: Clean, Pythonic code with appropriate complexity and no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format (plot-{THEME}.png) using current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of seaborn boxenplot; proper hue parameter usage for
-          seaborn 0.14+ compatibility
+        comment: Correct usage of sns.boxenplot() and sns.set_theme() with proper
+          rc parameters
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn-specific boxenplot function; theme configuration is
+          solid but generic
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
