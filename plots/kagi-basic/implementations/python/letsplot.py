@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 kagi-basic: Basic Kagi Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,8 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_segment,
     ggplot,
@@ -22,6 +26,18 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "rgba(26,26,23,0.08)" if THEME == "light" else "rgba(240,239,232,0.08)"
+
+# Kagi chart colors (semantic meaning: green for bullish/up, red for bearish/down)
+YANG_COLOR = "#009E73"  # Green for bullish/uptrend (yang)
+YIN_COLOR = "#E74C3C"  # Red for bearish/downtrend (yin)
 
 # Generate synthetic stock price data
 np.random.seed(42)
@@ -87,28 +103,35 @@ plot = (
     + geom_segment(
         aes(x="x1", y="y1", xend="x2", yend="y2"),
         data=yang_df,
-        color="#16A34A",  # Green for yang (bullish)
+        color=YANG_COLOR,
         size=4,  # Thick line for yang
     )
     + geom_segment(
         aes(x="x1", y="y1", xend="x2", yend="y2"),
         data=yin_df,
-        color="#DC2626",  # Red for yin (bearish)
+        color=YIN_COLOR,
         size=1.5,  # Thin line for yin
     )
-    + labs(title="kagi-basic · letsplot · pyplots.ai", x="Line Index", y="Price ($)")
+    + labs(title="kagi-basic · letsplot · anyplot.ai", x="Line Index", y="Price ($)")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=GRID_COLOR, size=0.3),
         panel_grid_minor=element_blank(),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_title=element_text(size=16, color=INK),
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scaled 3x for 4800x2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactive viewing
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
