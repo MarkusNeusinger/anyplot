@@ -1,151 +1,180 @@
 library: plotly
+language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:03:18Z'
-updated: '2026-01-08T16:10:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823040719
+updated: '2026-05-17T10:46:50Z'
+generated_by: claude-haiku
+workflow_run: 25988472109
 issue: 3293
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/plotly/plot.html
-quality_score: 98
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Plotly native OHLC trace type which handles bar rendering automatically
-  - Colorblind-safe color scheme using Python signature blue and yellow
-  - Realistic stock price data generation with proper OHLC relationships
-  - Clean disabling of range slider for uncluttered static view
-  - Both PNG and HTML outputs provided for static and interactive use
+  - 'Perfect visual quality: explicit font sizes (title 28px, labels 22px, ticks 18px),
+    proper theme-adaptive chrome in both renders, zero overlapping elements'
+  - 'Excellent specification compliance: uses Plotly''s native go.Ohlc() correctly
+    with all required features (high-low bars, open/close ticks, color differentiation,
+    grid)'
+  - Clean, reproducible code with np.random.seed(42) and deterministic data; linear
+    KISS structure
+  - 'Realistic, feature-rich data: 45 trading days of stock prices demonstrating both
+    up-bars (green #009E73) and down-bars (orange #D55E00)'
+  - Idiomatic Plotly usage leveraging native OHLC trace—distinctive feature not easily
+    replicated in other libraries
   weaknesses:
-  - 'Minor: showlegend=False hides legend elements, though reasonable for single-series
-    OHLC'
-  image_description: The plot displays an OHLC (Open-High-Low-Close) bar chart showing
-    45 trading days of stock price data from early June through late July 2024. Each
-    bar consists of a vertical line representing the high-low range, with horizontal
-    ticks on the left for open price and right for close price. Blue bars (#306998,
-    "Python Blue") indicate up days (close > open) and yellow/gold bars (#FFD43B,
-    "Python Yellow") indicate down days (close < open). The price ranges from approximately
-    $125 to $170, showing an overall downward trend from ~$165 in mid-June to ~$130
-    by late July. The title "ohlc-bar · plotly · pyplots.ai" is centered at the top
-    in a large, readable font. The x-axis shows dates formatted as "Mon DD" (e.g.,
-    "Jun 09", "Jul 14") and the y-axis shows "Price (USD)" with dollar-prefixed tick
-    values. A subtle gray grid (alpha 0.3) aids in reading exact price levels. The
-    layout is clean with balanced margins, no range slider, and the plot fills the
-    canvas well.
+  - 'Design excellence is modest: well-configured defaults without exceptional aesthetic
+    touches or custom styling (typical for Attempt 2)'
+  - 'Data storytelling minimal: plot displays data with color encoding but lacks visual
+    hierarchy or narrative emphasis to guide insight'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "ohlc-bar · plotly · anyplot.ai" (28px, dark text), axis labels "Date" and "Price (USD)" (22px), tick labels in readable format (18px)
+      Data: OHLC bars showing 45 trading days of stock data; up-bars in brand green (#009E73), down-bars in vermillion (#D55E00); thin 2px vertical lines for high-low range, left/right ticks for open/close
+      Grid: Subtle (~10% opacity) gridlines aid price level reading
+      Legibility verdict: PASS - All text clearly readable, no overlap, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Same title and labels, now in light text (F0EFE8 for title, B8B7B0 for ticks) against dark background, all clearly visible
+      Data: IDENTICAL colors to light render - up-bars remain #009E73 (green), down-bars remain #D55E00 (orange); only chrome has adapted to dark theme
+      Grid: Subtle gridlines adapted to dark theme
+      Legibility verdict: PASS - All text clearly readable in light color, no dark-on-dark failures, brand green vibrant and visible
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, ticks at 18pt - all perfectly
-          readable
+        comment: Title 28px, axis labels 22px, tick labels 18px; explicitly set, perfect
+          readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, date labels well-spaced
+        comment: Date labels well-spaced with %b %d format; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: OHLC bars have line width of 2, perfectly visible for 45 data points
+        comment: OHLC bars optimally visible for 45 data points; 2px line width appropriate
+          for density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe (not red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Date and Price (USD) with currency units and $ prefix on ticks
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito colors #009E73 and #D55E00 CVD-safe with excellent luminance
+          contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-70% of canvas; balanced margins (l:100, r:80, t:120,
+          b:100); no wasted space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Date'' and ''Price (USD)'' with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73✓; second #D55E00✓; backgrounds #FAF8F1 light/#1A1A17
+          dark✓; theme-adaptive chrome perfect✓'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.3), but showlegend=False hides all legend
-          elements
+        comment: Well-configured Plotly defaults with correct Okabe-Ito palette; lacks
+          exceptional design touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with explicit chrome configuration; minimal additional
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Color encodes up/down direction; no visual hierarchy or narrative
+          emphasis to guide insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct OHLC bar chart using Plotly native go.Ohlc trace
+        comment: Correct OHLC using go.Ohlc() native trace; all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, OHLC values correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin vertical lines, left/right ticks for open/close, color differentiation,
-          grid lines
-      - id: SC-04
-        name: Data Range
+        comment: High-low bars✓, open/close ticks✓, color differentiation✓, grid✓
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis auto-scaled appropriately ($125-$170)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis dates, Y-axis prices; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend hidden (appropriate for single series)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: ohlc-bar · plotly · pyplots.ai'
+        comment: Title format 'ohlc-bar · plotly · anyplot.ai' correct; legend omitted
+          (appropriate for single series)
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish bars, varied intraday ranges, price
-          trends
+        comment: Shows both up-bars (green) and down-bars (orange) with realistic
+          OHLC relationships
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price data with realistic daily returns, business days only
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price starting at $150, realistic for a stock, 45 trading days
+        comment: Stock price scenario; Jun-Jul 2024 timeframe; neutral, comprehensible
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base $150, daily returns ~0.1%, intraday volatility 1-3%—all realistic
     code_quality:
       score: 10
       max: 10
@@ -155,51 +184,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save - no functions/classes'
+        comment: 'Linear flow: imports → theme setup → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, plotly.graph_objects)
+        comment: 'All imports used: os, sys, numpy, pandas, plotly'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean, Pythonic, appropriate complexity; no fake UI or over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of go.Figure() + go.Ohlc(); proper layout with theme tokens
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Uses Plotly native go.Ohlc trace, customizable colors, range slider
-          control, HTML export
+        comment: Plotly's native OHLC trace—distinctive feature not easily replicated
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
   - time-series
-  styling:
-  - grid-styling
+  dataprep: []
+  styling: []
