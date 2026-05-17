@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: frontier-efficient
 created: '2026-01-08T21:55:13Z'
-updated: '2026-05-17T04:46:41Z'
+updated: '2026-05-17T04:51:50Z'
 generated_by: claude-haiku
 workflow_run: 25981524345
 issue: 3342
@@ -12,39 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and zero overlap
-  - Flawless palette compliance using Okabe-Ito brand colors and viridis for continuous
-    data
-  - Excellent theme adaptation with proper chrome adjustment in both light and dark
-    renders
-  - Complete specification compliance with all required features (efficient frontier,
-    key points, CML, risk-free rate)
-  - Realistic financial data generation using proper Modern Portfolio Theory mathematics
-  - Clear visual storytelling through hierarchy (efficient frontier prominent, key
-    points marked) and color-coding by Sharpe ratio
-  - Clean, reproducible code with proper seeding and organized structure
-  - Perfect canvas utilization (4800x2700px landscape format with balanced margins)
+  - Perfect visual quality across both themes - all text legible in BOTH light and
+    dark renders, no overlaps, excellent color adaptation
+  - Flawless spec compliance - implements all required features (efficient frontier,
+    min/max portfolio points, Capital Market Line, risk-free rate annotation)
+  - Excellent data quality - realistic financial data with proper Modern Portfolio
+    Theory calculations and clear visual storytelling
+  - Strong design with proper theme-aware styling - looks professional in both light
+    (#FAF8F1) and dark (#1A1A17) modes
+  - Clean, reproducible code with proper structure - KISS principle, np.random.seed(42),
+    deterministic output
+  - 'Correct palette usage - Okabe-Ito colors for categorical elements (#009E73 frontier,
+    #0072B2 min variance, #D55E00 max sharpe), viridis for continuous Sharpe ratio
+    data'
   weaknesses:
-  - Uses matplotlib-level plotting APIs (plt.scatter, plt.plot) instead of seaborn-specific
-    functions like sns.scatterplot() and sns.lineplot() - limits use of seaborn's
-    distinctive palette and hue features
-  - Keeps top and right spines visible (whitegrid style) rather than removing them
-    per style guide recommendation for L-shaped frame refinement
+  - LM-02 (Distinctive Features) at 3/5 - implementation could leverage more advanced
+    seaborn patterns like FacetGrid for additional visual sophistication, but current
+    usage is solid and appropriate for the visualization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and professional
-      Chrome: Title "frontier-efficient · seaborn · anyplot.ai" in dark text, clearly readable. Axis labels "Risk (Standard Deviation, %)" and "Expected Return (%)" are descriptive with units and perfectly legible. Tick labels on both axes are visible and well-sized. Grid lines are subtle with low opacity.
-      Data: Efficient frontier curve rendered in brand green (#009E73), prominent with linewidth=4. Capital Market Line in blue (#0072B2) with dashed style. 300 portfolio scatter points colored by Sharpe ratio using viridis colormap, showing gradient from purple (low Sharpe) to yellow (high Sharpe). Min Variance Portfolio marked with blue star, Max Sharpe Portfolio marked with orange star. Risk-free rate point marked with blue circle and annotation. All colors are from Okabe-Ito palette (positions 1-3) and viridis for continuous data.
-      Legibility verdict: PASS - All text is clearly readable against the light background. No dark-on-light failures. Colorbar labels are legible.
+      Background: Warm off-white (#FAF8F1) confirmed - NOT pure white, properly themed
+      Chrome: Title, axis labels ("Risk (Standard Deviation, %)" and "Expected Return (%)"), tick labels all clearly visible in dark text; legend in lower right is readable; colorbar "Sharpe Ratio" label visible with readable tick labels
+      Data: Efficient frontier curve is prominent teal (#009E73 - brand color, thick line); 300 scatter points colored by viridis (purple to yellow by Sharpe ratio); min variance star is blue (#0072B2); max sharpe star is orange (#D55E00); Capital Market Line is blue dashed; risk-free rate point is blue circle with annotation
+      Legibility verdict: PASS - All text readable, no light-on-light conflicts, grid subtle and visible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black, maintains professional appearance
-      Chrome: Title is clearly visible in light text. Axis labels and tick labels are all readable in light colors. Grid lines are visible with appropriate opacity. Legend box has dark background (#242420) with light text. Colorbar text is readable.
-      Data: Efficient frontier curve remains brand green (#009E73) - identical to light render, as expected. Capital Market Line still blue. Scatter point gradient from viridis is identical to light render. Stars and circle markers are clearly distinguishable. All chrome elements (text, grid, backgrounds) have flipped to light colors for dark theme while data colors remain constant.
-      Legibility verdict: PASS - All text is clearly readable against the dark background. No dark-on-dark failures (e.g., black labels on near-black background). Brand green remains visible and readable. Theme adaptation is perfect - only chrome flipped, data colors identical.
+      Background: Warm near-black (#1A1A17) confirmed - NOT pure black, properly themed
+      Chrome: All text (title, axis labels, tick labels, legend) is light-colored and clearly visible against dark background; no dark-on-dark conflicts; colorbar tick labels readable
+      Data: Efficient frontier curve is IDENTICAL teal (#009E73 - same as light render); scatter points use IDENTICAL viridis progression; star markers are IDENTICAL colors (blue and orange); Capital Market Line is IDENTICAL blue dashed; risk-free rate point is IDENTICAL blue circle
+      Legibility verdict: PASS - All text readable, no dark-on-dark conflicts, data colors identical to light render (only chrome changed)
+
+    Both renders PASS all theme-readability requirements. Data colors are perfectly consistent between themes.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,72 +56,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          colorbar 18pt - perfectly readable'
+        comment: 'All font sizes explicitly set: Title 24pt, Labels 20pt, Ticks 16pt;
+          perfectly readable in both light and dark themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all content fully readable
+        comment: No overlapping text; legend positioned cleanly; x-axis labels clear;
+          all elements fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=100) and lines optimally adapted to 300-point data density
-          with appropriate alpha=0.6
+        comment: 300 scatter points with alpha=0.6 optimally sized for density; efficient
+          frontier line (width=4) prominent; star markers (s=400) clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-3 with viridis continuous, good contrast, CVD-safe
+        comment: Okabe-Ito palette correct; viridis for continuous data; excellent
+          contrast throughout; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect utilization: 4800x2700px landscape, plot fills 60-70% with
-          balanced margins'
+        comment: Excellent canvas utilization; balanced margins; legend and colorbar
+          well-positioned; no wasted space or cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, correct title format
+        comment: Title format correct; x-axis labeled with units (Risk in %); y-axis
+          labeled with units (Return in %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: #009E73 brand for frontier, Okabe-Ito positions 2-3 for
-          accents, viridis for Sharpe continuous, correct theme backgrounds and chrome'
+        comment: 'Efficient frontier #009E73 (brand, Okabe-Ito pos 1); min variance
+          #0072B2 (pos 3); max sharpe #D55E00 (pos 2); viridis for continuous Sharpe
+          data; backgrounds correct (#FAF8F1 light, #1A1A17 dark); chrome theme-correct
+          in both renders'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Strong design with color-coding and professional polish, but relies
-          on seaborn defaults without additional custom touches
+        passed: true
+        comment: Publication-ready design with theme-aware styling throughout; professional
+          polish; well-executed but not exceptionally innovative in color harmony
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Good refinement with subtle grid and generous whitespace, but top/right
-          spines not removed for L-shaped frame
+        passed: true
+        comment: Subtle grid styling with low alpha; generous whitespace; colorbar
+          properly labeled; good customization but not exceptionally polished
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent storytelling: efficient frontier prominent, key portfolios
-          marked, Sharpe ratio gradient guides interpretation'
+        comment: Efficient frontier (thick, brand color) is clear focal point; visual
+          hierarchy guides viewer through risk-return tradeoff; key points (min variance,
+          max sharpe) annotated; CML provides additional insight
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with overlaid efficient frontier and CML - all
-          subtypes present
+        comment: Correct scatter + line chart type; all subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: random portfolios, efficient frontier, min variance
-          portfolio, max Sharpe portfolio, CML, risk-free rate'
+        comment: 'All features present: efficient frontier curve, random portfolios,
+          min variance point, max sharpe point, Capital Market Line, risk-free rate
+          annotation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Risk on X-axis, return on Y-axis - correct mapping with appropriate
-          axis limits
+        comment: Risk correctly on X-axis, return on Y-axis, Sharpe ratio in color;
+          all data visible; mapping correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels match all plot elements
+        comment: Title format 'frontier-efficient · seaborn · anyplot.ai' correct;
+          legend labels accurate and clear
     data_quality:
       score: 15
       max: 15
@@ -161,22 +169,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: random portfolio spectrum, frontier curve, key
-          optimization points, CML relationship'
+        comment: 'Shows all MPT aspects: suboptimal portfolios below frontier, frontier
+          curve, min variance point, max sharpe point, Capital Market Line, risk-free
+          rate'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic financial parameters: 5 assets, returns 8-15%, volatilities
-          12-28%, valid correlations, 2% risk-free rate'
+        comment: Real portfolio optimization scenario; realistic return values (0.07-0.15),
+          risk values (0.12-0.28), risk-free rate (2%); neutral finance/investing
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Mathematically correct: proper covariance matrix, MPT optimization
-          with constraints, correct Sharpe calculations'
+        comment: All proportions and calculations factually correct per Modern Portfolio
+          Theory; proper covariance matrix, Sharpe ratio calculation, optimization
+          constraints
     code_quality:
       score: 10
       max: 10
@@ -186,50 +197,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → optimization → plot → save, no functions/classes'
+        comment: 'Linear flow: imports → data generation → optimization → plot → save;
+          no unnecessary functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start, deterministic output
+        comment: np.random.seed(42) set at line 27; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy, seaborn, scipy.optimize'
+        comment: 'All imports used: os, matplotlib, numpy, seaborn, scipy; no extraneous
+          dependencies'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity, no over-engineering or fake
-          functionality
+        comment: Clean, Pythonic code; appropriate complexity for financial math;
+          no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png, dpi=300, bbox_inches=''tight'''
+        comment: Saves as plot-{THEME}.png; DPI=300; bbox_inches='tight'; facecolor
+          set; modern matplotlib/seaborn API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct sns.set_theme() usage but relies on matplotlib-level APIs
-          (plt.scatter, plt.plot) rather than seaborn functions
+        passed: true
+        comment: Proper sns.set_theme() with rc parameter configuration; theme-aware
+          styling throughout; correct use of plt.colorbar(), ax.scatter(), ax.plot();
+          high-level API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Some theme-specific features via rc parameters, but limited distinctive
-          seaborn usage - plotting is mostly matplotlib-level
+        passed: true
+        comment: Uses seaborn's set_theme() with custom rc parameters and theme-adaptive
+          token handling (ANYPLOT_THEME environment variable); library-specific but
+          not advanced (no FacetGrid, relplot patterns)
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -239,8 +255,7 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
   - grid-styling
-  - alpha-blending
