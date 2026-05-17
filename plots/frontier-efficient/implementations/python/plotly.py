@@ -1,19 +1,40 @@
-""" pyplots.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: plotly 6.5.1 | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-import numpy as np
-import plotly.graph_objects as go
+import os
+import sys
 
+
+# Remove current directory from path to avoid import collision with script filename
+sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd())]
+
+import numpy as np  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"
+SECONDARY = "#D55E00"
+TERTIARY = "#0072B2"
+ACCENT_1 = "#CC79A7"
 
 # Data - Generate random portfolios and efficient frontier
 np.random.seed(42)
 
 # Simulate 5 assets with expected returns and covariance
 n_assets = 5
-expected_returns = np.array([0.08, 0.12, 0.15, 0.10, 0.18])  # Annual returns
+expected_returns = np.array([0.08, 0.12, 0.15, 0.10, 0.18])
 cov_matrix = np.array(
     [
         [0.04, 0.01, 0.02, 0.01, 0.02],
@@ -45,8 +66,7 @@ portfolio_returns = np.array(portfolio_returns)
 portfolio_risks = np.array(portfolio_risks)
 portfolio_sharpes = np.array(portfolio_sharpes)
 
-# Generate efficient frontier by finding minimum variance portfolios for each return level
-# Using Monte Carlo with many samples to approximate the frontier
+# Generate efficient frontier by Monte Carlo approximation
 n_frontier_samples = 50000
 all_returns = []
 all_risks = []
@@ -62,7 +82,7 @@ for _ in range(n_frontier_samples):
 all_returns = np.array(all_returns)
 all_risks = np.array(all_risks)
 
-# Extract efficient frontier by binning returns and taking minimum risk in each bin
+# Extract efficient frontier by binning returns and finding minimum risk
 return_bins = np.linspace(all_returns.min(), all_returns.max(), 40)
 frontier_returns = []
 frontier_risks = []
@@ -87,15 +107,15 @@ frontier_risks = frontier_risks[sort_idx]
 min_var_idx = np.argmin(portfolio_risks)
 max_sharpe_idx = np.argmax(portfolio_sharpes)
 
-# Capital Market Line (from risk-free rate tangent to max Sharpe portfolio)
+# Capital Market Line
 cml_x = np.linspace(0, 0.35, 100)
 sharpe_slope = (portfolio_returns[max_sharpe_idx] - risk_free_rate) / portfolio_risks[max_sharpe_idx]
 cml_y = risk_free_rate + sharpe_slope * cml_x
 
-# Create figure
+# Plot
 fig = go.Figure()
 
-# Random portfolios scatter colored by Sharpe ratio
+# Random portfolios scatter colored by Sharpe ratio (using viridis for continuous)
 fig.add_trace(
     go.Scatter(
         x=portfolio_risks,
@@ -106,13 +126,14 @@ fig.add_trace(
             "color": portfolio_sharpes,
             "colorscale": "Viridis",
             "colorbar": {
-                "title": {"text": "Sharpe Ratio", "font": {"size": 18}},
-                "tickfont": {"size": 14},
+                "title": {"text": "Sharpe Ratio", "font": {"size": 18, "color": INK_SOFT}},
+                "tickfont": {"size": 14, "color": INK_SOFT},
                 "thickness": 20,
                 "len": 0.6,
+                "tickcolor": INK_SOFT,
             },
             "opacity": 0.7,
-            "line": {"width": 0.5, "color": "white"},
+            "line": {"width": 0.5, "color": PAGE_BG},
         },
         name="Random Portfolios",
         hovertemplate="Risk: %{x:.2%}<br>Return: %{y:.2%}<br>Sharpe: %{marker.color:.2f}<extra></extra>",
@@ -125,7 +146,7 @@ fig.add_trace(
         x=frontier_risks,
         y=frontier_returns,
         mode="lines",
-        line={"color": "#FFD43B", "width": 5},
+        line={"color": BRAND, "width": 5},
         name="Efficient Frontier",
         hovertemplate="Risk: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>",
     )
@@ -137,7 +158,7 @@ fig.add_trace(
         x=cml_x,
         y=cml_y,
         mode="lines",
-        line={"color": "#306998", "width": 3, "dash": "dash"},
+        line={"color": SECONDARY, "width": 3, "dash": "dash"},
         name="Capital Market Line",
         hovertemplate="Risk: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>",
     )
@@ -149,25 +170,25 @@ fig.add_trace(
         x=[portfolio_risks[min_var_idx]],
         y=[portfolio_returns[min_var_idx]],
         mode="markers+text",
-        marker={"size": 20, "color": "#FF6B6B", "symbol": "diamond", "line": {"width": 2, "color": "white"}},
+        marker={"size": 20, "color": TERTIARY, "symbol": "diamond", "line": {"width": 2, "color": PAGE_BG}},
         text=["Min Variance"],
         textposition="top right",
-        textfont={"size": 16, "color": "#FF6B6B"},
+        textfont={"size": 16, "color": TERTIARY},
         name="Min Variance Portfolio",
         showlegend=True,
     )
 )
 
-# Maximum Sharpe ratio portfolio (tangency portfolio)
+# Maximum Sharpe ratio portfolio
 fig.add_trace(
     go.Scatter(
         x=[portfolio_risks[max_sharpe_idx]],
         y=[portfolio_returns[max_sharpe_idx]],
         mode="markers+text",
-        marker={"size": 20, "color": "#4ECDC4", "symbol": "star", "line": {"width": 2, "color": "white"}},
+        marker={"size": 20, "color": ACCENT_1, "symbol": "star", "line": {"width": 2, "color": PAGE_BG}},
         text=["Max Sharpe"],
         textposition="top right",
-        textfont={"size": 16, "color": "#4ECDC4"},
+        textfont={"size": 16, "color": ACCENT_1},
         name="Max Sharpe Portfolio",
         showlegend=True,
     )
@@ -179,47 +200,56 @@ fig.add_trace(
         x=[0],
         y=[risk_free_rate],
         mode="markers",
-        marker={"size": 16, "color": "#306998", "symbol": "circle", "line": {"width": 2, "color": "white"}},
+        marker={"size": 16, "color": INK_SOFT, "symbol": "circle", "line": {"width": 2, "color": PAGE_BG}},
         name=f"Risk-Free Rate ({risk_free_rate:.0%})",
         showlegend=True,
     )
 )
 
-# Layout
+# Style
 fig.update_layout(
-    title={"text": "frontier-efficient · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "frontier-efficient · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Risk (Standard Deviation)", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Risk (Standard Deviation)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "tickformat": ".0%",
         "range": [0, 0.38],
-        "gridcolor": "rgba(128, 128, 128, 0.2)",
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
         "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Expected Return (Annual)", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Expected Return (Annual)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "tickformat": ".0%",
         "range": [0, 0.25],
-        "gridcolor": "rgba(128, 128, 128, 0.2)",
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
         "zeroline": False,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     legend={
-        "font": {"size": 14},
+        "font": {"size": 16, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
-        "bgcolor": "rgba(255, 255, 255, 0.8)",
-        "bordercolor": "rgba(128, 128, 128, 0.3)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
     margin={"l": 80, "r": 100, "t": 80, "b": 80},
+    width=1600,
+    height=900,
 )
 
-# Save as PNG
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
