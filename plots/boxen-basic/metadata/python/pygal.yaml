@@ -1,0 +1,230 @@
+library: pygal
+language: python
+specification_id: boxen-basic
+created: '2026-05-17T08:58:34Z'
+updated: '2026-05-17T09:37:03Z'
+generated_by: claude-haiku
+workflow_run: 25986442262
+issue: 3414
+language_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.html
+quality_score: 61
+review:
+  strengths:
+  - Theme tokens correctly applied (warm off-white and near-black backgrounds)
+  - Data colors remain identical across light and dark renders
+  - API response time scenario is realistic and well-chosen
+  - Shows outliers and multiple quantile levels as specified
+  - Clean code structure with reproducible seed
+  - Correctly formatted title
+  weaknesses:
+  - 'Legend clutter: 16 entries (4 endpoints × 4 quantile levels) severely impacts
+    readability; legend should be simplified or reorganized'
+  - Boxen plot is approximation using line segments rather than nested rectangles
+    - doesn't match specification's 'nested boxes with decreasing width'
+  - Color cycling per level rather than per endpoint causes same quantile level to
+    have different colors across endpoints, confusing the encoding
+  - Minimal design refinement; uses library defaults with no visual hierarchy or aesthetic
+    sophistication
+  - Small outlier markers (4px) are barely visible at full resolution
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title ("boxen-basic · pygal · anyplot.ai"), axis labels ("Endpoint", "Response Time (ms)"), and tick labels all clearly readable against light background. All text is dark-colored and well-positioned.
+      Data: Uses four colored marker sets (cyan, orange, blue, pink) with line segments representing quantile levels. Each endpoint (API-Auth, API-Search, API-Report, API-Download) is shown with nested line segments for sixteenths, eighths, quartiles, and median, plus outlier points with jitter. Colors appear to follow Okabe-Ito palette order but are applied inconsistently (cycling per level rather than per endpoint).
+      Legend: MAJOR ISSUE - Contains 16 entries (4 endpoints × 4 quantile types), creating severe visual clutter and overlap on the left side. Legend is hard to parse.
+      Legibility verdict: PARTIAL FAIL - While text elements are readable, the legend clutter significantly impairs usability.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, and tick labels are all light-colored and readable against the dark background. No "dark-on-dark" failures observed.
+      Data: Data colors are identical to light render (cyan, orange, blue, pink line segments for each quantile level and outliers). Line visibility is good against dark background.
+      Legend: Same 16-entry clutter issue as light render, but text is now light-colored and readable against dark background.
+      Legibility verdict: PARTIAL FAIL - Chrome is theme-correct, but legend clutter reduces overall usability in both renders.
+  criteria_checklist:
+    visual_quality:
+      score: 19
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable but could be more prominent at 4800×2700 resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 1
+        max: 6
+        passed: false
+        comment: 'CRITICAL: Legend has 16 entries creating severe overlap and clutter'
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Line segments visible but thin; outlier points (4px) are quite small
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Palette cycles per level not per endpoint; same level has different
+          colors across endpoints
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Okabe-Ito palette defined but applied via color cycling; theme chrome
+          is correct in both renders but palette is misapplied
+    design_excellence:
+      score: 6
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic defaults with no design thought; color cycling creates visual
+          confusion
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
+    spec_compliance:
+      score: 8
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses XY scatter as workaround; not true boxen plot with nested rectangles
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Shows quantile levels and outliers but 'nested boxes with decreasing
+          width' not clearly represented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapping correct (endpoint vs response time)
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Title correct format; legend is confusing with 16 cluttered entries
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows outliers and varying distributions well
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: API response times by endpoint is realistic, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Response times 0-1200ms are realistic and plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple, straightforward
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png and .html output
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses XY chart and Style correctly; workaround approach is reasonable
+          given pygal limitations
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage without distinctive library features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
