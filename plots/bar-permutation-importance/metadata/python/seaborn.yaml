@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:56:07Z'
-updated: '2026-05-17T12:25:41Z'
+updated: '2026-05-17T12:31:29Z'
 generated_by: claude-haiku
 workflow_run: 25990643795
 issue: 2998
@@ -12,37 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 84
 review:
   strengths:
-  - 'Perfect visual quality: All text explicitly sized and readable in both light
-    and dark themes'
-  - 'Perfect spec compliance: All required features (error bars, color gradient, reference
-    line, sorting) correctly implemented'
-  - 'Excellent data quality: Real dataset, real ML calculations, scientifically grounded'
-  - Clean, reproducible code with proper structure and seed management
-  - 'Proper theme adaptation: Background, text, and grid colors follow design tokens
-    correctly in both renders'
+  - Clear, readable horizontal bar chart with proper feature sorting by importance
+  - Excellent theme adaptation with correct light (#FAF8F1) and dark (#1A1A17) backgrounds
+  - All text legible in both renders with proper color contrast
+  - Proper use of viridis colormap for continuous importance values
+  - Correct error bar visualization showing importance variability across permutation
+    repeats
+  - Good visual hierarchy with brightest colors highlighting most important features
+  - Reproducible code with deterministic seed and real dataset (breast cancer)
   weaknesses:
-  - Design sophistication is generic/safe rather than distinctive—plot looks like
-    a well-configured library default
-  - Limited visual refinement beyond minimum customization (grid and spine styling
-    are correct but not exceptional)
-  - Data storytelling relies primarily on sorting and colormap rather than intentional
-    visual emphasis or hierarchy
-  - No seaborn-specific features leveraged to distinguish this from a matplotlib equivalent
+  - Design could be more sophisticated with additional visual refinement beyond defaults
+  - Library mastery is basic - uses standard sns.barplot without distinctive seaborn
+    features
+  - Color gradient is effective but not explicitly mapped to importance values (relies
+    on sorted order)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark text (INK #1A1A17) — fully readable
-      Data: Bars use viridis colormap (yellow→green→teal→blue gradient); error bars visible; reference line at x=0 visible; features sorted by importance
-      Legibility verdict: PASS — All text highly readable with excellent contrast
+      Background: Warm off-white (#FAF8F1) with subtle edges - correct theme surface
+      Chrome: Title "bar-permutation-importance · seaborn · anyplot.ai" is prominent and dark; axis labels "Feature" and "Mean Importance (Decrease in Accuracy)" are clear and readable; tick labels for all 30 features are legible with dark text on light background
+      Data: Horizontal bars use reversed viridis palette (yellow at top for high importance, dark blue at bottom), error bars shown in muted gray (#4A4A44), vertical reference line at x=0 is visible with subtle gray color
+      Legibility verdict: PASS - All elements are clearly visible with excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, axis labels, tick labels in light text (INK_SOFT #B8B7B0) — fully readable; no dark-on-dark issues
-      Data: Viridis colors identical to light render (yellow→green→teal→blue); error bars visible; reference line visible; lowest-importance bars in dark blue have slightly reduced luminance but remain distinguishable
-      Legibility verdict: PASS — All text readable; data colors identical to light render; theme chrome correct
+      Background: Warm near-black (#1A1A17) with subtle edges - correct theme surface
+      Chrome: Title is bright and readable; axis labels are light and legible against dark background; tick labels maintain readability with light text on dark background; no dark-on-dark failures detected
+      Data: Bar colors identical to light render (data colors theme-independent per spec), error bars appear in light gray (#B8B7B0) with good contrast against dark background, reference line at x=0 visible
+      Legibility verdict: PASS - All elements readable in both themes with proper color adaptation
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,47 +51,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: All text readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable
+        comment: 30 features displayed without text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, error bars, grid lines optimally sized for 4800×2700 resolution
+        comment: Bars, error bars, and reference line all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is CVD-safe with good luminance variation
+        comment: Viridis palette is CVD-safe, excellent contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins
+        comment: Good proportions, nothing cut off, generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis descriptive with units; title in correct format
+        comment: Descriptive labels with units, professional title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis approved for continuous sequential data; backgrounds correct;
-          theme-adaptive chrome correct
+        comment: Viridis correct for continuous data, backgrounds accurate, both renders
+          theme-correct
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -101,22 +98,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; professional but generic styling; viridis
-          is standard rather than custom
+        comment: Clean but generic design with default seaborn approach
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, grid styled with alpha=0.10, whitespace generous;
-          some customization above defaults
+        passed: false
+        comment: Standard spine removal and grid styling, no exceptional refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Data sorted by importance; viridis gradient emphasizes relative importance;
-          error bars show variability
+        comment: Good visual hierarchy through color gradient and feature ordering
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +120,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart for permutation importance
+        comment: Correct horizontal bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars, error bars, color gradient, reference
-          line, sorted'
+        comment: Sorted bars, error bars, color gradient, reference line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (importance), Y-axis (features); all data visible
+        comment: X/Y axes correct, all data visible, proper scaling
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend not needed for continuous gradient
+        comment: Correct title format, legend appropriately omitted
     data_quality:
       score: 15
       max: 15
@@ -155,20 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Real breast cancer dataset; 30 features; full range of importance
-          values
+        comment: 'All plot aspects shown: sorted bars, error bars, reference line'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real ML scenario; real data; real permutation importance calculations
+        comment: Real breast cancer dataset with genuine permutation importance
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance values 0–0.0036 realistic; proportions accurate
+        comment: Sensible importance values and axis scaling
     code_quality:
       score: 10
       max: 10
@@ -178,57 +170,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow; no unnecessary functions
+        comment: Simple, straightforward implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeds set throughout
+        comment: Uses random_state=42 for reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used and necessary
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no over-engineering
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Correct output as plot-{THEME}.png
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses sns.barplot() and sns.set_theme() idiomatically; competent but
-          not exceptional
+        comment: Correct sns.barplot usage and theme setup
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No seaborn-specific features leveraged; could be matplotlib equivalent
-  verdict: REJECTED
+        comment: Generic usage without showcasing seaborn's unique strengths
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques: []
   patterns:
-  - data-generation
   - dataset-loading
   dataprep: []
   styling:
-  - custom-colormap
   - grid-styling

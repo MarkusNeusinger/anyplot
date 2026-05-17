@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-permutation-importance: Permutation Feature Importance Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-17
+Quality: 84/100 | Updated: 2026-05-17
 """
 
 import os
