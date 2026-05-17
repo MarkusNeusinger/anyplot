@@ -1,156 +1,164 @@
 library: matplotlib
+language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:18:19Z'
-updated: '2026-01-07T20:23:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795209467
+updated: '2026-05-17T09:40:50Z'
+generated_by: claude-haiku
+workflow_run: 25987230795
 issue: 3237
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/matplotlib/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of Bollinger Bands with all required components (close
-    price, SMA, upper/lower bands with fill)
-  - Clean, readable code following KISS principles
-  - Good color scheme with colorblind-safe palette
-  - Proper date handling with business day frequency
-  - Title format matches specification exactly
+  - Perfect spec compliance with all required features
+  - Flawless theme-adaptive styling in both renders — no dark-on-dark or light-on-light
+    failures
+  - Correct Okabe-Ito palette usage in canonical order
+  - Clean, reproducible code with appropriate data transformation
+  - All text readable at full resolution in both themes
   weaknesses:
-  - Legend position at upper left slightly overlaps with early data points - consider
-    upper right or adjusting framealpha
-  - Data shows mostly downtrend - could benefit from more varied price action (rally
-    + decline + consolidation)
-  image_description: The plot displays a Bollinger Bands indicator chart for stock
-    price data spanning from January 2024 to June 2024. The closing price is shown
-    as a dark blue/black solid line (linewidth ~2.5) that starts around $151, peaks
-    briefly at ~$165 in late January, then trends downward to stabilize around $127-140.
-    The 20-day SMA is rendered as a yellow dashed line (#FFD43B) serving as the middle
-    band. The volatility envelope is displayed as a light blue semi-transparent filled
-    region (#306998 at 20% alpha) between the upper and lower bands, with the band
-    edges visible as darker blue solid lines. The title follows the required format
-    "indicator-bollinger · matplotlib · pyplots.ai" at fontsize 24. The legend is
-    positioned in the upper left corner with good framealpha. Axis labels show "Date"
-    on x-axis and "Price ($)" on y-axis with appropriate font sizes. A subtle dashed
-    grid with alpha=0.3 provides reference without dominating.
+  - Design Excellence uses standard patterns rather than visually distinctive choices
+  - Library Mastery lower — idiomatic but doesn't showcase advanced matplotlib features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper contrast
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text (INK #1A1A17, INK_SOFT #4A4A44)
+      Data: Close price in brand green (#009E73, thick line), SMA in orange (#D55E00, dashed), bands in blue (#0072B2, semi-transparent fill)
+      Legend: Upper left with light background, soft-gray text, properly styled frame
+      Legibility verdict: PASS — all elements readable against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with appropriate contrast
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (INK #F0EFE8, INK_SOFT #B8B7B0)
+      Data: Close price, SMA, bands identical to light render (data colors theme-independent)
+      Legend: Dark fill with light-gray text, properly styled frame
+      Legibility verdict: PASS — all elements readable, no dark-on-dark failures, brand green visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at fontsize 24, labels at 20, tick labels at 16 - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, rotated date labels at 30 degrees work well
+        comment: Title (24pt), axes (20pt), ticks (16pt) all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend positioned upper left, all text properly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines clearly visible with good linewidths (2-2.5), though bands
-          could be slightly more prominent
+        comment: Lines appropriately thick (2–3 linewidth), fill semi-transparent
+          (alpha=0.15)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/dark color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins with tight_layout
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) with unit, Date is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, colorblind-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio, balanced proportions, tight_layout applied
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid alpha 0.3 is good, but legend at upper left overlaps with some
-          data points
+        passed: true
+        comment: Descriptive labels with units, correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds, both
+          themes correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme tokens and legend styling, but follows standard patterns
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spine removal, subtle grid (alpha=0.1), whitespace generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: close price (primary), SMA (secondary), bands (context)'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Bollinger Bands chart with price line, SMA, and volatility
-          bands
+        comment: Bollinger Bands with price, SMA, envelope
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, Price on Y, bands correctly computed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: close price, SMA middle band (dashed),
-          upper/lower bands with fill'
-      - id: SC-04
-        name: Data Range
+        comment: 'All components: close, SMA (dashed), bands with fill'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: dates (120 periods), Y: price ($)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels accurately describe elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses indicator-bollinger · matplotlib · pyplots.ai
+        comment: Correct title and legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows price movement, band expansion/contraction, price touching
-          bands. Could show more dramatic squeeze/expansion pattern
+        comment: Shows all Bollinger Band aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock price data with plausible volatility ($125-165 range)
+        comment: Realistic stock prices, plausible parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Prices are realistic for a mid-cap stock, though starting at $150
-          and dropping to $127 is mostly downtrend
+        comment: Y-axis and time scale appropriate for analysis
     code_quality:
       score: 10
       max: 10
@@ -160,42 +168,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data generation, plot, save'
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, pandas used - all necessary
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses fill_between for bands, autofmt_xdate for date rotation, MaxNLocator
-          - good but not exceptional matplotlib features
+        comment: Ax methods, proper setup, theme tokens, legend styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses fill_between, dashed lines, alpha blending — standard for this
+          chart type
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -204,7 +218,6 @@ impl_tags:
   - data-generation
   dataprep:
   - rolling-window
-  - time-series
   styling:
   - alpha-blending
   - grid-styling
