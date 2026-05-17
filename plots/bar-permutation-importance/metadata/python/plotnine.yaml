@@ -1,160 +1,172 @@
 library: plotnine
+language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:55:20Z'
-updated: '2025-12-31T11:03:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617501040
+updated: '2026-05-17T12:33:46Z'
+generated_by: claude-haiku
+workflow_run: 25990822171
 issue: 2998
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/plotnine/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and proper font hierarchy
-  - Complete spec compliance with all required features (error bars, color gradient,
-    reference line, sorted bars)
-  - Realistic customer churn prediction scenario with sensible feature names
-  - Clean KISS code structure following plotnine grammar of graphics idioms
-  - Good color palette choice (yellow-blue) that is colorblind accessible
+  - Perfect visual quality with explicit, properly-sized text in both themes
+  - All specification requirements fully met and well-implemented
+  - Viridis colormap appropriate for continuous importance data
+  - Realistic, neutral data with excellent feature coverage (15 diverse features)
+  - Proper theme adaptation with identical data colors and theme-appropriate chrome
+  - Error bars effectively communicate uncertainty; reference line clearly shows importance
+    direction
+  - Code is clean, reproducible, and follows KISS principle
   weaknesses:
-  - Axis labels lack units (e.g., could use Score Decrease or similar context)
-  - Library features score is modest - could leverage more plotnine-specific features
-  - Horizontal grid lines (panel_grid_major_y) show through bars which adds visual
-    noise for a horizontal bar chart
-  image_description: The plot displays a horizontal bar chart showing permutation
-    feature importance for a customer churn prediction model. The title "bar-permutation-importance
-    · plotnine · pyplots.ai" appears at the top in bold. Features are listed on the
-    y-axis (Contract Length at top down to Multiple Lines at bottom), sorted by importance.
-    The x-axis shows "Mean Decrease in Model Score" ranging from 0.00 to approximately
-    0.15. Bars are colored with a sequential gradient from yellow (low importance)
-    to blue (high importance). Each bar has horizontal error bars showing variability.
-    A vertical dashed gray reference line at x=0 distinguishes positive from negative
-    importance values. The legend on the right shows the "Importance" color scale.
-    The layout is clean with a minimal theme, subtle grid lines, and well-spaced elements.
+  - Design is competent but generic—uses library defaults with minimal aesthetic customization
+    beyond theme compliance
+  - 'Visual refinement is solid but could expand: spines handling not explicitly stated,
+    whitespace adjustments could be more generous'
+  - Data storytelling relies on natural sorting and color gradient rather than explicit
+    visual hierarchy or design emphasis
+  - Library mastery doesn't leverage distinctive plotnine features—uses standard ggplot2
+    patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "bar-permutation-importance · plotnine · anyplot.ai" in bold dark text (24pt); Y-axis label "Feature" (20pt); X-axis label "Mean Decrease in Model Score" (20pt); all tick labels (16pt) in dark text; legend showing viridis scale - all clearly readable
+      Data: 15 bars colored with viridis gradient from light yellow (Contract Length, ~0.15) through greens, blues, to dark purple (Multiple Lines, ~-0.002); error bars in soft gray; reference line at x=0 as dashed gray line; grid lines subtle and supportive
+      Legibility verdict: PASS - excellent contrast and readability throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title in light off-white (size 24pt); axis labels in light off-white (20pt); tick labels in soft gray (16pt); legend text in soft gray - all clearly readable against dark background with no "dark on dark" issues
+      Data: Viridis colors identical to light render (yellow, greens, blues, purples); error bars in soft gray; reference line at x=0 in dashed gray; all data elements maintain same visibility as light render
+      Legibility verdict: PASS - excellent contrast with no readability issues; proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold at 24pt, axis labels at 20pt, tick labels at 16pt -
-          all perfectly readable
+        comment: All font sizes explicitly set; perfectly readable in both renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, feature names fully visible
+        comment: No overlapping text; all features readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are clearly visible, error bars appropriately sized
+        comment: Bars, error bars, reference line optimally sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Yellow-to-blue gradient is colorblind-safe, good contrast
+        comment: Viridis is CVD-safe and perceptually uniform
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, legend well-placed, plot fills canvas appropriately
+        comment: Perfect 16:9 layout; plot uses ~65% of canvas with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("Feature", "Mean Decrease in Model Score") but
-          no units
+        comment: Descriptive axis labels with context; correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.3), but minor y-grid visible when not needed
-          for horizontal bars
+        comment: Viridis for continuous data; theme-correct backgrounds and chrome
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; generic styling without custom aesthetic
+          choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid customization visible; could expand whitespace and typography
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Natural hierarchy from sort order and gradient; no explicit focal
+          point beyond natural structure
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Correct horizontal bar chart with error bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Features on y-axis, importance on x-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has error bars, color gradient, reference line at x=0, sorted by
-          importance
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: bars, error bars, sorting, reference
+          line, color gradient'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including negative value for Multiple Lines
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'Y: features (categorical); X: importance_mean; color: importance_mean'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Importance legend correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: bar-permutation-importance · plotnine · pyplots.ai'
+        comment: Title format correct; legend labels clear
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 15 features with varying importance including one negative
-          value, good range but could show more variation in error bar sizes
+        comment: 15 diverse features showing full range with excellent variability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer churn prediction is a real, neutral ML scenario with plausible
-          feature names
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Importance values 0-0.15 are realistic for permutation importance
+        comment: Real customer churn scenario; meaningful feature names; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic importance values and std; all proportions factually plausible
     code_quality:
       score: 10
       max: 10
@@ -164,41 +176,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure, no functions/classes
+        comment: Simple linear flow; no over-engineering
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports; no dead code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot() + geoms + coord_flip + theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses plotnine grammar (ggplot, geom_col, coord_flip, scale_fill_gradient,
-          theme_minimal) correctly but doesn't showcase advanced features like faceting
-          or statistical transformations
+        comment: Uses standard ggplot2 patterns; not distinctively plotnine
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling

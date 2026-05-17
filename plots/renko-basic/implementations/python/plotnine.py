@@ -1,13 +1,43 @@
-""" pyplots.ai
+""" anyplot.ai
 renko-basic: Basic Renko Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-17
 """
+
+import os
+import sys
 
 import numpy as np
 import pandas as pd
-from plotnine import aes, element_line, element_text, geom_rect, ggplot, labs, scale_fill_manual, theme, theme_minimal
 
+
+# Work around naming collision with plotnine.py
+sys.path.pop(0)
+
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_rect,
+    ggplot,
+    labs,
+    scale_fill_manual,
+    theme,
+    theme_minimal,
+)
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito colors for direction
+BULLISH = "#009E73"  # Position 1 - brand green
+BEARISH = "#D55E00"  # Position 2 - vermillion
 
 # Data - Generate stock price data
 np.random.seed(42)
@@ -116,21 +146,26 @@ brick_df["ymax"] = brick_df["top"]
 # Plot
 plot = (
     ggplot(brick_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="direction"))
-    + geom_rect(color="#333333", size=0.3)
-    + scale_fill_manual(values={"up": "#26A69A", "down": "#EF5350"}, labels={"up": "Bullish", "down": "Bearish"})
-    + labs(x="Brick Index", y="Price ($)", title="renko-basic · plotnine · pyplots.ai", fill="Direction")
+    + geom_rect(color=INK_SOFT, size=0.3)
+    + scale_fill_manual(values={"up": BULLISH, "down": BEARISH}, labels={"up": "Bullish", "down": "Bearish"})
+    + labs(x="Brick Index", y="Price ($)", title="renko-basic · plotnine · anyplot.ai", fill="Direction")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        panel_grid_major=element_line(color="#E0E0E0", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#E0E0E0", size=0.3, alpha=0.2),
+        text=element_text(size=14, color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.5, alpha=0.15),
+        panel_grid_minor=element_line(color=INK, size=0.3, alpha=0.08),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.3),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
     )
 )
 
-plot.save("plot.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)

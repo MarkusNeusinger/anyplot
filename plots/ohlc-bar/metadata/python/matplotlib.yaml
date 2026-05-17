@@ -1,159 +1,182 @@
 library: matplotlib
+language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:03:34Z'
-updated: '2026-01-08T16:10:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823042611
+updated: '2026-05-17T10:37:43Z'
+generated_by: claude-haiku
+workflow_run: 25988388092
 issue: 3293
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/matplotlib/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of OHLC bar chart with proper left/right tick marks for
-    open/close prices
-  - Clear visual distinction between up and down days using appropriate colors
-  - Good use of matplotlib.dates for proper date axis formatting with week-based locators
-  - Realistic synthetic data generation with price gaps and appropriate daily volatility
-  - Clean, well-organized code following KISS principle
-  - Proper use of custom legend with Line2D elements
+  - 'Theme-Perfect Chrome: Both light and dark renders pass comprehensive readability
+    checks; backgrounds, text, and grid colors are theme-correct with excellent contrast'
+  - 'Spec Mastery: All OHLC features present; horizontal ticks for open/close, vertical
+    lines for ranges, appropriate color differentiation, professional date formatting'
+  - 'Okabe-Ito Compliance: Brand green (#009E73) for up series matches specification
+    exactly; orange (#D55E00) for down series is Okabe-Ito position 2'
+  - 'Typography Excellence: All font sizes explicitly set (24/20/16pt); zero overlap;
+    perfect readability at 4800×2700px'
+  - 'Data-Driven Example: 45-day random walk with realistic returns demonstrates full
+    range of OHLC features without abstract labels'
+  - 'Code Clarity: Simple, linear structure with no over-engineering; reproducible
+    with seed 42; clean imports'
   weaknesses:
-  - X-axis grid is too faint (alpha=0.15) compared to y-axis grid (alpha=0.3), making
-    it harder to align dates with bars
-  - Line width of 2.0 could be slightly thicker (2.5-3.0) for better visibility at
-    full resolution
-  - Data could be more descriptive (e.g., naming a fictional stock symbol for context)
-  image_description: The plot displays an OHLC bar chart showing 45 trading days of
-    stock price data from June 3 to August 5, 2024. Each bar consists of a vertical
-    line representing the high-low range with horizontal tick marks on the left for
-    the open price and the right for the close price. Blue bars (#306998) indicate
-    "Up" days (Close ≥ Open) and red bars (#D62728) indicate "Down" days (Close <
-    Open). The price ranges from approximately $127 to $170 USD. The chart includes
-    a legend in the upper left explaining the color coding, date labels on the x-axis
-    are rotated at 45 degrees showing weekly intervals (Mondays), and a subtle y-axis
-    grid (alpha=0.3) helps read price levels. The title follows the required format
-    "ohlc-bar · matplotlib · pyplots.ai". The overall trend shows a downward price
-    movement over the period with an initial rally from $150 to ~$167 in mid-June,
-    followed by a sustained decline to ~$130 by late July.
+  - 'Design Excellence Cap: While visually excellent, the implementation follows standard
+    best practices rather than introducing distinctive design innovations. The Okabe-Ito
+    palette and refined defaults leave room for bolder aesthetic choices (e.g., custom
+    typography weights, emphasis techniques, data-focused color contrast).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - exactly as specified
+      Chrome: Title "ohlc-bar · matplotlib · anyplot.ai" in dark text (24pt); X-axis "Date" in dark text (20pt); Y-axis "Price (USD)" in dark text (20pt); tick labels at 16pt in secondary dark text (#4A4A44) - all perfectly readable
+      Data: OHLC bars with green (#009E73) for up days and orange (#D55E00) for down days; vertical high-low lines with width 2.0 and round caps; horizontal ticks for open (left) and close (right); grid lines subtle at alpha 0.15 (y) and 0.08 (x); legend in upper left with light elevated background (#FFFDF6)
+      Legibility verdict: PASS - All text perfectly readable, no contrast failures, optimal color choices for light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - exactly as specified, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light text (#F0EFE8 for primary, #B8B7B0 for secondary) - perfectly readable against dark background; legend frame uses elevated dark surface (#242420) with light text
+      Data: OHLC bars maintain identical colors to light render - green (#009E73) and orange (#D55E00) unchanged, confirming proper theme-independence; vertical and horizontal tick structure identical; grid lines remain subtle
+      Legibility verdict: PASS - No dark-on-dark failures, all text is light-colored and fully legible, grid remains visible, data colors unchanged from light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt, legend 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, date labels rotated to avoid overlap
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text overlap; all elements fully readable with good spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: OHLC bars clearly visible with appropriate line width, tick marks
-          distinguishable
+        comment: OHLC bars optimally sized for 45 data points; line width 2.0 with
+          round caps; all markers clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue and red distinguishable, though red-blue is not optimal for
-          all colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Date and Price (USD) with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette with strong contrast; CVD-safe; distinguishable
+          beyond hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-80% of canvas; balanced margins; legend well-positioned;
+          generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-grid subtle (alpha 0.3), x-grid at 0.15 is too faint
+        comment: Title includes spec-id, library, and brand; Y-axis includes units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second #D55E00 (Okabe-Ito #2);
+          backgrounds #FAF8F1 light/#1A1A17 dark; theme-adaptive chrome perfect in
+          both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured professional styling; thoughtful color choices; clean
+          typography; not exceptionally unique
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spine removal; subtle grid with appropriate alpha; generous
+          whitespace; legend styled with elevated background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Visual hierarchy guides viewer; color encoding conveys up/down; could
+          emphasize focal points more
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct OHLC bar chart with vertical lines and left/right tick marks
+        comment: Perfect OHLC bar implementation; both up and down bars present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price on Y-axis, OHLC correctly represented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: thin vertical lines, left tick for open,
-          right tick for close, up/down colors, date formatting, grid lines'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: vertical high-low lines, horizontal open/close
+          ticks, color differentiation, date formatting, grid'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis has appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: date; Y-axis: price; all 45 periods visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes up and down bars
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format ohlc-bar · matplotlib · pyplots.ai
+        comment: Title format correct; legend labels descriptive
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both up and down bars, price gaps, varying ranges, clear trend
+        comment: Shows up bars and down bars; varied price ranges; realistic volatility;
+          visible trend
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Stock price scenario plausible with realistic daily movements and
-          price gaps
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price values ($130-$170) and daily returns are realistic for stock
-          data
+        comment: Stock price data in realistic range ($128–$170); neutral financial
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 45 trading days appropriate window; returns and volatility realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,48 +184,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Linear structure: imports → data → plot → save; no functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed 42 ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: DataFrame iteration pattern could be more idiomatic
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; correct naming
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Proper Axes methods; correct figure/axes pattern; theme-adaptive
+          tokens; mostly standard approach
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses matplotlib.dates for date handling, Line2D for custom legend,
-          but draws OHLC manually
+        passed: false
+        comment: Custom legend with Line2D; theme-adaptive chrome; matplotlib.dates
+          formatting; mostly standard OHLC
+    score_caps:
+      applied: false
+      notes: No caps triggered
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
@@ -210,3 +242,4 @@ impl_tags:
   - time-series
   styling:
   - grid-styling
+  - publication-ready

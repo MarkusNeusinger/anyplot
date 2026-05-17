@@ -1,151 +1,177 @@
 library: bokeh
+language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:20:29Z'
-updated: '2026-01-07T20:28:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795213741
+updated: '2026-05-17T09:55:44Z'
+generated_by: claude-haiku
+workflow_run: 25987356501
 issue: 3237
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Bokeh's Band glyph for the volatility envelope
-  - Good interactive features with HoverTool showing all data points
-  - Clean separation of price line, SMA, and bands with appropriate visual hierarchy
-  - Proper datetime x-axis handling
-  - Both PNG and HTML outputs generated
+  - 'Perfect visual quality: all text explicitly sized and readable in both themes'
+  - 'Flawless palette compliance: Okabe-Ito colors applied correctly, theme-adaptive
+    chrome working perfectly'
+  - 'Complete spec implementation: all Bollinger Bands features present and working'
+  - Strong idiomatic bokeh usage with proper data binding and interactive tools
+  - Clean, reproducible code with deterministic output
   weaknesses:
-  - Legend placement on the right side creates visual disconnect from the plot area
-  - Yellow SMA line could have better contrast against the light background
-  image_description: The plot displays a Bollinger Bands chart for stock price data
-    spanning from February 2024 to June 2024. The chart features a dark navy/black
-    price line (Close Price) that moves within a semi-transparent blue band (the Bollinger
-    Bands envelope). The middle band (20-period SMA) is shown as a dashed yellow/gold
-    line. The upper and lower bands are rendered with solid blue lines, and the area
-    between them is filled with a light blue semi-transparent color. The title "indicator-bollinger
-    · bokeh · pyplots.ai" appears at the top left. The y-axis shows "Price ($)" ranging
-    from approximately 85 to 110, and the x-axis shows "Date" with monthly labels.
-    A legend is positioned on the right side showing "Close Price", "SMA (20)", and
-    "Upper/Lower Band (±2σ)". The background is a light gray (#fafafa), and the grid
-    lines are subtle dashed lines.
+  - 'Design excellence below top tier: lacks custom styling, visual refinement beyond
+    library defaults, or explicit data storytelling through annotations/emphasis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1 - correct light theme surface
+      Chrome: Title "indicator-bollinger · bokeh · anyplot.ai" is dark text, fully readable. X-axis label "Date" and Y-axis label "Price ($)" are descriptive with units. Axis tick labels for dates and prices are clearly legible at 18pt. Legend in top-right lists three series clearly at 16pt.
+      Data: Price line rendered in teal-green #009E73 (brand color, first Okabe-Ito position). Upper and lower bands in blue #0072B2 (position 3) with semi-transparent light blue fill between them. Middle band (SMA) shown as dashed blue line. Grid at 10% alpha, subtle but visible.
+      Legibility verdict: PASS - All text readable with no dark-on-light issues. Contrast is excellent.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17 - correct dark theme surface
+      Chrome: Title is light cream text #F0EFE8, highly visible against dark background. Axis labels and tick labels in secondary light text #B8B7B0, clearly readable. Legend maintains light text color. No dark-on-dark failures present.
+      Data: Price line identical teal-green #009E73 as in light render (data colors consistent across themes). Bands rendered in darker blue but still clearly distinguishable. Semi-transparent band fill visible and effective. Grid subtle and visible at correct opacity.
+      Legibility verdict: PASS - All text readable with excellent light-on-dark contrast. Theme adaptation perfect - only chrome changes, data colors stay identical.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 26pt, tick labels at 20pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
+          legend 16pt). All text perfectly readable in both light and dark renders.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text overlap. Excellent spacing throughout.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are well-sized, though the SMA line could be slightly more
-          prominent against the band fill
+        comment: All markers and lines optimally visible and well-adapted to 120-period
+          data density.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good contrast between price line (dark), SMA (yellow), and bands
-          (blue), though yellow on light background could be better
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization, plot fills the space well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Price ($) and Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Excellent contrast. Teal-green brand color is CVD-safe and distinguishable
+          from blue bands in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout. Plot fills ~70% of canvas with balanced whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is placed on the right but positioned far from the data, creating
-          visual disconnect
+        passed: true
+        comment: 'Descriptive labels with units: Price ($) on Y-axis, Date on X-axis.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses brand green #009E73. Bands use Okabe-Ito position
+          3 (#0072B2). Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Theme-adaptive
+          text colors in both renders. Data colors identical across themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful use of Okabe-Ito palette, proper theme-adaptive tokens,
+          clear typographic hierarchy. Well-configured library defaults with intentional
+          design choices, but not publication-level custom styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid explicitly set to 10% opacity, legend background styled with
+          elevated colors. No spine removal or additional refinement beyond library
+          defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Price line established as focal point through bold green color and
+          5px weight. Bands show volatility envelope effectively. Lacks explicit annotations
+          or emphasis to highlight story elements.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Bollinger Bands chart type
+        comment: Correct line chart with band fill for Bollinger Bands visualization.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, Price on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: price line, SMA (dashed), upper/lower
-          bands with fill'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: price line, upper band, lower band, middle
+          band (SMA), semi-transparent fill.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X-axis, Price on Y-axis. All 100 periods visible and correctly
+          scaled.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify all series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: indicator-bollinger · bokeh · pyplots.ai'
+        comment: 'Title format correct: indicator-bollinger · bokeh · anyplot.ai.
+          Legend labels accurate.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows volatility expansion/contraction, price movements, band touches;
-          could show more dramatic squeeze patterns
+        comment: 'Demonstrates all Bollinger Bands features: band width compression,
+          price oscillation patterns, volatility trends.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock price scenario with random walk and drift
+        comment: Synthetic stock price with realistic random walk model. Neutral financial
+          context, plausible daily trading scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Reasonable price range (~85-110), 120 trading days is good
+        comment: Prices $65-$115, Bollinger Bands correctly calculated. Values factually
+          correct and properly scaled.
     code_quality:
       score: 10
       max: 10
@@ -155,45 +181,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> data -> plot -> save'
+        comment: 'Simple linear flow: imports → data generation → plot creation →
+          save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy, pandas, bokeh functions, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code. Selenium approach is idiomatic for bokeh.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Band glyph, HoverTool - good Bokeh features,
-          but hover tooltips could be more interactive
+        comment: 'Expert use of bokeh patterns: ColumnDataSource, Band model, HoverTool,
+          Legend positioning.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses bokeh-specific features: Band model for fills, HoverTool with
+          formatters, Selenium headless rendering. Minor deduction for not exploring
+          advanced interactivity.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - html-export
@@ -203,7 +239,7 @@ impl_tags:
   - columndatasource
   dataprep:
   - rolling-window
-  - time-series
   styling:
+  - theme-adaptive
   - alpha-blending
   - grid-styling
