@@ -1,143 +1,172 @@
 library: matplotlib
+language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:52:26Z'
-updated: '2026-01-08T21:58:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832938847
+updated: '2026-05-17T01:46:32Z'
+generated_by: claude-haiku
+workflow_run: 25978156824
 issue: 3340
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 95
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Perfect implementation of standard chess board conventions (h1 light square)
-  - Excellent color scheme with classic cream (#F0D9B5) and brown (#B58863) that provides
-    good contrast
-  - Clean, readable algebraic notation labels at appropriate font sizes
-  - Proper 1:1 aspect ratio maintained with square figure dimensions
-  - Subtle border styling with coordinated dark brown color
-  - Simple, clean KISS code structure
-  weaknesses: []
-  image_description: 'The plot displays a classic 8x8 chess board with alternating
-    light (cream, #F0D9B5) and dark (brown, #B58863) squares. The board is properly
-    oriented with the h1 square being light-colored, following standard chess conventions.
-    Row labels (1-8) appear on the left side in bold black text, and column labels
-    (a-h) appear at the bottom in bold black text. The board has a dark brown border
-    (#5D4037) around all edges with matching thin borders between squares. The title
-    "chessboard-basic · matplotlib · pyplots.ai" appears at the top in bold black
-    text. The board maintains a perfect 1:1 square aspect ratio with excellent proportions.'
+  - 'Perfect theme adaptation: Both renders legible with properly implemented theme
+    tokens while maintaining consistent chess board colors'
+  - 'Excellent text legibility: Title and axis labels clear and bold across both themes
+    (fontsize=24 for title, 20 for labels)'
+  - 'Full spec compliance: All chess notation requirements met (8×8 grid, a–h columns,
+    1–8 rows, correct h1 light square)'
+  - 'Clean code: Simple, straightforward implementation without unnecessary abstractions'
+  - 'Professional visual design: Custom chess board colors with proper borders and
+    theme-adaptive styling'
+  weaknesses:
+  - 'Design Excellence is solid but not exceptional: Implementation is functional
+    and well-executed, but lacks additional visual sophistication or embellishment'
+  - 'Library Mastery is good but not distinctive: Idiomatic matplotlib, but doesn''t
+    showcase particularly unique library capabilities beyond Rectangle patching'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "chessboard-basic · matplotlib · anyplot.ai" in bold black (fontsize=24), clearly readable. Column labels a–h and row labels 1–8 in bold black (fontsize=20), centered and legible.
+      Data: Chess squares alternate between light cream (#F0D9B5) and warm brown (#B58863) with brown borders (#5D4037), perfect h1 light-square corner, excellent contrast
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in light off-white text, clearly visible. Column and row labels in light off-white, all readable against dark background — no dark-on-dark failures
+      Data: Lighter cream (#E8D4C4) and darker brown (#6B5047) squares maintain identical pattern to light render, only chrome colors adapted. Border color (#A0967C) visible against dark background. Data colors are identical to light render.
+      Legibility verdict: PASS — all text readable, strong theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, all perfectly readable
+        comment: Title and labels explicitly set with fontsize 20–24 and bold weight,
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements whatsoever
+        comment: Labels centered at tick positions, title padded, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Squares are perfectly sized and clearly visible
+        comment: All squares and borders clearly visible with strong contrast
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Cream/brown contrast is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Board fills canvas well with balanced margins, 1:1 aspect ratio maintained
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for chess board - functional labels present
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed; square borders are subtle and appropriate
+        comment: Light/dark distinction is strong and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 1:1 aspect ratio maintained, proper square proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches spec format; column/row labels follow chess notation
+          standard
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Theme-adaptive colors applied correctly; backgrounds #FAF8F1 (light)
+          and #1A1A17 (dark); both renders pass theme-readability check'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom chess colors with theme adaptation; professional but functional
+          rather than exceptionally sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Custom borders, explicit edge colors, spine styling, and padding
+          applied; well-polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Board layout naturally supports chess notation; inherently not a
+          storytelling visualization
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 8x8 grid visualization
+        comment: Correct 8×8 chess board
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Rows 1-8, columns a-h correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: algebraic notation, light h1 corner,
-          classic colors, square borders, 1:1 aspect ratio'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: 8 rows, 8 columns, alternating colors, algebraic
+          notation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 64 squares visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly labeled; h1 light-square corner verified
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type, labels accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: chessboard-basic · matplotlib · pyplots.ai'
+        comment: Title follows spec format; no legend needed (N/A)
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete standard chess board with all required features
+        comment: Full chess board coverage with complete notation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Standard chess board is a real, neutral scenario
+        comment: Standard chess board in real-world notation; neutral and educational
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
-        max: 5
-        passed: false
-        comment: Fixed 8x8 grid is correct; deterministic data
+        score: 4
+        max: 4
+        passed: true
+        comment: 8×8 is standard chess board; proportions correct
     code_quality:
       score: 10
       max: 10
@@ -147,41 +176,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → config → plot → save structure
+        comment: No functions or classes; simple loops and variables
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements)
+        comment: Deterministic; will produce identical output on repeated runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot imported
+        comment: Only necessary imports (os, sys, matplotlib.pyplot); all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current API
+        comment: No fake UI; appropriate complexity; no unnecessary abstractions
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API usage
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Good use of Rectangle patches, axis customization, spine styling
+        comment: Axes methods used correctly; Rectangle patches for grid-based shapes;
+          theme tokens follow matplotlib guide
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of patches and theme adaptation; mostly standard matplotlib
+          features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -189,7 +226,7 @@ impl_tags:
   - patches
   - manual-ticks
   patterns:
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - edge-highlighting
