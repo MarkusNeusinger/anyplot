@@ -1,13 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 98/100 | Created: 2026-01-08
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
+import os
+import sys
 
+
+# Remove current directory from path to avoid naming conflicts
+sys.path = [p for p in sys.path if p not in ("", ".", os.path.dirname(__file__))]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for up/down coloring
+BRAND = "#009E73"  # Position 1 - bluish green, first series
+UP_COLOR = BRAND  # Use brand green for up days
+DOWN_COLOR = "#D55E00"  # Position 2 - vermillion for down days
 
 # Data - Generate realistic stock price data for 45 trading days
 np.random.seed(42)
@@ -44,38 +64,40 @@ fig = go.Figure(
         high=df["high"],
         low=df["low"],
         close=df["close"],
-        increasing={"line": {"color": "#306998", "width": 2}},  # Python Blue for up bars
-        decreasing={"line": {"color": "#FFD43B", "width": 2}},  # Python Yellow for down bars
+        increasing={"line": {"color": UP_COLOR, "width": 2}},
+        decreasing={"line": {"color": DOWN_COLOR, "width": 2}},
         name="Price",
     )
 )
 
-# Update layout for 4800x2700 canvas
+# Update layout for 4800x2700 canvas with theme-adaptive chrome
 fig.update_layout(
-    title={"text": "ohlc-bar · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
+    title={"text": "ohlc-bar · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Date", "font": {"size": 24}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(128, 128, 128, 0.3)",
+        "title": {"text": "Date", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
-        "rangeslider": {"visible": False},  # Disable range slider for cleaner look
+        "linecolor": INK_SOFT,
+        "rangeslider": {"visible": False},
         "tickformat": "%b %d",
     },
     yaxis={
-        "title": {"text": "Price (USD)", "font": {"size": 24}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Price (USD)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "tickprefix": "$",
-        "gridcolor": "rgba(128, 128, 128, 0.3)",
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     showlegend=False,
     margin={"l": 100, "r": 80, "t": 120, "b": 100},
-    plot_bgcolor="white",
 )
 
-# Save as PNG (4800x2700 via scale=3)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML version
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save outputs
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
