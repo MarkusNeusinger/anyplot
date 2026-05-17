@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:53:55Z'
-updated: '2026-05-17T02:02:03Z'
+updated: '2026-05-17T02:09:26Z'
 generated_by: claude-haiku
 workflow_run: 25978473546
 issue: 3340
@@ -12,39 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Perfect theme adaptation - light/dark square colors adjust intelligently for both
-    renders
-  - Excellent text legibility - all labels perfectly readable at 3600×3600 canvas
-    size
-  - Complete spec compliance - proper 8×8 grid with algebraic notation and classic
-    colors
-  - Clean, deterministic code with perfect reproducibility
-  - Proper use of Highcharts HeatmapSeries with color_axis stops
+  - 'Excellent text legibility: all fonts explicitly sized (title 28px, labels 18px),
+    perfectly readable in both renders'
+  - 'Perfect spec compliance: all required features present and correctly implemented
+    (8×8 board, algebraic notation, 1:1 aspect ratio)'
+  - Clean, maintainable code with proper theme-token architecture (PAGE_BG, INK, INK_SOFT
+    correctly set)
+  - Proper use of square format (3600×3600px) for geometric grid visualization
+  - 'Strong data quality: complete chessboard with correct alternating pattern and
+    classic colors'
+  - Interactive tooltips showing square notation (e.g., a1, h8) enhance usability
   weaknesses:
-  - Design Excellence is moderate - fairly straightforward implementation without
-    additional visual sophistication
-  - Library Mastery is functional but not distinctive - standard Highcharts features
-    without creative approaches
+  - 'VQ-07 violation: Data colors (square colors) change between themes — light squares
+    #F0D9B5→#D4AF77, dark squares #B58863→#4A3C28. Design rule requires data colors
+    to remain identical across renders; only chrome should flip.'
+  - 'Limited design excellence: implementation is technically correct but visually
+    generic (default heatmap styling without custom refinement)'
+  - Minimal use of highcharts distinctive features beyond basic heatmap with tooltips
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) providing excellent foundation for the visualization
-      Chrome: Title "chessboard-basic · highcharts · anyplot.ai" in dark text at top; column labels (a-h) at bottom and row labels (1-8) on left, all clearly readable in dark color
-      Data: 8×8 grid with alternating cream (#F0D9B5) and brown (#B58863) squares with subtle dark borders; classic chess colors
-      Layout: Perfect 1:1 square aspect ratio with well-balanced margins
-      Legibility verdict: PASS - All elements completely readable with excellent contrast
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title (28px bold), column labels a-h (18px), row labels 1-8 (18px), all in dark text (INK) — all readable ✓
+      Data: Light squares cream (#F0D9B5), dark squares brown (#B58863), perfect 1:1 aspect ratio with clean borders ✓
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with no readability issues
-      Chrome: Title and all labels rendered in light text that is clearly visible against dark surface; no dark-on-dark conflicts
-      Data: Same 8×8 pattern with theme-adapted colors - light squares now #D4AF77 (lighter gold), dark squares #4A3C28 (darker brown); colors remain visually distinct and readable
-      Color consistency: Data square alternation pattern identical to light render; only chrome (background, text colors) flips between themes as specified
-      Legibility verdict: PASS - All text and data elements perfectly readable on dark background
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title visible in light text, column/row labels in light colors (INK_SOFT) — all readable ✓
+      Data: Light squares golden (#D4AF77), dark squares very dark (#4A3C28) — DIFFERENT from light render
+      Color consistency: FAIL — data colors changed between themes (violates design principle: only chrome should flip)
+      Legibility verdict: PASS (text readable, but data colors inconsistent)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -52,69 +55,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, labels 18px; all explicitly set, perfectly readable in
-          both themes
+        comment: 'All fonts explicitly set: title 28px, labels/ticks 18px, perfectly
+          readable in both renders'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no overlapping elements
+        comment: No overlapping text, clean layout with proper margins
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 64 squares clearly visible and distinguishable with defined borders
+        comment: All 64 squares clearly visible, properly sized, well-defined borders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Classic chess colors provide excellent contrast; CVD-safe
+        comment: Strong contrast between light/dark squares, colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect square format (3600×3600) with well-balanced margins
+        comment: Perfect 3600×3600 square format, balanced margins, plot fills ~70%
+          of canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; algebraic notation labels
+        comment: Title with spec-id/library/domain, axes labeled with algebraic notation
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Correct backgrounds (#FAF8F1 light, #1A1A17 dark); theme-adapted
-          text colors; data colors maintain identity'
+        passed: false
+        comment: 'Partial: colors reasonable but violate theme-constancy rule — data
+          colors change between renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured classic chess colors; straightforward styling without
-          additional sophistication
+        comment: Professional polish but generic default styling, no exceptional design
+          thought
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Borders add refinement; thoughtful color adaptation; could use more
-          enhancement
+        passed: true
+        comment: Clean borders, generous whitespace, minimalist chrome
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Alternating pattern is clear focal point; adequate for grid visualization
+        comment: Reference visualization, no narrative hierarchy needed
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect 8×8 chessboard grid
+        comment: Heatmap correctly represents 8×8 grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: alternating squares, notation, aspect ratio,
-          colors'
+        comment: Alternating squares, algebraic notation, 1:1 aspect ratio, clean
+          borders
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct column/row mapping; all data visible
+        comment: Rows and columns properly mapped, all 64 squares visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend needed
+        comment: 'Format correct: ''chessboard-basic · highcharts · anyplot.ai'',
+          legend disabled'
     data_quality:
       score: 15
       max: 15
@@ -153,19 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of chessboard (full 8×8 with proper alternation)
+        comment: Shows all 64 squares with correct alternating pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard chessboard is universally recognized, realistic, and neutral
+        comment: Classic chessboard is neutral, well-known, real-world reference
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Canonical 8×8 scale is correct for chess
+        comment: 8×8 grid is correct, proportions perfect
     code_quality:
       score: 10
       max: 10
@@ -175,48 +179,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear code; no functions or classes
+        comment: 'Linear: imports → theme tokens → data → chart → render'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic modulo logic; perfectly reproducible
+        comment: Deterministic data, static board
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: requests, highcharts_core, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with current API
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Correct patterns; HeatmapSeries used idiomatically with color_axis
+        passed: true
+        comment: Chart, HighchartsOptions, HeatmapSeries used correctly; proper Selenium
+          export
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses color_axis and tooltip; fairly standard application without
-          creative approach
+        passed: true
+        comment: Uses heatmap with custom color stops and interactive tooltips showing
+          square notation
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -224,8 +229,10 @@ impl_tags:
   - selenium
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
+  - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
+  - minimal-chrome
