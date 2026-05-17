@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: boxen-basic
 created: '2026-05-17T08:58:34Z'
-updated: '2026-05-17T09:21:23Z'
+updated: '2026-05-17T09:26:09Z'
 generated_by: claude-haiku
 workflow_run: 25986442262
 issue: 3414
@@ -12,93 +12,83 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.html
-quality_score: 50
+quality_score: 49
 review:
   strengths:
-  - Correct quantile calculations (sixteenths, eighths, quartiles, median)
-  - Realistic API endpoint data with appropriate distributions
-  - Theme-aware styling with correct Okabe-Ito palette usage
-  - Readable text in both light and dark themes
-  - Clean code structure with reproducible seed
+  - Clean, reproducible Python code with proper seeding
+  - Realistic server response time scenario
+  - Correct use of Okabe-Ito palette and theme-adaptive colors
+  - Proper background colors and theme handling
   weaknesses:
-  - 'Core spec requirement unmet: no visual boxes. Spec requires ''nested boxes representing
-    letter values'' with ''boxes should decrease in width for deeper quantiles'' —
-    pygal XY scatter cannot render boxes'
-  - 'Visualization structure unclear: 16 series legend makes it hard to interpret
-    quantile hierarchy'
-  - 'SC-01 failure: Not a proper boxen/letter-value plot; appears as scattered points
-    and lines'
-  - 'Pygal library limitation: no native boxen plot support; XY workaround insufficient'
-  - 'Visual hierarchy unclear: stroke_width used but doesn''t create the nested box
-    effect specified'
+  - Legend explosion with 16 overlapping entries making it completely unreadable
+  - Wrong visualization approach - lines with stroke-width variation do not represent
+    nested boxes as specified
+  - Specification violation - requires nested boxes with decreasing width but shows
+    lines instead
+  - Missing visual structure - boxen plot concept of nested quantile boxes is not
+    conveyed visually
+  - Layout issues - legend dominates canvas and plot area is underutilized
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title, axis labels ("Endpoint", "Response Time (ms)"), and tick labels all readable in dark text ✓
-      Data: Multiple colored vertical line segments at each endpoint showing different quantile levels; uses Okabe-Ito palette with brand green as primary color; legend shows 16 series (4 endpoints × quantile levels) with outliers scattered
-      Structure: Points and lines connect to show upper/lower bounds of quantile ranges
-      Legibility verdict: PASS - text is readable, but visualization structure is unclear
+      Background: Warm off-white around #FAF8F1 - correct theme
+      Chrome: Title "boxen-basic · pygal · anyplot.ai" is readable; axis labels "Response Time (ms)" and "Endpoint" are clear; tick labels visible but small
+      Data: Shows four API endpoints with vertical lines at different stroke widths (attempting to represent quantiles); four bar shapes at bottom
+      Legibility verdict: FAIL - Legend contains 16 overlapping entries making it completely unreadable and unusable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title, axis labels, and tick labels all readable in light text; no dark-on-dark failures ✓
-      Data: Identical data colors to light render (Okabe-Ito maintained); same 16-series structure; colors remain #009E73 and variants
-      Structure: Same point/line visualization as light render; outline visible against dark background
-      Legibility verdict: PASS - all elements readable; theme adaptation correct
-
-    CRITICAL OBSERVATION: While both renders are technically readable, the core visualization does not match the specification's requirement for "nested boxes representing letter values." The implementation uses a pygal XY scatter chart as a workaround, but this cannot create visual boxes with decreasing width for deeper quantiles. The result shows points and lines rather than the nested box structure required by the spec.
+      Background: Warm near-black around #1A1A17 - correct theme
+      Chrome: Title and axis labels are readable with light text on dark background
+      Data: Data colors are identical to light render (greens, oranges, blues, purples); same line structure
+      Legibility verdict: FAIL - Same legend readability issue persists; 16 entries completely overlapping and unreadable
   criteria_checklist:
     visual_quality:
-      score: 14
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
-        passed: true
-        comment: All text readable in both themes; relies on library defaults rather
-          than explicit sizing
+        passed: false
+        comment: Title and axis labels readable; legend text too small and overlapping
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 1
         max: 6
         passed: false
-        comment: Legend cluttered with 16 series; some overlap between series visualizations
+        comment: 'SEVERE: 16-entry legend completely unreadable and overlapping'
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Points and lines visible but structure confusing; doesn't convey
-          nested quantile levels clearly
+        passed: true
+        comment: Lines and points visible despite poor structure
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito used but with 16 series; distinction between similar quantile
-          levels unclear
+        passed: true
+        comment: Okabe-Ito colors distinguishable and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
         passed: false
-        comment: Reasonable plot area but legend is overly large and cluttered
+        comment: Legend occupies excessive space; plot underutilizes canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive with units
+        comment: Title correct; Y-axis has units (ms); descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette correct; theme-adaptive chrome correct (#FAF8F1/#1A1A17)
+        comment: Okabe-Ito palette used correctly; backgrounds are theme-correct
     design_excellence:
-      score: 6
+      score: 5
       max: 20
       items:
       - id: DE-01
@@ -106,22 +96,22 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic styling; no special design polish
+        comment: Generic defaults; legend ruins overall aesthetics
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 1
         max: 6
         passed: false
-        comment: Minimal customization; library defaults
+        comment: No refinement; cluttered legend; unpolished
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Visualization does not clearly tell the story of nested quantile
-          distributions
+        comment: Data displayed but visualization approach fails to convey boxen plot
+          concept
     spec_compliance:
-      score: 5
+      score: 7
       max: 15
       items:
       - id: SC-01
@@ -129,28 +119,29 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Not a proper boxen/letter-value plot; uses XY scatter as workaround
+        comment: 'CRITICAL: Not a proper boxen plot - shows lines instead of nested
+          boxes with decreasing widths'
       - id: SC-02
         name: Required Features
         score: 1
         max: 4
         passed: false
-        comment: Shows quantile data but not in 'nested boxes' format; missing visual
-          box structure
+        comment: Missing nested box visualization; quantile levels present but not
+          visually distinguished
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Endpoints on X, response times on Y; all data visible
+        comment: X/Y correctly mapped to endpoints and response times
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 1
         max: 3
         passed: false
-        comment: Title format correct but 16-entry legend is unwieldy and confusing
+        comment: Title format correct but legend is broken with 16 unreadable entries
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -158,21 +149,21 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Shows quantile variations across endpoints and outliers
+        comment: All four endpoints and quantile levels shown despite flawed visualization
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Realistic API endpoint scenario with plausible response time distributions
+        comment: Server response times is realistic and neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response time values realistic (0-1500ms range appropriate)
+        comment: Values plausible for API response times
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,13 +171,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean sequential structure
+        comment: Simple, clear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Reproducible with seed 42
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -195,34 +186,33 @@ review:
         comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Functional but overly verbose with 16 separate .add() calls
+        passed: true
+        comment: Clean code though fundamentally flawed approach
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Missing HTML output (only PNG rendered via render_to_png, but HTML
-          write is present in code)
+        passed: true
+        comment: Correct output format
     library_mastery:
-      score: 5
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: false
-        comment: Pygal used correctly but XY chart is a workaround, not idiomatic
-          for this visualization
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Generic XY chart; no distinctive pygal features leveraged
+        comment: Uses pygal.XY() but doesn't leverage better approaches for boxen
+          plot
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage with no distinctive library features
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -231,4 +221,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - theme-adaptive
