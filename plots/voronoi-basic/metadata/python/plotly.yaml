@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:21:46Z'
-updated: '2026-05-17T15:39:22Z'
+updated: '2026-05-17T15:45:53Z'
 generated_by: claude-haiku
 workflow_run: 25995038630
 issue: 3415
@@ -15,39 +15,37 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 quality_score: 87
 review:
   strengths:
-  - Perfect theme adaptation with no legibility failures in light or dark
-  - Correct Voronoi implementation with proper Sutherland-Hodgman polygon clipping
-  - Seed points clearly marked with brand color and hover information
-  - Square canvas format appropriate for symmetric spatial visualization
-  - Extended color palette ensures cell differentiation while maintaining Okabe-Ito
-    order
-  - Deterministic, reproducible code with clean linear structure
+  - Excellent Voronoi diagram implementation with proper Sutherland-Hodgman clipping
+    algorithm
+  - Perfect theme adaptability with all tokens properly applied to both light and
+    dark renders
+  - Clear and professional visualization of spatial partitioning with readable layouts
+    in both themes
+  - Well-structured code with clean imports, full reproducibility, and deterministic
+    output
+  - Effective use of extended Okabe-Ito palette for clear cell differentiation
   weaknesses:
-  - Limited use of Plotly's advanced interactive features (no range sliders, click
-    handlers, or animated states)
-  - Visual hierarchy could be enhanced to emphasize key cells or service area statistics
-  - Legend could be more informative with cell area or store count data
+  - Title contains incorrect domain name 'pyplots.ai' instead of 'anyplot.ai' (line
+    161) - violates spec requirement for title format
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "voronoi-basic · plotly · pyplots.ai" centered, dark text; axis labels "Longitude (°)" and "Latitude (°)" clearly readable; tick labels in dark gray, distinct from background
-      Data: 20 colored Voronoi cells with 60% opacity, boundaries in soft gray; seed points marked with bright green (#009E73) circles with white outline, highly visible
-      Legend: "Store Location" in top-left with green marker and frame
-      Grid: Subtle, visible but not dominant
-      Legibility verdict: PASS - All text readable with excellent contrast
+      Background: Warm off-white (#FAF8F1) - exactly as specified
+      Chrome: Title "voronoi-basic · plotly · pyplots.ai" in dark text (#1A1A17), axis labels "Longitude (°)" and "Latitude (°)" in dark, tick labels in INK_SOFT (#4A4A44) - all clearly readable against light background
+      Data: 20 store locations marked with bright green circles (#009E73) with white borders; Voronoi cells colored with extended Okabe-Ito palette (positions 1-7) plus supplementary pastels; colors are vivid and distinct
+      Grid: Subtle grid lines in GRID color (rgba(26,26,23,0.10)) - appropriate contrast
+      Legibility verdict: PASS - all text readable, no overlaps, excellent visual clarity
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title and axis labels in light text (#F0EFE8), readable against dark background; tick labels in light gray (#B8B7B0), distinct and clear
-      Data: Cell colors identical to light render (only chrome changes theme); seed points maintain bright green visibility
-      Legend: Frame in slightly lighter color (#242420) for contrast; text in light gray
-      Grid: Subtle and visible
-      Legibility verdict: PASS - No dark-on-dark failures; all text maintains proper contrast; brand green visible and readable
+      Background: Warm near-black (#1A1A17) - exactly as specified
+      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in INK_SOFT (#B8B7B0) - all clearly readable against dark background; no dark-on-dark failures detected
+      Data: Identical store location colors (#009E73) and Voronoi cell colors as light render - only background and text colors have adapted for theme
+      Grid: Subtle grid lines in GRID color (rgba(240,239,232,0.10)) - appropriate on dark surface
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, colors maintain identical data representation as light render
 
-    Both renders confirmed: data colors unchanged between themes (only chrome adapts), all text legible in both conditions.
+    Both renders pass legibility checks. Data colors are perfectly consistent across themes (only chrome changes). The only issue is the domain name error in the title affecting both renders.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,71 +53,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized, readable in both themes, well-scaled for
-          3600px canvas
+        comment: All text properly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, clear separation
+        comment: Clean layout with no colliding elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size 18 highly visible, cells distinguished with opacity
-          and boundaries
+        comment: All 20 seed points and Voronoi cells clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette, colors distinct from background
+        comment: Okabe-Ito palette with adequate contrast and CVD-safe colors
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format 1200x1200 appropriate, nothing cut off, generous margins
+        comment: Square format (1:1 aspect ratio) appropriate for symmetric Voronoi
+          diagram
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title includes spec-id/library, axis labels descriptive with units
+        passed: false
+        comment: Descriptive axis labels with units; title has domain name error (pyplots.ai
+          instead of anyplot.ai)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Markers #009E73, cells use extended Okabe-Ito, backgrounds correct,
-          both themes proper'
+        comment: 'First series #009E73, backgrounds correct (#FAF8F1 light, #1A1A17
+          dark), both renders theme-compliant'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Extended palette + theme-adaptive styling, but standard cell styling
+        passed: true
+        comment: Custom Voronoi rendering with extended palette and thoughtful implementation
+          of Sutherland-Hodgman clipping
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid/whitespace, legend basic, no advanced layout
+        passed: true
+        comment: Good border styling with INK_SOFT edges, styled legend with theme-adaptive
+          background
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear narrative (retail service areas), context interpretable, but
-          no visual emphasis
+        passed: true
+        comment: 'Strong context via subtitle ''Retail Service Areas | 20 stores |
+          Total coverage: 10000 sq units''; clear focal points'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,25 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Voronoi diagram with spatial partitioning
+        comment: Correct Voronoi diagram with proper spatial partitioning
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bounding box clipping, color differentiation, seed marking all present
+        comment: 'All spec features: distinguishable cells, marked seed points, color
+          palette for differentiation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude/Latitude correct, axes show all data
+        comment: X/Y mapping correct, bounding box [-5, 105] shows all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct, legend labeled appropriately
+        passed: false
+        comment: 'Title format violation: contains ''pyplots.ai'' instead of required
+          ''anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -155,81 +157,91 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All Voronoi aspects shown, 20 seeds within 10-50 range
+        comment: 'Shows all Voronoi aspects: cells, boundaries, seed points, territorial
+          influence'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail service area realistic and neutral
+        comment: Retail store coverage is plausible and neutral; coordinate system
+          appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 range sensible, 20 stores allow clear visualization
+        comment: Values 0-100 sensible for geographic domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear script, logical flow
+        comment: Straightforward approach; Sutherland-Hodgman clipping adds necessary
+          complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only needed imports
+        comment: 'Only used imports: numpy, plotly, scipy.spatial'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Sutherland-Hodgman appropriate, no fake UI
+        comment: No fake UI; proper algorithm implementation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html correctly
+        comment: Correct files and current Plotly 6.7.0 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: graph_objects idiomatic, theme-adaptive styling correct, but could
-          use higher-level API
+        passed: true
+        comment: Good use of graph_objects, theme tokens, fill='toself' for polygon
+          rendering
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Basic hover tooltips only, no advanced Plotly interactivity like
-          range slider or callbacks
-  verdict: APPROVED
+        passed: true
+        comment: Interactive hover tooltips, custom Voronoi rendering with fill, zoom/pan
+          capabilities
+    issues_found:
+    - severity: critical
+      category: SC-04
+      description: Title format violation - domain name error
+      current: voronoi-basic · plotly · pyplots.ai
+      required: voronoi-basic · plotly · anyplot.ai
+      location: line 161 in plotly.py
+      fix: Change domain from 'pyplots.ai' to 'anyplot.ai' (one-line change)
+    score_caps_applied: None
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
