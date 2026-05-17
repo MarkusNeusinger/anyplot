@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 renko-basic: Basic Renko Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,6 +16,18 @@ from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Bullish (position 1)
+BEARISH = "#D55E00"  # Bearish (position 2)
 
 # Data - Generate synthetic stock price data
 np.random.seed(42)
@@ -53,7 +66,7 @@ for i, brick in enumerate(bricks):
     else:
         bearish_series_data.append([i, brick["close"], brick["open"]])
 
-# Create chart
+# Plot
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
@@ -62,7 +75,7 @@ chart.options.chart = {
     "type": "columnrange",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 280,
     "marginLeft": 250,
     "marginTop": 200,
@@ -71,33 +84,37 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "renko-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
+    "text": "renko-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
     "y": 50,
 }
 
 # Subtitle
 chart.options.subtitle = {
     "text": f"Stock Price Movement | Brick Size: ${brick_size:.0f}",
-    "style": {"fontSize": "36px", "color": "#666666"},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
     "y": 100,
 }
 
 # X-axis
 chart.options.x_axis = {
-    "title": {"text": "Brick Index", "style": {"fontSize": "40px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "32px"}},
+    "title": {"text": "Brick Index", "style": {"fontSize": "22px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
     "tickInterval": 5,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Price ($)", "style": {"fontSize": "40px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "32px"}, "format": "${value}"},
+    "title": {"text": "Price ($)", "style": {"fontSize": "22px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "${value}"},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.15)",
+    "gridLineColor": GRID,
 }
 
 # Legend - positioned at top right for visibility
@@ -108,76 +125,65 @@ chart.options.legend = {
     "layout": "vertical",
     "x": -50,
     "y": 150,
-    "itemStyle": {"fontSize": "32px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
     "symbolHeight": 24,
     "symbolWidth": 50,
     "itemMarginBottom": 15,
-    "backgroundColor": "rgba(255, 255, 255, 0.9)",
+    "backgroundColor": ELEVATED_BG,
     "borderWidth": 1,
-    "borderColor": "#cccccc",
+    "borderColor": INK_SOFT,
     "padding": 15,
 }
 
 # Plot options for column range
 chart.options.plot_options = {
-    "columnrange": {"borderWidth": 2, "borderColor": "#333333", "pointPadding": 0.05, "groupPadding": 0}
+    "columnrange": {"borderWidth": 2, "borderColor": INK_SOFT, "pointPadding": 0.05, "groupPadding": 0}
 }
 
-# Series data - using colorblind-safe blue/orange palette
+# Series data - using Okabe-Ito palette
 chart.options.series = [
     {
         "type": "columnrange",
         "name": "Bullish (Up)",
         "data": bullish_series_data,
-        "color": "#2563eb",  # Blue - colorblind safe
-        "borderColor": "#1e40af",
+        "color": BRAND,
+        "borderColor": BRAND,
         "borderWidth": 2,
     },
     {
         "type": "columnrange",
         "name": "Bearish (Down)",
         "data": bearish_series_data,
-        "color": "#ea580c",  # Orange - colorblind safe
-        "borderColor": "#c2410c",
+        "color": BEARISH,
+        "borderColor": BEARISH,
         "borderWidth": 2,
     },
 ]
 
-# Tooltip configuration - Highcharts distinctive feature
+# Tooltip configuration
 chart.options.tooltip = {
     "enabled": True,
-    "headerFormat": '<span style="font-size: 28px">Brick {point.x}</span><br/>',
-    "pointFormat": '<span style="font-size: 24px; color:{point.color}">●</span> {series.name}: <b>${point.low:.2f} - ${point.high:.2f}</b><br/>',
-    "style": {"fontSize": "24px"},
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderWidth": 2,
+    "headerFormat": '<span style="font-size: 18px; color: ' + INK + '">Brick {point.x}</span><br/>',
+    "pointFormat": '<span style="font-size: 18px; color:{point.color}">●</span> {series.name}: <b style="color: '
+    + INK
+    + '">${point.low:.2f} - ${point.high:.2f}</b><br/>',
+    "style": {"fontSize": "18px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderWidth": 1,
+    "borderColor": INK_SOFT,
 }
 
-# Credits - Highcharts distinctive feature
+# Credits and exporting
 chart.options.credits = {"enabled": False}
-
-# Exporting options - Highcharts distinctive feature
 chart.options.exporting = {"enabled": False}
 
-# Note: Animation is enabled by default in Highcharts
-
-# Responsive rules - Highcharts distinctive feature
-chart.options.responsive = {
-    "rules": [
-        {
-            "condition": {"maxWidth": 2400},
-            "chartOptions": {"legend": {"itemStyle": {"fontSize": "18px"}}, "title": {"style": {"fontSize": "32px"}}},
-        }
-    ]
-}
-
 # Download Highcharts JS (required for headless Chrome)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/highcharts.js"
+highcharts_more_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/highcharts-more.min.js"
+
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Download highcharts-more.js for columnrange
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
 with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
@@ -190,11 +196,15 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
+
+# Save HTML artifact for the site
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -211,11 +221,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()  # Clean up temp file
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
