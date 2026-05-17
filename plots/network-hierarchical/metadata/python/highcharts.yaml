@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:42:25Z'
-updated: '2026-05-17T06:34:32Z'
+updated: '2026-05-17T06:42:53Z'
 generated_by: claude-haiku
 workflow_run: 25983407107
 issue: 3343
@@ -12,100 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/highcharts/plot-dark.html
-quality_score: 75
+quality_score: 79
 review:
   strengths:
-  - Correct Okabe-Ito palette for node colors (#009E73 as first series)
-  - Clear hierarchical structure with 4 levels and realistic organizational chart
-  - Good canvas utilization with balanced margins
-  - Clean, simple code structure with proper theme token usage
-  - Correct title format (spec-id · library · anyplot.ai)
+  - Perfect Okabe-Ito palette compliance with brand color (#009E73) as first series
+  - Both theme renders correctly with identical data colors and theme-appropriate
+    chrome
+  - Clear hierarchical structure with all 4 levels and 22 nodes visible
+  - Proper title format (spec-id · library · anyplot.ai) and informative subtitle
+  - Clean, reproducible code with correct theme token application
+  - No overlapping or broken elements in either render
   weaknesses:
-  - Node labels are too small (16px) and unreadable in dark render against dark node
-    backgrounds - VQ-01 failure
-  - Dark render shows black bands/artifacts between Sankey flows that don't appear
-    in light render - rendering inconsistency
-  - Sankey flows appear to use default Highcharts colors rather than theme-adaptive
-    styling - VQ-07 palette compliance issue
-  - Node labels need explicit font sizing and dark-mode color adjustment - text currently
-    inherits INK color which is dark on dark nodes
-  - Overall text legibility degraded due to small sizes - consider increasing node
-    label font size to 18-20px
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ (#FAF8F1) - correct surface color\n  Chrome: Title \"network-hierarchical ·\
-    \ highcharts · anyplot.ai\" (28px, dark text) and subtitle \"Organizational Hierarchy:\
-    \ 22 nodes across 4 levels\" (22px) both clearly readable\n  Data: Sankey diagram\
-    \ with nodes colored by hierarchical level using Okabe-Ito palette:\n    - CEO:\
-    \ #009E73 (bluish green, brand color) - leftmost\n    - VPs: #D55E00 (vermillion)\
-    \ - second column\n    - Directors: #0072B2 (blue) - third column  \n    - Managers:\
-    \ #CC79A7 (reddish purple) - rightmost column\n  Flows: Sankey bands connect parent-to-child\
-    \ showing organizational relationships\n  Node labels: Very small (16px), difficult\
-    \ to read even on light background\n  Legibility verdict: MARGINAL - title/subtitle\
-    \ readable, but node labels too small\n\nDark render (plot-dark.png):\n  Background:\
-    \ Warm near-black (#1A1A17) - correct surface color\n  Chrome: Title and subtitle\
-    \ visible but small node labels are problematic\n  Data: Same hierarchical structure\
-    \ attempted but with critical rendering issues:\n    - Node colors appear to match\
-    \ light render (Okabe-Ito palette preserved)\n    - HOWEVER: Black bands/artifacts\
-    \ appear between flows that don't exist in light render\n    - These artifacts\
-    \ create a visually different output despite same data\n  Node labels: UNREADABLE\
-    \ - 16px dark text (#1A1A17) on dark node backgrounds creates invisible labels\
-    \ throughout the chart\n  Flow colors: Dark bands have poor contrast and appear\
-    \ as black voids rather than colored flows\n  Legibility verdict: FAIL - Node\
-    \ labels invisible, rendering artifacts present, dark-on-dark text failure\n\n\
-    Key Issue: Data colors (Okabe-Ito) are preserved between renders, but node labels\
-    \ use INK color (dark in both themes) without light-mode adaptation for dark-background\
-    \ nodes. This causes VQ-01 failure in dark render."
+  - Node labels still 16px - unfixed from Attempt 1 feedback (should be 18-20px for
+    full readability)
+  - Dark render Sankey separators create more segmented appearance vs light render
+    - visual continuity issue
+  - Generic design with minimal visual refinement beyond library defaults (DE-01=4,
+    DE-02=2)
+  - Sankey diagram unconventional for tree hierarchy (spec suggests dot layout) -
+    not using Highcharts network capabilities
+  - Node label legibility marginal - font size improvement required before approval
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct surface color
+      Chrome: Title "network-hierarchical · highcharts · anyplot.ai" (28px, dark text) and subtitle "Organizational Hierarchy: 22 nodes across 4 levels" (22px, soft dark) both clearly readable
+      Data: Sankey diagram with nodes colored by hierarchical level using Okabe-Ito palette:
+        - CEO: #009E73 (bluish green, brand) - leftmost column
+        - VPs: #D55E00 (vermillion) - second column
+        - Directors: #0072B2 (blue) - third column
+        - Managers: #CC79A7 (reddish purple) - rightmost column
+      Flows: Flow bands connect parent-to-child with subtle white separators between flows
+      Node labels: 16px, bold, dark text - visible but small
+      Legibility verdict: PASS - all main text readable; node labels legible but on smaller side
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct surface color
+      Chrome: Title and subtitle now light text (INK #F0EFE8), clearly readable against dark background
+      Data: Sankey hierarchy identical to light render with preserved Okabe-Ito colors (theme-independent):
+        - Node colors match light render exactly - #009E73, #D55E00, #0072B2, #CC79A7 preserved
+        - Node positioning and flow connectivity identical
+      Node labels: 16px, light text (INK #F0EFE8) on dark node backgrounds - readable but still small
+      Flows: Sankey separators appear darker/more prominent (natural to dark background) creating more segmented visual appearance compared to light render's subtle white separators - design continuity issue but not a legibility failure
+      Legibility verdict: PASS - text readable in both themes; data colors correctly preserved; visual appearance of flow separators differs from light render
+
+    Key: Data colors are identical between renders (Okabe-Ito is theme-independent). Only chrome (backgrounds, text, separators) adapts. Legibility passes for main text but node labels remain at 16px which Attempt 1 feedback recommended increasing to 18-20px - this improvement was NOT implemented.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 6
         max: 8
         passed: false
-        comment: Node labels unreadable in dark render (dark text on dark backgrounds);
-          title/subtitle readable
+        comment: Title and subtitle clearly readable in both themes; node labels 16px
+          (still unfixed from A1 feedback - should be 18-20px)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no overlapping text elements
+        comment: Clean layout with no overlapping text or elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes visible but labels very small; flows clear
+        comment: All nodes and flows visible; labels small but legible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Okabe-Ito palette is colorblind-safe; no red-green sole signals
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization with balanced margins
+        comment: Excellent 4800x2700 utilization with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and subtitle descriptive and properly formatted
+        comment: Title correctly formatted; subtitle provides organizational context
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Node colors correct Okabe-Ito but flows appear with black artifacts
-          in dark render; not theme-consistent
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order maintained, backgrounds correct,
+          data colors identical between themes'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -113,8 +114,8 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured Highcharts default, no custom design beyond color
-          palette
+        comment: Generic Highcharts Sankey defaults; color-by-level is functional
+          but not sophisticated
       - id: DE-02
         name: Visual Refinement
         score: 2
@@ -123,40 +124,40 @@ review:
         comment: Minimal customization; library defaults with basic color assignment
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Hierarchy displayed but no visual emphasis or narrative around organizational
-          structure
+        comment: Level-based color coding creates visual hierarchy; organizational
+          structure clear but lacks narrative depth
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Sankey diagram used instead of traditional tree layout with 'dot'
-          layout; still hierarchical but different approach
+        comment: Sankey shows hierarchy effectively with level separation, but spec
+          requests tree layout with dot algorithm
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All hierarchical levels present with parent-child relationships clear
+        comment: All hierarchical levels present; parent-child relationships clear
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Flows correctly show organizational relationships across levels
+        comment: Flows correctly show organizational structure across 4 levels
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''network-hierarchical · highcharts · anyplot.ai'''
+        comment: Title format correct; subtitle appropriate
     data_quality:
       score: 15
       max: 15
@@ -166,19 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 hierarchical levels present with varied branching
+        comment: Shows all hierarchical aspects with varied branching patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic organizational chart with proper titles and structure
+        comment: Realistic organizational chart with CEO→VP→Director→Manager structure
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22 nodes across 4 levels is appropriate for visualization
+        comment: 22 nodes across 4 levels is readable and appropriate
     code_quality:
       score: 10
       max: 10
@@ -188,13 +189,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: data building → HTML generation → screenshot'
+        comment: 'Linear flow: data building → HTML → screenshot'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static data - no random seed needed
+        comment: Static data - deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -214,7 +215,7 @@ review:
         passed: true
         comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -222,13 +223,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Sankey API usage with theme adaptation
+        comment: Proper Highcharts Sankey API; theme-adaptive tokens applied correctly
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 0
         max: 5
-        passed: true
-        comment: Uses Highcharts Sankey module which is distinctive to library
+        passed: false
+        comment: No distinctive library features beyond standard Sankey usage; not
+          leveraging Highcharts network capabilities
   verdict: REJECTED
 impl_tags:
   dependencies:
