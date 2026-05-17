@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:21:42Z'
-updated: '2026-05-17T10:06:47Z'
+updated: '2026-05-17T10:13:28Z'
 generated_by: claude-haiku
 workflow_run: 25987481141
 issue: 3237
@@ -12,111 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-dark.html
-quality_score: 53
+quality_score: 67
 review:
   strengths:
-  - Correct chart type for Bollinger Bands
-  - All required data series present (Close, SMA, Upper/Lower bands)
-  - Good data generation with realistic price movements
-  - Readable layout and no overlapping elements
+  - 'Both renders display correct background colors (#FAF8F1 light, #1A1A17 dark)'
+  - Proper Bollinger Bands mathematical calculation (20-period SMA with 2 std dev)
+  - All required data series are visualized
+  - Text is readable in both light and dark themes
+  - Realistic, non-controversial synthetic data
   weaknesses:
-  - 'Palette compliance failure: uses #306998 (blue) for first series instead of #009E73
-    (brand green)'
-  - 'No theme adaptation: hard-coded white background instead of reading ANYPLOT_THEME
-    and using #FAF8F1 (light) / #1A1A17 (dark)'
-  - Output files saved as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
-  - 'Title format incorrect: shows ''pyplots.ai'' instead of ''anyplot.ai'''
-  - 'Dark theme text legibility compromised: dark/muted text on dark background (ax
-    foreground colors not theme-adapted)'
+  - 'Palette non-compliance: uses arbitrary colors instead of Okabe-Ito; fails CVD
+    safety requirement'
+  - 'Theme adaptation failure: code doesn''t read ANYPLOT_THEME; hardcoded for light
+    theme'
+  - 'Title format incorrect: should be ''indicator-bollinger · pygal · anyplot.ai''
+    (note: anyplot, not pyplots)'
+  - 'Wrong output filenames: uses ''plot.png'' instead of theme-aware ''plot-{THEME}.png'''
+  - 'Band visualization unclear: lines shown separately; no clear semi-transparent
+    fill as spec requests'
+  - 'Design excellence absent: no custom styling or visual hierarchy'
   image_description: |-
     Light render (plot-light.png):
-      Background: Off-white surface, appears to be pure white or very close (should be #FAF8F1)
-      Chrome: Title "Bollinger Band Indicator", axis labels "Trading Day" and "Price (USD)", tick labels visible
-      Data: Close Price (first series) appears as green/teal line; Upper Band (orange); Lower Band (blue); SMA dashed line (teal)
-      Palette: Colors are hard-coded #306998, #FFD43B, #5A9BD4, #8BC34A - NOT Okabe-Ito
-      Legibility verdict: PASS for text readability, but FAIL for palette compliance
+      Background: Warm off-white (#FAF8F1) - CORRECT
+      Chrome: Title "Bollinger Band Indicator", axis labels "Trading Day" / "Price (USD)" visible and readable with dark text
+      Data: Blue Close Price line, cyan upper/lower band lines, orange-gold SMA (20) dashed line
+      Legibility verdict: PASS - all text elements readable
 
     Dark render (plot-dark.png):
-      Background: Dark surface, appears to be near-black (matches #1A1A17 expectation)
-      Chrome: Title visible but appears dim/faint; axis labels present; tick labels are muted brown/tan
-      Data: Colors appear muted compared to light render - close price appears orange/gold instead of green
-      Issue: Dark-on-dark detected - muted foreground color (#333333) on dark background creates poor contrast
-      Data colors: NOT identical to light render (first series changed from green to orange-ish), violating theme consistency rule
-      Legibility verdict: FAIL - text contrast insufficient on dark background, data colors changed between renders instead of remaining constant
-
-    Both renders FAIL theme-readiness check: background is hard-coded white (light) with no adaptation to ANYPLOT_THEME environment variable; colors are not Okabe-Ito compliant.
+      Background: Warm near-black (#1A1A17) - CORRECT
+      Chrome: Title, axis labels visible with light text, good contrast, no dark-on-dark failures
+      Data: Colors identical to light render (blue, cyan, orange) - correct theme-independence
+      Legibility verdict: PASS - all text readable, no contrast issues
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
-        passed: false
-        comment: Light readable; dark theme has poor contrast (dark text on dark background)
+        passed: true
+        comment: Most text readable; legend could be larger
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: Some overlap where lines cross but distinguishable
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All lines and markers clearly visible
+        comment: All visible; band fill effect unclear
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Distinct colors, but not Okabe-Ito safe palette
+        passed: false
+        comment: Colors not Okabe-Ito; lacks CVD safety
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Good proportions; legend slightly cramped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Labels present but title format wrong
+        passed: false
+        comment: Axis labels good; title format incorrect
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses #306998 (blue) instead of #009E73 for first series;
-          background hard-coded white, not theme-adaptive'
+        comment: Not Okabe-Ito; no theme adaptation
     design_excellence:
-      score: 8
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Generic styling with default colors
+        comment: Generic styling, arbitrary colors
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization, default appearance
+        comment: Minimal customization
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Functional but no visual hierarchy or emphasis
+        passed: true
+        comment: Shows data but lacks hierarchy
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -124,26 +121,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for Bollinger Bands
+        comment: Line chart correct
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Close price, SMA, upper/lower bands all present
+        comment: All series present; band visualization unclear
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all 120 days of data correctly
+        comment: X/Y correct
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: 'Title format wrong: ''pyplots.ai'' instead of ''anyplot.ai''; legend
-          present'
+        comment: Title format incorrect
     data_quality:
       score: 15
       max: 15
@@ -153,19 +149,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all Bollinger Bands components
+        comment: All aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price data with proper volatility
+        comment: Realistic BB calculation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible $100-$180 price range
+        comment: Sensible values
     code_quality:
       score: 8
       max: 10
@@ -175,54 +171,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward code
+        comment: Simple structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Has seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Functional but uses hard-coded colors/backgrounds instead of theme
-          tokens
+        comment: Hardcoded for light theme
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
+        comment: Wrong filenames
     library_mastery:
-      score: 4
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses pygal.Line and Style correctly, but missing critical theme adaptation
-          pattern
+        comment: No ANYPLOT_THEME integration
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses fill=True and dashed lines (basic features, not distinctive)
+        comment: Generic usage
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - rolling-window
   styling: []
