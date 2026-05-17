@@ -281,16 +281,15 @@ class TestDebugStatus:
     def test_debug_status_recent_activity(self, db_client) -> None:
         """recent_activity should return impls sorted by updated DESC, capped at 15,
         and surface each impl's language so the frontend can build correct deep links
-        (regression: Python + R impls were both linked as /spec/python/... before).
+        (regression: Python + R impls were both linked as /{spec}/python/{library}
+        before, which sent R/ggplot2 clicks to the Python language overview).
         """
         client, _ = db_client
 
         older = datetime(2026, 3, 1, tzinfo=timezone.utc)
         newer = datetime(2026, 4, 20, tzinfo=timezone.utc)
         impl_py = _make_impl(library_id="matplotlib", updated=older, generated_by="claude-opus-4-6")
-        impl_r = _make_impl(
-            library_id="ggplot2", language_id="r", updated=newer, generated_by="claude-opus-4-7"
-        )
+        impl_r = _make_impl(library_id="ggplot2", language_id="r", updated=newer, generated_by="claude-opus-4-7")
         spec = _make_spec(impls=[impl_py, impl_r])
 
         mock_repo = MagicMock()

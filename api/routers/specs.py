@@ -137,12 +137,7 @@ async def _build_spec_images(db: AsyncSession, spec_id: str) -> dict:
         raise_not_found("Spec with implementations", spec_id)
 
     images = [
-        {
-            "library": impl.library_id,
-            "language": impl.language_id,
-            "url": impl.preview_url,
-            "html": impl.preview_html,
-        }
+        {"library": impl.library_id, "language": impl.language_id, "url": impl.preview_url, "html": impl.preview_html}
         for impl in spec.impls
         if impl.preview_url
     ]

@@ -28,8 +28,10 @@ export const LIB_ABBREV: Record<string, string> = {
 
 // Static library → language map, mirroring core/constants.py LIBRARIES_METADATA.
 // Used to build correct /{spec}/{language}/{library} links from contexts that
-// only know a library id (e.g. the debug-page spec matrix and recent-activity
-// list, which would otherwise have to wait for /libraries to load).
+// only know a library id — e.g. the debug-page spec matrix, where columns are
+// keyed by library and the per-cell payload doesn't carry a language. The
+// recent-activity list does NOT need this map; it gets `language_id` straight
+// from /debug/status.
 export const LIB_TO_LANG: Record<string, string> = {
   altair: 'python',
   bokeh: 'python',
