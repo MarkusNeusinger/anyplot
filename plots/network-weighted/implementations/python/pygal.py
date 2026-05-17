@@ -1,35 +1,53 @@
-""" pyplots.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-17
 """
 
+import os
 import re
-
-import cairosvg
-import numpy as np
-import pygal
-from pygal.style import Style
+import sys
+from pathlib import Path
 
 
-# Set seed for reproducibility
-np.random.seed(42)
+# Work around filename/module name conflict
+script_dir = Path(__file__).parent
+while str(script_dir) in sys.path:
+    sys.path.remove(str(script_dir))
+
+import cairosvg  # noqa: E402
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data: Trade network between countries (billions USD)
+np.random.seed(42)
 nodes = {
-    "USA": {"group": "Americas"},
-    "CAN": {"group": "Americas"},
-    "MEX": {"group": "Americas"},
-    "BRA": {"group": "Americas"},
-    "DEU": {"group": "Europe"},
-    "FRA": {"group": "Europe"},
-    "GBR": {"group": "Europe"},
-    "ITA": {"group": "Europe"},
-    "CHN": {"group": "Asia"},
-    "JPN": {"group": "Asia"},
-    "KOR": {"group": "Asia"},
-    "IND": {"group": "Asia"},
-    "AUS": {"group": "Oceania"},
+    "USA": {"group": 0},
+    "CAN": {"group": 0},
+    "MEX": {"group": 0},
+    "BRA": {"group": 0},
+    "DEU": {"group": 1},
+    "FRA": {"group": 1},
+    "GBR": {"group": 1},
+    "ITA": {"group": 1},
+    "CHN": {"group": 2},
+    "JPN": {"group": 2},
+    "KOR": {"group": 2},
+    "IND": {"group": 2},
+    "AUS": {"group": 3},
 }
 
 # Define edges with trade volume weights (billions USD)
@@ -119,14 +137,6 @@ for src, tgt, weight in edges:
 max_degree = max(weighted_degree.values())
 min_degree = min(weighted_degree.values())
 
-# Color mapping by region
-group_colors = {
-    "Americas": "#306998",  # Python Blue
-    "Europe": "#1A1A1A",  # Near black (high contrast)
-    "Asia": "#FFD43B",  # Python Yellow
-    "Oceania": "#E74C3C",  # Red
-}
-
 # Bin edges by weight for visual thickness representation
 edge_weights = [w for _, _, w in edges]
 min_weight = min(edge_weights)
@@ -134,12 +144,7 @@ max_weight = max(edge_weights)
 weight_range = max_weight - min_weight
 
 # Create 4 weight bins for edge thickness visualization
-edge_bins = {
-    "low": [],  # 0-25% percentile: $20-178B
-    "medium": [],  # 25-50%: $178-335B
-    "high": [],  # 50-75%: $335-493B
-    "very_high": [],  # 75-100%: $493-650B
-}
+edge_bins = {"low": [], "medium": [], "high": [], "very_high": []}
 
 for src, tgt, weight in edges:
     norm_weight = (weight - min_weight) / weight_range if weight_range > 0 else 0.5
@@ -152,41 +157,38 @@ for src, tgt, weight in edges:
     else:
         edge_bins["very_high"].append((src, tgt, weight))
 
-# Edge thickness settings (stroke-width in pixels) - dramatically different for visibility
+# Edge thickness and color mapping based on weight
 edge_styles = {
-    "low": {"stroke": "#CCCCCC", "stroke_width": 3},
-    "medium": {"stroke": "#999999", "stroke_width": 10},
-    "high": {"stroke": "#666666", "stroke_width": 20},
-    "very_high": {"stroke": "#222222", "stroke_width": 32},
+    "low": {"stroke": INK_MUTED, "stroke_width": 3},
+    "medium": {"stroke": INK_SOFT, "stroke_width": 10},
+    "high": {"stroke": INK, "stroke_width": 18},
+    "very_high": {"stroke": OKABE_ITO[0], "stroke_width": 28},
 }
 
 # Custom style for pygal chart
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=(group_colors["Americas"], group_colors["Europe"], group_colors["Asia"], group_colors["Oceania"]),
-    title_font_size=72,
-    label_font_size=44,
-    major_label_font_size=40,
-    legend_font_size=40,
-    value_font_size=32,
-    stroke_width=3,
-    opacity=0.9,
-    opacity_hover=1.0,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=2,
+    opacity=0.95,
 )
 
-# Create pygal XY chart for nodes (to use pygal's features)
+# Create pygal XY chart for nodes
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="network-weighted · pygal · pyplots.ai",
+    title="network-weighted · pygal · anyplot.ai",
     show_legend=True,
-    x_title="",
-    y_title="",
     show_x_guides=False,
     show_y_guides=False,
     show_x_labels=False,
@@ -194,51 +196,45 @@ chart = pygal.XY(
     stroke=False,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
-    legend_box_size=36,
     range=(0, 12),
     xrange=(0, 12),
     print_labels=True,
     print_values=False,
-    margin_bottom=200,
-    margin_top=120,
+    margin_bottom=250,
+    margin_top=150,
+    margin_left=150,
+    margin_right=150,
 )
 
-# Group nodes by region and add to chart with varying dot sizes based on weighted degree
-regions = {"Americas": [], "Europe": [], "Asia": [], "Oceania": []}
+# Group nodes by region and add to chart with varying dot sizes
+regions = [[], [], [], []]
+region_names = ["Americas", "Europe", "Asia", "Oceania"]
 for name, data in nodes.items():
     regions[data["group"]].append(name)
 
-for region, region_nodes in regions.items():
+for group_idx, region_nodes in enumerate(regions):
     node_points = []
     for name in region_nodes:
         x, y = positions[name]
-        # Calculate dot size based on weighted degree (25-65 px)
         degree_norm = (
             (weighted_degree[name] - min_degree) / (max_degree - min_degree) if max_degree > min_degree else 0.5
         )
-        dot_size = 25 + degree_norm * 40
-        label = name  # Show country code as label
-        node_points.append({"value": (x, y), "label": label, "node": {"r": dot_size}})
-    chart.add(region, node_points, dots_size=40)
+        dot_size = 30 + degree_norm * 50
+        node_points.append({"value": (x, y), "label": name, "node": {"r": dot_size}})
+    chart.add(region_names[group_idx], node_points, dots_size=50)
 
 # Render chart to get SVG string
 svg_content = chart.render().decode("utf-8")
 
 # Post-process SVG to add edges with varying thickness before nodes
-# Find the position to insert edges (after background, before data)
-
-# Find the first <g class="series" position to insert edges before it
-series_match = re.search(r'(<g class="series)', svg_content)
+series_match = re.search(r"(<g class=\"series)", svg_content)
 if series_match:
     insert_pos = series_match.start()
 else:
-    # Fallback: insert before </svg>
     insert_pos = svg_content.rfind("</svg>")
 
-# Calculate SVG coordinate transformation (pygal uses viewBox)
-# We need to map our data coords to pygal's SVG coords
-# Pygal typically maps xrange/range to the plot area
-svg_margin = {"top": 120, "right": 100, "bottom": 200, "left": 100}
+# Calculate SVG coordinate transformation
+svg_margin = {"top": 150, "right": 150, "bottom": 250, "left": 150}
 svg_width = 4800
 svg_height = 2700
 plot_width = svg_width - svg_margin["left"] - svg_margin["right"]
@@ -250,7 +246,6 @@ edge_svg_parts = ['<g class="edges">']
 for weight_cat in ["low", "medium", "high", "very_high"]:
     style = edge_styles[weight_cat]
     for src, tgt, _weight in edge_bins[weight_cat]:
-        # Convert data coordinates to SVG coordinates
         x1_data, y1_data = positions[src]
         x2_data, y2_data = positions[tgt]
 
@@ -271,55 +266,61 @@ edge_svg = "\n".join(edge_svg_parts)
 # Insert edges into SVG
 svg_content = svg_content[:insert_pos] + edge_svg + "\n" + svg_content[insert_pos:]
 
-# Add node labels (country codes) on top of nodes with shadow for readability
+# Add node labels (country codes) on top of nodes
 label_svg_parts = ['<g class="node-labels">']
 for name in nodes.keys():
     x_data, y_data = positions[name]
     x = svg_margin["left"] + (x_data / 12) * plot_width
     y = svg_margin["top"] + (1 - y_data / 12) * plot_height
-    # Add white background for better visibility over edges
+
+    # White stroke for contrast
     label_svg_parts.append(
-        f'<text x="{x:.1f}" y="{y + 14:.1f}" text-anchor="middle" '
-        f'font-family="sans-serif" font-size="46" font-weight="bold" fill="white" '
-        f'stroke="white" stroke-width="8">{name}</text>'
+        f'<text x="{x:.1f}" y="{y + 18:.1f}" text-anchor="middle" '
+        f'font-family="system-ui, sans-serif" font-size="50" font-weight="bold" '
+        f'fill="{PAGE_BG}" stroke="{PAGE_BG}" stroke-width="10">{name}</text>'
     )
-    # Main dark text on top
+    # Main text in brand color
     label_svg_parts.append(
-        f'<text x="{x:.1f}" y="{y + 14:.1f}" text-anchor="middle" '
-        f'font-family="sans-serif" font-size="46" font-weight="bold" fill="#1A1A1A">{name}</text>'
+        f'<text x="{x:.1f}" y="{y + 18:.1f}" text-anchor="middle" '
+        f'font-family="system-ui, sans-serif" font-size="50" font-weight="bold" '
+        f'fill="{OKABE_ITO[0]}">{name}</text>'
     )
+
 label_svg_parts.append("</g>")
 label_svg = "\n".join(label_svg_parts)
 
 # Insert labels before closing </svg>
 svg_content = svg_content.replace("</svg>", label_svg + "\n</svg>")
 
-# Add edge thickness legend with proper spacing to avoid truncation
-legend_y = 2700 - 100
-legend_x_start = 1800
+# Add edge weight legend
+legend_y = 2700 - 120
+legend_x_start = 200
 legend_items = [
-    ("$20-178B", edge_styles["low"]),
-    ("$178-335B", edge_styles["medium"]),
-    ("$335-493B", edge_styles["high"]),
-    ("$493-650B", edge_styles["very_high"]),
+    ("$20–178B", edge_styles["low"]),
+    ("$178–335B", edge_styles["medium"]),
+    ("$335–493B", edge_styles["high"]),
+    ("$493–650B", edge_styles["very_high"]),
 ]
 
 edge_legend_parts = ['<g class="edge-legend">']
 edge_legend_parts.append(
-    f'<text x="{legend_x_start}" y="{legend_y + 12}" '
-    f'font-family="sans-serif" font-size="36" font-weight="bold" fill="#333333">Edge weights:</text>'
+    f'<text x="{legend_x_start}" y="{legend_y + 14}" '
+    f'font-family="system-ui, sans-serif" font-size="38" font-weight="bold" '
+    f'fill="{INK}">Edge Thickness Scale:</text>'
 )
-legend_x = legend_x_start + 280
+legend_x = legend_x_start + 420
 for label, style in legend_items:
     edge_legend_parts.append(
-        f'<line x1="{legend_x}" y1="{legend_y}" x2="{legend_x + 60}" y2="{legend_y}" '
-        f'stroke="{style["stroke"]}" stroke-width="{style["stroke_width"]}" stroke-linecap="round"/>'
+        f'<line x1="{legend_x}" y1="{legend_y}" x2="{legend_x + 70}" y2="{legend_y}" '
+        f'stroke="{style["stroke"]}" stroke-width="{style["stroke_width"]}" '
+        f'stroke-linecap="round" opacity="0.8"/>'
     )
     edge_legend_parts.append(
-        f'<text x="{legend_x + 80}" y="{legend_y + 12}" '
-        f'font-family="sans-serif" font-size="32" fill="#333333">{label}</text>'
+        f'<text x="{legend_x + 90}" y="{legend_y + 14}" '
+        f'font-family="system-ui, sans-serif" font-size="34" fill="{INK_SOFT}">{label}</text>'
     )
-    legend_x += 360
+    legend_x += 420
+
 edge_legend_parts.append("</g>")
 edge_legend_svg = "\n".join(edge_legend_parts)
 
@@ -327,4 +328,62 @@ edge_legend_svg = "\n".join(edge_legend_parts)
 svg_content = svg_content.replace("</svg>", edge_legend_svg + "\n</svg>")
 
 # Convert modified SVG to PNG using cairosvg
-cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to=f"plot-{THEME}.png")
+
+# Save interactive HTML version
+with open(f"plot-{THEME}.html", "w") as f:
+    f.write(
+        f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>network-weighted · pygal · anyplot.ai</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 20px;
+            background-color: {PAGE_BG};
+            font-family: system-ui, sans-serif;
+        }}
+        .container {{
+            max-width: 4800px;
+            margin: 0 auto;
+        }}
+        h1 {{
+            color: {INK};
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+        .chart-container {{
+            display: flex;
+            justify-content: center;
+        }}
+        img {{
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }}
+        .info {{
+            color: {INK_SOFT};
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>network-weighted · pygal · anyplot.ai</h1>
+        <div class="chart-container">
+            <img src="plot-{THEME}.png" alt="Network graph with weighted edges">
+        </div>
+        <div class="info">
+            <p>Trade network visualization showing relationships between countries.</p>
+            <p>Edge thickness represents bilateral trade volume (billions USD).</p>
+            <p>Node size indicates total weighted degree (sum of connected edge weights).</p>
+        </div>
+    </div>
+</body>
+</html>"""
+    )

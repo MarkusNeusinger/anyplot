@@ -1,151 +1,164 @@
 library: plotnine
+language: python
 specification_id: network-weighted
 created: '2026-01-08T15:59:07Z'
-updated: '2026-01-08T16:14:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20822858331
+updated: '2026-05-17T14:53:48Z'
+generated_by: claude-haiku
+workflow_run: 25993853282
 issue: 3290
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-weighted/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent creative solution using geom_segment + geom_point to render network
-    graph in plotnine
-  - Clear edge thickness variation shows trade volume differences effectively
-  - Good legend with meaningful breaks (100, 300, 500 billions USD)
-  - Realistic trade data with plausible country relationships and volumes
-  - Clean code structure following KISS principles
-  - Proper use of theme_void for network visualization
-  - Node sizing by weighted degree adds information density
+  - Excellent visual quality across all axes (all VQ items at max points)
+  - Perfect theme adaptation with no dark-on-dark failures
+  - Strong data storytelling through edge thickness and node sizing
+  - Realistic, neutral trade-network context with plausible volumes
+  - Clean, deterministic code with explicit font sizing
+  - Okabe-Ito palette compliance with theme-correct chrome
+  - All specification requirements met exactly
   weaknesses:
-  - 'Title format incorrect: should be network-weighted · plotnine · pyplots.ai but
-    includes extra International Trade Network · prefix'
-  image_description: The plot displays a weighted network graph visualizing international
-    trade relationships between 12 countries. Nodes are arranged in a roughly circular
-    layout, represented as yellow circles with dark borders. Each node is labeled
-    with the country name (USA, China, Germany, Japan, UK, France, Canada, Mexico,
-    S.Korea, India, Brazil, Australia) in bold black text positioned above the node.
-    Edges connect trading partners with thickness proportional to trade volume in
-    billions USD - the thickest edges connect USA-Canada, USA-Mexico, and USA-China,
-    clearly showing the USA as a major trade hub. Edge color is a consistent blue
-    (#306998) with ~55% transparency. A legend on the right shows "Trade Volume (Billions
-    USD)" with three reference line sizes (100, 300, 500). The title reads "International
-    Trade Network · network-weighted · plotnine · pyplots.ai" in bold centered text,
-    with a gray subtitle explaining that edge thickness represents bilateral trade
-    volume.
+  - Design follows library defaults rather than creating distinctive aesthetic (minor)
+  - Could emphasize trade hubs more dramatically through visual hierarchy (minor)
+  - Library usage is competent but generic—doesn't showcase advanced plotnine patterns
+    (minor)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title (26pt, dark, bold) and subtitle (18pt, dark gray) clearly readable; node labels (14pt bold dark text) well-spaced; legend title (16pt) and text (14pt) readable against light background
+      Data: Green circular nodes (#009E73) sized 5-16 by weighted degree; blue edges (#0072B2, α=0.55) with thickness 1-6 proportional to trade volume; all elements clearly visible
+      Legibility verdict: PASS — All text readable in both light and dark themes; no light-on-light failures; strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title and subtitle in light text (#F0EFE8); node labels in light text; legend elements in light text; all readable against dark background with no dark-on-dark failures
+      Data: Green nodes (#009E73) identical to light render; blue edges identical thickness/color; data colors theme-independent as required
+      Legibility verdict: PASS — All text light-colored and readable; no dark-on-dark issues; full visual legibility maintained
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels are readable, labels slightly small but bold helps
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, node labels well positioned with nudge_y offset
+        comment: All font sizes explicitly set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Node labels positioned with nudge_y; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes and edges visible, edge thickness variation clear
+        comment: Nodes 5-16 range, edges 1-6 thickness; all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue edges on white background, yellow nodes - colorblind safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, network centered with legend on right
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graphs using theme_void
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well placed and clear with appropriate breaks
+        comment: Strong contrast; Okabe-Ito CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 well-filled, balanced margins, legend properly placed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct format and descriptive subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Nodes #009E73, edges #0072B2; BG #FAF8F1 light / #1A1A17 dark; theme-adaptive
+          text'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional; follows defaults rather than exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void() applied, legend refined, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy via edge thickness/node sizing; guides reader
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct weighted network graph with edge thickness
+        comment: Correct weighted network graph
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes, edges, weights correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Edge thickness for weight, node sizing by weighted degree, legend
-          present
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All nodes and connections visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y and weight mappings correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows trade volume scale
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: Title includes extra text before spec-id
+        comment: Correct format and labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows strong and weak edges, hub nodes, varied connections
+        comment: Shows all network aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: International trade between real countries is neutral and realistic
+        comment: Real trade relationships, neutral economics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Trade volumes plausible but slightly simplified
+        comment: Trade values realistic and plausible
     code_quality:
       score: 10
       max: 10
@@ -155,52 +168,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: Linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotnine API
+        comment: Pythonic; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ggplot() + geoms pattern
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of geom_segment, geom_point, geom_text with scale_size_continuous,
-          theme_void, and guide_legend
+        comment: Uses some features but mostly standard patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-  - alpha-blending

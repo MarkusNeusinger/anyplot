@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 70/100 | Updated: 2026-05-17
 """
 
 import matplotlib.pyplot as plt
