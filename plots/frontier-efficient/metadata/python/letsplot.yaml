@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: frontier-efficient
 created: '2026-01-08T21:57:12Z'
-updated: '2026-05-17T05:01:47Z'
+updated: '2026-05-17T05:07:35Z'
 generated_by: claude-haiku
 workflow_run: 25981719090
 issue: 3342
@@ -12,41 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Perfect theme adaptation with comprehensive theme tokens applied to all chrome
-    elements
-  - 'Excellent visual quality: all text explicitly sized, both renders readable, no
-    overlap, optimal element visibility'
-  - Complete spec compliance with all required features correctly implemented
-  - High-quality realistic data with good feature coverage
-  - Clean, reproducible code with proper seeding
-  - Clear data storytelling with visual hierarchy
+  - Theme-adaptive color system correctly implements both light and dark palettes
+    with proper contrast
+  - 'All required plot features present and correctly implemented: efficient frontier,
+    random portfolios, min variance/max Sharpe points, and capital market line'
+  - Proper use of viridis colormap for continuous Sharpe ratio data
+  - Clean, reproducible code with seed for deterministic output
+  - Text legibility excellent in both themes with appropriate font sizes (title 24pt,
+    labels 20pt, ticks 16pt)
   weaknesses:
-  - 'DE-01 LOW (4/8): Design lacks distinctive aesthetic sophistication - palette
-    and layout are correct but functional rather than distinctly sophisticated; could
-    benefit from intentional color harmony refinement, typography hierarchy, or visual
-    emphasis techniques'
-  - 'DE-02 MODERATE (3/6): Visual refinement is solid but not polished - consider
-    y-axis-only grid, refine legend styling, enhance whitespace contrast'
-  - 'LM-02 LOW (2/5): Generic library usage without distinctive features - does not
-    leverage letsplot-specific capabilities like faceting, custom legends, or advanced
-    layer composition'
+  - Design is competent but somewhat generic—no distinctive visual refinements beyond
+    spec requirements
+  - Spines present by default (letsplot theme_minimal behavior) could be explicitly
+    removed for cleaner appearance
+  - Frontier calculation uses brute-force random sampling rather than quadratic programming—acceptable
+    for visualization but less precise
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all dark text on light background - clearly readable
-      Data: Blue frontier curve (size=3) shows efficient frontier prominently; 300 scatter points colored by viridis Sharpe ratio (size=4, alpha=0.6) provide portfolio context; two orange diamond markers (size=10) highlight Min Variance and Max Sharpe portfolios; dashed gray CML provides theoretical reference
-      Grid: Subtle rgba-based grid lines at 0.3 size - visible but non-intrusive
-      Legibility verdict: PASS - all elements clearly readable, excellent contrast, no overlap
+      Background: Warm off-white (#FAF8F1) with correct contrast. All text renders dark and clearly readable.
+      Chrome: Title "frontier-efficient · letsplot · anyplot.ai", X-axis "Risk (Standard Deviation)", Y-axis "Expected Return" all in dark INK color (#1A1A17). Tick labels in INK_SOFT (#4A4A44). Legend shows "Sharpe Ratio" with viridis colormap. All text crisp and legible.
+      Data: 300 scattered portfolio points colored by viridis (green-to-yellow indicating low-to-high Sharpe ratios), blue solid efficient frontier curve (OKABE_ITO[2] #0072B2), dashed gray capital market line, and two orange diamond markers (OKABE_ITO[1] #D55E00) for min variance and max Sharpe portfolios.
+      Legibility verdict: PASS - all elements readable with proper contrast against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, never pure black
-      Chrome: Title, axis labels, tick labels all rendered in light text (INK and INK_SOFT tokens) - all clearly readable against dark background, no dark-on-dark failures
-      Data: Efficient frontier curve identical blue (#0072B2) as light render; scatter points show same viridis color mapping (colors identical to light render, only chrome adapted); special points same orange (#D55E00) - data colors perfectly consistent between themes
-      Grid: Same subtle rgba styling adapted for dark theme
-      Legibility verdict: PASS - no dark-on-dark issues, all text readable, data colors identical to light render, theme adaptation perfect
+      Background: Warm near-black (#1A1A17) with correct contrast. All text renders light and clearly readable.
+      Chrome: Title, axis labels (both primary and tick labels) all render in light colors. Title and axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0). Legend frame background in ELEVATED_BG (#242420). No dark-on-dark failures—all text is light and visible against the dark background.
+      Data: Identical viridis coloring (same Sharpe ratio gradient as light), blue frontier line maintains same color as light theme, dashed capital market line visible in light gray, orange special-point markers identical to light render.
+      Legibility verdict: PASS - all elements readable with proper light text on dark background. Data colors identical between light and dark renders (only chrome flips).
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,72 +52,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all explicitly sized and perfectly
-          readable in both themes
+        comment: All text readable in both themes; font sizes (title 24pt, labels
+          20pt, ticks 16pt) appropriate for canvas size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend properly positioned
+        comment: Clean layout with generous whitespace; no text collisions or overlapping
+          elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter (300 points, size=4, alpha=0.6) optimally sized; frontier
-          (size=3) and special points (size=10) prominent
+        comment: All markers and lines clearly visible; scatter alpha=0.6 shows density
+          well; frontier curve prominent and distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis for continuous data; Okabe-Ito positions for categorical;
-          excellent contrast throughout
+        comment: Viridis colormap CVD-safe; orange diamond markers distinct from scatter
+          colors
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 (4800x2700 final); 50-80% utilization; balanced margins
+        comment: 16:9 landscape (4800×2700) appropriate for plot; nothing cut off;
+          margins generous
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; proper title format
+        comment: Title follows spec format (spec-id · library · anyplot.ai); axis
+          labels descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct backgrounds (#FAF8F1/#1A1A17); viridis for continuous; Okabe-Ito
-          for categorical; theme-adaptive chrome perfect
+        comment: 'Background #FAF8F1 (light) / #1A1A17 (dark) correct; special points
+          use OKABE_ITO[1]; viridis for continuous data; both renders theme-correct'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Custom theme tokens but still reads as well-configured default; lacks
-          distinctive sophistication
+        comment: Competent multi-layer design with theme adaptation, but somewhat
+          generic; no distinctive visual refinements beyond spec requirements
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid, spines removed, whitespace generous - above default
-          but could be more polished
+        comment: Standard formatting; spines present by default; grid is subtle but
+          could be more refined; legend styling adequate but not distinctive
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: 'Clear hierarchy: frontier focal point, scatter context, special
-          points highlighted, CML reference'
+        passed: false
+        comment: Narrative present (efficient frontier vs. suboptimal portfolios);
+          color gradient shows Sharpe progression; hierarchy present but not particularly
+          sophisticated
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct efficient frontier scatter with overlaid curves
+        comment: Correct scatter + line composition for efficient frontier visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: frontier, random portfolios, special points,
-          CML, Sharpe coloring'
+        comment: 'All spec elements present: frontier curve, 300 random portfolios,
+          min variance and max Sharpe points, capital market line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Risk, Y=Return, color=Sharpe; full data range visible
+        comment: Risk on X, return on Y; all data correctly mapped; axes show full
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend properly labeled
+        comment: Title matches spec format; legend clearly labels Sharpe Ratio with
+          viridis scale
     data_quality:
       score: 15
       max: 15
@@ -161,20 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: frontier, random, special, CML, Sharpe variation'
+        comment: 'Complete coverage: efficient frontier (50 points), 300 random portfolios,
+          min variance, max Sharpe, CML'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic returns (7-18%), volatilities (10-30%), correlations, risk-free
-          rate (3%)
+        comment: 'Realistic financial data: asset returns 7-18%, volatilities 10-30%,
+          plausible correlation matrix; neutral subject'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Return and risk scales match real-world parameters; factually correct
+        comment: 'Sensible values for portfolio optimization: returns 3-18%, risks
+          8-22%'
     code_quality:
       score: 10
       max: 10
@@ -184,50 +187,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → seed → data → compute → plot → save'
+        comment: No functions/classes; straightforward linear code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Seed set (np.random.seed(42)); fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous packages
+        comment: 'Only necessary imports: numpy, pandas, lets_plot components'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; appropriate complexity
+        comment: No fake UI; appropriate complexity; covariance-based portfolio generation
+          is sound
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; current API
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current letsplot
+          API
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct ggplot + geom_* patterns, proper aes() mapping, theme() customization;
-          standard but doesn't leverage advanced capabilities
+        comment: 'Proper ggplot2 grammar: ggplot() + geom_*() + theme(); aesthetic
+          mapping with aes(); theme customization with element_text/rect/line'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Uses viridis, diamonds, element styling; lacks advanced features
-          like faceting, custom legends, or complex layer composition
-  verdict: REJECTED
+        comment: Good use of letsplot's theme system; alpha blending for overlap;
+          viridis scale mapping; HTML export alongside PNG. Relatively standard application
+          without advanced letsplot features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -235,6 +241,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - correlation-matrix
   styling:
-  - alpha-blending
+  - custom-colormap
