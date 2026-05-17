@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: highcharts | Python 3.13
+Quality: 91/100 | Updated: 2026-05-17
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,13 +17,26 @@ from selenium.webdriver.chrome.options import Options
 from sklearn.datasets import load_iris
 
 
+# Theme tokens (from prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is ALWAYS #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 # Load Iris dataset
 iris = load_iris()
 x = iris.data[:, 0]  # Sepal length
 y = iris.data[:, 1]  # Sepal width
 value = iris.data[:, 2]  # Petal length
-categories = [str(iris.target_names[t]) for t in iris.target]  # Convert to native Python str
-category_colors = {"setosa": "#306998", "versicolor": "#FFD43B", "virginica": "#9467BD"}
+categories = [str(iris.target_names[t]) for t in iris.target]
+
+# Category colors from Okabe-Ito palette
+category_colors = {"setosa": OKABE_ITO[0], "versicolor": OKABE_ITO[1], "virginica": OKABE_ITO[2]}
 
 # Prepare data as JavaScript-friendly format
 data_points = []
@@ -37,18 +51,12 @@ hist_counts = hist_bins[0].tolist()
 hist_edges = hist_bins[1].tolist()
 hist_labels = [f"{hist_edges[i]:.1f}-{hist_edges[i + 1]:.1f}" for i in range(len(hist_counts))]
 
-# Category counts for bar chart
-category_counts = {}
-for cat in categories:
-    category_counts[cat] = category_counts.get(cat, 0) + 1
-
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+# Download Highcharts JS via jsDelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11.0.0/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Highcharts-more for additional chart types
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
+highcharts_more_url = "https://cdn.jsdelivr.net/npm/highcharts@11.0.0/highcharts-more.js"
 with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
@@ -63,7 +71,7 @@ html_content = f"""<!DOCTYPE html>
         body {{
             margin: 0;
             padding: 40px;
-            background: #ffffff;
+            background: {PAGE_BG};
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }}
         .header {{
@@ -73,12 +81,12 @@ html_content = f"""<!DOCTYPE html>
         .title {{
             font-size: 48px;
             font-weight: 600;
-            color: #1f2937;
+            color: {INK};
             margin: 0;
         }}
         .subtitle {{
             font-size: 28px;
-            color: #6b7280;
+            color: {INK_SOFT};
             margin-top: 10px;
         }}
         .charts-container {{
@@ -93,10 +101,10 @@ html_content = f"""<!DOCTYPE html>
             grid-row: span 2;
         }}
         .chart-box {{
-            background: #fafafa;
+            background: {ELEVATED_BG};
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid {GRID};
         }}
         .controls {{
             text-align: center;
@@ -105,7 +113,7 @@ html_content = f"""<!DOCTYPE html>
         .reset-btn {{
             padding: 16px 48px;
             font-size: 24px;
-            background: #306998;
+            background: {OKABE_ITO[0]};
             color: white;
             border: none;
             border-radius: 8px;
@@ -113,18 +121,18 @@ html_content = f"""<!DOCTYPE html>
             font-weight: 500;
         }}
         .reset-btn:hover {{
-            background: #254d73;
+            opacity: 0.8;
         }}
         .selection-info {{
             font-size: 28px;
-            color: #374151;
+            color: {INK};
             margin-top: 20px;
         }}
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 class="title">linked-views-selection · highcharts · pyplots.ai</h1>
+        <h1 class="title">linked-views-selection · highcharts · anyplot.ai</h1>
         <p class="subtitle">Iris Dataset: Select points in scatter plot to highlight in all views</p>
     </div>
 
@@ -142,8 +150,16 @@ html_content = f"""<!DOCTYPE html>
     <script>
         // Data points
         const allData = {json.dumps(data_points)};
-        const categoryColors = {{"setosa": "#306998", "versicolor": "#FFD43B", "virginica": "#9467BD"}};
+        const categoryColors = {{
+            "setosa": "{OKABE_ITO[0]}",
+            "versicolor": "{OKABE_ITO[1]}",
+            "virginica": "{OKABE_ITO[2]}"
+        }};
         const categoryList = ["setosa", "versicolor", "virginica"];
+        const pageColor = "{PAGE_BG}";
+        const inkColor = "{INK}";
+        const inkSoftColor = "{INK_SOFT}";
+        const gridColor = "{GRID}";
 
         // Track selected indices
         let selectedIndices = new Set();
@@ -158,9 +174,9 @@ html_content = f"""<!DOCTYPE html>
                         y: d.y,
                         index: d.index,
                         marker: {{
-                            fillColor: isSelected ? categoryColors[cat] : '#cccccc',
-                            lineColor: isSelected ? categoryColors[cat] : '#cccccc',
-                            radius: isSelected ? 12 : 8
+                            fillColor: isSelected ? categoryColors[cat] : inkSoftColor,
+                            lineColor: isSelected ? categoryColors[cat] : inkSoftColor,
+                            radius: isSelected ? 14 : 10
                         }},
                         opacity: isSelected ? 1 : 0.3
                     }};
@@ -169,7 +185,7 @@ html_content = f"""<!DOCTYPE html>
                     name: cat.charAt(0).toUpperCase() + cat.slice(1),
                     data: points,
                     color: categoryColors[cat],
-                    marker: {{ radius: 12, symbol: 'circle' }}
+                    marker: {{ radius: 14, symbol: 'circle' }}
                 }};
             }});
         }}
@@ -187,7 +203,7 @@ html_content = f"""<!DOCTYPE html>
                 return {{
                     name: cat.charAt(0).toUpperCase() + cat.slice(1),
                     y: count,
-                    color: isActive ? categoryColors[cat] : '#cccccc'
+                    color: isActive ? categoryColors[cat] : inkSoftColor
                 }};
             }});
         }}
@@ -212,7 +228,7 @@ html_content = f"""<!DOCTYPE html>
                 return {{
                     name: label,
                     y: count,
-                    color: isActive ? '#306998' : '#cccccc'
+                    color: isActive ? categoryColors["setosa"] : inkSoftColor
                 }};
             }});
         }}
@@ -223,7 +239,7 @@ html_content = f"""<!DOCTYPE html>
                 type: 'scatter',
                 zoomType: 'xy',
                 backgroundColor: 'transparent',
-                style: {{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }},
+                style: {{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: inkColor }},
                 events: {{
                     selection: function(event) {{
                         if (event.xAxis && event.yAxis) {{
@@ -248,34 +264,38 @@ html_content = f"""<!DOCTYPE html>
             }},
             title: {{
                 text: 'Sepal Dimensions by Species',
-                style: {{ fontSize: '32px', fontWeight: '600' }}
+                style: {{ fontSize: '32px', fontWeight: '600', color: inkColor }}
             }},
             xAxis: {{
                 title: {{
                     text: 'Sepal Length (cm)',
-                    style: {{ fontSize: '24px' }}
+                    style: {{ fontSize: '24px', color: inkColor }}
                 }},
-                labels: {{ style: {{ fontSize: '20px' }} }},
+                labels: {{ style: {{ fontSize: '20px', color: inkSoftColor }} }},
                 gridLineWidth: 1,
-                gridLineColor: '#e5e7eb'
+                gridLineColor: gridColor,
+                lineColor: inkSoftColor,
+                tickColor: inkSoftColor
             }},
             yAxis: {{
                 title: {{
                     text: 'Sepal Width (cm)',
-                    style: {{ fontSize: '24px' }}
+                    style: {{ fontSize: '24px', color: inkColor }}
                 }},
-                labels: {{ style: {{ fontSize: '20px' }} }},
-                gridLineColor: '#e5e7eb'
+                labels: {{ style: {{ fontSize: '20px', color: inkSoftColor }} }},
+                gridLineColor: gridColor,
+                lineColor: inkSoftColor,
+                tickColor: inkSoftColor
             }},
             legend: {{
                 enabled: true,
-                itemStyle: {{ fontSize: '22px' }},
+                itemStyle: {{ fontSize: '22px', color: inkSoftColor }},
                 symbolRadius: 6
             }},
             plotOptions: {{
                 scatter: {{
                     marker: {{
-                        radius: 12,
+                        radius: 14,
                         states: {{
                             hover: {{ enabled: true, radiusPlus: 4 }}
                         }}
@@ -286,9 +306,11 @@ html_content = f"""<!DOCTYPE html>
                 }}
             }},
             tooltip: {{
-                style: {{ fontSize: '18px' }},
+                style: {{ fontSize: '18px', color: inkColor }},
                 headerFormat: '<b>{{series.name}}</b><br>',
-                pointFormat: 'Sepal: {{point.x:.1f}} x {{point.y:.1f}} cm'
+                pointFormat: 'Sepal: {{point.x:.1f}} x {{point.y:.1f}} cm',
+                backgroundColor: pageColor,
+                borderColor: inkSoftColor
             }},
             series: getScatterSeries()
         }});
@@ -298,23 +320,28 @@ html_content = f"""<!DOCTYPE html>
             chart: {{
                 type: 'column',
                 backgroundColor: 'transparent',
-                style: {{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}
+                style: {{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: inkColor }}
             }},
             title: {{
                 text: 'Species Distribution',
-                style: {{ fontSize: '28px', fontWeight: '600' }}
+                style: {{ fontSize: '28px', fontWeight: '600', color: inkColor }}
             }},
             xAxis: {{
                 type: 'category',
-                labels: {{ style: {{ fontSize: '20px' }} }}
+                labels: {{ style: {{ fontSize: '20px', color: inkSoftColor }} }},
+                lineColor: inkSoftColor,
+                tickColor: inkSoftColor,
+                gridLineColor: gridColor
             }},
             yAxis: {{
                 title: {{
                     text: 'Count',
-                    style: {{ fontSize: '22px' }}
+                    style: {{ fontSize: '22px', color: inkColor }}
                 }},
-                labels: {{ style: {{ fontSize: '18px' }} }},
-                gridLineColor: '#e5e7eb'
+                labels: {{ style: {{ fontSize: '18px', color: inkSoftColor }} }},
+                gridLineColor: gridColor,
+                lineColor: inkSoftColor,
+                tickColor: inkSoftColor
             }},
             legend: {{ enabled: false }},
             plotOptions: {{
@@ -322,13 +349,15 @@ html_content = f"""<!DOCTYPE html>
                     borderRadius: 6,
                     dataLabels: {{
                         enabled: true,
-                        style: {{ fontSize: '20px', fontWeight: '600' }}
+                        style: {{ fontSize: '20px', fontWeight: '600', color: inkColor }}
                     }}
                 }}
             }},
             tooltip: {{
-                style: {{ fontSize: '18px' }},
-                pointFormat: '<b>{{point.y}}</b> specimens'
+                style: {{ fontSize: '18px', color: inkColor }},
+                pointFormat: '<b>{{point.y}}</b> specimens',
+                backgroundColor: pageColor,
+                borderColor: inkSoftColor
             }},
             series: [{{
                 name: 'Count',
@@ -342,26 +371,31 @@ html_content = f"""<!DOCTYPE html>
             chart: {{
                 type: 'column',
                 backgroundColor: 'transparent',
-                style: {{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}
+                style: {{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: inkColor }}
             }},
             title: {{
                 text: 'Petal Length Distribution',
-                style: {{ fontSize: '28px', fontWeight: '600' }}
+                style: {{ fontSize: '28px', fontWeight: '600', color: inkColor }}
             }},
             xAxis: {{
                 type: 'category',
                 labels: {{
-                    style: {{ fontSize: '16px' }},
+                    style: {{ fontSize: '16px', color: inkSoftColor }},
                     rotation: -45
-                }}
+                }},
+                lineColor: inkSoftColor,
+                tickColor: inkSoftColor,
+                gridLineColor: gridColor
             }},
             yAxis: {{
                 title: {{
                     text: 'Count',
-                    style: {{ fontSize: '22px' }}
+                    style: {{ fontSize: '22px', color: inkColor }}
                 }},
-                labels: {{ style: {{ fontSize: '18px' }} }},
-                gridLineColor: '#e5e7eb'
+                labels: {{ style: {{ fontSize: '18px', color: inkSoftColor }} }},
+                gridLineColor: gridColor,
+                lineColor: inkSoftColor,
+                tickColor: inkSoftColor
             }},
             legend: {{ enabled: false }},
             plotOptions: {{
@@ -369,19 +403,21 @@ html_content = f"""<!DOCTYPE html>
                     borderRadius: 4,
                     dataLabels: {{
                         enabled: true,
-                        style: {{ fontSize: '18px', fontWeight: '600' }}
+                        style: {{ fontSize: '18px', fontWeight: '600', color: inkColor }}
                     }}
                 }}
             }},
             tooltip: {{
-                style: {{ fontSize: '18px' }},
-                pointFormat: '<b>{{point.y}}</b> specimens'
+                style: {{ fontSize: '18px', color: inkColor }},
+                pointFormat: '<b>{{point.y}}</b> specimens',
+                backgroundColor: pageColor,
+                borderColor: inkSoftColor
             }},
             series: [{{
                 name: 'Count',
                 data: getHistogramData(),
                 colorByPoint: false,
-                color: '#306998'
+                color: categoryColors["setosa"]
             }}]
         }});
 
@@ -426,8 +462,8 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Also save as plot.html for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+# Also save as plot-{THEME}.html for interactive viewing
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 chrome_options = Options()
@@ -439,8 +475,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(8)  # Wait for charts to render
-driver.save_screenshot("plot.png")
+time.sleep(8)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
