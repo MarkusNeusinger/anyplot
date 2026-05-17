@@ -1,13 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-17
 """
 
-import altair as alt
+import os
+
 import numpy as np
 import pandas as pd
+from altair import Chart, Color, Legend, Scale, Title, Tooltip, X, Y, condition, selection_point, value
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data: Programming languages positioned by popularity vs age
 np.random.seed(42)
@@ -44,7 +54,6 @@ languages = [
 ]
 
 # Simulated: x = language age (years), y = relative popularity score
-# Data spread more evenly to avoid overlap
 ages = np.array(
     [33, 29, 26, 41, 29, 15, 9, 10, 13, 8, 20, 31, 12, 37, 30, 24, 34, 13, 17, 18, 31, 40, 68, 65, 66, 38, 19, 21]
 )
@@ -54,39 +63,56 @@ popularity = np.array(
 
 df = pd.DataFrame({"age": ages, "popularity": popularity, "language": languages, "year_created": 2026 - ages})
 
-# Create interactive scatter text plot using mark_text
-# Selection for hover highlight - Altair's distinctive interactivity feature
-hover = alt.selection_point(on="pointerover", nearest=True, empty=False)
+# Selection for hover highlight
+hover = selection_point(on="pointerover", nearest=True, empty=False)
 
 chart = (
-    alt.Chart(df)
+    Chart(df)
     .mark_text(fontSize=14, fontWeight="bold")
     .encode(
-        x=alt.X("age:Q", title="Language Age (Years Since Creation)", scale=alt.Scale(domain=[-2, 75])),
-        y=alt.Y("popularity:Q", title="Relative Popularity Score", scale=alt.Scale(domain=[-2, 105])),
+        x=X("age:Q", title="Language Age (Years Since Creation)", scale=Scale(domain=[-2, 75])),
+        y=Y("popularity:Q", title="Relative Popularity Score", scale=Scale(domain=[-2, 105])),
         text="language:N",
-        color=alt.condition(
-            hover,
-            alt.value("#FF6B35"),
-            alt.Color("popularity:Q", scale=alt.Scale(scheme="viridis"), legend=alt.Legend(title="Popularity")),
+        color=condition(
+            hover, value(BRAND), Color("popularity:Q", scale=Scale(scheme="viridis"), legend=Legend(title="Popularity"))
         ),
-        size=alt.condition(hover, alt.value(18), alt.value(14)),
+        size=condition(hover, value(18), value(14)),
         tooltip=[
-            alt.Tooltip("language:N", title="Language"),
-            alt.Tooltip("age:Q", title="Age (years)"),
-            alt.Tooltip("popularity:Q", title="Popularity Score"),
-            alt.Tooltip("year_created:Q", title="Year Created"),
+            Tooltip("language:N", title="Language"),
+            Tooltip("age:Q", title="Age (years)"),
+            Tooltip("popularity:Q", title="Popularity Score"),
+            Tooltip("year_created:Q", title="Year Created"),
         ],
     )
     .add_params(hover)
     .properties(
-        width=1600, height=900, title=alt.Title(text="scatter-text · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=Title(text="scatter-text · Python · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
-    .configure_legend(titleFontSize=18, labelFontSize=16)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        labelFontSize=18,
+        titleColor=INK,
+        titleFontSize=22,
+    )
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=18,
+        labelFontSize=16,
+    )
 )
 
-# Save as PNG and HTML (HTML preserves interactivity)
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save as PNG and HTML
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
