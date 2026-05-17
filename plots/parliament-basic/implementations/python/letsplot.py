@@ -1,3 +1,8 @@
+""" anyplot.ai
+parliament-basic: Parliament Seat Chart
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-17
+"""
 # ruff: noqa: F405
 """anyplot.ai
 parliament-basic: Parliament Seat Chart
