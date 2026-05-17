@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: boxen-basic
 created: '2026-05-17T08:58:34Z'
-updated: '2026-05-17T09:26:09Z'
+updated: '2026-05-17T09:31:25Z'
 generated_by: claude-haiku
 workflow_run: 25986442262
 issue: 3414
@@ -15,131 +15,143 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 quality_score: 49
 review:
   strengths:
-  - Clean, reproducible Python code with proper seeding
-  - Realistic server response time scenario
-  - Correct use of Okabe-Ito palette and theme-adaptive colors
-  - Proper background colors and theme handling
+  - Realistic API response time data with proper statistical distributions
+  - Correct theme handling with light/dark background and text color tokens
+  - Proper Okabe-Ito palette implementation across all series
+  - Clean, deterministic code with seed-based reproducibility
+  - Correct title format and descriptive axis labels with units
   weaknesses:
-  - Legend explosion with 16 overlapping entries making it completely unreadable
-  - Wrong visualization approach - lines with stroke-width variation do not represent
-    nested boxes as specified
-  - Specification violation - requires nested boxes with decreasing width but shows
-    lines instead
-  - Missing visual structure - boxen plot concept of nested quantile boxes is not
-    conveyed visually
-  - Layout issues - legend dominates canvas and plot area is underutilized
+  - Legend has 20 entries (4 endpoints × 5 series) making it completely unreadable
+    — collapse to single explanation
+  - Boxes are represented as vertical line segments with stroke-width variation, not
+    actual nested rectangles — spec requires visual boxes that decrease in width for
+    deeper quantiles
+  - XY scatter API insufficient for boxen plots — need approach that draws actual
+    boxes/rectangles or find alternative library
+  - Colored rectangles at bottom appear to be legend artifacts but are unexplained
+    and confusing
+  - Stroke width variation (2, 2, 4, 6) cannot convey the nested quantile hierarchy
+    that the spec requires
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 - correct theme
-      Chrome: Title "boxen-basic · pygal · anyplot.ai" is readable; axis labels "Response Time (ms)" and "Endpoint" are clear; tick labels visible but small
-      Data: Shows four API endpoints with vertical lines at different stroke widths (attempting to represent quantiles); four bar shapes at bottom
-      Legibility verdict: FAIL - Legend contains 16 overlapping entries making it completely unreadable and unusable
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title, Y-axis "Response Time (ms)", X-axis "Endpoint" all clearly readable in dark text
+      Data: Four vertical line segments per endpoint (teal, orange, blue, reddish-purple) representing quantile ranges; colored rectangles at bottom; many scattered points as outliers
+      Grid: Subtle horizontal and vertical lines
+      Legend: Contains 20 entries listing every series (API-Auth: Sixteenths, API-Auth: Eighths, etc.) — extremely crowded and nearly illegible
+      Legibility verdict: FAIL — While individual text is readable, the legend with 20 entries is completely unusable. More critically, the visualization fails to show nested boxes — the spec requires "nested boxes representing letter values" with "boxes that decrease in width for deeper quantiles," but the implementation shows only vertical line segments with varying stroke widths, not actual nested rectangular boxes.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 - correct theme
-      Chrome: Title and axis labels are readable with light text on dark background
-      Data: Data colors are identical to light render (greens, oranges, blues, purples); same line structure
-      Legibility verdict: FAIL - Same legend readability issue persists; 16 entries completely overlapping and unreadable
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title, axis labels all clearly visible in light text against dark background
+      Data: Four vertical line segments per endpoint in the same colors (teal, orange, blue, reddish-purple); colored rectangles at bottom; scattered outlier points
+      Grid: Subtle lines visible
+      Legend: Same 20-entry legend as light render — equally unreadable
+      Legibility verdict: FAIL for same reasons — all text is technically readable, but the legend is useless and the visualization fundamentally misrepresents the required plot type. Data colors are identical across both renders (only chrome flips), confirming proper theme handling. However, the nested box structure that defines a boxen plot is not visually represented in either render.
+
+    Summary: Both renders fail the core requirement. The spec demands nested boxes with visual hierarchy, but the implementation approximates them with line segments. The 20-entry legend destroys usability in both themes.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 15
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: Title and axis labels readable; legend text too small and overlapping
+        passed: true
+        comment: Font sizes explicitly set; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 1
+        score: 0
         max: 6
         passed: false
-        comment: 'SEVERE: 16-entry legend completely unreadable and overlapping'
+        comment: Legend has 20 entries — severe overlap and unreadable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 0
         max: 6
-        passed: true
-        comment: Lines and points visible despite poor structure
+        passed: false
+        comment: Boxes represented as line segments, not visual boxes — nested structure
+          not visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors distinguishable and colorblind-safe
+        comment: Okabe-Ito palette with good contrast and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 1
         max: 4
         passed: false
-        comment: Legend occupies excessive space; plot underutilizes canvas
+        comment: Functional layout but compromised by huge legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; Y-axis has units (ms); descriptive labels
+        comment: Title correct format, labels descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used correctly; backgrounds are theme-correct
+        comment: Correct Okabe-Ito usage, backgrounds correct, theme-adaptive chrome
+          correct
     design_excellence:
-      score: 5
+      score: 4
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults; legend ruins overall aesthetics
+        comment: Well-configured default, no design thought beyond correct palette/fonts
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 0
         max: 6
         passed: false
-        comment: No refinement; cluttered legend; unpolished
+        comment: Cluttered legend destroys refinement; stroke width variation insufficient
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 0
         max: 6
         passed: false
-        comment: Data displayed but visualization approach fails to convey boxen plot
-          concept
+        comment: Fails to communicate data effectively; nested structure not visually
+          clear
     spec_compliance:
-      score: 7
+      score: 6
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: 'CRITICAL: Not a proper boxen plot - shows lines instead of nested
-          boxes with decreasing widths'
+        comment: Attempts boxen plot but implementation fundamentally wrong — line
+          segments not boxes
       - id: SC-02
         name: Required Features
         score: 1
         max: 4
         passed: false
-        comment: Missing nested box visualization; quantile levels present but not
-          visually distinguished
+        comment: Shows quantile levels and outliers but representation doesn't match
+          spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to endpoints and response times
+        comment: X/Y correctly assigned, all data visible
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Title format correct but legend is broken with 16 unreadable entries
+        comment: Title correct, legend unreadable with 20 entries
     data_quality:
       score: 13
       max: 15
@@ -149,19 +161,19 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: All four endpoints and quantile levels shown despite flawed visualization
+        comment: Shows multiple endpoints with varying distributions and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times is realistic and neutral scenario
+        comment: API response times — realistic, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible for API response times
+        comment: 0-1200ms range appropriate for API response times
     code_quality:
       score: 10
       max: 10
@@ -171,33 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, clear flow
+        comment: Simple flow with appropriate helper functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Reproducible with seed 42
+        comment: Uses np.random.seed(42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports (importlib, os, sys, numpy)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code though fundamentally flawed approach
+        comment: No over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves as plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -205,14 +217,13 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses pygal.XY() but doesn't leverage better approaches for boxen
-          plot
+        comment: Basic XY scatter usage but XY API not suitable for boxen plots
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage with no distinctive library features
+        comment: Uses Style object and HTML export, but approach is generic
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -221,5 +232,4 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - theme-adaptive
+  styling: []
