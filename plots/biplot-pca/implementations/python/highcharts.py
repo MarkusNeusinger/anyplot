@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -19,7 +20,18 @@ from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]  # Positions 1-3 for species
+
 # Data - Iris dataset for PCA
+np.random.seed(42)
 iris = load_iris()
 X = iris.data
 y = iris.target
@@ -54,19 +66,16 @@ score_max = np.max(np.abs(scores)) * 0.9
 loading_scale = score_max / np.max(np.abs(loadings))
 loadings_scaled = loadings * loading_scale
 
-# Colors for species (colorblind-safe)
-colors = ["#306998", "#FFD43B", "#9467BD"]
-
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart settings
+# Chart settings with theme-aware colors
 chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "marginLeft": 180,
     "marginRight": 200,
@@ -74,26 +83,30 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "Iris PCA · biplot-pca · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "biplot-pca · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
 }
 
 # Axes with variance explained
 chart.options.x_axis = {
-    "title": {"text": f"PC1 ({variance_explained[0]:.1f}%)", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px"}},
+    "title": {"text": f"PC1 ({variance_explained[0]:.1f}%)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0,0,0,0.1)",
-    "plotLines": [{"value": 0, "color": "#666666", "width": 2, "zIndex": 3}],
+    "gridLineColor": RULE,
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 2, "zIndex": 3}],
     "tickInterval": 0.5,
 }
 
 chart.options.y_axis = {
-    "title": {"text": f"PC2 ({variance_explained[1]:.1f}%)", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px"}},
+    "title": {"text": f"PC2 ({variance_explained[1]:.1f}%)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0,0,0,0.1)",
-    "plotLines": [{"value": 0, "color": "#666666", "width": 2, "zIndex": 3}],
+    "gridLineColor": RULE,
+    "plotLines": [{"value": 0, "color": INK_SOFT, "width": 2, "zIndex": 3}],
 }
 
 # Legend
@@ -102,7 +115,10 @@ chart.options.legend = {
     "layout": "vertical",
     "align": "right",
     "verticalAlign": "middle",
-    "itemStyle": {"fontSize": "32px"},
+    "itemStyle": {"fontSize": "16px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "symbolRadius": 8,
     "itemMarginTop": 10,
 }
@@ -113,28 +129,52 @@ for i, species in enumerate(target_names):
     series = ScatterSeries()
     series.name = species.capitalize()
     series.data = [{"x": float(scores[j, 0]), "y": float(scores[j, 1])} for j in range(len(y)) if mask[j]]
-    series.color = colors[i]
-    series.marker = {"radius": 14, "symbol": "circle"}
+    series.color = OKABE_ITO[i]
+    series.marker = {"radius": 8}
     chart.add_series(series)
 
 # Plot options for all series
 chart.options.plot_options = {
     "scatter": {
-        "marker": {"radius": 14, "states": {"hover": {"radiusPlus": 4}}},
+        "marker": {"radius": 8, "states": {"hover": {"radiusPlus": 2}}},
         "tooltip": {"headerFormat": "", "pointFormat": "<b>{series.name}</b>: ({point.x:.2f}, {point.y:.2f})"},
     },
     "series": {"animation": False},
 }
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Set colors for chart-level consistency
+chart.options.colors = OKABE_ITO
+
+# Download Highcharts JS with retries and fallback CDN URLs
+cdn_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.min.js",
+    "https://unpkg.com/highcharts@11/highcharts.js",
+    "https://code.highcharts.com/highcharts.js",
+]
+
+highcharts_js = None
+for url in cdn_urls:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"})
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                highcharts_js = response.read().decode("utf-8")
+                break
+        except (urllib.error.URLError, urllib.error.HTTPError):
+            if attempt < max_retries - 1:
+                time.sleep(1)
+    if highcharts_js:
+        break
+
+if not highcharts_js:
+    raise RuntimeError("Could not download Highcharts from any CDN")
 
 # Generate JS literal
 html_str = chart.to_js_literal()
 
 # Create custom arrow drawing using SVG renderer after chart loads
+# Arrow color is theme-aware INK_SOFT for subtle appearance
 arrow_js = """
 Highcharts.addEvent(Highcharts.Chart, 'load', function() {
     var chart = this;
@@ -152,9 +192,11 @@ for i, feature in enumerate(feature_names):
     y_end = float(loadings_scaled[i, 1])
     arrow_js += f'        {{name: "{clean_name}", x: {x_end}, y: {y_end}}},\n'
 
-arrow_js += """    ];
+# Arrow color uses theme-aware INK value for better contrast
+arrow_color = INK if THEME == "light" else ELEVATED_BG
+arrow_js += f"""    ];
 
-    loadings.forEach(function(loading) {
+    loadings.forEach(function(loading) {{
         var x0 = xAxis.toPixels(0);
         var y0 = yAxis.toPixels(0);
         var x1 = xAxis.toPixels(loading.x);
@@ -162,11 +204,11 @@ arrow_js += """    ];
 
         // Draw arrow line
         renderer.path(['M', x0, y0, 'L', x1, y1])
-            .attr({
-                stroke: '#E74C3C',
-                'stroke-width': 6,
+            .attr({{
+                stroke: '{arrow_color}',
+                'stroke-width': 4,
                 zIndex: 10
-            })
+            }})
             .add();
 
         // Calculate arrowhead
@@ -181,28 +223,28 @@ arrow_js += """    ];
 
         // Draw arrowhead
         renderer.path(['M', x1, y1, 'L', ax1, ay1, 'M', x1, y1, 'L', ax2, ay2])
-            .attr({
-                stroke: '#E74C3C',
-                'stroke-width': 6,
+            .attr({{
+                stroke: '{arrow_color}',
+                'stroke-width': 4,
                 zIndex: 10
-            })
+            }})
             .add();
 
         // Add label with offset
         var labelX = x1 + 15 * Math.cos(angle);
         var labelY = y1 + 15 * Math.sin(angle);
         renderer.text(loading.name, labelX, labelY)
-            .attr({
+            .attr({{
                 zIndex: 11
-            })
-            .css({
-                fontSize: '28px',
+            }})
+            .css({{
+                fontSize: '18px',
                 fontWeight: 'bold',
-                color: '#E74C3C'
-            })
+                color: '{arrow_color}'
+            }})
             .add();
-    });
-});
+    }});
+}});
 """
 
 html_content = f"""<!DOCTYPE html>
@@ -212,17 +254,17 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{arrow_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Save interactive HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save interactive HTML with theme-suffixed filename
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Write temp HTML and take screenshot
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -237,7 +279,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
