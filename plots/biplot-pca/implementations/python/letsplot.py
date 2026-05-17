@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-01-09
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -14,6 +16,18 @@ from sklearn.preprocessing import StandardScaler
 
 
 LetsPlot.setup_html()  # noqa: F405
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Load Iris dataset
 iris = load_iris()
@@ -54,26 +68,23 @@ loadings_df = pd.DataFrame(
 )
 
 # Label positions with smart offset to avoid overlap
-# Petal Length and Petal Width have similar directions, so we offset them differently
 label_offsets = []
 for i, name in enumerate(clean_names):
     x_end = loadings_df["x_end"].iloc[i]
     y_end = loadings_df["y_end"].iloc[i]
     if name == "Petal Width":
-        # Offset Petal Width label upward to avoid overlap with Petal Length
         label_offsets.append((x_end * 1.15, y_end * 1.15 + 0.4))
     elif name == "Petal Length":
-        # Offset Petal Length label downward
         label_offsets.append((x_end * 1.15, y_end * 1.15 - 0.3))
     else:
-        # Default offset for other labels
         label_offsets.append((x_end * 1.15, y_end * 1.15))
 
 loadings_df["label_x"] = [offset[0] for offset in label_offsets]
 loadings_df["label_y"] = [offset[1] for offset in label_offsets]
 
-# Colorblind-safe palette (blue, orange, purple - distinguishable for all color vision types)
-colors = ["#0077BB", "#EE7733", "#AA3377"]
+# Unit circle for reference
+circle_theta = np.linspace(0, 2 * np.pi, 100)
+circle_df = pd.DataFrame({"x": np.cos(circle_theta), "y": np.sin(circle_theta)})
 
 # Build the plot
 plot = (
@@ -87,7 +98,7 @@ plot = (
     + geom_segment(  # noqa: F405
         data=loadings_df,
         mapping=aes(x="x_start", y="y_start", xend="x_end", yend="y_end"),  # noqa: F405
-        color="#333333",
+        color=INK_SOFT,
         size=1.8,
         arrow=arrow(length=15, type="open"),  # noqa: F405
     )
@@ -95,32 +106,48 @@ plot = (
         data=loadings_df,
         mapping=aes(x="label_x", y="label_y", label="variable"),  # noqa: F405
         size=14,
-        color="#333333",
+        color=INK_SOFT,
     )
-    + geom_hline(yintercept=0, color="gray", size=0.5, linetype="dashed", alpha=0.5)  # noqa: F405
-    + geom_vline(xintercept=0, color="gray", size=0.5, linetype="dashed", alpha=0.5)  # noqa: F405
+    + geom_path(  # noqa: F405
+        data=circle_df,
+        mapping=aes(x="x", y="y"),  # noqa: F405
+        color=INK_MUTED,
+        size=0.5,
+    )
+    + geom_hline(yintercept=0, color=INK_MUTED, size=0.5, linetype="dashed")  # noqa: F405
+    + geom_vline(xintercept=0, color=INK_MUTED, size=0.5, linetype="dashed")  # noqa: F405
     + labs(  # noqa: F405
         x=f"PC1 ({var_explained[0]:.1f}%)",
         y=f"PC2 ({var_explained[1]:.1f}%)",
-        title="biplot-pca · letsplot · pyplots.ai",
+        title="biplot-pca · letsplot · anyplot.ai",
         color="Species",
     )
-    + scale_color_manual(values=colors)  # noqa: F405
+    + scale_color_manual(values=OKABE_ITO)  # noqa: F405
     + scale_x_continuous(expand=[0.15, 0.15])  # noqa: F405
     + scale_y_continuous(expand=[0.15, 0.15])  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        plot_title=element_text(size=24),  # noqa: F405
-        axis_title=element_text(size=20),  # noqa: F405
-        axis_text=element_text(size=16),  # noqa: F405
-        legend_title=element_text(size=18),  # noqa: F405
-        legend_text=element_text(size=16),  # noqa: F405
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+        panel_grid_major=element_line(  # noqa: F405
+            color=INK, size=0.3
+        ),
+        panel_grid_minor=element_blank(),  # noqa: F405
+        axis_title=element_text(size=20, color=INK),  # noqa: F405
+        axis_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
+        axis_line=element_line(color=INK_SOFT, size=0.5),  # noqa: F405
+        plot_title=element_text(size=24, color=INK),  # noqa: F405
+        legend_background=element_rect(  # noqa: F405
+            fill=ELEVATED_BG, color=INK_SOFT
+        ),
+        legend_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
+        legend_title=element_text(size=18, color=INK),  # noqa: F405
     )
     + ggsize(1600, 900)  # noqa: F405
 )
 
 # Save PNG (scale 3x for 4800x2700)
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
+export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
 
 # Save HTML for interactivity
-export_ggsave(plot, filename="plot.html", path=".")
+export_ggsave(plot, filename=f"plot-{THEME}.html", path=".")
