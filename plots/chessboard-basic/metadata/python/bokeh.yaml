@@ -1,148 +1,174 @@
 library: bokeh
+language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:54:32Z'
-updated: '2026-01-08T22:05:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832942368
+updated: '2026-05-17T01:52:57Z'
+generated_by: claude-haiku
+workflow_run: 25978267071
 issue: 3340
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/bokeh/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Perfect implementation of chess board color pattern with correct h1 light square
-  - Classic, professional color scheme (#F0D9B5/#B58863) that matches traditional
-    chess boards
-  - Clean use of Bokeh ColumnDataSource and rect glyph for grid construction
-  - Proper 1:1 aspect ratio maintains square proportions
-  - Both PNG and HTML outputs generated
+  - 'Flawless theme adaptation: backgrounds, text colors, and borders correctly flip
+    between light/dark while board colors remain constant'
+  - Excellent text legibility across all typography sizes and both themes
+  - Perfect grid structure with clean, simple design appropriate for reference visualization
+  - Robust use of environment variables and theme tokens for theme-adaptive chrome
+  - Proper use of ColumnDataSource for data flexibility and Bokeh best practices
+  - Deterministic, reproducible code with no randomness
   weaknesses:
-  - Axis labels Column and Row are redundant when a-h and 1-8 notation is already
-    present
-  - Could leverage Bokeh hover tooltips to show square names (e.g., e4)
-  image_description: The plot displays a standard 8x8 chess board with 64 alternating
-    squares in classic cream (#F0D9B5) and brown (#B58863) colors. The board uses
-    a 1:1 aspect ratio (3600x3600 px square format). Column labels (a-h) appear at
-    the bottom with "Column" as the axis label, and row labels (1-8) appear on the
-    left side with "Row" as the axis label. The title "chessboard-basic · bokeh ·
-    pyplots.ai" is centered at the top. Each square has a subtle dark gray border
-    (#333333). The h1 square (bottom-right) is correctly colored light, following
-    standard chess convention. The background is a light gray (#FAFAFA), providing
-    subtle contrast with the board.
+  - Design is minimal/functional rather than sophisticated — uses standard chess colors
+    without additional aesthetic refinement
+  - Limited use of Bokeh-specific distinctive features — no interactive elements or
+    callbacks showcased
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1, matching specification
+      Chrome: Title "chessboard-basic · bokeh · anyplot.ai" in dark text (32pt); row labels 1-8 on left in 24pt dark gray; column labels a-h at bottom in matching dark gray; axis labels "Row" and "Column" in 22pt dark text; subtle tan/gray border (2pt stroke)
+      Data: Alternating light (#F0D9B5) and dark (#B58863) squares in perfect 8×8 grid; all 64 squares clearly visible and distinguished
+      Legibility verdict: PASS — All text elements have excellent contrast and are fully readable against the light background; no overlapping or collision issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17, matching specification
+      Chrome: Title in light text (#F0EFE8); row and column labels in lighter gray (#B8B7B0); axis labels in light text; border lighter than background for definition
+      Data: Chess board squares remain identical to light render (#F0D9B5 light, #B58863 dark) — data colors constant, only chrome flipped (CORRECT theme adaptation)
+      Legibility verdict: PASS — All text elements remain clearly legible against the dark background; no dark-on-dark failures detected; strong contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and axis labels readable, tick labels slightly small but acceptable
+        comment: Font sizes explicitly set (32pt title, 22pt labels, 24pt ticks);
+          readable in both themes with strong contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements
+        comment: Clean layout, all text properly spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All 64 squares clearly visible with good contrast
+        comment: All 64 squares clearly visible and distinguished; no density issues
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Classic cream/brown scheme has excellent contrast, colorblind-safe
+        comment: Light and dark squares have strong contrast; appropriate for chess
+          context
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Perfect 1:1 ratio, board fills canvas well
+        comment: Square format (3600×3600) appropriate for grid; proper margins; 1:1
+          aspect ratio maintained; no cut-off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are Column and Row which are descriptive but generic
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for this plot type (no grid or legend needed)
+        comment: Title in correct format; axes labeled 'Row' and 'Column'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light bg #FAF8F1, dark bg #1A1A17; text colors theme-adaptive; board
+          colors constant across themes'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean, traditional design using standard chess colors; straightforward
+          but competent; no embellishments beyond traditional aesthetic
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid borders; grid lines hidden appropriately; reasonable
+          whitespace; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No narrative needed for reference visualization; all squares have
+          equal importance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grid visualization for chess board
+        comment: Perfect 8×8 chess board grid
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 8x8 grid with proper algebraic notation (a-h, 1-8)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: alternating colors, proper notation, h1 light
-          square'
-      - id: SC-04
-        name: Data Range
+        comment: Alternating squares, algebraic notation (a-h, 1-8), light square
+          at h1 all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 64 squares displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Column and row labels correct; all 64 squares present; 1:1 aspect
+          ratio maintained
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: chessboard-basic · bokeh · pyplots.ai'
+        comment: Title format correct; no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete 8x8 board with all features
+        comment: Complete 8×8 board with all 64 squares and proper alternating pattern
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Standard chess board, universally recognized
+        comment: Standard chess board context; neutral and appropriate
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
-        max: 5
-        passed: false
-        comment: Grid is well-sized but axis labels are somewhat redundant
+        score: 4
+        max: 4
+        passed: true
+        comment: 8×8 grid is canonical chess board size; coordinate system correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -150,52 +176,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save'
+        comment: Direct, straightforward code without unnecessary complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Deterministic data (no random), but no explicit seed comment
+        max: 2
+        passed: true
+        comment: Deterministic; environment-driven theme selection (ANYPLOT_THEME)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current Bokeh API
+        comment: Clean, readable; proper ColumnDataSource usage; AR-08 PASS (no fake
+          interactivity)
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource pattern correct; figure() API; rect() glyph; major_label_overrides
+          for custom ticks
+      - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses ColumnDataSource and rect glyph appropriately, but does not
-          leverage Bokeh interactivity features
+        comment: Theme tokens and Selenium pattern used correctly; HTML export appropriate;
+          no distinctive Bokeh features showcased
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - manual-ticks
   - html-export
   patterns:
+  - matrix-construction
   - columndatasource
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+  styling: []

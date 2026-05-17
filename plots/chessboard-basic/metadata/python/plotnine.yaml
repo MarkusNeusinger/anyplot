@@ -1,146 +1,165 @@
 library: plotnine
+language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:52:42Z'
-updated: '2026-01-08T21:58:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832944685
+updated: '2026-05-17T01:52:38Z'
+generated_by: claude-haiku
+workflow_run: 25978338440
 issue: 3340
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/plotnine/plot.png
-preview_html: null
-quality_score: 95
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layering
-  - Perfect chess board orientation with h1 light square as per standard
-  - Classic cream/brown color scheme with excellent contrast
-  - Clean, readable algebraic notation labels
-  - Proper 1:1 aspect ratio using coord_fixed
-  - Professional appearance suitable for chess publications
+  - Perfect chess board pattern with correct corner squares (h1 light, a8 dark)
+  - Excellent theme adaptation with clean color token usage (PAGE_BG, INK, INK_SOFT)
+  - All text is readable in both light and dark themes with no contrast issues
+  - Clean, idiomatic plotnine code using geom_tile() and coord_fixed() appropriately
+  - Proper data generation using matrix logic (row + col) % 2 == 1
+  - Domain-appropriate classic cream/brown color palette
+  - Proper use of element_text and element_rect for fine-grained theme control
   weaknesses:
-  - VQ-06 scored 0/2 because axis labels are empty, though this is appropriate for
-    a chess board (no units apply)
-  image_description: The plot displays a classic 8x8 chess board with alternating
-    cream (#F0D9B5) and brown (#B58863) squares. The board is correctly oriented with
-    the light square at h1 (bottom-right corner) as per standard chess convention.
-    Column labels (a-h) appear along the bottom x-axis, and row labels (1-8) are on
-    the left y-axis. The title "chessboard-basic · plotnine · pyplots.ai" is prominently
-    displayed at the top in bold. A subtle brown border frames the entire board. The
-    squares have thin border lines enhancing visual separation. The 1:1 aspect ratio
-    is maintained, making all squares perfectly square-shaped.
+  - 'Minor: Design Excellence could be elevated with subtle visual enhancements (custom
+    edge styling, subtle grid pattern, visual emphasis techniques)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white - correct
+      Chrome: Title in dark text (#1A1A17) bold and centered, axis labels and tick labels in softer dark (#4A4A44) - all readable with excellent contrast
+      Data: Cream (#F0D9B5) and brown (#B58863) squares in perfect 8x8 pattern with h1 light square correct
+      Legibility verdict: PASS - all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black - correct
+      Chrome: Title in light text (#F0EFE8) bold and centered, axis labels and tick labels in light soft color (#B8B7B0) - all readable with excellent contrast against dark background; no dark-on-dark failures
+      Data: Identical cream and brown colors as light render - confirms data colors remain constant across themes
+      Legibility verdict: PASS - all text clearly readable against dark background, proper theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt bold, axis labels at 20pt bold, all perfectly readable
+        comment: Title 24pt, axis labels 20pt, tick labels 20pt - all readable in
+          both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: All labels properly spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tiles perfectly sized, clear color distinction
+        comment: All 64 squares visible, borders readable, square proportions perfect
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Cream/brown palette is colorblind-safe with excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Board fills canvas appropriately with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Empty labels (appropriate for chess board, no units needed)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate), no legend (none needed), clean appearance
+        comment: Cream/brown contrast strong, CVD-safe, not red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 9x9 at 300dpi appropriate, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct, axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct, theme adaptation flawless'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Domain-appropriate colors, timeless palette, well-executed
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean spines, subtle border, appropriate grid absence, excellent
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear structure, strong focal point, visual hierarchy guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 8x8 grid visualization using geom_tile
+        comment: Correct 8x8 grid chess board
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Columns mapped to x, rows to y, color correctly alternating
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 8x8 grid, algebraic notation, correct
-          h1 color'
-      - id: SC-04
-        name: Data Range
+        comment: All spec requirements met
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows complete board from 1-8 and a-h
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correct, all 64 squares mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly hidden (not needed for chess board)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: chessboard-basic · plotnine · pyplots.ai'
+        comment: Title format correct, legend appropriately hidden
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all 64 squares with correct alternating pattern
+        comment: Complete chess board pattern
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Standard chess board, universally recognized neutral topic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standard 8x8 dimensions, correct labeling scheme
+        comment: Standard chess layout, realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8x8 canonical size with appropriate colors
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -148,42 +167,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Simple, straightforward data generation
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: No random seed needed - data is fully deterministic
+        comment: Deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar, geom_tile, coord_fixed, scale_fill_manual, comprehensive
-          theme customization
+        comment: Excellent plotnine patterns with geom_tile, coord_fixed, scale customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_fixed and theme element control, good use of distinctive features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -191,8 +215,7 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting

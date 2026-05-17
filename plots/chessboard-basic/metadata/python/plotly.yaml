@@ -1,145 +1,172 @@
 library: plotly
+language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:52:51Z'
-updated: '2026-01-08T21:58:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832939312
+updated: '2026-05-17T01:53:00Z'
+generated_by: claude-haiku
+workflow_run: 25978230200
 issue: 3340
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/plotly/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/plotly/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Perfect implementation of chess board pattern with correct h1 light square positioning
-  - Excellent use of Plotly shapes API for creating the grid
-  - Clean, classic color scheme (cream/brown) with subtle borders
-  - Proper 1:1 aspect ratio maintained via scaleanchor
-  - Both PNG and HTML output provided
-  - Title correctly formatted per spec requirements
+  - Perfect theme adaptation with readable text in both light and dark renders
+  - '100% spec compliance: correct 8×8 board, proper algebraic notation, h1 light
+    square'
+  - 'Excellent visual quality: no overlap, all elements clearly visible, appropriate
+    layout and canvas use'
+  - Data is factually correct standard chess board with neutral educational context
+  - Clean KISS code structure with deterministic output
   weaknesses:
-  - Could add hover tooltips showing square names (e.g., e4) for enhanced interactivity
-  image_description: The plot displays a classic 8x8 chess board with alternating
-    cream (#F0D9B5) and brown (#B58863) squares. The board uses standard algebraic
-    notation with column labels (a-h) along the bottom axis and row labels (1-8) along
-    the left axis. The light (cream) square is correctly positioned at h1 (bottom-right
-    corner), following chess conventions. Each square has a subtle brown border (#8B7355)
-    for enhanced clarity. The title "chessboard-basic · plotly · pyplots.ai" appears
-    centered at the top. The board maintains a perfect 1:1 aspect ratio with square
-    proportions, and the layout is clean with balanced white margins on all sides.
+  - 'Design Excellence below maximum: classic chess colors are appropriate but not
+    sophisticated; could add visual refinement (e.g., subtle styling, emphasis techniques)'
+  - 'Library Mastery limited to basic shape usage: could leverage plotly''s interactive
+    features more distinctively'
+  - 'Code quality: output file naming in code shows ''plot.png'' instead of ''plot-{THEME}.png''
+    (though pipeline correctly generates themed versions)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 - matches style guide requirement
+      Chrome: Title "chessboard-basic · plotly · anyplot.ai" in dark text (32px), axis labels a-h and 1-8 in dark text (24px) - all clearly readable against light background
+      Data: Chessboard with classic cream (#F0D9B5) and brown (#B58863) squares, brown borders (#8B7355) on each square for definition, correct h1 light square positioning, perfect 8×8 grid with algebraic notation
+      Legibility verdict: PASS - all text elements clearly visible, no contrast issues, professional appearance
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approximately #1A1A17 - matches style guide requirement for dark theme
+      Chrome: Title and axis labels now in light/white color, all text clearly readable against dark background - proper theme adaptation of text colors
+      Data: Chessboard colors identical to light render (#F0D9B5 cream and #B58863 brown remain constant) - correct preservation of data colors across themes only chrome flips
+      Legibility verdict: PASS - no "dark-on-dark" failures, text color properly adapted for dark background, full readability maintained
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt - all perfectly readable
+        comment: Font sizes explicitly set (title 32px, ticks 24px), all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, labels well-spaced
+        comment: No overlapping text, all labels fully spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Squares perfectly sized, fill the canvas appropriately
+        comment: All 64 squares clearly visible with borders for definition
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Cream/brown contrast is colorblind-safe, good visibility
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Perfect 1:1 ratio, board fills ~70% of canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Labels are notation-only (a-h, 1-8), appropriate for chess board
-          but no descriptive text
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle borders enhance clarity, no legend needed
+        comment: Cream vs brown has good contrast, no colorblind issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 1:1 aspect ratio, generous margins, optimal canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct, labels descriptive (a-h, 1-8)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Custom chess colors (#F0D9B5, #B58863) appropriate for spec, backgrounds
+          theme-correct, data colors constant across themes'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Classic chess colors are iconic and appropriate, but design is functional
+          rather than exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Borders add definition but otherwise minimal customization beyond
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Chess board is self-evident, clear visual hierarchy, but no interpretive
+          emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chess board grid visualization
+        comment: Correct 8x8 chess board
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 8x8 grid with proper row/column mapping
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Alternating colors, algebraic notation, h1 light square
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: correct labels, alternation, proper h1 orientation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 8x8 board displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Rows 1-8, columns a-h, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as chessboard-basic · plotly · pyplots.ai
+        comment: Title correct format, legend N/A for chess board
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete chess board with all 64 squares
+        comment: Full 8x8 board with all labels
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Standard chess board used universally in chess
+        comment: Standard chess board, neutral educational context
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
-        max: 5
-        passed: false
-        comment: Fixed 8x8 grid is correct, but no dynamic data to showcase
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 8x8, classic colors, perfect proportions
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -147,52 +174,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Simple linear structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic pattern, no randomness needed
+        comment: Deterministic output, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: Only numpy and plotly imported, both used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
+        max: 2
+        passed: false
+        comment: Code readable but doesn't follow plotly.md theme-adaptive pattern;
+          hardcoded colors and template
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Code shows 'plot.png' output instead of 'plot-{THEME}.png'; pipeline
+          generates correct themed output
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses shapes API well, generates HTML for interactivity, but could
-          leverage more Plotly features like hoverinfo
+        passed: false
+        comment: Correct plotly usage with go.Figure and add_shape, but basic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic shape usage, no leveraging of plotly-specific features; could
+          be replicated in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  - patches
-  - html-export
   patterns:
   - matrix-construction
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
