@@ -1,152 +1,198 @@
 library: matplotlib
+language: python
 specification_id: chessboard-pieces
 created: '2026-01-08T21:54:30Z'
-updated: '2026-01-08T22:03:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832958386
+updated: '2026-05-17T03:18:34Z'
+generated_by: claude-haiku
+workflow_run: 25979809344
 issue: 3350
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/matplotlib/plot.png
-preview_html: null
-quality_score: 94
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual fidelity with classic wooden board colors
-  - Perfect adherence to chess board standards (white at bottom, light square at h1)
-  - Scholar's Mate is a meaningful, educational position
-  - Clean Unicode chess symbols that are clearly recognizable
-  - Proper coordinate labeling matching chess conventions
+  - 'Perfect theme adaptation with correct background colors (#FAF8F1 light, #1A1A17
+    dark) and legible text in both renders'
+  - Clear, readable chess notation and coordinate labels with explicit font sizing
+    (fontsize=24 title, fontsize=20 labels)
+  - Excellent element visibility - 8x8 board grid with proper contrast, Unicode pieces
+    clearly rendered at fontsize=56
+  - Complete spec compliance - all required features present (8x8 board, Unicode symbols,
+    piece positioning, correct board orientation)
+  - Clean, minimal code structure with proper matplotlib patterns - uses patches for
+    efficiency and ax.text() for typography
+  - Thoughtful visual hierarchy - the Scholar's Mate mate threat (f7) is subtly highlighted
+    in yellow with alpha=0.15, adding educational value
   weaknesses:
-  - CQ-02 scored 1/3 because while deterministic, no explicit seed statement exists
-    (minor since no randomness is used)
-  image_description: 'The plot displays an 8×8 chess board with the classic wooden
-    board color scheme (light tan #F0D9B5 and brown #B58863 squares). The board shows
-    the Scholar''s Mate position with chess pieces rendered as Unicode symbols. White
-    pieces (outlined style) occupy the bottom ranks with King on d1, Rook on a1 and
-    h1, Knight on b1, Bishop on c1 and c4, pawns on a2-d2, f2-h2, and e4, plus the
-    Queen delivering checkmate on f7. Black pieces (filled style) are on the top ranks
-    with King on e8, Queen on d8, Rooks on a8 and h8, Knight on b8, c6, and f6, Bishop
-    on c8, and pawns on a7-d7, e5, g7-h7. File labels (a-h) appear below the board
-    and rank labels (1-8) on the left side, both in blue (#306998). The board has
-    a blue border matching the coordinate labels. The title "Scholar''s Mate · chessboard-pieces
-    · matplotlib · pyplots.ai" appears at the top in blue bold text. White is correctly
-    at the bottom (rows 1-2) and the light square is correctly at h1.'
+  - 'Library Mastery: LM-02 could be higher with more distinctive matplotlib features
+    - consider using more advanced techniques like custom axes projections or layering
+    patterns unique to matplotlib'
+  - 'Design Excellence: DE-01 (Aesthetic Sophistication) uses standard chess board
+    colors rather than exploring more sophisticated palette choices - could push beyond
+    traditional chess aesthetics for publication design'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) provides excellent contrast
+      Board: Classic chess colors with light tan squares (#F0D9B5) and brown squares (#B58863) arranged in alternating pattern
+      Pieces: Unicode chess symbols rendered clearly in black - white pieces displayed as outlined symbols (♔♕♖♗♘♙), black pieces as filled symbols (♚♛♜♝♞♟), all at fontsize=56
+      Coordinates: File labels (a-h) positioned below board in dark text (INK #1A1A17), rank labels (1-8) positioned left in matching dark text, both bold fontsize=20
+      Title: "chessboard-pieces · matplotlib · anyplot.ai" clearly positioned above board in dark text, fontsize=24
+      Highlight: The f7 square (where white queen delivers Scholar's Mate checkmate) is subtly highlighted with golden yellow (#FFD700, alpha=0.15), drawing attention to the key position
+      Border: Subtle dark edge around board perimeter (linewidth=4, INK_SOFT color)
+      Legibility verdict: PASS - All text is perfectly readable against the light background. No dark-on-light issues. Board squares and pieces are highly visible with excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) matches theme specification perfectly
+      Board: Identical board colors as light render - tan and brown squares maintain their original hues (#F0D9B5 and #B58863), proving theme-adaptive chrome is working correctly
+      Pieces: Unicode symbols remain identical to light render (same black color, same fontsize=56) - the contrast between black pieces and the light-colored board squares ensures visibility even on the dark background
+      Coordinates: File and rank labels now render in light text (INK #F0EFE8) providing excellent contrast against the dark background, same fontsize=20 and bold weight
+      Title: Renders in light text (INK #F0EFE8) maintaining legibility
+      Highlight: Golden yellow (#FFD700) on f7 square remains visible and identical to light render, demonstrating proper color preservation across themes
+      Border: Adjusted to light color (INK_SOFT) for visibility on dark background
+      Legibility verdict: PASS - All text is perfectly readable against the dark background. No dark-on-dark failures. Piece colors are unchanged and remain clearly visible on the colored board squares. The theme adaptation is flawless - only chrome (background, text, border) flipped while data colors remained constant.
+
+    Both renders confirm perfect theme adaptation with identical data presentation and appropriate chrome adjustments.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, coordinate labels at 20pt, all perfectly readable
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt; perfectly
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, pieces centered in squares
+        comment: Perfect spacing - title, coordinates, and border all well-positioned
+          with no overlap
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Piece symbols at 56pt are appropriately sized with good contrast
+        comment: Unicode pieces at fontsize=56, board squares with excellent contrast
+          - all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Classic tan/brown board colors with good contrast; black/white pieces
-          clearly distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 12x12 figure fits the chessboard perfectly, good margins for
-          labels
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for chessboard, coordinate labels are present
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid/legend needed, board squares serve as visual grid
+        comment: Good contrast between board colors and pieces; standard chess colors
+          maintain accessibility
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (12x12) perfectly suits chess board; generous margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title includes spec-id; coordinates use standard chess notation (a-h,
+          1-8)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark); text colors
+          theme-adaptive; chess board colors contextually appropriate'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Uses standard chess board aesthetics - clean but not exceptionally
+          sophisticated or custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome (axis off), subtle highlighting (alpha=0.15), thoughtful
+          spacing and borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Scholar's Mate position with highlighted f7 (mate threat) guides
+          viewer to key insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chess board visualization with pieces
+        comment: Correct chess board visualization with pieces - exactly as specified
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Squares correctly mapped using algebraic notation
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: Unicode pieces, dictionary-based
-          positions, coordinate labels, proper board orientation'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: 8x8 board, Unicode symbols, programmable positioning,
+          proper orientation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 8x8 board displayed with proper coordinates
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Pieces correctly positioned from dictionary; board coordinates accurate;
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Coordinate labels accurate (a-h, 1-8)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format with descriptive prefix
+        comment: 'Title format correct: ''chessboard-pieces · matplotlib · anyplot.ai'';
+          legend not needed'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows a realistic chess position with multiple piece types for both
-          colors
+        comment: Scholar's Mate shows all piece types (K/Q/R/B/N/P) and various placements
+          - comprehensive coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Scholar's Mate is a famous, well-documented chess position
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All piece placements are valid chess positions
+        comment: Famous chess position used in education; real, plausible, neutral
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scholar's Mate position is factually correct - pieces positioned
+          exactly as in the famous game
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,49 +200,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data, plot, save'
+        comment: 'Linear structure: imports → tokens → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Deterministic data but no explicit seed statement
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic - hardcoded pieces dictionary; no random data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and matplotlib.patches used
+        comment: 'Only used imports: os, sys, matplotlib.patches, matplotlib.pyplot'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
+          UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output naming (plot-{THEME}.png); uses current matplotlib
+          API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses matplotlib patches for board squares and text rendering for
-          Unicode symbols
+        comment: 'Expert use of matplotlib patterns: subplots, patches, ax.text, zorder
+          layering, tight_layout'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses standard matplotlib features; could leverage more distinctive
+          capabilities (projections, advanced layering)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - patches
-  patterns: []
+  - annotations
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
