@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:18:16Z'
-updated: '2026-05-17T17:37:23Z'
+updated: '2026-05-17T17:44:36Z'
 generated_by: claude-haiku
 workflow_run: 25997815712
 issue: 3417
@@ -12,42 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Perfect theme adaptation - both renders fully readable with correct backgrounds
-    and text colors
-  - Complete spec compliance - all required biplot elements present (observation scores,
-    loading vectors, labels, variance explained %)
-  - Okabe-Ito palette correctly applied with brand green (#009E73) as first series
-    across both themes
-  - Clean, deterministic code with proper imports and StandardScaler + PCA decomposition
-  - Well-positioned labels with intelligent offset logic preventing overlap between
-    elements
+  - 'Excellent visual quality: all text explicitly sized and readable in both themes'
+  - 'Flawless theme compliance: data colors identical across light/dark, chrome perfectly
+    adapted'
+  - Correct biplot implementation with proper loading vector scaling
+  - Clean, reproducible code with zero dependencies issues
+  - Perfect specification compliance and data quality
+  - Well-balanced canvas utilization and layout
   weaknesses:
-  - Design Excellence is minimal - uses default styling without custom refinements
-    (no spine removal, generic typography, basic grid)
-  - Library Mastery is standard - doesn't showcase plotly-specific interactive features
-    or advanced customizations
-  - No additional reference elements (e.g., unit circle for correlation biplot) to
-    enhance interpretability
+  - 'Design Excellence is modest: implementation is competent but generic (DE-01=4,
+    no visual hierarchy in DE-03=2)'
+  - Limited use of Plotly-specific features; could leverage more sophisticated annotation
+    patterns
+  - Loading vectors rendered in muted color reduce visual prominence; arrows could
+    be more visually distinctive
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), properly set - not pure white
-      Chrome: Title, axis labels ("PC1 (73.0%)", "PC2 (22.9%)"), tick labels all dark (#1A1A17) and clearly visible
-      Data: Three iris species - Setosa (#009E73), Versicolor (#D55E00), Virginica (#0072B2); first series is brand green ✓
-      Loading arrows: Four arrows with offset labels (sepal length, sepal width, petal length, petal width) in INK_SOFT color
-      Legend: Top-left box with elevated background (#FFFDF6), dark border, readable legend text
-      Legibility verdict: PASS - all text and markers clearly readable
+      Background: Warm off-white (#FAF8F1), correct theme color
+      Chrome: Title, axis labels (PC1 73.0%, PC2 22.99%), tick labels all dark text, clearly readable
+      Data: Three iris species as colored points (Setosa #009E73, Versicolor #D55E00, Virginica #0072B2), four loading vectors as dark gray lines with labeled arrows from origin
+      Legibility verdict: PASS - all elements readable, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), properly set - not pure black
-      Chrome: Title and axis labels now light (#F0EFE8), tick labels are INK_SOFT (#B8B7B0) - all readable, no dark-on-dark failures
-      Data: Colors identical to light render - Setosa (#009E73), Versicolor (#D55E00), Virginica (#0072B2) ✓
-      Loading arrows: Same structure and labels, now in light INK_SOFT color, clearly visible against dark background
-      Legend: Box background darker (#242420) with light border and text
-      Brand green visible: Yes, #009E73 stands out clearly on dark surface
-      Legibility verdict: PASS - all elements readable with proper theme adaptation, no dark-on-dark issues
+      Background: Warm near-black (#1A1A17), correct theme color
+      Chrome: Title, axis labels, tick labels all light text, clearly readable against dark background, no dark-on-dark failures
+      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2), loading vectors light-colored and fully visible
+      Legibility verdict: PASS - all elements readable, theme-adapted correctly
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,45 +51,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both light and dark themes
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels offset intelligently, no overlapping elements
+        comment: Arrow labels have smart offsets; no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and arrows clearly distinguishable from background
+        comment: Markers and arrows properly scaled for visibility
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette inherently CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Plot fills 65-70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with variance explained percentages
+        comment: Axes show variance percentages; descriptive title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, Okabe-Ito order followed, backgrounds correct'
+        comment: 'First series #009E73; multi-series Okabe-Ito; theme-correct backgrounds
+          and text'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -104,19 +98,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults, no custom palette or visual polish
+        comment: Well-configured default, not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Minimal customization, no spine removal or grid refinement
+        comment: Subtle grid, minimal embellishment beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: No visual hierarchy or emphasis techniques
+        comment: Technical display without visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +120,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PCA biplot with scores and loadings
+        comment: Correct biplot with scores and loadings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present - observation scores, loading arrows, variable
-          labels, variance explained
+        comment: 'All features present: points, arrows, labels, variance explained'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: PC1 vs PC2 correct, all data visible
+        comment: PC1/PC2 correctly mapped; all observations visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend matches iris species groups
+        comment: Title format correct; legend labels match species
     data_quality:
       score: 15
       max: 15
@@ -155,19 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of biplot - scores, loadings, labels
+        comment: All species and features well-represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is real-world and neutral
+        comment: Classic iris dataset, neutral and scientific
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data ranges make sense for iris measurements
+        comment: Variance explained and scaling factually correct
     code_quality:
       score: 10
       max: 10
@@ -177,31 +170,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: Linear flow without unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: load_iris() is deterministic, StandardScaler and PCA are reproducible
+        comment: Deterministic iris dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, plotly, sklearn)
+        comment: All imports used, no dead code
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Clean, Pythonic, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Correct output format and current API
     library_mastery:
       score: 6
       max: 10
@@ -211,24 +204,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses plotly.graph_objects correctly, follows standard patterns
+        comment: Proper Plotly Graph Objects usage; solid patterns
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Generic usage - doesn't showcase plotly-specific interactive features
+        comment: Generic usage without distinctive Plotly features
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
-  - html-export
+  - custom-legend
   patterns:
   - dataset-loading
   - iteration-over-groups
   dataprep:
   - pca
   - normalization
-  styling: []
+  styling:
+  - edge-highlighting
