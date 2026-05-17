@@ -12,7 +12,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import type { PlotImage } from '../types';
-import { BATCH_SIZE, type ImageSize } from '../constants';
+import { BATCH_SIZE, LANG_DISPLAY, LANG_EXT, type ImageSize } from '../constants';
 import { useCodeFetch } from '../hooks';
 import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
 import { useThemedPreviewUrl } from '../utils/themedPreview';
@@ -70,11 +70,17 @@ export const ImageCard = memo(function ImageCard({
   const [copyState, setCopyState] = useState<'idle' | 'loading' | 'copied'>('idle');
 
   // Library display: in compact mode - hidden on xs, abbreviated otherwise
-  // In normal mode - always show full name
+  // In normal mode - always show full name. Compact mode embeds the language
+  // as a file-extension suffix on the abbreviation (e.g. "mpl.py", "ggplot2.r")
+  // so the row stays as two tokens — normal mode shows language as a separate
+  // middot-token between spec-id and library.
   const showLibrary = imageSize === 'normal' || !isXs;
+  const langExt = LANG_EXT[image.language];
   const libraryDisplay = imageSize === 'compact'
-    ? (LIBRARY_ABBR[image.library] || image.library)
+    ? `${LIBRARY_ABBR[image.library] || image.library}${langExt ? '.' + langExt : ''}`
     : image.library;
+  const languageDisplay = LANG_DISPLAY[image.language] || image.language;
+  const showLanguageToken = imageSize === 'normal' && !!image.language && showLibrary;
 
   // Stable click handler - calls onClick with image
   const handleClick = useCallback(() => {
@@ -281,6 +287,24 @@ export const ImageCard = memo(function ImageCard({
             {image.spec_id}
           </Typography>
         </Tooltip>
+
+        {showLanguageToken && (
+          <>
+            <Typography sx={{ color: 'var(--ink-muted)', fontSize: labelFontSize }}>·</Typography>
+            <Typography
+              aria-label={`Language: ${languageDisplay}`}
+              sx={{
+                fontSize: labelFontSize,
+                letterSpacing: labelLetterSpacing,
+                fontWeight: 400,
+                fontFamily: typography.fontFamily,
+                color: 'var(--ink-muted)',
+              }}
+            >
+              {languageDisplay}
+            </Typography>
+          </>
+        )}
 
         {showLibrary && (
           <>

@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 import { colors, typography } from '../theme';
+import { LANG_DISPLAY } from '../constants';
 
 const DESCRIPTIONS: Record<string, string> = {
   matplotlib: 'The foundation. Publication-ready figures with total control.',
@@ -11,15 +12,18 @@ const DESCRIPTIONS: Record<string, string> = {
   pygal: 'Minimalistic SVG charts with a clean API.',
   highcharts: 'Interactive web charts, stock charts, and maps.',
   letsplot: 'Grammar of graphics by JetBrains. Interactive.',
+  ggplot2: 'The reference grammar of graphics. R’s expressive plotting standard.',
 };
 
 interface LibraryCardProps {
   name: string;
+  language?: string;
   count?: number;
   onClick: () => void;
 }
 
-export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
+export function LibraryCard({ name, language, count, onClick }: LibraryCardProps) {
+  const langLabel = language ? (LANG_DISPLAY[language] || language).toUpperCase() : null;
   return (
     <Box
       component="button"
@@ -64,14 +68,40 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
         },
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Box sx={{
-          fontFamily: typography.mono,
-          fontSize: '15px',
-          fontWeight: 700,
-          color: 'var(--ink)',
-        }}>
-          {name}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          {langLabel && (
+            <Box
+              aria-label={`Language: ${langLabel}`}
+              sx={{
+                fontFamily: typography.mono,
+                fontSize: '9px',
+                fontWeight: 600,
+                color: 'var(--ink-muted)',
+                bgcolor: 'var(--bg-elevated)',
+                border: '1px solid var(--rule)',
+                borderRadius: '4px',
+                px: 0.75,
+                py: 0.25,
+                letterSpacing: '0.08em',
+                lineHeight: 1.4,
+                flexShrink: 0,
+              }}
+            >
+              {langLabel}
+            </Box>
+          )}
+          <Box sx={{
+            fontFamily: typography.mono,
+            fontSize: '15px',
+            fontWeight: 700,
+            color: 'var(--ink)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {name}
+          </Box>
         </Box>
         {count != null && (
           <Box sx={{
@@ -79,6 +109,7 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
             fontSize: '10px',
             color: 'var(--ink-muted)',
             letterSpacing: '0.08em',
+            flexShrink: 0,
           }}>
             {count} examples
           </Box>
