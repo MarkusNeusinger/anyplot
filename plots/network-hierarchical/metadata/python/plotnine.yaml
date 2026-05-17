@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:38:20Z'
-updated: '2026-05-17T06:25:05Z'
+updated: '2026-05-17T06:29:05Z'
 generated_by: claude-haiku
 workflow_run: 25983330934
 issue: 3343
@@ -12,38 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Excellent visual quality: readable in both light and dark themes; no contrast
-    failures'
-  - 'Perfect spec compliance: hierarchical structure, realistic data, correct title/legend'
-  - Clean, reproducible code with zero dependencies beyond stdlib
-  - Theme-adaptive styling correctly handles both light (#FAF8F1/#F0EFE8) and dark
-    (#1A1A17/#1A1A17) surfaces
-  - 'Thoughtful hierarchy: node sizes and colors encode organizational depth effectively'
-  - 'Okabe-Ito palette used correctly (positions 1–4, first series is #009E73)'
+  - Flawless palette compliance with perfect Okabe-Ito implementation and theme-adaptive
+    chrome in both renders
+  - Successfully implements network visualization in plotnine without matplotlib workaround,
+    using native geoms creatively
+  - All text legible and readable in both light and dark themes with proper contrast
+    and sizing
+  - Clean, well-structured code with appropriate complexity and zero unnecessary engineering
+  - Excellent data quality with real-world organizational scenario showing complete
+    hierarchy
+  - Proper visual hierarchy through node positioning, sizing by level, and color encoding
   weaknesses:
-  - 'DE-01 LOW: Generic design — uses defaults without additional polish'
-  - 'DE-02 LOW: Minimal visual refinement — straightforward approach with no custom
-    styling beyond requirements'
-  - 'LM-02 LOW: No distinctive plotnine features — manual layout is workaround for
-    plotnine''s lack of network support'
+  - Library Mastery score is lower due to manual position calculation being a workaround
+    rather than distinctive plotnine patterns (inherent to the network-graph approach)
+  - Level 3 team member nodes could be slightly larger (currently 6pt, could increase
+    to 8pt for better visibility)
+  - Design Excellence could improve with additional visual emphasis or focal points
+    to push toward publication-ready level
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with clean, bright appearance
-      Chrome: Title (dark text, 24pt, centered) clearly readable; all node labels (size 9, dark text) readable
-      Data: CEO in teal (#009E73, size 16); VPs in orange (#D55E00, size 12); Directors in blue (#0072B2, size 9); Team in pink (#CC79A7, size 6); edges in soft gray with alpha 0.7
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 (correct per style guide, not pure white)
+      Chrome: Title, node labels, and legend all rendered in dark INK color (#1A1A17), clearly visible and readable. No illegible text.
+      Data: CEO node in brand green #009E73, VPs in orange #D55E00, Directors in blue #0072B2, Team in reddish purple #CC79A7. All nodes positioned in clear hierarchical levels with connecting edges in subtle gray. Legend at bottom clearly labeled "Hierarchy Level" with 4 level entries.
+      Legibility verdict: PASS - All text readable, no overlaps, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle dark tone
-      Chrome: Title (light text, #F0EFE8) clearly readable; all node labels (light text) readable; no dark-on-dark failures
-      Data: Data colors identical to light render (only chrome adapted). Edges appear lighter, properly visible on dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 (correct per style guide, not pure black)
+      Chrome: Title and labels rendered in light INK color (#F0EFE8), clearly visible against dark background. Legend background is elevated surface #242420 with light text. No dark-on-dark failures detected.
+      Data: All data colors identical to light render—CEO still #009E73 (brand green clearly visible), VPs still #D55E00, Directors still #0072B2, Team still #CC79A7. Edges rendered in light gray, visible and not hidden. Theme-adaptive chrome properly applied.
+      Legibility verdict: PASS - All text readable, proper theme adaptation, no dark-on-dark issues, data colors maintain identity across themes
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,66 +54,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title at 24pt, labels at size=9, perfectly readable in both themes
+        comment: 'All fonts explicitly sized: title 24pt, labels 16pt, node names
+          9pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Hierarchical layout prevents overlap; bottom labels snug but readable
+        comment: Minor crowding in middle levels (directors) but no text collisions
+          or unreadable elements.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 22 nodes visible; edge colors appropriate; node sizes scale well
+        comment: Nodes scaled 16-6pt by level. Deepest level slightly small but still
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe
+        comment: Okabe-Ito palette, colorblind-safe, adequate contrast across all
+          series.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format at 4800×2700px; proportions correct; nothing cut off
+        comment: 4800x2700 landscape. Plot fills ~70% of canvas with balanced, generous
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; axes removed (appropriate for network)
+        comment: Title format correct. No axis elements (appropriate for network).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito 1→4; backgrounds correct; both renders
-          theme-correct'
+        comment: 'Perfect Okabe-Ito: CEO=#009E73, VPs=#D55E00, Directors=#0072B2,
+          Team=#CC79A7. Backgrounds and chrome correct in both themes.'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Generic defaults; no custom design flourishes beyond requirements
+        comment: Professional color choice and intentional hierarchy. Looks like well-configured
+          default, not custom/publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Minimal customization; standard practice for network plots
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good hierarchy; size/color encode depth; clear focal point (CEO)
+        comment: No grid/axes (appropriate). Clean edges, generous whitespace, legend
+          well-positioned with border.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy through positioning and sizing. Org structure immediately
+          apparent. Could emphasize focal points more.
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hierarchical tree layout with 4 levels
+        comment: Correct hierarchical network with tree layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, edges, levels, realistic organizational data
+        comment: 'All spec features present: nodes, edges, labels, hierarchy levels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; all nodes displayed
+        comment: All 22 nodes visible, 20 edges correct, positioning proper across
+          levels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows all hierarchy levels
+        comment: Title format correct. Legend labels match data accurately.
     data_quality:
       score: 15
       max: 15
@@ -148,19 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates all hierarchical aspects
+        comment: 'Shows all hierarchy aspects: CEO, VPs, Directors, Team across 4
+          levels.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software company org chart with realistic roles
+        comment: Real organizational scenario, neutral, credible roles and structure.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22 nodes, 4 levels, readable without clutter
+        comment: Node counts realistic (1-3-6-12). Proportions reflect typical org
+          structure.
     code_quality:
       score: 10
       max: 10
@@ -170,48 +184,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward flow
+        comment: 'Linear structure: imports → data → positions → plot → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic
+        comment: Deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports (os, pandas, plotnine). All used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Clean, readable, appropriate complexity. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses ANYPLOT_THEME env var
+        comment: Saves as plot-{THEME}.png correctly.
     library_mastery:
       score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: ggplot composition, appropriate geoms, proper aes() mapping
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Manual layout is workaround for plotnine limitation; no distinctive
-          features
+        comment: Correct ggplot + geoms pattern. Manual positioning is workaround
+          rather than leveraging library patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic geom combination (point, segment, text). Same approach would
+          work in matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -219,6 +234,7 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome

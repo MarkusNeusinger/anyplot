@@ -1,7 +1,7 @@
 """ anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-17
+Quality: 88/100 | Updated: 2026-05-17
 """
 
 import os
