@@ -1,0 +1,253 @@
+library: ggplot2
+language: r
+specification_id: parliament-basic
+created: '2026-05-17T13:53:48Z'
+updated: '2026-05-17T13:57:50Z'
+generated_by: claude-haiku
+workflow_run: 25992701725
+issue: 2499
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Perfect theme-adaptive styling with correct chrome tokens applied to both renders
+  - All text elements properly sized and readable in both light (#FAF8F1) and dark
+    (#1A1A17) themes
+  - Okabe-Ito palette correctly applied with first series as brand green (#009E73),
+    multi-series colors in canonical order
+  - Correct parliament chart geometry with semicircular arrangement and proper coordinate
+    mapping using coord_fixed()
+  - Data colors are identical between light and dark renders; only chrome changes
+    appropriately
+  - Clean, idiomatic ggplot2 code with proper use of shape=21 (circle with outline),
+    aes mappings, and theme composition
+  - Realistic and appropriate example data with 7 parties and plausible seat distribution
+    totaling 620 seats
+  - Zero overlapping elements; all markers clearly visible and distinguishable at
+    full resolution
+  weaknesses:
+  - dplyr and tidyr libraries imported but not used in code — recommend removing unused
+    imports
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Title: "parliament-basic · ggplot2 · anyplot.ai" centered at top, dark text (INK color) at 24pt, clearly readable
+      Data representation: Semicircular parliament arrangement with 620 individual seat dots arranged in concentric arcs from center outward
+      Colors: Okabe-Ito palette in correct order — green (#009E73) forms the majority center, followed by orange (#D55E00), blue (#0072B2), purple (#CC79A7), yellow (#F0E442), sky blue (#56B4E9), orange at edges
+      Legend: Right side, showing 7 party names, legend text at 16pt in dark color (INK_SOFT), legend frame uses ELEVATED_BG (#FFFDF6)
+      Axes: Hidden (no axis lines, ticks, or labels) — appropriate for parliament visualization
+      Grid: Removed — appropriate, no clutter
+      Overall legibility: PASS — all text readable, all markers clearly visible, no overlaps, excellent contrast between elements and background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Title: Same format, now rendered in light text (INK color for dark theme at #F0EFE8), clearly readable against dark background
+      Data representation: Identical semicircular parliament arrangement with same 620 seat dots in same positions
+      Colors: Data colors are IDENTICAL to light render — green (#009E73), orange, blue, purple, yellow all maintain exact same hex values. Only chrome changed, not data colors. ✓
+      Legend: Light text (INK_SOFT for dark theme at #B8B7B0), legend frame now uses dark ELEVATED_BG (#242420)
+      Axes: Hidden as in light render
+      Grid: Removed as in light render
+      Theme readability: PASS — no dark-on-dark text failures, all text is light-colored and readable on dark background, brand green (#009E73) is still highly visible and distinguishable
+      Chrome flip: Perfect — only background, text, and legend box colors changed; all data colors remain identical between themes
+
+    Both renders: Theme-adaptive styling correctly implemented with proper token application. Legibility verdict for both: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 24pt, legend 16pt, all text explicitly sized and readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, all fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers size=5 perfectly adapted for 620 seats, alpha=0.85 provides
+          visibility
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe, good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape format with balanced margins, plot fills 60-70% of
+          canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title in correct format; axes appropriately hidden
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order preserved, backgrounds #FAF8F1/#1A1A17
+          correct, data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional polish with intentional radial hierarchy, uses standard
+          Okabe-Ito palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, generous margins, legend styled with
+          ELEVATED_BG
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point with center mass showing majority; radial arrangement
+          guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parliament seat chart in semicircular arrangement
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All requirements met: semicircular arcs, individual seat dots, color
+          by party, legend with names'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Seat positions correctly mapped to semicircular geometry, all 620
+          seats displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct 'parliament-basic · ggplot2 · anyplot.ai', legend
+          shows party names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 7 parties with varied seat counts, majority and
+          minorities represented'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic election scenario with plausible party names and neutral
+          representation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 620 total seats appropriate for national parliament, proportions
+          factually correct
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Straightforward structure: imports → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42), hardcoded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: dplyr and tidyr imported but not used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic ggplot2, no over-engineering or fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png using current ggsave API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ggplot2 grammar: geom_point, scale_manual, coord_fixed,
+          proper theming'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses ggplot2-specific features: shape=21 with stroke, theme_minimal
+          + custom theme composition, proper chrome token mapping'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

@@ -1,154 +1,177 @@
 library: bokeh
+language: python
 specification_id: parliament-basic
 created: '2026-01-09T08:19:57Z'
-updated: '2026-01-09T08:28:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845567797
+updated: '2026-05-17T13:52:07Z'
+generated_by: claude-haiku
+workflow_run: 25992425009
 issue: 2499
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/bokeh/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent semicircular seat arrangement with 8 concentric arcs
-  - Colorblind-friendly palette with distinct hues
-  - Clean legend showing party names with seat counts
-  - Proper majority threshold annotation
-  - Good use of Bokeh ColumnDataSource and Legend models
-  - Dual output format (PNG and HTML)
-  - White edge highlighting on seats improves visibility
+  - Excellent theme-adaptive color scheme — both light and dark renders perfectly
+    readable with no color-on-color failures
+  - 'Correct Okabe-Ito palette usage with first series #009E73'
+  - Accurate semicircular parliament visualization with proper concentric arc arrangement
+  - Clean, simple code structure with deterministic, reproducible output
+  - Proper legend placement and majority threshold annotation
+  - All required specification features implemented correctly
+  - Strong data quality with realistic political party representation
   weaknesses:
-  - Legend text could be slightly larger for better readability at full resolution
-  - Seat dots could be marginally larger to better fill the canvas space
-  image_description: 'The plot displays a semicircular parliament seat chart with
-    400 total seats arranged in 8 concentric arcs. Individual seats are rendered as
-    colored dots with white borders. The visualization uses 6 political parties: Progressive
-    Alliance (85 seats, red), Green Coalition (42, green), Center Party (58, yellow),
-    Liberal Democrats (67, dark red/maroon), Conservative Union (92, purple), and
-    National Front (56, darker purple). The seats flow from left to right through
-    the semicircle, with each party''s seats appearing consecutively. A horizontal
-    legend at the bottom shows all parties with their seat counts. The title "parliament-basic
-    · bokeh · pyplots.ai" appears at the top center, and "Majority threshold: 201
-    seats (Total: 400)" annotation is displayed below the semicircle.'
+  - Design Excellence scores are low — while the plot is clean and correct, it lacks
+    visual polish, hierarchy, or design sophistication beyond defaults
+  - No distinctive bokeh features used — interactive tooltips, hover effects, or other
+    library-specific enhancements would elevate the visualization
+  - Majority threshold text could be more visually prominent or emphasized
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "parliament-basic · bokeh · anyplot.ai" in dark text (36pt) is clearly readable. Majority threshold text "Majority threshold: 201 seats (Total: 400)" in secondary text color (28pt) is legible. Legend with party names, colored dots, and seat counts in secondary text (16pt) is readable.
+      Data: Six parties represented by concentric semicircular arcs using Okabe-Ito colors (green #009E73 innermost, followed by orange #D55E00, dark blue #0072B2, reddish purple #CC79A7, gold #E69F00, sky blue #56B4E9). Each dot is a 40px marker with white edge stroke for definition. All colors are saturated and clearly visible against the light background.
+      Legibility verdict: PASS — All elements readable, no color-on-color failures, strong contrast throughout.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title rendered in light text (#F0EFE8) and clearly readable against dark background. Majority threshold text in secondary text color (#B8B7B0) is fully legible. Legend text is adapted to dark theme and readable.
+      Data: All data colors are identical to light render (green, orange, dark blue, purple, gold, sky blue) — no color shifting between themes. Only chrome (background, text colors) adapted. All 40px markers maintain visibility and definition against dark surface.
+      Legibility verdict: PASS — No dark-on-dark failures, all text properly adapted via theme tokens (INK_SOFT), both data and chrome elements readable.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and annotations are readable; legend text is slightly small
-          but legible
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: Title 36pt, threshold 28pt, legend 16pt. All readable in both themes
+          with appropriate contrast.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements well-spaced. Legend separated below chart. No collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Seats are well-sized dots with good visibility; slightly smaller
-          than optimal for the canvas
+        comment: 40px markers clearly visible. All seats distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good colorblind-friendly palette with distinct hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Semicircle fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for parliament chart - axes correctly hidden
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed below chart, no grid needed
+        comment: Okabe-Ito palette is colorblind-safe. Strong contrast throughout.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×3200px landscape. No clipping. Generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title clearly identifies chart type. No axes needed for parliament
+          type.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Multi-series follows Okabe-Ito order. Backgrounds
+          #FAF8F1/#1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean, professional defaults using Okabe-Ito palette. No custom design
+          innovation or exceptional visual polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Axes hidden, marker edges provide definition. Minimal styling beyond
+          defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Clear parliament structure. Left-to-right spectrum ordering aids
+          understanding. No visual hierarchy or emphasis.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct semicircular parliament seat chart
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Seats correctly arranged by party in arcs
-      - id: SC-03
+        comment: Correct semicircular parliament seat chart with individual dots.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has seats in arcs, party colors, legend with counts, majority threshold;
-          missing explicit left-to-right political spectrum ordering
-      - id: SC-04
-        name: Data Range
+        comment: Semicircular arcs, individual seats, legend with counts, majority
+          threshold all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 400 seats displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Parties assigned sequentially. Semicircular positioning correct.
+          Colors map correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows correct party names with seat counts
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format; minor inconsistency between annotation text and code
-          comment
+        comment: Title format correct. Legend labels match spec.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple parties with varying seat counts; good distribution
-          demonstration
+        comment: 6 parties, 400 total seats. Realistic parliament size with good seat
+          distribution coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Changed from corporate board to political parties; parties are fictional
-          and neutral
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 400 seats is realistic for a parliament, seat counts are plausible
+        comment: Plausible party seat counts. Generic names are neutral. Left-to-right
+          spectrum ordering reflects real legislative convention.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 400 seats is realistic parliament size. Party distributions are plausible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,48 +179,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script structure, no functions/classes
+        comment: No classes/functions. Straightforward procedural logic.
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: No random seed, but data is deterministic
+        comment: Deterministic seat assignments and positioning.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy, bokeh, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Appropriate complexity for semicircular geometry. No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
       score: 4
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, manual Legend construction, scatter
-          with line_color; HTML export included
+        comment: ColumnDataSource used appropriately. Standard bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No advanced bokeh features. HoverTool for tooltips would enhance
+          interactivity. Basic scatter and text only.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - custom-legend
-  - annotations
   - html-export
   patterns:
   - data-generation
@@ -205,6 +233,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
-  - edge-highlighting
-  - alpha-blending
+  - publication-ready
