@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(ragg)
 
 set.seed(42)
@@ -16,6 +15,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID        <- if (THEME == "light") "#D4D4D0" else "#3A3A36"
 OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
                  "#E69F00", "#56B4E9", "#F0E442")
 
@@ -37,9 +37,10 @@ anyplot_theme <- theme_minimal(base_size = 14) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major  = element_line(color = GRID, linewidth = 0.2),
     panel.grid.minor  = element_blank(),
-    panel.border      = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.5),
+    panel.border      = element_blank(),
+    axis.line         = element_line(color = INK_SOFT, linewidth = 0.4),
     axis.title        = element_text(color = INK, size = 20, face = "plain"),
     axis.text         = element_text(color = INK_SOFT, size = 16),
     axis.ticks        = element_blank(),
@@ -59,17 +60,17 @@ df_views <- rbind(
   df %>% mutate(
     x_val = Sepal.Length,
     y_val = Sepal.Width,
-    view_name = "Sepal Dimensions"
+    view_name = "Sepal Length vs Width (cm)"
   ),
   df %>% mutate(
     x_val = Sepal.Length,
     y_val = Petal.Length,
-    view_name = "Sepal vs Petal Length"
+    view_name = "Sepal vs Petal Length (cm)"
   ),
   df %>% mutate(
     x_val = Petal.Length,
     y_val = Petal.Width,
-    view_name = "Petal Dimensions"
+    view_name = "Petal Length vs Width (cm)"
   )
 )
 
@@ -80,8 +81,8 @@ p <- ggplot(df_views, aes(x = x_val, y = y_val, color = Species)) +
   facet_wrap(~view_name, scales = "free", ncol = 3) +
   labs(
     title = "linked-views-selection · ggplot2 · anyplot.ai",
-    x = "",
-    y = "",
+    x = "Measurement (cm)",
+    y = "Measurement (cm)",
     color = "Species"
   ) +
   anyplot_theme
