@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:22:30Z'
-updated: '2026-05-17T12:33:07Z'
+updated: '2026-05-17T12:53:50Z'
 generated_by: claude-haiku
 workflow_run: 25987521018
 issue: 3237
@@ -12,166 +12,167 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/highcharts/plot-dark.html
-quality_score: 24
+quality_score: 84
 review:
   strengths:
-  - 'Theme tokens fully wired: PAGE_BG, ELEVATED_BG, INK, INK_SOFT, GRID all correctly
-    derived from ANYPLOT_THEME and applied throughout chart config'
-  - 'Correct Okabe-Ito palette defined and assigned: Close=#009E73 (first series),
-    SMA=#D55E00, Bands=#0072B2'
-  - 'Bollinger Band data generation is technically correct: 20-period rolling SMA
-    + 2 standard deviations, NaN rows dropped'
-  - arearange series with fillOpacity for band fill is the right Highcharts approach
-  - Font sizes explicitly set throughout (title 28px, axis labels 22px, tick labels
-    18px)
-  - Both HTML artifacts saved correctly alongside PNGs
+  - Perfect spec compliance — all Bollinger Band components present with correct parameters
+    (20-period SMA, 2σ bands, fill, dashed bands, dotted SMA)
+  - 'Correct theme-adaptive chrome throughout: all text, grid, background, legend
+    use ANYPLOT_THEME tokens; both renders pass legibility checks'
+  - Good visual hierarchy via z-index + line style differentiation (solid/dash/dot)
+    and color assignment
   weaknesses:
-  - 'CRITICAL rendering failure: chart renders blank in both themes. Root cause: highcharts.js
-    and highcharts-more.js downloaded from public CDN at runtime; if network request
-    fails in CI environment the fallback ''// Highcharts JS unavailable'' is embedded,
-    Highcharts is undefined in the browser, and the chart silently fails producing
-    a blank canvas'
-  - 'Does not use highcharts_core Python API: library guide recommends Chart(container=''container'')
-    + HighchartsOptions() + typed series classes; raw-JS f-string approach bypasses
-    type safety and is harder to maintain'
-  - 'CDN fallback is silent: the except clause sets highcharts_js to a comment string
-    instead of raising an exception, so the pipeline cannot detect the download failure'
+  - Does not use highcharts_core Python API (Chart, HighchartsOptions, typed series);
+    builds raw JS strings instead — violates library guide idiomatic pattern
+  - Default Highcharts plot frame/border not removed; top/right axis lines persist;
+    reduces visual refinement score
+  - Grid uses Dash style which is slightly heavier than ideal; no explicit spine/frame
+    removal
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct theme surface
-      Chrome: No title, no axis labels, no tick labels visible — chart failed to render
-      Data: No data lines, no Bollinger Band fill, no legend visible
-      Legibility verdict: FAIL — rendering failure; chart is completely blank. Only the background color is present.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "indicator-bollinger · highcharts · anyplot.ai" in dark INK (#1A1A17); axis labels "Date" and "Price (USD)" in dark INK; tick labels in INK_SOFT (#4A4A44); legend with ELEVATED_BG frame — all clearly readable
+      Data: Close price solid green #009E73; 20-Day SMA dotted orange #D55E00; Bollinger Bands dashed blue #0072B2 with semi-transparent fill (fillOpacity 0.2)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black matching #1A1A17 — correct dark theme surface
-      Chrome: No title, no axis labels, no tick labels visible — chart failed to render; no dark-on-dark issue observed because nothing rendered
-      Data: No data lines, no Bollinger Band fill, no legend visible; data colors cannot be confirmed
-      Legibility verdict: FAIL — rendering failure; chart is completely blank. Only the background color is present.
+      Background: Near-black #1A1A17 — correct
+      Chrome: Title and axis labels in INK (#F0EFE8 light text); tick labels in INK_SOFT (#B8B7B0); legend with ELEVATED_BG (#242420) frame — all clearly readable; no dark-on-dark text issues
+      Data: Colors identical to light render — green #009E73 close price, orange #D55E00 SMA, blue #0072B2 band fill/lines; band fill appears as subtle teal-blue area on dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 8
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: No text rendered; chart blank due to rendering failure
+        passed: true
+        comment: Font sizes correct (title 28px, axis 22px, ticks 18px, legend 18px);
+          both themes readable; minor deduction for legend density
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Trivially true; nothing rendered
+        comment: No significant overlaps; legend slightly dense but readable
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 5
         max: 6
-        passed: false
-        comment: No data elements visible; chart failed to render
+        passed: true
+        comment: All series visible; SMA dotted line could be slightly more prominent
+          against the band fill
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Backgrounds are theme-correct; data contrast unverifiable
+        passed: true
+        comment: Okabe-Ito is CVD-safe; no red-green sole differentiator
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 3
         max: 4
-        passed: false
-        comment: Empty canvas; no plot content
+        passed: true
+        comment: 4800x2700, generous margins (T:200, B:250, L:200, R:150); nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: No labels or title visible
+        passed: true
+        comment: Date and Price (USD) descriptive; title format correct
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Both theme backgrounds correct (#FAF8F1 light / #1A1A17 dark); data
-          palette unverifiable due to render failure'
+        passed: true
+        comment: 'Close price gets #009E73; SMA #D55E00; bands #0072B2; backgrounds
+          #FAF8F1/#1A1A17'
     design_excellence:
-      score: 0
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 0
+        score: 5
         max: 8
-        passed: false
-        comment: Nothing rendered
+        passed: true
+        comment: Above default; correct Okabe-Ito palette, semi-transparent band fill,
+          dash/dot differentiation; legend with elevated background and border
       - id: DE-02
         name: Visual Refinement
-        score: 0
+        score: 3
         max: 6
         passed: false
-        comment: Nothing rendered
+        comment: Default Highcharts plot frame visible; grid is dashed which is heavier
+          than ideal; dash/dot styles distinguish series well; top/right spines not
+          explicitly removed
       - id: DE-03
         name: Data Storytelling
-        score: 0
+        score: 4
         max: 6
-        passed: false
-        comment: Nothing rendered
+        passed: true
+        comment: Clear visual hierarchy (solid green price > dashed blue bands > dotted
+          orange SMA); z-index ensures price is always on top
     spec_compliance:
-      score: 0
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: Cannot verify; chart blank
+        passed: true
+        comment: Correct Bollinger Bands chart (line + arearange)
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Cannot verify; chart blank
+        passed: true
+        comment: Close price line, upper band, lower band, SMA middle band, semi-transparent
+          band fill, 20-period/2σ parameters noted
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Cannot verify; chart blank
+        passed: true
+        comment: 'X: datetime axis; Y: price (USD); 100 periods after dropna'
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Title not visible
+        passed: true
+        comment: 'Title: indicator-bollinger · highcharts · anyplot.ai; legend shows
+          all five series'
     data_quality:
-      score: 5
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: Cannot verify from image
+        passed: true
+        comment: 'Shows all aspects: price, upper/lower bands, SMA, filled envelope'
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Code shows plausible stock price data (120 trading days, ~$150 starting
-          price, GARCH-like volatility)
+        comment: Synthetic stock price with GARCH-like volatility clustering; neutral
+          financial context
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: 20-period SMA and 2-sigma bands calculated correctly; pricing scale
-          realistic
+        comment: Start price $150, realistic movements; 20-day window, 2σ bands; business-day
+          date range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,52 +180,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data generation -> chart config -> HTML -> screenshot'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (json, os, tempfile, time, urllib, numpy, pandas, selenium)
-          are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Uses raw JavaScript instead of highcharts_core Python API; otherwise
-          clean
+        passed: true
+        comment: No fake UI; clean data pipeline; proper arearange usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 2
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Bypasses highcharts_core Python API entirely; constructs raw JS strings
-          instead of using Chart() + HighchartsOptions() + typed series classes
+        comment: Bypasses highcharts_core Python API entirely; builds raw JS string
+          instead of using Chart(container='container'), HighchartsOptions, and typed
+          series classes
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Cannot verify rendered output; arearange series for band fill would
-          be a distinctive Highcharts feature if it rendered
-  verdict: REJECTED
+        passed: true
+        comment: arearange series type for band envelope fill; zIndex layering; enableMouseTracking
+          false on background series; shared crosshair tooltip; per-series dashStyle
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
