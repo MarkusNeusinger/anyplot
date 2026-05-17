@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: boxen-basic
 created: '2026-05-17T08:58:34Z'
-updated: '2026-05-17T09:09:07Z'
+updated: '2026-05-17T09:16:06Z'
 generated_by: claude-haiku
 workflow_run: 25986442262
 issue: 3414
@@ -12,167 +12,178 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.html
-quality_score: 46
+quality_score: 62
 review:
   strengths:
-  - Data is realistic (response times by endpoint) with proper random seed
-  - Quantile calculations are mathematically correct
-  - Outliers are properly identified and displayed
-  - Output files are correctly named (plot-light.png, plot-dark.png, HTML exports)
+  - Clean, reproducible code with proper theme token usage (INK, INK_MUTED)
+  - Correct Okabe-Ito palette application and theme-adaptive colors across both light
+    and dark renders
+  - Accurate letter value calculations and realistic server-response-time data distributions
+  - 'All required features present: five quantile levels (sixteenths, eighths, quartiles,
+    median) plus outliers'
+  - Both light and dark renders are readable except for legend clutter; theme chrome
+    correctly adaptive
   weaknesses:
-  - 'First series uses yellow/orange instead of #009E73 (brand green) - palette compliance
-    violation'
-  - Severe overlap of many line series makes plot unreadable and prevents understanding
-    of nested boxes
-  - 'Fundamental visualization approach is broken: XY chart with overlapping lines
-    does not show nested boxes as specified'
-  - Legend is overwhelming with 16+ entries (4 endpoints × 4 quantile levels + outliers)
-  - Design lacks polish and refinement; purely generic defaults
-  - Does not visually represent the 'nested boxes' concept central to boxen plots
+  - Legend contains 20 items (5 levels × 4 endpoints) creating severe text overlap
+    and making legend completely unreadable
+  - Nested quantile levels visualized as overlapping XY scatter lines instead of actual
+    nested boxes with decreasing width as specified
+  - Overall design appears cluttered and chaotic; no visual hierarchy or emphasis
+    to guide viewer understanding
+  - Legend repeats quantile level names for each endpoint instead of showing single
+    5-item legend explaining all levels once
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme color
-      Chrome: Title "boxen-basic · pygal · anyplot.ai" is visible; axis labels ("Endpoint", "Response Time (ms)") are readable; tick labels are present but small
-      Data: Multiple series shown in yellow/orange, blue, black, and blue. Severe overlapping of many line series representing different quantile levels creates visual confusion. Outlier points are shown as small dots. Data colors show variety but palette order is non-compliant.
-      Legibility verdict: PARTIAL FAIL - While text is readable, the data representation is severely compromised by overlapping, making it very difficult to distinguish individual quantile levels and understand the distribution shape
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "boxen-basic · pygal · anyplot.ai", axis labels "Endpoint" and "Response Time (ms)" are dark text and clearly readable; tick labels visible and readable against light background
+      Data: Four endpoints (API-Auth, API-Search, API-Report, API-Download) shown with nested colored lines (green, orange, yellow, blue, pink) representing five quantile levels; outlier dots scattered; first series uses #009E73 brand green correctly
+      Grid: Subtle horizontal and vertical grid lines visible, not dominant
+      Legend: 20-item legend at top-left showing "Endpoint: Level" for all combinations; text severely overlapped and unreadable despite adequate font size
+      Legibility verdict: FAIL - Legend is completely unreadable due to severe clutter and overlap
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme color
-      Chrome: Title and axis labels are visible against dark background; tick labels present and readable (no dark-on-dark issues with text)
-      Data: Same series as light render with identical colors (yellow, blue, black, blue). The data colors carry over correctly without theme adaptation. Same severe overlap problem present.
-      Legibility verdict: PARTIAL FAIL - Text is readable, but the data visualization is fundamentally compromised by severe overlapping of many line series that prevents clear understanding of the boxen structure
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Same title and axis labels now in light text (#F0EFE8), clearly readable against dark background; no dark-on-dark failures; tick labels light-colored and readable
+      Data: Data colors (green, orange, yellow, blue, pink) identical to light render—proper color preservation across themes; outlier dots present; same nested-line visualization as light
+      Grid: Faint but visible grid lines; appropriate for dark theme
+      Legend: Identical 20-item legend; text overlapped and unreadable, same as light render
+      Legibility verdict: FAIL - Legend remains completely unreadable; however, dark-on-dark legibility issue is NOT present (text correctly light-colored). The primary failure is legend clutter, not theme-chrome readability.
   criteria_checklist:
     visual_quality:
-      score: 15
+      score: 17
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: Text readable but scattered across crowded plot
+        passed: false
+        comment: Font sizes explicitly set (28-18-16px) but legend text unreadable
+          due to severe clutter
       - id: VQ-02
         name: No Overlap
-        score: 0
+        score: 1
         max: 6
         passed: false
-        comment: 'CRITICAL: Severe overlap of many series makes plot confusing'
+        comment: 'CRITICAL: 20-item legend creates severe text overlap; legend completely
+          unreadable'
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Elements visible but overlapping prevents distinction
+        comment: Colored lines visible but confused by overlapping bundles; outlier
+          dots small
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors distinct but palette order non-compliant
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; correct palette order applied
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Well-proportioned, nothing cut off
+        comment: Reasonable canvas usage and plot fill
       - id: VQ-06
         name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Title and axis labels with units correct; legend unreadable due to
+          clutter
+      - id: VQ-07
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Title and axis labels present and descriptive
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: 'CRITICAL: First series is yellow/orange, not #009E73; backgrounds
-          are correct'
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark), data colors identical
+          across themes, chrome theme-adaptive'
     design_excellence:
-      score: 4
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 1
+        score: 3
         max: 8
         passed: false
-        comment: Generic defaults, no design thought
+        comment: Custom Style applied but visualization cluttered/chaotic, not elegant
       - id: DE-02
         name: Visual Refinement
-        score: 1
-        max: 6
-        passed: false
-        comment: No customization or refinement
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Attempts to show distributions but fails due to visualization approach
+        comment: Default pygal styling with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 1
+        max: 6
+        passed: false
+        comment: Raw data display without visual hierarchy or emphasis; confusing
+          rather than guiding
     spec_compliance:
-      score: 7
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Not a proper boxen plot; shows overlapping lines instead of nested
-          boxes
+        comment: Requires nested visual boxes with decreasing width; implementation
+          uses overlapping XY lines instead
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 3
         max: 4
         passed: false
-        comment: Missing nested box visualization; no decreasing widths; outliers
-          shown but structure broken
+        comment: Letter values and outliers present; visual nesting missing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-Y mapping correct, axes show data range properly
+        comment: X/Y correctly assigned; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: Title correct but legend is overwhelming and confusing
+        comment: Title correct; legend unreadable due to 20-item clutter
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Shows quantile levels but not in proper boxen format
+        passed: true
+        comment: All endpoints, all quantile levels, outliers shown
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Response time data is realistic and neutral
+        comment: Server response times realistic; neutral technical scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 0-1200ms is sensible for API response times
+        comment: Response time values (0-1200ms) plausible for API endpoints
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward structure
+        comment: Clean linear flow with justified helper functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -184,39 +195,40 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and pygal imported
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Clean, readable, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and .html
+        comment: Correctly saves as plot-{THEME}.png and .html
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Correct pygal.XY() and Style usage but suboptimal for nested boxes
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Attempts workaround; XY chart is not the right tool for boxen plots
-      - id: LM-02
-        name: Distinctive Features
-        score: 0
-        max: 5
-        passed: false
-        comment: No distinctive features; generic approach
+        comment: Uses custom Style but no particularly impressive distinctive features
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
