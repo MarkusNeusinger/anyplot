@@ -1,12 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-import altair as alt
-import pandas as pd
+import os
+import sys
 
+
+# Handle import conflict when script is named altair.py
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir and p not in ("", ".")]
+
+import altair as chart_module  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Chess board squares (standard colors, theme-independent)
+LIGHT_SQUARE = "#F0D9B5"
+DARK_SQUARE = "#B58863"
+BOARD_BORDER = INK_SOFT
 
 # Unicode chess pieces mapping
 PIECE_SYMBOLS = {
@@ -24,7 +43,7 @@ PIECE_SYMBOLS = {
     "p": "♟",  # Black
 }
 
-# Famous position: Scholar's Mate (checkmate in 4 moves setup)
+# Scholar's Mate position: Famous tactical pattern
 pieces = {
     # White pieces
     "a1": "R",
@@ -61,12 +80,8 @@ pieces = {
     "h7": "p",
     "e5": "p",
     "f6": "n",
-    "e7": "k",  # King exposed for Scholar's Mate setup
+    "e7": "k",  # King exposed for checkmate threat
 }
-
-# Board square colors
-LIGHT_SQUARE = "#F0D9B5"
-DARK_SQUARE = "#B58863"
 
 # Create board squares data
 files = "abcdefgh"
@@ -104,84 +119,85 @@ rank_order = list("87654321")  # Top to bottom in standard chess view
 
 # Create board squares layer
 board = (
-    alt.Chart(board_df)
-    .mark_rect(stroke="#4a3728", strokeWidth=2)
+    chart_module.Chart(board_df)
+    .mark_rect(stroke=BOARD_BORDER, strokeWidth=2)
     .encode(
-        x=alt.X(
+        x=chart_module.X(
             "file:N",
             sort=file_order,
-            axis=alt.Axis(
+            axis=chart_module.Axis(
                 title=None,
                 labelFontSize=28,
                 labelFontWeight="bold",
-                labelColor="#4a3728",
+                labelColor=INK,
                 orient="bottom",
                 ticks=False,
                 domain=False,
                 labelPadding=12,
             ),
         ),
-        y=alt.Y(
+        y=chart_module.Y(
             "rank:N",
             sort=rank_order,
-            axis=alt.Axis(
+            axis=chart_module.Axis(
                 title=None,
                 labelFontSize=28,
                 labelFontWeight="bold",
-                labelColor="#4a3728",
+                labelColor=INK,
                 orient="left",
                 ticks=False,
                 domain=False,
                 labelPadding=12,
             ),
         ),
-        color=alt.Color("color:N", scale=None, legend=None),
+        color=chart_module.Color("color:N", scale=None, legend=None),
     )
 )
 
-# White pieces with dark outline for visibility on light squares
+# White pieces with dark outline for visibility
 white_pieces = (
-    alt.Chart(white_pieces_df)
+    chart_module.Chart(white_pieces_df)
     .mark_text(fontSize=70, fontWeight="bold", stroke="#2c2c2c", strokeWidth=1.5)
     .encode(
-        x=alt.X("file:N", sort=file_order),
-        y=alt.Y("rank:N", sort=rank_order),
+        x=chart_module.X("file:N", sort=file_order),
+        y=chart_module.Y("rank:N", sort=rank_order),
         text="symbol:N",
-        color=alt.value("#FAFAFA"),
+        color=chart_module.value("#FAFAFA"),
     )
 )
 
 # Black pieces (solid black, clearly visible)
 black_pieces = (
-    alt.Chart(black_pieces_df)
+    chart_module.Chart(black_pieces_df)
     .mark_text(fontSize=70, fontWeight="bold")
     .encode(
-        x=alt.X("file:N", sort=file_order),
-        y=alt.Y("rank:N", sort=rank_order),
+        x=chart_module.X("file:N", sort=file_order),
+        y=chart_module.Y("rank:N", sort=rank_order),
         text="symbol:N",
-        color=alt.value("#1a1a1a"),
+        color=chart_module.value("#1a1a1a"),
     )
 )
 
 # Combine layers
 chart = (
-    alt.layer(board, white_pieces, black_pieces)
+    chart_module.layer(board, white_pieces, black_pieces)
     .properties(
         width=1000,
         height=1000,
-        title=alt.Title(
-            "Scholar's Mate Setup · chessboard-pieces · altair · pyplots.ai",
+        background=PAGE_BG,
+        title=chart_module.Title(
+            "Scholar's Mate Setup · chessboard-pieces · altair · anyplot.ai",
             fontSize=32,
             anchor="middle",
-            color="#333333",
+            color=INK,
             offset=20,
         ),
     )
-    .configure_view(strokeWidth=4, stroke="#4a3728")
+    .configure_view(strokeWidth=4, stroke=BOARD_BORDER, fill=PAGE_BG)
 )
 
-# Save as PNG (square format: ~3600x3600 at scale 3.6)
-chart.save("plot.png", scale_factor=3.6)
-
-# Save as HTML for interactivity
-chart.save("plot.html")
+# Save as PNG and HTML (square format: 3600x3600 at scale 3.6)
+png_path = os.path.join(script_dir, f"plot-{THEME}.png")
+html_path = os.path.join(script_dir, f"plot-{THEME}.html")
+chart.save(png_path, scale_factor=3.6)
+chart.save(html_path)
