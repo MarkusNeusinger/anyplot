@@ -1,214 +1,238 @@
 library: pygal
+language: python
 specification_id: network-weighted
 created: '2026-01-09T08:18:44Z'
-updated: '2026-01-09T08:40:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845566465
+updated: '2026-05-17T14:56:45Z'
+generated_by: claude-haiku
+workflow_run: 25993901071
 issue: 3290
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-weighted/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-weighted/pygal/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/pygal/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent edge thickness differentiation with 4 clearly distinct weight categories
-  - Force-directed layout algorithm produces readable network structure
-  - Comprehensive legends for both node regions and edge weights
-  - Realistic trade network data with meaningful variation in connection strengths
-  - Creative SVG post-processing to overcome pygal lack of native network graph support
+  - Exceptional data storytelling with edge thickness immediately communicating trade
+    importance
+  - 'Perfect theme adaptation: both renders fully readable, no dark-on-dark or light-on-light
+    failures'
+  - Thoughtful force-directed layout with weighted edge attraction creates meaningful
+    spatial relationships
+  - Professional polish with white strokes, opacity layering, and custom gray-to-green
+    gradient
+  - Comprehensive legend with trade volume ranges clearly labeled in billions USD
   weaknesses:
-  - Some node labels (particularly for smaller nodes like IND, AUS, JPN) are difficult
-    to read at full resolution
-  - Minor edge-label overlap at hub nodes where many connections converge
-  image_description: 'The plot displays a weighted network graph representing international
-    trade relationships between 13 countries. Nodes are colored by region: Americas
-    (blue - USA, CAN, MEX, BRA), Europe (black - DEU, FRA, GBR, ITA), Asia (yellow
-    - CHN, JPN, KOR, IND), and Oceania (red - AUS). Node sizes vary based on weighted
-    degree (trade volume). Edges connect trading partners with thickness representing
-    trade volume in 4 bins: thin light gray ($20-178B), medium gray ($178-335B), thick
-    dark gray ($335-493B), and very thick near-black ($493-650B). The USA-CAN and
-    USA-MEX edges are clearly the thickest, showing the strongest trade relationships.
-    The title "network-weighted · pygal · pyplots.ai" appears at top. A region legend
-    is at the bottom, along with an edge weight legend showing the 4 thickness categories.
-    Country codes (USA, CHN, etc.) are labeled on some nodes, though several labels
-    are partially obscured or very small.'
+  - 'Library mastery limited: pygal is stateful chart library; implementation works
+    around it via SVG manipulation rather than leveraging pygal''s strengths'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1, not pure white)
+      Chrome: Title in dark text, axis/tick labels clearly visible, legend at bottom with 4 trade volume ranges
+      Data: 13 country nodes colored by region (green/orange/blue/pink Okabe-Ito), edges gradient from thin gray (low volume) to thick brand-green (highest volume)
+      Legibility verdict: PASS - all text readable, high contrast between text and surface, data markers clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17, not pure black)
+      Chrome: Title and labels in light text, fully readable against dark background, no dark-on-dark failures detected
+      Data: Node colors identical to light render (data colors don't change), edge colors match exactly, regional grouping preserved
+      Legibility verdict: PASS - all text legible in light color, edges clearly visible, brand green (#009E73) prominent, no readability issues in dark mode
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
+        max: 8
         passed: true
-        comment: Title is clear. Node labels present but some are small or partially
-          cut off (JPN, IND, AUS). Major nodes (USA, CHN, MEX) clearly labeled.
+        comment: All text readable in both themes with appropriate sizing (title 28px,
+          label 22px, legend 16px)
       - id: VQ-02
         name: No Overlap
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Minor overlap where edges converge at hub nodes (USA, CHN), but generally
-          readable.
+        comment: White strokes on labels, well-positioned annotations, clean legend
+          layout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Edge thickness differences clearly visible and distinguishable. 4-tier
-          system works well.
+        comment: 13 nodes + 27 edges clearly visible with distinct weight differences,
+          no clutter
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, black, yellow, red) are colorblind-safe.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Force-directed layout effectively positions nodes with good canvas
-          utilization.
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graphs - no axes appropriate for this plot type.
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Both region legend and edge weight legend present and well-placed.
+        comment: Okabe-Ito palette CVD-safe, gray-to-green gradient avoids red-green
+          dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced 4800x2700 composition with generous margins, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title, subtitle explains weight/degree mappings, units
+          provided (billions USD)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green consistent, Okabe-Ito regions correct, backgrounds accurate
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom gray-to-green edge gradient, force-directed layout, clear
+          visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Appropriate spine removal, generous whitespace, edge opacity creates
+          layering
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear focal point (USA/China hubs), edge thickness communicates importance,
+          regional grouping reveals trading blocs
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements weighted network graph with edge thickness for
-          connection strength.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Nodes=countries, edges=trade relationships, thickness=trade volume.
-      - id: SC-03
+        comment: Correct weighted network graph
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has weighted edges, node labels, regional grouping, weight legend.
-          Node sizing by degree is subtle.
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: weighted edges, node IDs, weight
+          visualization, force-directed layout, node sizing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 nodes and 27 edges visible.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Coordinates from layout, all data visible, no clipping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both legends accurate and informative.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but spacing slightly inconsistent.
+        comment: Correct format with library and domain, legend labels match, ranges
+          labeled
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: strong connections (USA-CAN), medium, and weak.
-          Hub structure evident.'
+        comment: Comprehensive weighted network demonstration with clear variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: International trade network is perfect neutral real-world scenario.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Trade volumes $20B-$650B realistic for major trading partners.
+        comment: Trade data plausible and realistic, neutral presentation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13 countries and $20-650B range well-distributed
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Linear structure but includes complex SVG post-processing. Acceptable
-          for pygal limitations.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for consistent layout.
+        comment: Linear script with justified complexity for layout
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42), deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, pygal, cairosvg, re) are used.
+        comment: All imports used, no bloat
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, justified SVG post-processing
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly.
-    library_features:
+        comment: Correct output format and current API
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Creative use of XY chart with SVG post-processing, custom Style,
-          legend_at_bottom. Good adaptation for network visualization.
+        comment: Uses pygal.XY appropriately, Style for themes correct, but SVG post-processing
+          is workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Limited distinctive pygal features; implementation works around library
+          rather than leveraging strengths
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - custom-legend
+  - html-export
   - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
-  dataprep:
-  - normalization
-  - binning
+  - iteration-over-groups
+  dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending
