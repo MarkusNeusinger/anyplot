@@ -93,8 +93,10 @@ export const ImageCard = memo(function ImageCard({
 
     setCopyState('loading');
     try {
-      // Use cached code if available, otherwise fetch
-      const code = image.code ?? await fetchCode(image.spec_id, image.library);
+      // Use cached code if available, otherwise fetch. Pass `image.language`
+      // so R impls (ggplot2 today) hit the right DB row — the code endpoint
+      // defaults to Python and would 404 on an R artifact otherwise.
+      const code = image.code ?? await fetchCode(image.spec_id, image.library, image.language);
       if (code) {
         await navigator.clipboard.writeText(code);
         setCopyState('copied');
@@ -106,7 +108,7 @@ export const ImageCard = memo(function ImageCard({
     } catch {
       setCopyState('idle');
     }
-  }, [image.spec_id, image.library, image.code, copyState, fetchCode, onTrackEvent]);
+  }, [image.spec_id, image.library, image.language, image.code, copyState, fetchCode, onTrackEvent]);
 
   const cardId = `${image.spec_id}-${image.library}`;
   const specTooltipId = `spec-${cardId}`;

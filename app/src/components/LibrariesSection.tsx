@@ -19,7 +19,7 @@ export function LibrariesSection({
   // Use known library order, with counts from stats if available
   const libList = LIBRARIES.map(name => {
     const info = libraries.find(l => l.id === name);
-    return { name, count: info ? undefined : undefined }; // counts come from API if available
+    return { name, language: info?.language, count: info ? undefined : undefined }; // counts come from API if available
   });
 
   const maxWidth = widthTier === 'catalog' ? 'var(--max-catalog)' : 'var(--max)';
@@ -42,6 +42,7 @@ export function LibrariesSection({
           <LibraryCard
             key={lib.name}
             name={lib.name}
+            language={lib.language}
             onClick={() => onLibraryClick(lib.name)}
           />
         ))}

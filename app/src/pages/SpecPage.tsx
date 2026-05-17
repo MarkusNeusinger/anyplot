@@ -137,6 +137,19 @@ export function SpecPage() {
     setSearchParams(params, { replace: true });
   }, [mode, specData, languageFilter, availableLanguages, searchParams, setSearchParams]);
 
+  // Detail mode: if `?language=…` conflicts with the URL path's language
+  // (e.g. `/biplot-pca/r/ggplot2?language=python` from a stale deep link),
+  // drop the query. The URL path is the source of truth for "what's being
+  // viewed"; the carousel filter would otherwise exclude the currently
+  // selected impl and centre the pills on the wrong library.
+  useEffect(() => {
+    if (mode !== 'detail' || !carouselLanguage || !urlLanguage) return;
+    if (carouselLanguage === urlLanguage) return;
+    const params = new URLSearchParams(searchParams);
+    params.delete('language');
+    setSearchParams(params, { replace: true });
+  }, [mode, carouselLanguage, urlLanguage, searchParams, setSearchParams]);
+
   // Get current implementation (only in detail mode)
   const currentImpl = useMemo(() => {
     if (!specData || !selectedLibrary) return null;
