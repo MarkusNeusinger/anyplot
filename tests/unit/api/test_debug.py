@@ -77,6 +77,7 @@ def auth_client():
 
 def _make_impl(
     library_id="matplotlib",
+    language_id="python",
     quality_score=92.5,
     preview_url="https://example.com/plot.png",
     updated=None,
@@ -86,6 +87,7 @@ def _make_impl(
     """Helper to create a mock implementation."""
     impl = MagicMock()
     impl.library_id = library_id
+    impl.language_id = language_id
     impl.quality_score = quality_score
     impl.preview_url = preview_url
     impl.updated = updated
@@ -148,8 +150,8 @@ class TestDebugStatus:
         data = response.json()
         assert data["total_specs"] == 1
         assert data["total_implementations"] == 2
-        # coverage = 2 / (1 * 9) * 100 = 22.2%
-        assert data["coverage_percent"] == 22.2
+        # coverage = 2 / (1 * len(SUPPORTED_LIBRARIES)) * 100
+        assert data["coverage_percent"] == round(2 / len(SUPPORTED_LIBRARIES) * 100, 1)
 
         # Check library stats
         lib_stats_by_id = {ls["id"]: ls for ls in data["library_stats"]}
@@ -277,14 +279,19 @@ class TestDebugStatus:
         assert today_point["impls_updated"] == 1
 
     def test_debug_status_recent_activity(self, db_client) -> None:
-        """recent_activity should return impls sorted by updated DESC, capped at 15."""
+        """recent_activity should return impls sorted by updated DESC, capped at 15,
+        and surface each impl's language so the frontend can build correct deep links
+        (regression: Python + R impls were both linked as /spec/python/... before).
+        """
         client, _ = db_client
 
         older = datetime(2026, 3, 1, tzinfo=timezone.utc)
         newer = datetime(2026, 4, 20, tzinfo=timezone.utc)
-        impl_old = _make_impl(library_id="matplotlib", updated=older, generated_by="claude-opus-4-6")
-        impl_new = _make_impl(library_id="seaborn", updated=newer, generated_by="claude-opus-4-7")
-        spec = _make_spec(impls=[impl_old, impl_new])
+        impl_py = _make_impl(library_id="matplotlib", updated=older, generated_by="claude-opus-4-6")
+        impl_r = _make_impl(
+            library_id="ggplot2", language_id="r", updated=newer, generated_by="claude-opus-4-7"
+        )
+        spec = _make_spec(impls=[impl_py, impl_r])
 
         mock_repo = MagicMock()
         mock_repo.get_all = AsyncMock(return_value=[spec])
@@ -295,9 +302,11 @@ class TestDebugStatus:
         data = response.json()
         activity = data["recent_activity"]
         assert len(activity) == 2
-        assert activity[0]["library_id"] == "seaborn"
+        assert activity[0]["library_id"] == "ggplot2"
+        assert activity[0]["language_id"] == "r"
         assert activity[0]["generated_by"] == "claude-opus-4-7"
         assert activity[1]["library_id"] == "matplotlib"
+        assert activity[1]["language_id"] == "python"
 
     def test_debug_status_common_weaknesses(self, db_client) -> None:
         """common_weaknesses should aggregate review_weaknesses case-insensitively, top 10."""

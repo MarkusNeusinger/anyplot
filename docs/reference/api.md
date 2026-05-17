@@ -96,6 +96,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
   "images": [
     {
       "library": "matplotlib",
+      "language": "python",
       "url": "https://storage.googleapis.com/.../plot.png",
       "html": null
     }
@@ -140,6 +141,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "spec_id": "scatter-basic",
       "library": "matplotlib",
+      "language": "python",
       "url": "https://storage.googleapis.com/.../plot.png",
       "html": null,
       "code": "import matplotlib.pyplot as plt..."

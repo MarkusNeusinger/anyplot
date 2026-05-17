@@ -25,3 +25,20 @@ export const LIB_ABBREV: Record<string, string> = {
   letsplot: 'lp',
   ggplot2: 'gg',
 };
+
+// Static library → language map, mirroring core/constants.py LIBRARIES_METADATA.
+// Used to build correct /{spec}/{language}/{library} links from contexts that
+// only know a library id (e.g. the debug-page spec matrix and recent-activity
+// list, which would otherwise have to wait for /libraries to load).
+export const LIB_TO_LANG: Record<string, string> = {
+  altair: 'python',
+  bokeh: 'python',
+  ggplot2: 'r',
+  highcharts: 'python',
+  letsplot: 'python',
+  matplotlib: 'python',
+  plotly: 'python',
+  plotnine: 'python',
+  pygal: 'python',
+  seaborn: 'python',
+};
