@@ -332,7 +332,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 
 | Points | Criterion |
 |--------|-----------|
-| 3 | Title format `{spec-id} · {Language} · {library} · anyplot.ai` (Language ∈ {Python, R}) AND legend labels correct |
+| 3 | Title is `{spec-id} · {Language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (Language ∈ {Python, R}). Legend labels correct |
 | 2 | Title format correct but legend issues, or vice versa |
 | 1 | Partially correct |
 | 0 | Missing or wrong |
