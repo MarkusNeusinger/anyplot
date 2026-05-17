@@ -1,13 +1,33 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 99/100 | Updated: 2026-05-17
 """
 
-import altair as alt
+import os
+
+# noqa: E402 — workflow requires file named altair.py; this conflicts with import
+import sys
+
 import numpy as np
 import pandas as pd
 
+
+sys.path = [p for p in sys.path if p != "" and p != os.getcwd()]
+import altair as alt  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data colors (Okabe-Ito palette - theme-independent)
+PRICE_COLOR = "#009E73"  # Position 1: brand green
+SMA_COLOR = "#D55E00"  # Position 2: vermillion
+BAND_COLOR = "#0072B2"  # Position 3: blue
 
 # Data - Simulated stock price with realistic Bollinger Bands
 np.random.seed(42)
@@ -16,7 +36,6 @@ dates = pd.date_range("2024-01-01", periods=n_days, freq="B")  # Business days
 
 # Generate price series with trend and volatility changes
 returns = np.random.randn(n_days) * 0.015  # Daily returns ~1.5% std
-# Add some trending behavior
 returns[:30] += 0.002  # Uptrend start
 returns[50:70] -= 0.003  # Downtrend middle
 returns[90:] += 0.002  # Recovery end
@@ -52,7 +71,7 @@ base = alt.Chart(df).encode(
 # Band area (filled region between upper and lower bands)
 band_area = (
     alt.Chart(df)
-    .mark_area(opacity=0.25, color="#306998")
+    .mark_area(opacity=0.2, color=BAND_COLOR)
     .encode(
         x=alt.X("date:T", title="Date"),
         y=alt.Y("lower_band:Q", title="Price ($)", scale=alt.Scale(domain=[y_min, y_max])),
@@ -61,22 +80,22 @@ band_area = (
 )
 
 # Upper band line
-upper_line = base.mark_line(strokeWidth=2, color="#306998", opacity=0.7).encode(
+upper_line = base.mark_line(strokeWidth=2, color=BAND_COLOR, opacity=0.6).encode(
     y=alt.Y("upper_band:Q", scale=alt.Scale(domain=[y_min, y_max]))
 )
 
 # Lower band line
-lower_line = base.mark_line(strokeWidth=2, color="#306998", opacity=0.7).encode(
+lower_line = base.mark_line(strokeWidth=2, color=BAND_COLOR, opacity=0.6).encode(
     y=alt.Y("lower_band:Q", scale=alt.Scale(domain=[y_min, y_max]))
 )
 
 # Middle band (SMA) - dashed line
-sma_line = base.mark_line(strokeWidth=2.5, strokeDash=[8, 4], color="#306998").encode(
+sma_line = base.mark_line(strokeWidth=2.5, strokeDash=[8, 4], color=SMA_COLOR).encode(
     y=alt.Y("sma:Q", scale=alt.Scale(domain=[y_min, y_max]))
 )
 
 # Price line - prominent
-price_line = base.mark_line(strokeWidth=3, color="#FFD43B").encode(
+price_line = base.mark_line(strokeWidth=3.5, color=PRICE_COLOR).encode(
     y=alt.Y("close:Q", scale=alt.Scale(domain=[y_min, y_max]))
 )
 
@@ -86,14 +105,23 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("indicator-bollinger · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title("indicator-bollinger · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.1,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=18,
+        titleFontSize=22,
+    )
+    .configure_title(color=INK, fontSize=28)
 )
 
-# Save as PNG
-chart.save("plot.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
-chart.save("plot.html")
+# Save outputs
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
