@@ -1,158 +1,169 @@
 library: highcharts
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:26:13Z'
-updated: '2026-01-09T14:29:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854886732
+updated: '2026-05-17T22:44:58Z'
+generated_by: claude-haiku
+workflow_run: 26004649593
 issue: 3485
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/highcharts/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of grouped lollipop chart using scatter series with custom
-    stem rendering
-  - Creative use of Highcharts render event to draw stems programmatically
-  - Colorblind-safe palette (blue, yellow, purple)
-  - Proper grouping offset calculation for side-by-side positioning
-  - Good data scenario with realistic business context
+  - Perfect visual quality across all 6 criteria with explicitly set font sizes
+  - 'Full spec compliance: correct plot type, all features implemented, proper data
+    mapping'
+  - 'Excellent code quality: clean, deterministic, appropriately complex'
+  - Flawless theme adaptation with identical data colors across light/dark renders
+  - Custom stem rendering demonstrates highcharts library-specific capability
   weaknesses:
-  - Y-axis tick labels could be larger for better readability at the canvas size
-  - Grid lines could be more subtle (lower alpha/opacity)
-  image_description: 'The plot displays a grouped lollipop chart showing quarterly
-    revenue by product line across four regions (North, South, East, West). Each category
-    has three lollipops side by side representing Electronics (blue #306998), Furniture
-    (yellow #FFD43B), and Clothing (purple #9467BD). The lollipops consist of thin
-    vertical stems extending from the baseline (y=0) to circular markers at the data
-    values. The title "lollipop-grouped · highcharts · pyplots.ai" appears at the
-    top in bold. The Y-axis shows "Revenue ($ Millions)" ranging from 0 to 5.4, with
-    dashed gray grid lines. The X-axis shows region labels (North, South, East, West).
-    A vertical legend on the right identifies each series with colored circle symbols.
-    The chart uses a white background with good spacing between grouped lollipops.
-    The stem width is appropriate and markers are clearly visible circular dots.'
+  - 'Design Excellence underdeveloped: implementation is functional but visually generic'
+  - No visual hierarchy or data storytelling through emphasis or color contrast
+  - Library usage is standard configuration rather than leveraging distinctive patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1
+      Chrome: Title "lollipop-grouped · Python · highcharts · anyplot.ai" in dark text (28px); axis labels "Region" and "Revenue ($ Millions)" in dark text (22px); tick labels in soft gray (18px); legend on right with light border on elevated background - all readable
+      Data: Three series across four regions with grouped lollipops. Electronics (#009E73) green, Furniture (#D55E00) orange, Clothing (#0072B2) blue. Thin stems connect baseline to circular markers. Values displayed (4.2, 2.8, 3.5, etc.). Data points well-spaced with clear grouping.
+      Legibility verdict: PASS - all text clearly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17
+      Chrome: Title in light text (28px); axis labels in light text (22px); tick labels in light gray (18px); legend box with darker background and light border - all clearly readable on dark background
+      Data: Identical to light render - Electronics still green, Furniture still orange, Clothing still blue. Same stem colors and marker positions. No dark-on-dark contrast issues.
+      Legibility verdict: PASS - all text clearly readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and legend text are clearly readable at full
-          size. Tick labels could be slightly larger.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; lollipops within groups are well-spaced
-          with appropriate offset.
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px,
+          legend 18px. Perfectly readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. All elements have proper spacing.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are appropriately sized (radius 28) and stems are visible
-          (width 6). Stems could be slightly thicker.
+        comment: Markers and stems perfectly visible. Grouped arrangement with offsets
+          is clear.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, purple) - no red-green
-          issues.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space with appropriate margins. Legend positioned
-          well on right side.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units, X-axis labeled Region.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette ensures CVD safety with sufficient contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent layout with proper margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid uses dashed style which is good, but could be more subtle. Legend
-          is well-placed.
+        comment: Descriptive labels with units and correct title format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito: #009E73, #D55E00, #0072B2. Theme-correct backgrounds
+          and chrome.'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no exceptional design polish or custom
+          flourishes.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; legend is basic but functional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis to guide viewer.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements grouped lollipop chart with stems and circular
-          markers.
+        comment: Correct grouped lollipop implementation with scatter markers and
+          custom stems.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis, series grouped correctly.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has thin stems, circular markers, side-by-side grouping with offset,
-          and legend.
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stems, markers, grouping, legend, proper categorization.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full data range from 0 to beyond max value.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y axes correctly assigned with all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three series with matching colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format {spec-id} · {library} · pyplots.ai.
+        comment: Correct title format and legend properly labels all series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and series. Could show more dramatic
-          differences.
+        comment: 'Shows all aspects: multiple categories, series, grouping, and value
+          variation.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Revenue by product line across regions is a realistic business scenario.
+        comment: Realistic quarterly revenue scenario, neutral and domain-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in millions are reasonable for regional revenue, though range
-          is somewhat narrow.
+        comment: Revenue values sensible for business context.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,42 +171,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure without functions/classes.
+        comment: Clean linear code without unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
+        comment: Uses np.random.seed(42) for deterministic results.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports are used and necessary.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity with clever stem-drawing; no fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly, but also creates plot.html (minor issue).
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and .html with current API.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses custom renderer for stem drawing via Highcharts.addEvent, which
-          is good use of Highcharts extensibility.
+        passed: false
+        comment: Correct usage with proper theme tokens; mostly standard configuration.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses custom JavaScript stem-rendering which is highcharts-specific.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -206,5 +222,4 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []

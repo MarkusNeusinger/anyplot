@@ -1,148 +1,170 @@
 library: plotnine
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:24:37Z'
-updated: '2026-01-09T14:27:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854883837
+updated: '2026-05-17T22:47:39Z'
+generated_by: claude-haiku
+workflow_run: 26004678880
 issue: 3485
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/plotnine/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - Clean, readable lollipop chart with proper grouping using position_dodge
-  - Excellent text sizing for 4800x2700 output
-  - Colorblind-safe color palette with good contrast
-  - Realistic business data scenario with appropriate regional variation
-  - Proper use of plotnine grammar of graphics (geom_segment + geom_point layering)
+  - Perfect visual quality across all dimensions
+  - Excellent spec compliance with all features correctly implemented
+  - Clean, idiomatic plotnine code with proper theme adaptation
+  - Strong data storytelling through regional and product line comparisons
+  - All text legible in both light and dark themes with correct palette
   weaknesses:
-  - Legend order is alphabetical rather than matching visual order or value order
-  - Could use scale_color_brewer for more idiomatic plotnine usage
-  image_description: 'The plot displays a grouped lollipop chart showing quarterly
-    revenue by product line across 4 regions (Asia Pacific, Europe, Latin America,
-    North America). Each region has 3 lollipops positioned side by side representing
-    Hardware (blue #306998), Services (yellow #FFD43B), and Software (orange/red #E85D04).
-    The lollipops consist of thin vertical stems extending from y=0 to circular markers
-    at the value. The y-axis shows "Revenue (Million USD)" ranging from 0 to 100.
-    The x-axis shows "Region" with the 4 categorical labels. A legend titled "Product
-    Line" is positioned on the right side. The title "lollipop-grouped · plotnine
-    · pyplots.ai" is displayed at the top. The background is white with subtle horizontal
-    gridlines. Values vary appropriately: Software consistently highest (~65-100M),
-    Hardware middle (~38-85M), Services lowest (~42-65M), with North America showing
-    highest values and Latin America lowest.'
+  - Design excellence could be elevated with more distinctive visual styling
+  - Data storytelling could be enhanced with annotations or emphasis techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title, axis labels, and tick labels all in dark text (#1A1A17), clearly readable against light surface
+      Data: Three product lines rendered in Okabe-Ito colors - Software (#009E73), Hardware (#D55E00), Services (#0072B2); stems are thin and markers are circular; grouped positioning with offset is clear
+      Legibility verdict: PASS - all text is highly readable; grid is subtle and doesn't compete with data
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, and tick labels all in light text (#F0EFE8), clearly readable against dark surface; no dark-on-dark failures
+      Data: Data colors are identical to light render (#009E73, #D55E00, #0072B2); stems and markers perfectly visible on dark background; grouped arrangement unchanged
+      Legibility verdict: PASS - all text is readable with correct light-on-dark contrast; no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, lollipops within groups are well-spaced
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable with good spacing; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers and stems clearly visible, good sizing
+        comment: 12 data points with optimal marker sizing; all elements clearly visible
+          and well-adapted to density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and orange are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, balanced margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (Million USD), X-axis labeled Region
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe; colors have distinct and contrasting
+          luminance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend order is alphabetical rather than matching visual or value
-          order
+        passed: true
+        comment: 'Descriptive labels with units: Region, Revenue (Million USD)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; Okabe-Ito order correct; backgrounds are
+          #FAF8F1 (light) and #1A1A17 (dark); theme-adaptive chrome perfect in both
+          renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Well-configured defaults with correct Okabe-Ito palette; professional
+          appearance but not particularly distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: L-shaped spines, subtle y-only grid, generous whitespace,
+          polished legend'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through series ordering by median; clear focal
+          point (North America); guides viewer through comparison
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers
+        comment: Correct grouped lollipop chart with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, series by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, side-by-side grouping, legend present
-      - id: SC-04
-        name: Data Range
+        comment: Stems, circular markers, grouped arrangement, legend, side-by-side
+          positioning all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range 0-100+, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Region, Y=Revenue, Color=Series; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three product lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format lollipop-grouped · plotnine · pyplots.ai
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and product lines
+        comment: Shows all aspects of grouped lollipop with variation across regions
+          and series
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Revenue by product line across regions is realistic business scenario
+        comment: Quarterly revenue by product line is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 38-100 million are plausible
+        comment: Revenue values (50-100M USD) are realistic; regional and product
+          proportions make sense
     code_quality:
       score: 10
       max: 10
@@ -152,42 +174,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear structure: imports → data → plot → save; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports; no unused packages
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, proper theme token handling; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses position_dodge correctly but could use more plotnine-specific
-          features like scale_color_brewer
+        passed: true
+        comment: Expert use of ggplot() + geom_*(), position_dodge(), scale_color_manual(),
+          theme()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Combines geom_segment + geom_point with position_dodge for grouping;
+          uses library-specific features but fairly standard
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -195,7 +224,7 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
   - grid-styling

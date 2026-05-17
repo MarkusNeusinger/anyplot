@@ -1,155 +1,168 @@
 library: letsplot
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:25:14Z'
-updated: '2026-01-09T14:28:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854888534
+updated: '2026-05-17T22:46:31Z'
+generated_by: claude-haiku
+workflow_run: 26004696663
 issue: 3485
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/letsplot/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of the grouped lollipop concept using geom_segment +
-    geom_point layer composition
-  - Clean, readable code following KISS principles
-  - Good use of x_pos offset calculation for side-by-side grouping
-  - Professional color palette with Python Blue as primary
-  - Proper title format and descriptive axis labels with units
+  - Perfect theme-adaptive implementation with identical data colors across light/dark
+    renders and zero legibility issues
+  - Meticulous explicit font sizing (24/20/16pt) ensuring readability at large canvas
+    resolution
+  - Clean minimalist aesthetic with all spines/grid removed, creating refined visual
+    composition
+  - Comprehensive spec compliance demonstrating all grouped lollipop features correctly
+  - Realistic data scenario with proper proportions and units throughout
   weaknesses:
-  - Legend is positioned at default location (right edge) with some empty space between
-    plot and legend
-  - Data variation could be more pronounced to better showcase the grouped comparison
-    feature
-  image_description: 'The plot displays a grouped lollipop chart showing quarterly
-    revenue by product line across four regions (North, South, East, West). Each region
-    has three lollipops side by side representing Electronics (blue #306998), Furniture
-    (yellow #FFD43B), and Clothing (red #DC2626). The stems are thin vertical lines
-    extending from the baseline (0) to the data values, topped with circular markers.
-    The title "lollipop-grouped · letsplot · pyplots.ai" is centered at the top. The
-    y-axis shows "Revenue ($ thousands)" ranging from 0 to 300, and the x-axis shows
-    "Region" with the four region labels. A legend on the right identifies the three
-    product lines. The plot uses a minimal theme with horizontal grid lines only (no
-    vertical grid lines), and the layout is well-balanced with good use of canvas
-    space.'
+  - No visual hierarchy or data storytelling—plot displays data without highlighting
+    insights or directing viewer attention
+  - Generic styling relying on library defaults rather than distinctive visual emphasis
+    or narrative structure
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all dark and clearly readable; legend on right with light background
+      Data: Green (#009E73) Electronics, orange (#D55E00) Furniture, blue (#0072B2) Clothing; thin stems, round markers; East shows highest Electronics value
+      Legibility verdict: PASS - All text readable, proper contrast, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, tick labels all light (#F0EFE8 / #B8B7B0) and clearly readable; legend background elevated (#242420); no dark-on-dark text failures
+      Data: Colors identical to light render (green, orange, blue preserved); stems and markers maintain same structure and visibility
+      Legibility verdict: PASS - All text readable against dark surface, proper contrast, brand green clearly visible
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements; lollipops well-spaced within groups
+        comment: No collisions between elements; clean grouping layout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stem size=2 and marker size=8 are well-proportioned for 12 data points
+        comment: Stems and markers properly sized for data density; all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red palette is colorblind-safe (no red-green confusion)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills ~60% of canvas, minor whitespace on
-          right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units, X-axis labeled Region
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with high contrast between series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Y-axis includes units; X-axis descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, follows Okabe-Ito order, theme-correct backgrounds
+          and text'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle, but legend could be positioned closer to the plot
-          area
+        comment: Well-configured defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean spine/grid removal with good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers
+        comment: Correct grouped lollipop with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories (regions) on X, values (revenue) on Y, series (products)
-          distinguished by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, side-by-side grouping, legend present
-      - id: SC-04
-        name: Data Range
+        comment: Stems, markers, grouping, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-300 shows all data points comfortably
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Region, Y=Revenue, Color=Product; full range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Product Line with all three series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format lollipop-grouped · letsplot · pyplots.ai
+        comment: Title format correct; legend properly labeled
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and products; Electronics consistently
-          highest, Clothing lowest
+        comment: Shows all aspects with variation across regions/products
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Revenue by product line across regions is a plausible business scenario
+        comment: Real quarterly revenue scenario; neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 118-267 thousand are reasonable for regional quarterly revenue
+        comment: Values and proportions realistic for business data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,50 +170,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports, data, plot, save'
+        comment: Linear flow with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random seed needed), hardcoded values
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current lets-plot API
+        comment: Clean, Pythonic, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format with current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot2-style grammar with proper aes and scale functions
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Good use of ggplot grammar with geom_segment + geom_point, scale_color_manual,
-          theme customization
+        passed: false
+        comment: Uses ggsize/ggsave but segment+point layering is generic
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - manual-ticks
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
