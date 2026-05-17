@@ -1,14 +1,37 @@
-""" pyplots.ai
+""" anyplot.ai
 kagi-basic: Basic Kagi Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 82/100 | Created: 2026-01-08
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-17
 """
 
-import cairosvg
-import numpy as np
-import pygal
-from pygal.style import Style
+from __future__ import absolute_import
 
+import os
+import sys
+
+
+# Ensure we import the pygal library, not the local script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != script_dir and p != ""]
+
+import cairosvg  # noqa: E402
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette - yang (bullish) uses brand green, yin (bearish) uses vermillion
+YANG_COLOR = "#009E73"  # Okabe-Ito position 1 - brand green
+YIN_COLOR = "#D55E00"  # Okabe-Ito position 2 - vermillion
+YANG_WIDTH = 18  # Thick for yang
+YIN_WIDTH = 4  # Thin for yin
 
 # Data - Generate synthetic stock price data
 np.random.seed(42)
@@ -73,7 +96,6 @@ for price in prices[1:]:
 columns.append(current_col)
 
 # Build individual line segments for proper Kagi rendering
-# Each segment is a separate 2-point series to avoid polygon connections
 yang_segments = []  # List of [(x1,y1), (x2,y2)] for yang
 yin_segments = []  # List of [(x1,y1), (x2,y2)] for yin
 
@@ -104,48 +126,42 @@ for col in columns:
     prev_x = x
     prev_y = y_end
 
-# Colors and stroke widths - large difference for visibility
-YANG_COLOR = "#16A34A"  # Green for bullish
-YIN_COLOR = "#DC2626"  # Red for bearish
-YANG_WIDTH = 18  # Thick for yang
-YIN_WIDTH = 4  # Thin for yin
-
-# Custom style - create colors list with yang color first, yin color second
+# Custom style with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#000000",
-    foreground_subtle="#999999",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=(YANG_COLOR, YIN_COLOR),
-    title_font_size=64,
-    label_font_size=42,
-    major_label_font_size=38,
-    legend_font_size=38,
-    value_font_size=30,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
     guide_stroke_dasharray="4,4",
     opacity=1.0,
     opacity_hover=1.0,
 )
 
-# Create XY chart - disable legend (we'll add manual legend annotation)
+# Create XY chart
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="kagi-basic · pygal · pyplots.ai",
+    title="kagi-basic · pygal · anyplot.ai",
     x_title="Kagi Line Index",
     y_title="Price ($)",
     show_dots=False,
     show_x_guides=False,
     show_y_guides=True,
-    show_legend=False,  # Disable native legend - we'll add custom one
+    show_legend=False,
     stroke=True,
     fill=False,
     margin=100,
 )
 
-# Combine all yang segments into one series (for consistent color)
+# Combine all yang segments into one series
 yang_points = []
 for seg in yang_segments:
     yang_points.extend(seg)
@@ -161,34 +177,38 @@ for seg in yin_segments:
 chart.add("Yang (Bullish)", yang_points, stroke_style={"width": YANG_WIDTH, "linecap": "round"})
 chart.add("Yin (Bearish)", yin_points, stroke_style={"width": YIN_WIDTH, "linecap": "round"})
 
-# Render to SVG and add custom legend with proper line styles
+# Render to SVG and customize
 svg_data = chart.render()
 svg_str = svg_data.decode("utf-8")
 
-# Add CSS to enforce stroke widths (pygal's stroke_style may not apply correctly)
+# CSS override to enforce stroke widths
 css_override = f"""
 .serie-0 .line {{ stroke-width: {YANG_WIDTH}px !important; stroke: {YANG_COLOR} !important; }}
 .serie-1 .line {{ stroke-width: {YIN_WIDTH}px !important; stroke: {YIN_COLOR} !important; }}
 """
 svg_str = svg_str.replace("</style>", css_override + "</style>")
 
-# Build manual legend that accurately shows thick vs thin lines
-# Position legend in upper right area to avoid axis labels
+# Manual legend showing line styles
+legend_bg = "#FFFDF6" if THEME == "light" else "#242420"
 legend_svg = f"""
 <g class="manual-legend" transform="translate(3200, 180)">
-  <rect x="-20" y="-30" width="1450" height="80" fill="white" fill-opacity="0.9" rx="8"/>
+  <rect x="-20" y="-30" width="1450" height="80" fill="{legend_bg}" fill-opacity="0.95" rx="8"/>
   <line x1="0" y1="0" x2="80" y2="0" stroke="{YANG_COLOR}" stroke-width="{YANG_WIDTH}" stroke-linecap="round"/>
-  <text x="100" y="10" font-size="36" fill="#333333" font-family="Verdana, sans-serif">Yang (Bullish) — Thick</text>
+  <text x="100" y="10" font-size="36" fill="{INK}" font-family="Verdana, sans-serif">Yang (Bullish) — Thick</text>
   <line x1="700" y1="0" x2="780" y2="0" stroke="{YIN_COLOR}" stroke-width="{YIN_WIDTH}" stroke-linecap="round"/>
-  <text x="800" y="10" font-size="36" fill="#333333" font-family="Verdana, sans-serif">Yin (Bearish) — Thin</text>
+  <text x="800" y="10" font-size="36" fill="{INK}" font-family="Verdana, sans-serif">Yin (Bearish) — Thin</text>
 </g>
 """
 
-# Insert legend before closing svg tag
 svg_str = svg_str.replace("</svg>", legend_svg + "</svg>")
 
-# Convert to PNG
-cairosvg.svg2png(bytestring=svg_str.encode("utf-8"), write_to="plot.png")
+# Save to script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Save HTML version for interactive view
-chart.render_to_file("plot.html")
+# Convert to PNG with theme-suffixed filename
+png_path = os.path.join(script_dir, f"plot-{THEME}.png")
+cairosvg.svg2png(bytestring=svg_str.encode("utf-8"), write_to=png_path)
+
+# Save HTML version with theme-suffixed filename
+html_path = os.path.join(script_dir, f"plot-{THEME}.html")
+chart.render_to_file(html_path)

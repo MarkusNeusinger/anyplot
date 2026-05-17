@@ -1,156 +1,167 @@
 library: seaborn
+language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:53:52Z'
-updated: '2026-01-08T22:13:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832942108
+updated: '2026-05-17T08:05:14Z'
+generated_by: claude-haiku
+workflow_run: 25985156901
 issue: 3341
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of Kagi chart algorithm with proper yang/yin classification
-    based on price exceeding previous highs/lows
-  - Clean visual distinction between bullish (thick green) and bearish (thin red)
-    segments
-  - Proper use of seaborn theming (whitegrid, talk context) for publication-quality
-    appearance
-  - Well-structured code with clear segment-building logic
-  - Correct title format and descriptive axis labels with units
+  - Excellent theme-adaptive implementation with proper token usage throughout
+  - Perfect Okabe-Ito palette compliance with correct colors for Yang/Yin
+  - Clean visual distinction between bullish and bearish trends via linewidth
+  - Strong text legibility in both light and dark renders
+  - Proper title/legend formatting matching spec requirements
+  - Realistic and appropriate synthetic cryptocurrency data
+  - No AR-08 violations — static implementation with no simulated interactivity
   weaknesses:
-  - Feature coverage could be improved - the generated data produces mostly yang segments
-    with relatively few yin transitions, making it harder to see the bearish behavior
-  - Grid styling in the rendered output shows dashed lines despite code setting solid
-    linestyle
-  image_description: The plot displays a Kagi chart showing stock price movements
-    over approximately 21 Kagi line segments. The Y-axis shows "Price ($)" ranging
-    from approximately $77 to $115, and the X-axis shows "Kagi Line Index" from 0
-    to 20. Green thick lines (linewidth=5) represent Yang (Bullish) segments indicating
-    uptrends, while red thin lines (linewidth=2) represent Yin (Bearish) segments
-    indicating downtrends. The chart correctly uses vertical lines for price movements
-    and horizontal lines for reversals/transitions. A well-placed legend in the upper
-    left corner clearly identifies "Yang (Bullish)" and "Yin (Bearish)" segments.
-    The title "kagi-basic · seaborn · pyplots.ai" is displayed prominently at the
-    top in bold. The background uses a subtle white grid with light gray gridlines.
-    The overall layout is clean with good use of canvas space.
+  - Design could be enhanced with additional visual polish (e.g., custom palette refinements,
+    more sophisticated layout)
+  - Could include subtle annotations to guide interpretation of trend reversals
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all rendered in dark text and clearly readable against light background
+      Data: Yang (bullish) rendered as thick lines in green (#009E73 — Okabe-Ito position 1), Yin (bearish) as thin lines in orange/vermillion (#D55E00 — position 2). First series is correct Okabe-Ito color.
+      Legibility verdict: PASS — all text is readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, axis labels, tick labels all rendered in light text and clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Yang (#009E73) and Yin (#D55E00) colors are identical to light render, confirming proper theme-independence for data colors
+      Legibility verdict: PASS — all text is readable on dark background, proper Chrome adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt bold, axis labels at 20pt, tick labels at 16pt - all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements anywhere
+        comment: All text properly sized and colored for theme, 24pt title, 20pt labels,
+          16pt ticks
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths appropriate (thick=5, thin=2) making yang/yin distinction
-          clear
+        comment: Thick (4.5pt) and thin (1.5pt) lines are clearly distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green and red provide good contrast and are distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Price ($) with units, X-axis has descriptive Kagi Line
-          Index
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, colorblind-safe, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper proportions, tight_layout, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid shows dashed lines despite code setting solid linestyle
+        passed: true
+        comment: Descriptive labels with units, correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Yang=#009E73, Yin=#D55E00, backgrounds correct, both renders theme-compliant
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with custom linewidths and intentional color
+          choice
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with Yang/Yin distinction guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Kagi chart with vertical price lines and horizontal transitions
+        comment: Correct Kagi chart implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows line index (time-independent), Y-axis shows price
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thick lines for yang, thin lines for yin, horizontal connectors,
-          4% reversal
-      - id: SC-04
-        name: Data Range
+        comment: Thick lines (yang), thin lines (yin), colors, reversal threshold
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All price data visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis shows line index, Y-axis shows price with appropriate scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Yang (Bullish) and Yin (Bearish)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format kagi-basic · seaborn · pyplots.ai
+        comment: Correct format, legend labels clearly identify series
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows multiple reversals but yang-dominated with few yin segments
+        comment: Demonstrates all Kagi chart aspects with multiple reversals
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price simulation starting at $100 with realistic daily returns
+        comment: Realistic crypto volatility, neutral domain, appropriate data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price range of $77-$113 is realistic for a stock
+        comment: 180 periods sensible, 5% reversal threshold appropriate for crypto
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,11 +169,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports → data → plot → save structure
+        comment: Direct algorithm, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -170,30 +181,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, no AR-08 violations
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn and matplotlib APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png output
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses sns.set_theme, sns.set_context, sns.lineplot but Kagi is not
-          native to seaborn
+        comment: Proper matplotlib/seaborn patterns, sns.set_theme() usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom legend with Line2D, theme-adaptive rc configuration
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -204,4 +220,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - grid-styling

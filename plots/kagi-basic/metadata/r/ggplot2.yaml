@@ -1,0 +1,52 @@
+library: ggplot2
+language: r
+specification_id: kagi-basic
+created: '2026-05-17T08:12:16Z'
+updated: '2026-05-17T08:17:51Z'
+generated_by: claude-haiku
+workflow_run: 25985491480
+issue: 3341
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - Flawless visual quality across all criteria—text legibility, color accessibility,
+    element visibility perfectly executed in both light and dark themes
+  - 'Proper Kagi chart implementation with intuitive visual distinction: line thickness
+    (1.2 vs. 0.6) and color (#009E73 yang, #D55E00 yin) effectively communicate trend
+    direction'
+  - 'Excellent theme-adaptive design: correctly applies environment-based color tokens
+    (INK, INK_SOFT, PAGE_BG) ensuring consistency across themes'
+  - 'Clean, professional code: minimal but complete, properly seeded, idiomatic ggplot2
+    patterns, AR-08 compliant'
+  weaknesses:
+  - Design Excellence score (16/20) reflects functional but restrained design—could
+    explore additional visual sophistication (e.g., custom line endpoints, gradient
+    effects, or annotation of key reversal points) while maintaining minimalism
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "kagi-basic · ggplot2 · anyplot.ai" rendered in dark text (INK); axis labels "Price" and "Line Index" clearly visible; tick labels (110-150 on Y, 5-10 on X) in soft gray (INK_SOFT); grid lines subtle but visible
+      Data: Vertical line segments in two colors - thick green lines (#009E73) for uptrends (yang), thin orange lines (#D55E00) for downtrends (yin); horizontal connector segments at price reversals in soft gray; all lines clearly distinguishable from background
+      Legibility verdict: PASS - all elements readable with proper contrast and sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title rendered in light text (INK at #F0EFE8); axis labels and tick labels in soft light gray (INK_SOFT at #B8B7B0); all text clearly readable against dark background - no dark-on-dark failures detected; grid lines visible
+      Data: Identical colors to light render (#009E73 green, #D55E00 orange) - only chrome inverted as required; all line styles preserved
+      Legibility verdict: PASS - full readability across themes; theme-adaptive tokens correctly applied; brand green maintains visibility on dark surface
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - theme-adaptive
