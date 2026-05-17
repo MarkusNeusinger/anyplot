@@ -1,149 +1,174 @@
 library: altair
+language: python
 specification_id: chessboard-basic
 created: '2026-01-08T22:36:40Z'
-updated: '2026-01-08T22:39:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20834085094
+updated: '2026-05-17T01:50:39Z'
+generated_by: claude-haiku
+workflow_run: 25978302827
 issue: 3340
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-dark.html
 quality_score: 95
 review:
   strengths:
-  - Excellent implementation of chess board using Altair declarative approach
-  - Perfect color scheme with classic wheat/saddle brown contrast
-  - Correct chess convention with h1 as light square
-  - Clean use of ordinal encoding for both axes
-  - Proper 1:1 aspect ratio for square board
-  - Subtle stroke on squares enhances visual clarity
-  - Good use of configure_view for outer border styling
+  - Excellent theme adaptation with proper INK and INK_SOFT tokens applied to all
+    chrome elements; no dark-on-dark or light-on-light failures in either render.
+  - Perfect 1:1 aspect ratio for a domain-specific visualization; clean, professional
+    presentation.
+  - Correct chess notation and coloring (light square at h1); all 64 squares clearly
+    distinguishable with subtle borders.
+  - Clean, readable code with minimal complexity; properly sized fonts for high-resolution
+    rendering.
   weaknesses:
-  - Axis labels lack descriptive context, though contextually acceptable for chess
-    notation
-  - Data generation loop could include a brief comment explaining the coloring logic
-  image_description: 'The plot displays a classic 8x8 chess board with alternating
-    light (wheat/cream #F5DEB3) and dark (saddle brown #8B4513) squares. The board
-    is properly oriented with row labels 1-8 on the left side (1 at bottom, 8 at top)
-    and column labels a-h at the bottom. The title "chessboard-basic · altair · pyplots.ai"
-    appears at the top in bold black text. The squares have subtle dark brown borders
-    (#5D4037) that enhance clarity. The light square appears correctly at h1 (bottom-right
-    corner) following standard chess convention. The overall layout is square (1:1
-    aspect ratio) with the board filling most of the canvas. The chart has a thin
-    dark brown outer border framing the entire visualization.'
+  - Design could be enhanced with slightly bolder borders, different spine treatment,
+    or more distinctive color palette (though current colors are appropriate for the
+    domain).
+  - Altair implementation is idiomatic but generic—could showcase more distinctive
+    Altair features (e.g., interactive selection, hover tooltips for piece identification).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — perfectly matches style guide requirements
+      Chrome: Title "chessboard-basic · altair · anyplot.ai" in 32px dark text (#1A1A17); column labels (a-h) at bottom in 24px (#4A4A44); row labels (1-8) on left in same color; all text clearly readable with good contrast
+      Data: 8x8 chessboard with wheat (#F5DEB3) and medium brown (#A0704F) squares in correct chess pattern (light at h1 corner); gray borders (#4A4A44) provide clear definition
+      Legibility verdict: PASS — all text readable, excellent contrast on light surface, no readability issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — perfectly matches style guide requirements
+      Chrome: Title in 32px light cream text (#F0EFE8); column and row labels in light gray (#B8B7B0); all text clearly readable against dark background with excellent contrast — NO dark-on-dark failures
+      Data: Identical wheat and medium brown squares to light render — confirming data colors stay constant while only chrome adapts to theme
+      Legibility verdict: PASS — all text readable, excellent contrast on dark surface, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, all perfectly readable
+        comment: Title (32px), axis labels (24px) properly sized and readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: All labels well-spaced with 10px padding; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All 64 squares clearly visible with good contrast
+        comment: All 64 squares clearly distinguishable with subtle borders
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Wheat/brown color scheme is colorblind-safe
+        comment: Wheat and brown accessible for colorblind viewers
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Perfect 1:1 aspect ratio, board fills canvas well
+        comment: Perfect square proportions (900x900px) with generous margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels present but no units needed for chess notation
+        comment: Descriptive title and proper chess notation (a-h, 1-8)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed; borders serve as grid, subtle and effective
+        comment: 'Correct background colors (#FAF8F1 light, #1A1A17 dark); both renders
+          theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean professional design with domain-appropriate colors; somewhat
+          generic palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle borders enhance clarity; could use bolder treatment for extra
+          polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy guides viewer naturally through chessboard
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 8x8 grid visualization using rect marks
+        comment: Correct 8x8 grid visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Columns a-h on X, rows 1-8 on Y, correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: alternating colors, proper notation, h1 light
-          square'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: 8 rows/columns, a-h and 1-8 labels, alternating colors,
+          light at h1'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 8x8 board displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: columns (a-h), Y-axis: rows (1-8), colors accurate'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, colors self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses chessboard-basic · altair · pyplots.ai
+        comment: Title includes spec-id, library, anyplot.ai; legend appropriately
+          omitted
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete chess board with all 64 squares
+        comment: All 64 squares with correct chess coloring
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Standard chess board, universally recognized
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Proper 8x8 grid with standard notation
+        comment: Chess board universally recognizable and appropriate for education/game
+          analysis
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible 8x8 grid with appropriately scaled labels
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,50 +176,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports, data, plot, save structure
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Deterministic data but no explicit seed comment
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only necessary imports (pandas, altair components)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Appropriate complexity with no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair declarative grammar: ordinal encoding, mark_rect,
-          color scale mapping, configure_view'
+        comment: 'Proper Altair idioms: Chart, mark_rect, encoding, configure_* methods'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good theme adaptation; could use more distinctive features like interactive
+          selection or tooltips
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
