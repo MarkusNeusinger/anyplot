@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: linked-views-selection
 created: '2026-01-08T22:06:59Z'
-updated: '2026-05-17T00:41:24Z'
+updated: '2026-05-17T00:45:19Z'
 generated_by: claude-haiku
 workflow_run: 25977011516
 issue: 3344
@@ -12,42 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-vi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - Perfect visual quality across both light and dark themes with zero legibility
+  - Perfect visual quality with explicit font sizing and flawless theme adaptation
+    in both renders
+  - Sophisticated use of Highcharts' native interactive features for linked selection
+    and real-time updates
+  - All specification requirements implemented and fully functional (brush selection,
+    highlighting, reset)
+  - Excellent multi-view data storytelling with complementary scatter, bar, and histogram
+    charts
+  - Professional design with intentional grid layout, spacing, typography hierarchy,
+    and rounded-corner styling
+  - Real, well-known Iris dataset that clearly demonstrates the linked selection feature
+  - Both light and dark renders are pixel-perfect and readable without any legibility
     issues
-  - Excellent spec compliance—all required linked-view features implemented and working
-    correctly
-  - Strong data storytelling with clear visual hierarchy (scatter plot dominates,
-    supporting charts provide context)
-  - Clean code structure with proper theme-adaptive chrome implementation
-  - Realistic, well-known dataset (Iris) appropriate for demonstrating linked-view
-    exploratory analysis
-  - Proper use of Okabe-Ito palette with consistent colors across all views
-  - Interactive features work as intended (selection sync, reset button, selection
-    count display)
-  weaknesses:
-  - Design excellence is above-average but not exceptional; styling could be more
-    sophisticated (e.g., custom color refinements, more distinctive visual polish)
-  - Histogram X-axis labels are small and rotated, reducing readability slightly (though
-    still legible)
-  - Library mastery is adequate but not distinctive; could leverage more advanced
-    Highcharts-specific features for selection and interaction
-  - JavaScript event handlers, while functional, are straightforward and don't showcase
-    distinctive Highcharts capabilities
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme token, NOT pure white or dark
-      Chrome: Title, axis labels (24px), tick labels (18-20px) are dark (#1A1A17, #4A4A44) and clearly readable
-      Data: Three colors visible - green #009E73, orange #D55E00, blue #0072B2 (Okabe-Ito positions 1-3); markers clearly distinguishable from background
-      Legibility verdict: PASS - All text readable, no light-on-light issues, grid lines subtle but visible
+      Background: Warm off-white at #FAF8F1 — correct theme surface
+      Chrome: Title (48px, dark ink), axis labels (28px, dark), tick labels (24px, dark) — all explicitly sized and clearly readable
+      Grid: Subtle grid lines visible without competing with data
+      Data: Scatter plot with green (#009E73), orange (#D55E00), blue (#0072B2) markers at 14px radius; bar chart and histogram use same colors
+      Legibility verdict: PASS — all elements readable against light background; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme token, NOT pure black or light
-      Chrome: Title, axis labels, tick labels are light colors (#F0EFE8, #B8B7B0) and clearly readable against dark background
-      Data: Same three colors as light render (green, orange, blue) - color consistency confirmed; no data color shift between themes
-      Legibility verdict: PASS - All text readable, no dark-on-dark issues, grid lines visible, brand green visible
+      Background: Warm near-black at #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, tick labels rendered in light text (#F0EFE8 and #B8B7B0) — all readable against dark background
+      Grid: Subtle grid with light opacity visible; no dark-on-dark text failures
+      Data: Scatter, bar, and histogram markers/bars use identical colors to light render (#009E73, #D55E00, #0072B2) — data colors unchanged, only chrome adapted
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; perfect theme adaptation
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,70 +53,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both light and dark themes
+        comment: 'All font sizes explicitly set: title 48px, labels 28px, ticks 24px.
+          Perfectly readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; histogram X-labels rotated for clarity
+        comment: All labels fully legible; rotated histogram x-axis labels do not
+          overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and bars clearly visible; opacity adapts for selection
-          feedback
+        comment: Markers at 14px radius optimally sized for ~150 scattered points;
+          bars and histogram bins clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; excellent contrast throughout
+        comment: Okabe-Ito palette is CVD-safe; green, orange, blue are distinctly
+          separable without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced grid layout; 4800x2700px canvas effectively utilized
+        comment: Grid layout utilizes 60-70% of canvas; balanced margins; chart boxes
+          properly spaced with 40px gaps.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (cm, distribution)
+        comment: 'All axis labels include units: ''Sepal Length (cm)'', ''Sepal Width
+          (cm)'', ''Petal Length Distribution''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds correct;
-          both renders theme-correct'
+        comment: 'First series is #009E73; multi-series follows Okabe-Ito order; backgrounds
+          #FAF8F1 (light) and #1A1A17 (dark); all text colors theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional styling with grid layout, rounded button, subtle borders.
-          Good but not exceptionally sophisticated
+        comment: Professional design with intentional grid layout, rounded corners,
+          consistent spacing, and typography hierarchy. Above library defaults but
+          not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Generous whitespace and subtle borders. Minimal customization beyond
-          defaults
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Strong visual hierarchy with scatter plot dominating. Clear focal
-          point and narrative flow
+        comment: Subtle borders, rounded corners on chart boxes, elevated backgrounds,
+          minimal grid styling, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides exploration through linked charts; color
+          consistency creates narrative about species relationships. Selection interaction
+          adds dynamism.
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chart types for linked-views-selection
+        comment: Correct implementation of multiple coordinated views with selection
+          sync (scatter, bar, histogram).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: linked selection, de-emphasis, reset button,
-          selection count'
+        comment: 'All features present: multiple views, brush-zoom selection, consistent
+          color encoding, opacity de-emphasis, reset button, selection count display.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; category colors properly assigned
+        comment: X/Y correctly mapped in scatter plot; categories encoded by color;
+          histogram shows third numeric dimension; all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match categories
+        comment: Title format 'linked-views-selection · highcharts · anyplot.ai' is
+          correct; legend labels match data.
     data_quality:
       score: 15
       max: 15
@@ -160,19 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Iris dataset demonstrates all linked-view aspects
+        comment: Iris dataset shows all three species with natural variation, overlap,
+          and separation in different dimensions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, well-known, neutral dataset; perfect for exploratory analysis
+        comment: Real, well-known botanical dataset; scientifically legitimate; neutral
+          context without controversial topics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges for sepal dimensions and petal length
+        comment: Sepal and petal measurements are factually correct; values align
+          with established botanical data.
     code_quality:
       score: 10
       max: 10
@@ -182,47 +190,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward sequential code; no unnecessary abstractions
+        comment: 'Clean linear structure: imports → theme setup → data → HTML generation
+          → Selenium screenshot. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic load_iris() dataset
+        comment: Uses deterministic load_iris() dataset; fully reproducible without
+          random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: json, os, tempfile, time, urllib, Path, numpy,
+          selenium, sklearn. No dead code.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; legitimate event handling; proper theme tokens
+        comment: Elegant, readable implementation with appropriate complexity. JavaScript
+          callbacks are clean and efficient. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files (plot-{THEME}.png and plot-{THEME}.html)
+        comment: Correctly outputs plot-{THEME}.png and plot-{THEME}.html. Uses current
+          Highcharts version (11.0.0 via jsDelivr).
     library_mastery:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Solid Highcharts APIs; proper chart and event handling
+        comment: 'Expert use of Highcharts'' high-level API: chart creation, series
+          data management, native event handlers, zoomType configuration.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Functional but straightforward; not highly distinctive
+        passed: true
+        comment: 'Leverages Highcharts-distinctive features: native selection event
+          handler, series.setData() for reactive updates, zoomType=''xy'' for brush
+          selection, legend interaction.'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -230,10 +246,10 @@ impl_tags:
   - sklearn
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - dataset-loading
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
-  - theme-adaptive-chrome
+  - dark-theme

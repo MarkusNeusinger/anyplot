@@ -1,7 +1,7 @@
 """ anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
 Library: highcharts unknown | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-17
+Quality: 95/100 | Updated: 2026-05-17
 """
 
 import json
