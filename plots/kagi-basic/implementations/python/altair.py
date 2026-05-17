@@ -1,13 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 kagi-basic: Basic Kagi Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-17
 """
+
+import os
+from pathlib import Path
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Get script directory for saving outputs
+SCRIPT_DIR = Path(__file__).parent
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+YANG_COLOR = "#009E73"  # Bluish green (brand)
+YIN_COLOR = "#D55E00"  # Vermillion
 
 # Generate realistic stock price data (simulated random walk)
 np.random.seed(42)
@@ -93,7 +110,7 @@ for i in range(1, len(prices)):
 
 # Create DataFrame for segments
 df_segments = pd.DataFrame(segments)
-df_segments["color"] = df_segments["yang"].map({True: "#2E7D32", False: "#C62828"})
+df_segments["color"] = df_segments["yang"].map({True: YANG_COLOR, False: YIN_COLOR})
 df_segments["thickness"] = df_segments["yang"].map({True: 6, False: 2})
 df_segments["type"] = df_segments["yang"].map({True: "Yang (Bullish)", False: "Yin (Bearish)"})
 
@@ -108,19 +125,34 @@ chart = (
         y2="y2:Q",
         color=alt.Color(
             "type:N",
-            scale=alt.Scale(domain=["Yang (Bullish)", "Yin (Bearish)"], range=["#2E7D32", "#C62828"]),
+            scale=alt.Scale(domain=["Yang (Bullish)", "Yin (Bearish)"], range=[YANG_COLOR, YIN_COLOR]),
             legend=alt.Legend(title="Trend"),
         ),
         strokeWidth=alt.StrokeWidth("yang:N", scale=alt.Scale(domain=[True, False], range=[6, 2]), legend=None),
     )
-    .properties(width=1600, height=900, title="kagi-basic \u00b7 altair \u00b7 pyplots.ai")
-    .configure_title(fontSize=28, anchor="middle")
-    .configure_axis(labelFontSize=18, titleFontSize=22)
-    .configure_legend(titleFontSize=18, labelFontSize=16)
+    .properties(width=1600, height=900, title="kagi-basic · altair · anyplot.ai", background=PAGE_BG)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_title(fontSize=28, anchor="middle", color=INK)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        labelFontSize=18,
+        titleColor=INK,
+        titleFontSize=22,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        labelFontSize=16,
+        titleColor=INK,
+        titleFontSize=18,
+    )
 )
 
-# Save as PNG (4800x2700 with scale_factor=3)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
-chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.save(str(SCRIPT_DIR / f"plot-{THEME}.png"), scale_factor=3.0)
+chart.save(str(SCRIPT_DIR / f"plot-{THEME}.html"))

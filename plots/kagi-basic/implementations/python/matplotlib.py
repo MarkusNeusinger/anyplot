@@ -1,13 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 kagi-basic: Basic Kagi Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data colors (Okabe-Ito palette, theme-independent)
+COLOR_YANG = "#009E73"  # Okabe-Ito position 1 (green for bullish)
+COLOR_YIN = "#D55E00"  # Okabe-Ito position 2 (red for bearish)
 
 # Generate synthetic stock price data
 np.random.seed(42)
@@ -44,7 +58,7 @@ for price in prices[1:]:
             is_yang = True
             kagi_x.append(x_pos)
             kagi_y.append(price)
-            kagi_colors.append("#2E7D32")  # Green for yang
+            kagi_colors.append(COLOR_YANG)
             kagi_widths.append(4)
             current_price = price
             last_high = price
@@ -53,7 +67,7 @@ for price in prices[1:]:
             is_yang = False
             kagi_x.append(x_pos)
             kagi_y.append(price)
-            kagi_colors.append("#C62828")  # Red for yin
+            kagi_colors.append(COLOR_YIN)
             kagi_widths.append(2)
             current_price = price
             last_low = price
@@ -66,7 +80,7 @@ for price in prices[1:]:
             # Check if we broke previous high -> become yang
             if price > last_high:
                 is_yang = True
-                kagi_colors[-1] = "#2E7D32"
+                kagi_colors[-1] = COLOR_YANG
                 kagi_widths[-1] = 4
                 last_high = price
         elif price <= current_price - reversal_amount:
@@ -75,7 +89,7 @@ for price in prices[1:]:
             # Horizontal shoulder line
             kagi_x.append(x_pos)
             kagi_y.append(current_price)
-            kagi_colors.append("#2E7D32" if is_yang else "#C62828")
+            kagi_colors.append(COLOR_YANG if is_yang else COLOR_YIN)
             kagi_widths.append(4 if is_yang else 2)
             # New vertical down line
             kagi_x.append(x_pos)
@@ -84,7 +98,7 @@ for price in prices[1:]:
             if price < last_low:
                 is_yang = False
                 last_low = price
-            kagi_colors.append("#2E7D32" if is_yang else "#C62828")
+            kagi_colors.append(COLOR_YANG if is_yang else COLOR_YIN)
             kagi_widths.append(4 if is_yang else 2)
             current_direction = "down"
             current_price = price
@@ -97,7 +111,7 @@ for price in prices[1:]:
             # Check if we broke previous low -> become yin
             if price < last_low:
                 is_yang = False
-                kagi_colors[-1] = "#C62828"
+                kagi_colors[-1] = COLOR_YIN
                 kagi_widths[-1] = 2
                 last_low = price
         elif price >= current_price + reversal_amount:
@@ -106,7 +120,7 @@ for price in prices[1:]:
             # Horizontal waist line
             kagi_x.append(x_pos)
             kagi_y.append(current_price)
-            kagi_colors.append("#2E7D32" if is_yang else "#C62828")
+            kagi_colors.append(COLOR_YANG if is_yang else COLOR_YIN)
             kagi_widths.append(4 if is_yang else 2)
             # New vertical up line
             kagi_x.append(x_pos)
@@ -115,13 +129,14 @@ for price in prices[1:]:
             if price > last_high:
                 is_yang = True
                 last_high = price
-            kagi_colors.append("#2E7D32" if is_yang else "#C62828")
+            kagi_colors.append(COLOR_YANG if is_yang else COLOR_YIN)
             kagi_widths.append(4 if is_yang else 2)
             current_direction = "up"
             current_price = price
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Draw Kagi lines segment by segment
 for i in range(len(kagi_colors)):
@@ -133,21 +148,29 @@ for i in range(len(kagi_colors)):
         solid_capstyle="round",
     )
 
-# Create legend handles
+# Style
+ax.set_xlabel("Kagi Line Index", fontsize=20, color=INK)
+ax.set_ylabel("Price ($)", fontsize=20, color=INK)
+ax.set_title("kagi-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+
+# Legend
 legend_elements = [
-    Line2D([0], [0], color="#2E7D32", linewidth=4, label="Yang (Bullish)"),
-    Line2D([0], [0], color="#C62828", linewidth=2, label="Yin (Bearish)"),
+    Line2D([0], [0], color=COLOR_YANG, linewidth=4, label="Yang (Bullish)"),
+    Line2D([0], [0], color=COLOR_YIN, linewidth=2, label="Yin (Bearish)"),
 ]
-ax.legend(handles=legend_elements, fontsize=16, loc="upper left")
+leg = ax.legend(handles=legend_elements, fontsize=16, loc="upper left")
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Styling
-ax.set_xlabel("Kagi Line Index", fontsize=20)
-ax.set_ylabel("Price ($)", fontsize=20)
-ax.set_title("kagi-basic · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
-
-# Add annotation explaining reversal threshold
+# Annotation explaining reversal threshold
 ax.text(
     0.98,
     0.02,
@@ -156,8 +179,9 @@ ax.text(
     fontsize=14,
     ha="right",
     va="bottom",
-    bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
+    color=INK,
+    bbox={"boxstyle": "round", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
 )
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
