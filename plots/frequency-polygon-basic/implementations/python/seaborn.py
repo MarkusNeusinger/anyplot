@@ -1,7 +1,7 @@
 """ anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-17
+Quality: 95/100 | Updated: 2026-05-17
 """
 
 import os
