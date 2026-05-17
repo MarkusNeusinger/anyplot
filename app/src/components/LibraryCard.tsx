@@ -68,40 +68,49 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
         },
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-          {langLabel && (
-            <Box
-              aria-label={`Language: ${langLabel}`}
-              sx={{
-                fontFamily: typography.mono,
-                fontSize: '9px',
-                fontWeight: 600,
-                color: 'var(--ink-muted)',
-                bgcolor: 'var(--bg-elevated)',
-                border: '1px solid var(--rule)',
-                borderRadius: '4px',
-                px: 0.75,
-                py: 0.25,
-                letterSpacing: '0.08em',
-                lineHeight: 1.4,
-                flexShrink: 0,
-              }}
-            >
-              {langLabel}
-            </Box>
-          )}
-          <Box sx={{
+      {/* Top-right corner chip — sits above the card's flow content so it
+          doesn't push the library name around. Top offset clears the 2px
+          hover-accent that animates in via ::before. */}
+      {langLabel && (
+        <Box
+          aria-label={`Language: ${langLabel}`}
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
             fontFamily: typography.mono,
-            fontSize: '15px',
-            fontWeight: 700,
-            color: 'var(--ink)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {name}
-          </Box>
+            fontSize: '9px',
+            fontWeight: 600,
+            color: 'var(--ink-muted)',
+            bgcolor: 'var(--bg-elevated)',
+            border: '1px solid var(--rule)',
+            borderRadius: '4px',
+            px: 0.75,
+            py: 0.25,
+            letterSpacing: '0.08em',
+            lineHeight: 1.4,
+            pointerEvents: 'none',
+          }}
+        >
+          {langLabel}
+        </Box>
+      )}
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
+        <Box sx={{
+          fontFamily: typography.mono,
+          fontSize: '15px',
+          fontWeight: 700,
+          color: 'var(--ink)',
+          // Reserve space under the absolute-positioned chip so a long
+          // library name doesn't slide under it.
+          pr: langLabel ? 5 : 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          minWidth: 0,
+        }}>
+          {name}
         </Box>
         {count != null && (
           <Box sx={{
