@@ -1,218 +1,255 @@
 library: bokeh
+language: python
 specification_id: linked-views-selection
 created: '2026-01-08T21:54:54Z'
-updated: '2026-01-08T22:17:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832956812
+updated: '2026-05-17T00:32:33Z'
+generated_by: claude-haiku
+workflow_run: 25976859294
 issue: 3344
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of Bokeh native linked selection via shared ColumnDataSource
-  - Four coordinated views exceeding the spec requirement of 2-3 views
-  - Well-implemented CustomJS callbacks to update histogram and bar chart on selection
-  - Clear Selection button provides good UX for resetting views
-  - Proper use of selection_color, selection_alpha, and nonselection_alpha for visual
-    feedback
-  - Color-consistent encoding across all views
+  - Perfect visual quality across all criteria—text legible in both themes, proper
+    palette compliance, excellent layout proportions
+  - Correct linked-selection implementation using Bokeh's ColumnDataSource and CustomJS
+    callbacks for dynamic histogram/bar chart updates
+  - Professional theme-adaptive styling with consistent use of INK/INK_SOFT/PAGE_BG
+    tokens throughout all four plots
+  - Clean, reproducible code with deterministic seed and idiomatic Bokeh patterns
+  - 'Comprehensive specification compliance: 2 scatter plots + histogram + bar chart
+    with selection sync, clear button, and de-emphasis on unselected'
   weaknesses:
-  - Text sizes could be slightly larger for the high-resolution canvas
-  - Histogram uses single color instead of showing category breakdown with colors
-  - Small Bokeh toolbar icons in top-right corner may be hard to see at full resolution
-  image_description: 'The plot displays a 2x2 grid layout with four coordinated views.
-    Top-left: A scatter plot titled "Scatter Plot - Use Box Select or Lasso to Select
-    Points" showing Sepal Length (cm) on x-axis vs Sepal Width (cm) on y-axis with
-    150 data points in three distinct color-coded clusters (blue for Species A, yellow
-    for Species B, green for Species C). Top-right: A second scatter plot titled "Value
-    vs Sepal Width - Linked Selection" showing Value (units) on x-axis vs Sepal Width
-    (cm) on y-axis with the same color encoding, demonstrating cross-view linking.
-    Bottom-left: A histogram titled "Value Distribution - Updates with Selection"
-    showing the count distribution across Value (units) in blue bars. Bottom-right:
-    A bar chart titled "Category Distribution - Updates with Selection" showing three
-    equal-height bars (50 each) for Species A (blue), Species B (yellow), and Species
-    C (green). The main title "linked-views-selection · bokeh · pyplots.ai" appears
-    at the top left corner. All views share consistent color encoding for the three
-    species categories.'
+  - Design excellence is competent but standard—no exceptional aesthetic touches beyond
+    required theme tokens; could emphasize the linkage mechanism more visually
+  - Clear button uses default warning styling; consider more integration with overall
+    design palette
+  - Histogram and bar chart are separate ColumnDataSources manually updated via CustomJS
+    rather than derived views—works correctly but architectural alternative exists
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with subtle grain, correctly applied
+      Chrome: Title "linked-views-selection · bokeh · anyplot.ai" in dark text (#1A1A17), axis labels (Sepal Length, Sepal Width, Value, Category, Count) clearly readable, tick labels in softer dark (#4A4A44), grid lines at 10% opacity
+      Data: Two scatter plots show three colored categories (green #009E73, orange #D55E00, blue #0072B2) at consistent opacity 0.8; histogram and bar chart use same palette; all data colors match Okabe-Ito specification
+      Layout: 2×2 grid layout with clear button centered at top; all elements properly spaced with generous margins
+      Legibility verdict: PASS — All text readable, no collisions, high contrast between foreground and background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correctly applied (not pure black)
+      Chrome: Title and all axis/tick labels rendered in light text (#F0EFE8 and #B8B7B0), all readable against dark background with no dark-on-dark failures
+      Data: All data colors identical to light render—green, orange, blue scatter points and histogram/bar colors preserved; only chrome (background, text, grid) flips between themes as specified
+      Layout: Identical 2×2 grid structure maintained; spacing and proportions consistent with light render
+      Legibility verdict: PASS — All text readable, brand green #009E73 remains visible and distinct, proper theme-adapted contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
-        passed: true
-        comment: Text is readable but could be larger given canvas size; titles and
-          axis labels are visible
-      - id: VQ-02
-        name: No Overlap
-        score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text (titles, axis labels, tick labels) explicitly sized (28pt,
+          22pt, 18pt) and readable at full resolution in both light (#FAF8F1) and
+          dark (#1A1A17) themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Elements well-separated in 2×2 grid; no text collisions or overlapping
+          markers
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Markers are visible but relatively small for the canvas size; alpha
-          blending works well
+        comment: Scatter markers (size=15) clearly visible; histogram bars and categorical
+          bars well-distinguished
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/green palette is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: 2x2 grid fills canvas well, balanced proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All axes have descriptive labels with units (cm, units)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette (green #009E73, orange #D55E00, blue #0072B2)
+          is CVD-safe; no red-green as sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2×2 grid proportions balanced; nothing cut off; generous margins
+          around plots
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), legend in scatter plot works, but histogram
-          lacks category legend
+        comment: 'Descriptive labels with units: Sepal Length (cm), Sepal Width (cm),
+          Value (units); title format correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green #009E73; multi-series follows Okabe-Ito order
+          (1→3); backgrounds #FAF8F1 (light) and #1A1A17 (dark); chrome correctly
+          theme-adapted in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional styling with intentional hierarchy and theme token consistency,
+          but uses standard Bokeh patterns without exceptional design flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean styling with proper font hierarchy and subtle grid (10% opacity),
+          but minimal additional refinement beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Four complementary views guide exploratory analysis (scatter → histogram,
+          bar chart), but linkage mechanism could be more visually emphasized
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-view linked selection dashboard with scatter, histogram,
-          and bar chart
+        comment: 'Correct plot types: two scatter plots (primary interaction), histogram
+          (continuous distribution), bar chart (categorical summary)'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned across all views
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has 4 coordinated views (exceeds spec 2-3), selection sync, clear
-          selection button, consistent colors
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements: 3 coordinated views, selection sync via CustomJS
+          callback, de-emphasis (nonselection_alpha=0.15), selection mechanism (box_select,
+          lasso_select), clear button, consistent color encoding'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible in each view
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correct; all 150 data points shown; axes scale appropriately
+          to data ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title uses correct format: linked-views-selection · bokeh · pyplots.ai'
+        comment: 'Title: ''linked-views-selection · bokeh · anyplot.ai'' (correct
+          format); implicit legend via color encoding in scatter plots'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters with good separation, demonstrating
-          linking across views
+        comment: Demonstrates multiple dimensions (x, y, category, value), brushing/linking
+          interaction, and categorical/continuous distributions
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Iris-like species data is plausible scientific scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for botanical measurements
+        comment: Iris-like data with realistic labels (Sepal Length/Width, Species
+          A–C); 150 points across 3 categories is plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150 points (50 per category) appropriate for linked-view interaction;
+          value ranges (10–25 units) and sepal dimensions (2–8) realistic
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Script structure is linear but has some complexity with CustomJS
-          callbacks
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Simple, straightforward script; no unnecessary functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set to 42 for deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Some redundant code with duplicate scatter renderers for legend
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; uses idiomatic Bokeh patterns (ColumnDataSource,
+          CustomJS callbacks) without fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Generates plot-light.png, plot-dark.png, plot-light.html, plot-dark.html;
+          no bare plot.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Bokeh ColumnDataSource for linked selection, CustomJS
-          callbacks, selection_color/nonselection_alpha, interactive tools (box_select,
-          lasso_select, tap), Button widget
+        comment: 'Uses Bokeh''s recommended patterns: ColumnDataSource for data binding,
+          figure() API, CustomJS for callbacks, proper theme token application'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Leverages Bokeh''s distinctive capabilities: ColumnDataSource linking,
+          selection glyphs (selection_color, nonselection_alpha), CustomJS for dynamic
+          updates; Selenium screenshot pattern correct per library rules'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - subplots
-  - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep:
   - binning
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending
