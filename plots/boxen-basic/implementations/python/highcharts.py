@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-Library: highcharts | Python 3.13
-Quality: 91/100 | Updated: 2026-05-17
+Library: highcharts unknown | Python 3.13.13
+Quality: 12/100 | Updated: 2026-05-17
 """
 
 import json
