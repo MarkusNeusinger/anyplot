@@ -1,220 +1,243 @@
 library: pygal
+language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:23:35Z'
-updated: '2026-01-09T08:27:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845624604
+updated: '2026-05-17T19:21:28Z'
+generated_by: claude-haiku
+workflow_run: 25995153011
 issue: 3415
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/pygal/plot-dark.html
+quality_score: 73
 review:
   strengths:
-  - Excellent Voronoi diagram implementation with proper polygon clipping to bounding
-    box
-  - Creative workaround for pygal's lack of native Voronoi support using manual SVG
-    construction with pygal's Style
-  - Colorblind-safe palette with 20 distinguishable colors
-  - Proper seed point markers with white borders for visibility
-  - Good realistic context with facility location clusters (urban, industrial, suburban)
-  - Interactive tooltips on cells and points via SVG title elements
-  - High-resolution output suitable for publication
+  - Correct Voronoi cell computation using scipy with proper infinite-region extension
+    algorithm
+  - Full theme adaptation — both light and dark renders pass the chrome-readability
+    check
+  - 'All spec requirements met: clipping, color differentiation, seed point markers,
+    title format'
+  - Seed-point halo design (outer PAGE_BG ring + inner Okabe-Ito dot) works in both
+    themes
   weaknesses:
-  - Code violates KISS principle by using multiple helper functions instead of flat
-    structure
-  - Legend positioned inside plot area could potentially overlap with data in different
-    configurations
-  image_description: The plot displays a Voronoi diagram partitioning a 2D plane into
-    20 colored polygonal regions. The canvas has a light gray background with a white
-    plot area. Each Voronoi cell is filled with a distinct color (including blue,
-    yellow, orange, green, purple, pink, lavender, teal, gray, and others) at 60%
-    opacity with dark gray borders. Seed points are shown as small circles with white
-    outer rings and colored inner circles matching their respective cells. The title
-    "voronoi-basic · pygal · pyplots.ai" appears at the top in bold black text. Axis
-    labels show "X Coordinate (km)" and "Y Coordinate (km)" with tick marks at odd
-    values 1, 3, 5, 7, 9. A dashed grid overlay helps with spatial reference. A legend
-    in the upper right shows "Voronoi Cell" and "Seed Point" symbols with "n = 20
-    points" notation. The plot is well-proportioned, filling most of the canvas with
-    balanced margins.
+  - pygal is not used at all — the implementation bypasses the library entirely in
+    favor of raw SVG construction via xml.etree.ElementTree; no pygal import, no Style
+    object, no chart API
+  - Seed-point markers are too small at ~32px diameter on a 4800px canvas; should
+    be 3-4x larger (r=40-50) to be clearly visible per spec
+  - No design storytelling — no focal point, region labels, or visual hierarchy to
+    guide the viewer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "voronoi-basic · pygal · anyplot.ai" in dark ink (#1A1A17), visible at top-center. X-axis label "X Coordinate (units)" and Y-axis label "Y Coordinate (units)" in dark ink. Tick labels (1,3,5,7,9 on both axes) in INK_SOFT (#4A4A44). All chrome elements readable.
+      Data: 25 Voronoi cells filled with Okabe-Ito colors at 60% opacity — first cell green (#009E73), cycling through orange, blue, purple, amber, sky-blue, yellow. Subtle grid at opacity 0.15. Small seed-point markers (r=16 outer, r=12 inner) in cell color with PAGE_BG outer ring.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and axis labels render in #F0EFE8 (near-white) — clearly visible. Tick labels in #B8B7B0 — visible against dark background. No dark-on-dark failures detected.
+      Data: Okabe-Ito data colors are identical to light render — only chrome flipped. Seed-point outer rings show PAGE_BG (#1A1A17) which creates a subtle dark halo against the colored cells. Brand green #009E73 reads well on the dark surface.
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          high resolution
+        comment: Font sizes match style-guide spec (28px title, 22px axis labels,
+          18px ticks); readable in both themes but visual weight could be stronger
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels and legend are well-separated
+        comment: Voronoi cells non-overlapping by construction; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Voronoi cells and seed points are clearly visible; seed points are
-          well-sized with white borders for contrast
+        comment: Cells clearly visible; seed-point markers present but small (~32px
+          diameter on 4800px canvas)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses a diverse colorblind-safe palette with 20 distinguishable colors
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas; plot fills approximately 70% with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: X Coordinate (km), Y Coordinate (km)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; no red-green sole-signal encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas with generous margins and clean proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Correct title format; X/Y axis labels with units present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First cell #009E73; Okabe-Ito order followed; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid uses dashed lines; legend positioned inside plot area could
-          overlap with data
+        comment: Colorful but utilitarian; no spatial emphasis, no region labels,
+          no visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid, clean borders, correct themes; seed points too small
+          to register as designed elements
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Correct partitioning shown but no focal point, no emphasis, no narrative
+          guidance for viewer
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Voronoi diagram with spatial partitioning
+        comment: Correct Voronoi diagram with scipy-computed cells
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly mapped to seed points
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: clipped cells, distinguishable colors,
-          marked seed points'
-      - id: SC-04
-        name: Data Range
+        comment: Bounding-box clipping, color differentiation, seed points, color
+          palette all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible from 0.5 to 10.5 on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: Legend is accurate but minimal; does not explain cluster meanings
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: 25 seed points (within 10-50 range), coordinate axes shown, all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: voronoi-basic · pygal · pyplots.ai'
+        comment: Correct title format; no legend needed for individually-colored cells
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows varied cell sizes, boundary clipping, clustering patterns (urban,
-          industrial, suburban)
+        comment: Shows cells, boundaries, clipping, seed points; seed-point size limits
+          how well markers aspect is demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Facility location scenario is plausible but the data is synthetic/generated
-          rather than from a real dataset
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values 1-10 km is reasonable for facility coverage analysis
+        comment: Random 2D points in neutral coordinate space; plausible spatial distribution
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0.5-10.5 coordinate range is sensible and well-bounded
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 2
         max: 3
         passed: false
-        comment: Contains multiple functions (data_to_svg, voronoi_finite_polygons_2d,
-          clip_polygon_to_box) - violates KISS principle
+        comment: Three helper functions (data_to_svg, voronoi_finite_polygons_2d,
+          clip_polygon_to_box); algorithms are complex enough to partially justify
+          functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (xml.etree, cairosvg, numpy, pygal, scipy.spatial)
+        comment: All five imports (os, xml.etree.ElementTree, cairosvg, numpy, scipy.spatial.Voronoi)
+          are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated APIs used
+        comment: Clear SVG construction; no fake UI; well-organized pipeline
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required by pygal
+          library guide
+    library_mastery:
+      score: 0
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 0
         max: 5
-        passed: true
-        comment: Creative use of pygal's Style class for consistent theming; generates
-          SVG natively and uses cairosvg for PNG export; leverages pygal's config
-          system
+        passed: false
+        comment: pygal is not imported or used anywhere — entire implementation uses
+          xml.etree.ElementTree + cairosvg to hand-build raw SVG
+      - id: LM-02
+        name: Distinctive Features
+        score: 0
+        max: 5
+        passed: false
+        comment: No pygal features used; no Style object, no chart API, no interactive
+          HTML — raw SVG saved as .html
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - cairosvg
   techniques:
-  - patches
-  - manual-ticks
   - html-export
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
