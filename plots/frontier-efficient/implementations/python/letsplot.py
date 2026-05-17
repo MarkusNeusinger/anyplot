@@ -1,16 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_line,
+    geom_point,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    scale_color_viridis,
+    theme,
+    theme_minimal,
+)
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Generate simulated asset data
 np.random.seed(42)
@@ -22,7 +50,7 @@ risk_free_rate = 0.03
 asset_returns = np.array([0.08, 0.10, 0.12, 0.15, 0.07, 0.18])
 asset_volatility = np.array([0.12, 0.15, 0.18, 0.25, 0.10, 0.30])
 
-# Correlation matrix (realistic correlations)
+# Correlation matrix
 corr_matrix = np.array(
     [
         [1.00, 0.30, 0.25, 0.20, 0.50, 0.15],
@@ -49,7 +77,7 @@ for _ in range(n_portfolios):
     portfolio_risks.append(port_vol)
     sharpe_ratios.append((port_return - risk_free_rate) / port_vol)
 
-# Generate efficient frontier via Monte Carlo sampling
+# Generate efficient frontier
 target_returns = np.linspace(0.07, 0.18, 50)
 frontier_risks = []
 frontier_returns = []
@@ -67,22 +95,19 @@ for target in target_returns:
         frontier_risks.append(best_risk)
         frontier_returns.append(target)
 
-# Find minimum variance portfolio
+# Find special portfolios
 min_var_idx = np.argmin(frontier_risks)
 min_var_risk = frontier_risks[min_var_idx]
 min_var_return = frontier_returns[min_var_idx]
 
-# Find maximum Sharpe ratio (tangency portfolio)
 sharpe_frontier = [(r - risk_free_rate) / s for r, s in zip(frontier_returns, frontier_risks, strict=False)]
 max_sharpe_idx = np.argmax(sharpe_frontier)
 tangency_risk = frontier_risks[max_sharpe_idx]
 tangency_return = frontier_returns[max_sharpe_idx]
 
-# Create DataFrames
+# DataFrames
 df_portfolios = pd.DataFrame({"risk": portfolio_risks, "return": portfolio_returns, "sharpe": sharpe_ratios})
-
 df_frontier = pd.DataFrame({"risk": frontier_risks, "return": frontier_returns})
-
 df_special = pd.DataFrame(
     {
         "risk": [min_var_risk, tangency_risk],
@@ -96,60 +121,41 @@ cml_risks = np.array([0, tangency_risk * 1.8])
 cml_returns = risk_free_rate + (tangency_return - risk_free_rate) / tangency_risk * cml_risks
 df_cml = pd.DataFrame({"risk": cml_risks, "return": cml_returns})
 
-# Create plot
-plot = (
-    ggplot()  # noqa: F405
-    # Random portfolios colored by Sharpe ratio
-    + geom_point(  # noqa: F405
-        data=df_portfolios,
-        mapping=aes(x="risk", y="return", color="sharpe"),  # noqa: F405
-        size=4,
-        alpha=0.6,
-    )
-    # Efficient frontier curve
-    + geom_line(  # noqa: F405
-        data=df_frontier,
-        mapping=aes(x="risk", y="return"),  # noqa: F405
-        color="#306998",
-        size=3,
-    )
-    # Capital Market Line
-    + geom_line(  # noqa: F405
-        data=df_cml,
-        mapping=aes(x="risk", y="return"),  # noqa: F405
-        color="#666666",
-        size=1.5,
-        linetype="dashed",
-    )
-    # Special portfolios (Min Variance and Max Sharpe)
-    + geom_point(  # noqa: F405
-        data=df_special,
-        mapping=aes(x="risk", y="return"),  # noqa: F405
-        color="#DC2626",
-        size=10,
-        shape=18,
-    )
-    # Labels
-    + labs(  # noqa: F405
-        x="Risk (Standard Deviation)",
-        y="Expected Return",
-        title="frontier-efficient · letsplot · pyplots.ai",
-        color="Sharpe Ratio",
-    )
-    # Color scale
-    + scale_color_gradient(low="#FFD43B", high="#306998")  # noqa: F405
-    # Theme
-    + theme_minimal()  # noqa: F405
-    + theme(  # noqa: F405
-        plot_title=element_text(size=24),  # noqa: F405
-        axis_title=element_text(size=20),  # noqa: F405
-        axis_text=element_text(size=16),  # noqa: F405
-        legend_title=element_text(size=18),  # noqa: F405
-        legend_text=element_text(size=14),  # noqa: F405
-    )
-    + ggsize(1600, 900)  # noqa: F405
+# Custom theme
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major_x=element_line(color=RULE, size=0.3),
+    panel_grid_major_y=element_line(color=RULE, size=0.3),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
 )
 
-# Save plot to current directory
-export_ggsave(plot, "plot.png", path=".", scale=3)
-export_ggsave(plot, "plot.html", path=".")
+# Plot
+plot = (
+    ggplot()
+    + geom_point(data=df_portfolios, mapping=aes(x="risk", y="return", color="sharpe"), size=4, alpha=0.6)
+    + geom_line(data=df_frontier, mapping=aes(x="risk", y="return"), color=OKABE_ITO[2], size=3)
+    + geom_line(data=df_cml, mapping=aes(x="risk", y="return"), color=INK_SOFT, size=1.5, linetype="dashed")
+    + geom_point(data=df_special, mapping=aes(x="risk", y="return"), color=OKABE_ITO[1], size=10, shape=18)
+    + labs(
+        x="Risk (Standard Deviation)",
+        y="Expected Return",
+        title="frontier-efficient · letsplot · anyplot.ai",
+        color="Sharpe Ratio",
+    )
+    + scale_color_viridis()
+    + ggsize(1600, 900)
+    + theme_minimal()
+    + anyplot_theme
+)
+
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
