@@ -1,168 +1,168 @@
 library: matplotlib
+language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:03:27Z'
-updated: '2025-12-30T00:19:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585399690
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling:
-  - edge-highlighting
-  - minimal-chrome
+updated: '2026-05-17T13:44:36Z'
+generated_by: claude-haiku
+workflow_run: 25992288730
+issue: 2499
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Clean semicircular layout algorithm with proper seat distribution across 8 concentric
-    rows
-  - Excellent colorblind-safe palette using established accessible colors
-  - Party arrangement from left to right matches political convention
-  - Individual seats clearly visible with white borders providing visual separation
-  - Legend includes seat counts in parentheses for quick reference
-  - Majority threshold annotation adds context without cluttering the visualization
-  weaknesses:
-  - Legend ncol=3 creates uneven distribution (2-2-1 parties per row); ncol=2 or ncol=5
-    would be more balanced
-  - Party names still reference political spectrum (Progressive, Conservative) rather
-    than completely neutral names like colors or regions
-  - Could use matplotlib patches/collections for more efficient rendering of many
-    similar shapes
-  image_description: 'The plot displays a semicircular parliament seat chart with
-    400 seats arranged in 8 concentric arcs. Five parties are represented using a
-    colorblind-safe palette: Progressive Alliance (145 seats, orange/gold) on the
-    far left, Liberty Union (110 seats, blue), Green Future (45 seats, green), Conservative
-    Party (80 seats, red-orange), and Reform Movement (20 seats, pink) on the far
-    right. Seats are rendered as individual dots with white edge borders. The title
-    "parliament-basic · matplotlib · pyplots.ai" appears at the top in bold. Below
-    the semicircle, italic text displays "Majority threshold: 201 seats". A 3-column
-    legend at the bottom shows party names with seat counts. The chart has a clean
-    white background with no axes visible.'
+  - Perfect visual quality with all text readable in both light and dark themes
+  - Excellent theme adaptation with all chrome elements correctly color-mapped
+  - Complete spec implementation with elegant majority threshold annotation
+  - Strong data quality with realistic, neutral scenario and appropriate scale
+  - Clean, professional design using Okabe-Ito palette idiomatically
+  - Elegant code with clear structure and perfect reproducibility
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct)
+      Chrome: Title in dark INK (#1A1A17), legend and annotation in INK_SOFT (#4A4A44) — all clearly readable against light background
+      Data: Six parties rendered in Okabe-Ito colors starting with brand green (#009E73 for Green Alliance), followed by vermillion, blue, reddish purple, orange, sky blue. Seats arranged in concentric arcs, well-spaced and distinct.
+      Legibility verdict: PASS (excellent contrast, all text explicitly sized and readable)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct)
+      Chrome: Title in light INK (#F0EFE8), legend and annotation in light INK_SOFT (#B8B7B0) — all clearly readable against dark background. No dark-on-dark failures.
+      Data: Data colors identical to light render — all six party colors are the same Okabe-Ito values. Only chrome (text, background) has flipped to light colors.
+      Legibility verdict: PASS (excellent contrast, no dark-on-dark failures, theme adaptation perfect)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt bold, legend at 14pt, all text clearly readable
+        comment: All fonts explicitly set; title 24pt, legend 16pt, annotation 14pt;
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean spacing between seats and text
+        comment: Zero text overlap; legend and annotation positioned without collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Seat dots sized well (s=160), white edges provide separation
+        comment: 400 seats with s=160, white edges; density-appropriate and clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Uses colorblind-safe palette (#E69F00, #56B4E9, #009E73, #D55E00,
-          #CC79A7)'
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but some empty space at bottom; legend placement
-          could be closer
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for this plot type (axes hidden appropriately)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, CVD-safe, good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px; parliament fills ~60% with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is functional but ncol=3 creates uneven rows; could be better
-          organized
+        passed: true
+        comment: Correct title format; axes off appropriately
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order respected; backgrounds #FAF8F1/#1A1A17;
+          theme-adaptive chrome perfect in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional palette use and minimalist design; well above generic
+          defaults but not custom-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes off, custom legend styling, white edges, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Parliament layout clearly shows party composition; visual hierarchy
+          guides viewer to Green Alliance dominance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct semicircular parliament seat chart
+        comment: Correct semicircular parliament chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Seats correctly arranged left-to-right by party
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has individual seats as dots, party colors, legend with seat counts,
-          majority threshold annotation
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: individual seats, party colors, legend, majority
+          threshold'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 400 seats visible and accounted for
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angle and radius correctly map to political position and row; all
+          data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Party names and seat counts displayed correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows exact format: parliament-basic · matplotlib · pyplots.ai'
+        comment: Correct title format; legend labels match data exactly
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variety: large party (145), medium (110, 80), small (45, 20)'
+        comment: Shows party size variation (98 to 26), spectrum representation, threshold
+          context
       - id: DQ-02
         name: Realistic Context
-        score: 4
-        max: 7
-        passed: false
-        comment: Uses fictional parliament with neutral party names, but "Progressive"/"Conservative"
-          still suggest political spectrum (-3)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 400 total seats is realistic for a medium-sized parliament
+        comment: Realistic election results, neutral party names, plausible 400-seat
+          parliament
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Majority calculation correct (201); proportions realistic and factually
+          sound
     code_quality:
       score: 10
       max: 10
@@ -172,40 +172,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → layout → plot → save'
+        comment: Linear flow without functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random seed needed as data is hardcoded)
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only os, matplotlib, numpy — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct settings
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level API usage (scatter, legend, text); theme tokens handled
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses scatter with edgecolors, custom positioning, but no advanced
-          matplotlib features like patches or collections
+        comment: Custom legend construction, theme-adaptive implementation via environment
+          variables, geometric arrangement
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

@@ -1,163 +1,178 @@
 library: plotnine
+language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:03:48Z'
-updated: '2025-12-30T00:09:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585401490
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-05-17T13:50:19Z'
+generated_by: claude-haiku
+workflow_run: 25992572411
+issue: 2499
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent semicircular seat arrangement algorithm with proper left-to-right party
-    assignment
-  - Clean legend with seat counts using lambda for label formatting
-  - Good use of plotnine grammar of graphics with theme_void and coord_fixed
-  - Proper categorical ordering for consistent legend display
-  - Uses neutral fictional party names avoiding political controversy
+  - Perfect visual quality across both light and dark themes with excellent text legibility
+  - 'Correct Okabe-Ito palette usage with first series as #009E73, data colors identical
+    in both renders'
+  - Proper theme-adaptive chrome with all text clearly readable (no dark-on-dark or
+    light-on-light failures)
+  - Spec-compliant implementation with correct plot type, all required features, and
+    proper data mapping
+  - Clean code structure with deterministic data generation and idiomatic plotnine
+    usage
   weaknesses:
-  - Seat markers could be slightly larger for better visibility at full resolution
-  - Does not include optional majority threshold line mentioned in spec
-  image_description: 'The plot displays a semicircular parliament seat chart with
-    320 total seats arranged in 8 concentric arcs. Individual seats are rendered as
-    colored dots. From left to right, the parties are: Progressive Alliance (blue
-    #306998, 85 seats), Center Coalition (yellow #FFD43B, 72 seats), Conservative
-    Union (teal #4ECDC4, 68 seats), Green Future (green #2ECC71, 42 seats), Liberal
-    Democrats (purple #9B59B6, 35 seats), and Independent Group (gray #95A5A6, 18
-    seats). The legend is positioned at the bottom in a 2-row horizontal layout, showing
-    party names with seat counts in parentheses. The title "parliament-basic · plotnine
-    · pyplots.ai" is centered at the top in bold. The visualization uses theme_void
-    with a clean white background.'
+  - Design Excellence could be elevated with more distinctive styling beyond standard
+    parliament chart approach (e.g., custom color gradients, enhanced visual hierarchy,
+    or refined typography choices)
+  - LM-02 (Distinctive Features) uses standard techniques - guide_legend and coord_fixed
+    are expected, not distinctive to plotnine mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified, not pure white
+      Chrome: Title "parliament-basic · plotnine · anyplot.ai" in bold dark text (INK token #1A1A17) is clearly readable. Legend shows party names with seat counts in 2 rows, using appropriate secondary text color (INK_SOFT #4A4A44). Legend box has elevated background (#FFFDF6) with soft border.
+      Data: 320 individual seat dots arranged in 8 concentric semicircular arcs. Colors follow Okabe-Ito sequence: #009E73 (Progressive Alliance, 85 seats), #D55E00 (Center Coalition, 72), #0072B2 (Conservative Union, 68), #CC79A7 (Green Future, 42), #E69F00 (Liberal Democrats, 35), #56B4E9 (Independent Group, 18). All dots clearly visible with alpha=0.95, good contrast against background.
+      Legibility verdict: PASS - all text elements (title, legend labels, seat counts) are clearly readable with strong contrast against the light surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified, not pure black
+      Chrome: Title in light text (INK token #F0EFE8) is clearly readable against dark background. Legend text uses appropriate dark-theme secondary color (INK_SOFT #B8B7B0). Legend box background (#242420) provides proper contrast with light text.
+      Data: Identical semicircular arrangement and colors to light render. All six Okabe-Ito colors (positions 1-6) maintain their exact hex values from light render, confirming proper theme-adaptive implementation where only chrome changes, not data colors.
+      Legibility verdict: PASS - no dark-on-dark failures. All text is clearly readable with good contrast. Title, legend labels, and seat counts are all visible. Brand green #009E73 reads clearly on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large (26pt), legend text is clear (13pt), all text perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; seats are well-spaced
+        comment: Title 26pt bold, legend text 13pt, all readable in both themes with
+          proper INK tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend in 2 rows, no overlapping elements, all text clearly readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Seats are well-sized (size=5) with good alpha (0.95); could be slightly
-          larger for better visibility
+        comment: Seat dots size=6 alpha=0.95, clearly visible and distinct from background
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colors are distinguishable and avoid pure red-green conflicts; uses
-          blue, yellow, teal, green, purple, gray palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good semicircular layout filling canvas well; slight asymmetry in
-          vertical centering
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for this plot type (theme_void removes axes) - no deduction appropriate
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-positioned at bottom, horizontal with 2 rows, includes
-          seat counts
+        comment: Okabe-Ito palette is colorblind-safe, adequate contrast, no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape, nothing cut off, generous margins (plot_margin=0.1),
+          good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct, legend shows party names with counts, theme_void
+          appropriate
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order 1-6, backgrounds #FAF8F1/#1A1A17,
+          colors identical in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Good customization: legend styling, 2-row layout, elevated background.
+          Could use more distinctive touches beyond standard parliament approach.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes spines appropriately, no grid (correct for plot
+          type), generous whitespace, subtle legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: title > data > legend. Color progression
+          suggests political spectrum. Could strengthen focal points or emphasis techniques.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct semicircular parliament seat chart with dots
+        comment: Correct semicircular parliament seat chart with individual dots
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Seats correctly arranged in arcs from left to right by party
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Individual seats as dots, party colors, legend with seat counts
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: concentric arcs, party coloring, legend with
+          seat counts'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 320 seats visible across all arcs
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y coordinates properly calculated, all 320 seats displayed, axes
+          show full data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows all 6 parties with correct names and seat counts
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "parliament-basic · plotnine · pyplots.ai"'
+        comment: Title format correct, legend labels include seat counts
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple parties with varying sizes; missing majority threshold
-          line (optional per spec)
+        comment: 6 parties with varied seat counts (18-85), demonstrates full parliament
+          composition
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Uses fictional neutral party names (good), but parliament theme could
-          be considered edge case per content policy
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 320 total seats is realistic for a parliament; seat distribution
-          is plausible
+        comment: Neutral fictional parliament names, realistic distributions, appropriate
+          for demonstration
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 320 total seats reasonable, party size variation is meaningful
     code_quality:
       score: 10
       max: 10
@@ -167,41 +182,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → calculation → plot → save'
+        comment: No unnecessary functions/classes, straightforward implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements used)
+        comment: Deterministic seat positioning, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: 'Only necessary imports: os, numpy, pandas, plotnine'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean geometric calculations, no fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png, uses current plotnine API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ggplot pipeline, correct geom_point usage, appropriate theme_void
+          and aes mapping
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine grammar of graphics well (ggplot, geom_point, theme_void,
-          scale_color_manual, guide_legend); coord_fixed for aspect ratio; could leverage
-          more advanced features
+        comment: Uses guide_legend with custom parameters, coord_fixed, scale_color_manual
+          properly. Techniques are standard rather than distinctive.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - publication-ready
