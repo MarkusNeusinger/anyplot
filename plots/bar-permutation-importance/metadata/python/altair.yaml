@@ -1,167 +1,177 @@
 library: altair
+language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:55:08Z'
-updated: '2025-12-31T11:01:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617500535
+updated: '2026-05-17T12:30:56Z'
+generated_by: claude-haiku
+workflow_run: 25990778704
 issue: 2998
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent implementation of horizontal bar chart with proper sorting by importance
-  - Clean declarative Altair code with proper layering (zero_line, bars, error_bars)
-  - Good use of tooltips for interactivity showing feature name, mean importance,
-    and std dev
-  - Sequential blue color gradient effectively emphasizes high-importance features
-  - Error bars clearly visible and properly positioned
-  - Realistic housing price ML scenario with plausible feature names and importance
-    values
-  - Both PNG and HTML outputs provided for static and interactive viewing
+  - Excellent theme adaptation with proper token usage in both renders
+  - Effective use of viridis colormap for continuous importance values
+  - Clean layer composition combining bars, error bars, and reference line
+  - Well-sized typography that remains readable at large canvas
+  - Error bars meaningfully convey uncertainty across permutation repeats
+  - Specification requirements fully met with professional polish
   weaknesses:
-  - Missing subtle grid lines that would help readers trace values across the chart
-  - Could benefit from adding .interactive() for zoom/pan capabilities on the HTML
-    version
-  image_description: The plot displays a horizontal bar chart with 15 housing price
-    model features sorted by permutation importance (highest at top). Location Score
-    (~0.142) and Square Footage (~0.128) are the most important features, shown with
-    darker blue bars. The color gradient uses a sequential blue palette ("blues" scheme),
-    with bars transitioning from dark blue (high importance) to very light blue (near-zero
-    or negative importance). Horizontal error bars extend from each bar showing variability
-    across shuffles. A vertical dashed reference line at x=0 distinguishes positive
-    from negative importance. Two features (Basement Area and Pool Presence) show
-    small negative importance values. The x-axis is labeled "Mean Decrease in Model
-    Score" and y-axis is labeled "Feature". The title correctly uses the format "bar-permutation-importance
-    · altair · pyplots.ai".
+  - Design could be more distinctive with custom color palette or visual emphasis
+    technique
+  - Whitespace margins could be more generous for premium visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "bar-permutation-importance · altair · anyplot.ai" is clearly visible in dark text (28px). Y-axis label "Feature" and X-axis label "Mean Decrease in Model Score" are readable in 22px dark ink. Tick labels are in 18px dark ink. All axes and labels are legible against light background.
+      Data: Horizontal bars colored with viridis colormap (yellow at top for highest importance "Location Score", transitioning through lime green, cyan, blue, purple for lower importance). Each bar has symmetric error bars in lighter color (INK_SOFT). Dashed reference line at x=0 visible. Grid lines subtle. All data elements clearly distinguishable.
+      Legibility verdict: PASS - all text readable, no contrast issues, all elements visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title is clearly visible in light text (28px). Y-axis and X-axis labels readable in light ink. Tick labels clearly visible. No dark-on-dark issues. Grid lines subtle but visible. Reference line clearly visible.
+      Data: Viridis colormap bars identical to light render - yellow, lime, cyan, blue, purple in exact same order. Error bars visible in light color. All data elements distinguished from dark background.
+      Legibility verdict: PASS - all text readable in light colors, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 16-18pt, all clearly
-          readable
+        comment: Title, axis labels, and tick labels are large and explicitly sized
+          for visibility in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, feature names well-spaced
+        comment: Feature names and values display without collision; all text is readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar size (30) appropriate for 15 features, error bars clearly visible
+        comment: Bars, error bars, and reference line all clearly visible and appropriately
+          styled
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential blue palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but some whitespace could be optimized
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Mean Decrease in Model Score", "Feature"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis colormap is colorblind-safe; bars distinguished by position
+          and value
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 (4800×2700 at 3.0 scale) provides good proportions; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No grid lines present (would help readability), no legend needed
-          (color legend disabled)
+        comment: Title follows spec format; axes are descriptive with semantic meaning
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses viridis (per spec); backgrounds are #FAF8F1
+          (light) and #1A1A17 (dark); both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Viridis mapping is appropriate and professional; theme tokens show
+          design intent, but no highly distinctive visual treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid is subtle and well-integrated; whitespace adequate though could
+          be more generous; error bars and reference line add refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through sort order and color gradient; error
+          bars and reference line effectively communicate uncertainty and context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Correct horizontal bar chart for permutation importance
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Features on Y-axis, importance on X-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has error bars, zero line, sorted by importance, color gradient
-      - id: SC-04
-        name: Data Range
+        comment: Bars sorted by importance; error bars present; color gradient mapped
+          to values; reference line at x=0
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including negative values
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Y-axis shows features; X-axis shows importance mean; color encodes
+          importance; appropriate data ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (legend appropriately hidden for single color scale)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: {spec-id} · {library} · pyplots.ai'
+        comment: Title correct format; legend appropriately omitted for single continuous
+          encoding
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive, near-zero, and negative importance values; good variety
-          in importance magnitudes
+        comment: 15 features provide good coverage of importance spectrum (positive
+          and negative)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Housing price prediction is a well-known ML scenario with realistic
-          feature names
+        comment: Housing price prediction model is plausible and neutral; importance
+          values realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Importance values (0.005-0.142) are realistic for permutation importance;
-          std devs appropriately scaled
+        comment: Ranges appropriate for permutation importance context; 15 features
+          readable
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,40 +179,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No unnecessary functions or classes; straightforward implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42) for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: All imports used; no extraneous code
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; no simulated interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: true
-        comment: Saves as plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; no bare plot.png
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct alt.Chart, mark_bar, mark_errorbar patterns; proper encoding
+          syntax; configure methods used well
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's declarative layering, tooltips, encoding sort field,
-          but could use more interactivity
+        comment: Uses layer composition and multiple mark types effectively; mark_errorbar
+          and mark_rule are distinctive but implementation is fairly standard
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
