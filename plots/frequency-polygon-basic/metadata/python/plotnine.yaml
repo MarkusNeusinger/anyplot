@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:15:55Z'
-updated: '2026-05-17T16:37:58Z'
+updated: '2026-05-17T16:43:48Z'
 generated_by: claude-haiku
 workflow_run: 25996427092
 issue: 3418
@@ -12,35 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Perfect theme-adaptive implementation with flawless light and dark renders
-  - Excellent text legibility with explicitly sized fonts (title 24pt, labels 20pt,
-    ticks 16pt)
-  - Correct Okabe-Ito palette usage with brand green (#009E73) as first series
-  - Clean, idiomatic plotnine code using ggplot2 grammar of graphics pattern
-  - 'All spec requirements met: correct plot type, multiple groups, proper legend,
-    descriptive axis labels with units'
-  - Professional layout with balanced margins and good canvas utilization
+  - Perfect visual quality with excellent legibility in both light and dark themes
+  - Flawless spec compliance and data quality
+  - Clean, reproducible code with proper theme tokens
+  - Idiomatic plotnine usage with grammar of graphics
+  - Okabe-Ito palette correctly implemented with brand green (#009E73) as first series
+  - Theme-adaptive chrome properly implemented across both renders
   weaknesses:
-  - Design Excellence is competent but not exceptional - uses well-configured library
-    defaults rather than distinctive custom design
-  - No special visual hierarchy or data storytelling emphasis - plot displays data
-    clearly but doesn't guide viewer to specific insight
-  - Standard geom_freqpoly usage without distinctive plotnine-specific techniques
+  - 'Design Excellence modest (9/20): well-configured defaults but lacks exceptional
+    aesthetic polish'
+  - All four spines retained (could remove top/right for minimalist style per guide)
+  - No visual hierarchy or emphasis to create data storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and readable
-      Chrome: Title "frequency-polygon-basic · plotnine · anyplot.ai" is clear and readable; axis labels "Response Time (ms)" and "Frequency" are descriptive with units; tick labels (200, 400, 600 and 0, 10, 20, 30) are clear and well-sized; all text is dark on light background with excellent contrast
-      Data: Three frequency polygon lines representing Control (green #009E73), Treatment A (orange #D55E00), and Treatment B (blue #0072B2); lines are appropriately thick (size=2) and fully distinguishable; grid is subtle with appropriate opacity; legend is cleanly positioned on the right
-      Legibility verdict: PASS - All text is clearly readable at full resolution; colors are Okabe-Ito compliant with first series as required #009E73
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "frequency-polygon-basic · plotnine · anyplot.ai" in dark text (clearly readable); X-axis "Response Time (ms)" with units; Y-axis "Frequency"; all tick labels in soft gray; legend "Condition" on right with green/orange/blue entries—all readable with no overlap
+      Data: Three frequency polygon lines with semi-transparent fill: Control (#009E73), Treatment A (#D55E00), Treatment B (#0072B2)—Okabe-Ito canonical order; lines clearly visible and overlapping appropriately; fills enhance without obscuring data
+      Legibility verdict: PASS - All elements perfectly readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and appropriate
-      Chrome: Title and axis labels are rendered in light text colors (#F0EFE8 / #B8B7B0) with excellent contrast against dark background; no dark-on-dark failures; tick labels and legend text are all readable; grid lines are subtle but visible
-      Data: Data colors are identical to light render (green, orange, blue) confirming proper theme-independent color handling; lines maintain their visual prominence and clarity; no color wash-out or visibility issues
-      Legibility verdict: PASS - All text is clearly readable; theme adaptation is flawless with no dark text on dark background issues
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title in light text clearly readable against dark background; axis labels and tick labels all light-colored (INK and INK_SOFT tokens properly applied); legend has elevated background (#242420) with light text—all readable
+      Data: Three frequency polygon lines identical in color to light render (#009E73, #D55E00, #0072B2); fills visible; no dark-on-dark failures; text colors flipped to light for readability
+      Legibility verdict: PASS - All elements readable; theme adaptation correct
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,46 +48,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized (24/20/16pt), perfectly readable in both
-          themes
+        comment: All font sizes explicitly set; title 24pt, labels 20pt, ticks 16pt;
+          all perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, clean spacing throughout
+        comment: No overlapping text elements; all labels and legend have proper spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines are optimally sized (size=2) and clearly distinguishable
+        comment: Three frequency polygon lines clearly visible; transparent fill visible
+          and appropriate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast and CVD-safe colors
+        comment: Okabe-Ito palette is CVD-safe; good contrast; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance with plot filling 50-70% of canvas, well-centered
-          margins
+        comment: 16:9 landscape utilizes canvas well; balanced margins; legend near
+          plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units ('Response Time (ms)', 'Frequency')
+        comment: X-axis includes units (Response Time (ms)); descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, subsequent colors follow Okabe-Ito order,
-          backgrounds #FAF8F1/#1A1A17, theme-adaptive chrome perfect'
+        comment: 'First series #009E73 (brand), then #D55E00, #0072B2 (Okabe-Ito order);
+          backgrounds correct; theme chrome correct in both renders'
     design_excellence:
       score: 9
       max: 20
@@ -100,22 +98,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults, professional but not distinctive
-          or exceptional
+        comment: Well-configured library default with proper palette and theme support;
+          clean but not exceptional design
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid and panel borders show attention to detail, but mostly
-          library defaults
+        comment: Subtle grid and reasonable whitespace; all four spines retained (could
+          remove top/right for cleaner aesthetic)
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no special visual hierarchy or emphasis
-          on insights
+        comment: Data displayed clearly; no explicit visual hierarchy or emphasis
+          to guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency polygon using geom_freqpoly
+        comment: Correct frequency polygon implementation using geom_freqpoly()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: multiple groups, distinct lines, legend'
+        comment: 'All features present: distinct line colors, legend, semi-transparent
+          fill, multiple distributions'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, all data visible, axes properly scaled
+        comment: X/Y correctly assigned; full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title format correct; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -153,22 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all distribution characteristics: central tendency, spread,
-          shape differences'
+        comment: Shows different means and spreads across conditions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Response time experiment is realistic and neutral psychology research
-          scenario
+        comment: Real-world scenario from experimental psychology; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times (200-700ms) and frequencies (0-30) are factually correct
-          and proportional
+        comment: Response times and frequencies factually correct and plausible
     code_quality:
       score: 10
       max: 10
@@ -178,33 +174,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → theme → data → plot → save'
+        comment: Clean linear structure; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for deterministic data
+        comment: Seed set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering or fake functionality
+        comment: Pythonic; no over-engineering or fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output format
+        comment: Saves as plot-{THEME}.png; current API; proper dpi=300
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -212,19 +208,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ggplot2 grammar of graphics, proper aes(), scale_color_manual(),
-          theme() patterns
+        comment: Expert grammar of graphics usage; high-level API
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Standard geom_freqpoly usage; no distinctive plotnine-specific techniques
-          beyond basic grammar of graphics
+        comment: Good use of theme system; somewhat standard for plotnine
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling

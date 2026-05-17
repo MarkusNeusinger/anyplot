@@ -1,7 +1,7 @@
 """ anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-17
+Quality: 87/100 | Updated: 2026-05-17
 """
 
 import os
