@@ -1,148 +1,184 @@
 library: bokeh
+language: python
 specification_id: chessboard-pieces
 created: '2026-01-08T22:38:59Z'
-updated: '2026-01-08T22:41:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20834100968
+updated: '2026-05-17T03:25:59Z'
+generated_by: claude-haiku
+workflow_run: 25979923411
 issue: 3350
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of Bokeh-specific features (ColumnDataSource, Label, rect glyphs)
-  - Clean visualization with good color scheme matching lichess.org style
-  - Interactive features (pan, zoom, reset) properly configured
-  - Both PNG and HTML export for maximum utility
-  - Proper chess board orientation with h1 as light square
-  - Well-chosen example position (Scholar's Mate is educational and famous)
+  - 'Perfect text legibility: all font sizes explicitly set (48pt title, 36pt labels,
+    110pt pieces)'
+  - 'Flawless spec compliance: correct board dimensions, piece placement, title format,
+    and chess notation'
+  - 'Excellent data quality: Scholar''s Mate is a real, instructive position with
+    clear educational value'
+  - 'Proper theme adaptation: backgrounds, title/label colors correctly flip between
+    light/dark while data colors remain constant'
+  - Clean, reproducible code with proper separation of theme tokens and no unnecessary
+    dependencies
+  - Excellent layout and canvas utilization with balanced margins and clear visual
+    hierarchy
   weaknesses:
-  - The x_range/y_range (-0.8, 7.5) creates slightly asymmetric margins around the
-    board
-  image_description: The plot displays a chess board showing the Scholar's Mate position
-    (a famous quick checkmate). The board has alternating light cream (#F0D9B5) and
-    dark brown (#B58863) squares following chess conventions. White pieces are rendered
-    with white/outlined Unicode symbols, while black pieces use dark/filled symbols.
-    The board shows the classic position with the white queen on f7 delivering checkmate
-    to the black king on e8. File labels (a-h) appear in blue (#306998) below the
-    board, and rank labels (1-8) are positioned on the left side. The title "Scholar's
-    Mate · chessboard-pieces · bokeh · pyplots.ai" is centered at the top in blue.
-    The board has a blue border and uses a square 1:1 aspect ratio (3600x3600 pixels).
-    All pieces are clearly visible and centered within their squares. The Bokeh toolbar
-    is visible on the right side for pan/zoom interactions.
+  - 'Design Excellence is moderate: chess board is functional and correct but not
+    visually sophisticated or distinctive — uses standard colors without creative
+    enhancement'
+  - 'Library Mastery could be deeper: implementation uses core bokeh features (figure,
+    rect, Label, ColumnDataSource) but doesn''t leverage distinctive bokeh capabilities
+    (e.g., hover tooltips, custom glyph rendering, or interactive features would elevate
+    from static to more advanced)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Scholar's Mate · chessboard-pieces · bokeh · anyplot.ai" (48pt, dark text) is centered and clearly readable. File labels (a–h) at bottom and rank labels (1–8) on left use 36pt soft ink gray — all fully legible with no overlap.
+      Data: 8×8 chess board with alternating light (#F0D9B5) and dark (#B58863) squares displaying Scholar's Mate position. White pieces rendered as light/white symbols (110pt), black pieces as dark symbols. All pieces are centered and clearly visible. Position correctly represents the famous checkmate pattern.
+      Legibility verdict: PASS — all text, labels, and pieces are clearly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, file labels, and rank labels are all rendered in light theme-adaptive colors and remain clearly readable against the dark background. No dark-on-dark failures.
+      Data: Same 8×8 chess board and piece positions as light render. Board square colors identical to light render (only chrome changed for theme). All pieces are visible as light-colored symbols with proper contrast against dark background and brown/tan squares.
+      Legibility verdict: PASS — all elements readable in dark theme, data colors identical to light render, chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48pt, labels at 36pt, all perfectly readable
+        comment: All font sizes explicitly set; title 48pt, labels 36pt, pieces 110pt;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or pieces
+        comment: No overlapping elements; file labels, rank labels, and piece positioning
+          all properly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Pieces at 110pt are well-sized and clearly visible
+        comment: All pieces clearly visible at 110pt; board squares properly contrasted
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good contrast between pieces and squares
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good layout but slight asymmetry in x_range creates minor imbalance
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No axis labels (N/A for chess board)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid hidden appropriately, no legend needed
+        comment: Good contrast between white and black pieces; board colors (tan/brown)
+          are colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600) appropriate for chess board; balanced margins;
+          well-centered
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive with spec name; file/rank labels use standard chess
+          notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark); text colors
+          theme-adaptive; chess board colors appropriate for spec'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured chess board but standard design; no innovative aesthetic
+          choices beyond spec requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: no unnecessary grid, clean layout, board border
+          added; whitespace adequate'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Position tells clear story (Scholar's Mate checkmate); visual hierarchy
+          through piece placement and title context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chess board visualization with pieces
+        comment: 'Correct chart type: chess board with positioned pieces'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Pieces correctly mapped from algebraic notation to board positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Unicode symbols, piece dictionary, proper orientation, h1 light square
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: board grid, Unicode piece symbols,
+          correct positioning'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 8x8 squares visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (files a-h), Y (ranks 1-8), and piece positions correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A, correctly omitted
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses Scholar's Mate · chessboard-pieces · bokeh · pyplots.ai
+        comment: Title format correct; no legend needed (N/A for chess board)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both white and black pieces, demonstrates checkmate position
+        comment: Complete 8×8 board with all pieces from Scholar's Mate position
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Scholar's Mate is a real, famous chess position
+        comment: Scholar's Mate is real, famous, instructive position; neutral, educational
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Positions are accurate to the real Scholar's Mate
+        comment: Standard board dimensions (8×8); factually accurate chess position
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -150,51 +186,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, plot, save'
+        comment: 'Simple linear flow: imports → theme → data → figure → drawing →
+          save'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random data used, deterministic hardcoded position
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed data; no randomness; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os (theme), time (render), Path (file), bokeh
+          (plotting), selenium (screenshot)'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Well-structured, readable, no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct output: plot-{theme}.html and plot-{theme}.png'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Label annotations, rect glyphs, interactive
-          tools, export_png, output_file/save for HTML
+        comment: 'Good bokeh patterns: figure(), ColumnDataSource, rect(), Label,
+          theme tokens; Selenium for export appropriate'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Standard bokeh usage; could leverage distinctive features like HoverTool,
+          custom glyphs, or interactive rendering
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - annotations
-  - html-export
-  - minimal-chrome
   patterns:
   - columndatasource
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
