@@ -1,150 +1,166 @@
 library: letsplot
+language: python
 specification_id: kagi-basic
 created: '2026-01-08T22:38:03Z'
-updated: '2026-01-08T22:40:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20834090853
+updated: '2026-05-17T08:20:45Z'
+generated_by: claude-haiku
+workflow_run: 25985451870
 issue: 3341
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Correct Kagi chart algorithm implementation with proper yang/yin logic
-  - Clear visual distinction between thick green (bullish) and thin red (bearish)
-    lines
-  - Proper horizontal shoulders and waists at reversal points
-  - Clean code structure following KISS principle
-  - Appropriate use of lets-plot grammar of graphics
+  - Perfect visual quality with explicit font sizing (24pt title, 20pt labels, 16pt
+    ticks)
+  - Excellent theme implementation with warm backgrounds and proper text contrast
+    in both renders
+  - Strong spec compliance with all Kagi features (thick/thin lines, shoulders/waists,
+    semantic colors)
+  - Clean code with deterministic data, KISS structure, and proper letsplot API usage
+  - Identical data colors across light and dark renders with only chrome adaptation
   weaknesses:
-  - Missing legend to explain what green/red and thick/thin lines represent
-  - Grid styling could be more subtle
-  image_description: The plot displays a Kagi chart showing price movements over approximately
-    14 line indices. Green (thick) lines represent yang/bullish segments and red (thin)
-    lines represent yin/bearish segments. The chart starts at around $101, rises to
-    a peak of ~$110, then shows multiple trend reversals oscillating between roughly
-    $82-$110. Horizontal segments connect vertical price movements at reversal points
-    (shoulders and waists). The title reads "kagi-basic · letsplot · pyplots.ai" at
-    the top. The Y-axis shows "Price ($)" ranging from 84-110, and the X-axis shows
-    "Line Index" from 0-13. The background is white with a subtle grid, and the minimal
-    theme provides clean presentation.
+  - Design Excellence could be improved by removing top/right spines for enhanced
+    minimalism
+  - Library Mastery uses generic ggplot-style approach; letsplot-specific interactive
+    features not leveraged
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme
+      Chrome: Title "kagi-basic · letsplot · anyplot.ai" in 24pt dark text, Y-axis "Price ($)" in 20pt, X-axis "Line Index" in 20pt, tick labels in 16pt - all clearly readable
+      Data: Thick green lines (#009E73) for uptrends (yang), thin red lines (#E74C3C) for downtrends (yin), horizontal segments at reversals - colors correct and visible
+      Legibility verdict: PASS - all elements readable with dark text on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme
+      Chrome: Title, axis labels, and tick labels all in light text (INK/INK_SOFT tokens) - clearly visible against dark background
+      Data: Identical colors to light render - thick green and thin red lines showing same trend reversals
+      Legibility verdict: PASS - all elements readable, no dark-on-dark text, brand green #009E73 vibrant
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: All font sizes explicitly set; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all labels well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line segments are appropriately sized with clear thickness differentiation
-          between yang and yin
+        comment: Segments optimally sized for density; thick and thin lines clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green and red have sufficient luminance difference for colorblind
-          accessibility
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Price ($) and Line Index'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Good contrast; CVD-safe; thickness adds non-hue distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance; plot fills 60-70% of canvas; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Price ($) with units; Line Index descriptive; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds correct; theme-adaptive chrome
+          perfect'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is visible but no legend explaining yang/yin line types
+        comment: Semantic color coding shows intent; professional but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good refinement; could improve by removing top/right spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color and thickness create clear hierarchy; trend reversals obvious
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Kagi chart implementation with vertical price movements and
-          horizontal connections
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X shows line index (time-independent), Y shows price
-      - id: SC-03
+        comment: Correct Kagi chart implementation
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has thick/thin lines, green/red colors, shoulders/waists; missing
-          legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: thick/thin lines, reversals, semantic colors'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No legend present to explain line meanings
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: kagi-basic · letsplot · pyplots.ai'
+        comment: Title correct; no legend (appropriate)
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows both bullish and bearish segments, multiple reversals, shoulders
-          and waists
+        score: 5
+        max: 6
+        passed: false
+        comment: Shows uptrends, downtrends, reversals; good variety
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario with 4% reversal threshold is realistic
+        comment: Realistic stock price scenario; 200 days, 4% reversal threshold
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Prices around $82-$110 are reasonable for stock data
+        comment: Price range (82-111) is plausible
     code_quality:
       score: 10
       max: 10
@@ -154,42 +170,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, Kagi algorithm, plot, save'
+        comment: Clean structure; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert letsplot usage
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses ggplot grammar with geom_segment, theme_minimal, ggsize; could
-          leverage more lets-plot features
+        passed: false
+        comment: Theme-token approach is generic to ggplot-style libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -197,7 +218,6 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
