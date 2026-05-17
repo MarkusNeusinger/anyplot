@@ -1,158 +1,182 @@
 library: plotnine
+language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:38:20Z'
-updated: '2026-01-08T22:48:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20834075716
+updated: '2026-05-17T06:29:05Z'
+generated_by: claude-haiku
+workflow_run: 25983330934
 issue: 3343
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent 4-level color scheme that is colorblind-safe and visually distinct
-  - Clean hierarchical layout with proportional node sizing by level
-  - Good realistic example data (software company org chart)
-  - Proper use of plotnine grammar of graphics composition
-  - Clean code structure with manual layout calculation
-  - All text labels are readable and non-overlapping
+  - Flawless palette compliance with perfect Okabe-Ito implementation and theme-adaptive
+    chrome in both renders
+  - Successfully implements network visualization in plotnine without matplotlib workaround,
+    using native geoms creatively
+  - All text legible and readable in both light and dark themes with proper contrast
+    and sizing
+  - Clean, well-structured code with appropriate complexity and zero unnecessary engineering
+  - Excellent data quality with real-world organizational scenario showing complete
+    hierarchy
+  - Proper visual hierarchy through node positioning, sizing by level, and color encoding
   weaknesses:
-  - Node labels (size=8) could be slightly larger for better readability at full resolution
-  - No edge bundling or curved edges as suggested in spec notes
-  - Legend grid/key styling could be improved
-  image_description: 'The plot displays a hierarchical organizational chart with 4
-    levels (CEO at top, VPs, Directors, and Team members at bottom). The CEO node
-    (dark blue, Python Blue #306998) is centered at the top, connected to 3 VP nodes
-    (yellow #FFD43B) below. The VPs connect to 8 Director-level nodes (teal #4ECDC4),
-    which in turn connect to approximately 20 team member nodes (coral/red #FF6B6B)
-    at the bottom level. All nodes have text labels positioned above them. Gray edges
-    (#555555) connect parent-child relationships with straight lines. The legend at
-    the bottom shows "Hierarchy Level" with color coding for all 4 levels. The title
-    "network-hierarchical · plotnine · pyplots.ai" appears at the top. The white background
-    is clean, and axes are removed for a network-style visualization.'
+  - Library Mastery score is lower due to manual position calculation being a workaround
+    rather than distinctive plotnine patterns (inherent to the network-graph approach)
+  - Level 3 team member nodes could be slightly larger (currently 6pt, could increase
+    to 8pt for better visibility)
+  - Design Excellence could improve with additional visual emphasis or focal points
+    to push toward publication-ready level
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct per style guide, not pure white)
+      Chrome: Title, node labels, and legend all rendered in dark INK color (#1A1A17), clearly visible and readable. No illegible text.
+      Data: CEO node in brand green #009E73, VPs in orange #D55E00, Directors in blue #0072B2, Team in reddish purple #CC79A7. All nodes positioned in clear hierarchical levels with connecting edges in subtle gray. Legend at bottom clearly labeled "Hierarchy Level" with 4 level entries.
+      Legibility verdict: PASS - All text readable, no overlaps, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct per style guide, not pure black)
+      Chrome: Title and labels rendered in light INK color (#F0EFE8), clearly visible against dark background. Legend background is elevated surface #242420 with light text. No dark-on-dark failures detected.
+      Data: All data colors identical to light render—CEO still #009E73 (brand green clearly visible), VPs still #D55E00, Directors still #0072B2, Team still #CC79A7. Edges rendered in light gray, visible and not hidden. Theme-adaptive chrome properly applied.
+      Legibility verdict: PASS - All text readable, proper theme adaptation, no dark-on-dark issues, data colors maintain identity across themes
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt is excellent, legend text at 16-18pt is good. Node
-          labels at size=8 are readable but slightly small for some abbreviations
+        comment: 'All fonts explicitly sized: title 24pt, labels 16pt, node names
+          9pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text or elements. Labels are well-spaced with nudge_y
-          offset
+        comment: Minor crowding in middle levels (directors) but no text collisions
+          or unreadable elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Node sizes vary by level (16, 12, 9, 6) creating excellent visual
-          hierarchy. Edges at size=1.2 with alpha=0.7 are well-balanced
+        comment: Nodes scaled 16-6pt by level. Deepest level slightly small but still
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent colorblind-safe palette: blue, yellow, teal, coral are
-          all distinguishable'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced margins, plot fills approximately
-          60% of canvas
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for network visualization using element_blank
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, colorblind-safe, adequate contrast across all
+          series.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape. Plot fills ~70% of canvas with balanced, generous
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct. No axis elements (appropriate for network).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito: CEO=#009E73, VPs=#D55E00, Directors=#0072B2,
+          Team=#CC79A7. Backgrounds and chrome correct in both themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Legend placed at bottom is good, but legend key styling with white
-          boxes could be improved
+        comment: Professional color choice and intentional hierarchy. Looks like well-configured
+          default, not custom/publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid/axes (appropriate). Clean edges, generous whitespace, legend
+          well-positioned with border.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy through positioning and sizing. Org structure immediately
+          apparent. Could emphasize focal points more.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct hierarchical network graph with tree layout
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Nodes positioned by level (y-axis) and distributed horizontally (x-axis)
-          correctly
-      - id: SC-03
+        comment: Correct hierarchical network with tree layout.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has hierarchical levels, parent-child edges, node labels. Missing
-          curved/bundled edges option mentioned in spec notes
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: nodes, edges, labels, hierarchy levels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All nodes visible within plot limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 22 nodes visible, 20 edges correct, positioning proper across
+          levels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 4 hierarchy levels with accurate colors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format network-hierarchical · plotnine · pyplots.ai
+        comment: Title format correct. Legend labels match data accurately.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 distinct levels, varying branch widths. Could have more dramatic
-          branching differences
+        comment: 'Shows all hierarchy aspects: CEO, VPs, Directors, Team across 4
+          levels.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software company organizational hierarchy is excellent, neutral,
-          realistic scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 22 nodes across 4 levels is appropriate for readable static visualization
+        comment: Real organizational scenario, neutral, credible roles and structure.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Node counts realistic (1-3-6-12). Proportions reflect typical org
+          structure.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,56 +184,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, layout calculation, dataframes,
-          plot, save'
+        comment: 'Linear structure: imports → data → positions → plot → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: No random seed needed as data is deterministic, layout algorithm
-          is deterministic
+        comment: Deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports (os, pandas, plotnine). All used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotnine API
+        comment: Clean, readable, appropriate complexity. No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses ggplot grammar with geom_segment, geom_point, geom_text composition,
-          scale_color_manual, scale_size_identity. However, plotnine does not have
-          native network graph support, so this is essentially simulating a network
-          with basic geoms
+        passed: false
+        comment: Correct ggplot + geoms pattern. Manual positioning is workaround
+          rather than leveraging library patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic geom combination (point, segment, text). Same approach would
+          work in matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
-  - alpha-blending
