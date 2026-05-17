@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 parliament-basic: Parliament Seat Chart
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-05-17
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 32/100 | Created: 2026-05-17
 """
 
 import math
