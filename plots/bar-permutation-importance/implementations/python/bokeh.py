@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-permutation-importance: Permutation Feature Importance Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: pending | Created: 2025-12-31
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-17
 """
 
 import os
