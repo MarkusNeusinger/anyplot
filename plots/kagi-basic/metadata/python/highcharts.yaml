@@ -1,162 +1,180 @@
 library: highcharts
+language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:55:03Z'
-updated: '2026-01-08T22:24:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832949902
+updated: '2026-05-17T08:12:04Z'
+generated_by: claude-haiku
+workflow_run: 25985411069
 issue: 3341
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/highcharts/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent colorblind-safe color scheme using blue and orange instead of traditional
-    red-green
-  - Proper Kagi chart algorithm with 4% reversal threshold correctly implemented
-  - Good visual distinction between Yang (thick) and Yin (thin) lines
-  - Well-structured code with clear data generation and Kagi calculation logic
-  - Proper title format following pyplots.ai convention
-  - Clean canvas utilization with balanced layout
+  - Perfect visual quality and legibility in both light and dark themes
+  - Correct Kagi chart implementation with proper thick/thin line distinction for
+    Yang/Yin
+  - 'All spec requirements met: proper reversal logic, correct palette usage (Okabe-Ito),
+    theme-adaptive chrome'
+  - Clean, reproducible code with proper Selenium rendering and HTML generation
   weaknesses:
-  - LineSeries import from highcharts_core.options.series.area is unconventional (should
-    be from .line module)
-  - Legend could be slightly more prominent for the large canvas size
-  image_description: 'The plot displays a Kagi chart showing stock price analysis
-    with a 4% reversal threshold. The chart uses a white background with a clear title
-    "kagi-basic · highcharts · pyplots.ai" at the top, followed by a subtitle "Stock
-    Price Analysis with 4% Reversal Threshold". The X-axis shows "Kagi Line Index"
-    ranging from 0 to 12, and the Y-axis shows "Price ($)" ranging from approximately
-    $86 to $130. The chart displays two series: Yang (Bullish) segments in blue (#306998)
-    with thicker lines, and Yin (Bearish) segments in orange/gold (#E69F00) with thinner
-    lines. The price movement shows multiple trend reversals - starting around $100,
-    rising to ~$104, dropping to ~$90, rising again, and ultimately reaching ~$127
-    by the end. The legend at the bottom clearly identifies "Yang (Bullish)" and "Yin
-    (Bearish)" series. Grid lines are subtle with light gray color. The layout is
-    well-balanced with good use of canvas space.'
+  - Design Excellence is competent but not exceptional (solid defaults rather than
+    distinctive design)
+  - Library Mastery could showcase more distinctive Highcharts features beyond standard
+    line series
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified, providing clean contrast
+      Chrome: Title "kagi-basic · highcharts · anyplot.ai" is bold and dark (INK), subtitle clearly visible in INK_SOFT. X-axis labeled "Kagi Line Index", Y-axis labeled "Price ($)" with proper dark text and tick labels in INK_SOFT. Legend at bottom shows "Yang (Bullish)" and "Yin (Bearish)" with elevated background and border.
+      Data: Yang (bullish) series renders in #009E73 (green, thick 8px lines), Yin (bearish) series in #D55E00 (orange/vermillion, thin 4px lines). Grid lines are subtle and light. All rectangular Kagi segments clearly visible with proper thickness differentiation.
+      Legibility verdict: PASS - All text readable, no overlap, high contrast, clear data visualization
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified, avoiding pure black
+      Chrome: Title and subtitle rendered in light text (F0EFE8/INK color for dark theme), clearly readable against dark background. X and Y axis titles in light INK, tick labels in light INK_SOFT (#B8B7B0), all distinct from background. Legend styled with dark-theme ELEVATED_BG (#242420) and light border color.
+      Data: Yang series identical green #009E73 (same as light render), Yin series identical orange #D55E00 (no color shift between themes - only chrome adapted). Grid lines remain subtle with light opacity. All Kagi segments clearly distinguishable.
+      Legibility verdict: PASS - No dark-on-dark failures, all text readable, identical data colors to light render, proper theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all readable at full size.
-          Font sizes are appropriately scaled for 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the chart.
+        comment: All font sizes explicitly set (Title 28px, Labels 22px, Ticks 18px)
+          - all perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text - title, axes, legend all properly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths are appropriately differentiated (8px for Yang, 4px for
-          Yin), clearly showing the thick/thin distinction required by Kagi charts.
+        comment: Kagi lines perfectly visible with proper thickness distinction (8px
+          for yang, 4px for yin)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe blue (#306998) and orange (#E69F00) instead
-          of red-green, excellent choice.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, plot fills most of the space with balanced
-          margins.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has 'Price ($)' with units, X-axis has descriptive 'Kagi Line
-          Index'.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) provides excellent contrast
+          and CVD safety'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect layout: 4800x2700 landscape, plot fills 60-70% of canvas,
+          balanced margins'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend is well-placed at bottom, but legend could
-          be slightly larger.
+        comment: Title format correct ('kagi-basic · highcharts · anyplot.ai'), Y-axis
+          includes units ($)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (green), second #D55E00 (orange) - perfect
+          Okabe-Ito compliance, theme-correct chrome, identical data colors across
+          themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured defaults with thoughtful theme tokens and color choices
+          - professional but not exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: subtle grid, legend styling, proper whitespace
+          - some customization but mostly defaults'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Kagi pattern clearly visualized with thick/thin lines showing trend
+          direction - effective but straightforward
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Kagi chart implementation with vertical and horizontal segments.
+        comment: Correct Kagi chart with all subtypes and reversals present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows line index (time-independent), Y-axis shows price correctly.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thick lines for Yang (bullish), thin lines for Yin (bearish), horizontal
-          segments for direction changes.
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: thick Yang lines, thin Yin lines, reversal
+          threshold (4%), shoulders/waists, proper colors'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (Kagi Line Index) and Y-axis (Price) correctly assigned, all
+          data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Yang (Bullish) and Yin (Bearish).
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format 'kagi-basic · highcharts · pyplots.ai' but subtitle
-          takes attention.
+        comment: Title format correct, legend labels match ('Yang (Bullish)' and 'Yin
+          (Bearish)')
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple trend reversals, both bullish and bearish periods,
-          demonstrates the filtering of market noise effectively.
+        comment: 'Shows all Kagi aspects: both Yang and Yin patterns, multiple reversals,
+          price variations'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price analysis is a realistic scenario, price movements are
-          plausible.
+        comment: Realistic stock price simulation with 200 days, 4% reversal threshold,
+          plausible trend patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Prices ranging from ~$86-$127 with 4% reversal threshold is reasonable
-          for stock data.
+        comment: Price range ($95-130) realistic, reversal threshold factually sound
+          for trading
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,43 +182,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data generation → Kagi calculation
-          → chart creation → export.'
+        comment: 'Linear structure: imports → data generation → Kagi algorithm → chart
+          creation → export'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data.
+        comment: np.random.seed(42) set, deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used appropriately.
+        comment: 'All imports used: urllib for Highcharts JS, selenium for rendering,
+          numpy for data'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: LineSeries imported from area module is unconventional.
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 4
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of Highcharts series configuration, proper chart options,
-          selenium-based PNG export pattern. HTML output also generated for interactivity.
+        comment: 'Proper Highcharts patterns: Chart, HighchartsOptions, LineSeries,
+          add_series() - correct but standard approach'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses connectNulls and z_index for layer control - some distinctive
+          features but relatively standard implementation
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -209,7 +235,5 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []

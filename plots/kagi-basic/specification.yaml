@@ -6,7 +6,7 @@ title: Basic Kagi Chart
 
 # Specification tracking
 created: 2026-01-08T21:41:39Z
-updated: null
+updated: 2026-05-17T07:48:49Z
 issue: 3341
 suggested: MarkusNeusinger
 
@@ -17,7 +17,7 @@ tags:
     - kagi
     - line
   data_type:
-    - timeseries
+    - time-series
     - numeric
   domain:
     - finance

@@ -1,165 +1,188 @@
 library: matplotlib
+language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:40:02Z'
-updated: '2026-01-08T22:42:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20834071969
+updated: '2026-05-17T06:24:07Z'
+generated_by: claude-haiku
+workflow_run: 25983210528
 issue: 3343
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent hierarchical layout with nodes centered over their children
-  - Effective use of color to distinguish hierarchy levels
-  - Clean visual design with white node outlines and subtle gray edges
-  - Good node sizing that reflects hierarchy importance
-  - Well-placed legend that does not interfere with the graph
+  - 'Perfect Visual Quality (30/30): excellent text sizing, no overlap, proper theme
+    adaptation across both renders'
+  - 'Correct palette compliance: Okabe-Ito colors identical between light and dark,
+    theme-correct chrome in both'
+  - Clean, reproducible code with proper seed and deterministic output
+  - 'Strong spec compliance: all required features present and correctly implemented'
+  - 'Excellent data quality: realistic software hierarchy with good feature coverage'
+  - 'Proper theme-adaptive implementation: both renders pass legibility checks with
+    no dark-on-dark or light-on-light failures'
   weaknesses:
-  - Code uses a helper function count_descendants() which violates the KISS principle
-    (no functions/classes)
-  - Title format includes extra descriptive text before the spec-id
-  - Some labels on the right edge (Helper) appear slightly close to canvas boundary
-  image_description: The plot displays a hierarchical network graph representing a
-    software module hierarchy with 24 nodes across 4 levels. The root node "App" (dark
-    blue) is positioned at the top center. Four core modules ("Core", "UI", "Data",
-    "Utils") in yellow are on Level 1, spreading horizontally below the root. Level
-    2 contains 8 sub-modules (light blue) including "Auth", "Config", "Widget", "Theme",
-    "Models", "Store", "Logger", and "Helper". The bottom level (Level 3) has 11 leaf
-    modules in gray ("Login", "Sess", "Btns", "Forms", "Grid", "User", "Prod", "Cache",
-    "DB", "REST", "Fmt"). Edges are straight gray lines connecting parent-child relationships.
-    A legend in the upper-left shows all four level colors. The title uses the correct
-    format. The background is white and nodes have white edge outlines for clarity.
+  - 'Design Excellence could be stronger: aesthetic choices are professional but not
+    exceptional'
+  - 'Library Mastery: while idiomatic, the approach is somewhat generic (could leverage
+    more distinctive matplotlib features)'
+  - 'Data Storytelling: visual hierarchy is good but could emphasize key organizational
+    patterns more'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct light theme surface
+      Chrome: Title "network-hierarchical · matplotlib · anyplot.ai" is dark and clearly readable; legend in upper left with dark text on light background; all elements readable
+      Data: Root Module (green #009E73), Core Modules (orange #D55E00), Sub-modules (blue #0072B2), Leaf Modules (reddish-purple #CC79A7) - all colors match Okabe-Ito spec; node sizes decrease by level creating hierarchy; white edges on colored circles provide excellent contrast
+      Legibility verdict: PASS - all text, title, and data elements are clearly readable on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct dark theme surface
+      Chrome: Title is light-colored and clearly readable on dark background; legend text is light; no dark-on-dark failures detected
+      Data: Colors identical to light render (green, orange, blue, purple) - only chrome flips to light colors; data color consistency between renders confirms proper theme implementation
+      Legibility verdict: PASS - all text is light and readable on dark background, no dark-on-dark failures, brand green is visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is 24pt bold, labels are readable though some leaf labels are
-          slightly tight at the edge
+        comment: 'All font sizes explicitly set: title 24pt, labels 16/14/12/10pt,
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or nodes; spacing is well calculated
+        comment: Proper spacing calculated, no overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Node sizes vary by level, all clearly visible with good alpha
+        comment: Node sizes 1300-3200 adapted by level, white edges provide excellent
+          contrast
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/gray palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas but some nodes near right edge are slightly tight
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graph (axes hidden appropriately)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well placed in upper-left, no grid needed
+        comment: Okabe-Ito palette CVD-safe, good contrast between nodes and backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins, legend integrated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: network-hierarchical · matplotlib · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
+          correct (#FAF8F1 light / #1A1A17 dark), theme chrome correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional polish with thoughtful hierarchy, but essentially configured
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes off, generous whitespace, legend frame styled nicely
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good visual hierarchy through size/color, but could emphasize key
+          organizational patterns
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct hierarchical network graph with tree layout
+        comment: Correct hierarchical tree layout with node-edge representation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes organized by levels with parent-child edges correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has hierarchical layout, level-based positioning, parent-child edges,
-          proper node spacing
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: nodes, edges, levels, parent-child relationships'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 24 nodes visible within canvas
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct level positioning, edges show relationships, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 levels with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Includes extra descriptive text before the spec-id
+        comment: Title format correct, legend labels match four levels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 levels of hierarchy with varying branching (1→4→8→11), demonstrates
-          different subtree sizes
+        comment: 'Shows all aspects: root, branching patterns, depth, all four levels'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software module hierarchy is a plausible, neutral real-world scenario
+        comment: Software module hierarchy is real and neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 24 nodes is appropriate for the spec's 10-50 node recommendation
+        comment: 24 nodes across 4 levels appropriate for static visualization
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code defines a helper function count_descendants which violates KISS
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) at the start
+        comment: 'Linear flow: imports → config → data → positions → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, deterministic positioning
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -167,40 +190,44 @@ review:
         passed: true
         comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated APIs used
+        comment: Clean Pythonic code, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format with dpi=300
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Good use of matplotlib features: scatter with varying sizes, annotations,
-          manual positioning, patches for legend, zorder control'
+        comment: Expertly uses scatter, plot, annotate, custom legend with mpatches
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses manual positioning and zorder, but approach is somewhat generic
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - patches
   patterns:
   - data-generation
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
-  - alpha-blending
   - edge-highlighting
+  - minimal-chrome

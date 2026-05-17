@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-17
 """
 
 import os
@@ -12,6 +12,8 @@ from lets_plot import (  # noqa: F401
     LetsPlot,
     aes,
     coord_fixed,
+    element_blank,
+    element_rect,
     element_text,
     geom_text,
     geom_tile,
@@ -29,20 +31,26 @@ from lets_plot import (  # noqa: F401
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Unicode chess symbols
 PIECE_SYMBOLS = {
-    "K": "\u2654",
-    "Q": "\u2655",
-    "R": "\u2656",
-    "B": "\u2657",
-    "N": "\u2658",
-    "P": "\u2659",
-    "k": "\u265a",
-    "q": "\u265b",
-    "r": "\u265c",
-    "b": "\u265d",
-    "n": "\u265e",
-    "p": "\u265f",
+    "K": "♔",
+    "Q": "♕",
+    "R": "♖",
+    "B": "♗",
+    "N": "♘",
+    "P": "♙",
+    "k": "♚",
+    "q": "♛",
+    "r": "♜",
+    "b": "♝",
+    "n": "♞",
+    "p": "♟",
 }
 
 # Scholar's Mate position - a famous 4-move checkmate
@@ -101,7 +109,7 @@ for square, piece in pieces.items():
     pieces_data.append({"file": file_idx, "rank": rank_val, "symbol": symbol})
 df_pieces = pd.DataFrame(pieces_data)
 
-# Board colors
+# Board colors (chess standard, theme-independent for clarity)
 light_color = "#F0D9B5"
 dark_color = "#B58863"
 
@@ -118,24 +126,27 @@ plot = (
         breaks=[0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5], labels=["1", "2", "3", "4", "5", "6", "7", "8"]
     )
     + coord_fixed(ratio=1)
-    + labs(title="Scholar's Mate · chessboard-pieces · letsplot · pyplots.ai")
+    + labs(title="chessboard-pieces · letsplot · anyplot.ai")
     + theme_void()
     + theme(
-        plot_title=element_text(size=24, hjust=0.5, face="bold"),
-        axis_text=element_text(size=18, face="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, hjust=0.5, face="bold", color=INK),
+        axis_text=element_text(size=18, face="bold", color=INK_SOFT),
+        axis_line=element_blank(),
         plot_margin=40,
     )
     + ggsize(1200, 1200)
 )
 
 # Save outputs - ggsave uses lets-plot-images subfolder by default
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images to current directory
-if os.path.exists("lets-plot-images/plot.png"):
-    shutil.move("lets-plot-images/plot.png", "plot.png")
-if os.path.exists("lets-plot-images/plot.html"):
-    shutil.move("lets-plot-images/plot.html", "plot.html")
+if os.path.exists(f"lets-plot-images/plot-{THEME}.png"):
+    shutil.move(f"lets-plot-images/plot-{THEME}.png", f"plot-{THEME}.png")
+if os.path.exists(f"lets-plot-images/plot-{THEME}.html"):
+    shutil.move(f"lets-plot-images/plot-{THEME}.html", f"plot-{THEME}.html")
 if os.path.exists("lets-plot-images"):
     shutil.rmtree("lets-plot-images")

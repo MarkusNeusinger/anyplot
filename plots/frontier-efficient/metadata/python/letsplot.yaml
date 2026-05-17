@@ -1,159 +1,185 @@
 library: letsplot
+language: python
 specification_id: frontier-efficient
 created: '2026-01-08T21:57:12Z'
-updated: '2026-01-08T22:10:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832955057
+updated: '2026-05-17T05:07:35Z'
+generated_by: claude-haiku
+workflow_run: 25981719090
 issue: 3342
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of all specification requirements including efficient
-    frontier curve, random portfolios, special portfolio markers, and CML
-  - Clear color gradient encoding Sharpe Ratio values
-  - Proper use of lets-plot grammar of graphics with layer composition
-  - Well-structured data generation with realistic financial parameters
-  - Title format exactly matches specification
+  - Theme-adaptive color system correctly implements both light and dark palettes
+    with proper contrast
+  - 'All required plot features present and correctly implemented: efficient frontier,
+    random portfolios, min variance/max Sharpe points, and capital market line'
+  - Proper use of viridis colormap for continuous Sharpe ratio data
+  - Clean, reproducible code with seed for deterministic output
+  - Text legibility excellent in both themes with appropriate font sizes (title 24pt,
+    labels 20pt, ticks 16pt)
   weaknesses:
-  - Missing text annotations/labels for the two special portfolio points (Min Variance
-    and Max Sharpe) - they are marked but not labeled on the plot
-  - No grid lines visible which could help readers estimate exact values
-  image_description: The plot displays an efficient frontier visualization for portfolio
-    optimization. The X-axis shows "Risk (Standard Deviation)" ranging from 0 to ~0.22,
-    and the Y-axis shows "Expected Return" ranging from ~0.03 to ~0.16. The efficient
-    frontier is rendered as a thick blue curved line (#306998) that forms the characteristic
-    hyperbolic shape from Modern Portfolio Theory. Below and to the right of the frontier,
-    approximately 300 random portfolio scatter points are displayed, color-coded by
-    Sharpe Ratio using a gradient from yellow (lower ~0.58) to blue (higher ~0.70).
-    A gray dashed Capital Market Line (CML) extends from the origin area through the
-    tangent point and beyond. Two red diamond markers indicate the Minimum Variance
-    portfolio (lower on the frontier ~0.084 return) and Maximum Sharpe Ratio portfolio
-    (higher ~0.103 return). The title correctly uses the format "frontier-efficient
-    · letsplot · pyplots.ai". The legend for Sharpe Ratio is positioned on the right
-    side.
+  - Design is competent but somewhat generic—no distinctive visual refinements beyond
+    spec requirements
+  - Spines present by default (letsplot theme_minimal behavior) could be explicitly
+    removed for cleaner appearance
+  - Frontier calculation uses brute-force random sampling rather than quadratic programming—acceptable
+    for visualization but less precise
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with correct contrast. All text renders dark and clearly readable.
+      Chrome: Title "frontier-efficient · letsplot · anyplot.ai", X-axis "Risk (Standard Deviation)", Y-axis "Expected Return" all in dark INK color (#1A1A17). Tick labels in INK_SOFT (#4A4A44). Legend shows "Sharpe Ratio" with viridis colormap. All text crisp and legible.
+      Data: 300 scattered portfolio points colored by viridis (green-to-yellow indicating low-to-high Sharpe ratios), blue solid efficient frontier curve (OKABE_ITO[2] #0072B2), dashed gray capital market line, and two orange diamond markers (OKABE_ITO[1] #D55E00) for min variance and max Sharpe portfolios.
+      Legibility verdict: PASS - all elements readable with proper contrast against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with correct contrast. All text renders light and clearly readable.
+      Chrome: Title, axis labels (both primary and tick labels) all render in light colors. Title and axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0). Legend frame background in ELEVATED_BG (#242420). No dark-on-dark failures—all text is light and visible against the dark background.
+      Data: Identical viridis coloring (same Sharpe ratio gradient as light), blue frontier line maintains same color as light theme, dashed capital market line visible in light gray, orange special-point markers identical to light render.
+      Legibility verdict: PASS - all elements readable with proper light text on dark background. Data colors identical between light and dark renders (only chrome flips).
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick text at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels and ticks are clear
+        comment: All text readable in both themes; font sizes (title 24pt, labels
+          20pt, ticks 16pt) appropriate for canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with generous whitespace; no text collisions or overlapping
+          elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Scatter points visible with appropriate alpha (0.6), markers sized
-          well for density, though some overlap in dense region
+        comment: All markers and lines clearly visible; scatter alpha=0.6 shows density
+          well; frontier curve prominent and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Yellow-to-blue gradient is colorblind-friendly, though contrast could
-          be slightly better in mid-range
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with implicit units: Risk (Standard Deviation)
-          and Expected Return'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis colormap CVD-safe; orange diamond markers distinct from scatter
+          colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape (4800×2700) appropriate for plot; nothing cut off;
+          margins generous
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title follows spec format (spec-id · library · anyplot.ai); axis
+          labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background #FAF8F1 (light) / #1A1A17 (dark) correct; special points
+          use OKABE_ITO[1]; viridis for continuous data; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: No visible grid lines, legend could be more informative
+        comment: Competent multi-layer design with theme adaptation, but somewhat
+          generic; no distinctive visual refinements beyond spec requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Standard formatting; spines present by default; grid is subtle but
+          could be more refined; legend styling adequate but not distinctive
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Narrative present (efficient frontier vs. suboptimal portfolios);
+          color gradient shows Sharpe progression; hierarchy present but not particularly
+          sophisticated
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct efficient frontier visualization
+        comment: Correct scatter + line composition for efficient frontier visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Risk, Y=Return correctly mapped as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes frontier curve, random portfolio scatter, Sharpe color coding,
-          min variance point, max Sharpe point, CML
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec elements present: frontier curve, 300 random portfolios,
+          min variance and max Sharpe points, capital market line'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Risk on X, return on Y; all data correctly mapped; axes show full
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Sharpe Ratio legend correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format frontier-efficient · letsplot · pyplots.ai
+        comment: Title matches spec format; legend clearly labels Sharpe Ratio with
+          viridis scale
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all key aspects: frontier curve, suboptimal portfolios, special
-          points, CML'
+        comment: 'Complete coverage: efficient frontier (50 points), 300 random portfolios,
+          min variance, max Sharpe, CML'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Finance/portfolio optimization is a neutral, professional domain
-          with realistic correlation matrix
+        comment: 'Realistic financial data: asset returns 7-18%, volatilities 10-30%,
+          plausible correlation matrix; neutral subject'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Return values 0.07-0.18 and volatility 0.10-0.30 are realistic for
-          annual portfolio metrics
+        comment: 'Sensible values for portfolio optimization: returns 3-18%, risks
+          8-22%'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,55 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → frontier calculation →
-          plotting → save'
+        comment: No functions/classes; straightforward linear code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set (np.random.seed(42)); fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and lets_plot used
+        comment: 'Only necessary imports: numpy, pandas, lets_plot components'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity; covariance-based portfolio generation
+          is sound
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses export_ggsave with path parameter which is non-standard import
-          pattern
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current letsplot
+          API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses lets-plot grammar of graphics with ggplot(), geom_point(), geom_line(),
-          scale_color_gradient(), theme_minimal(), and ggsize(). Good use of layer
-          composition but no lets-plot specific interactive features.
+        comment: 'Proper ggplot2 grammar: ggplot() + geom_*() + theme(); aesthetic
+          mapping with aes(); theme customization with element_text/rect/line'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Good use of letsplot's theme system; alpha blending for overlap;
+          viridis scale mapping; HTML export alongside PNG. Relatively standard application
+          without advanced letsplot features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-colormap
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - correlation-matrix
   styling:
-  - alpha-blending
+  - custom-colormap

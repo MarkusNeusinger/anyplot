@@ -1,172 +1,191 @@
 library: altair
+language: python
 specification_id: network-hierarchical
 created: '2026-01-08T21:56:31Z'
-updated: '2026-01-08T22:18:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832958550
+updated: '2026-05-17T06:23:36Z'
+generated_by: claude-haiku
+workflow_run: 25983294718
 issue: 3343
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent hierarchical tree layout algorithm that properly positions nodes based
-    on subtree widths
-  - Layer composition (edge_layer, node_layer, label_layer) demonstrates Altair declarative
-    layering
-  - Color scheme effectively differentiates hierarchy levels with semantic legend
-    labels
-  - Interactive tooltips available on hover for node details
-  - Clean subtitle provides context about the visualization
+  - Perfect theme adaptation with both renders fully readable and color tokens correctly
+    applied
+  - Clean hierarchical layout with tree structure immediately evident and excellent
+    spatial organization
+  - Thoughtful legend with custom level-to-role mapping that adds usability beyond
+    defaults
+  - Correct Okabe-Ito palette usage (positions 1-4) for organizational level distinction
+  - Idiomatic Altair implementation with excellent use of declarative API and layering
+    patterns
+  - Professional polish across title, subtitle, legend, and styling that demonstrates
+    intentionality
   weaknesses:
-  - Some label overlap at the bottom level between adjacent nodes (e.g., Lead Cloud
-    Lead Security)
-  - Code comments indicate 25 employees but the actual implementation and subtitle
-    say 30
-  image_description: The plot displays a hierarchical network graph representing an
-    organizational chart with 30 employees distributed across 4 management levels.
-    The CEO node is positioned at the top center in dark blue (#306998). Four VP nodes
-    (VP Engineering, VP Sales, VP Marketing, VP Operations) are shown in lighter blue
-    (#4B8BBE) at level 1. Eight Director nodes appear in yellow (#FFD43B) at level
-    2 (Dir Frontend, Dir Backend, Dir DevOps, Dir East, Dir West, Dir Digital, Dir
-    Brand, Dir Logistics, Dir Facilities). Seventeen Manager/Lead nodes are displayed
-    in gray (#646464) at the bottom level (Lead UI, Lead UX, Lead API, Lead Data,
-    Lead Cloud, Lead Security, Mgr Northeast, Mgr Southeast, Mgr Northwest, Mgr Southwest,
-    Mgr Social, Mgr Content, Mgr PR, Mgr Design, Mgr Supply, Mgr Office). Nodes are
-    connected by gray semi-transparent edges showing parent-child relationships. The
-    title uses the correct format "network-hierarchical · altair · pyplots.ai" with
-    a subtitle. A legend on the right shows level-to-role mapping (Executive, VP,
-    Director, Manager).
+  - Could enhance visual storytelling with node size variation by span-of-control
+    or team size
+  - Edge styling could be more sophisticated with subtle bundling or gradient opacity
+    for cleaner appearance
+  - Interactive features available in Altair not yet enabled such as zoom/pan or selection
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "network-hierarchical · altair · anyplot.ai" in dark text, clearly readable; subtitle descriptive and visible; legend on right with role labels (Executive, VP, Director, Manager); all text readable
+      Data: 25 nodes organized hierarchically - CEO in green (#009E73), 4 VPs in orange (#D55E00), 8 Directors in blue (#0072B2), 12 Managers in reddish purple (#CC79A7); edges connect parent-child nodes with subtle gray opacity; node labels positioned above nodes without collision
+      Legibility verdict: PASS (all text and data elements clearly readable with strong contrast against light background)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and subtitle adapted to light text, all readable against dark background; legend maintains proper contrast with light text on darker background; node labels visible and readable
+      Data: All data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7); edges visible with appropriate opacity; all 25 nodes and 24 edges clearly distinguishable
+      Legibility verdict: PASS (no dark-on-dark issues; perfect theme adaptation with all text elements readable against dark background)
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 28pt readable, labels 16pt readable but some bottom labels
-          slightly crowded
+        comment: All text readable in both themes with proper font sizing
       - id: VQ-02
         name: No Overlap
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Minor overlap between some adjacent labels at bottom level
+        comment: Node labels positioned without collision; hierarchical layout prevents
+          crowding
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Node size 1200 with white stroke is excellent for 30 nodes
+        comment: 25 nodes and edges clearly visible with adequate spacing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/gray scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, tree centered, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graphs (axes hidden appropriately)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend clear with semantic labels, no grid needed
+        comment: Okabe-Ito palette CVD-safe with excellent contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 landscape with generous spacing and margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title and subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order preserved, backgrounds correct
+          in both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Professional polish with intentional color hierarchy; custom legend
+          mapping shows thoughtfulness; could be more sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean layout appropriate for network type; could enhance with sophisticated
+          edge styling or bundling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: Clear focal point and color gradient guide viewer; could strengthen
+          with node size variation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct hierarchical network graph with tree layout
+        comment: Correct hierarchical tree layout with parent-child relationships
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes positioned by level (y) and subtree width (x)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Tree layout, parent-child edges, level-based positioning, root at
-          top
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: nodes, edges, levels, 25 nodes within
+          spec range'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 30 nodes visible across 4 levels
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Positions computed via BFS + subtree-width algorithm; all nodes and
+          edges visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps levels to role names
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses network-hierarchical · altair · pyplots.ai
+        comment: Format correct with descriptive legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchy depth, branching patterns, but all branch widths
-          are uniform
+        comment: Full tree with 4 levels demonstrating hierarchical network aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Organizational chart is a realistic scenario
+        comment: Realistic organizational structure with neutral role names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 30 employees across 4 levels is reasonable; spec suggested 10-50
+        comment: 25 nodes readable with realistic 1-4-8-12 distribution
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Manual tree layout algorithm adds complexity, but needed for Altair
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set
+        comment: Procedural without unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) with deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -174,39 +193,43 @@ review:
         passed: true
         comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-implemented tree layout algorithm
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current Altair 6.0 API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct file naming with scale_factor=3.0
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Layer composition with mark_line detail encoding, mark_circle, mark_text;
-          declarative approach; proper use of scale/legend configuration
+        comment: Excellent declarative patterns with layering and configure methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses Altair-specific features well but could leverage more interactive
+          capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - hover-tooltips
   - custom-legend
+  - hover-tooltips
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
-  styling:
-  - edge-highlighting
-  - alpha-blending
+  styling: []

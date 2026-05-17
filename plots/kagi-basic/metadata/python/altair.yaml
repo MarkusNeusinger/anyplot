@@ -1,151 +1,177 @@
 library: altair
+language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:53:35Z'
-updated: '2026-01-08T22:02:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832946258
+updated: '2026-05-17T08:13:47Z'
+generated_by: claude-haiku
+workflow_run: 25985278923
 issue: 3341
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of the Kagi algorithm with proper yang/yin state transitions
-  - Clear visual distinction between bullish (thick green) and bearish (thin red)
-    segments
-  - Proper use of Altair mark_rule with x/x2/y/y2 encoding for line segments
-  - Good code organization following the Kagi chart logic faithfully
-  - Correct title format and descriptive axis labels with units
+  - Flawless theme adaptation with proper chrome color tokens (INK, INK_SOFT) in both
+    light and dark renders
+  - 'Correct Okabe-Ito palette usage: first series #009E73 (brand), second #D55E00
+    in proper order'
+  - Clean Kagi algorithm implementation with accurate trend reversal logic and shoulder/waist
+    tracking
+  - Both renders fully readable with no contrast or legibility issues; grid opacity
+    well-balanced at 10%
+  - Deterministic data generation with seed=42 ensures reproducibility; proper axis
+    scaling with zero=False
   weaknesses:
-  - No grid lines to help readers track price levels across the chart
-  - Does not leverage Altair interactivity features (tooltips, hover effects) which
-    would be valuable for financial data exploration
-  - Legend shows line style but thickness difference is subtle in legend representation
-  image_description: The plot displays a Kagi chart showing stock price movements
-    over approximately 20 line indices. The chart uses green thick lines for Yang
-    (Bullish) segments and red thin lines for Yin (Bearish) segments. The Y-axis shows
-    "Price ($)" ranging from approximately 76 to 114, while the X-axis displays "Line
-    Index" from 0 to 20. The title correctly shows "kagi-basic · altair · pyplots.ai"
-    at the top center. A legend in the upper right corner distinguishes Yang (Bullish)
-    in green from Yin (Bearish) in red. The chart shows clear trend reversals with
-    horizontal shoulder/waist connectors between vertical segments, demonstrating
-    multiple bullish and bearish phases including a significant downtrend in the early
-    portion and recovery with new highs toward the right side.
+  - 'Design Excellence below maximum: could explore subtle refinements like custom
+    legend styling or emphasis on key trend reversals'
+  - Library Mastery (LM-02) reflects straightforward use of standard Altair patterns
+    without distinctive flourishes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly on-spec — not pure white
+      Chrome: Title "kagi-basic · altair · anyplot.ai" in dark text (#1A1A17), clearly readable; "Price ($)" and "Line Index" axis labels in dark text; tick labels dark and legible; legend box with light fill (#FFFDF6)
+      Data: Green thick lines (#009E73, Okabe-Ito position 1) represent yang (bullish); orange thin lines (#D55E00, Okabe-Ito position 2) represent yin (bearish); clear thickness distinction (6px vs 2px)
+      Grid: Subtle at 10% opacity, visible but not competing with data
+      Legibility verdict: PASS — all text readable, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly on-spec — not pure black
+      Chrome: Title in light text (#F0EFE8), clearly readable; "Price ($)" and "Line Index" labels in light text; tick labels in light secondary text (#B8B7B0), readable; legend box with dark fill (#242420)
+      Data: Green thick lines (#009E73) and orange thin lines (#D55E00) are **identical** to light render (only chrome flipped) ✓
+      Grid: Subtle at 10% opacity with light color, visible
+      Legibility verdict: PASS — all text readable, no "dark-on-dark" failures; brand green clearly visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size with appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels are well-spaced
+        comment: Title (28px), axis labels (22px), tick labels (18px) all readable
+          in both themes with proper theme tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; legend positioned clearly; axis labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line segments clearly visible with good thickness differentiation
-          between yang and yin
+        comment: Line thickness distinction sharp (6px vs 2px); all segments clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green and red provide good contrast; thickness provides secondary
-          encoding for accessibility
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas appropriately with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) and Line Index are descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (positions 1-2); good contrast; line thickness
+          provides redundant signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 (scaled to 4800×2700); good proportions; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No grid lines visible; grid would improve price level tracking
+        passed: true
+        comment: Title format correct; axes labeled descriptively with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark); both theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Okabe-Ito palette applied correctly; line thickness encodes trend;
+          theme-adaptive tokens; solid execution within standard palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid opacity 10% (subtle); proper configure_* methods; clear styling;
+          room for deeper visual hierarchy
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear yang/yin distinction through color + thickness; pattern guides
+          to reversals; legend supports interpretation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Kagi chart with vertical lines and horizontal connectors
+        comment: Correct Kagi chart with vertical line segments of varying thickness
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows line index (time-independent), Y-axis shows price
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thick/thin lines for yang/yin, horizontal shoulders/waists, 4% reversal
-          threshold implemented
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: thick yang, thin yin, correct colors, line
+          index x-axis, shoulders/waists, 4% threshold'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: line index; Y: price; zero=False prevents misleading baseline'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Yang (Bullish) and Yin (Bearish)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows {spec-id} · {library} · pyplots.ai format
+        comment: Title format correct; legend labels match visual encoding
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish trends, reversals, and yang/yin transitions
+        comment: 'Demonstrates full Kagi behavior: uptrends, downtrends, reversals,
+          shoulders, waists'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Simulated stock price with random walk is a realistic financial scenario
+        comment: Stock price data, random walk model, neutral domain, plausible magnitudes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Prices around $80-$113 are realistic for stock data
+        comment: 250 price points, 4% reversal threshold, price range proportional
     code_quality:
       score: 10
       max: 10
@@ -155,42 +181,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports, data, algorithm, plot, save
+        comment: Linear, straightforward; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: seed=42; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported
+        comment: Only necessary imports; no orphaned imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No faked UI; clean variable names; clear algorithm flow
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png/html; scale_factor=3.0 correct; altair
+          6.1.0 API current
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses mark_rule and strokeWidth encoding but does not leverage Altair
-          interactivity or tooltips
+        passed: true
+        comment: mark_rule() correct for segments; x/x2/y/y2 encoding idiomatic; proper
+          color and strokeWidth scales
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good StrokeWidth scale usage; environment-based theme tokens; straightforward
+          but not particularly novel
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -198,7 +232,5 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - time-series
+  dataprep: []
   styling: []

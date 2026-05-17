@@ -1,157 +1,183 @@
 library: matplotlib
+language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:53:24Z'
-updated: '2026-01-08T21:59:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832941137
+updated: '2026-05-17T07:57:49Z'
+generated_by: claude-haiku
+workflow_run: 25985113035
 issue: 3341
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent Kagi chart algorithm implementation with correct yang/yin logic and
-    reversal threshold handling
-  - Clear visual distinction between bullish (thick green) and bearish (thin red)
-    segments
-  - Good annotation showing the reversal threshold parameter
-  - Realistic stock price data generation using geometric Brownian motion
-  - Clean, well-structured code following KISS principles
+  - Excellent visual quality across both themes with perfect legibility in light and
+    dark modes
+  - 'Perfect spec compliance: implements all required Kagi features (Yang/Yin distinction,
+    reversals, threshold annotation)'
+  - 'Correct Okabe-Ito color usage (#009E73 green, #D55E00 orange) with identical
+    colors across themes'
+  - Clean, minimal aesthetic with effective visual hierarchy through line-width distinction
+  - Proper theme-adaptive styling with zero contrast failures
+  - Realistic data generation (GBM) and sensible 4% reversal threshold
+  - Correct algorithm implementation with proper shoulders/waists
   weaknesses:
-  - Red-green color scheme is not colorblind-friendly (though thickness provides secondary
-    cue)
-  - Could use LineCollection for more efficient segment rendering instead of individual
-    plot calls
-  image_description: 'The plot displays a Kagi chart showing stock price movements
-    over time. The chart uses thick green lines (Yang/Bullish) and thin red lines
-    (Yin/Bearish) to represent trend directions. The price range spans approximately
-    $83-$108, with the X-axis showing "Kagi Line Index" from 0 to ~13. The title correctly
-    displays "kagi-basic · matplotlib · pyplots.ai" in large font at the top. A legend
-    in the upper left corner identifies the two line types. An annotation box in the
-    lower right shows "Reversal threshold: 4%". The chart demonstrates multiple trend
-    reversals with clear yang-to-yin and yin-to-yang transitions, including horizontal
-    shoulder/waist segments at reversal points. The grid is subtle with dashed lines
-    at 0.3 alpha.'
+  - Design Excellence could be elevated with additional visual refinements beyond
+    standard minimal aesthetic
+  - Library Mastery is solid but could showcase more distinctive matplotlib techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "kagi-basic · matplotlib · anyplot.ai" in dark INK color (fontsize=24), axis labels "Kagi Line Index" and "Price ($)" in dark text (fontsize=20), tick labels in INK_SOFT (fontsize=16) - all clearly readable against light background
+      Data: Thick green lines (#009E73) for Yang/bullish trends, thin orange lines (#D55E00) for Yin/bearish trends - visually distinct and interpretable
+      Legend: Upper left corner with proper line-width distinction, framed with background
+      Annotation: "Reversal threshold: 4%" in lower right with contrast background box
+      Legibility verdict: PASS - All text readable, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title and labels now in light tones (INK=#F0EFE8, INK_SOFT=#B8B7B0) providing excellent contrast against dark background - all clearly readable
+      Data: Green and orange lines maintain identical colors from light render (theme-independent) - semantic meaning preserved
+      Legend: Frame uses ELEVATED_BG (#242420) with light text, proper visual hierarchy
+      Annotation: Readable with contrast box
+      Legibility verdict: PASS - No dark-on-dark failures, all text readable, brand green (#009E73) visible on both surfaces
+
+    Both renders pass legibility requirements. Data colors are identical between themes (only chrome adapts). Theme adaptation is correct throughout.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements anywhere in the plot
+        comment: All text explicitly sized (24/20/16pt) and readable in both themes
+          with proper theme tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout; legend upper-left, annotation lower-right with contrast
+          background
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths (4 for yang, 2 for yin) are clearly visible and distinguishable;
-          could be slightly thicker for optimal visibility
+        comment: Thick/thin lines (4/2pt) effectively distinguish Yang/Yin; all segments
+          visually distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses red-green color scheme which is not colorblind-safe; however,
-          thickness difference provides secondary visual cue
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) with units and Kagi Line Index are descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe; green vs orange with redundant line-width
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 16:9 with generous margins; all elements within bounds
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha 0.3, but legend could be positioned better
+        comment: Standard title format; axes descriptive (Kagi Line Index, Price with
+          units)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Yang=#009E73, Yin=#D55E00, backgrounds correct, both renders theme-proper
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional minimal design with intentional line-width hierarchy;
+          canonical palette; typography hierarchy 24→20→16pt
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle y-grid (alpha=0.10), rounded line caps, properly
+          styled legend/annotation frames
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear line-width hierarchy for trend distinction; reversal context
+          provided; lacks secondary emphasis techniques
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Kagi chart implementation with vertical lines changing direction
-          on reversal threshold
+        comment: Correct Kagi chart with proper vertical/horizontal segments and reversals
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X shows line index (time-independent as spec requires), Y shows price
-          correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: thick/thin lines, yang/yin coloring,
-          horizontal shoulders/waists, reversal threshold'
-      - id: SC-04
-        name: Data Range
+        comment: Yang bullish (thick, green), Yin bearish (thin, orange), reversals,
+          threshold shown
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Kagi line index (time-independent), Y=Price; all data visible with
+          appropriate scaling
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Yang (Bullish) and Yin (Bearish)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format kagi-basic · matplotlib · pyplots.ai
+        comment: Title format correct; legend labels clear and descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both yang and yin segments, multiple reversals, shoulders/waists;
-          could show more yang-to-yin thickness transitions
+        comment: Shows multiple reversals, uptrends/downtrends, shoulders/waists -
+          comprehensive Kagi pattern
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price data using geometric Brownian motion is realistic and
-          appropriate for financial charting
+        comment: GBM for realistic prices; 4% threshold realistic for stock trading;
+          250-day span appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price range ~$83-$108 is reasonable for a ~$100 stock; 250 days of
-          data is appropriate
+        comment: Price range $80-107 realistic; reversal ~$4 on $100 stock realistic
     code_quality:
       score: 10
       max: 10
@@ -161,11 +187,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data generation → Kagi construction → Plot → Save structure
+        comment: No unnecessary functions/classes; direct procedural Kagi algorithm
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -173,41 +199,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot, numpy, and Line2D (used for legend)
+        comment: 'Only used imports: os, matplotlib, numpy, Line2D'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions used
+        comment: Correct algorithm, no fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct axes methods, fig.subplots(), theme tokens, Line2D legend,
+          spine removal, grid styling
+      - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses matplotlib line plotting and Line2D for custom legend, but could
-          leverage more matplotlib features like LineCollection for more efficient
-          rendering
+        passed: true
+        comment: Uses solid_capstyle='round' and custom Line2D legend; lacks advanced
+          matplotlib techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  - explicit-figure
+  dataprep: []
   styling:
   - grid-styling

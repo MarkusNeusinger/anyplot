@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_point,
     geom_segment,
@@ -28,14 +31,15 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 np.random.seed(42)
 
 # Data: Small tech company organizational chart with 30 employees across 4 levels
-# Level 0: CEO (1)
-# Level 1: VPs (3)
-# Level 2: Managers (8)
-# Level 3: Individual Contributors (18)
-
 nodes = [
     # Level 0 - CEO
     {"id": 0, "label": "CEO", "level": 0, "parent": None},
@@ -90,8 +94,7 @@ children = {node["id"]: [] for node in nodes}
 for parent, child in edges:
     children[parent].append(child)
 
-# Calculate x positions using a tree layout algorithm (similar to Reingold-Tilford)
-# We assign horizontal positions based on leaf counts and subtree widths
+# Calculate x positions using a tree layout algorithm
 x_pos = {}
 y_pos = {}
 
@@ -106,15 +109,12 @@ def count_leaves(node_id):
 def assign_x_positions(node_id, left_bound, right_bound):
     """Assign x positions recursively, centering parents over children."""
     if not children[node_id]:
-        # Leaf node: place in center of its allocated space
         x_pos[node_id] = (left_bound + right_bound) / 2
         return
 
-    # Calculate total leaves for proportional spacing
     child_leaves = [(c, count_leaves(c)) for c in children[node_id]]
     total_leaves = sum(leaves for _, leaves in child_leaves)
 
-    # Assign positions to children
     current_left = left_bound
     for child_id, num_leaves in child_leaves:
         proportion = num_leaves / total_leaves
@@ -123,7 +123,6 @@ def assign_x_positions(node_id, left_bound, right_bound):
         assign_x_positions(child_id, current_left, child_right)
         current_left = child_right
 
-    # Parent is centered over its children
     child_x_values = [x_pos[c] for c in children[node_id]]
     x_pos[node_id] = (min(child_x_values) + max(child_x_values)) / 2
 
@@ -136,8 +135,8 @@ max_level = max(node["level"] for node in nodes)
 for node in nodes:
     y_pos[node["id"]] = 1 - (node["level"] / max_level)
 
-# Level colors - different colors for each organizational level
-level_colors = ["#306998", "#FFD43B", "#2CA02C", "#E64A19"]
+# Okabe-Ito palette: first level always #009E73, then follow canonical order
+okabe_ito = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 level_names = ["Executive", "VP", "Manager", "Staff"]
 
 # Create edges dataframe
@@ -154,7 +153,6 @@ node_data = []
 for node in nodes:
     nid = node["id"]
     level = node["level"]
-    # Size nodes by level (executives larger)
     size = 18 - level * 3
     node_data.append(
         {
@@ -169,36 +167,36 @@ for node in nodes:
 
 df_nodes = pd.DataFrame(node_data)
 
-# Build the plot
+# Build the plot with theme-adaptive styling
 plot = (
     ggplot()
-    # Draw edges (straight lines connecting parent to child)
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_edges, color="#666666", size=1.5, alpha=0.6)
-    # Draw nodes colored by level
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_edges, color=INK_SOFT, size=1.5, alpha=0.6)
     + geom_point(aes(x="x", y="y", color="level_name", size="size"), data=df_nodes, stroke=2, alpha=0.95)
-    # Add node labels
-    + geom_text(aes(x="x", y="label_y", label="label"), data=df_nodes, size=8, color="#222222", fontface="bold")
-    + scale_color_manual(values=level_colors, name="Level")
+    + geom_text(aes(x="x", y="label_y", label="label"), data=df_nodes, size=8, color=INK, fontface="bold")
+    + scale_color_manual(values=okabe_ito, name="Level")
     + scale_size_identity()
     + scale_x_continuous(limits=(-0.05, 1.05))
     + scale_y_continuous(limits=(-0.08, 1.12))
-    + labs(title="Tech Company Org Chart · network-hierarchical · letsplot · pyplots.ai")
+    + labs(title="network-hierarchical · letsplot · anyplot.ai")
     + ggsize(1600, 900)
     + theme(
-        plot_title=element_text(size=26, face="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, face="bold", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
-        legend_text=element_text(size=14),
-        legend_title=element_text(size=16, face="bold"),
+        legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_title=element_text(size=16, face="bold", color=INK),
         legend_position="right",
     )
 )
 
 # Save as PNG (scale 3x to get 4800 x 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")

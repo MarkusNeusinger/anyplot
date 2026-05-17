@@ -1,0 +1,246 @@
+library: ggplot2
+language: r
+specification_id: frontier-efficient
+created: '2026-05-17T04:56:04Z'
+updated: '2026-05-17T04:59:21Z'
+generated_by: claude-haiku
+workflow_run: 25981755773
+issue: 3342
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent visual quality with all text explicitly sized and perfectly readable
+    in both themes
+  - Complete spec compliance with all required features implemented correctly
+  - Professional publication-ready aesthetic with clean design and clear visual hierarchy
+  - Realistic portfolio optimization data demonstrating key financial concepts
+  - Perfect theme-adaptive chrome with data colors identical across light and dark
+    renders
+  - Well-structured R code with appropriate complexity and reproducibility
+  weaknesses:
+  - Unused tidyr import (line 8) should be removed for code cleanliness
+  - Library mastery is competent but generic—could leverage distinctive ggplot2 features
+    like geom_ribbon() and stat_smooth() for confidence bands
+  - Design is solid but follows library defaults rather than pushing creative boundaries
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 as specified
+      Chrome: Title, axis labels (Risk/Return), tick labels all dark (#1A1A17) and clearly readable
+      Data: Green efficient frontier (#009E73), orange Capital Market Line (#D55E00), blue Min Variance marker (#0072B2), purple Max Sharpe marker (#CC79A7), scatter gradient from gray to green by Sharpe ratio
+      Grid: Subtle horizontal and vertical grid lines, visible but not dominant
+      Legend/Caption: Sharpe ratio colorbar on right; caption explains all symbols clearly
+      Legibility verdict: PASS - All text sizes explicitly set (title 24pt, labels 20pt, ticks 16pt, legend 14pt, caption 13pt). All elements perfectly readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 as specified
+      Chrome: Title, axis labels, tick labels all light (#F0EFE8 and #B8B7B0) and clearly readable against dark background
+      Data: Efficient frontier #009E73 (IDENTICAL to light), CML #D55E00 (IDENTICAL to light), Min Variance #0072B2 (IDENTICAL to light), Max Sharpe #CC79A7 (IDENTICAL to light), scatter gradient colors identical to light render
+      Grid: Subtle light-colored grid lines visible but not dominant
+      Legend/Caption: Sharpe ratio colorbar and caption equally clear as light version
+      Legibility verdict: PASS - All text light-colored and readable. No dark-on-dark failures. Data colors confirmed identical to light render. Brand green #009E73 visible and readable in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All text explicitly sized: title 24pt, labels 20pt, ticks 16pt,
+          legend 14pt, caption 13pt. Perfect readability in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. All components clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: ~300 scatter points (alpha=0.6, size=3.5), frontier line (linewidth=1.2),
+          CML (linewidth=1.0), key points (size=5.5) all optimally visible for density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette throughout. CVD-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of 4800x2700 canvas. Balanced 20pt margins. Legend
+          positioned without waste.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Risk (Standard Deviation), Expected Return
+          (Annualized).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Multi-series follows Okabe-Ito. Backgrounds
+          correct. Data colors identical across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, publication-ready with intentional color choices and
+          typography. Solid library-default approach.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, theme-aware panel border, generous whitespace, explicit
+          font sizing. Very refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: frontier dominates, CML secondary, key points
+          marked distinctly. Excellent storytelling.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct efficient frontier visualization.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: frontier, scatter, key points, CML, Sharpe
+          coloring.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped. Axes show all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Caption labels all elements.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: frontier, random portfolios, key points, CML,
+          Sharpe gradient.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic 5-asset portfolio with plausible returns (8-15%), volatilities
+          (12-25%), correlations. Finance domain, neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values factually correct. Risk-return tradeoff properly represented.
+          CML correctly tangent.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flow: imports → tokens → data → plot → save. Minimal helper
+          function.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures reproducibility.
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: tidyr imported but never used. Minor deduction.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean R code, appropriate complexity, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format with ragg::agg_png.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level ggplot2 API with proper aes(), scale_color_gradient(),
+          theme_minimal(). Idiomatic but could explore advanced stat layers.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic usage of multiple geoms and shape aesthetics. Could leverage
+          geom_ribbon(), stat_smooth(), confidence bands. Standard approach.
+    score_caps:
+      applied: false
+      notes: No caps triggered
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
