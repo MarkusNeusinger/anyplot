@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 79/100 | Updated: 2026-05-17
 """
 
 import numpy as np
