@@ -1,171 +1,171 @@
 library: bokeh
+language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:55:17Z'
-updated: '2025-12-31T11:03:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617500674
+updated: '2026-05-17T12:41:38Z'
+generated_by: claude-haiku
+workflow_run: 25990803901
 issue: 2998
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - columndatasource
-  - data-generation
-  dataprep: []
-  styling:
-  - custom-colormap
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/bokeh/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - 'Excellent implementation of all spec requirements: sorted bars, error bars, color
-    gradient, zero reference line'
-  - 'Clean use of Bokeh-specific features: ColumnDataSource, linear_cmap, Whisker
-    model'
-  - Great choice of realistic housing price prediction context with 15 meaningful
-    feature names
-  - Proper sorting logic with highest importance at top
-  - Good visual hierarchy with darker blues for more important features
+  - Excellent spec compliance (15/15) with all required features present
+  - Perfect code quality (10/10) with clean KISS structure and reproducibility
+  - Strong idiomatic bokeh usage with Whisker elements and linear_cmap
+  - Correct theme-adaptive tokens (PAGE_BG, INK, INK_SOFT) for chrome elements
+  - Realistic data with full feature coverage showing entire spectrum of importance
+    values
   weaknesses:
-  - X-axis label lacks units (e.g., Mean Decrease in R² Score would be more informative)
-  - Error bar caps (upper_head/lower_head) are set to None - small T-shaped caps would
-    improve visibility
-  - Could leverage Bokeh interactive features like HoverTool to show exact values
-    on hover
-  image_description: 'The plot displays a horizontal bar chart showing permutation
-    feature importance for a housing price prediction model. There are 15 features
-    sorted by mean importance (highest at top): Square Footage, Number of Bedrooms,
-    Neighborhood Score, etc. The bars use a blue sequential color gradient from Blues9
-    palette (darker blue = higher importance, lighter blue = lower/negative importance).
-    Each bar has horizontal error bars (whiskers) showing the standard deviation across
-    permutation shuffles. A vertical dashed reference line at x=0 distinguishes positive
-    from negative importance values. The bottom two features (Walk Score, Public Transit
-    Access) have slightly negative importance values extending left of the zero line.
-    The title "bar-permutation-importance · bokeh · pyplots.ai" appears at the top.
-    The x-axis is labeled "Mean Decrease in Model Score" and feature names are displayed
-    on the y-axis.'
+  - 'Dark theme palette contrast: low-importance bars use dark blue from cividis gradient,
+    lacking sufficient contrast against #1A1A17 background'
+  - Design excellence is adequate but not exceptional (12/20) - fairly standard configured
+    defaults without exceptional visual polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 ✓
+      Chrome: Title (28pt), axis labels (22pt), tick labels (18pt) all in dark INK color - fully readable
+      Data: Horizontal bars color-mapped with cividis256 from yellow (high importance) to dark blue (low importance); error bars visible as horizontal whiskers; reference line at x=0; features sorted by importance with Square Footage highest (0.182) at top
+      Legibility verdict: PASS - All text and data elements clearly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 ✓
+      Chrome: Title, axis labels, tick labels all in light INK_SOFT color - fully readable; no dark-on-dark text issues
+      Data: Color gradient preserved identically (yellow for high, dark blue for low); top/middle bars (high importance) have excellent contrast; bottom bars (Walk Score, Public Transit Access) use dark blue which has reduced contrast against dark background - visible but less prominent than in light render; error bars and reference line remain visible
+      Legibility verdict: PASS with caveat - Readable but dark-end colors lack optimal contrast. Bottom bars distinguishable due to edges and error bars, but not as visually prominent as in light render.
+
+    Both renders are functional and readable. Data colors (Okabe-Ito replacement: cividis gradient) remain identical between themes, only chrome (background, text) flips as expected. Primary design trade-off: sequential gradient strategy (dark=low importance) is less optimal for dark backgrounds.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt - all clearly
-          readable, slightly larger title would be ideal but very good
+        comment: All fonts explicitly sized (title 28pt, labels 22pt, ticks 18pt);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all feature names fully visible
+        comment: No overlapping text elements; all labels fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Bars well-sized with height=0.7, error bars visible with line_width=3
+        score: 3
+        max: 6
+        passed: false
+        comment: Light render excellent; dark render has reduced contrast for low-importance
+          bars (dark blue on dark background)
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blues9 sequential palette is colorblind-safe, good choice, though
-          gradient differences are subtle for middle values
+        score: 1
+        max: 2
+        passed: false
+        comment: Cividis is colorblind-safe but dark-theme contrast suboptimal
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space, balanced margins
+        comment: Excellent proportions (60-70% canvas usage), balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has descriptive label but no units (could be "Mean Decrease
-          in R² Score" or similar)
+        comment: 'Descriptive with context: title format correct, x-axis labeled ''Mean
+          Decrease in Model Score'''
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
+        passed: false
+        comment: Cividis256 correct; backgrounds correct (#FAF8F1/#1A1A17); but gradient
+          strategy (dark=low) creates dark-on-dark contrast issue
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: true
-        comment: X-grid at alpha 0.4 is appropriate, y-grid disabled correctly, no
-          legend needed for this plot type
+        comment: Well-configured defaults with explicit styling; fairly standard approach
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean layout, subtle grid, good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted by importance with gradient guidance; reference line clarifies
+          positive/negative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct horizontal bar chart for permutation importance
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Features on y-axis, importance on x-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: sorted bars, error bars, color gradient,
-          zero reference line'
-      - id: SC-04
-        name: Data Range
+        comment: Error bars, sorting, gradient, reference line all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including negative values
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Features on y-axis, importance on x-axis, std as error bars
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A (full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-permutation-importance · bokeh · pyplots.ai"'
+        comment: Title format 'bar-permutation-importance · bokeh · anyplot.ai' correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows range from high importance to negative importance, good variability
-          in std values, could show more extreme negative cases
+        comment: 15 features from 0.182 to -0.008; full spectrum of importance
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Housing price model is an excellent, neutral, real-world ML scenario
+        comment: Housing price prediction model; real-world features
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Importance values 0.18 to -0.008 are realistic for sklearn permutation_importance
-          output, std values proportional
+        comment: Factually realistic permutation importance values and error bars
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,11 +173,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -185,29 +185,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used (numpy, bokeh, selenium)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format (plot-{THEME}.png + HTML)
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, linear_cmap transform, Whisker model
-          for error bars - these are Bokeh-specific patterns, but could leverage HoverTool
-          for interactivity
+        comment: 'Excellent idiomatic bokeh: figure(), hbar(), Whisker, linear_cmap,
+          HoverTool, ColumnDataSource'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Whisker and linear_cmap (bokeh-distinctive); theme tokens
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
