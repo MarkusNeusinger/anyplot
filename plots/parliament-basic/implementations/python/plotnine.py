@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 parliament-basic: Parliament Seat Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-30
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -22,20 +24,40 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
+    "#56B4E9",  # sky blue
+]
+
 # Data - fictional parliament with neutral party names
 parties = [
-    {"party": "Progressive Alliance", "seats": 85, "color": "#306998"},
-    {"party": "Center Coalition", "seats": 72, "color": "#FFD43B"},
-    {"party": "Conservative Union", "seats": 68, "color": "#4ECDC4"},
-    {"party": "Green Future", "seats": 42, "color": "#2ECC71"},
-    {"party": "Liberal Democrats", "seats": 35, "color": "#9B59B6"},
-    {"party": "Independent Group", "seats": 18, "color": "#95A5A6"},
+    {"party": "Progressive Alliance", "seats": 85},
+    {"party": "Center Coalition", "seats": 72},
+    {"party": "Conservative Union", "seats": 68},
+    {"party": "Green Future", "seats": 42},
+    {"party": "Liberal Democrats", "seats": 35},
+    {"party": "Independent Group", "seats": 18},
 ]
+
+# Assign Okabe-Ito colors to parties
+for i, party in enumerate(parties):
+    party["color"] = OKABE_ITO[i % len(OKABE_ITO)]
 
 total_seats = sum(p["seats"] for p in parties)
 
 # Calculate seat positions in semicircular arcs
-# Determine optimal row configuration
 n_rows = 8
 inner_radius = 2.0
 row_spacing = 1.0
@@ -44,7 +66,6 @@ row_spacing = 1.0
 seats_per_row = []
 for i in range(n_rows):
     radius = inner_radius + i * row_spacing
-    # Seats roughly proportional to arc length
     row_seats = int(np.ceil(radius * 3.5))
     seats_per_row.append(row_seats)
 
@@ -77,7 +98,6 @@ all_seats.sort(key=lambda s: -s["angle"])
 seat_data = []
 cumulative = 0
 for seat in all_seats:
-    # Find which party this seat belongs to
     running_total = 0
     for party in parties:
         running_total += party["seats"]
@@ -100,25 +120,26 @@ df["party"] = pd.Categorical(df["party"], categories=party_order, ordered=True)
 # Create plot
 plot = (
     ggplot(df, aes(x="x", y="y", color="party"))
-    + geom_point(size=5, alpha=0.95)
+    + geom_point(size=6, alpha=0.95)
     + scale_color_manual(values=party_colors, labels=lambda x: [legend_labels.get(p, p) for p in x])
-    + labs(title="parliament-basic · plotnine · pyplots.ai", color="")
+    + labs(title="parliament-basic · plotnine · anyplot.ai", color="")
     + coord_fixed(ratio=1)
     + theme_void()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=26, ha="center", weight="bold", ma="center"),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=13),
+        plot_title=element_text(size=26, ha="center", weight="bold", color=INK),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=13, color=INK_SOFT),
         legend_position="bottom",
         legend_direction="horizontal",
         legend_key_size=20,
-        plot_background=element_rect(fill="white", color="white"),
-        panel_background=element_rect(fill="white", color="white"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         plot_margin=0.1,
     )
     + guides(color=guide_legend(nrow=2, override_aes={"size": 8}))
 )
 
 # Save
-plot.save("plot.png", dpi=300, width=16, height=9, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9, verbose=False)

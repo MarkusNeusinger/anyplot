@@ -1,31 +1,52 @@
-""" pyplots.ai
+""" anyplot.ai
 parliament-basic: Parliament Seat Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-17
 """
 
-import altair as alt
+import os
+import site
+import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
 
+# Ensure the real altair library is imported, not this script
+site_packages = [p for p in site.getsitepackages() if "site-packages" in p]
+if site_packages:
+    sys.path.insert(0, site_packages[0])
+
+import altair as alt  # noqa: E402
+
+
+# Get the directory where this script is located
+SCRIPT_DIR = Path(__file__).parent
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 np.random.seed(42)
 
 # Data: Fictional parliament with 300 seats
+# Using Okabe-Ito palette, starting with #009E73
 parties = [
-    {"party": "Progressive", "seats": 95, "color": "#306998"},
-    {"party": "Conservative", "seats": 82, "color": "#FFD43B"},
-    {"party": "Green", "seats": 45, "color": "#2CA02C"},
-    {"party": "Liberal", "seats": 38, "color": "#FF7F0E"},
-    {"party": "Social Dem.", "seats": 28, "color": "#9467BD"},
-    {"party": "Independent", "seats": 12, "color": "#8C564B"},
+    {"party": "Progressive", "seats": 95, "color": "#009E73"},
+    {"party": "Conservative", "seats": 82, "color": "#D55E00"},
+    {"party": "Green", "seats": 45, "color": "#0072B2"},
+    {"party": "Liberal", "seats": 38, "color": "#CC79A7"},
+    {"party": "Social Dem.", "seats": 28, "color": "#E69F00"},
+    {"party": "Independent", "seats": 12, "color": "#56B4E9"},
 ]
 
 total_seats = sum(p["seats"] for p in parties)
 
 # Generate seat positions in semicircular arcs
-# Calculate number of rows based on total seats (more seats = more rows)
-n_rows = 5  # For 300 seats
+n_rows = 5
 inner_radius = 3.0
 row_spacing = 1.0
 
@@ -110,12 +131,18 @@ chart = (
         tooltip=["party:N", "seats_count:Q"],
     )
     .properties(
-        width=1500, height=800, title=alt.Title("parliament-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        title=alt.Title("parliament-basic · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(padding=20, offset=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK, fontSize=28)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(str(SCRIPT_DIR / f"plot-{THEME}.png"), scale_factor=3.0)
+chart.save(str(SCRIPT_DIR / f"plot-{THEME}.html"))
