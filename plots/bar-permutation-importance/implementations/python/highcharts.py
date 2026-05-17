@@ -1,45 +1,51 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-permutation-importance: Permutation Feature Importance Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
 import json
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulating permutation importance from a house price prediction model
+# Theme-adaptive tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Data - Simulating permutation importance from a medical diagnosis model (diabetes prediction)
 np.random.seed(42)
 
 features = [
-    "Square Footage",
-    "Number of Bedrooms",
-    "Location Score",
-    "Year Built",
-    "Lot Size",
-    "Garage Spaces",
-    "Number of Bathrooms",
-    "School Rating",
-    "Distance to Center",
-    "Property Tax Rate",
-    "Crime Index",
-    "Median Income",
-    "Walk Score",
-    "Transit Score",
-    "Renovation Year",
+    "HbA1c Level",
+    "Fasting Glucose",
+    "BMI",
+    "Blood Pressure Systolic",
+    "Age",
+    "Cholesterol",
+    "Triglycerides",
+    "Family History Score",
+    "Physical Activity",
+    "Sleep Duration",
+    "Medication Count",
+    "Waist Circumference",
 ]
 
 # Generate realistic importance values (decreasing model score)
-base_importance = np.array([0.35, 0.28, 0.22, 0.18, 0.15, 0.12, 0.10, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.005, -0.01])
-importance_mean = base_importance + np.random.uniform(-0.02, 0.02, len(features))
-importance_std = np.abs(importance_mean) * np.random.uniform(0.2, 0.5, len(features))
+base_importance = np.array([0.42, 0.38, 0.32, 0.25, 0.18, 0.14, 0.10, 0.08, 0.06, 0.03, 0.01, -0.02])
+importance_mean = base_importance + np.random.uniform(-0.03, 0.03, len(features))
+importance_std = np.abs(importance_mean) * np.random.uniform(0.25, 0.55, len(features))
 
 # Sort by importance (highest first)
 sorted_indices = np.argsort(importance_mean)[::-1]
@@ -47,28 +53,37 @@ features = [features[i] for i in sorted_indices]
 importance_mean = importance_mean[sorted_indices]
 importance_std = importance_std[sorted_indices]
 
-# Create color gradient based on importance (blue gradient with more contrast)
-max_imp = float(max(importance_mean))
-min_imp = float(min(importance_mean))
+# Create sequential color gradient based on importance (viridis-inspired)
+# Map importance to a color from light yellow-green to dark green
+max_imp = float(np.max(importance_mean))
+min_imp = float(np.min(importance_mean))
 
+# Use a viridis-like sequential gradient
+colors = [
+    "#FDE725",
+    "#ADDC30",
+    "#5EC962",
+    "#31688E",
+    "#440154",
+    "#31688E",
+    "#31688E",
+    "#31688E",
+    "#440154",
+    "#440154",
+    "#440154",
+    "#440154",
+]
 
-def get_color(value):
-    """Map value to color gradient from light blue to Python Blue."""
-    if max_imp == min_imp:
-        t = 0.5
-    else:
-        t = (value - min_imp) / (max_imp - min_imp)
-    # Gradient from very light (#B8D4E8) to Python Blue (#306998)
-    r = int(184 + (48 - 184) * t)
-    g = int(212 + (105 - 212) * t)
-    b = int(232 + (152 - 232) * t)
-    return f"#{r:02x}{g:02x}{b:02x}"
-
-
-# Prepare data for bars with individual colors
+# Map each importance value to a position in the gradient
 bar_data = []
 for imp in importance_mean:
-    bar_data.append({"y": float(imp), "color": get_color(float(imp))})
+    if max_imp == min_imp:
+        color_idx = len(colors) // 2
+    else:
+        # Normalize importance to [0, 1]
+        normalized = (imp - min_imp) / (max_imp - min_imp)
+        color_idx = min(int(normalized * len(colors)), len(colors) - 1)
+    bar_data.append({"y": float(imp), "color": colors[color_idx]})
 
 # Prepare error bar data
 error_data = []
@@ -81,53 +96,89 @@ chart_options = {
         "type": "bar",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginLeft": 400,
         "marginRight": 100,
         "marginBottom": 200,
         "marginTop": 180,
     },
     "title": {
-        "text": "bar-permutation-importance · highcharts · pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold"},
+        "text": "bar-permutation-importance · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
     },
     "subtitle": {
-        "text": "House Price Prediction Model - Permutation Importance (n_repeats=10)",
-        "style": {"fontSize": "38px", "color": "#666666"},
+        "text": "Diabetes Prediction Model - Permutation Importance (n_repeats=10)",
+        "style": {"fontSize": "20px", "color": INK_SOFT},
     },
-    "xAxis": {"categories": features, "title": None, "labels": {"style": {"fontSize": "34px"}}},
+    "xAxis": {
+        "categories": features,
+        "title": None,
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
+    },
     "yAxis": {
-        "title": {"text": "Mean Decrease in R² Score", "style": {"fontSize": "40px"}},
-        "labels": {"style": {"fontSize": "28px"}},
-        "plotLines": [{"value": 0, "color": "#333333", "width": 4, "zIndex": 5}],
+        "title": {"text": "Mean Decrease in AUC Score", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "plotLines": [{"value": 0, "color": INK_SOFT, "width": 2, "zIndex": 5}],
         "gridLineWidth": 1,
-        "gridLineColor": "#E5E5E5",
+        "gridLineColor": GRID,
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
     },
     "tooltip": {
-        "headerFormat": '<span style="font-size: 30px; font-weight: bold;">{point.key}</span><br/>',
-        "pointFormat": '<span style="font-size: 28px">Importance: <b>{point.y:.4f}</b></span>',
+        "headerFormat": '<span style="font-size: 18px; font-weight: bold; color: {INK};">{point.key}</span><br/>',
+        "pointFormat": '<span style="font-size: 16px; color: {INK};">Importance: <b>{point.y:.4f}</b></span>',
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
     },
-    "legend": {"enabled": False},
+    "legend": {
+        "enabled": True,
+        "itemStyle": {"color": INK_SOFT, "fontSize": "16px"},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
+    },
     "credits": {"enabled": False},
     "plotOptions": {
-        "bar": {"pointPadding": 0.05, "groupPadding": 0.05, "borderWidth": 2, "borderColor": "#1a3a5c"},
-        "errorbar": {"stemWidth": 6, "whiskerLength": "50%", "whiskerWidth": 6, "color": "#1a3a5c"},
+        "bar": {"pointPadding": 0.05, "groupPadding": 0.05, "borderWidth": 0},
+        "errorbar": {"stemWidth": 6, "whiskerLength": "50%", "whiskerWidth": 6, "color": INK_SOFT},
     },
     "series": [
-        {"name": "Importance", "data": bar_data, "type": "bar"},
-        {"name": "Error", "data": error_data, "type": "errorbar", "linkedTo": ":previous"},
+        {"name": "Importance (Color = Relative Magnitude)", "data": bar_data, "type": "bar"},
+        {"name": "Variability (±1 Std Dev)", "data": error_data, "type": "errorbar", "linkedTo": ":previous"},
     ],
 }
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS with retry logic
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Accept": "text/javascript, application/javascript",
+    "Referer": "https://code.highcharts.com/",
+}
 
-# Download highcharts-more for error bars
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+for attempt in range(3):
+    try:
+        resp = requests.get("https://code.highcharts.com/highcharts.js", headers=headers, timeout=30)
+        resp.raise_for_status()
+        highcharts_js = resp.text
+        break
+    except Exception:
+        if attempt == 2:
+            raise
+        time.sleep(2)
+
+for attempt in range(3):
+    try:
+        resp = requests.get("https://code.highcharts.com/highcharts-more.js", headers=headers, timeout=30)
+        resp.raise_for_status()
+        highcharts_more_js = resp.text
+        break
+    except Exception:
+        if attempt == 2:
+            raise
+        time.sleep(2)
 
 # Generate HTML with inline scripts
 chart_options_json = json.dumps(chart_options)
@@ -138,7 +189,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         Highcharts.chart('container', {chart_options_json});
@@ -146,7 +197,7 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -161,27 +212,11 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
 
-# Also save HTML for interactive version
-html_interactive = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>bar-permutation-importance · highcharts · pyplots.ai</title>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>
-        Highcharts.chart('container', {chart_options_json});
-    </script>
-</body>
-</html>"""
-
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_interactive)
+# Save HTML for interactive version
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
