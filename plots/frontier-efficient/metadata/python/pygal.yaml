@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: frontier-efficient
 created: '2026-01-08T21:54:32Z'
-updated: '2026-05-17T04:54:06Z'
+updated: '2026-05-17T05:00:08Z'
 generated_by: claude-haiku
 workflow_run: 25981648601
 issue: 3342
@@ -15,35 +15,37 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-
 quality_score: 85
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing readable in both light and dark
-    themes
-  - Complete and correct spec implementation with all required features present
-  - Solid data quality using realistic financial parameters and proper risk/return
-    representation
-  - Clean, reproducible, maintainable code structure
-  - Proper theme-adaptive styling with correct Okabe-Ito palette application
-  - Effective visual hierarchy showing efficient frontier as focal point
+  - Perfect theme adaptation with light/dark renders maintaining identical data colors
+    while chrome adapts correctly
+  - 'Comprehensive data visualization: 300 random portfolios + efficient frontier
+    + key strategic points (Min Variance, Max Sharpe)'
+  - Excellent use of Sharpe ratio categorization (low/mid/high) providing visual hierarchy
+    and data storytelling
+  - Clean, readable layout at 4800x2700 with no overlapping elements or text legibility
+    issues
+  - Idiomatic pygal implementation with custom Style, theme-adaptive colors, and interactive
+    HTML output
   weaknesses:
-  - Design Excellence score only 10/20 - generic styling with library defaults and
-    no custom visual refinement
-  - Library Mastery score only 5/10 - generic pygal usage without leveraging distinctive
-    library-specific features
-  - 'Visual Refinement: spines remain on all four sides rather than using cleaner
-    L-shaped frame (left and bottom only)'
-  - Lack of aesthetic sophistication - looks like well-configured default implementation
-    rather than publication-quality design
+  - Design sophistication limited to template-following style setup without extraordinary
+    aesthetic customization beyond required defaults
+  - Min Variance and Max Sharpe special points could be more visually distinguished
+    from their respective Sharpe category colors for clearer emphasis
+  - No exploration of advanced pygal features like custom callbacks or enhanced interactivity
+    beyond standard HTML export
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "frontier-efficient · pygal · anyplot.ai" in dark text, X-axis "Risk (Standard Deviation)" and Y-axis "Expected Return" both clearly readable in dark text. Tick labels formatted as percentages (12.0%, 13.0%, etc.) readable against light background. Grid lines subtle and visible.
-      Data: Three scatter series - Low Sharpe (teal #009E73), Mid Sharpe (orange #D55E00), High Sharpe (blue #0072B2). Efficient frontier traced as reddish-purple line (#CC79A7). Min Variance marker (orange, large dot at lower-left). Max Sharpe marker (blue, large dot mid-range). All markers distinct and clearly visible.
-      Legibility verdict: PASS - all text is readable, all data elements visible, no dark-on-light failures
+      Background: Warm off-white (#FAF8F1) - exactly on spec
+      Chrome: Title "frontier-efficient · pygal · anyplot.ai" clearly visible at top; X-axis "Risk (Standard Deviation)" and Y-axis "Expected Return" labels are readable; tick labels (0%, 2.0%, etc.) are clear dark text on light background; legend at bottom shows all 6 series with readable labels
+      Data: Green dots (#009E73) for Low Sharpe portfolios, orange dots (#D55E00) for Mid Sharpe, blue dots (#0072B2) for High Sharpe; efficient frontier curve visible as distinct line; Min Variance and Max Sharpe points clearly marked with larger dots in orange and sky blue
+      Grid: Subtle horizontal and vertical guides, visible but not dominant
+      Legibility verdict: PASS - All text fully readable, excellent contrast, no overlapping elements
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in softer light (#B8B7B0). All text clearly readable against dark background. Grid lines subtle, adjusted for dark surface. No dark-on-dark failures.
-      Data: Same three scatter series in identical Okabe-Ito colors (teal #009E73, orange #D55E00, blue #0072B2) - confirming proper theme adaptation (data colors identical between renders). Frontier line same reddish-purple (#CC79A7). Min Variance and Max Sharpe markers visible and clear.
-      Legibility verdict: PASS - all text readable against dark background, data colors identical to light render, proper theme-adaptive chrome without dark-on-dark text failures
+      Background: Warm near-black (#1A1A17) - exactly on spec
+      Chrome: Title, axis labels, and tick labels rendered in light text with excellent contrast against dark background; legend readable with no dark-on-dark failures
+      Data: Identical data colors to light render (green, orange, blue for Sharpe categories preserved); efficient frontier line visible; Min Variance and Max Sharpe points clearly marked
+      Grid: Subtle guides maintain visibility against dark background
+      Legibility verdict: PASS - All text fully readable, no dark-on-dark issues, chrome correctly adapted while data colors remain identical between renders
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,51 +56,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
-          Perfectly readable in both light and dark renders.
+        comment: All text readable in both light and dark themes with appropriate
+          font sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Text elements don't overlap. Point overlap is natural for 300 scatter
-          points and doesn't impair clarity.
+        comment: No overlapping text, legend at bottom, data points well-distributed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and frontier line clearly visible. Sizing appropriate
-          for data density.
+        comment: All markers, lines, and special points clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (CVD-safe). Good contrast and distinction between
-          series.
+        comment: CVD-safe Okabe-Ito palette with good contrast throughout
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins. Plot fills 60-70% appropriately.
+        comment: 4800x2700 landscape format with appropriate axis ranges and nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Risk (Standard Deviation) and Expected
-          Return.'
+        comment: Descriptive title and axis labels with percentage formatting
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
-          correct, theme-adaptive chrome perfect'
+        comment: 'First series green #009E73, follows Okabe-Ito order, backgrounds
+          correct for both themes, data colors identical between light/dark'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,22 +105,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults with clean appearance. Lacks custom design
-          touches—looks like competent default rather than publication-quality design.
+        comment: Template-following custom Style without extraordinary design customization
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization. Spines remain on all
-          four sides rather than L-shaped frame. No special visual refinement.
+        comment: Minimal visual refinement beyond required defaults, grid visible
+          but no advanced techniques
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good hierarchy with frontier line as focal point. Color gradient
-          guides viewer from low to high efficiency. Tells risk-return story effectively.
+        comment: Sharpe ratio categorization and frontier highlighting create clear
+          visual narrative of efficient frontier concept
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter with efficient frontier line overlay.
+        comment: Correct XY scatter plot for efficient frontier visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: risk/return axes, frontier distinguished,
-          portfolios scattered, key points marked, Sharpe ratio coding.'
+        comment: 'All features present: random portfolios, frontier curve, Min Variance,
+          Max Sharpe marked'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Risk on X-axis, return on Y-axis, all data visible appropriately.
+        comment: Risk (X) and return (Y) correctly mapped with appropriate axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: frontier-efficient · pygal · anyplot.ai. Legend
-          labels accurate.'
+        comment: Title and legend correctly formatted with all series labeled
     data_quality:
       score: 15
       max: 15
@@ -161,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 300 random portfolios, complete efficient frontier,
-          key optimal points.'
+        comment: Comprehensive portfolio simulation with realistic efficient frontier
+          calculation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic financial parameters (8-18% returns, 15-30% volatilities,
-          proper correlations, 2% risk-free rate). Real-world plausible and neutral.
+        comment: 5-asset portfolio with realistic returns (8-18%), volatilities (15-30%),
+          and correlations
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Risk range (12-23%), return range (8-16%), relationships factually
-          correct for portfolio optimization.
+        comment: Axis scales (0-35% risk, 0-20% return) appropriate for portfolio
+          data
     code_quality:
       score: 10
       max: 10
@@ -186,34 +183,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → style → chart → series → render.
-          No unnecessary functions or classes.'
+        comment: Simple, direct script structure without unnecessary functions or
+          classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output.
+        comment: Seeded with np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pygal, Style.'
+        comment: 'Only necessary imports: os, numpy, pygal, Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. No fake functionality or over-engineering.
+        comment: No fake UI, straightforward Monte Carlo simulation approach
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html.
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -221,22 +218,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of Style object for theming, XY chart for scatter, proper
-          series addition. Uses theme tokens idiomatically.
+        comment: Good use of pygal.XY(), custom Style, and theme-adaptive colors following
+          pygal patterns
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic pygal usage without leveraging distinctive library-specific
-          features. Could be ported to another charting library with minimal changes.
-  verdict: REJECTED
+        comment: Interactive HTML export leveraged; could explore more pygal-specific
+          features
+    score_caps_applied: []
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling: []
