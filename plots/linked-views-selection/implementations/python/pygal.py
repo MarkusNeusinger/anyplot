@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-05-17
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 78/100 | Created: 2026-05-17
 """
 
 import os
