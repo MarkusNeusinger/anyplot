@@ -1,161 +1,180 @@
 library: seaborn
+language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:16:19Z'
-updated: '2026-01-09T13:19:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853035126
+updated: '2026-05-17T16:37:10Z'
+generated_by: claude-haiku
+workflow_run: 25996237238
 issue: 3418
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of frequency polygon with all spec requirements met (closed
-    polygons, aligned bins, distinct markers, semi-transparent fill)
-  - Outstanding data design showing unimodal vs bimodal distributions for meaningful
-    comparison
-  - Clean, readable code structure following KISS principles
-  - Colorblind-safe color palette with distinct marker shapes for accessibility
-  - Proper use of seaborn styling (whitegrid) integrated with matplotlib functionality
-  weaknesses:
-  - Uses matplotlib fill_between rather than exploring seaborn-native alternatives
-    like kdeplot with fill parameter
-  - Data scenario, while realistic, is somewhat generic (could have more specific
-    variable naming)
-  image_description: "The plot displays a frequency polygon comparing three experimental\
-    \ conditions (Control, Treatment A, Treatment B) for response time distributions.\
-    \ The x-axis shows \"Response Time (ms)\" ranging from approximately 200 to 625ms,\
-    \ and the y-axis shows \"Frequency\" from 0 to 30. Three distinct line-filled\
-    \ polygons are shown:\n\n- Control (blue #306998): A unimodal distribution centered\
-    \ around 450ms with circle markers\n- Treatment A (yellow #FFD43B): A unimodal\
-    \ distribution centered around 380ms with square markers  \n- Treatment B (teal\
-    \ #2AA198): A bimodal distribution with peaks around 350ms and 500ms with triangle\
-    \ markers\n\nEach group has distinct colors, different marker shapes, and semi-transparent\
-    \ fills (alpha=0.15) beneath the lines. The legend is positioned in the upper\
-    \ right corner with a semi-transparent background (framealpha=0.9). A subtle dashed\
-    \ grid (alpha=0.3) is visible in the background. All lines extend to zero at both\
-    \ ends, forming properly closed polygons as specified. The title follows the required\
-    \ format \"frequency-polygon-basic · seaborn · pyplots.ai\" at 24pt font size."
+  - Excellent theme-adaptive styling with flawless contrast in both light and dark
+    modes
+  - Perfect visual clarity with all text properly sized and readable (24pt title,
+    20pt labels, 16pt ticks)
+  - Strong data storytelling—three distributions with different characteristics (normal,
+    shifted, bimodal) are immediately distinguishable
+  - Comprehensive feature implementation—closed polygons, aligned bins, semi-transparent
+    fills, distinct markers all present
+  - 'Clean, reproducible code with proper palette compliance (Okabe-Ito first series
+    #009E73)'
+  - Idiomatic seaborn usage with proper rc-dict theming and theme-token integration
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title (24pt), X-axis label "Test Score" (20pt), Y-axis label "Frequency" (20pt), tick labels (16pt) — all rendered in dark text
+      Legibility: All text perfectly readable against light background, no contrast issues
+      Data: Three frequency polygons in Okabe-Ito colors—Class A green (#009E73), Class B vermillion (#D55E00), Class C blue (#0072B2)
+      Markers: Distinct markers per class (circles, squares, triangles) clearly visible at bin centers
+      Fills: Semi-transparent fills (alpha=0.15) visible beneath each polygon
+      Legend: Upper right, clear background with dark text labels
+      Grid: Subtle y-axis grid (alpha=0.10) visible but not dominant
+      Legibility verdict: PASS — all elements readable with proper theme chrome
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, tick labels rendered in light text (INK=#F0EFE8)
+      Legibility: All text perfectly readable against dark background, no dark-on-dark failures
+      Data: Data colors identical to light render—green, orange, blue unchanged (only chrome adapts)
+      Markers: Same distinct markers (circles, squares, triangles) clearly visible
+      Fills: Semi-transparent fills with same alpha values, properly visible
+      Legend: Dark background (#242420) with light text labels, properly themed
+      Grid: Subtle y-axis grid maintained
+      Legibility verdict: PASS — all elements readable, no theme-adaptation issues, colors match light render
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          perfect readability in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend does not cover data
+        comment: No overlapping text elements, legend positioned well
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 and marker size of 8 appropriate for data density,
-          alpha fills at 0.15 allow clear overlap viewing
+        comment: Markers and lines optimally sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, and teal are colorblind-safe and distinguishable
+        comment: Okabe-Ito palette is CVD-safe with good contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout applied
+        comment: Perfect layout, plot fills 60-70% of canvas, balanced margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms), Frequency'
+        comment: Descriptive labels (Test Score, Frequency) with correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid alpha at 0.3 is acceptable, but legend lacks frameon styling
-          consistency
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct frequency polygon with line segments connecting bin midpoints
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis correctly shows binned response times, Y-axis shows frequency
-          counts
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Distinct colors/styles, legend present, markers at data points, lines
-          extend to zero, aligned bins, semi-transparent fill
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, axes range from data min-10 to max+10
-      - id: SC-05
-        name: Legend Accuracy
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly identifies Control, Treatment A, Treatment B
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: frequency-polygon-basic · seaborn · pyplots.ai'
-    data_quality:
+        comment: 'First series #009E73, Okabe-Ito order followed, correct backgrounds,
+          theme-correct chrome'
+    design_excellence:
       score: 17
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows unimodal (Control, Treatment A) AND bimodal (Treatment B) distributions,
-          different central tendencies and spreads
+        comment: Thoughtful marker differentiation and fill styling, well-executed
+          but follows established pattern
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Excellent spine removal, subtle grid, generous whitespace, polished
+          legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Excellent visual hierarchy showing three distinct distributions (normal,
+          shifted, bimodal)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct frequency polygon implementation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: colors, legend, markers, fills, aligned bins'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, matching legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all distribution aspects: normal, shifted, bimodal'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
+        max: 5
         passed: true
-        comment: Response times for experimental conditions is plausible psychology
-          research scenario, but slightly generic
+        comment: Test scores by class is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times of 200-600ms are realistic for cognitive tasks
+        comment: Proportions and values are factually sound
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,44 +182,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions or classes
+        comment: Simple, linear structure with no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed 42 ensures reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn imported and all used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png correctly but minor deduction for code quality
-          total
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot with seaborn styling via set_style(whitegrid),
-          but frequency polygon is not a native seaborn plot type - implementation
-          uses matplotlib fill_between rather than seaborn-specific features
+        comment: Proper sns.set_theme() with rc configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses different markers per group, custom theming
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -210,5 +232,5 @@ impl_tags:
   dataprep:
   - binning
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending

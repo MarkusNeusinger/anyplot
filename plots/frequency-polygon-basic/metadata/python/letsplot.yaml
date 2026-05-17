@@ -1,170 +1,181 @@
 library: letsplot
+language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:17:54Z'
-updated: '2026-01-09T13:20:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853045165
+updated: '2026-05-17T16:42:56Z'
+generated_by: claude-haiku
+workflow_run: 25996570310
 issue: 3418
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/letsplot/plot.html
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-dark.html
 quality_score: 92
 review:
   strengths:
-  - Excellent demonstration of frequency polygon for comparing distributions with
-    different characteristics (unimodal vs bimodal)
-  - Clean, publication-ready appearance with appropriate font sizes for the resolution
-  - Good data scenario choice (response times in psychology research)
-  - Properly uses lets-plot grammar of graphics approach with geom_freqpoly
-  - Correct title format and clear axis labeling with units
-  - Three-way comparison effectively shows the advantage of frequency polygons over
-    histograms for comparison
+  - Perfect theme adaptation in both light and dark renders with correct token usage
+    throughout
+  - Excellent text legibility with all font sizes explicitly set for the large canvas
+  - Correct Okabe-Ito color ordering and palette compliance across both renders
+  - Well-chosen synthetic data demonstrating multiple distribution shapes (unimodal,
+    shifted, bimodal)
+  - Clean code structure following KISS principles with proper random seed for reproducibility
+  - Idiomatic use of letsplot's ggplot2-style API and distinctive features (geom_freqpoly,
+    HTML export)
+  - Professional layout with balanced margins and no overlapping elements
   weaknesses:
-  - Spec suggests extending lines to zero at both ends to close the polygon shape
-    - currently lines do not extend to the baseline
-  - Color palette includes red which could be improved for colorblind accessibility
-    (consider using blue-orange-purple instead)
-  - Grid could be slightly more subtle (current alpha seems to be default)
-  image_description: 'The plot displays a frequency polygon comparing three experimental
-    conditions (Control, Treatment A, Treatment B) with response times in milliseconds
-    on the x-axis (ranging from ~125 to ~525 ms) and frequency on the y-axis (0-32).
-    Three colored lines are shown: blue for Control (centered around 350ms), yellow
-    for Treatment A (centered around 300ms with higher peak around 29), and red for
-    Treatment B (showing a bimodal distribution with peaks around 270ms and 420ms).
-    The title reads "frequency-polygon-basic · letsplot · pyplots.ai" in the correct
-    format. A legend labeled "Condition" appears on the right side. The plot uses
-    a minimal white/light gray background with subtle gridlines. Lines are distinct
-    and clearly differentiated.'
+  - 'Design Excellence slightly below exceptional level (DE-01: 4/8) — while well-executed,
+    uses library defaults rather than fully custom aesthetic choices'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required. Not pure white.
+      Chrome: Title "frequency-polygon-basic · letsplot · anyplot.ai" clearly visible in dark text (INK). Axis labels "Response Time (ms)" and "Frequency" readable. Tick labels (0, 2, 4... 30-32) in soft gray (INK_SOFT). Legend showing "Condition" with three items.
+      Data: Three lines in Okabe-Ito colors — green (#009E73) for Control (main peak ~350ms), orange (#D55E00) for Treatment A (main peak ~300ms), blue (#0072B2) for Treatment B (bimodal ~280ms and ~420ms). Colors are vibrant and distinct.
+      Grid lines: Subtle, visible, using RULE token.
+      Legibility verdict: PASS — all text highly readable, excellent contrast, no issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required. Not pure black.
+      Chrome: Title in light text (INK: #F0EFE8) clearly visible. Axis labels and tick labels in light soft text (INK_SOFT: #B8B7B0), all readable. Legend text light-colored.
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2) — confirmation that only chrome flips, not data colors. All three distribution shapes identical to light render.
+      Grid lines: Subtle and visible using RULE token adapted for dark theme.
+      Legibility verdict: PASS — no dark-on-dark failures, all text properly light-colored against dark surface, excellent contrast throughout.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend text are all clearly
-          readable at the high resolution. Font sizes are appropriately scaled.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. All labels and tick marks are clearly
-          separated.
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
+          Perfect readability in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend positioned cleanly on right.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Lines are thick enough (size=2.5) to be clearly visible. The three
-          distributions are easily distinguishable. Minor deduction: some line segments
-          at the extremes are quite thin when frequencies are low.'
+        comment: Lines clearly visible with size=2.5 and alpha=0.9. All three distributions
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red provide good contrast. However, red-yellow
-          could be challenging for some colorblind viewers.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills the canvas well with balanced margins. Legend placement
-          on right is appropriate.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) includes units, Frequency is appropriate for count
-          data.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe. Strong contrast between all three
+          lines.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance. Plot fills appropriate canvas area with balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate. Legend is well-placed but title Condition
-          could be slightly more prominent.
+        comment: Axis labels include units. Title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73. Multi-series follows Okabe-Ito order. Backgrounds
+          correct. Chrome colors theme-correct in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library defaults with consistent theme tokens. Clean
+          and professional but not exceptionally custom.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid styling using RULE token, minimal chrome, generous whitespace.
+          Shows attention to visual detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color contrast clearly distinguishes three
+          conditions. Data choice naturally tells story about response time differences.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements a frequency polygon using geom_freqpoly with
-          connected lines through bin midpoints.
+        comment: Correct use of geom_freqpoly() for frequency polygon chart type.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows the continuous variable (response_time), color differentiates
-          groups.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple groups compared (3 conditions), distinct colors, clear legend
-          present.
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements present: multiple distributions, distinct
+          colors, clear legend, lines connect bin midpoints.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range without cutting off any distributions.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis correctly maps response_time, Y-axis maps frequency, color
+          maps condition.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Control, Treatment A, Treatment B with
-          matching colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows exact format: frequency-polygon-basic · letsplot ·
-          pyplots.ai'
+        comment: Title in correct format. Legend labels match data conditions.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent data design: Control shows unimodal normal, Treatment
-          A shows shifted distribution, Treatment B shows bimodal pattern. Demonstrates
-          key frequency polygon strengths. Minor deduction: spec suggests extending
-          lines to zero at ends.'
+        comment: 'Shows three distinct distribution types: unimodal, shifted unimodal,
+          and bimodal. Demonstrates full range of frequency polygon use cases.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Psychology research response times is a perfect, neutral scenario.
-          The conditions and values are plausible.
+        comment: 'Real-world plausible scenario: response times in controlled experimental
+          conditions. Neutral, non-controversial.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times of 150-500ms are realistic for experimental psychology.
-          200 observations per group is within recommended range.
+        comment: 'All values factually correct: response times (200-550ms typical),
+          sample sizes (200 per group), SDs appropriate for psychological research.'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,52 +183,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save. No functions or classes.'
+        comment: 'Clean linear structure: imports → theme tokens → data generation
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
+        comment: Sets np.random.seed(42) for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. Specific imports from lets_plot.
+        comment: 'Only used imports: numpy, pandas, lets_plot components, os.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Minor style consideration with import organization.
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriately complex. Clean theme token organization.
+          No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png correctly.
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html using current
+          API.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses geom_freqpoly which is a lets-plot native geom, scale_color_manual,
-          theme_minimal, and HTML export. Good use of lets-plot features but could
-          leverage more interactive capabilities.
+        comment: 'Expertly uses letsplot ggplot2 grammar: ggplot() + geom_freqpoly()
+          + scale_color_manual() + custom theme with element_* functions.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Uses letsplot-specific features: geom_freqpoly(), ggsave() with
+          scale, LetsPlot.setup_html(), theme system with element_* functions.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - binning
+  dataprep: []
   styling:
+  - grid-styling
   - alpha-blending
