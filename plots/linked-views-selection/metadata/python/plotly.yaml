@@ -1,156 +1,169 @@
 library: plotly
+language: python
 specification_id: linked-views-selection
 created: '2026-01-08T21:54:59Z'
-updated: '2026-01-08T22:17:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832953481
+updated: '2026-05-17T00:48:56Z'
+generated_by: claude-haiku
+workflow_run: 25976874632
 issue: 3344
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-dark.html
+quality_score: 76
 review:
   strengths:
-  - Excellent multi-view layout with proper subplot configuration
-  - Good use of Plotly native selection styling (selected/unselected marker states)
-  - Custom JavaScript implementation provides true cross-view linked selection
-  - Consistent color encoding across all three views
-  - Clear instruction text explaining the interaction
-  - Proper hover templates with formatted data
-  - High-resolution output (1600x900 at scale 3 = 4800x2700px)
+  - Excellent data quality with realistic iris-like dataset and clear clustering
+  - Strong layout and composition with three well-balanced coordinated views
+  - All text readable in both light and dark renders with proper contrast
+  - Correct plot types and core spec compliance
+  - Good marker sizing and opacity handling for scatter overlaps
+  - Seed-based reproducibility with deterministic data
   weaknesses:
-  - Grid visibility too subtle (alpha 0.1) - could use alpha 0.2-0.3 for better visibility
-  - Unused deselected_colors variable defined but not used in trace definitions
-  - Bar chart shows identical counts for all species (50 each) which is less informative
-    than having varied counts
-  image_description: 'The plot displays three coordinated views arranged in a 2x1
-    + 2-column layout. The top scatter plot spans the full width and shows Sepal Length
-    (x-axis, 4.5-8 cm) vs Sepal Width (y-axis, 2-4.5 cm) with 150 points colored by
-    species: Setosa (blue #306998), Versicolor (yellow #FFD43B), and Virginica (red
-    #E53935). The three species form distinct clusters with some overlap between Versicolor
-    and Virginica. The bottom-left histogram shows Petal Length (cm) distribution
-    with overlaid bars for each species - Setosa clusters around 1.5cm, while Versicolor
-    (4-5cm) and Virginica (5-6cm) form distinct peaks. The bottom-right bar chart
-    shows equal counts (50) for each species. A horizontal legend with the species
-    title sits above the scatter plot. An instruction annotation at the bottom reads
-    "Click legend items to toggle visibility | Use box/lasso select to highlight points".
-    The title "linked-views-selection · plotly · pyplots.ai" is centered at the top.
-    The white background with subtle gridlines provides good contrast.'
+  - 'VQ-07 CRITICAL: Code uses wrong palette (#306998, #FFD43B, #E53935) instead of
+    Okabe-Ito (#009E73, #D55E00, #0072B2). First series must be brand green.'
+  - 'CQ-05 CRITICAL: Output filenames wrong. Code saves plot.png/plot.html but should
+    save plot-light.png/plot-dark.png with theme variants.'
+  - 'VQ-01: Title uses hardcoded color #333333 instead of theme-adaptive INK token.
+    Code doesn''t read ANYPLOT_THEME environment variable.'
+  - 'LM-01: Doesn''t follow plotly.md template for theme-adaptive chrome (no INK/INK_SOFT/GRID
+    tokens, no PAGE_BG background switching).'
+  - 'SC-04: Title says ''pyplots.ai'' instead of ''anyplot.ai''.'
+  - 'DE-01/DE-02: Generic styling with library defaults, no visual refinement or design
+    sophistication.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - PASS
+      Chrome: Title "linked-views-selection · plotly · anyplot.ai" in dark text, axis labels "Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Count", "Species" all with units, tick labels visible - PASS
+      Data: Three species in teal, orange, and blue (colors appear visually correct for Okabe-Ito positions 1-3 in render, though code uses wrong hex values), white-edged markers for definition, histogram bins with matching colors, bar chart with matching species colors - PASS
+      Legibility verdict: PASS - All elements readable, good contrast, no overlaps
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - PASS
+      Chrome: Title in light text, axis labels and tick labels all light-colored and readable against dark background - PASS
+      Data: Teal, orange, blue colors IDENTICAL to light render (only chrome flipped, not data colors) - CORRECT. White-edged markers maintain definition on dark background. Histogram and bar colors match - PASS
+      Legibility verdict: PASS - All text fully readable, no dark-on-dark failures, proper theme contrast
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 20pt, tick fonts at 16-18pt, all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 8
         passed: true
-        comment: Markers sized at 14px with 0.8 opacity work well for 150 points,
-          though histogram bars overlap making individual heights harder to distinguish
+        comment: Readable but not explicitly theme-aware
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red palette is colorblind-safe and provides good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with subplots, though bottom instruction text
-          is cut off in the static image
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units for all axes
+        comment: CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent three-subplot layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All labels have units
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Grid visibility too subtle at alpha 0.1
+        comment: 'Code uses #306998/#FFD43B/#E53935 instead of Okabe-Ito #009E73/#D55E00/#0072B2'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Library defaults, no exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-view layout with scatter, histogram, and bar chart
+        comment: Correct three-view setup
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned for all three plot types
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Implements 3 coordinated views, selection mechanism, consistent colors,
-          selected/unselected states, reset via double-click
-      - id: SC-04
-        name: Data Range
+        comment: Most features present; PNG is static
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y/categorical assignments
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species names correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as spec-id · library · pyplots.ai
+        comment: 'Title correct (but typo: pyplots.ai not anyplot.ai)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows distinct clusters for all species, demonstrates separation
-          and overlap in histogram; bar chart shows equal counts which is less interesting
+        comment: Shows all iris aspects with three distinct clusters
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses Iris-like flower measurement data with realistic botanical measurements
+        comment: Real, plausible, neutral scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values realistic for iris flowers
+        comment: Realistic iris proportions
     code_quality:
       score: 8
       max: 10
@@ -160,51 +173,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Linear code, no over-engineering
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
         max: 2
         passed: false
-        comment: deselected_colors variable defined but never used in main figure
-          code
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
+        comment: Readable but lacks theme logic; hard-coded trace indices
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        passed: false
+        comment: 'Wrong filenames: plot.png not plot-light.png/plot-dark.png'
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Uses Plotly native selection features, custom JavaScript for cross-view
-          linking, hover templates, subplots, and interactive HTML export
+        passed: false
+        comment: Correct but doesn't follow plotly.md theme patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses make_subplots and JavaScript selection but implementation is
+          manual
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -213,4 +229,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
