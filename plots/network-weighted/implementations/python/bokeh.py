@@ -1,14 +1,28 @@
-""" pyplots.ai
+"""anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Range1d
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data: Trade network between 15 countries (billions USD annual trade volume)
 np.random.seed(42)
@@ -34,45 +48,42 @@ node_labels = [
 n_nodes = len(node_labels)
 
 # Generate weighted edges (trade relationships)
-# Not all pairs are connected - create a realistic trade network
 edges = [
     # USA trade partners
-    (0, 1, 580),  # USA-China
-    (0, 2, 180),  # USA-Germany
-    (0, 3, 220),  # USA-Japan
-    (0, 4, 130),  # USA-UK
-    (0, 6, 620),  # USA-Canada
-    (0, 7, 680),  # USA-Mexico
-    (0, 10, 170),  # USA-S.Korea
+    (0, 1, 580),
+    (0, 2, 180),
+    (0, 3, 220),
+    (0, 4, 130),
+    (0, 6, 620),
+    (0, 7, 680),
+    (0, 10, 170),
     # China trade partners
-    (1, 3, 340),  # China-Japan
-    (1, 10, 290),  # China-S.Korea
-    (1, 2, 220),  # China-Germany
-    (1, 11, 180),  # China-Australia
-    (1, 12, 120),  # China-Singapore
-    (1, 9, 110),  # China-India
+    (1, 3, 340),
+    (1, 10, 290),
+    (1, 2, 220),
+    (1, 11, 180),
+    (1, 12, 120),
+    (1, 9, 110),
     # European connections
-    (2, 4, 160),  # Germany-UK
-    (2, 5, 180),  # Germany-France
-    (2, 13, 200),  # Germany-Netherlands
-    (2, 14, 140),  # Germany-Switzerland
-    (4, 5, 110),  # UK-France
-    (5, 13, 90),  # France-Netherlands
+    (2, 4, 160),
+    (2, 5, 180),
+    (2, 13, 200),
+    (2, 14, 140),
+    (4, 5, 110),
+    (5, 13, 90),
     # Asian connections
-    (3, 10, 85),  # Japan-S.Korea
-    (9, 12, 55),  # India-Singapore
-    (12, 11, 70),  # Singapore-Australia
+    (3, 10, 85),
+    (9, 12, 55),
+    (12, 11, 70),
     # Americas
-    (6, 7, 80),  # Canada-Mexico
-    (0, 8, 95),  # USA-Brazil
-    (8, 9, 40),  # Brazil-India
+    (6, 7, 80),
+    (0, 8, 95),
+    (8, 9, 40),
 ]
 
-# Use spring layout (force-directed) for node positions
-# Compute initial positions using a simple force-directed approach
+# Use force-directed layout for node positions
 positions = np.random.rand(n_nodes, 2) * 10
 
-# Simple force-directed layout
 for _ in range(100):
     forces = np.zeros((n_nodes, 2))
 
@@ -118,7 +129,6 @@ node_sizes = min_size + (weighted_degree - weighted_degree.min()) / (
 # Prepare edge data
 edge_x0, edge_y0, edge_x1, edge_y1 = [], [], [], []
 edge_widths = []
-edge_colors = []
 
 # Normalize edge weights to line widths
 max_weight = max(e[2] for e in edges)
@@ -134,30 +144,29 @@ for src, tgt, weight in edges:
     normalized = (weight - min_weight) / (max_weight - min_weight + 0.1)
     edge_widths.append(2 + normalized * 18)
 
-    # Color by weight (darker = stronger)
-    alpha = 0.3 + normalized * 0.5
-    edge_colors.append(f"rgba(48, 105, 152, {alpha})")
-
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="network-weighted · bokeh · pyplots.ai",
+    title="network-weighted · bokeh · anyplot.ai",
     x_axis_label="",
     y_axis_label="",
     tools="",
     toolbar_location=None,
 )
 
-# Remove axes and grid (network graphs don't need them)
+# Remove axes and grid
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
 
-# Set title style
-p.title.text_font_size = "32pt"
+# Theme-adaptive styling
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.title.text_color = INK
+p.title.text_font_size = "28pt"
 p.title.align = "center"
 
 # Set range with padding
@@ -165,20 +174,22 @@ padding = 0.15
 p.x_range = Range1d(node_x.min() - padding, node_x.max() + padding)
 p.y_range = Range1d(node_y.min() - padding, node_y.max() + padding)
 
-# Draw edges (as individual segments with varying widths)
+# Draw edges with weighted line widths
 for i in range(len(edge_x0)):
+    normalized = (edge_widths[i] - 2) / 18
+    alpha = 0.3 + normalized * 0.5
     p.segment(
         x0=[edge_x0[i]],
         y0=[edge_y0[i]],
         x1=[edge_x1[i]],
         y1=[edge_y1[i]],
         line_width=edge_widths[i],
-        line_color="#306998",
-        line_alpha=0.3 + (edge_widths[i] - 2) / 18 * 0.5,
+        line_color=BRAND,
+        line_alpha=alpha,
         line_cap="round",
     )
 
-# Create node source with weighted degree for hover
+# Create node source with weighted degree
 node_source = ColumnDataSource(
     data={
         "x": node_x,
@@ -191,14 +202,7 @@ node_source = ColumnDataSource(
 
 # Draw nodes
 nodes_renderer = p.scatter(
-    x="x",
-    y="y",
-    source=node_source,
-    size="size",
-    fill_color="#FFD43B",
-    line_color="#306998",
-    line_width=3,
-    fill_alpha=0.9,
+    x="x", y="y", source=node_source, size="size", fill_color=BRAND, line_color=INK_SOFT, line_width=3, fill_alpha=0.85
 )
 
 # Add hover tool for interactivity
@@ -216,13 +220,12 @@ labels = LabelSet(
     text_font_size="16pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#1a1a1a",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(labels)
 
 # Add legend annotation for edge thickness
-# Create a prominent manual legend in the corner
 legend_x = node_x.min() - padding + 0.03
 legend_y = node_y.max() + padding - 0.02
 
@@ -233,36 +236,51 @@ p.text(
     text=["Trade Volume (B USD)"],
     text_font_size="22pt",
     text_font_style="bold",
-    text_color="#1a1a1a",
+    text_color=INK,
 )
 
-# Legend lines showing weight scale - made more prominent
+# Legend lines showing weight scale
 legend_weights = [min_weight, (min_weight + max_weight) / 2, max_weight]
 legend_labels = [f"{int(w)} B" for w in legend_weights]
-legend_widths = [4, 14, 26]  # Increased widths for visibility
+legend_widths = [4, 14, 26]
 
 for i, (lw, label) in enumerate(zip(legend_widths, legend_labels, strict=True)):
     y_pos = legend_y - 0.055 - i * 0.05
-    # Longer legend lines for better visibility
+    normalized = (lw - 2) / 18
+    alpha = 0.3 + normalized * 0.5
     p.segment(
         x0=[legend_x],
         y0=[y_pos],
         x1=[legend_x + 0.12],
         y1=[y_pos],
         line_width=lw,
-        line_color="#306998",
-        line_alpha=0.6 + i * 0.15,
+        line_color=BRAND,
+        line_alpha=alpha,
         line_cap="round",
     )
     p.text(
-        x=[legend_x + 0.14],
-        y=[y_pos],
-        text=[label],
-        text_font_size="18pt",
-        text_baseline="middle",
-        text_color="#1a1a1a",
+        x=[legend_x + 0.14], y=[y_pos], text=[label], text_font_size="18pt", text_baseline="middle", text_color=INK_SOFT
     )
 
-# Export to PNG and HTML (for interactivity)
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="network-weighted · bokeh · pyplots.ai")
+# Save HTML (interactive artifact)
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome for PNG
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
