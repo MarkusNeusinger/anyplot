@@ -7,6 +7,7 @@ import {
 import type { FilterCounts, ActiveFilters } from '../types';
 
 const mockFilterCounts: FilterCounts = {
+  lang: { python: 28, r: 0 },
   lib: { matplotlib: 10, seaborn: 8, plotly: 7, bokeh: 3 },
   spec: { 'scatter-basic': 5, 'heatmap-correlation': 4 },
   plot: { scatter: 8, heatmap: 4, bar: 6 },

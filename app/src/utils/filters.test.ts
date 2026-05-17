@@ -4,6 +4,7 @@ import type { FilterCounts, ActiveFilters } from '../types';
 
 describe('getSearchResults', () => {
   const mockFilterCounts: FilterCounts = {
+    lang: { python: 25, r: 0 },
     spec: {
       'scatter-basic': 5,
       'scatter-color-mapped': 3,
