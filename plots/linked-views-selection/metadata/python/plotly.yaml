@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: linked-views-selection
 created: '2026-01-08T21:54:59Z'
-updated: '2026-05-17T00:41:53Z'
+updated: '2026-05-17T00:48:56Z'
 generated_by: claude-haiku
 workflow_run: 25976874632
 issue: 3344
@@ -12,139 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-vi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-dark.html
-quality_score: 71
+quality_score: 76
 review:
   strengths:
-  - 'Functional linked selection: JavaScript implementation provides real cross-view
-    interaction with selection/deselection events'
-  - 'Strong interactive design: Scatter plot with box/lasso select integrates naturally
-    with Plotly''s native interaction model'
-  - 'Clear visual hierarchy: Three coordinated views (scatter, histogram, species
-    count) are well-organized in a 2×2 layout with spanning title plot'
-  - 'Good data encoding: White-edged markers and bars provide clear definition across
-    both themes'
-  - 'Proper interactivity messaging: Helpful annotation explains selection mechanism
-    and reset behavior'
-  - 'Consistent layout across themes: Both light and dark renders maintain the same
-    proportions and element placement'
+  - Excellent data quality with realistic iris-like dataset and clear clustering
+  - Strong layout and composition with three well-balanced coordinated views
+  - All text readable in both light and dark renders with proper contrast
+  - Correct plot types and core spec compliance
+  - Good marker sizing and opacity handling for scatter overlaps
+  - Seed-based reproducibility with deterministic data
   weaknesses:
-  - 'Hardcoded custom colors instead of Okabe-Ito palette: Code specifies [''#306998'',
-    ''#FFD43B'', ''#E53935''] rather than [''#009E73'', ''#D55E00'', ...]. First series
-    must always be #009E73 per style guide. Rendered output appears visually correct
-    but code violates explicit palette requirement.'
-  - 'Theme tokens not implemented: Code doesn''t read ANYPLOT_THEME environment variable
-    or use theme-adaptive INK/INK_SOFT/GRID tokens. Theme adaptation appears to work
-    in rendered output (plotly_white template may be handling it) but implementation
-    doesn''t follow documented pattern.'
-  - 'Wrong output filenames: Code saves as ''plot.png'' and ''plot.html'' instead
-    of ''plot-light.png''/''plot-light.html'' and ''plot-dark.png''/''plot-dark.html''.
-    Implementation pipeline expects both theme variants.'
-  - 'Title text mismatch: Code specifies ''pyplots.ai'' (line 116) but renders show
-    ''anyplot.ai''. Code file appears to be outdated—rendered output is correct but
-    code doesn''t match.'
-  - 'Limited linked interaction scope: Selection only works on scatter plot (box/lasso
-    select). Histogram and bar chart are de-emphasized on selection but don''t trigger
-    selection themselves (selection should ideally be bidirectional across all views).'
-  - 'Minimal design polish: Generic Plotly styling with default axes spines. Could
-    benefit from spine removal (left/bottom only) or grid refinement per style guide
-    minimalism principles.'
+  - 'VQ-07 CRITICAL: Code uses wrong palette (#306998, #FFD43B, #E53935) instead of
+    Okabe-Ito (#009E73, #D55E00, #0072B2). First series must be brand green.'
+  - 'CQ-05 CRITICAL: Output filenames wrong. Code saves plot.png/plot.html but should
+    save plot-light.png/plot-dark.png with theme variants.'
+  - 'VQ-01: Title uses hardcoded color #333333 instead of theme-adaptive INK token.
+    Code doesn''t read ANYPLOT_THEME environment variable.'
+  - 'LM-01: Doesn''t follow plotly.md template for theme-adaptive chrome (no INK/INK_SOFT/GRID
+    tokens, no PAGE_BG background switching).'
+  - 'SC-04: Title says ''pyplots.ai'' instead of ''anyplot.ai''.'
+  - 'DE-01/DE-02: Generic styling with library defaults, no visual refinement or design
+    sophistication.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1-like), correct for light theme.
-      Chrome: Title "linked-views-selection · plotly · anyplot.ai" is centered and readable. Axis labels ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Count", "Species") are clear with good contrast. Tick labels are visible and appropriately sized. Legend positioned at top center with species names (Setosa, Versicolor, Virginica) in readable font. Subtitle with interaction hint visible at bottom.
-      Data: Three scatter series appear to use a teal/green-orange-blue color scheme with white-edged markers for good definition. Bar charts and histogram bins display clearly with solid fills and white borders. Grid lines are subtle and don't compete with data.
-      Legibility verdict: PASS — all text elements are clearly readable against the light background. No dark-on-light or light-on-light conflicts.
+      Background: Warm off-white (#FAF8F1) - PASS
+      Chrome: Title "linked-views-selection · plotly · anyplot.ai" in dark text, axis labels "Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Count", "Species" all with units, tick labels visible - PASS
+      Data: Three species in teal, orange, and blue (colors appear visually correct for Okabe-Ito positions 1-3 in render, though code uses wrong hex values), white-edged markers for definition, histogram bins with matching colors, bar chart with matching species colors - PASS
+      Legibility verdict: PASS - All elements readable, good contrast, no overlaps
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17-like), correct for dark theme.
-      Chrome: Title, axis labels, and tick labels all remain clearly visible against the dark background. Legend is readable with appropriate contrast. All text is light-colored and stands out well from the dark surface.
-      Data: The data series colors (teal/green, orange, blue) appear identical to the light render, confirming only chrome has adapted to theme. Markers, bars, and histogram bins maintain visibility.
-      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored, all data elements remain distinguishable. Color data consistency with light render confirmed.
+      Background: Warm near-black (#1A1A17) - PASS
+      Chrome: Title in light text, axis labels and tick labels all light-colored and readable against dark background - PASS
+      Data: Teal, orange, blue colors IDENTICAL to light render (only chrome flipped, not data colors) - CORRECT. White-edged markers maintain definition on dark background. Histogram and bar colors match - PASS
+      Legibility verdict: PASS - All text fully readable, no dark-on-dark failures, proper theme contrast
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders. Title, axis labels,
-          tick labels have adequate font sizes and contrast.
+        comment: Readable but not explicitly theme-aware
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Subplot layout provides clear separation.
-          Axis labels, ticks, and legend are well-spaced.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers clearly visible with white edges. Bar chart and histogram
-          bins have good definition. No hidden or barely-visible elements.
+        comment: Markers well-sized and visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Rendered colors provide adequate contrast. White edges on markers
-          aid visibility. Palette appears CVD-safe visually (though code doesn't implement
-          Okabe-Ito).
+        comment: CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions across subplots. Nothing cut off. Margins are generous.
-          1600×900 resolution (scale 3) produces appropriate element sizing.
+        comment: Excellent three-subplot layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive with units (cm, Count). Subplot titles clear.
-          Main title identifies spec, library, and source.
+        comment: All labels have units
       - id: VQ-07
         name: Palette Compliance
-        score: -1
+        score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Code hardcodes custom colors ([''#306998'', ''#FFD43B'',
-          ''#E53935'']) instead of Okabe-Ito palette. First series must be #009E73.
-          Rendered colors appear visually reasonable but implementation violates style
-          guide requirement. Background colors appear theme-correct in renders.'
+        comment: 'Code uses #306998/#FFD43B/#E53935 instead of Okabe-Ito #009E73/#D55E00/#0072B2'
     design_excellence:
       score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic Plotly defaults with minimal customization. No sophisticated
-          palette or intentional design hierarchy beyond functional layout. Custom
-          interactive JS adds some sophistication but code-level styling is basic.
+        comment: Library defaults, no exceptional design
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Spines retained (not removed). Grid present but not refined. Could
-          benefit from L-shaped frame (left/bottom only) and more subtle grid styling
-          per style guide.
+        comment: Minimal customization beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Three views show data from different angles but no clear visual hierarchy
-          or focal point. Color consistency helps link views but no design emphasis
-          creates narrative or guides viewer through insights.
+        comment: Data displayed without visual hierarchy
     spec_compliance:
       score: 14
       max: 15
@@ -154,59 +123,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: multi-panel linked views with scatter plot, histogram,
-          and categorical bar chart. Properly coordinated.'
+        comment: Correct three-view setup
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec requirements present: 2+ coordinated views, selection mechanism
-          (box/lasso select), color highlighting, de-emphasis on unselected, reset
-          via double-click, selection feedback.'
+        comment: Most features present; PNG is static
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct in scatter. Axes show all data with sensible ranges.
-          Category encoding consistent across views.
+        comment: Correct X/Y/categorical assignments
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title present but shows 'pyplots.ai' in code (should be 'anyplot.ai'
-          — renders show correct text but code is outdated). Legend labels correct.
+        passed: true
+        comment: 'Title correct (but typo: pyplots.ai not anyplot.ai)'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Iris-like clustered data demonstrates multivariate relationships.
-          Three species show distinct distributions in both scatter (sepal dimensions)
-          and histogram (petal length). Species count bar is supplementary.
+        comment: Shows all iris aspects with three distinct clusters
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Iris-based data is real-world and neutral. Synthetic clusters are
-          plausible (similar to actual Iris distributions).
+        comment: Real, plausible, neutral scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sepal dimensions in 4-8 cm range, sepal width 2-4.5 cm, petal length
-          0-7 cm are appropriate for Iris. 50 points per species (150 total) is good
-          for linked interaction.
+        comment: Realistic iris proportions
     code_quality:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -214,67 +173,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes/functions. Straightforward data generation and plot setup.
-          However, embedded JavaScript (lines 193-273) adds complexity.
+        comment: Linear code, no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Random seed set (line 13): np.random.seed(42). Deterministic output.'
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only numpy and plotly imported. All used: numpy for data, plotly
-          for viz.'
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: -2
+        score: 1
         max: 2
         passed: false
-        comment: 'NEGATIVE: Hardcoded color arrays (line 18). Theme tokens not used
-          (should read ANYPLOT_THEME). JavaScript for linked selection is embedded
-          HTML string (fragile, not extracted). Code organization is functional but
-          not elegant.'
+        comment: Readable but lacks theme logic; hard-coded trace indices
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'FAIL: Saves as ''plot.png'' and ''plot.html'' instead of ''plot-light.png''/''plot-dark.png''.
-          Plotly.md specifies ''{THEME}'' format. Code doesn''t implement dual-render
-          pipeline.'
+        comment: 'Wrong filenames: plot.png not plot-light.png/plot-dark.png'
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Uses make_subplots, add_trace, Scatter/Bar traces appropriately.
-          Hover templates, legendgroup, and selection-state styling leverage Plotly
-          patterns well. Missing theme-adaptive styling via environment variable.
+        passed: false
+        comment: Correct but doesn't follow plotly.md theme patterns
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: 'Plotly strengths used: interactive selection (dragmode=''select''),
-          custom hover templates, selected/unselected marker states. JavaScript extension
-          for cross-view sync is library-agnostic workaround, not a Plotly-native
-          feature (could use Plotly callback system instead).'
-  verdict: REJECTED
+        passed: false
+        comment: Uses make_subplots and JavaScript selection but implementation is
+          manual
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -282,3 +228,4 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
