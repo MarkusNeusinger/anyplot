@@ -1,15 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
+import os
+import sys
+
 import numpy as np
-import pygal
-from pygal.style import Style
 
 
-# Data - Three groups of measurements (e.g., plant heights by soil type)
+# Remove current directory from path to avoid shadowing pygal module
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != current_dir]
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2")
+
+# Data - Three groups of measurements (plant heights by soil type)
 np.random.seed(42)
 
 # Generate three distributions with different characteristics
@@ -27,50 +45,43 @@ freq_b, _ = np.histogram(group_b, bins=bins)
 freq_c, _ = np.histogram(group_c, bins=bins)
 
 # Extend lines to zero at both ends to close the polygon shape
-# Convert to Python native types for JSON serialization
 midpoints_extended = [float(bins[0])] + [float(m) for m in bin_midpoints] + [float(bins[-1])]
 freq_a_extended = [0] + [int(f) for f in freq_a] + [0]
 freq_b_extended = [0] + [int(f) for f in freq_b] + [0]
 freq_c_extended = [0] + [int(f) for f in freq_c] + [0]
 
-# Custom style for large canvas (4800x2700)
+# Custom style for large canvas (4800x2700) with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#48a868"),  # Python Blue, Python Yellow, Green
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
-    opacity=0.9,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    opacity=0.8,
     opacity_hover=1.0,
-    guide_stroke_width=1,
-    major_guide_stroke_width=1,
-    guide_stroke_dasharray="3,3",
-    font_family="sans-serif",
 )
 
-# Create XY chart for frequency polygon
+# Create XY chart for frequency polygon with fill
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="frequency-polygon-basic · pygal · pyplots.ai",
+    title="frequency-polygon-basic · pygal · anyplot.ai",
     x_title="Plant Height (cm)",
     y_title="Frequency",
-    show_x_guides=False,
+    show_x_guides=True,
     show_y_guides=True,
-    dots_size=12,
-    stroke_style={"width": 6},
+    dots_size=10,
+    stroke_style={"width": 4},
     legend_at_bottom=True,
-    legend_box_size=36,
-    truncate_legend=-1,
     show_dots=True,
-    fill=False,
+    fill=True,
     x_label_rotation=0,
     range=(0, int(max(max(freq_a), max(freq_b), max(freq_c))) + 5),
     xrange=(15, 90),
@@ -81,6 +92,6 @@ chart.add("Sandy Soil", list(zip(midpoints_extended, freq_a_extended, strict=Tru
 chart.add("Loamy Soil", list(zip(midpoints_extended, freq_b_extended, strict=True)))
 chart.add("Clay Soil", list(zip(midpoints_extended, freq_c_extended, strict=True)))
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.render_to_png(f"plot-{THEME}.png")
+chart.render_to_file(f"plot-{THEME}.html")
