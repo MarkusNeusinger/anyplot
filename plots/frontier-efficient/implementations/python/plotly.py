@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: plotly 6.5.1 | Python 3.13
-Quality: pending | Created: 2026-05-17
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-17
 """
 
 import os
