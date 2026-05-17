@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-17
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-17
 """
 
 import os
