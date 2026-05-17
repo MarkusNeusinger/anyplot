@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-01-09
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,6 +18,24 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette - first color is always brand green
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
+    "#56B4E9",  # sky blue
+    "#F0E442",  # yellow
+]
+
 # Data - Generate seed points for Voronoi diagram
 np.random.seed(42)
 n_points = 20
@@ -28,7 +47,6 @@ labels = [f"Site {i + 1}" for i in range(n_points)]
 points = np.column_stack([x_coords, y_coords])
 
 # Add boundary points to ensure finite regions for interior points
-# These help create proper bounded regions
 boundary_margin = 200
 boundary_points = np.array(
     [
@@ -98,30 +116,6 @@ def clip_polygon_to_bbox(polygon, x_min, y_min, x_max, y_max):
     return output
 
 
-# Colorblind-safe colors for Voronoi cells
-colors = [
-    "#306998",
-    "#FFD43B",
-    "#9467BD",
-    "#17BECF",
-    "#8C564B",
-    "#1F77B4",
-    "#FF7F0E",
-    "#2CA02C",
-    "#D62728",
-    "#E377C2",
-    "#7F7F7F",
-    "#BCBD22",
-    "#4E79A7",
-    "#F28E2B",
-    "#E15759",
-    "#76B7B2",
-    "#59A14F",
-    "#EDC948",
-    "#B07AA1",
-    "#FF9DA7",
-]
-
 # Build series data for Highcharts
 polygon_series = []
 scatter_data = []
@@ -132,10 +126,7 @@ for idx in range(n_points):
     region = vor.regions[region_idx]
 
     if not region or -1 in region:
-        # Skip regions with infinite vertices
-        scatter_data.append(
-            {"x": float(x_coords[idx]), "y": float(y_coords[idx]), "name": labels[idx], "color": "#1a1a1a"}
-        )
+        scatter_data.append({"x": float(x_coords[idx]), "y": float(y_coords[idx]), "name": labels[idx], "color": INK})
         continue
 
     vertices = vor.vertices
@@ -145,15 +136,13 @@ for idx in range(n_points):
     clipped = clip_polygon_to_bbox(polygon_points, x_min, y_min, x_max, y_max)
 
     if not clipped or len(clipped) < 3:
-        scatter_data.append(
-            {"x": float(x_coords[idx]), "y": float(y_coords[idx]), "name": labels[idx], "color": "#1a1a1a"}
-        )
+        scatter_data.append({"x": float(x_coords[idx]), "y": float(y_coords[idx]), "name": labels[idx], "color": INK})
         continue
 
     # Close the polygon
     clipped.append(clipped[0])
 
-    color = colors[idx % len(colors)]
+    color = OKABE_ITO[idx % len(OKABE_ITO)]
 
     polygon_series.append(
         {
@@ -163,14 +152,14 @@ for idx in range(n_points):
             "color": color,
             "fillOpacity": 0.5,
             "lineWidth": 3,
-            "lineColor": "#333333",
+            "lineColor": INK_SOFT,
             "enableMouseTracking": True,
             "showInLegend": False,
         }
     )
 
     # Add seed point
-    scatter_data.append({"x": float(x_coords[idx]), "y": float(y_coords[idx]), "name": labels[idx], "color": "#1a1a1a"})
+    scatter_data.append({"x": float(x_coords[idx]), "y": float(y_coords[idx]), "name": labels[idx], "color": INK})
 
 # Create chart
 chart = Chart(container="container")
@@ -181,7 +170,7 @@ chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "marginLeft": 220,
     "marginRight": 100,
@@ -191,36 +180,40 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "voronoi-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "voronoi-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
 # Subtitle
 chart.options.subtitle = {
     "text": "Spatial partitioning based on proximity to seed points",
-    "style": {"fontSize": "28px"},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
 # X-Axis
 chart.options.x_axis = {
-    "title": {"text": "X Coordinate", "style": {"fontSize": "36px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "26px"}},
+    "title": {"text": "X Coordinate", "style": {"fontSize": "22px", "color": INK}, "margin": 30},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "max": 100,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
     "tickInterval": 10,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Y-Axis
 chart.options.y_axis = {
-    "title": {"text": "Y Coordinate", "style": {"fontSize": "36px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "26px"}},
+    "title": {"text": "Y Coordinate", "style": {"fontSize": "22px", "color": INK}, "margin": 30},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "max": 100,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
     "tickInterval": 10,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Legend
@@ -232,7 +225,7 @@ chart.options.credits = {"enabled": False}
 # Plot options
 chart.options.plot_options = {
     "polygon": {"fillOpacity": 0.4, "lineWidth": 3, "states": {"hover": {"fillOpacity": 0.6}}},
-    "scatter": {"marker": {"radius": 12, "symbol": "circle", "lineWidth": 2, "lineColor": "#ffffff"}},
+    "scatter": {"marker": {"radius": 12, "symbol": "circle", "lineWidth": 2, "lineColor": PAGE_BG}},
 }
 
 # Build series list
@@ -244,7 +237,7 @@ all_series.append(
         "type": "scatter",
         "name": "Seed Points",
         "data": scatter_data,
-        "marker": {"radius": 22, "fillColor": "#1a1a1a", "lineWidth": 5, "lineColor": "#ffffff", "symbol": "circle"},
+        "marker": {"radius": 22, "fillColor": INK, "lineWidth": 5, "lineColor": PAGE_BG, "symbol": "circle"},
         "zIndex": 10,
         "showInLegend": False,
         "dataLabels": {"enabled": False},
@@ -254,14 +247,30 @@ all_series.append(
 # Set series via dictionary approach
 chart.options.series = all_series
 
-# Export to PNG via Selenium
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+# Export to PNG via Selenium - fetch Highcharts JS with retry
+def fetch_url(url, max_retries=3):
+    """Fetch URL with retry logic."""
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Referer": "https://anyplot.ai/",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                return response.read().decode("utf-8")
+        except urllib.error.HTTPError:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(2**attempt)  # Exponential backoff
+    return None
+
+
+highcharts_js = fetch_url("https://code.highcharts.com/highcharts.js")
+highcharts_more_js = fetch_url("https://code.highcharts.com/highcharts-more.js")
 
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
@@ -271,19 +280,18 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0; padding:0; background:#ffffff;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save as plot.html for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -295,7 +303,7 @@ chrome_options.add_argument("--window-size=4800,2800")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
