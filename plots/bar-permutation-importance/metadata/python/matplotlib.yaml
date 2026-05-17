@@ -1,163 +1,176 @@
 library: matplotlib
+language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:55:44Z'
-updated: '2025-12-31T11:05:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617498030
+updated: '2026-05-17T12:22:08Z'
+generated_by: claude-haiku
+workflow_run: 25990600883
 issue: 2998
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - custom-colormap
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of all specification requirements including sorted bars,
-    error bars, color gradient, and x=0 reference line
-  - Uses wine dataset feature names which provides realistic, domain-appropriate context
-  - Clean KISS code structure with proper sizing (16x9, fontsize 24/20/16)
-  - Color gradient with colorbar adds visual emphasis as specified
-  - Error bars with proper styling (capsize, linewidth) enhance readability
+  - Perfect visual quality with explicit font sizing readable in both themes
+  - All specification requirements fully implemented with proper error bars and reference
+    line
+  - Clean, idiomatic matplotlib code with proper theme adaptation
+  - Excellent data storytelling through sorted bars and color gradient reinforcement
+  - Professional colorbar integration with proper normalization and labeling
   weaknesses:
-  - X-axis label lacks units (e.g., (fraction) or (score decrease)) for full clarity
-  - Could demonstrate more edge cases like several features with very similar near-zero
-    importance
-  - Limited use of distinctive matplotlib features beyond standard barh and colorbar
-  image_description: The plot displays a horizontal bar chart showing permutation
-    feature importance for 13 wine-related features. Bars extend horizontally from
-    a vertical reference line at x=0, with the highest importance feature (flavanoids,
-    ~0.142) at the top and the lowest (ash, ~-0.002) at the bottom. The bars use a
-    sequential Blues color gradient mapped to importance values - darker blue for
-    higher importance, lighter for lower. Each bar includes horizontal error bars
-    (gray caps) showing standard deviation. The colorbar on the right indicates the
-    importance scale (0.00-0.14). Title follows the correct format. X-axis shows "Mean
-    Decrease in Accuracy" and Y-axis shows "Feature". Grid lines are subtle with dashed
-    styling at alpha=0.3.
+  - Design could benefit from more visual hierarchy emphasis (DE-01 is competent but
+    not exceptional)
+  - Colorbar distinctive feature is present but not library-unique (other libraries
+    have similar)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly applied
+      Chrome: Title "bar-permutation-importance · matplotlib · anyplot.ai" is dark text, clearly readable. X-axis label "Mean Decrease in Accuracy" and Y-axis label "Feature" are both readable in dark text. Feature names (tick labels) are all visible and well-spaced. Spines on left and bottom are light gray, appropriately visible.
+      Data: Bars use Blues colormap gradient from light to dark blue, sorted by importance from lowest (ash at bottom) to highest (flavanoids at top). Error bars shown with caps, styled in soft gray/brown. Reference line at x=0 is dark and visible. Colorbar on right shows "Importance" label with scale 0.00-0.14.
+      Legibility verdict: PASS - All elements are clearly readable on light background. No light-on-light issues detected.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly applied
+      Chrome: Title remains in light text, clearly readable against dark background. X-axis and Y-axis labels are light-colored and readable. Feature names (tick labels) are light text on dark background, all visible. Spines are light gray, appropriately visible against the dark background.
+      Data: Bars maintain identical Blues colormap colors as light render (correctly theme-independent). Error bars appear in light gray, visible and distinct. Reference line at x=0 remains visible in light color. Colorbar labels and scale are light-colored and readable. Grid lines are subtle and appropriate.
+      Legibility verdict: PASS - All text is readable against dark background. No dark-on-dark issues detected. Data colors are identical to light render, confirming proper theme adaptation.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          fully readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, feature names are spaced well
+        comment: No overlapping text elements, all labels well-spaced and readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar height 0.7 is appropriate for 13 features, error bars clearly
-          visible
+        comment: Bars, error bars, and colorbar all perfectly visible and appropriately
+          sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blues sequential colormap is colorblind-safe
+        comment: Blues colormap is perceptually uniform and CVD-safe, good contrast
+          throughout
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, colorbar placed with appropriate padding
+        comment: Perfect layout with balanced margins, colorbar properly integrated,
+          no content cut-off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but x-axis could include "(fraction)" or similar
-          unit
+        comment: Title format correct, x-axis labeled with unit context, y-axis descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha=0.3), colorbar replaces legend appropriately;
-          grid only on x-axis as intended
+        comment: 'Blues colormap appropriate for continuous data, backgrounds correct
+          (#FAF8F1 light / #1A1A17 dark), theme-adaptive chrome perfect in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with thoughtful colorbar, but not
+          exceptional or publication-grade innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, grid customized with appropriate opacity,
+          colorbar frame styled, good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Features sorted by importance with color gradient reinforcement creates
+          clear focal point on top features, visual hierarchy evident
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart for permutation importance
+        comment: Correct horizontal bar chart with error bars for permutation importance
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Features on Y-axis, importance on X-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: sorted by importance, error bars, color
+        comment: 'All features present: sorted bars, error bars, sequential color
           gradient, reference line at x=0'
-      - id: SC-04
-        name: Data Range
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows full range including negative value (ash)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis correctly shows importance values, y-axis shows feature names,
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Importance"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows exact format: "bar-permutation-importance · matplotlib ·
-          pyplots.ai"'
+        comment: Title format correct, colorbar label appropriate, no legend needed
+          for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows positive and negative importance values, varying magnitudes;
-          could include more features with near-zero importance for better demonstration
+        comment: 13 features shown with wide range of importances from near-zero to
+          0.142, good variability in error bars
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Wine dataset features (sklearn wine) are realistic and neutral
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Importance values 0-0.15 are typical for permutation importance
+        comment: Wine quality dataset with chemical properties, real and scientifically
+          plausible, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Importance values realistically scaled (typical permutation importance
+          ranges), factually sensible proportions
     code_quality:
       score: 10
       max: 10
@@ -167,40 +180,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern, no functions/classes
+        comment: 'Simple linear structure: imports → data → plot → save, no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: Only necessary imports (os, matplotlib.pyplot, numpy), all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code with appropriate complexity, no over-engineering
+          or fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, uses current matplotlib API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ax.barh(), theme-adaptive styling, proper colorbar
+          integration, follows matplotlib conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses barh, colorbar, ScalarMappable correctly; could leverage ax.errorbar
-          or more advanced matplotlib features
+        comment: Uses colorbar and normalized colormap, but these techniques are not
+          unique to matplotlib
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
