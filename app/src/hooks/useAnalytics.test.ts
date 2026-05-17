@@ -169,6 +169,50 @@ describe('useAnalytics', () => {
       // The call should have gone through with buildPlausibleUrl(), not the invalid URL
       expect(window.plausible).toHaveBeenCalled();
     });
+
+    it('converts ?lang=python on /plots to a /lang/python path segment for Plausible', () => {
+      // `/plots` is a reserved top-level route so the path prefix is stripped
+      // and filter segments are appended directly to the domain — matching
+      // how the other `/plots?lib=…` filters are already tracked.
+      Object.defineProperty(window, 'location', {
+        value: { ...originalLocation, hostname: 'anyplot.ai', pathname: '/plots', search: '?lang=python' },
+        writable: true,
+        configurable: true,
+      });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackPageview();
+        vi.advanceTimersByTime(200);
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('pageview', {
+        url: 'https://anyplot.ai/lang/python',
+      });
+    });
+
+    it('converts ?language=python on a spec hub to a /{spec}/language/python path segment', () => {
+      Object.defineProperty(window, 'location', {
+        value: {
+          ...originalLocation,
+          hostname: 'anyplot.ai',
+          pathname: '/biplot-pca',
+          search: '?language=python',
+        },
+        writable: true,
+        configurable: true,
+      });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackPageview();
+        vi.advanceTimersByTime(200);
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('pageview', {
+        url: 'https://anyplot.ai/biplot-pca/language/python',
+      });
+    });
   });
 
   describe('ambient props', () => {

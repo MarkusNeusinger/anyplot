@@ -131,6 +131,19 @@ def mock_lib():
     return mock_lib
 
 
+@pytest.fixture
+def mock_lang():
+    """Create a mock language row (Python)."""
+    mock_lang = MagicMock()
+    mock_lang.id = "python"
+    mock_lang.name = "Python"
+    mock_lang.file_extension = ".py"
+    mock_lang.runtime_version = "3.13"
+    mock_lang.documentation_url = "https://www.python.org"
+    mock_lang.description = "General-purpose programming language."
+    return mock_lang
+
+
 class TestStatsRouter:
     """Tests for stats router."""
 
@@ -184,6 +197,58 @@ class TestStatsRouter:
             data = response.json()
             assert data["specs"] == 5
             assert data["plots"] == 10
+
+
+class TestLanguagesRouter:
+    """Tests for languages router."""
+
+    def test_languages_without_db(self, client: TestClient) -> None:
+        """Languages should return seed data when DB not configured."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/languages")
+            assert response.status_code == 200
+            data = response.json()
+            assert "languages" in data
+            ids = {lang["id"] for lang in data["languages"]}
+            # SUPPORTED_LANGUAGES = {"python", "r"} — both must surface
+            assert {"python", "r"}.issubset(ids)
+
+    def test_languages_with_db(self, db_client, mock_lang) -> None:
+        """Languages should return data from DB when configured."""
+        client, _ = db_client
+
+        mock_lang_repo = MagicMock()
+        mock_lang_repo.get_all = AsyncMock(return_value=[mock_lang])
+
+        with (
+            patch("api.routers.languages.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.languages.LanguageRepository", return_value=mock_lang_repo),
+        ):
+            response = client.get("/languages")
+            assert response.status_code == 200
+            data = response.json()
+            assert "languages" in data
+            assert len(data["languages"]) == 1
+            lang = data["languages"][0]
+            assert lang["id"] == "python"
+            assert lang["documentation_url"] == "https://www.python.org"
+            assert lang["runtime_version"] == "3.13"
+            assert lang["description"] == "General-purpose programming language."
+
+    def test_languages_cache_hit(self, db_client) -> None:
+        """Languages should return cached data when available."""
+        client, _ = db_client
+
+        cached_data = {"languages": [{"id": "cached_lang", "name": "Cached"}]}
+
+        async def _return_cached(key, factory, **kwargs):
+            return cached_data
+
+        with patch("api.routers.languages.get_or_set_cache", side_effect=_return_cached):
+            response = client.get("/languages")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["languages"][0]["id"] == "cached_lang"
 
 
 class TestLibrariesRouter:
@@ -1014,6 +1079,42 @@ class TestPlotsRouter:
             assert response.status_code == 200
             data = response.json()
             assert data["total"] == 1
+
+    def test_filter_with_lang_param_includes_python(self, client: TestClient, mock_spec) -> None:
+        """`?lang=python` should pass through the filter dispatch and surface in the counts."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter?lang=python")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 1
+            # The lang category is populated in the counts dict so the
+            # frontend FilterBar can render it as a chip.
+            assert "lang" in data["globalCounts"]
+            assert data["globalCounts"]["lang"].get("python") == 1
+
+    def test_filter_with_lang_param_excludes_other_languages(self, client: TestClient, mock_spec) -> None:
+        """`?lang=r` against a Python-only impl should yield zero matches but still report counts."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter?lang=r")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 0
+            # globalCounts still reports the one Python impl under lang=python
+            assert data["globalCounts"]["lang"].get("python") == 1
 
     def test_filter_cached(self, client: TestClient) -> None:
         """Filter should return cached response when available."""

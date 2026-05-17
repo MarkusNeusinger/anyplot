@@ -16,10 +16,11 @@ export function LibrariesSection({
   onLibraryClick,
   widthTier = 'paper',
 }: LibrariesSectionProps) {
-  // Use known library order, with counts from stats if available
+  // Use known library order; surface the language so LibraryCard can render
+  // the corner chip. (Counts are not currently piped through this section.)
   const libList = LIBRARIES.map(name => {
     const info = libraries.find(l => l.id === name);
-    return { name, language: info?.language, count: info ? undefined : undefined }; // counts come from API if available
+    return { name, language: info?.language };
   });
 
   const maxWidth = widthTier === 'catalog' ? 'var(--max-catalog)' : 'var(--max)';
