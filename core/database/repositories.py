@@ -10,7 +10,7 @@ from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
-from core.database.models import Impl, Library, Spec
+from core.database.models import Impl, Language, Library, Spec
 
 
 T = TypeVar("T")
@@ -27,6 +27,7 @@ SPEC_UPDATABLE_FIELDS = frozenset(
 )
 
 LIBRARY_UPDATABLE_FIELDS = frozenset({"name", "version", "documentation_url", "description"})
+LANGUAGE_UPDATABLE_FIELDS = frozenset({"name", "file_extension", "runtime_version", "documentation_url", "description"})
 
 IMPL_UPDATABLE_FIELDS = frozenset(
     {
@@ -243,6 +244,33 @@ class LibraryRepository(BaseRepository[Library]):
             await self.session.refresh(existing)
             return existing
         return await self.create(library_data)
+
+
+class LanguageRepository(BaseRepository[Language]):
+    """Repository for Language operations."""
+
+    model = Language
+    updatable_fields = LANGUAGE_UPDATABLE_FIELDS
+
+    async def get_all(self) -> list[Language]:
+        """Get all languages ordered by name."""
+        query = select(Language).order_by(Language.name)
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def upsert(self, language_data: dict) -> Language:
+        """Create or update a language by ID."""
+        language_id = language_data.get("id")
+        if not language_id:
+            raise ValueError("language_data must include 'id' field")
+
+        existing = await self.get_by_id(language_id)
+        if existing:
+            self._apply_updates(existing, language_data)
+            await self.session.commit()
+            await self.session.refresh(existing)
+            return existing
+        return await self.create(language_data)
 
 
 class ImplRepository(BaseRepository[Impl]):

@@ -46,22 +46,27 @@ _IMPL_EXTRACTORS: dict[str, Callable[[dict], list[str]]] = {
 }
 
 
-def _get_category_values(category: str, spec_id: str, library: str, spec_tags: dict, impl_tags: dict) -> list[str]:
+def _get_category_values(
+    category: str, spec_id: str, library: str, language: str, spec_tags: dict, impl_tags: dict
+) -> list[str]:
     """
     Get the values for a category from the appropriate tag source.
 
     This unified function replaces the repeated if/elif chains throughout the module.
 
     Args:
-        category: Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style)
+        category: Filter category (lang, lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style)
         spec_id: Specification ID
         library: Library ID
+        language: Implementation language id (e.g. "python", "r")
         spec_tags: Spec-level tags dict
         impl_tags: Implementation-level tags dict
 
     Returns:
         List of values that match this category for the given image/spec/impl
     """
+    if category == "lang":
+        return [language] if language else []
     if category == "lib":
         return [library]
     if category == "spec":
@@ -74,7 +79,7 @@ def _get_category_values(category: str, spec_id: str, library: str, spec_tags: d
 
 
 def _category_matches_filter(
-    category: str, values: list[str], spec_id: str, library: str, spec_tags: dict, impl_tags: dict
+    category: str, values: list[str], spec_id: str, library: str, language: str, spec_tags: dict, impl_tags: dict
 ) -> bool:
     """
     Check if any of the filter values match the category's values.
@@ -84,17 +89,20 @@ def _category_matches_filter(
         values: Filter values to match against
         spec_id: Specification ID
         library: Library ID
+        language: Implementation language id
         spec_tags: Spec-level tags dict
         impl_tags: Implementation-level tags dict
 
     Returns:
         True if any filter value matches, False otherwise
     """
-    category_values = _get_category_values(category, spec_id, library, spec_tags, impl_tags)
+    category_values = _get_category_values(category, spec_id, library, language, spec_tags, impl_tags)
     return any(v in category_values for v in values)
 
 
-def _image_matches_groups(spec_id: str, library: str, groups: list[dict], spec_lookup: dict, impl_lookup: dict) -> bool:
+def _image_matches_groups(
+    spec_id: str, library: str, language: str, groups: list[dict], spec_lookup: dict, impl_lookup: dict
+) -> bool:
     """Check if an image matches a set of filter groups."""
     if spec_id not in spec_lookup:
         return False
@@ -105,22 +113,25 @@ def _image_matches_groups(spec_id: str, library: str, groups: list[dict], spec_l
         category = group["category"]
         values = group["values"]
 
-        if not _category_matches_filter(category, values, spec_id, library, spec_tags, impl_tags):
+        if not _category_matches_filter(category, values, spec_id, library, language, spec_tags, impl_tags):
             return False
     return True
 
 
-def _increment_category_counts(counts: dict, spec_id: str, library: str, spec_tags: dict, impl_tags: dict) -> None:
+def _increment_category_counts(
+    counts: dict, spec_id: str, library: str, language: str, spec_tags: dict, impl_tags: dict
+) -> None:
     """Increment counts for all categories based on an image's spec/impl tags."""
-    all_categories = ["lib", "spec", "plot", "data", "dom", "feat", "dep", "tech", "pat", "prep", "style"]
+    all_categories = ["lang", "lib", "spec", "plot", "data", "dom", "feat", "dep", "tech", "pat", "prep", "style"]
     for category in all_categories:
-        for value in _get_category_values(category, spec_id, library, spec_tags, impl_tags):
+        for value in _get_category_values(category, spec_id, library, language, spec_tags, impl_tags):
             counts[category][value] = counts[category].get(value, 0) + 1
 
 
 def _create_empty_counts() -> dict:
     """Create an empty counts dictionary with all categories initialized."""
     return {
+        "lang": {},
         "lib": {},
         "spec": {},
         "plot": {},
@@ -157,7 +168,8 @@ def _calculate_global_counts(all_specs: list) -> dict:
                 continue
 
             impl_tags = impl.impl_tags or {}
-            _increment_category_counts(global_counts, spec_obj.id, impl.library_id, spec_tags, impl_tags)
+            language = impl.library.language if impl.library else "python"
+            _increment_category_counts(global_counts, spec_obj.id, impl.library_id, language, spec_tags, impl_tags)
 
     return _sort_counts(global_counts)
 
@@ -169,10 +181,11 @@ def _calculate_contextual_counts(filtered_images: list[dict], spec_id_to_tags: d
     for img in filtered_images:
         spec_id = img["spec_id"]
         library = img["library"]
+        language = img.get("language", "")
         spec_tags = spec_id_to_tags.get(spec_id, {})
         impl_tags = impl_lookup.get((spec_id, library), {})
 
-        _increment_category_counts(counts, spec_id, library, spec_tags, impl_tags)
+        _increment_category_counts(counts, spec_id, library, language, spec_tags, impl_tags)
 
     return _sort_counts(counts)
 
@@ -202,7 +215,9 @@ def _calculate_or_counts(
         images_with_other_filters = [
             img
             for img in all_images
-            if _image_matches_groups(img["spec_id"], img["library"], other_groups, spec_lookup, impl_lookup)
+            if _image_matches_groups(
+                img["spec_id"], img["library"], img.get("language", ""), other_groups, spec_lookup, impl_lookup
+            )
         ]
 
         # Count each value for this group's category
@@ -212,11 +227,12 @@ def _calculate_or_counts(
         for img in images_with_other_filters:
             spec_id = img["spec_id"]
             library = img["library"]
+            language = img.get("language", "")
             spec_tags = spec_id_to_tags.get(spec_id, {})
             impl_tags = impl_lookup.get((spec_id, library), {})
 
             # Use unified value extractor
-            for value in _get_category_values(category, spec_id, library, spec_tags, impl_tags):
+            for value in _get_category_values(category, spec_id, library, language, spec_tags, impl_tags):
                 group_counts[value] = group_counts.get(value, 0) + 1
 
         # Sort by count descending
@@ -241,6 +257,7 @@ def _parse_filter_groups(request: Request) -> list[dict]:
 
     # Valid filter categories (spec-level and impl-level)
     valid_categories = (
+        "lang",
         "lib",
         "spec",
         "plot",
@@ -374,7 +391,9 @@ def _filter_images(
     return [
         img
         for img in all_images
-        if _image_matches_groups(img["spec_id"], img["library"], filter_groups, spec_lookup, impl_lookup)
+        if _image_matches_groups(
+            img["spec_id"], img["library"], img.get("language", ""), filter_groups, spec_lookup, impl_lookup
+        )
     ]
 
 
@@ -394,6 +413,7 @@ async def get_filtered_plots(
     - Different categories: AND (lib=matplotlib&plot=scatter)
 
     Query params (comma-separated for OR, multiple params for AND):
+    - lang: Language filter (python, r)
     - lib: Library filter (matplotlib, seaborn, etc.)
     - spec: Spec ID filter (scatter-basic, etc.)
     - plot: Plot type tag (scatter, bar, line, etc.)

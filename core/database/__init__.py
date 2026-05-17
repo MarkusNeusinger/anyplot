@@ -15,7 +15,13 @@ from core.database.connection import (
     is_db_configured,
 )
 from core.database.models import LANGUAGES_SEED, LIBRARIES_SEED, Impl, Language, Library, Spec
-from core.database.repositories import BaseRepository, ImplRepository, LibraryRepository, SpecRepository
+from core.database.repositories import (
+    BaseRepository,
+    ImplRepository,
+    LanguageRepository,
+    LibraryRepository,
+    SpecRepository,
+)
 
 
 __all__ = [
@@ -39,5 +45,6 @@ __all__ = [
     "BaseRepository",
     "SpecRepository",
     "LibraryRepository",
+    "LanguageRepository",
     "ImplRepository",
 ]

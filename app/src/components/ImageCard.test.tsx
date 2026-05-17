@@ -10,9 +10,18 @@ vi.mock('../hooks/useCodeFetch', () => ({
 
 const baseImage: PlotImage = {
   library: 'matplotlib',
+  language: 'python',
   url: 'https://example.com/plot.png',
   spec_id: 'scatter-basic',
   title: 'Basic Scatter Plot',
+};
+
+const rImage: PlotImage = {
+  library: 'ggplot2',
+  language: 'r',
+  url: 'https://example.com/biplot.png',
+  spec_id: 'biplot-pca',
+  title: 'PCA Biplot',
 };
 
 const defaultProps = {
@@ -82,5 +91,57 @@ describe('ImageCard', () => {
       />
     );
     expect(screen.getByText('A basic scatter plot example')).toBeInTheDocument();
+  });
+
+  describe('language token', () => {
+    it('renders the language token in normal mode for python', () => {
+      render(<ImageCard {...defaultProps} />);
+      expect(screen.getByLabelText('Language: Python')).toHaveTextContent('Python');
+    });
+
+    it('renders the language token in normal mode for r', () => {
+      render(<ImageCard {...defaultProps} image={rImage} />);
+      expect(screen.getByLabelText('Language: R')).toHaveTextContent('R');
+    });
+
+    it('toggles the language tooltip on click', async () => {
+      const { userEvent } = await import('../test-utils');
+      const user = userEvent.setup();
+      const onTooltipToggle = vi.fn();
+      render(<ImageCard {...defaultProps} onTooltipToggle={onTooltipToggle} />);
+
+      await user.click(screen.getByLabelText('Language: Python'));
+      expect(onTooltipToggle).toHaveBeenCalledWith('lang-scatter-basic-matplotlib');
+    });
+
+    it('shows the language description + docs link when its tooltip is open', () => {
+      render(
+        <ImageCard
+          {...defaultProps}
+          languageDescription="High-level programming language."
+          languageDocUrl="https://www.python.org"
+          openTooltip="lang-scatter-basic-matplotlib"
+        />
+      );
+      expect(screen.getByText('High-level programming language.')).toBeInTheDocument();
+      const link = screen.getByRole('link', { name: /www\.python\.org/i });
+      expect(link).toHaveAttribute('href', 'https://www.python.org');
+      expect(link).toHaveAttribute('target', '_blank');
+    });
+
+    it('does not show the language token in compact mode', () => {
+      render(<ImageCard {...defaultProps} imageSize="compact" />);
+      expect(screen.queryByLabelText('Language: Python')).not.toBeInTheDocument();
+    });
+
+    it('embeds the language as a file-extension suffix on the library in compact mode (python)', () => {
+      render(<ImageCard {...defaultProps} imageSize="compact" />);
+      expect(screen.getByText('mpl.py')).toBeInTheDocument();
+    });
+
+    it('embeds the language as a file-extension suffix on the library in compact mode (r)', () => {
+      render(<ImageCard {...defaultProps} image={rImage} imageSize="compact" />);
+      expect(screen.getByText('ggplot2.r')).toBeInTheDocument();
+    });
   });
 });
