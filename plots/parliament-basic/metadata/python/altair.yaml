@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:03:33Z'
-updated: '2026-05-17T13:46:19Z'
+updated: '2026-05-17T13:52:13Z'
 generated_by: claude-haiku
 workflow_run: 25992472836
 issue: 2499
@@ -12,37 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliamen
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Correct Okabe-Ito palette usage with first series as brand green (#009E73)
-  - 'Perfect theme adaptation: light and dark renders identical except for chrome
-    colors'
-  - Clean, readable visualizations at full resolution; all text legible in both themes
-  - Proper data generation with realistic parliament composition (6 parties, 300 seats)
-  - Correct HTML and PNG export with proper resolution scaling (3×)
-  - 'All specification requirements met: semicircular arcs, individual seat dots,
-    party legend with counts'
+  - Theme-adaptive chrome correctly applied to both renders; text readable in both
+    light and dark
+  - 'Okabe-Ito palette correctly used with #009E73 first series across both renders'
+  - Clean code structure with explicit font sizing and comprehensive configuration
+  - Legend properly styled with seat counts for clarity
+  - Excellent visual hierarchy with Progressive party (dominant arc) visually prominent
   weaknesses:
-  - Design sophistication is generic; leverages Altair defaults without distinctive
-    visual polish
-  - Limited use of Altair's advanced features (no interactive selection, conditional
-    encoding, or cross-filtering)
-  - Legend layout is functional but unremarkable (standard 3-column horizontal)
-  - 'Could benefit from additional refinement: spine styling, subtle grid, or annotation
-    of majority threshold'
+  - Limited aesthetic sophistication beyond Okabe-Ito defaults (DE-01 = 4/8)
+  - Design refinement could be enhanced with more sophisticated styling (DE-02 = 4/6)
+  - Limited use of altair-specific features beyond standard encode/configure patterns
+    (LM-02 = 1/5)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and matches spec
-      Chrome: Title "parliament-basic · altair · anyplot.ai" at 28px dark text, clearly readable at top. Legend titled "Parties" with party names and seat counts in 3-column layout, labels at 16px dark gray (#4A4A44), background slightly elevated (#FFFDF6)
-      Data: Six Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2, purple #CC79A7, gold #E69F00, light blue #56B4E9). First series correctly uses #009E73. Seat circles sized at 250 with 0.9 opacity, arranged in 5 concentric semicircular arcs
-      Legibility verdict: PASS - All text readable; excellent contrast against light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title "parliament-basic · altair · anyplot.ai" in dark text; legend with light gray labels and light background frame
+      Data: Six parties as concentric arcs of colored dots - Progressive (green #009E73), Conservative (orange #D55E00), Green (blue #0072B2), Liberal (purple #CC79A7), Social Dem. (orange #E69F00), Independent (sky blue #56B4E9)
+      Legibility verdict: PASS - all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and matches spec
-      Chrome: Title same position and content but rendered in light color (#F0EFE8), clearly readable. Legend title "Parties" in light text (#F0EFE8), labels in soft light gray (#B8B7B0), background darker elevated (#242420)
-      Data: Identical Okabe-Ito colors to light render - green, orange, blue, purple, gold, light blue perfectly preserved. Seat circles maintain same sizing and opacity as light render. Semicircular arrangement identical
-      Legibility verdict: PASS - All text readable; excellent contrast against dark background; no dark-on-dark failures detected; brand green (#009E73) clearly visible and prominent
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title in light text; legend labels in light gray (#B8B7B0), legend box in elevated dark (#242420)
+      Data: Identical colors to light render (Progressive still #009E73, etc.) - only chrome changes, not data colors
+      Legibility verdict: PASS - all text readable against dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,45 +48,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, legend 16px; all readable in both themes
+        comment: Title fontSize=28, legend labelFontSize=16 explicitly set; all perfectly
+          readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Seat circles well-spaced; legend clean
+        comment: Clean legend placement, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 300 seats visible; appropriately sized
+        comment: Circles (size=250, opacity=0.9) well-scaled for 300-point density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe
+        comment: Okabe-Ito palette guarantees CVD-safe contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px; perfect proportions
+        comment: Plot fills 60-70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clear, descriptive title
+        comment: Correct title format parliament-basic · altair · anyplot.ai
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; both renders theme-correct'
+        comment: 'First series #009E73; Okabe-Ito order; theme-correct backgrounds
+          and chrome in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -99,19 +96,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic Altair defaults; no custom polish
+        comment: Well-configured Okabe-Ito palette; professional but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Minimal customization beyond requirements
+        comment: Deliberate styling with gridOpacity=0.10, theme-adaptive colors,
+          legend refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Semicircular arrangement conveys parliament composition
+        passed: false
+        comment: Visual hierarchy through color spectrum and Progressive (green) dominance
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +119,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parliament chart
+        comment: Correct parliament seat chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: 'All features present: seats in arcs, colors, legend with counts'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Spatial and color mapping correct
+        comment: X/Y coordinates correct; all 300 seats visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; labels include counts
+        comment: Format and labels correct
     data_quality:
       score: 15
       max: 15
@@ -149,19 +147,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete composition
+        comment: Full range of parties with varied sizes from 95 to 12 seats
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral scenario
+        comment: Realistic fictional parliament; neutral political labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values
+        comment: 300 total seats with sensible proportions
     code_quality:
       score: 10
       max: 10
@@ -171,56 +169,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions
+        comment: 'Simple linear flow: imports, data, chart, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only required imports
+        comment: 'Only necessary imports: numpy, pandas, altair'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: Clean, Pythonic, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct naming and scale factor
+        comment: 'Correct output: plot-{THEME}.png and .html'
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct Altair patterns; standard API
+        comment: Proper Chart/encode/configure pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Lacks advanced features
+        comment: Generic feature application; could be replicated in other libraries
+    summary:
+      total_score: 88
+      max_score: 100
+      verdict: APPROVED
+      attempt: 2
+      threshold: 80
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - publication-ready
+  - theme-adaptive-chrome
