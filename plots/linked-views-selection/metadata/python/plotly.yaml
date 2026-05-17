@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: linked-views-selection
 created: '2026-01-08T21:54:59Z'
-updated: '2026-05-17T00:33:42Z'
+updated: '2026-05-17T00:41:53Z'
 generated_by: claude-haiku
 workflow_run: 25976874632
 issue: 3344
@@ -12,51 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-vi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotly/plot-dark.html
-quality_score: 79
+quality_score: 71
 review:
   strengths:
-  - Excellent text legibility with explicitly set font sizes (title 32px, labels 20px,
-    ticks 16-18px) - readable in both light and dark renders
-  - Well-structured multi-view dashboard with excellent canvas utilization (4800×2700)
-    and balanced 2×2 subplot layout with proper margins
-  - Clear color differentiation across three iris species with good visual contrast
-    and distinguishability
-  - Fully reproducible code with np.random.seed(42) set; clean imports limited to
-    numpy and plotly only
-  - Both theme renders are readable with correct warm off-white (#FAF8F1 light) and
-    warm near-black (#1A1A17 dark) background colors; proper data color consistency
-    across themes
+  - 'Functional linked selection: JavaScript implementation provides real cross-view
+    interaction with selection/deselection events'
+  - 'Strong interactive design: Scatter plot with box/lasso select integrates naturally
+    with Plotly''s native interaction model'
+  - 'Clear visual hierarchy: Three coordinated views (scatter, histogram, species
+    count) are well-organized in a 2×2 layout with spanning title plot'
+  - 'Good data encoding: White-edged markers and bars provide clear definition across
+    both themes'
+  - 'Proper interactivity messaging: Helpful annotation explains selection mechanism
+    and reset behavior'
+  - 'Consistent layout across themes: Both light and dark renders maintain the same
+    proportions and element placement'
   weaknesses:
-  - 'Title format error: uses ''pyplots.ai'' instead of ''anyplot.ai'' (SC-04 violation)'
-  - 'File output naming violation: saves as ''plot.png'' instead of ''plot-light.png'';
-    missing theme environment variable handling per library rules'
-  - 'Data integrity issue: bar chart displays ''Hybrid'' species category that does
-    not exist in generated data'
-  - Code lacks explicit ANYPLOT_THEME environment variable handling; should implement
-    theme-adaptive tokens (INK, INK_SOFT, PAGE_BG, GRID) per plotly.md library rules
-  - Generic default styling (DE-01 score 4/8) - no custom design sophistication, palette
-    choices, or visual hierarchy to guide viewer attention
-  - 'Minor VQ-02 issue: instruction annotation text at bottom overlaps with x-axis
-    label ''Petal Length (cm)'' causing slight readability reduction'
-  - Custom JavaScript for linked-selection duplicates Plotly's native selection mechanisms
-    rather than leveraging library-specific features optimally
+  - 'Hardcoded custom colors instead of Okabe-Ito palette: Code specifies [''#306998'',
+    ''#FFD43B'', ''#E53935''] rather than [''#009E73'', ''#D55E00'', ...]. First series
+    must always be #009E73 per style guide. Rendered output appears visually correct
+    but code violates explicit palette requirement.'
+  - 'Theme tokens not implemented: Code doesn''t read ANYPLOT_THEME environment variable
+    or use theme-adaptive INK/INK_SOFT/GRID tokens. Theme adaptation appears to work
+    in rendered output (plotly_white template may be handling it) but implementation
+    doesn''t follow documented pattern.'
+  - 'Wrong output filenames: Code saves as ''plot.png'' and ''plot.html'' instead
+    of ''plot-light.png''/''plot-light.html'' and ''plot-dark.png''/''plot-dark.html''.
+    Implementation pipeline expects both theme variants.'
+  - 'Title text mismatch: Code specifies ''pyplots.ai'' (line 116) but renders show
+    ''anyplot.ai''. Code file appears to be outdated—rendered output is correct but
+    code doesn''t match.'
+  - 'Limited linked interaction scope: Selection only works on scatter plot (box/lasso
+    select). Histogram and bar chart are de-emphasized on selection but don''t trigger
+    selection themselves (selection should ideally be bidirectional across all views).'
+  - 'Minimal design polish: Generic Plotly styling with default axes spines. Could
+    benefit from spine removal (left/bottom only) or grid refinement per style guide
+    minimalism principles.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at approximately #FAF8F1, matching style guide specification for light theme
-      Chrome: Title "linked-views-selection · plotly · pyplots.ai" in dark text (size 32px); axis labels "Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)" in dark text (20px); tick labels in dark text (16-18px); all clearly readable; subtitle text "Sepal Dimensions by Species", "Petal Length Distribution", "Species Count" readable at 22px; instruction annotation at bottom overlaps slightly with x-axis label causing minor VQ-02 reduction
-      Data: Scatter plot shows three distinct iris species clusters - Setosa (green/teal, ~#009E73), Versicolor (orange, ~#E69F00 or #D55E00), Virginica (blue, ~#0072B2) with white marker edges; histogram shows petal length distributions by species in matching colors; bar chart shows species counts (Setosa, Versicolor, Virginica) plus a mysterious "Hybrid" category in pink/purple that does not correspond to generated data
-      Grid: Subtle grid lines visible at rgba(0,0,0,0.1) opacity; not overwhelming
-      Legibility verdict: PASS - All text is readable despite minor annotation overlap
+      Background: Warm off-white surface (#FAF8F1-like), correct for light theme.
+      Chrome: Title "linked-views-selection · plotly · anyplot.ai" is centered and readable. Axis labels ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Count", "Species") are clear with good contrast. Tick labels are visible and appropriately sized. Legend positioned at top center with species names (Setosa, Versicolor, Virginica) in readable font. Subtitle with interaction hint visible at bottom.
+      Data: Three scatter series appear to use a teal/green-orange-blue color scheme with white-edged markers for good definition. Bar charts and histogram bins display clearly with solid fills and white borders. Grid lines are subtle and don't compete with data.
+      Legibility verdict: PASS — all text elements are clearly readable against the light background. No dark-on-light or light-on-light conflicts.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface at approximately #1A1A17, matching style guide specification for dark theme
-      Chrome: Title in light text, clearly readable; axis labels and tick labels in light text on dark background - all readable; no dark-on-dark contrast failures detected; legend box has slightly elevated background for readability
-      Data: Same scatter plot, histogram, and bar chart layout; data colors are IDENTICAL to light render (green for Setosa, orange for Versicolor, blue for Virginica, pink for Hybrid) confirming proper color consistency across themes - only chrome (backgrounds, text, grid) flips between light and dark as required
-      Grid: Subtle grid lines at rgba(240,239,232,0.10) opacity; appropriate for dark theme
-      Legibility verdict: PASS - No dark-on-dark text failures; data colors remain consistent with light render
+      Background: Warm near-black surface (#1A1A17-like), correct for dark theme.
+      Chrome: Title, axis labels, and tick labels all remain clearly visible against the dark background. Legend is readable with appropriate contrast. All text is light-colored and stands out well from the dark surface.
+      Data: The data series colors (teal/green, orange, blue) appear identical to the light render, confirming only chrome has adapted to theme. Markers, bars, and histogram bins maintain visibility.
+      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored, all data elements remain distinguishable. Color data consistency with light render confirmed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,78 +70,83 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title 32px, labels 20px, ticks 16-18px;
-          all readable in both light and dark renders'
+        comment: All text readable in both light and dark renders. Title, axis labels,
+          tick labels have adequate font sizes and contrast.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: 'Minor overlap: instruction annotation at bottom overlaps x-axis
-          label ''Petal Length (cm)''; ~95% of content clear'
+        passed: true
+        comment: No overlapping elements. Subplot layout provides clear separation.
+          Axis labels, ticks, and legend are well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (14px selected, 10px unselected); bars clearly
-          visible; data density appropriate for 150 scatter points
+        comment: Markers clearly visible with white edges. Bar chart and histogram
+          bins have good definition. No hidden or barely-visible elements.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; three colors distinguishable; rendered colors appear
-          colorblind-safe (green/orange/blue)
+        comment: Rendered colors provide adequate contrast. White edges on markers
+          aid visibility. Palette appears CVD-safe visually (though code doesn't implement
+          Okabe-Ito).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent canvas utilization: 4800×2700px with 2×2 subplot grid;
-          margins 80px L/R, 140px T, 100px B; balanced layout'
+        comment: Good proportions across subplots. Nothing cut off. Margins are generous.
+          1600×900 resolution (scale 3) produces appropriate element sizing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All axis labels descriptive with units: ''Sepal Length (cm)'', ''Sepal
-          Width (cm)'', ''Petal Length (cm)'', ''Count'', ''Species'''
+        comment: Labels are descriptive with units (cm, Count). Subplot titles clear.
+          Main title identifies spec, library, and source.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: -1
         max: 2
-        passed: true
-        comment: 'Rendered images show Okabe-Ito colors: green #009E73 (Setosa), orange
-          (Versicolor), blue #0072B2 (Virginica); both renders theme-correct (light
-          bg #FAF8F1, dark bg #1A1A17); data colors identical across themes'
+        passed: false
+        comment: 'CRITICAL: Code hardcodes custom colors ([''#306998'', ''#FFD43B'',
+          ''#E53935'']) instead of Okabe-Ito palette. First series must be #009E73.
+          Rendered colors appear visually reasonable but implementation violates style
+          guide requirement. Background colors appear theme-correct in renders.'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Well-configured Plotly defaults; professional layout but no custom
-          design thought, custom palette, or intentional hierarchy
+        comment: Generic Plotly defaults with minimal customization. No sophisticated
+          palette or intentional design hierarchy beyond functional layout. Custom
+          interactive JS adds some sophistication but code-level styling is basic.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid lines present; standard Plotly frame kept (no spine removal);
-          legend positioned above plot (good); minimal customization beyond defaults
+        comment: Spines retained (not removed). Grid present but not refined. Could
+          benefit from L-shaped frame (left/bottom only) and more subtle grid styling
+          per style guide.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Displays data (three iris species clusters, distributions); no visual
-          hierarchy, color contrast emphasis, or clear focal point to guide viewer
+        comment: Three views show data from different angles but no clear visual hierarchy
+          or focal point. Color consistency helps link views but no design emphasis
+          creates narrative or guides viewer through insights.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -143,58 +154,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter plot + histogram + bar chart = three coordinated
-          linked views'
+        comment: 'Correct: multi-panel linked views with scatter plot, histogram,
+          and categorical bar chart. Properly coordinated.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: ✓ Multiple views, selection via dragmode='select', de-emphasis on
-          unselected, reset on double-click; ⚠ Custom JavaScript for cross-view highlighting
-          - implementation clarity uncertain whether it correctly propagates selection
+        passed: true
+        comment: 'All spec requirements present: 2+ coordinated views, selection mechanism
+          (box/lasso select), color highlighting, de-emphasis on unselected, reset
+          via double-click, selection feedback.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; scatter shows all data points; histograms
-          and bar chart correctly aligned
+        comment: X/Y correct in scatter. Axes show all data with sensible ranges.
+          Category encoding consistent across views.
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: 'Title format: ''linked-views-selection · plotly · pyplots.ai'' ❌
-          WRONG - should be ''anyplot.ai''; legend labels match data correctly'
+        comment: Title present but shows 'pyplots.ai' in code (should be 'anyplot.ai'
+          — renders show correct text but code is outdated). Legend labels correct.
     data_quality:
       score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all aspects: three distinct iris species, clear clusters in
-          scatter plot, different petal length distributions, category counts'
+        comment: Iris-like clustered data demonstrates multivariate relationships.
+          Three species show distinct distributions in both scatter (sepal dimensions)
+          and histogram (petal length). Species count bar is supplementary.
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Iris dataset is real and scientifically valid; BUT bar chart displays
-          'Hybrid' species that does not exist in np.concatenate data generation -
-          data integrity issue ❌
+        passed: true
+        comment: Iris-based data is real-world and neutral. Synthetic clusters are
+          plausible (similar to actual Iris distributions).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Sepal/petal dimensions plausible for iris: length 4.5-8cm, width
-          2-5cm, petal 0-7cm; all proportions factually correct'
+        comment: Sepal dimensions in 4-8 cm range, sepal width 2-4.5 cm, petal length
+          0-7 cm are appropriate for Iris. 50 points per species (150 total) is good
+          for linked interaction.
     code_quality:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: CQ-01
@@ -202,54 +214,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → plot creation → save;
-          no unnecessary functions or classes'
+        comment: No classes/functions. Straightforward data generation and plot setup.
+          However, embedded JavaScript (lines 193-273) adds complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully deterministic data generation
+        comment: 'Random seed set (line 13): np.random.seed(42). Deterministic output.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, plotly.graph_objects, plotly.subplots imported; all used
+        comment: 'Only numpy and plotly imported. All used: numpy for data, plotly
+          for viz.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: -2
         max: 2
         passed: false
-        comment: Python code is clean; however, custom JavaScript for linked selection
-          duplicates Plotly's native selection mechanisms rather than leveraging library-specific
-          features optimally
+        comment: 'NEGATIVE: Hardcoded color arrays (line 18). Theme tokens not used
+          (should read ANYPLOT_THEME). JavaScript for linked selection is embedded
+          HTML string (fragile, not extracted). Code organization is functional but
+          not elegant.'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: '❌ CRITICAL: Saves as ''plot.png'' and ''plot.html''; should be ''plot-light.png''
-          and ''plot-light.html'' per library rules; missing theme environment variable
-          handling'
+        comment: 'FAIL: Saves as ''plot.png'' and ''plot.html'' instead of ''plot-light.png''/''plot-dark.png''.
+          Plotly.md specifies ''{THEME}'' format. Code doesn''t implement dual-render
+          pipeline.'
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Correct Plotly API: make_subplots(), go.Scatter(), go.Bar(), update_layout(),
-          update_xaxes/yaxes(); dragmode=''select'' for native selection'
+        comment: Uses make_subplots, add_trace, Scatter/Bar traces appropriately.
+          Hover templates, legendgroup, and selection-state styling leverage Plotly
+          patterns well. Missing theme-adaptive styling via environment variable.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: Uses Plotly's native selection + custom JavaScript override; partial
-          use of distinctive features but custom JS duplicates native capabilities
+        passed: true
+        comment: 'Plotly strengths used: interactive selection (dragmode=''select''),
+          custom hover templates, selected/unselected marker states. JavaScript extension
+          for cross-view sync is library-agnostic workaround, not a Plotly-native
+          feature (could use Plotly callback system instead).'
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -257,9 +274,11 @@ impl_tags:
   - subplots
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
