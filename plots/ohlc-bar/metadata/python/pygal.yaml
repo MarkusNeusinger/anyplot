@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:12:54Z'
-updated: '2026-05-17T10:52:24Z'
+updated: '2026-05-17T10:57:13Z'
 generated_by: claude-haiku
 workflow_run: 25988699695
 issue: 3293
@@ -12,102 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - Correctly implements all OHLC specification requirements with proper vertical
-    bars and up/down color distinction
-  - Theme-adaptive styling works perfectly; Okabe-Ito colors remain constant across
-    both light and dark renders
-  - Clean, reproducible code with realistic stock price data generation
-  - Proper file naming and dual-format output (PNG + HTML)
-  - Subtle grid styling aids readability without dominating the plot
+  - OHLC bar structure is correctly implemented with distinct high-low vertical lines
+    and open/close ticks
+  - 'Dual-theme mastery: both light and dark renders pass legibility checks with perfect
+    chrome adaptation'
+  - Color semantics are intuitive (green bullish, orange bearish) and follow Okabe-Ito
+    safely
+  - Realistic stock price data with proper business-day frequency and plausible volatility
+  - Clean, deterministic code with seed set for reproducibility
   weaknesses:
-  - X-axis tick labels are small and require closer inspection at full resolution
+  - 'Title contains incorrect product branding: ''pyplots.ai'' should be ''anyplot.ai''
+    (line 86)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct theme surface
-      Chrome: Title "ohlc-bar · pygal · pyplots.ai" readable; axis labels "Date (Jul-Sep 2024)" and "Price ($)" clear; x-axis tick labels small but visible; legend properly positioned
-      Data: Green bars (#009E73) for bullish periods, orange bars (#D55E00) for bearish; vertical range bars with open/close ticks correctly positioned; 45 trading days displayed
-      Legibility verdict: PASS - all text readable, though tick labels require careful inspection
+      Background: Warm off-white (#FAF8F1), correct for light theme.
+      Chrome: Title "ohlc-bar · pygal · pyplots.ai", axis labels "Date (Jul-Sep 2024)" and "Price ($)", tick labels for dates (every 5th) and prices—all readable in dark text.
+      Data: OHLC bars with thin vertical high-low lines, open ticks (left), close ticks (right). Bullish bars (#009E73 green), bearish bars (#D55E00 orange). 45 trading days spanning ~$170–$210 price range.
+      Legibility verdict: PASS – all text clearly readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct dark theme surface
-      Chrome: Title light-colored and visible; axis labels clear; tick labels small but readable; no dark-on-dark contrast issues; legend properly visible
-      Data: Green and orange colors identical to light render (proper theme-independent coloring); bar structure unchanged
-      Legibility verdict: PASS - all elements properly readable; no theme adaptation failures
+      Background: Warm near-black (#1A1A17), correct for dark theme.
+      Chrome: Same title, axis labels, and legend rendered in light text—all clearly readable against dark background. No dark-on-dark text.
+      Data: OHLC bars are identical in color and structure to light render (bullish green, bearish orange). Grid visible and subtle. Legend shows "Bullish (Close ≥ Open)" and "Bearish (Close < Open)" in light text.
+      Legibility verdict: PASS – all text clearly readable; no dark-on-dark failures; data colors identical to light render confirming proper theme separation.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, legend readable; x-axis tick labels small but
-          visible
+        comment: All text readable in both light and dark themes; font sizes appropriately
+          scaled
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All bars and labels display without collision
+        comment: Date labels sparse (every 5th); no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All OHLC segments clearly distinguishable
+        comment: All OHLC bars and ticks clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors provide adequate contrast
+        comment: Okabe-Ito palette is CVD-safe; adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced proportions with generous margins
+        comment: 4800×2700 landscape with generous margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels with units
+        passed: false
+        comment: Title says 'pyplots.ai' but should be 'anyplot.ai'; axis labels are
+          descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors correct; backgrounds theme-appropriate
+        comment: 'Bullish #009E73, bearish #D55E00; correct backgrounds (#FAF8F1 light,
+          #1A1A17 dark)'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Professional theme-adaptive styling but standard defaults
+        passed: true
+        comment: Custom Style with intentional color semantics (green=bullish, orange=bearish);
+          professional polish
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Standard pygal rendering without customization
+        comment: Standard pygal rendering; minimal customization beyond theme tokens
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Clear visualization but limited visual hierarchy
+        passed: true
+        comment: Clear visual hierarchy; downward price trend is focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -115,25 +120,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OHLC bar chart
+        comment: Correct OHLC bar chart structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All OHLC features present
+        comment: 'All features present: high-low bars, open/close ticks, bullish/bearish
+          colors, date axis, grid'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axis mapping
+        comment: Correct axes; 45 business days; price range ~170–210
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Proper format and labels
+        passed: false
+        comment: Title branding error ('pyplots.ai' vs 'anyplot.ai'); legend labels
+          correct
     data_quality:
       score: 15
       max: 15
@@ -143,19 +150,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All OHLC components shown
+        comment: All OHLC components shown; time series trend clear
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock prices
+        comment: Stock price data is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges
+        comment: Sensible price range and time span
     code_quality:
       score: 10
       max: 10
@@ -165,52 +172,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions
+        comment: Straightforward procedural script; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses random seed
+        comment: Seed set (np.random.seed(77)) ensures deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports are used; no dead code
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality
+        comment: No fake interactivity; OHLC construction is clever but appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming
+        comment: Correct output format (plot-{THEME}.png/html); current API
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Style object, XY chart with breaks, theme handling all idiomatic
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct pygal.XY usage with proper Style
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Standard patterns; no advanced features
-  verdict: APPROVED
+        comment: Interactive HTML output; creative use of XY for OHLC
+  verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling: []
