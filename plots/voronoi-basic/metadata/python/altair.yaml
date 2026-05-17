@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:25:21Z'
-updated: '2026-05-17T15:38:58Z'
+updated: '2026-05-17T15:45:16Z'
 generated_by: claude-haiku
 workflow_run: 25995055408
 issue: 3415
@@ -12,41 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required features (cells, seed points, color
-    differentiation, clipping)
-  - Excellent theme adaptation—both renders are readable with proper INK/INK_SOFT
-    tokens and correct background colors
-  - Clean, reproducible code with proper seed setting (np.random.seed(42))
-  - 'Correct Okabe-Ito palette application with #009E73 as first series'
-  - Effective multi-layer visualization with good visual hierarchy (cells, points,
-    labels)
-  - Proper canvas dimensions (1600×900 = 4800×2700 at 3x scale) with adequate whitespace
+  - Accurate Voronoi computation with proper cell clipping and boundary handling
+  - Correct theme-adaptive rendering with all tokens properly threaded (background,
+    text, grid, legend)
+  - Interactive tooltips enhance usability for seed point inspection
+  - Okabe-Ito palette correctly applied and ordered; first series correctly green
+    (#009E73)
+  - Clear visual hierarchy and fully readable text in both light and dark themes
+  - Proper data representation with seed points clearly marked and labeled
   weaknesses:
-  - Design is competent but standard—follows prescribed palette correctly but lacks
-    distinctive aesthetic sophistication
-  - Potential minor text overlap in dense station clusters despite dy=-18 positioning
-    attempt
-  - Limited use of Altair-specific distinctive features—implementation uses standard
-    layering without advanced techniques
-  - No visual emphasis or focal point creation beyond basic color differentiation
-  image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "voronoi-basic · altair · anyplot.ai" is centered and clear; axis labels "X Coordinate" and "Y Coordinate" are descriptive; tick labels at 18px are readable; legend with 2 columns and "Weather Stations" title is prominent on the right
-      Data: 15 Voronoi cells rendered with Okabe-Ito palette colors starting with green (#009E73); cell boundaries marked with dark strokes; seed points marked with white-stroked circles; station labels positioned above points with dy=-18 offset
-      Legibility verdict: PASS — All text is clearly readable with strong contrast against the light background; grid is subtle (10% opacity) and non-intrusive
-
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title and axis labels are rendered in light text (#F0EFE8) with clear contrast; legend background is elevated (#242420); no dark-on-dark text failures
-      Data: Voronoi cell colors are identical to light render—confirming proper theme-independent data color handling; cell edges and seed points maintain visibility
-      Legibility verdict: PASS — All text is clearly readable against dark background with proper INK/INK_SOFT token usage; no dark-on-dark contrast failures observed
+  - Station label positioning could be further optimized to eliminate overlap in very
+    dense regions (minor issue)
+  - Design excellence is solid but somewhat conservative—could explore more sophisticated
+    refinements
+  - Could leverage more advanced Altair features for enhanced visual storytelling
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ (#FAF8F1), not pure white, correct\n  Chrome: Title \"voronoi-basic · altair\
+    \ · anyplot.ai\", axis labels \"X Coordinate\" and \"Y Coordinate\", tick labels,\
+    \ legend \"Weather Stations\" all in dark text (INK color #1A1A17)\n  Data: Voronoi\
+    \ cells colored with Okabe-Ito palette (green #009E73 for first station, followed\
+    \ by orange, blue, purple, yellow, sky blue); cells semi-transparent (opacity\
+    \ 0.50) with clear boundaries; seed points marked with circles and white stroke;\
+    \ station labels positioned above points\n  Grid: Subtle at 10% opacity, not competing\
+    \ with data\n  Legibility verdict: PASS - All text clearly readable against light\
+    \ background, no \"light on light\" issues\n\nDark render (plot-dark.png):\n \
+    \ Background: Warm near-black (#1A1A17), not pure black, correct\n  Chrome: Title,\
+    \ axis labels, tick labels, legend text all in light color (INK #F0EFE8); grid\
+    \ uses 10% opacity light ink\n  Data: Voronoi cells retain identical Okabe-Ito\
+    \ colors from light render (green #009E73, orange, blue, etc.); cell boundaries\
+    \ visible in INK_SOFT (#B8B7B0); seed points with white stroke still visible;\
+    \ station labels visible in light text\n  Brand green (#009E73): Visible and readable\
+    \ on dark background\n  Legibility verdict: PASS - All text clearly readable against\
+    \ dark background, no \"dark on dark\" issues observed\n  \nTheme consistency:\
+    \ Data colors identical between renders, only chrome (background, text, grid)\
+    \ adapted. Both renders theme-correct and readable."
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,73 +59,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts properly sized (28px title, 22px labels, 18px ticks) and
-          readable in both themes
+        comment: All font sizes explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally good label positioning with dy=-18, minor potential overlap
-          in very dense clusters
+        comment: Station labels positioned above points; minimal overlap in dense
+          regions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Voronoi cells, boundaries, seed points, and labels all clearly visible
-          and distinguishable
+        comment: All 15 seed points visible, cells clear, semi-transparent fill allows
+          layering
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides CVD-safe coloring; no red-green dependency
+        comment: Okabe-Ito palette (colorblind-safe), good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 canvas with adequate margins; good proportions for spatial
-          data
+        comment: 1600×900 @ 3× = 4800×2700 px, correct proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axis labels descriptive
+        comment: Title and axis labels match spec requirements
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order followed, backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: Okabe-Ito in order, backgrounds correct, both renders theme-correct
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Uses prescribed palette correctly but lacks distinctive design choices;
-          generic styling defaults applied
+        passed: true
+        comment: Professional execution but limited enhancement beyond spec
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid and adequate whitespace, but minimal visual refinement
-          beyond defaults
+        passed: true
+        comment: Subtle grid, generous whitespace, elevated legend background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear spatial narrative with color and position; good visual hierarchy
-          but could benefit from emphasis
+        comment: Clear hierarchy, geometric pattern guides viewer
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +129,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Voronoi diagram implementation
+        comment: Correct Voronoi diagram with proper clipping
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: partitioned cells, seed points, differentiation,
-          clipping'
+        comment: Cells, seed points, labels, color differentiation all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped with proper domain (0-100)
+        comment: X/Y correct, axes show full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend properly labeled
+        comment: Format matches spec
     data_quality:
       score: 15
       max: 15
@@ -159,20 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 15 stations rendered with complete spatial partitioning
+        comment: Complete partition demonstrates concept well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Weather station context is plausible and neutral; bounded region
-          is sensible
+        comment: Weather stations realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 points within recommended range; coordinate scale (0-100) appropriate
+        comment: 15 points, 0-100 range sensible
     code_quality:
       score: 10
       max: 10
@@ -182,49 +179,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward code without unnecessary abstraction
+        comment: Direct implementation, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42), deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas, scipy.spatial.Voronoi)
+        comment: All imports used appropriately
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity for task
+        comment: Voronoi algorithm properly handled, theme-aware
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and .html files'
+        comment: Saves plot-{THEME}.png/html, current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of Altair API: Chart(), encoding, layer composition,
-          configure methods'
+        comment: Multi-layer composition, proper encodings, tooltips
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Limited use of distinctive Altair features—standard layering and
-          mark usage without advanced techniques
+        passed: true
+        comment: Uses detail encoding, filled marks, interactive output
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -234,5 +229,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
