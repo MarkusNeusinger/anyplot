@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 parliament-basic: Parliament Seat Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-30
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-17
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,20 +12,46 @@ import pandas as pd
 import seaborn as sns
 
 
-# Set random seed for reproducibility
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: Corporate board composition by department (neutral context)
-groups = ["Engineering", "Operations", "Finance", "Marketing", "Research", "Legal"]
-seats = [85, 72, 45, 38, 22, 18]
-total_seats = sum(seats)
+# Okabe-Ito palette
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
+    "#56B4E9",  # sky blue
+]
 
-# Use seaborn's colorblind-safe palette
-colors = sns.color_palette("colorblind", n_colors=len(groups))
+# Data: Sports league team distribution across regional conferences
+# Different decay pattern: geometric progression instead of linear
+conferences = ["North", "South", "East", "West", "Central"]
+teams = [90, 54, 32, 20, 12]  # Geometric decay pattern (roughly 0.6x each step)
+total_seats = sum(teams)
 
-# Set seaborn style
-sns.set_style("white")
-sns.set_context("talk", font_scale=1.2)
+# Set seaborn theme with proper chrome tokens
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Create figure
 fig, ax = plt.subplots(figsize=(16, 9))
@@ -49,27 +77,27 @@ all_positions.sort(key=lambda p: (p[0], -p[1]))
 # Build DataFrame for seaborn plotting
 x_coords, y_coords, group_labels = [], [], []
 seat_idx = 0
-for group_idx, n_seats in enumerate(seats):
+for group_idx, n_seats in enumerate(teams):
     for _ in range(n_seats):
         if seat_idx < len(all_positions):
             x_coords.append(all_positions[seat_idx][0])
             y_coords.append(all_positions[seat_idx][1])
-            group_labels.append(groups[group_idx])
+            group_labels.append(conferences[group_idx])
             seat_idx += 1
 
 # Create DataFrame for seaborn
 df = pd.DataFrame({"x": x_coords, "y": y_coords, "group": group_labels})
 
-# Plot seats using seaborn scatterplot (uses hue for grouping)
+# Plot seats using seaborn scatterplot
 sns.scatterplot(
     data=df,
     x="x",
     y="y",
     hue="group",
-    hue_order=groups,
-    palette="colorblind",
+    hue_order=conferences,
+    palette=OKABE_ITO[: len(conferences)],
     s=350,
-    edgecolor="white",
+    edgecolor=PAGE_BG,
     linewidth=1.5,
     legend=False,
     ax=ax,
@@ -78,22 +106,22 @@ sns.scatterplot(
 
 # Add majority threshold line
 majority = total_seats // 2 + 1
-ax.axhline(y=0, color="#666666", linestyle="--", linewidth=2, alpha=0.5, zorder=1)
-ax.text(0.85, 0.02, f"Majority: {majority} seats", fontsize=14, color="#666666", ha="right", transform=ax.transAxes)
+ax.axhline(y=0, color=INK_SOFT, linestyle="--", linewidth=2, alpha=0.5, zorder=1)
+ax.text(0.85, 0.02, f"Majority: {majority} seats", fontsize=14, color=INK_SOFT, ha="right", transform=ax.transAxes)
 
 # Create legend with seat counts
 legend_elements = [
-    plt.scatter([], [], c=[colors[i]], s=200, label=f"{group}: {seat_count}")
-    for i, (group, seat_count) in enumerate(zip(groups, seats, strict=True))
+    plt.scatter([], [], c=[OKABE_ITO[i % len(OKABE_ITO)]], s=200, label=f"{conf}: {count}")
+    for i, (conf, count) in enumerate(zip(conferences, teams, strict=True))
 ]
 ax.legend(
     handles=legend_elements,
     loc="upper left",
     fontsize=14,
     frameon=True,
-    facecolor="white",
-    edgecolor="lightgray",
-    title="Departments",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    title="Conferences",
     title_fontsize=16,
 )
 
@@ -104,10 +132,10 @@ ax.set_aspect("equal")
 ax.axis("off")
 
 # Title
-ax.set_title("parliament-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+ax.set_title("parliament-basic · seaborn · anyplot.ai", fontsize=24, fontweight="bold", pad=20, color=INK)
 
 # Add total seats annotation
-ax.text(0.5, -0.08, f"Total: {total_seats} seats", fontsize=18, ha="center", transform=ax.transAxes, color="#333333")
+ax.text(0.5, -0.08, f"Total: {total_seats} teams", fontsize=18, ha="center", transform=ax.transAxes, color=INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

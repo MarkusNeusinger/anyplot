@@ -1,163 +1,185 @@
 library: seaborn
+language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:02:51Z'
-updated: '2025-12-30T00:18:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585399654
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-17T13:46:17Z'
+generated_by: claude-haiku
+workflow_run: 25992335125
+issue: 2499
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/seaborn/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling:
-  - edge-highlighting
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent semicircular layout with 5 well-proportioned concentric arcs
-  - Clean neutral data context using corporate departments
-  - Proper random seed set for reproducibility
-  - Good use of seaborn colorblind palette for accessibility
-  - Clear legend with department names and seat counts
-  - Helpful annotations for majority threshold and total seats
-  - White edge borders on seats provide good visual separation
+  - Clean, readable visualization across both light and dark themes
+  - Correct implementation of parliament semicircular layout with proper seat arrangement
+  - All theme tokens properly applied—no dark-on-dark or light-on-light legibility
+    issues
+  - 'Strong visual quality: text legibility, marker visibility, and palette compliance
+    all at maximum'
+  - Proper use of Okabe-Ito palette with first series as brand green (#009E73)
+  - Clean code structure with deterministic data and proper seaborn idiomatic usage
+  - Well-positioned annotations (majority threshold, total count) enhance clarity
   weaknesses:
-  - Layout has some empty space below the baseline that could be better utilized
-  - Title uses regular dots which work but could be improved
-  image_description: 'The plot displays a semicircular parliament-style seat chart
-    with 5 concentric arcs. The title "parliament-basic · seaborn · pyplots.ai" appears
-    at the top in bold. A legend in the upper-left corner shows 6 departments: Engineering
-    (85 seats, blue), Operations (72 seats, orange), Finance (45 seats, green), Marketing
-    (38 seats, orange), Research (22 seats, pink), and Legal (18 seats, tan). Each
-    seat is represented as a circular dot with white edge borders. A dashed gray horizontal
-    line marks the baseline with "Majority: 141 seats" annotation on the right. At
-    the bottom, "Total: 280 seats" is displayed. The layout fills the canvas well
-    with balanced whitespace.'
+  - 'Semantic mismatch: implementation uses ''sports teams'' and ''conferences'' instead
+    of political parties expected by spec'
+  - Data context doesn't demonstrate the intended use case (election results / political
+    representation)
+  - Design excellence is functional but not distinctive—no custom refinement or sophisticated
+    visual hierarchy beyond defaults
+  - Limited distinctive seaborn features—uses basic scatterplot without showcasing
+    library's unique capabilities
+  - Legend is manually constructed rather than leveraging seaborn's automatic legend
+    features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)—correct theme surface.
+      Chrome: Title "parliament-basic · seaborn · anyplot.ai" is bold, dark, clearly readable. Legend (upper left) shows conference names with seat counts on warm elevated background. Majority threshold text and total count annotation are both clearly visible.
+      Data: Five conference groups rendered as dots in concentric semicircular arcs. Colors follow Okabe-Ito: green (#009E73) for North (largest), orange (#D55E00) for South, blue (#0072B2) for East, purple (#CC79A7) for West, yellow (#E69F00) for Central (smallest). Dots have white edges for definition. Layout is clean with no overlap.
+      Legibility verdict: PASS—all text is readable; data colors have adequate contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)—correct theme surface.
+      Chrome: Title and annotations are light text (#F0EFE8), clearly visible against dark background. Legend has dark background with light border and text. No dark-on-dark failures.
+      Data: Identical colors to light render—Okabe-Ito palette is preserved. Green (#009E73), orange, blue, purple, yellow maintain their exact hex values. Dots are clearly visible against dark background. Semicircular layout is maintained.
+      Legibility verdict: PASS—all text is readable; data colors are consistent with light render; no readability issues in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, legend text at 14pt, all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: Title 24pt, annotations at 14-18pt, all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend and annotations positioned without collision, dots arranged
+          in clear arcs
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Seats well-sized (s=350) with white edges for separation, minor:
-          outer rows slightly crowded'
+        comment: Dots at s=350 with white edges are clearly visible, grid line is
+          subtle but perceivable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses seaborn's colorblind-safe palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall, but bottom portion has significant empty space below
-          the baseline
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for this plot type (axis is hidden)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed, includes seat counts, no distracting grid
+        comment: Okabe-Ito palette is CVD-safe with good contrast, no red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio appropriate for semicircle, no clipping, equal
+          aspect applied correctly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows required format; legend and annotations provide context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; Okabe-Ito order maintained; backgrounds
+          are correct for both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional and clean, uses required Okabe-Ito palette, clear hierarchy,
+          but lacks distinctive custom refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes off (minimal-chrome), subtle grid, good whitespace margins,
+          could be more refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with largest groups on left; majority threshold
+          adds context, storytelling is functional but not exceptional
     spec_compliance:
-      score: 24
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct semicircular parliament seat chart
+        comment: Correct semicircular parliament chart implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Groups correctly mapped to seat positions left-to-right
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Individual seats as dots, party colors, legend with counts, majority
-          threshold
-      - id: SC-04
-        name: Data Range
-        score: 3
+        comment: 'All features present: semicircular arrangement, individual dots,
+          color coding, legend, majority threshold'
+      - id: SC-03
+        name: Data Mapping
+        score: 2.5
         max: 3
         passed: true
-        comment: All 280 seats visible across all rows
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y mapping correct, all data shown, but terminology (teams/conferences)
+          doesn't match spec intent (political parties)
+      - id: SC-04
+        name: Title & Legend
+        score: 2.5
+        max: 3
         passed: true
-        comment: Accurate seat counts for all 6 groups
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format but uses middle dots instead of proper interpuncts
+        comment: Title format correct; legend format correct; but semantic context
+          is sports-based rather than political
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple groups with varying sizes, good distribution across
-          arcs
+        comment: 'Demonstrates all aspects of parliament chart: distribution, color
+          coding, scale'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Corporate board composition is neutral and plausible but somewhat
-          generic
+        score: 3
+        max: 5
+        passed: false
+        comment: Data is realistic in scale but uses sports context instead of political
+          parties—doesn't demonstrate intended use case from spec
       - id: DQ-03
         name: Appropriate Scale
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 280 total seats with realistic department proportions
+        comment: 208 total with geometric progression is sensible; majority calculation
+          correct
     code_quality:
       score: 10
       max: 10
@@ -167,40 +189,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern
+        comment: Linear code without unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Hard-coded deterministic data, fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Layout calculation is clear, no fake UI or simulated interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png, uses current APIs, no bare plot.png
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot with hue for grouping, sns.set_style, sns.set_context,
-          colorblind palette
+        comment: 'Good: sns.scatterplot() is idiomatic, sns.set_theme() with rc parameters
+          follows seaborn patterns'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Limited: basic scatterplot usage, manual legend instead of seaborn''s
+          automatic features, minimal showcase of library capabilities'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
