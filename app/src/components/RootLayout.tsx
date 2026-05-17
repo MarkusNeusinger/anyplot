@@ -9,6 +9,7 @@ import { useTheme } from '../hooks/useLayoutContext';
 import { MastheadRule } from './MastheadRule';
 import { NavBar } from './NavBar';
 import { Footer } from './Footer';
+import { FeedbackWidget } from './FeedbackWidget';
 
 const containerSx = {
   px: { xs: 2, sm: 4, md: 8, lg: 12 },
@@ -90,6 +91,8 @@ export function RootLayout() {
       <Container maxWidth={false} sx={{ ...containerSx, pb: { xs: 4, md: 6 } }}>
         <Footer onTrackEvent={trackEvent} />
       </Container>
+
+      <FeedbackWidget />
     </Box>
   );
 }

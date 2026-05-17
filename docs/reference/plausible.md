@@ -138,6 +138,8 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `map_node_click` | `spec` | MapPage.tsx | User clicks a node on `/map` (or, on touch, second tap on an already-pinned node) to navigate to its spec detail. |
 | `map_node_pin` | `spec` | MapPage.tsx | Touch device only: first tap on a node opens the preview panel + pin marker without navigating. A second tap on the same node fires `map_node_click` and navigates. |
 | `map_search_select` | `spec` | MapPage.tsx | User picks a result from the `/map` search dropdown (`⌘K` / `Ctrl+K` opens it). The camera flies to the node and the preview panel opens. |
+| `feedback_opened` | `path` | FeedbackWidget.tsx | User opens the floating in-app feedback widget (issue #5662). `path` is `window.location.pathname + search` at open time. |
+| `feedback_submitted` | `path`, `reaction`?, `has_email`, `spec_id`? | FeedbackWidget.tsx | User submits the feedback form. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, `heart` (omitted if none selected). `has_email` is `"true"`/`"false"`. `spec_id` is set when the current route resolves to a spec page. |
 
 ### Landing Page Navigation (`nav_click`)
 

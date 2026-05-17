@@ -10,7 +10,7 @@ from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
-from core.database.models import Impl, Library, Spec
+from core.database.models import Feedback, Impl, Library, Spec
 
 
 T = TypeVar("T")
@@ -319,3 +319,22 @@ class ImplRepository(BaseRepository[Impl]):
             return existing
         full_data = {**impl_data, "spec_id": spec_id, "library_id": library_id, "language_id": language_id}
         return await self.create(full_data)
+
+
+class FeedbackRepository(BaseRepository[Feedback]):
+    """Repository for in-app feedback entries (issue #5662). Entries are immutable."""
+
+    model = Feedback
+    updatable_fields = frozenset()
+
+    async def count_recent_by_ip(self, ip_hash: str, since) -> int:
+        """Count entries from this IP hash since the given UTC datetime — used for rate limiting."""
+        result = await self.session.execute(
+            select(func.count(Feedback.id)).where(Feedback.ip_hash == ip_hash, Feedback.created_at >= since)
+        )
+        return result.scalar_one() or 0
+
+    async def list_recent(self, limit: int = 100) -> list[Feedback]:
+        """List most recent entries first — for admin/triage tooling."""
+        result = await self.session.execute(select(Feedback).order_by(Feedback.created_at.desc()).limit(limit))
+        return list(result.scalars().all())
