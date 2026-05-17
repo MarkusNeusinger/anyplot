@@ -1,7 +1,7 @@
 """ anyplot.ai
 kagi-basic: Basic Kagi Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-17
+Quality: 93/100 | Updated: 2026-05-17
 """
 
 from __future__ import absolute_import
