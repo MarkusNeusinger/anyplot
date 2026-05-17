@@ -1,7 +1,7 @@
 """ anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 72/100 | Updated: 2026-05-17
+Quality: 65/100 | Updated: 2026-05-17
 """
 
 import matplotlib.pyplot as plt

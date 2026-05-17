@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:25:40Z'
-updated: '2026-05-17T22:30:42Z'
+updated: '2026-05-17T22:38:07Z'
 generated_by: claude-haiku
 workflow_run: 26004332590
 issue: 3485
@@ -12,85 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 72
+quality_score: 65
 review:
   strengths:
-  - Excellent visual clarity and text legibility in both light and dark themes
-  - Proper theme adaptation in rendered output (backgrounds, text colors, grid contrast)
-  - Correct Okabe-Ito color palette in rendered images
-  - Clean layout with good marker sizing and stem visibility
+  - Grouped lollipop chart structure is correct with proper side-by-side marker positioning
+  - Images show excellent theme adaptation with light/dark rendering (backgrounds,
+    text, grid colors appropriately flipped)
+  - Data colors use correct Okabe-Ito palette with first series as brand green (#009E73)
+  - Good marker and stem visualization with white edges for definition
+  - Subtle grid lines and removed top/right spines follow style guidelines
+  - Title and legend format correct in images
   weaknesses:
-  - 'Code is not the source of rendered images: specifies different data (regions/products
-    vs departments/hardware-software-services)'
-  - Code completely lacks ANYPLOT_THEME environment handling required by matplotlib
-    template
-  - Code saves to plot.png instead of plot-{THEME}.png
-  - 'Wrong color palette in code: uses Python colors instead of Okabe-Ito positions
-    1-3'
-  - 'Wrong title format: missing Language and correct domain (anyplot.ai not pyplots.ai)'
-  - 'Low design excellence: minimal visual refinement and no visual hierarchy/storytelling'
+  - 'CRITICAL: Code/Image Mismatch - Repository code uses Python Blue (#306998) and
+    lacks all theme-adaptive logic, but images show Okabe-Ito colors and proper theme
+    rendering. The code as written would not produce the images shown.'
+  - 'CQ-05 FAILURE: Code saves to plot.png instead of plot-light.png and plot-dark.png,
+    incompatible with pipeline'
+  - Code missing theme environment variable handling (os.getenv('ANYPLOT_THEME'))
+    required by matplotlib.md
+  - Code missing fig/ax facecolor, text color, spine color, and grid color theme tokens
+    (PAGE_BG, INK, INK_SOFT, etc.)
+  - 'Dark render background appears to be pure black rather than warm #1A1A17 per
+    style guide'
+  - 'DE-01 LOW (4/8): Generic styling with correct defaults but no design sophistication
+    or intentional hierarchy'
+  - 'DE-03 LOW (2/6): No visual storytelling - data is displayed but doesn''t guide
+    viewer toward insight'
+  - Code data labels (Electronics, Furniture, Clothing, regions North/South/East/West)
+    don't match image labels (Hardware, Software, Services, departments)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title "lollipop-grouped · Python · matplotlib · anyplot.ai" is dark and readable; axis labels "Department" and "Spending ($ millions)" are clear; tick labels are dark and visible
-      Data: Green (#009E73) for Hardware, orange (#D55E00) for Software, blue (#0072B2) for Services - correct Okabe-Ito colors; markers have white edges; thin stems clearly visible
-      Legibility verdict: PASS
+      Background: Warm off-white around #FAF8F1 ✓
+      Chrome: Title, axis labels, ticks, and grid all visible in dark text/gray against light background - all readable ✓
+      Data: Three series (Hardware=green #009E73, Software=orange #D55E00, Services=blue #0072B2) correctly using Okabe-Ito palette ✓
+        - Stems are thin vertical lines from baseline to markers
+        - Markers are circular dots with white edges for definition
+        - Lollipops properly grouped side-by-side within each category
+      Legend: Present in top right, labels readable, legend frame has appropriate background
+      Legibility verdict: PASS - all text is clearly readable against the light surface
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title and all labels are light-colored and clearly readable; no dark-on-dark failures
-      Data: Green, orange, blue colors are identical to light render (as required); only background and text flipped
-      Legibility verdict: PASS
+      Background: Very dark (appears to be near-black, should verify it's #1A1A17 not pure black)
+      Chrome: Title, axis labels, ticks, and grid all rendered in light colors - text is readable but contrast with very dark background is tight
+      Data: Same three series with IDENTICAL colors to light render (green #009E73, Software orange #D55E00, Services blue #0072B2) ✓
+        - White edges on markers help them stand out clearly against dark background ✓
+        - Stems and markers properly preserved from light render ✓
+      Legend: Light-colored text in darker frame, readable
+      Legibility verdict: PASS - text is readable, though the background color (if pure black) may violate the #1A1A17 warm-black requirement
+
+    Both renders confirm: data colors are preserved identically between themes (only chrome flips) ✓
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes
+        comment: Sizes explicitly set (24/20/16pt), readable in both renders but dark
+          theme contrast is tight
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text, tick labels well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and stems well-adapted to density
+        comment: Markers appropriately sized (s=250), stems thin but visible, white
+          edges help definition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast
+        comment: Okabe-Ito palette is CVD-safe, colors well-contrasted
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced layout, good utilization
+        comment: Good proportion of canvas used, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: Labels descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Code uses wrong colors and lacks theme handling; images show correct
-          palette but code is non-compliant
+        comment: 'CRITICAL: Dark render background appears pure black (not #1A1A17).
+          Code has zero theme adaptation - no ANYPLOT_THEME handling, saves to plot.png
+          not plot-light/dark.png, uses Python Blue #306998 not Okabe-Ito #009E73'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -98,21 +121,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults, lacks intentional design
+        comment: Well-configured defaults using correct palette, but no custom design
+          or intentional hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
+        comment: Spines removed (good), subtle grid, but minimal customization beyond
+          defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy
+        comment: Data displayed clearly but no visual hierarchy or emphasis to guide
+          viewer
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,49 +146,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped lollipop chart
+        comment: Correct grouped lollipop chart with all components
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Stems, markers, grouping, legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correct and complete
+        comment: X/Y correctly assigned, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Images have correct format but code title is wrong
+        passed: true
+        comment: Title format correct in images, legend labels match
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good variation and range
+        comment: Shows 4 categories × 3 series with good variation
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Realistic departmental spending scenario
+        comment: Plausible spending data by department/product, though data labels
+          don't match code
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions plausible
+        comment: Values 2-5.5M are plausible for spending data
     code_quality:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: CQ-01
@@ -170,47 +197,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward
+        comment: Simple linear code, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: Has random seed for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only matplotlib and numpy, both used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Lacks theme handling, hardcoded colors/backgrounds
+        passed: true
+        comment: Straightforward iteration approach appropriate for grouping
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png not plot-{THEME}.png
-    library_mastery:
-      score: 2
+        comment: 'CRITICAL FAILURE: Saves to plot.png instead of plot-light.png/plot-dark.png.
+          No ANYPLOT_THEME environment variable handling. Missing all theme-adaptive
+          code (backgrounds, text colors, spines). Code is not compatible with current
+          pipeline'
+    library_features:
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Basic usage, no advanced patterns
+        passed: true
+        comment: Standard matplotlib API, iteration for grouping is idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No distinctive matplotlib features
+        comment: No distinctive matplotlib features used, generic implementation
   verdict: REJECTED
 impl_tags:
   dependencies: []
