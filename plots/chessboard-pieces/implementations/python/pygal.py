@@ -1,21 +1,37 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 76/100 | Created: 2026-05-17
 """
 
+import importlib
 import os
+import sys
+import xml.etree.ElementTree as ET
 
 
-# Theme tokens
+# This file is named pygal.py; strip its directory from sys.path so that
+# importlib resolves to the installed package, not this script itself.
+_self_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.realpath(p or ".") != _self_dir]
+
+pygal = importlib.import_module("pygal")
+Style = importlib.import_module("pygal.style").Style
+
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 LIGHT_SQUARE = "#E8D5C4" if THEME == "light" else "#4A4136"
 DARK_SQUARE = "#B5956F" if THEME == "light" else "#2D2622"
+WHITE_PIECE_COLOR = "#F5E6D0"
+BLACK_PIECE_COLOR = "#1A1A17"
 
-# Chess pieces Unicode mapping
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
 PIECE_UNICODE = {
     "K": "♔",
     "Q": "♕",
@@ -31,7 +47,6 @@ PIECE_UNICODE = {
     "p": "♟",
 }
 
-# Example position (starting position)
 pieces = {
     "a1": "R",
     "b1": "N",
@@ -49,14 +64,6 @@ pieces = {
     "f2": "P",
     "g2": "P",
     "h2": "P",
-    "a8": "r",
-    "b8": "n",
-    "c8": "b",
-    "d8": "q",
-    "e8": "k",
-    "f8": "b",
-    "g8": "n",
-    "h8": "r",
     "a7": "p",
     "b7": "p",
     "c7": "p",
@@ -65,119 +72,139 @@ pieces = {
     "f7": "p",
     "g7": "p",
     "h7": "p",
+    "a8": "r",
+    "b8": "n",
+    "c8": "b",
+    "d8": "q",
+    "e8": "k",
+    "f8": "b",
+    "g8": "n",
+    "h8": "r",
 }
 
+# Pygal Style — maps ANYPLOT_THEME tokens to pygal's chrome
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=72,
+    label_font_size=40,
+    major_label_font_size=40,
+    legend_font_size=36,
+)
 
-# Create SVG chess board
-def create_chessboard_svg(pieces, theme):
-    """Generate SVG chessboard with pieces."""
-    board_size = 800
-    square_size = board_size / 8
-    margin = 60
-    total_width = board_size + 2 * margin
-    total_height = board_size + 2 * margin + 80
+# pygal.XY renders the SVG skeleton: title, background, and theme chrome
+chart = pygal.XY(
+    width=3600,
+    height=3600,
+    title="chessboard-pieces · pygal · anyplot.ai",
+    style=custom_style,
+    show_legend=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    show_dots=False,
+    show_x_labels=False,
+    show_y_labels=False,
+    margin=80,
+)
+chart.add("", [(0, 0)])  # single invisible seed point — show_dots=False hides it
 
-    page_bg = PAGE_BG
-    light_sq = LIGHT_SQUARE
-    dark_sq = DARK_SQUARE
-    text_color = INK
-    label_color = INK_MUTED
+# Render via pygal to get the themed SVG base
+svg_bytes = chart.render()
 
-    svg = f"""<?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{total_height}" viewBox="0 0 {total_width} {total_height}">
-  <defs>
-    <style>
-      .piece-text {{ font-size: {square_size * 0.6}px; text-anchor: middle; dominant-baseline: central; }}
-      .label-text {{ font-size: 16px; text-anchor: middle; dominant-baseline: central; fill: {label_color}; }}
-      .title-text {{ font-size: 28px; font-weight: 500; text-anchor: middle; fill: {text_color}; }}
-    </style>
-  </defs>
-  <rect width="{total_width}" height="{total_height}" fill="{page_bg}"/>
+# Inject chess board elements into pygal's SVG tree
+root = ET.fromstring(svg_bytes)
+NS = "http://www.w3.org/2000/svg"
 
-  <!-- Title -->
-  <text x="{total_width / 2}" y="35" class="title-text">chessboard-pieces · pygal · anyplot.ai</text>
+BOARD_SIZE = 2800
+MARGIN_X = (3600 - BOARD_SIZE) // 2  # 400 px side margins
+MARGIN_Y = 210  # clears title + top margin
+SQ = BOARD_SIZE // 8  # 350 px per square
 
-  <!-- Board background -->
-  <rect x="{margin}" y="{margin + 60}" width="{board_size}" height="{board_size}" fill="{dark_sq}"/>
+board_g = ET.SubElement(root, f"{{{NS}}}g", attrib={"id": "chess-board"})
 
-  <!-- Board squares and pieces -->
-"""
-
-    # Draw board squares and pieces
-    for rank in range(8):  # 8 to 1 (top to bottom)
-        for file in range(8):  # a to h (left to right)
-            x = margin + file * square_size
-            y = margin + 60 + (7 - rank) * square_size
-
-            # Determine square color (light at h1, so (h,1) = (7,0) is light)
-            is_light = (file + rank) % 2 == 1
-
-            square_color = light_sq if is_light else dark_sq
-            svg += f'  <rect x="{x}" y="{y}" width="{square_size}" height="{square_size}" fill="{square_color}"/>\n'
-
-            # Add piece if present
-            file_letter = chr(ord("a") + file)
-            rank_number = rank + 1
-            square_name = f"{file_letter}{rank_number}"
-
-            if square_name in pieces:
-                piece = pieces[square_name]
-                unicode_piece = PIECE_UNICODE[piece]
-                piece_color = text_color
-                piece_x = x + square_size / 2
-                piece_y = y + square_size / 2
-                svg += f'  <text x="{piece_x}" y="{piece_y}" class="piece-text" fill="{piece_color}">{unicode_piece}</text>\n'
-
-    # Add file labels (a-h)
+# 64 alternating squares — h1 (file=7, rank=0): (7+0)%2==1 → light ✓
+for rank in range(8):
     for file in range(8):
-        x = margin + file * square_size + square_size / 2
-        y = margin + 60 + board_size + 25
-        file_letter = chr(ord("a") + file)
-        svg += f'  <text x="{x}" y="{y}" class="label-text">{file_letter}</text>\n'
+        x = MARGIN_X + file * SQ
+        y = MARGIN_Y + (7 - rank) * SQ
+        fill = LIGHT_SQUARE if (file + rank) % 2 == 1 else DARK_SQUARE
+        ET.SubElement(
+            board_g,
+            f"{{{NS}}}rect",
+            attrib={"x": str(x), "y": str(y), "width": str(SQ), "height": str(SQ), "fill": fill},
+        )
 
-    # Add rank labels (1-8)
-    for rank in range(8):
-        x = margin - 20
-        y = margin + 60 + (7 - rank) * square_size + square_size / 2
-        rank_number = rank + 1
-        svg += f'  <text x="{x}" y="{y}" class="label-text">{rank_number}</text>\n'
+# Pieces — white pieces cream, black pieces near-black for visual distinction
+for sq_name, piece in pieces.items():
+    file = ord(sq_name[0]) - ord("a")
+    rank = int(sq_name[1]) - 1
+    cx = MARGIN_X + file * SQ + SQ // 2
+    cy = MARGIN_Y + (7 - rank) * SQ + SQ // 2
+    t = ET.SubElement(
+        board_g,
+        f"{{{NS}}}text",
+        attrib={
+            "x": str(cx),
+            "y": str(cy),
+            "font-size": str(int(SQ * 0.7)),
+            "text-anchor": "middle",
+            "dominant-baseline": "central",
+            "fill": WHITE_PIECE_COLOR if piece.isupper() else BLACK_PIECE_COLOR,
+        },
+    )
+    t.text = PIECE_UNICODE[piece]
 
-    svg += "\n</svg>"
+# File labels (a–h)
+for file in range(8):
+    t = ET.SubElement(
+        board_g,
+        f"{{{NS}}}text",
+        attrib={
+            "x": str(MARGIN_X + file * SQ + SQ // 2),
+            "y": str(MARGIN_Y + BOARD_SIZE + 55),
+            "font-size": "44",
+            "text-anchor": "middle",
+            "fill": INK_MUTED,
+        },
+    )
+    t.text = chr(ord("a") + file)
 
-    return svg
+# Rank labels (1–8)
+for rank in range(8):
+    t = ET.SubElement(
+        board_g,
+        f"{{{NS}}}text",
+        attrib={
+            "x": str(MARGIN_X - 30),
+            "y": str(MARGIN_Y + (7 - rank) * SQ + SQ // 2),
+            "font-size": "44",
+            "text-anchor": "end",
+            "dominant-baseline": "central",
+            "fill": INK_MUTED,
+        },
+    )
+    t.text = str(rank + 1)
 
+# Serialize — register_namespace calls above keep default SVG namespace prefix clean
+svg_content = ET.tostring(root, encoding="unicode")
 
-# Generate and save SVG
-svg_content = create_chessboard_svg(pieces, THEME)
-
-# Save SVG
-with open(f"plot-{THEME}.svg", "w") as f:
+with open(f"plot-{THEME}.svg", "w", encoding="utf-8") as f:
     f.write(svg_content)
 
-# Convert SVG to PNG using cairosvg
 try:
     import cairosvg
 
     cairosvg.svg2png(bytestring=svg_content.encode(), write_to=f"plot-{THEME}.png")
 except ImportError:
-    print("cairosvg not available, PNG export skipped")
+    pass
 
-# Save as HTML (SVG embedded)
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>chessboard-pieces - pygal</title>
-    <style>
-        body {{ margin: 0; padding: 20px; background-color: {PAGE_BG}; }}
-        svg {{ max-width: 100%; height: auto; }}
-    </style>
-</head>
-<body>
-{svg_content}
-</body>
-</html>
-"""
-
-with open(f"plot-{THEME}.html", "w") as f:
-    f.write(html_content)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(
+        f'<!DOCTYPE html><html><head><meta charset="utf-8">'
+        f"<style>body{{margin:0;background:{PAGE_BG}}}</style></head>"
+        f"<body>{svg_content}</body></html>"
+    )
