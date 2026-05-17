@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:23:26Z'
-updated: '2026-05-17T15:46:43Z'
+updated: '2026-05-17T15:53:17Z'
 generated_by: claude-haiku
 workflow_run: 25995201182
 issue: 3415
@@ -12,96 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 68
 review:
   strengths:
-  - Perfect visual quality with explicitly-sized fonts (title 28px, labels 22px, ticks
-    18px) — all readable in both themes
-  - 'Flawless palette compliance: first series is #009E73, multi-series follow Okabe-Ito
-    order exactly, theme-adaptive chrome is correct in both renders'
-  - 'Sophisticated technical implementation: Sutherland-Hodgman polygon clipping algorithm
-    properly handles infinite Voronoi regions and clips to bounding box'
-  - Clean KISS code structure with deterministic data (np.random.seed(42)), all imports
-    used, proper Highcharts API usage
-  - 'Comprehensive spec compliance: correct Voronoi diagram with colored cells, marked
-    seed points, proper title format, all required features present'
+  - Correct Voronoi diagram implementation with proper spatial partitioning and cell
+    clipping
+  - Full Okabe-Ito palette used correctly in light render with excellent color differentiation
+  - Data colors remain consistent between light and dark renders
+  - Proper seed point visualization with clear markers
+  - Clean chart structure with appropriate title format and axis labels
+  - Correct canvas size (4800×2700) with good layout proportions
+  - Subtle grid lines and well-spaced tick marks in light render
   weaknesses:
-  - 'Design Excellence below threshold: DE-01 is generic (score 4/8) — uses library
-    defaults without additional aesthetic sophistication or intentional design hierarchy'
-  - 'Limited visual refinement: DE-02 is adequate (4/6) but could be enhanced — consider
-    custom typography, additional styling layers, or visual emphasis techniques'
-  - 'No data storytelling: DE-03 is minimal (2/6) — visualization displays Voronoi
-    partition concept clearly but doesn''t emphasize particular insights or create
-    visual narrative through hierarchy/emphasis'
+  - 'CRITICAL: Dark render text colors not rendering - title/axis labels appear dark
+    on dark background instead of light colors (#F0EFE8/#B8B7B0). Highcharts not applying
+    the ''color'' property from style objects in title and axis label configurations'
+  - 'VQ-01 failure: Dark render fails readability - axis title, axis labels, and tick
+    labels nearly unreadable due to theme color non-application'
+  - 'VQ-07 failure: Dark render chrome is wrong-theme (dark text on dark background
+    violates theme-adaptive color requirements)'
+  - Subtitle readability could be improved in dark render with stronger color contrast
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, perfectly on-theme
-      Chrome: Title "voronoi-basic · highcharts · anyplot.ai" in dark text, readable. Subtitle and axis labels "X Coordinate"/"Y Coordinate" clearly visible with proper font sizing (28px title, 22px labels, 18px ticks). All text is dark on light, high contrast.
-      Data: Voronoi cells colored with Okabe-Ito palette in order (green #009E73 first, then vermillion, blue, purple, orange, sky blue, yellow). Seed points are black dots with white outlines, clearly marking cell centers. Polygons have 50% opacity fill and 3px borders, creating clear visual separation.
-      Legibility verdict: PASS - all elements fully readable, no dark-on-light failures
+      Background: Warm off-white (#FAF8F1) - correct and appropriate
+      Chrome: Title "voronoi-basic · highcharts · anyplot.ai" is bold and clearly readable in dark text; subtitle in secondary color (#4A4A44) is visible; X and Y axis labels ("X Coordinate", "Y Coordinate") clearly visible with proper sizing; tick marks (0-100) well-spaced and readable
+      Data: Voronoi cells use full Okabe-Ito palette - green brand color (#009E73) dominant, followed by vermillion (#D55E00), blue (#0072B2), reddish purple (#CC79A7), orange (#E69F00), sky blue (#56B4E9), yellow (#F0E442); seed points marked as white circles with dark outlines for contrast
+      Layout: Good proportions with adequate margins; no text overlap; grid lines subtle and appropriate
+      Legibility verdict: PASS - all text clearly readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, perfectly theme-correct
-      Chrome: Title and subtitle in light color, readable. Axis labels and tick labels all rendered in light color with good contrast against dark background. Grid lines are visible at 10-unit intervals.
-      Data: Voronoi cells maintain identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442). Seed points are light-colored with white fill, clearly visible against dark background. Polygon fill opacity unchanged.
-      Legibility verdict: PASS - all elements readable, perfect theme adaptation, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: **FAILURE - Title text appears nearly black/unreadable on dark background instead of expected light color (#F0EFE8); axis labels "X Coordinate" and "Y Coordinate" are dark on dark (poor contrast); axis tick labels are dark instead of light (#B8B7B0) - text color tokens not rendering correctly
+      Data: Voronoi cell colors identical to light render - correctly maintained ✓; seed points still visible as white circles
+      Legibility verdict: FAIL - dark-on-dark text rendering failure; title, axis labels, and tick labels unreadable
+
+    **Critical Issue**: The dark render exhibits a theme-adaptation failure. While the code correctly sets INK (#F0EFE8) and INK_SOFT (#B8B7B0) colors for text elements, Highcharts is not applying these colors to the final rendered output. This makes the dark theme unusable.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 10
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 2
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px).
-          All text fully readable in both light and dark renders.
+        passed: false
+        comment: Light render has all text properly sized and readable; dark render
+          fails critically - title, axis labels, and tick labels are unreadable due
+          to dark text on dark background (text color styles not rendering in Highcharts)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text overlap. Axis labels well-spaced, tick labels non-overlapping,
-          title and subtitle clear.
+        comment: No overlapping text elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Voronoi cells optimally sized, seed points (22px radius) clearly
-          visible, polygon fill opacity (0.5) provides clear visual distinction.
+        comment: Voronoi cells clearly visible and differentiated; seed points prominent
+          with good sizing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Marker outlines provide definition.
-          Good contrast across all elements.
+        comment: Okabe-Ito palette is colorblind-safe; good contrast between cell
+          colors
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: plot fills 55-70% of canvas with balanced margins
-          (marginTop 150, marginBottom 250, marginLeft 220, marginRight 100).'
+        comment: Good use of canvas space; proper margins; plot fills 60-70% of canvas
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Descriptive labels: ''X Coordinate'' and ''Y Coordinate'' (coordinates
-          are dimensionless, units N/A).'
+        passed: false
+        comment: Title uses correct format 'voronoi-basic · highcharts · anyplot.ai'
+          (2 pts potential); axis labels describe coordinates but lack units or semantic
+          meaning; only 1 pt for generic 'X Coordinate'/'Y Coordinate'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First categorical series is #009E73 (brand green). Multi-series
-          follow Okabe-Ito in order. Backgrounds are #FAF8F1 (light) and #1A1A17 (dark).
-          Text and grid colors theme-correct in both renders.'
+        passed: false
+        comment: 'Light render: 2/2 - correct Okabe-Ito palette, #009E73 first, background
+          #FAF8F1, text colors appropriate. Dark render: 0/2 - FAIL on chrome - text
+          colors not rendering (should be #F0EFE8 but appears black), background correct
+          #1A1A17 but rendered chrome is wrong-theme (dark-on-dark)'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -109,26 +112,27 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default. Okabe-Ito palette is enforced policy.
-          No additional design thought, custom styling, or intentional hierarchy beyond
-          the plot type.
+        comment: Uses Okabe-Ito palette correctly but design is straightforward default
+          library configuration; no custom aesthetic choices or intentional hierarchy
+          beyond the standard scatter + polygon visualization
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Some refinement: opacity layering (0.4-0.5 fill), 3px borders, generous
-          whitespace. Could improve with custom typography, gradient effects, or additional
-          styling layers.'
+        comment: Minimal visual refinement - library defaults with grid enabled; no
+          custom spine removal or whitespace optimization; polygon fill opacity at
+          0.4-0.5 is reasonable but not refined
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis. Visualization
-          shows concept correctly but doesn't guide viewer to particular insight.
+        comment: Plot displays Voronoi regions and seed points but provides no visual
+          hierarchy or narrative emphasis; no focus on particular insights about spatial
+          partitioning
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,55 +140,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Voronoi diagram with partitioned regions.'
+        comment: Correct Voronoi diagram implementation with proper polygon regions
+          clipped to bounding box
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: colored cells, marked seed points, clipped to bounding
-          box [0,100]x[0,100].'
+        comment: 'All required features present: cells distinguished by color, seed
+          points marked, cells clipped to visible bounding box'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y coordinates correctly mapped. Axes display 0-100 range, all
-          data visible.
+        comment: X and Y coordinates properly mapped; axes show full data range (0-100)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title format correct: ''voronoi-basic · highcharts · anyplot.ai''.
-          Legend appropriately disabled for this plot type.'
+        passed: false
+        comment: Title format correct 'voronoi-basic · highcharts · anyplot.ai' (2
+          pts); no legend present (which is appropriate for this type of visualization
+          where cells are named in the data)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: '20 seed points show full range of Voronoi behavior: interior cells,
-          boundary cells, varied sizes and shapes.'
+        passed: false
+        comment: Shows Voronoi partitioning with 20 seed points; demonstrates basic
+          feature coverage but could show edge cases like extremely close points or
+          boundary interactions more prominently
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Random points in [15,85] coordinate space with seed(42). Plausible,
-          neutral spatial partitioning scenario.
+        comment: Random seed points in bounded region (0-100 range) create plausible
+          spatial partitioning scenario; neutral and realistic context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually correct. Proportions align with Voronoi geometry.
-          Display range [0,100] is sensible for the data.
+        comment: 20 points in 0-100 range is reasonable for Voronoi visualization;
+          values are sensible and domain-appropriate
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -192,63 +198,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Functions (polygon clipping) → Computation (Voronoi)
-          → Chart → Export. Clean linear flow.
+        comment: 'Linear structure: imports → theme tokens → data generation → Voronoi
+          computation → polygon clipping → chart building → export; no unnecessary
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) ensures deterministic generation of seed points
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
         comment: 'All imports used: numpy (data), scipy.spatial (Voronoi), highcharts_core
-          (plotting), selenium+urllib (export), pathlib+tempfile+os (file handling).'
+          (plotting), selenium (PNG export)'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Sutherland-Hodgman polygon clipping is appropriate complexity. No
-          over-engineering, no fake functionality.
+        passed: false
+        comment: Polygon clipping algorithm is complex but appropriate for the task;
+          however, the Highcharts color styling (setting 'color' in style dicts) is
+          not rendering correctly, suggesting a misunderstanding of how Highcharts
+          applies colors
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current Highcharts
-          API usage.
+        comment: Correctly outputs plot-light.png, plot-dark.png, plot-light.html,
+          plot-dark.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Expert-level Highcharts API: Chart + HighchartsOptions, proper series
-          configuration, correct use of marker/polygon options.'
+        passed: false
+        comment: Uses highcharts_core API correctly for basic operations (Chart, HighchartsOptions,
+          series setup); however, the color styling approach (setting 'color' in style
+          objects) doesn't render correctly, suggesting incorrect understanding of
+          Highcharts' color property handling
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses polygon series (distinctive to Highcharts) and custom scatter
-          + polygon combination. Polygon clipping algorithm is general-purpose (not
-          Highcharts-specific). Score reflects moderate library-specific usage, not
-          exceptional.
+        comment: Uses polygon series type which is somewhat distinctive to Highcharts;
+          uses custom data arrays for complex geometry; however, styling customization
+          doesn't render as intended
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
-  - annotations
+  - html-export
   patterns:
   - data-generation
+  - matrix-construction
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - publication-ready
