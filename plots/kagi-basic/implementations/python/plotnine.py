@@ -1,7 +1,7 @@
 """ anyplot.ai
 kagi-basic: Basic Kagi Chart
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 3/100 | Updated: 2026-05-17
+Quality: 15/100 | Updated: 2026-05-17
 """
 
 import os
