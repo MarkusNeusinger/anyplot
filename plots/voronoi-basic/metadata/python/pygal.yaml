@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:23:35Z'
-updated: '2026-05-17T18:35:50Z'
+updated: '2026-05-17T18:57:18Z'
 generated_by: claude-haiku
 workflow_run: 25995153011
 issue: 3415
@@ -12,42 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/pygal/plot-dark.html
-quality_score: 71
+quality_score: 73
 review:
   strengths:
-  - 'Perfect spec compliance: Voronoi cells clipped to bounding box, seed points clearly
-    marked, all spec requirements met (15/15)'
-  - Correct Sutherland-Hodgman polygon clipping algorithm; infinite Voronoi ridges
-    properly extended
-  - Deterministic output via np.random.seed(42); clean, readable algorithm code
-  - Theme-adaptive chrome tokens (INK, INK_SOFT, PAGE_BG) correctly defined and applied
-    throughout
+  - 'Perfect spec compliance: all required Voronoi features implemented (clipping,
+    seed markers, color-coded cells)'
+  - Correct Okabe-Ito palette with theme-adaptive chrome; both renders are clean and
+    readable in light and dark themes
+  - Proper 4800x2700 landscape canvas with well-defined margins and subtle grid (opacity
+    0.15)
+  - Deterministic output via np.random.seed(42)
+  - Two-circle seed-point design (outer ring in page background + inner colored dot)
+    is a thoughtful visual touch
   weaknesses:
-  - 'Critical: No pygal usage — import pygal is absent; the implementation is pure
-    ElementTree + cairosvg SVG construction. Must use pygal chart API and pygal.style.Style
-    for theming.'
-  - 'VQ-07 partial fail: fill-opacity=0.6 on Voronoi polygons causes data colors to
-    perceptually differ between light and dark renders (pastel vs deep). Use fully
-    opaque or near-opaque fills (>=0.85) so colors are near-identical across themes.'
-  - 'Seed point markers are small: radius 12/16 SVG units on a 4800-unit canvas —
-    increase to r=22/30 for better prominence at full resolution.'
-  - 'No real-world context: axis labels are generic X/Y Coordinate (units); a domain
-    scenario would improve DQ-02.'
+  - Pygal is not imported or used at all — the implementation must use pygal chart
+    classes (at minimum pygal.XY for seed points + pygal.Style for theming), not raw
+    xml.etree.ElementTree; fix by using pygal.XY() for seed points, pygal.Style for
+    theme tokens, and injecting Voronoi polygons into pygal's rendered SVG
+  - Seed-point circles are too small (r=12 inner / r=16 outer in a 4800px canvas);
+    increase to r=22 inner / r=32 outer for better visibility at full resolution
+  - Title font-weight is light (font-weight='500'); change to font-weight='bold' to
+    improve typographic hierarchy
+  - Data storytelling is minimal — consider adding subtle region labels (e.g., region
+    number) at each cell centroid to help viewers understand the partitioning concept
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) applied to both SVG root and plot_bg rect; margins also carry this color from the SVG style attribute.
-      Chrome: Title "voronoi-basic · pygal · anyplot.ai" in dark (#1A1A17) at 28px — readable. Axis labels "X Coordinate (units)" / "Y Coordinate (units)" in dark at 22px — readable. Tick labels (1,3,5,7,9 on both axes) in INK_SOFT (#4A4A44) at 18px — readable.
-      Data: 25 Voronoi cells filled with Okabe-Ito colors at 0.6 opacity over the light background, producing pastel tones. Seed points as dual circles: outer ring in PAGE_BG, inner filled in cell color (no opacity). Subtle grid at 15% opacity.
-      Legibility verdict: PASS — all text elements are dark on light, no contrast failures.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "voronoi-basic · pygal · anyplot.ai" rendered in #1A1A17 (INK) — clearly readable. Axis labels "X Coordinate (units)" / "Y Coordinate (units)" in INK, 22px. Tick labels (1–10 step 2) in #4A4A44 (INK_SOFT), 18px — all readable. Grid lines at opacity 0.15, very subtle.
+      Data: 25 Voronoi cells filled with Okabe-Ito colors cycling at 60% opacity. First cell uses #009E73. Seed points as two-circle markers (outer ring in PAGE_BG, inner colored dot matching cell). Cell borders use INK_SOFT stroke at width 2.
+      Legibility verdict: PASS — all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) applied via SVG style attribute and plot_bg rect; outer margins also appear dark.
-      Chrome: Title in off-white cream (#F0EFE8) at 28px — readable against dark background. Axis labels and tick labels in #B8B7B0 — readable. No dark-on-dark failures observed.
-      Data: Same Okabe-Ito colors at 0.6 opacity, but blending with #1A1A17 background produces deeper, more saturated versions (data colors perceptually differ from light render — palette identity violation). Seed point inner circles at full opacity maintain correct Okabe-Ito colors.
-      Legibility verdict: PASS — text is light on dark, adequate contrast. Minor: at 4800px canvas, text appears small but within spec guidelines.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in #F0EFE8 (INK for dark) — clearly readable. Axis labels and tick labels in #B8B7B0 (INK_SOFT for dark) — clearly readable against dark background. No dark-on-dark failures observed. Grid lines adapt to dark theme rgba rule.
+      Data: Voronoi cell fill colors are identical to the light render — same Okabe-Ito palette, same opacity. First cell still #009E73. Seed-point outer rings use the dark page background (#1A1A17), inner dots unchanged.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -55,50 +57,50 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px axis labels, 18px
-          ticks); readable in both themes
+        comment: Font sizes explicitly set per style guide (title 28px, labels 22px,
+          ticks 18px). Readable in both themes. Title weight thin/light — could be
+          bolder.
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No significant overlaps; some seed points sit close to cell borders
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Cells clearly visible; seed circles (r=12/16 on 4800-unit canvas)
-          are small but identifiable
+        comment: Voronoi cells highly visible. Seed-point circles small for 4800px
+          canvas (r=12 inner / r=16 outer) but just barely meeting threshold.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, adjacent cells use distinguishable hues
+        comment: Okabe-Ito palette, CVD-safe. 60% opacity gives sufficient contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 4800x2700 landscape proportions; generous margins; plot fills
-          ~75% of canvas
+        comment: 'Good use of 4800x2700 with proper margins. Minor: seed-point scale
+          slightly small.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels include (units)
+        comment: Title in correct format; axis labels present with units.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito colors used and backgrounds correct, but fill-opacity=0.6
-          causes data colors to blend with background, making them perceptually different
-          between light and dark renders
+        passed: true
+        comment: 'First color #009E73, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
+          both renders theme-correct.'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -106,21 +108,22 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Clean functional diagram with dual-circle seed markers; well-configured
-          but not exceptional
+        comment: Well-configured custom SVG with Okabe-Ito palette and opacity. Competent
+          but not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle 15%-opacity grid, no unnecessary decorations, clean layout
+        comment: Very subtle grid (opacity 0.15), two-circle seed-point design shows
+          detail. Some refinement above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: No visual hierarchy, emphasis, or annotation guiding viewer toward
-          insight
+        passed: true
+        comment: Spatial partitioning clear, color regions reinforce Voronoi concept.
+          No focal point or annotated insight.
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Voronoi diagram with properly partitioned cells
+        comment: Correct Voronoi diagram with spatial partitioning.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cells clipped to bounding box, color-distinguished, seed points marked
+        comment: Clipping, distinguishable cells, seed points, 25 points in range
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 25 seed points in [0.5,10.5] range; axes display full data range
+        comment: X/Y coordinates correctly mapped; full 0.5-10.5 range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is voronoi-basic · pygal · anyplot.ai; no legend needed
+        comment: Title 'voronoi-basic · pygal · anyplot.ai' correct; no legend needed.
     data_quality:
       score: 13
       max: 15
@@ -158,22 +162,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows cells, boundaries, seed points; lacks real-world context labels
+        comment: Varied cell shapes, boundary clipping, interior and edge cells shown.
+          Good variety with 25 points.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Generic coordinate axes, neutral but no real-world scenario
+        comment: Random uniform coordinates. Plausible spatial-analysis context but
+          somewhat generic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25 points in recommended 10-50 range; uniform-random distribution
-          representative
+        comment: 0.5-10.5 coordinate units with 25 seed points. Sensible density.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -181,34 +186,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Three helper functions necessary for coordinate mapping, ridge extension,
-          and polygon clipping algorithms
+        comment: Three helper functions needed but adds complexity beyond pure linear
+          script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused packages
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, correct algorithm implementations; no fake UI or over-engineering
+        comment: Functional but verbose. Manual SVG construction is extensive.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 2
+      score: 1
       max: 10
       items:
       - id: LM-01
@@ -216,16 +221,15 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: No import pygal; implementation uses only xml.etree.ElementTree +
-          cairosvg for raw SVG construction; no pygal chart classes or Style objects
+        comment: Pygal is not imported or used. Implementation uses xml.etree.ElementTree
+          + cairosvg + scipy only. No import pygal anywhere.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 0
         max: 5
         passed: false
-        comment: 'None of pygal''s distinctive features used: no interactive JS output,
-          no Style theming system, HTML file is plain static SVG not pygal''s interactive
-          render'
+        comment: Zero pygal-specific features. No pygal.Style, no pygal.XY, no chart
+          classes, no pygal API used.
   verdict: REJECTED
 impl_tags:
   dependencies:
