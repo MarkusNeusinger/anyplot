@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 
 import { API_URL } from '../constants';
-import type { LibraryInfo, SpecInfo } from '../types';
+import type { LanguageInfo, LibraryInfo, SpecInfo } from '../types';
 import {
   AppDataContext,
   HomeStateContext,
@@ -16,6 +16,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const themeMode = useThemeMode();
   const [specsData, setSpecsData] = useState<SpecInfo[]>([]);
   const [librariesData, setLibrariesData] = useState<LibraryInfo[]>([]);
+  const [languagesData, setLanguagesData] = useState<LanguageInfo[]>([]);
   const [stats, setStats] = useState<{ specs: number; plots: number; libraries: number; lines_of_code?: number } | null>(null);
 
   // Persistent home state (both ref for sync access and state for reactivity)
@@ -39,9 +40,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const callback = async () => {
       try {
-        const [specsRes, libsRes, statsRes] = await Promise.all([
+        const [specsRes, libsRes, langsRes, statsRes] = await Promise.all([
           fetch(`${API_URL}/specs`),
           fetch(`${API_URL}/libraries`),
+          fetch(`${API_URL}/languages`),
           fetch(`${API_URL}/stats`),
         ]);
 
@@ -53,6 +55,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         if (libsRes.ok) {
           const data = await libsRes.json();
           setLibrariesData(data.libraries || []);
+        }
+
+        if (langsRes.ok) {
+          const data = await langsRes.json();
+          setLanguagesData(data.languages || []);
         }
 
         if (statsRes.ok) {
@@ -77,7 +84,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={themeMode}>
-      <AppDataContext.Provider value={{ specsData, librariesData, stats }}>
+      <AppDataContext.Provider value={{ specsData, librariesData, languagesData, stats }}>
         <HomeStateContext.Provider value={{ homeState, homeStateRef, setHomeState, saveScrollPosition }}>
           {children}
         </HomeStateContext.Provider>

@@ -18,7 +18,7 @@ import { colors } from '../theme';
 export function PlotsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { specsData, librariesData } = useAppData();
+  const { specsData, librariesData, languagesData } = useAppData();
   const { homeStateRef, saveScrollPosition } = useHomeState();
 
   // Disable browser's automatic scroll restoration so we can restore from
@@ -210,6 +210,7 @@ export function PlotsPage() {
         isLoadingMore={false}
         isTransitioning={false}
         librariesData={librariesData}
+        languagesData={languagesData}
         specsData={specsData}
         openTooltip={openImageTooltip}
         loadMoreRef={loadMoreRef}

@@ -28,7 +28,7 @@ LANGUAGES_METADATA = [
         "file_extension": ".py",
         "runtime_version": "3.13",
         "documentation_url": "https://www.python.org",
-        "description": "The default language for anyplot plot implementations.",
+        "description": "General-purpose, high-level programming language with a clean, readable syntax. The lingua franca of data science, scientific computing, and the SciPy / PyData ecosystem.",
     },
     {
         "id": "r",
@@ -36,7 +36,7 @@ LANGUAGES_METADATA = [
         "file_extension": ".R",
         "runtime_version": "4.4",
         "documentation_url": "https://www.r-project.org",
-        "description": "R is a statistical computing environment widely used in academia, biotech, and finance research.",
+        "description": "Language and environment for statistical computing and graphics. Widely used in academia, biotech, and finance research, with a rich package ecosystem on CRAN.",
     },
 ]
 

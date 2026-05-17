@@ -118,6 +118,15 @@ export interface LibraryInfo {
   description?: string;
 }
 
+export interface LanguageInfo {
+  id: string;
+  name: string;
+  file_extension?: string;
+  runtime_version?: string;
+  documentation_url?: string;
+  description?: string;
+}
+
 export interface SpecInfo {
   id: string;
   title: string;

@@ -38,6 +38,8 @@ interface ImageCardProps {
   selectedSpec: string;
   libraryDescription?: string;
   libraryDocUrl?: string;
+  languageDescription?: string;
+  languageDocUrl?: string;
   specDescription?: string;
   openTooltip: string | null;
   imageSize: ImageSize;
@@ -53,6 +55,8 @@ export const ImageCard = memo(function ImageCard({
   selectedSpec,
   libraryDescription,
   libraryDocUrl,
+  languageDescription,
+  languageDocUrl,
   specDescription,
   openTooltip,
   imageSize,
@@ -113,8 +117,10 @@ export const ImageCard = memo(function ImageCard({
   const cardId = `${image.spec_id}-${image.library}`;
   const specTooltipId = `spec-${cardId}`;
   const libTooltipId = `lib-${cardId}`;
+  const langTooltipId = `lang-${cardId}`;
   const isSpecTooltipOpen = openTooltip === specTooltipId;
   const isLibTooltipOpen = openTooltip === libTooltipId;
+  const isLangTooltipOpen = openTooltip === langTooltipId;
 
   // Animate first batch only (initial load), subsequent batches appear instantly
   const isFirstBatch = index < BATCH_SIZE;
@@ -293,18 +299,74 @@ export const ImageCard = memo(function ImageCard({
         {showLanguageToken && (
           <>
             <Typography sx={{ color: 'var(--ink-muted)', fontSize: labelFontSize }}>·</Typography>
-            <Typography
-              aria-label={`Language: ${languageDisplay}`}
-              sx={{
-                fontSize: labelFontSize,
-                letterSpacing: labelLetterSpacing,
-                fontWeight: 400,
-                fontFamily: typography.fontFamily,
-                color: 'var(--ink-muted)',
+
+            {/* Clickable Language — same visual weight as spec/library tokens.
+                Tooltip body shows the language description (from /languages)
+                and a link to the upstream homepage. */}
+            <Tooltip
+              title={
+                <Box>
+                  <Typography sx={{ fontSize: '0.8rem', mb: languageDocUrl ? 1 : 0 }}>
+                    {languageDescription || 'No description available'}
+                  </Typography>
+                  {languageDocUrl && (
+                    <Link
+                      href={languageDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        fontSize: '0.75rem',
+                        color: colors.tooltipLight,
+                        textDecoration: 'underline',
+                        '&:hover': { color: '#fff' },
+                      }}
+                    >
+                      {languageDocUrl.replace(/^https?:\/\//, '')} <OpenInNewIcon sx={{ fontSize: 12 }} />
+                    </Link>
+                  )}
+                </Box>
+              }
+              arrow
+              placement="bottom"
+              open={isLangTooltipOpen}
+              disableFocusListener
+              disableHoverListener
+              disableTouchListener
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    maxWidth: { xs: '80vw', sm: 400 },
+                    fontFamily: typography.fontFamily,
+                    fontSize: labelFontSize,
+                  },
+                },
               }}
             >
-              {languageDisplay}
-            </Typography>
+              <Typography
+                data-description-btn
+                aria-label={`Language: ${languageDisplay}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTooltipToggle(isLangTooltipOpen ? null : langTooltipId);
+                }}
+                sx={{
+                  fontSize: labelFontSize,
+                  letterSpacing: labelLetterSpacing,
+                  fontWeight: 600,
+                  fontFamily: typography.fontFamily,
+                  color: isLangTooltipOpen ? colors.primary : semanticColors.labelText,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    color: colors.primary,
+                  },
+                }}
+              >
+                {languageDisplay}
+              </Typography>
+            </Tooltip>
           </>
         )}
 
