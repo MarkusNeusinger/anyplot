@@ -1,18 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from plotnine import aes, element_line, element_text, geom_text, ggplot, labs, scale_color_manual, theme, theme_minimal
+from plotnine import aes, element_line, element_rect, element_text, geom_text, ggplot, labs, scale_color_manual, theme
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (categorical data only)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data: Simulated 2D projection of programming language embeddings
 np.random.seed(42)
 
-# Programming languages grouped by paradigm
 languages = [
     # Object-oriented / General purpose
     ("Python", -1.2, 2.1, "General"),
@@ -46,45 +57,48 @@ languages = [
     ("SAS", -1.2, -0.3, "Data"),
 ]
 
-# Add some jitter for realism
 df = pd.DataFrame(languages, columns=["label", "x", "y", "category"])
 df["x"] = df["x"] + np.random.normal(0, 0.1, len(df))
 df["y"] = df["y"] + np.random.normal(0, 0.1, len(df))
 
-# Define color palette (Python Blue as primary, colorblind-safe palette)
-colors = {
-    "General": "#306998",  # Python Blue
-    "Systems": "#E69F00",  # Orange
-    "Functional": "#56B4E9",  # Sky Blue
-    "Web": "#FFD43B",  # Python Yellow
-    "Data": "#009E73",  # Teal
+# Map categories to Okabe-Ito colors
+category_colors = {
+    "General": OKABE_ITO[0],
+    "Systems": OKABE_ITO[1],
+    "Functional": OKABE_ITO[2],
+    "Web": OKABE_ITO[3],
+    "Data": OKABE_ITO[4],
 }
 
-# Create plot
+# Plot
 plot = (
     ggplot(df, aes(x="x", y="y", label="label", color="category"))
-    + geom_text(size=12, alpha=0.85, fontweight="bold")
+    + geom_text(size=11, alpha=0.9, fontweight="bold")
     + labs(
         x="Dimension 1 (Paradigm Similarity)",
         y="Dimension 2 (Abstraction Level)",
-        title="scatter-text · plotnine · pyplots.ai",
+        title="scatter-text · Python · plotnine · anyplot.ai",
         color="Category",
     )
-    + scale_color_manual(values=colors)
-    + theme_minimal()
+    + scale_color_manual(values=category_colors)
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24, ha="center"),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        dpi=300,
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.08),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.4),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        plot_title=element_text(size=24, color=INK, ha="left"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
         legend_position="right",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#EEEEEE", size=0.3, alpha=0.2),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

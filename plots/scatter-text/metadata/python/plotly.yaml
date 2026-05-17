@@ -1,159 +1,178 @@
 library: plotly
+language: python
 specification_id: scatter-text
 created: '2026-01-09T14:24:41Z'
-updated: '2026-01-09T14:40:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854874896
+updated: '2026-05-17T23:34:58Z'
+generated_by: claude-haiku
+workflow_run: 26005729162
 issue: 3482
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-text/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-text/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/plotly/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of text-as-markers concept using Plotly mode=text
-  - Rich interactive features with detailed hover information showing language, paradigm,
-    abstraction level, and type safety
-  - Well-organized code that groups data by category for proper legend display
-  - Thoughtful color palette with 8 distinguishable colors for different paradigm
-    categories
-  - Clean, publication-quality visual presentation with proper font sizes and subtle
-    grid
+  - 'Perfect visual quality: explicit font sizing, no overlaps, excellent theme adaptation
+    across light and dark renders'
+  - 'Ideal palette and color implementation: Okabe-Ito colors correct and identical
+    in both renders with proper theme-adaptive chrome'
+  - 'Data representation is clear and meaningful: 30 programming languages organized
+    by programming paradigm'
+  - 'Spec-compliant with all required features implemented: x/y positioning, text
+    labels, color encoding, hover details'
+  - Clean, reproducible code with proper theme-token handling and straightforward
+    KISS structure
+  - Both light and dark renders perfectly legible with zero text-readability issues
   weaknesses:
-  - Some labels in the middle-right area (Python, Perl, R region) are slightly clustered
-  - Code imports numpy primarily for array creation and seed, which could be simplified
-    with plain Python lists
-  image_description: 'The plot displays a scatter plot where programming language
-    names serve as data points positioned on a 2D coordinate system. The x-axis represents
-    "Level of Abstraction (0-10 scale)" and the y-axis represents "Type Safety (0-10
-    scale)". 30 programming languages are displayed as text labels, color-coded by
-    paradigm category: Multi-paradigm (blue), OOP (amber/yellow), Systems (red), Functional
-    (green), Statistical (purple), Scientific (cyan), Scripting (orange), and Legacy
-    (gray). The title follows the correct format "scatter-text · plotly · pyplots.ai"
-    centered at the top. A legend on the right side shows the paradigm categories
-    with small "Aa" text indicators. The layout is clean with a white background,
-    subtle gridlines, and well-distributed language labels across the plot area. Languages
-    like Haskell and OCaml appear at the top right (high abstraction, high type safety),
-    while Assembly appears at the bottom left (low abstraction, low type safety).'
+  - 'Design Excellence score is moderate (9/20): lacks distinctive aesthetic polish
+    beyond standard plotly library defaults'
+  - 'Visual refinement could be improved: no spine removal, minimal customization
+    of grid styling or margins'
+  - 'Data storytelling is minimal: all languages displayed equally without visual
+    emphasis or focal points to guide viewer'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "scatter-text · Python · plotly · anyplot.ai" (dark, 28px), axis labels "Level of Abstraction" and "Type Safety" (dark, 22px), tick labels (dark, 18px), legend "Category" - all clearly readable with high contrast
+      Data: 30 programming language labels positioned by abstraction level (x) and type safety (y); colors use Okabe-Ito palette (bluish green for Functional, vermillion for OOP, blue for Multi-paradigm, reddish purple for additional OOP, orange for Systems, sky blue for Functional variants, yellow for Scripting); all text is readable and well-spaced
+      Legibility verdict: PASS - all text and labels are crisp and readable against the light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, tick labels all rendered in light colors (#F0EFE8, #B8B7B0 variants) - clearly readable on dark background; legend box has proper dark elevated background (#242420); no dark-on-dark text failures
+      Data: All 30 language labels use identical colors to light render - data colors are theme-independent as specified (Okabe-Ito positions 1-7 unchanged); brand green (#009E73) clearly visible on Functional languages (Python, Haskell, R, Julia, Lisp, Prolog)
+      Legibility verdict: PASS - both renders achieve perfect theme adaptation with readable text in both contexts and data colors preserved identically
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All language names clearly readable with Arial Black font at size
-          18, title and axis labels appropriately sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text labels; coordinates carefully adjusted to prevent
-          collisions
+        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
+          perfectly readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all 30 labels fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Text labels visible and well-positioned, some labels in dense areas
-          could benefit from more spacing
+        comment: Text markers optimally sized for 30-point dataset; all elements visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Eight distinct colors with good differentiation; avoids red-green
-          conflicts
+        comment: Okabe-Ito palette CVD-safe; good contrast; no red-green sole signal
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good overall layout, right side with legend has some empty space
+        comment: Plot fills 70-80% of canvas; balanced margins; legend well-positioned
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with scale information
+        comment: 'Descriptive labels: Level of Abstraction, Type Safety'
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha 0.1), legend properly positioned with title
+        comment: 'Okabe-Ito colors correct; backgrounds #FAF8F1/#1A1A17; data colors
+          identical in both renders'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default with intentional paradigm coloring; lacks
+          custom polish for publication quality
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some refinement (subtle grid, clear legend); mostly standard plotly
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Languages displayed clearly but all shown equally; minimal visual
+          emphasis or focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with text labels using mode=text
+        comment: Correct scatter-text using Plotly text mode
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned to abstraction and type safety dimensions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: text labels, color encoding, appropriate
-          fonts'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: x/y positioning, text labels, color categories,
+          hover details'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes range 0-10.5 shows all data with padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately reflects 8 paradigm categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format scatter-text · plotly · pyplots.ai
+        comment: Title format correct; legend properly labeled
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 30 programming languages across 8 categories with varied positions;
-          good spread with some clustering
+        comment: Shows all scatter-text aspects with 30 languages across diverse paradigms
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Programming language paradigm comparison is realistic and neutral
-          scenario
+        comment: Real programming languages with plausible positioning by abstraction
+          and type safety
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 0-10 scale is reasonable; some language positions are debatable
+        comment: Scales 0-10.5 appropriate for semantic dimensions; no factual errors
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,42 +180,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure
+        comment: 'Clean linear flow: imports → tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: numpy imported but could use plain lists
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Could use more modern import patterns
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
-        max: 5
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
         passed: true
-        comment: 'Excellent use of Plotly features: mode=text, hover tooltips, HTML
-          export, grouped traces, plotly_white template'
+        comment: Only used imports (os, plotly)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering or fake features; clean and Pythonic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Idiomatic plotly (go.Figure, mode=text, update_layout); correct but
+          standard patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses text mode and hover tooltips; generic application of library
+          features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -208,4 +234,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
