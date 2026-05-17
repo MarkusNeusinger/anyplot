@@ -1,7 +1,7 @@
 """ anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-17
+Quality: 85/100 | Updated: 2026-05-17
 """
 
 import os
