@@ -1,13 +1,16 @@
-""" pyplots.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    element_rect,
     element_text,
     geom_point,
     geom_segment,
@@ -21,6 +24,13 @@ from plotnine import (
     theme_void,
 )
 
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Trade network between countries (billions USD annual trade volume)
 np.random.seed(42)
@@ -128,36 +138,37 @@ plot = (
     ggplot()
     # Draw edges with thickness mapped to trade weight
     + geom_segment(
-        data=edges, mapping=aes(x="x", y="y", xend="xend", yend="yend", size="weight"), color="#306998", alpha=0.55
+        data=edges, mapping=aes(x="x", y="y", xend="xend", yend="yend", size="weight"), color="#0072B2", alpha=0.55
     )
     # Draw nodes with size mapped to weighted degree - larger for better visibility
     + geom_point(
         data=nodes,
         mapping=aes(x="x", y="y", size="weighted_degree"),
-        color="#1a1a1a",
+        color=INK,
         stroke=1.5,
-        fill="#FFD43B",
+        fill="#009E73",
         show_legend=False,
     )
     # Add node labels with offset - larger size for better legibility
-    + geom_text(
-        data=nodes, mapping=aes(x="x", y="y", label="id"), size=14, color="#1a1a1a", fontweight="bold", nudge_y=0.65
-    )
+    + geom_text(data=nodes, mapping=aes(x="x", y="y", label="id"), size=14, color=INK, fontweight="bold", nudge_y=0.65)
     # Scale edge thickness
     + scale_size_continuous(range=(0.8, 6), name="Trade Volume\n(Billions USD)", breaks=[100, 300, 500])
-    # Labels and title - format: {spec-id} · {library} · pyplots.ai
+    # Labels and title - format: {spec-id} · {library} · anyplot.ai
     + labs(
-        title="network-weighted · plotnine · pyplots.ai",
+        title="network-weighted · plotnine · anyplot.ai",
         subtitle="Edge thickness represents bilateral trade volume between countries",
     )
     # Clean theme with no axes
     + theme_void()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=26, ha="center", weight="bold"),
-        plot_subtitle=element_text(size=18, ha="center", color="#555555"),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=26, ha="center", weight="bold", color=INK),
+        plot_subtitle=element_text(size=18, ha="center", color=INK_SOFT),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
         plot_margin=0.05,
     )
@@ -165,4 +176,4 @@ plot = (
 )
 
 # Save plot
-plot.save("plot.png", dpi=300, width=16, height=9, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9, verbose=False)
