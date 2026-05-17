@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: plotnine 0.15.2 | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import pandas as pd
 from plotnine import (
@@ -23,8 +25,17 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data: Software company organizational hierarchy (22 employees, 4 levels)
-# Reduced from 30 to prevent label crowding at bottom level
 nodes = [
     # Level 0 - CEO
     {"id": 0, "label": "CEO", "level": 0},
@@ -84,7 +95,6 @@ edges = [
 ]
 
 # Compute hierarchical layout positions
-# Group nodes by level
 levels = {}
 for node in nodes:
     lvl = node["level"]
@@ -92,31 +102,31 @@ for node in nodes:
         levels[lvl] = []
     levels[lvl].append(node)
 
-# Calculate positions: levels spread vertically, nodes at each level spread horizontally
 positions = {}
-y_spacing = 0.22  # Vertical spacing between levels
+y_spacing = 0.22
 for lvl in sorted(levels.keys()):
     nodes_at_level = levels[lvl]
     n = len(nodes_at_level)
-    # Spread nodes horizontally with even distribution
     if n > 1:
         x_positions = [0.05 + i * (0.90 / (n - 1)) for i in range(n)]
     else:
         x_positions = [0.5]
-    y_pos = 0.90 - lvl * y_spacing  # Root at top
+    y_pos = 0.90 - lvl * y_spacing
     for i, node in enumerate(nodes_at_level):
         positions[node["id"]] = (x_positions[i], y_pos)
 
-# Define colors by level - Python Blue for CEO, Yellow for VPs
-level_colors = {
-    "Level 0: CEO": "#306998",
-    "Level 1: VPs": "#FFD43B",
-    "Level 2: Directors": "#4ECDC4",
-    "Level 3: Team": "#FF6B6B",
-}
+# Level names for legend
 level_names = {0: "Level 0: CEO", 1: "Level 1: VPs", 2: "Level 2: Directors", 3: "Level 3: Team"}
 
-# Node sizes by level (higher = larger)
+# Map level names to Okabe-Ito colors
+level_colors = {
+    "Level 0: CEO": OKABE_ITO[0],
+    "Level 1: VPs": OKABE_ITO[1],
+    "Level 2: Directors": OKABE_ITO[2],
+    "Level 3: Team": OKABE_ITO[3],
+}
+
+# Node sizes by level
 size_map = {0: 16, 1: 12, 2: 9, 3: 6}
 
 # Create node dataframe
@@ -143,38 +153,36 @@ plot = (
     ggplot()
     # Draw edges first (underneath nodes)
     + geom_segment(
-        data=edge_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#555555", size=1.2, alpha=0.7
+        data=edge_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=1.2, alpha=0.7
     )
-    # Draw nodes colored by level
+    # Draw nodes colored by level using Okabe-Ito palette
     + geom_point(data=node_df, mapping=aes(x="x", y="y", color="level", size="size"), alpha=0.95, stroke=0.5)
-    # Add node labels with offset above nodes
-    + geom_text(
-        data=node_df, mapping=aes(x="x", y="y", label="label"), size=8, va="bottom", nudge_y=0.025, color="#222222"
-    )
+    # Add node labels with offset
+    + geom_text(data=node_df, mapping=aes(x="x", y="y", label="label"), size=9, va="bottom", nudge_y=0.025, color=INK)
     + scale_color_manual(values=level_colors)
     + scale_size_identity()
-    + labs(title="network-hierarchical · plotnine · pyplots.ai", color="Hierarchy Level")
+    + labs(title="network-hierarchical · plotnine · anyplot.ai", color="Hierarchy Level")
     + xlim(-0.02, 1.02)
     + ylim(0.18, 1.0)
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center"),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, ha="center", color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
         legend_position="bottom",
         legend_box_margin=10,
         legend_margin=5,
-        legend_background=element_rect(fill="white", alpha=0.95),
-        legend_key=element_rect(fill="white"),
+        legend_key=element_rect(fill=ELEVATED_BG),
         # Remove axis elements for network graph
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
-        panel_background=element_rect(fill="white"),
-        plot_background=element_rect(fill="white"),
     )
 )
 
 # Save the plot
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
