@@ -1,7 +1,7 @@
 """ anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-17
+Quality: 83/100 | Updated: 2026-05-17
 """
 
 import os
