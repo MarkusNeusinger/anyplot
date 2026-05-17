@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-permutation-importance: Permutation Feature Importance Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-31
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,10 +13,12 @@ from lets_plot import (
     aes,
     coord_flip,
     element_line,
+    element_rect,
     element_text,
     geom_bar,
     geom_errorbar,
-    geom_vline,
+    geom_hline,
+    geom_text,
     ggplot,
     ggsave,
     ggsize,
@@ -27,6 +31,14 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#8A8A7E" if THEME == "light" else "#7A7970"
 
 # Data: Simulated permutation importance from a Random Forest model
 np.random.seed(42)
@@ -64,34 +76,44 @@ df = df.sort_values("importance_mean", ascending=True).reset_index(drop=True)
 # Create ordered categorical for proper y-axis ordering
 df["feature"] = pd.Categorical(df["feature"], categories=df["feature"].tolist(), ordered=True)
 
-# Calculate error bar positions
+# Calculate error bar positions and label format
 df["ymin"] = df["importance_mean"] - df["importance_std"]
 df["ymax"] = df["importance_mean"] + df["importance_std"]
+df["importance_pct"] = (df["importance_mean"] * 100).round(1).astype(str) + "%"
+df["label"] = df["importance_mean"].round(4).astype(str)
 
-# Create the plot with horizontal bars using geom_bar + coord_flip
+# Create the plot with enhanced letsplot-specific features
 plot = (
     ggplot(df, aes(x="feature", y="importance_mean", fill="importance_mean"))
-    + geom_bar(stat="identity", width=0.7, alpha=0.9)
-    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.25, size=0.8, color="#333333")
-    + geom_vline(xintercept=0, color="#888888", size=0.8, linetype="dashed")
+    + geom_bar(
+        stat="identity",
+        width=0.75,
+        alpha=0.92,
+        tooltip=aes(text="<b>@feature</b><br/>Importance: @label<br/>±Std: @importance_std|.0000"),
+    )
+    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.3, size=1.0, color=INK_SOFT, alpha=0.8)
+    + geom_text(aes(y="importance_mean", label="label"), vjust=-0.6, size=12, color=INK_MUTED, family="monospace")
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.9, linetype="dashed", alpha=0.6)
     + coord_flip()
     + scale_fill_gradient(low="#FFD43B", high="#306998", guide="none")
     + scale_x_discrete()
-    + labs(x="Feature", y="Mean Decrease in Model Score", title="bar-permutation-importance · letsplot · pyplots.ai")
+    + labs(x="Feature", y="Mean Decrease in Model Score", title="bar-permutation-importance · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_y=element_text(size=14),
-        panel_grid_major_x=element_line(color="#CCCCCC", size=0.5),
-        panel_grid_minor_x=element_line(color="#EEEEEE", size=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_minor_x=element_line(color=INK_SOFT, size=0.15),
+        plot_title=element_text(size=24, color=INK, face="bold"),
+        axis_title=element_text(size=20, color=INK, face="bold"),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_text_y=element_text(size=14, color=INK_SOFT),
     )
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800x2700) - path="." saves to current directory
-ggsave(plot, "plot.png", path=".", scale=3)
+# Save as PNG (scale 3x for 4800x2700)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactive view
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
