@@ -1,16 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
 import os
+import sys
+import time
+from pathlib import Path
 
-import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem
-from bokeh.plotting import figure
 
+# Ensure we import the real bokeh, not this script
+sys.path = [p for p in sys.path if p not in ("", os.path.dirname(__file__))]
+
+import numpy as np  # noqa: E402
+from bokeh.io import output_file, save  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem  # noqa: E402
+from bokeh.plotting import figure  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.chrome.options import Options  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for level differentiation
+LEVEL_COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: Software project team hierarchy (24 employees, 4 levels)
 np.random.seed(42)
@@ -88,14 +107,13 @@ for node in nodes:
 
 # Calculate positions: levels spread vertically, nodes at each level spread horizontally
 positions = {}
-y_spacing = 2.0  # Increased vertical spacing for better separation
+y_spacing = 2.0
 for lvl in sorted(levels.keys()):
     nodes_at_level = levels[lvl]
     n = len(nodes_at_level)
-    # Wider horizontal spread for lower levels
     spread = max(n * 1.4, 6)
     x_positions = np.linspace(-spread / 2, spread / 2, n)
-    y_pos = -lvl * y_spacing  # Root at top, children below
+    y_pos = -lvl * y_spacing
     for i, node in enumerate(nodes_at_level):
         positions[node["id"]] = (x_positions[i], y_pos)
 
@@ -105,13 +123,11 @@ node_y = [positions[n["id"]][1] for n in nodes]
 node_labels = [n["label"] for n in nodes]
 node_levels = [n["level"] for n in nodes]
 
-# Color by level - using Python Blue and Yellow as primary
-level_colors = ["#306998", "#FFD43B", "#4B8BBE", "#8BC34A"]
-level_names = ["CEO", "VPs", "Directors", "Team Members"]
-node_colors = [level_colors[lvl] for lvl in node_levels]
+# Color by level using Okabe-Ito
+node_colors = [LEVEL_COLORS[lvl] for lvl in node_levels]
 
-# Node sizes based on level (higher in hierarchy = larger) - increased for better visibility
-size_map = {0: 95, 1: 80, 2: 70, 3: 60}
+# Node sizes based on level - larger for better visibility at Level 3
+size_map = {0: 95, 1: 80, 2: 70, 3: 65}
 node_sizes = [size_map[lvl] for lvl in node_levels]
 
 # Prepare edge data
@@ -124,12 +140,17 @@ edge_y1 = [positions[e[1]][1] for e in edges]
 p = figure(
     width=4800,
     height=2700,
-    title="network-hierarchical · bokeh · pyplots.ai",
+    title="network-hierarchical · bokeh · anyplot.ai",
     x_axis_label="",
     y_axis_label="",
     tools="",
     toolbar_location=None,
 )
+
+# Apply theme-adaptive styling
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
 # Hide axes for cleaner network visualization
 p.xaxis.visible = False
@@ -137,12 +158,14 @@ p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 
-# Draw edges (lines connecting parent to child)
+# Draw edges
 edge_source = ColumnDataSource(data={"x0": edge_x0, "y0": edge_y0, "x1": edge_x1, "y1": edge_y1})
-p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=edge_source, line_width=4, line_color="#555555", line_alpha=0.7)
+p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=edge_source, line_width=4, line_color=INK_SOFT, line_alpha=0.4)
 
-# Draw nodes by level to create legend items
+# Draw nodes by level
 renderers_by_level = {}
+level_names = ["CEO", "VPs", "Directors", "Team Members"]
+
 for lvl in range(4):
     lvl_indices = [i for i, n in enumerate(nodes) if n["level"] == lvl]
     lvl_x = [node_x[i] for i in lvl_indices]
@@ -158,14 +181,14 @@ for lvl in range(4):
         y="y",
         source=source,
         size="sizes",
-        fill_color=level_colors[lvl],
-        line_color="#333333",
+        fill_color=LEVEL_COLORS[lvl],
+        line_color=INK_SOFT,
         line_width=3,
         alpha=0.9,
     )
     renderers_by_level[lvl] = renderer
 
-# Create proper legend with level colors - positioned adjacent to the graph
+# Create legend with theme-adaptive styling
 legend_items = [
     LegendItem(label=f"Level {lvl}: {level_names[lvl]}", renderers=[renderers_by_level[lvl]]) for lvl in range(4)
 ]
@@ -173,30 +196,31 @@ legend = Legend(
     items=legend_items,
     location="top_right",
     label_text_font_size="26pt",
+    label_text_color=INK_SOFT,
     glyph_height=45,
     glyph_width=45,
     spacing=12,
     padding=25,
-    border_line_color="#333333",
+    border_line_color=INK_SOFT,
     border_line_width=2,
-    background_fill_color="#f8f8f8",
-    background_fill_alpha=0.8,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.95,
 )
 p.add_layout(legend, "right")
 
-# Collect all node data for labels and hover
+# Prepare node data for labels and hover
 all_node_source = ColumnDataSource(data={"x": node_x, "y": node_y, "labels": node_labels, "levels": node_levels})
 
-# Add labels to nodes with larger font for better legibility
+# Add labels to nodes with improved visibility
 labels = LabelSet(
     x="x",
     y="y",
     text="labels",
     source=all_node_source,
-    text_font_size="28pt",
-    text_color="#222222",
+    text_font_size="26pt",
+    text_color=INK,
     text_align="center",
-    y_offset=55,
+    y_offset=60,
 )
 p.add_layout(labels)
 
@@ -205,7 +229,8 @@ hover = HoverTool(tooltips=[("Role", "@labels"), ("Level", "@level")], mode="mou
 p.add_tools(hover)
 
 # Style title
-p.title.text_font_size = "36pt"
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
 p.title.align = "center"
 
 # Set plot range with balanced padding
@@ -218,6 +243,25 @@ p.x_range.end = max(x_vals) + x_padding
 p.y_range.start = min(y_vals) - y_padding
 p.y_range.end = max(y_vals) + y_padding
 
-# Save as PNG using absolute path
-output_path = os.path.join(os.path.dirname(__file__), "plot.png")
-export_png(p, filename=output_path)
+# Save HTML output
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with Selenium for PNG output
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
