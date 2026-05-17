@@ -1,149 +1,186 @@
 library: seaborn
+language: python
 specification_id: renko-basic
 created: '2026-01-08T16:02:10Z'
-updated: '2026-01-08T16:32:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823037316
+updated: '2026-05-17T11:41:34Z'
+generated_by: claude-haiku
+workflow_run: 25989593749
 issue: 3294
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/renko-basic/seaborn/plot.png
-preview_html: null
-quality_score: 68
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Correct Renko chart algorithm with proper stair-step brick positioning
-  - Good data generation showing realistic price movements with multiple trend reversals
-  - Clean code structure following KISS principles
-  - Appropriate brick sizing and gaps for visual clarity
-  - Helpful annotation showing brick size
+  - Perfect theme implementation with correct token usage in both light and dark renders
+  - 'Flawless spec compliance: all Renko features present, correct stair-step pattern,
+    proper bullish/bearish coloring'
+  - Clean, reproducible code with explicit font sizes, proper KISS structure, and
+    deterministic data generation
+  - 'Excellent visual quality: no overlap, all text readable in both themes, proper
+    layout utilization (60-70% of canvas)'
+  - 'Perfect data quality: realistic stock price scenario with good feature coverage
+    showing bullish/bearish reversals and trend patterns'
+  - 'Correct palette usage: green (#009E73) for up, orange (#D55E00) for down (Okabe-Ito
+    positions 1-2), identical across themes'
   weaknesses:
-  - Title format uses hyphens instead of required middle dots (·)
-  - 'Color mismatch: code defines colorblind-safe blue/orange but rendered image shows
-    traditional red/green'
-  - Seaborn is only used for styling - no seaborn plotting functions are utilized
-  image_description: 'The plot displays a Renko chart showing stock price movements
-    over approximately 40 bricks. Green bricks represent bullish (upward) price movements
-    while red bricks represent bearish (downward) movements. The chart shows a clear
-    pattern: an initial rise from ~$100 to ~$105, followed by a significant decline
-    to ~$87, then a recovery back up to ~$112. Bricks are uniform in size ($2 each
-    as noted in the annotation), clearly separated with small gaps, and properly stair-stepped.
-    The Y-axis shows "Stock Price (USD)" ranging from ~$85 to ~$112, and the X-axis
-    shows "Brick Number" from 0 to ~40. A legend in the upper left identifies the
-    brick colors. An annotation in the lower right displays "Brick Size: $2". The
-    title reads "renko-basic - seaborn - pyplots.ai" using hyphens instead of middle
-    dots.'
+  - 'Design Excellence is moderate (12/20): styling is professional but relies on
+    library defaults; could benefit from enhanced visual hierarchy or custom palette
+    refinement'
+  - 'Library Mastery is limited (4/10): Renko requires custom matplotlib.patches rendering
+    rather than seaborn''s high-level API, so seaborn-specific features are minimal;
+    this is expected for non-standard chart types but limits opportunity to leverage
+    seaborn''s strengths'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with correct theme tokens
+      Chrome: Title "renko-basic · seaborn · anyplot.ai" in dark text (24pt), axis labels "Brick Number" and "Stock Price (USD)" in dark text (20pt), tick labels in gray (16pt) — all clearly readable against light background
+      Data: Green bullish bricks (#009E73, Okabe-Ito position 1) and orange bearish bricks (#D55E00, position 2) render with uniform size and clear visual separation; 37 bricks shown with proper stair-step pattern; legend in upper right with dark text on light background; brick size annotation in lower right; Y-axis grid subtle and non-intrusive
+      Legibility verdict: PASS — all text readable, excellent contrast, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with correct theme tokens
+      Chrome: Title, axis labels, and tick labels rendered in light text (INK/INK_SOFT tokens) — all clearly readable against dark background; no dark-on-dark failures
+      Data: Green bullish bricks and orange bearish bricks are IDENTICAL in color to light render (#009E73 and #D55E00 preserved); stair-step pattern maintained; legend with light border on dark background; annotation box styled appropriately for dark theme; Y-axis grid subtle and light-colored
+      Legibility verdict: PASS — all text readable, data colors identical to light render, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt, all perfectly readable
+        comment: All fonts explicitly set (title 24pt, labels 20pt, ticks 16pt), perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements, all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bricks are well-sized and clearly visible with appropriate gaps
+        comment: 37 bricks with uniform size and proper gap ratio (8%), clearly visible
+          and well-adapted to data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
-        max: 5
-        passed: false
-        comment: Uses red-green color scheme instead of colorblind-safe colors
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        max: 2
         passed: true
-        comment: Good proportions, plot fills canvas appropriately
+        comment: Okabe-Ito palette (green/orange) provides good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect layout: plot fills 60-70% of canvas, balanced margins, legend
+          positioned neatly'
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Stock Price (USD), Brick Number'
+        comment: 'Descriptive labels with units: ''Stock Price (USD)'', correct title
+          format'
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'Perfect: bullish #009E73, bearish #D55E00, correct backgrounds (#FAF8F1
+          light, #1A1A17 dark), identical data colors across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend uses wrong colors (shows green/red but code defines blue/orange)
+        comment: Well-configured defaults with professional polish, but no exceptional
+          custom enhancements or unique design identity
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: spines removed (top/right), Y-axis grid subtle
+          (alpha=0.10), thoughtful brick gap ratio'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Renko pattern naturally shows trend reversals; color coding (green
+          up/orange down) creates visual hierarchy; stair-step guides the eye through
+          trends
     spec_compliance:
-      score: 21
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Renko chart implementation
+        comment: Correct Renko chart with proper stair-step pattern and bullish/bearish
+          alternation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Brick index on X, price on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: bullish/bearish bricks, uniform size, gaps,
-          grid, legend'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: green/orange colors, uniform bricks, gap separation,
+          subtle grid, brick index X-axis, brick size annotation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: brick number (0-37), Y-axis: stock price (85-115 USD), all
+          data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify bullish (Up) and bearish (Down)
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: Uses hyphens instead of required middle dots (·)
+        comment: 'Title: ''renko-basic · seaborn · anyplot.ai'' (correct format),
+          legend labels: ''Bullish (Up)'' and ''Bearish (Down)'' (accurate)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish movements, multiple trend reversals,
-          clear patterns
+        comment: 'Shows all aspects: bullish bricks, bearish bricks, trend reversals,
+          different brick sequences, realistic price movement'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Plausible stock price scenario with realistic volatility pattern
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Sensible stock price values around $100 with $2 brick size
+        comment: Real stock price scenario (100-115 USD range), daily closing prices,
+          neutral and plausible context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 250-day data generates ~37 bricks (appropriate), $2 brick size realistic,
+          price proportions correct
     code_quality:
       score: 10
       max: 10
@@ -153,55 +190,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → theme setup → data generation → Renko calculation
+          → plotting → save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only necessary imports: os, matplotlib, numpy, pandas, matplotlib.patches'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn/matplotlib API
+        comment: Renko algorithm clear and correct, Pythonic code, no fake UI or over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi=300, bbox_inches='tight',
+          facecolor=PAGE_BG
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Proper matplotlib figure/axes setup and configuration, but Renko
+          requires custom rectangle rendering (expected limitation)
+      - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: Seaborn is only used for styling (set_style, set_context). All plotting
-          is done with matplotlib patches. No seaborn plotting functions are used.
+        comment: Minimal seaborn-specific features; mostly matplotlib.patches for
+          custom chart; could apply this approach to any library
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - patches
   - custom-legend
-  - annotations
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
+  - publication-ready
   - grid-styling
-  - edge-highlighting
