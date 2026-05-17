@@ -1,22 +1,41 @@
-""" pyplots.ai
+""" anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-17
 """
 
-import numpy as np
-import plotly.graph_objects as go
-from scipy.spatial import Voronoi
+import os
+import sys
 
 
-# Data - Generate seed points for Voronoi diagram
+# Remove current directory from path BEFORE importing plotly
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != cur_dir]
+
+import numpy as np  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+from scipy.spatial import Voronoi  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (position 1 is brand color #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Generate seed points (retail stores) within city bounds
 np.random.seed(42)
-n_points = 20
-x = np.random.uniform(10, 90, n_points)
-y = np.random.uniform(10, 90, n_points)
+n_stores = 20
+x = np.random.uniform(10, 90, n_stores)
+y = np.random.uniform(10, 90, n_stores)
 points = np.column_stack([x, y])
 
-# Bounding box for clipping
+# Bounding box for city area
 x_min, x_max = 0, 100
 y_min, y_max = 0, 100
 
@@ -39,21 +58,8 @@ all_points = np.vstack([points, boundary_points])
 # Compute Voronoi diagram
 vor = Voronoi(all_points)
 
-# Colors for regions (colorblind-safe palette starting with Python Blue and Yellow)
-colors = [
-    "#306998",
-    "#FFD43B",
-    "#4ECDC4",
-    "#FF6B6B",
-    "#95E1D3",
-    "#F38181",
-    "#AA96DA",
-    "#FCBAD3",
-    "#A8D8EA",
-    "#B5EAD7",
-    "#C7CEEA",
-    "#FFDAC1",
-    "#E2F0CB",
+# Extended color palette (cycle through Okabe-Ito + supplementary colors)
+extended_colors = OKABE_ITO + [
     "#FF9AA2",
     "#FFB7B2",
     "#E0BBE4",
@@ -61,13 +67,17 @@ colors = [
     "#D291BC",
     "#C9B1FF",
     "#A1C4FD",
+    "#B5EAD7",
+    "#C7CEEA",
+    "#FFDAC1",
+    "#E2F0CB",
 ]
 
 # Create figure
 fig = go.Figure()
 
-# Draw Voronoi cells (only for original points, not boundary points)
-for idx in range(n_points):
+# Draw Voronoi cells (service areas for retail stores)
+for idx in range(n_stores):
     region_idx = vor.point_region[idx]
     region = vor.regions[region_idx]
 
@@ -124,62 +134,72 @@ for idx in range(n_points):
                 x=polygon_x,
                 y=polygon_y,
                 fill="toself",
-                fillcolor=colors[idx % len(colors)],
+                fillcolor=extended_colors[idx % len(extended_colors)],
                 opacity=0.6,
-                line={"color": "#333333", "width": 2},
+                line={"color": INK_SOFT, "width": 2},
                 mode="lines",
                 hoverinfo="skip",
                 showlegend=False,
             )
         )
 
-# Draw seed points on top
+# Draw seed points (store locations) on top
 fig.add_trace(
     go.Scatter(
         x=x,
         y=y,
         mode="markers",
-        marker={"size": 18, "color": "#306998", "line": {"color": "white", "width": 3}, "symbol": "circle"},
-        name="Seed Points",
-        hovertemplate="Point %{pointNumber}<br>X: %{x:.1f}<br>Y: %{y:.1f}<extra></extra>",
+        marker={"size": 18, "color": OKABE_ITO[0], "line": {"color": ELEVATED_BG, "width": 3}, "symbol": "circle"},
+        name="Store Location",
+        hovertemplate="Store %{pointNumber}<br>Latitude: %{y:.1f}<br>Longitude: %{x:.1f}<extra></extra>",
     )
 )
 
-# Update layout
+# Update layout with theme-adaptive colors
 fig.update_layout(
     title={
         "text": "voronoi-basic · plotly · pyplots.ai",
-        "font": {"size": 32, "color": "#333333"},
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "X Coordinate", "font": {"size": 24}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Longitude (°)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "range": [-5, 105],
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "gridcolor": GRID,
         "zeroline": False,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Y Coordinate", "font": {"size": 24}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Latitude (°)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "range": [-5, 105],
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "gridcolor": GRID,
         "zeroline": False,
         "scaleanchor": "x",
         "scaleratio": 1,
+        "linecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     showlegend=True,
-    legend={"font": {"size": 18}, "x": 0.02, "y": 0.98, "bgcolor": "rgba(255,255,255,0.8)"},
+    legend={
+        "font": {"size": 16, "color": INK_SOFT},
+        "x": 0.02,
+        "y": 0.98,
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
     margin={"l": 80, "r": 40, "t": 100, "b": 80},
-    plot_bgcolor="white",
 )
 
 # Save as PNG and HTML (square format for Voronoi diagram)
-fig.write_image("plot.png", width=1200, height=1200, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

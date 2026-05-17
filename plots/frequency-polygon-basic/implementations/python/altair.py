@@ -1,13 +1,35 @@
-""" pyplots.ai
+""" anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-17
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import site
+import sys
 
+
+# Workaround for script name shadowing the altair package
+sys.path = (
+    site.getsitepackages()
+    + [site.getusersitepackages()]
+    + [p for p in sys.path if p not in site.getsitepackages() + [site.getusersitepackages()]]
+)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens (Okabe-Ito palette + theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (colorblind-safe)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data: Response times (ms) by experimental condition
 np.random.seed(42)
@@ -34,9 +56,6 @@ for data, group_name in [(control, "Control"), (treatment_a, "Treatment A"), (tr
 
 df = pd.DataFrame(data_rows)
 
-# Colors: Python Blue, Python Yellow, and a third colorblind-safe color
-colors = ["#306998", "#FFD43B", "#E377C2"]
-
 # Create frequency polygon chart
 chart = (
     alt.Chart(df)
@@ -46,7 +65,7 @@ chart = (
         y=alt.Y("Frequency:Q", title="Frequency"),
         color=alt.Color(
             "Condition:N",
-            scale=alt.Scale(domain=["Control", "Treatment A", "Treatment B"], range=colors),
+            scale=alt.Scale(domain=["Control", "Treatment A", "Treatment B"], range=OKABE_ITO),
             legend=alt.Legend(title="Condition", titleFontSize=20, labelFontSize=18),
         ),
         strokeDash=alt.StrokeDash(
@@ -55,12 +74,25 @@ chart = (
             legend=None,
         ),
     )
-    .properties(width=1600, height=900, title="frequency-polygon-basic · altair · pyplots.ai")
-    .configure_title(fontSize=28, anchor="middle")
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_legend(orient="right", padding=20)
+    .properties(width=1600, height=900, background=PAGE_BG)
+    .configure_title(fontSize=28, anchor="middle", color=INK)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridOpacity=0.10,
+        gridColor=INK,
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, titleColor=INK, labelColor=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
 )
 
+# Add title with format: spec-id · library · anyplot.ai
+chart = chart.properties(title="frequency-polygon-basic · altair · anyplot.ai")
+
 # Save as PNG (4800 x 2700 px) and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

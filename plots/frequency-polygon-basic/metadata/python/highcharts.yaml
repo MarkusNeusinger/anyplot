@@ -1,158 +1,209 @@
 library: highcharts
+language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:18:56Z'
-updated: '2026-01-09T13:21:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853044421
+updated: '2026-05-17T16:52:05Z'
+generated_by: claude-haiku
+workflow_run: 25996524895
 issue: 3418
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of areaspline chart type to create smooth frequency polygon visualization
-  - Three distinct distributions (normal, tight, bimodal) effectively demonstrate
-    comparison capabilities
-  - Semi-transparent fills (0.2 opacity) allow overlapping distributions to remain
-    visible
-  - Proper closing of polygons to zero at both ends as specified
-  - Clean implementation with appropriate sizing for 4800x2700
-  - Interactive HTML version also generated for full Highcharts interactivity
-  - Colorblind-safe color palette (blue, yellow, purple)
+  - Fixed critical chart type issue - now uses SplineSeries for overlapping lines
+    instead of stacked areas
+  - Proper theme-adaptive chrome with correct light and dark renders
+  - Excellent data choice showing three distinct distribution patterns (normal, tight
+    normal, bimodal)
+  - All axis labels include units and are descriptive
+  - 'Okabe-Ito palette correctly applied with first series as #009E73'
+  - Markers at data points enhance clarity without overwhelming the plot
+  - Title format corrected to anyplot.ai
+  - Canvas utilization improved - plot fills 60-70% with balanced margins
+  - Spline curves properly extend to zero at both ends
+  - Legend clearly identifies each class with descriptive labels
   weaknesses:
-  - Legend text could be slightly larger for optimal readability at full resolution
-  - Axis labels lack units (though test scores are unitless by convention)
-  image_description: 'The plot displays three frequency polygons comparing test score
-    distributions for three classes. The chart uses an areaspline type with semi-transparent
-    fills beneath the lines. Class A (blue, Avg: 72) shows a normal distribution peaking
-    around 55-65 with the bulk of data in the 40-80 range. Class B (yellow, Avg: 80)
-    shows a tighter, higher distribution peaking at around 80 with the highest frequency
-    (~50 students). Class C (purple, Bimodal) shows a bimodal distribution with two
-    distinct peaks around 55 and 85. The x-axis shows "Test Score" from 0-100, and
-    the y-axis shows "Number of Students" from 0-54. The title follows the required
-    format "frequency-polygon-basic · highcharts · pyplots.ai". A legend is positioned
-    in the upper right corner identifying each class with descriptive labels including
-    average values. Markers (circles) are visible at data points along the lines.
-    The chart has subtle gray grid lines and a white background.'
+  - Library mastery could be higher - uses standard spline approach without leveraging
+    advanced highcharts features like animations, custom interactions, or distinctive
+    styling
+  - Design excellence is solid but not exceptional - follows library defaults rather
+    than introducing intentional aesthetic innovations
+  - Visual refinement uses mostly default highcharts styling with minimal customization
+    beyond what's required
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "frequency-polygon-basic · highcharts · anyplot.ai" in dark INK (#1A1A17), clearly readable. X-axis label "Test Score (0-100)" and Y-axis label "Frequency (count)" all in dark text with appropriate font sizing (22px). Tick labels (18px) and legend (16px) are readable. Legend positioned at top-right with light elevated background.
+      Data: Three overlapping spline curves with markers (radius 8px): green (#009E73) showing normal distribution around 72, orange (#D55E00) showing narrow distribution around 80, blue (#0072B2) showing bimodal distribution. Semi-transparent fill (0.2 opacity) beneath lines allows overlapping curves to be visible while maintaining visual appeal. Curves properly extend to zero at both ends.
+      Grid: Subtle horizontal gridlines with appropriate opacity
+      Legibility verdict: PASS - all elements clearly readable, excellent contrast, proper theme application
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8 for primary, #B8B7B0 for secondary), clearly readable against dark background. No dark-on-dark failures. Legend background (#242420) with light text maintains excellent readability.
+      Data: Identical three data colors as light render (#009E73, #D55E00, #0072B2) - colors remain unchanged, confirming correct theme handling where only chrome adapts. Curves, markers, and fill effects identical to light render. Legend styling properly theme-adapted.
+      Grid: Subtle gridlines visible with dark-theme appropriate color
+      Legibility verdict: PASS - all elements clearly readable in dark theme, no contrast issues, proper theme-adaptive implementation confirmed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable; tick labels are clear but could
-          be slightly larger at 4800x2700
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend is separate from data
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px, legend 16px. All perfectly readable in both light and dark
+          renders'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend positioned clearly without overlap.
+          X-axis labels offset appropriately to avoid collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines and fill areas are clearly visible; markers help identify data
-          points; semi-transparent fills allow overlapping distributions to be seen
+        comment: Spline curves perfectly visible with radius-8 markers. Line width
+          5px is bold and clear. Semi-transparent fill (0.2) allows overlapping series
+          to remain distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, and purple are colorblind-safe (no red-green combination)
+        comment: 'Okabe-Ito palette ensures CVD safety. Three colors (#009E73, #D55E00,
+          #0072B2) are perceptually distinct with different luminance levels. Good
+          contrast between all overlapping elements'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions; plot fills adequate canvas space with appropriate
-          margins
+        comment: 'Plot fills approximately 60-70% of 4800x2700 canvas. Margins (marginBottom:
+          180, marginLeft: 140, marginRight: 100, marginTop: 120) are generous and
+          balanced. Legend positioned at top-right without isolation'
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units
+        comment: 'X-axis: ''Test Score (0-100)'' - descriptive with unit range. Y-axis:
+          ''Frequency (count)'' - descriptive with unit/context. Title: spec-correct
+          format'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle; legend is well-placed but font is slightly small
+        comment: 'Perfect compliance: First series #009E73 (Okabe-Ito position 1),
+          second #D55E00 (position 2), third #0072B2 (position 3). Light background
+          #FAF8F1, dark background #1A1A17. Text colors properly theme-adapted (dark
+          text on light, light text on dark). Data colors identical in both renders;
+          only chrome adapts'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with correct color choices and proper
+          typography. Lacks exceptional design innovations or custom styling that
+          would elevate it to publication level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Some refinement visible: semi-transparent fill opacity 0.2 shows
+          thoughtfulness, generous margins, subtle grid styling, marker styling with
+          proper radius. Mostly standard highcharts styling with selective customization'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy and meaningful data choice. Three test score
+          distributions clearly show different performance patterns - normal distribution,
+          tight normal, and bimodal. Viewer immediately grasps class differences through
+          distribution shapes and color contrast
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct frequency polygon using areaspline with fill
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis correctly shows bin centers (test scores), Y-axis shows frequencies
-      - id: SC-03
+        comment: 'Correct chart type: frequency polygon implemented as spline series
+          with markers. Curves properly extend to zero at both ends, correctly representing
+          the histogram distribution outline'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has legend, markers, distinct colors, semi-transparent fill; polygons
-          close to zero at both ends
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: distinct line colors (green, orange,
+          blue), clear legend identifying each group, markers at data points, semi-transparent
+          fill beneath lines, aligned bin edges across all groups'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows 0-100, Y-axis scales appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: test score ranges 0-100. Y-axis: frequency counts. All data
+          visible with proper axis ranges. Correct mapping enables accurate distribution
+          comparison'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three classes with descriptive labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses frequency-polygon-basic · highcharts · pyplots.ai
-          format
+        comment: 'Title: ''frequency-polygon-basic · highcharts · anyplot.ai'' - correct
+          spec format. Legend: ''Class A (Avg: 72)'', ''Class B (Avg: 80)'', ''Class
+          C (Bimodal)'' - descriptive labels'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows three distinct distributions: normal, tight/high average,
-          and bimodal; demonstrates comparison capabilities'
+        comment: 'Shows all distribution aspects: single-peak normal (Class A), tight
+          normal (Class B), and bimodal (Class C). Demonstrates central tendency,
+          spread, and modality differences effectively'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Test scores for different classes is a realistic, neutral educational
-          scenario
+        comment: Test scores across three classes is realistic and comprehensible.
+          Scenario is neutral and common in educational contexts. Data is plausible
+          and relatable
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Test scores 0-100 are realistic; frequencies are reasonable for 200
-          students per class
+        comment: 0-100 test score range is standard. Means (72, 80, 55/85) are realistic.
+          Frequency counts (~20-30 for 200-sample groups) are appropriate. Bimodal
+          split proportions (50/50) are reasonable
     code_quality:
       score: 10
       max: 10
@@ -162,42 +213,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure; no functions/classes
+        comment: 'Straightforward flow: imports, theme config, data generation, binning,
+          chart creation, series setup, HTML generation, screenshot. No functions
+          or classes - appropriate simplicity'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output across runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, tempfile, time, urllib.request, Path, numpy,
+          highcharts_core, selenium. No extraneous dependencies'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Clean, Pythonic code. Proper error handling for Highcharts download.
+          No over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Correct naming convention.
+          Current API usage
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses AreaSeries with areaspline type, proper Highcharts options structure,
-          selenium for PNG export, also generates interactive HTML version
+        comment: 'Correct highcharts API: Chart, HighchartsOptions, SplineSeries.
+          Proper options-based configuration pattern. Follows highcharts conventions
+          but doesn''t leverage advanced patterns'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic highcharts usage. Could be adapted to plotly or other libraries
+          with minimal changes. Doesn't use advanced highcharts features like animations,
+          callbacks, or interactive tooltips
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -210,4 +275,3 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - grid-styling

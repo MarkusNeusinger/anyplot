@@ -1,158 +1,175 @@
 library: matplotlib
+language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:16:20Z'
-updated: '2026-01-09T13:18:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853034968
+updated: '2026-05-17T16:27:36Z'
+generated_by: claude-haiku
+workflow_run: 25996188458
 issue: 3418
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 94
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of the frequency polygon concept with proper bin alignment
-    across all groups
-  - Clean, readable code following KISS principles
-  - Appropriate use of semi-transparent fills that allow all distributions to be compared
-  - Good marker styling with white edges for visibility
-  - Realistic, neutral data scenario (heights by age group)
-  - Lines properly extended to zero at both ends to close the polygon shape
+  - Perfect visual quality in both light and dark renders with no legibility failures
+  - Accurate specification compliance with all required features implemented correctly
+  - Excellent theme-adaptive styling with proper use of theme tokens throughout
+  - Clean, reproducible, idiomatic code with no unnecessary imports or complexity
+  - Realistic, neutral data with plausible height distributions by age group
   weaknesses:
-  - Legend overlaps slightly with the blue distribution peak area - could be positioned
-    outside plot area or in a less congested corner
-  - Color palette while distinguishable, could use a more colorblind-optimized palette
-  image_description: 'The plot displays a frequency polygon comparing height distributions
-    across three age groups. Three lines with semi-transparent fills are shown: a
-    blue line with light blue fill for Young Adults (18-25) peaking around 172-175
-    cm with frequency ~45, a yellow/gold line with pale yellow fill for Middle-Aged
-    (40-50) peaking around 165-170 cm with frequency ~34, and a brown line with tan
-    fill for Seniors (65+) peaking around 160-165 cm with frequency ~34. Each line
-    has circular markers at data points with white edges. The x-axis shows "Height
-    (cm)" ranging from ~135 to 210 cm. The y-axis shows "Frequency" from 0 to 45.
-    A subtle dashed grid is visible. The legend is positioned in the upper right corner.
-    The title follows the correct format. The distributions show realistic shifts
-    in central tendency across age groups, with young adults being tallest and seniors
-    shortest, and increasing spread (variance) with age.'
+  - 'Data storytelling could be stronger: equal visual weight to all distributions;
+    consider subtle emphasis on primary group (e.g., linewidth or alpha variation)'
+  - 'Library mastery: idiomatic but lacks distinctive matplotlib-specific techniques
+    (custom cyclers, patheffects, advanced Artist customization)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct per style guide
+      Chrome: Title "frequency-polygon-basic · matplotlib · anyplot.ai" in dark text (INK); axis labels "Height (cm)" and "Frequency" in dark text; tick labels (140-210 on x, 0-45 on y) in INK_SOFT — all clearly readable
+      Data: Three frequency polygons in Okabe-Ito colors: green (#009E73) for Young Adults (first series, correct), orange (#D55E00) for Middle-Aged, blue (#0072B2) for Seniors. Circular markers at bin midpoints (markersize=6), semi-transparent fills (alpha=0.15). Lines extend to zero at both ends.
+      Legend: Upper left, light background (ELEVATED_BG=#FFFDF6), readable text in INK_SOFT
+      Grid: Y-axis only, subtle (alpha=0.10), does not compete with data
+      Spines: Top and right removed; left and bottom visible in INK_SOFT
+      Legibility verdict: PASS — no dark-on-light or light-on-light failures; all elements readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct per style guide
+      Chrome: Title and axis labels in light text (INK=#F0EFE8); tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark surface, no dark-on-dark failures
+      Data: Identical colors to light render — green, orange, blue unchanged. Markers and lines remain visible. Semi-transparent fills render correctly.
+      Legend: Dark background (ELEVATED_BG=#242420), text in INK_SOFT — legible
+      Grid: Y-axis grid subtle and visible at same opacity
+      Spines: Left and bottom in INK_SOFT, clearly visible
+      Legibility verdict: PASS — no dark-on-dark issues (tick labels, spines, grid all use INK_SOFT which reads well on near-black). Brand green (#009E73) remains visible.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All text sizes explicit and readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: All text fully readable; no overlapping elements or collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 is appropriate, markers with white edges clearly
-          visible, alpha blending allows all distributions to be seen
+        comment: Markers and lines clearly visible; semi-transparent fill supports
+          clarity
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and brown are distinguishable for most colorblind types;
-          blue/brown could be slightly better differentiated
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout applied
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has Height (cm) with units, Y-axis has Frequency
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito positions 1-3 used; CVD-safe; no red-green-only signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio; clean proportions; all elements visible
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3, but legend overlaps slightly with peak
-          data area
+        comment: Descriptive labels with units; title format matches spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito order correct; backgrounds correct; both renders theme-correct
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional palette choice; marker edge styling and semi-transparent
+          fill show polish; professional execution but could be more distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Spines, grid, whitespace, and legend styling all refined; excellent
+          visual refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear focal point and distribution differences visible; but equal
+          visual weight to all groups; could use emphasis on primary group
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct frequency polygon implementation connecting histogram bin
-          midpoints
+        comment: Correct frequency polygon; lines connect midpoints; extends to zero
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Height values correctly binned and displayed on X, frequencies on
-          Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple distributions, distinct colors, markers, lines extended
-          to zero, semi-transparent fill, aligned bins
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: multiple distributions, distinct colors, legend,
+          markers, semi-transparent fill'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Height (cm) on x; Frequency on y; range covers all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three age groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format frequency-polygon-basic · matplotlib · pyplots.ai
+        comment: Title format correct; legend labels descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distributions with different central tendencies, spreads,
-          and overlaps; could show more distinct skewness or modality
+        comment: All frequency polygon aspects shown; three distinct distributions
+          with realistic characteristics
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Heights by age group is a plausible, neutral scientific scenario
-          with realistic variation
+        comment: Heights by age group is real-world plausible; trend (seniors shorter)
+          is known; neutral data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Height values are realistic (135-210 cm range); seniors distribution
-          extends a bit wide
+        comment: Height values sensible; frequency counts proportional; bin width
+          appropriate
     code_quality:
       score: 10
       max: 10
@@ -162,43 +179,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data, plot, save - no functions
-          or classes'
+        comment: No functions or classes; straightforward script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: os, matplotlib.pyplot, numpy — all used; no bloat
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Idiomatic Axes methods; no fake UI or simulated interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses matplotlib plot, fill, and histogram functions correctly with
-          Axes methods; doesnt use more advanced features
+        comment: Axes methods; proper figure creation; theme tokens integrated; spine/grid
+          styling idiomatic; legend.get_frame()/.get_texts() proper
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Some distinctive choices (marker edges, theme-adaptive legend); but
+          mostly standard patterns; could explore more matplotlib-specific techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -210,5 +233,4 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting

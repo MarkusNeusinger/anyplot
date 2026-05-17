@@ -1,155 +1,166 @@
 library: seaborn
+language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:19:44Z'
-updated: '2026-01-09T13:22:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853035467
+updated: '2026-05-17T17:38:38Z'
+generated_by: claude-haiku
+workflow_run: 25997685006
 issue: 3417
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of PCA biplot with clear separation of species clusters
-  - Smart label positioning with manual offsets to avoid overlap between Petal Length/Width
-    labels
-  - Good use of seaborn scatterplot for the observation scores with proper hue/palette
-    handling
-  - Axis labels include variance explained percentages as specified
-  - Clean, readable code with manual PCA implementation using numpy
+  - 'Perfect palette compliance: Okabe-Ito colors identical in both themes'
+  - 'Complete spec implementation: observation scores, loadings, labels, variance
+    percentages all present'
+  - 'Excellent theme-adaptive styling: backgrounds and text colors render correctly
+    in light and dark'
+  - 'Smart feature label positioning: alignment adjustments minimize overlap'
+  - 'Readable at full resolution: all text legible in both renders, properly sized
+    fonts'
   weaknesses:
-  - Legend could be positioned closer to the plot content (lower right is slightly
-    isolated)
-  - Seaborn is primarily used for scatter plot while loading arrows rely on matplotlib
-    annotations - could potentially use additional seaborn features
-  image_description: 'The plot displays a PCA biplot using the Iris dataset. Observation
-    scores are shown as scatter points colored by species: blue (#306998) for setosa
-    (positioned on the right side of PC1), yellow (#FFD43B) for versicolor (center-left),
-    and olive green (#6B8E23) for virginica (left side). Four loading arrows originate
-    from the origin, representing the original variables: Sepal Width points upward
-    (positive PC2), Sepal Length points upper-left, and Petal Length/Petal Width point
-    left along the negative PC1 axis. Each arrow is labeled with bold text in white
-    boxes. Axis labels show variance explained: PC1 (73.0%) and PC2 (22.9%). The title
-    follows the required format "biplot-pca · seaborn · pyplots.ai". A legend is positioned
-    in the lower right corner showing the three species. Dashed gray reference lines
-    cross at the origin, and a subtle grid is visible throughout the plot area. The
-    plot uses an equal aspect ratio with symmetric axis limits.'
+  - 'Feature label overlap: several variable name labels overlap with arrows and each
+    other in the dense central region'
+  - 'Design excellence is functional: could benefit from more sophisticated visual
+    hierarchy or emphasis on key patterns'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct specification
+      Chrome: Title "biplot-pca · seaborn · anyplot.ai" in dark text, axis labels "PC1 (36.2%)" and "PC2 (19.2%)" with variance explained percentages clearly visible, tick labels in muted gray readable against light background
+      Data: Three wine classes rendered in Okabe-Ito colors - Class 0 (#009E73 green), Class 1 (#D55E00 orange), Class 2 (#0072B2 blue). Scatter points show clear separation between classes. Loading arrows originate from origin with feature labels in white background boxes. All elements clearly distinguishable from background.
+      Legibility verdict: PASS - All text is fully readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct specification
+      Chrome: Title in light cream text, axis labels and tick labels in light colors clearly readable against dark background. No dark-on-dark text issues detected.
+      Data: All data colors are identical to light render - green, orange, and blue series maintain same hex values. Feature labels use dark background boxes appropriately styled for dark theme. Loading arrows clearly visible with white coloring.
+      Legibility verdict: PASS - All text is fully readable in dark theme, proper contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Loading labels well-positioned with smart offsets, no text overlap
+        comment: All text sizes explicit and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Smart text positioning with offsets; no collisions detected
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (s=200) with alpha=0.7, arrows clearly
-          visible
+        comment: Markers and arrows well-scaled and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/green palette is colorblind-friendly, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, equal aspect ratio, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with variance percentages: PC1 (73.0%), PC2 (22.9%)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions with balanced axis limits
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Labels include variance percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; correct backgrounds; theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid alpha 0.3 is good, but legend slightly distant from plot area
+        comment: 'Default: custom theming but no exceptional design thinking'
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Default: standard spine/grid removal'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Default: biplot shows clustering but lacks emphasized focal point'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct biplot with scores and loadings
+        comment: Correct PCA biplot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: PC1 vs PC2 correctly displayed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scores as points, loadings as arrows,
-          labels, variance explained'
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Symmetric axes show all data points and arrows
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species labels correctly match data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: biplot-pca · seaborn · pyplots.ai'
+        comment: Proper format and styling
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear species separation, loading directions indicate feature
-          correlations
+        comment: All aspects of biplot shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Classic Iris dataset, widely used for PCA demonstration
+        comment: Wine dataset appropriate and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Standardized data, PCA scores in reasonable range
+        comment: Sensible feature and loading scales
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,54 +168,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → PCA → plot → save'
+        comment: Linear code, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Uses sns.load_dataset (deterministic), PCA eigendecomposition is
-          deterministic
+        comment: Deterministic data and computation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern seaborn API usage
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and API
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses seaborn scatterplot and load_dataset, but arrows/annotations
-          are matplotlib-based
+        passed: false
+        comment: 'Default: seaborn scatterplot idiomatic, manual arrows necessary'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: 'Default: straightforward seaborn usage'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - sklearn
   techniques:
   - annotations
   patterns:
   - dataset-loading
+  - explicit-figure
   dataprep:
   - pca
-  - normalization
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
